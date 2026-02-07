@@ -300,11 +300,15 @@ export default function ChartScreen() {
                 <View style={styles.sensitiveGrid}>
                   {sensitivePoints.map((pt) => (
                     <View key={pt.label} style={styles.sensitiveItem}>
-                      <Ionicons name={pt.iconName as any} size={24} color={theme.primary} style={{ marginBottom: 4 }} />
+                      {pt.label === 'Chiron' ? (
+                        <Text style={{ fontSize: 22, color: theme.primary, fontWeight: '700', marginBottom: 4 }}>K</Text>
+                      ) : (
+                        <Ionicons name={pt.iconName as any} size={24} color={theme.primary} style={{ marginBottom: 4 }} />
+                      )}
                       <Text style={styles.sensitiveName}>{pt.label}</Text>
                       <Text style={styles.sensitiveSign}>{pt.sign}</Text>
                       <Text style={styles.sensitiveDeg}>
-                        {pt.degree}°{pt.minute}'{pt.house ? ` · H${pt.house}` : ''}
+                        {pt.degree}°{String(pt.minute).padStart(2, '0')}'{pt.house ? ` · H${pt.house}` : ''}
                       </Text>
                     </View>
                   ))}
@@ -403,7 +407,7 @@ export default function ChartScreen() {
                     </View>
                     <View style={[styles.td, { flex: 1 }]}>
                       <Text style={styles.degreeText}>{row.p.degree}°</Text>
-                      <Text style={styles.minuteText}>{row.p.minute}'</Text>
+                      <Text style={styles.minuteText}>{String(row.p.minute).padStart(2, '0')}'</Text>
                     </View>
                     <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
                       <Text style={styles.houseNum}>{row.p.house || '—'}</Text>
@@ -429,7 +433,11 @@ export default function ChartScreen() {
                       style={styles.tableRow}
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                        <Ionicons name={pt.iconName as any} size={20} color={theme.primary} style={{ marginRight: 10, width: 28 }} />
+                        {pt.label === 'Chiron' ? (
+                          <Text style={styles.planetSymbol}>K</Text>
+                        ) : (
+                          <Ionicons name={pt.iconName as any} size={20} color={theme.primary} style={{ marginRight: 10, width: 28 }} />
+                        )}
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
                           {pt.retrograde && (
@@ -442,7 +450,7 @@ export default function ChartScreen() {
                       </View>
                       <View style={[styles.td, { flex: 1 }]}>
                         <Text style={styles.degreeText}>{pt.degree}°</Text>
-                        <Text style={styles.minuteText}>{pt.minute}'</Text>
+                        <Text style={styles.minuteText}>{String(pt.minute).padStart(2, '0')}'</Text>
                       </View>
                       <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
                         <Text style={styles.houseNum}>{pt.house || '—'}</Text>
@@ -469,7 +477,7 @@ export default function ChartScreen() {
                   <View style={styles.tableHeader}>
                     <Text style={[styles.th, { flex: 1 }]}>House</Text>
                     <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
-                    <Text style={[styles.th, { flex: 1 }]}>Degree</Text>
+                    <Text style={[styles.th, { flex: 1 }]}>Deg</Text>
                     <Text style={[styles.th, { flex: 3 }]}>Theme</Text>
                   </View>
 
@@ -499,7 +507,7 @@ export default function ChartScreen() {
                           </View>
                         </View>
                         <View style={[styles.td, { flex: 1 }]}>
-                          <Text style={styles.degreeText}>{deg}°{min}'</Text>
+                          <Text style={styles.degreeText}>{deg}°{String(min).padStart(2, '0')}'</Text>
                         </View>
                         <View style={[styles.td, { flex: 3 }]}>
                           <Text style={styles.houseTheme}>{houseInfo?.theme || ''}</Text>
@@ -543,7 +551,7 @@ export default function ChartScreen() {
                       >
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
                           <Text style={styles.aspectPlanetSymbol}>{asp.planet1.symbol}</Text>
-                          <Text style={styles.aspectPlanetName}>{asp.planet1.name}</Text>
+                          <Text style={[styles.aspectPlanetName, { flex: 1 }]}>{asp.planet1.name}</Text>
                         </View>
                         <View style={[styles.td, { flex: 2, alignItems: 'center' }]}>
                           <Text style={[styles.aspectSymbol, { color: natureColor }]}>{asp.type.symbol}</Text>
@@ -552,7 +560,7 @@ export default function ChartScreen() {
                         </View>
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
                           <Text style={styles.aspectPlanetSymbol}>{asp.planet2.symbol}</Text>
-                          <Text style={styles.aspectPlanetName}>{asp.planet2.name}</Text>
+                          <Text style={[styles.aspectPlanetName, { flex: 1 }]}>{asp.planet2.name}</Text>
                         </View>
                         <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
                           <Text style={[
@@ -943,7 +951,7 @@ export default function ChartScreen() {
                   style={styles.patternCard}
                 >
                   <View style={styles.patternHeader}>
-                    <Ionicons name="key-outline" size={20} color={theme.primary} style={{ marginRight: 10 }} />
+                    <Text style={{ fontSize: 20, color: theme.primary, fontWeight: '700', marginRight: 10 }}>K</Text>
                     <Text style={styles.patternTitle}>Chiron — {chironInsight.title}</Text>
                   </View>
                   <Text style={styles.patternDesc}>{chironInsight.description}</Text>
