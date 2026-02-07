@@ -1,0 +1,97 @@
+{
+  "expo": {
+    "name": "MySky",
+    "slug": "mysky",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "mysky",
+    "userInterfaceStyle": "dark",
+
+    "ios": {
+      "bundleIdentifier": "com.brittany.mysky",
+      "supportsTablet": false,
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSUserTrackingUsageDescription": "This app does not track users across apps or websites.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
+      }
+    },
+
+    "android": {
+      "package": "com.brittany.mysky",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0D1421"
+      },
+      "edgeToEdgeEnabled": true,
+      "permissions": [],
+      "blockedPermissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_CONTACTS",
+        "WRITE_CONTACTS",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR",
+        "READ_SMS",
+        "SEND_SMS",
+        "READ_PHONE_STATE",
+        "CALL_PHONE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
+    },
+
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon.png"
+    },
+
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0D1421",
+          "image": "./assets/images/splash.png",
+          "dark": {
+            "backgroundColor": "#0D1421",
+            "image": "./assets/images/splash.png"
+          },
+          "imageWidth": 200
+        }
+      ],
+      "expo-web-browser",
+      "expo-secure-store"
+    ],
+
+    "experiments": {
+      "typedRoutes": true
+    },
+
+    "extra": {
+      "privacyMode": true,
+      "router": {},
+      "eas": {
+        "projectId": "c76e6f9f-d7eb-494b-90f5-e1b35d86152a"
+      }
+    },
+
+    "owner": "brittanyhornick"
+  }
+}
+

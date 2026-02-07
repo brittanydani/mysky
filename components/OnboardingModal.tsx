@@ -1,0 +1,259 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
+
+import { theme } from '../constants/theme';
+import StarField from './ui/StarField';
+import BirthDataModal from './BirthDataModal';
+import { BirthData } from '../services/astrology/types';
+import { AstrologyCalculator } from '../services/astrology/calculator';
+import { localDb } from '../services/storage/localDb';
+import { logger } from '../utils/logger';
+
+interface OnboardingModalProps {
+  visible: boolean;
+  onComplete: (chart: any) => void;
+}
+
+export default function OnboardingModal({ visible, onComplete }: OnboardingModalProps) {
+  const [step, setStep] = useState<'welcome' | 'birth-data' | 'generating'>('welcome');
+  const [showBirthModal, setShowBirthModal] = useState(false);
+
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!visible) {
+      setStep('welcome');
+      setShowBirthModal(false);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const handleGetStarted = () => {
+    Haptics.selectionAsync();
+    setStep('birth-data');
+    setShowBirthModal(true);
+  };
+
+  const handleBirthModalClose = () => {
+    // Treat closing as “back to welcome” (prevents being stuck in a dead step)
+    setShowBirthModal(false);
+    setStep('welcome');
+  };
+
+  const handleBirthDataComplete = async (birthData: BirthData, extra?: { chartName?: string }) => {
+    setShowBirthModal(false);
+    setStep('generating');
+
+    try {
+      const chart = await Promise.resolve(AstrologyCalculator.generateNatalChart(birthData));
+
+      const savedChart = {
+        id: chart.id,
+        name: extra?.chartName ?? chart.name,
+        birthDate: chart.birthData.date,
+        birthTime: chart.birthData.time,
+        hasUnknownTime: chart.birthData.hasUnknownTime,
+        birthPlace: chart.birthData.place,
+        latitude: chart.birthData.latitude,
+        longitude: chart.birthData.longitude,
+        houseSystem: chart.birthData.houseSystem,
+        timezone: chart.birthData.timezone,
+        createdAt: chart.createdAt,
+        updatedAt: chart.updatedAt,
+        isDeleted: false,
+      };
+
+      await localDb.saveChart(savedChart);
+
+      timeoutRef.current = setTimeout(() => {
+        onComplete(chart);
+      }, 900);
+    } catch (error) {
+      logger.error('Failed to generate chart:', error);
+      Alert.alert('Something went wrong', 'We could not create your chart. Please try again.', [
+        { text: 'OK', onPress: () => setStep('welcome') },
+      ]);
+    }
+  };
+
+  return (
+    <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
+      <View style={styles.container}>
+        <StarField starCount={100} />
+
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {step === 'welcome' && (
+              <>
+                <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.welcomeContainer}>
+                  <View style={styles.logoContainer}>
+                    <View style={styles.logoCircle}>
+                      <Text style={styles.logoText}>🌙</Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.welcomeTitle}>Welcome to MySky</Text>
+                  <Text style={styles.welcomeSubtitle}>Your personal cosmic story awaits</Text>
+
+                  <Text style={styles.description}>
+                    Discover the unique patterns written in the stars at the moment of your birth. Your natal chart reveals insights about your personality, relationships, and life path.
+                  </Text>
+                </Animated.View>
+
+                <Animated.View entering={FadeInUp.delay(400).duration(600)} style={styles.featuresContainer}>
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
+                      <Ionicons name="star" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Personalized cosmic insights</Text>
+                  </View>
+
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
+                      <Ionicons name="book" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Your complete natal story</Text>
+                  </View>
+
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
+                      <Ionicons name="heart" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Relationship compatibility</Text>
+                  </View>
+
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
+                      <Ionicons name="calendar" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Daily cosmic guidance</Text>
+                  </View>
+                </Animated.View>
+
+                <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.ctaContainer}>
+                  <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handleGetStarted}>
+                    <LinearGradient
+                      colors={['#E8D5A8', '#C9A962', '#B8994F']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.ctaGradient}
+                    >
+                      <Text style={styles.ctaText}>Create My Chart</Text>
+                      <Ionicons name="arrow-forward" size={20} color="#1A1A1A" />
+                    </LinearGradient>
+                  </Pressable>
+
+                  <Text style={styles.privacyText}>Your birth data is stored securely on your device</Text>
+                </Animated.View>
+              </>
+            )}
+
+            {step === 'generating' && (
+              <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.generatingContainer}>
+                <View style={styles.generatingIcon}>
+                  <Ionicons name="sparkles" size={48} color={theme.primary} />
+                </View>
+
+                <Text style={styles.generatingTitle}>Creating Your Chart</Text>
+                <Text style={styles.generatingSubtitle}>Calculating planetary positions and cosmic influences…</Text>
+
+                <View style={styles.loadingDots}>
+                  <View style={[styles.dot, styles.dot1]} />
+                  <View style={[styles.dot, styles.dot2]} />
+                  <View style={[styles.dot, styles.dot3]} />
+                </View>
+              </Animated.View>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+
+        <BirthDataModal visible={showBirthModal} onClose={handleBirthModalClose} onSave={handleBirthDataComplete} />
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
+  safeArea: { flex: 1 },
+  scrollView: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.xl,
+  },
+  welcomeContainer: { alignItems: 'center', marginBottom: theme.spacing.xl },
+  logoContainer: { marginBottom: theme.spacing.xl },
+  logoCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(201, 169, 98, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.glow,
+  },
+  logoText: { fontSize: 48 },
+  welcomeTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    fontSize: 18,
+    color: theme.primary,
+    fontStyle: 'italic',
+    marginBottom: theme.spacing.lg,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 16,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: theme.spacing.md,
+  },
+  featuresContainer: { marginBottom: theme.spacing.xl },
+  feature: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.lg, paddingHorizontal: theme.spacing.md },
+  featureIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(201, 169, 98, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  featureText: { fontSize: 16, color: theme.textSecondary, flex: 1 },
+  ctaContainer: { alignItems: 'center' },
+  ctaButton: { width: '100%', borderRadius: theme.borderRadius.lg, overflow: 'hidden', marginBottom: theme.spacing.md, ...theme.shadows.glow },
+  ctaPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
+  ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl },
+  ctaText: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', fontFamily: 'serif', marginRight: theme.spacing.sm },
+  privacyText: { fontSize: 12, color: theme.textMuted, textAlign: 'center', paddingHorizontal: theme.spacing.lg },
+  generatingContainer: { alignItems: 'center', justifyContent: 'center', flex: 1 },
+  generatingIcon: { marginBottom: theme.spacing.xl },
+  generatingTitle: { fontSize: 24, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', marginBottom: theme.spacing.sm, textAlign: 'center' },
+  generatingSubtitle: { fontSize: 16, color: theme.textSecondary, textAlign: 'center', marginBottom: theme.spacing.xl, paddingHorizontal: theme.spacing.lg },
+  loadingDots: { flexDirection: 'row', alignItems: 'center' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.primary, marginHorizontal: 4 },
+  dot1: { opacity: 0.4 },
+  dot2: { opacity: 0.7 },
+  dot3: { opacity: 1 },
+});
