@@ -15,7 +15,10 @@ const PLANET_DEFINITIONS: Record<string, Planet> = {
   neptune: { name: 'Neptune', symbol: '♆', type: 'Transpersonal' },
   pluto: { name: 'Pluto', symbol: '♇', type: 'Transpersonal' },
   ascendant: { name: 'Ascendant', symbol: 'AC', type: 'Point' },
-  midheaven: { name: 'Midheaven', symbol: 'MC', type: 'Point' }
+  midheaven: { name: 'Midheaven', symbol: 'MC', type: 'Point' },
+  chiron: { name: 'Chiron', symbol: '⚷', type: 'Point' },
+  'north node': { name: 'North Node', symbol: '☊', type: 'Point' },
+  'south node': { name: 'South Node', symbol: '☋', type: 'Point' }
 };
 
 export const ZODIAC_SIGNS: ZodiacSign[] = [

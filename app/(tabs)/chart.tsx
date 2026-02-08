@@ -1,28 +1,29 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Pressable,
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+// File: app/(tabs)/chart.tsx
+
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/core';
+import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
+import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
+import BirthDataModal from '../../components/BirthDataModal';
 import { localDb } from '../../services/storage/localDb';
-import { NatalChart, PlanetPlacement, Aspect, HouseCusp } from '../../services/astrology/types';
+import { NatalChart, PlanetPlacement, Aspect, HouseCusp as HouseCuspType, BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { HOUSE_MEANINGS } from '../../services/astrology/constants';
 import { detectChartPatterns, ChartPatterns } from '../../services/astrology/chartPatterns';
 import { getChironInsightFromChart, ChironInsight } from '../../services/journal/chiron';
 import { getNodeInsight, NodeInsight } from '../../services/journal/nodes';
+import { RelationshipChart, generateId } from '../../services/storage/models';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
@@ -35,6 +36,22 @@ const ELEMENT_COLORS: Record<string, string> = {
   Water: '#7A8BE0',
 };
 
+// ── Sign lookup (name → symbol + element) for sensitive points ──
+const SIGN_LOOKUP: Record<string, { symbol: string; element: string }> = {
+  Aries: { symbol: '♈', element: 'Fire' },
+  Taurus: { symbol: '♉', element: 'Earth' },
+  Gemini: { symbol: '♊', element: 'Air' },
+  Cancer: { symbol: '♋', element: 'Water' },
+  Leo: { symbol: '♌', element: 'Fire' },
+  Virgo: { symbol: '♍', element: 'Earth' },
+  Libra: { symbol: '♎', element: 'Air' },
+  Scorpio: { symbol: '♏', element: 'Water' },
+  Sagittarius: { symbol: '♐', element: 'Fire' },
+  Capricorn: { symbol: '♑', element: 'Earth' },
+  Aquarius: { symbol: '♒', element: 'Air' },
+  Pisces: { symbol: '♓', element: 'Water' },
+};
+
 // ── Aspect nature colors ──
 const ASPECT_NATURE_COLORS: Record<string, string> = {
   Harmonious: '#6EBF8B',
@@ -42,19 +59,80 @@ const ASPECT_NATURE_COLORS: Record<string, string> = {
   Neutral: '#C9A962',
 };
 
+// ── Multi-character planet symbols that need smaller font in aspects tab ──
+const MULTI_CHAR_PLANETS = new Set(['Ascendant', 'Midheaven']);
+
 type TabKey = 'planets' | 'houses' | 'aspects' | 'patterns';
 
+type SensitivePointRow = {
+  label: 'Chiron' | 'North Node' | 'South Node';
+  sign: string;
+  signSymbol: string;
+  element: string;
+  degree: number;
+  minute: number;
+  house?: number;
+  retrograde: boolean;
+};
+
+function normalizeDegMin(rawDeg: number) {
+  let deg = Math.floor(rawDeg);
+  let min = Math.round((rawDeg - deg) * 60);
+  if (min === 60) {
+    deg += 1;
+    min = 0;
+  }
+  return { deg, min };
+}
+
+function safeString(s: unknown) {
+  return typeof s === 'string' ? s : '';
+}
+
+function getRetrogradeFlag(obj: any): boolean {
+  // supports both legacy `retrograde` and current `isRetrograde`
+  return Boolean(obj?.isRetrograde ?? obj?.retrograde ?? false);
+}
+
+function safeAspectTypeName(a: any): string {
+  return safeString(a?.type?.name).toLowerCase();
+}
+
+type RelationshipType = 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other';
+
+const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
+  partner: 'Partner',
+  ex: 'Ex',
+  child: 'Child',
+  parent: 'Parent',
+  friend: 'Friend',
+  sibling: 'Sibling',
+  other: 'Other',
+};
+
 export default function ChartScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
+
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('planets');
 
-  useEffect(() => {
-    loadChart();
-  }, []);
+  // Multi-chart state
+  const [savedUserChartId, setSavedUserChartId] = useState<string | null>(null);
+  const [people, setPeople] = useState<RelationshipChart[]>([]);
+  const [overlayPerson, setOverlayPerson] = useState<RelationshipChart | null>(null);
+  const [overlayChart, setOverlayChart] = useState<NatalChart | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showRelTypePicker, setShowRelTypePicker] = useState(false);
+  const [addingRelationType, setAddingRelationType] = useState<RelationshipType>('friend');
+
+  // Reload chart every time this screen is focused (fixes "No chart found" after creating from Home)
+  useFocusEffect(
+    useCallback(() => {
+      void loadChart();
+    }, [])
+  );
 
   const loadChart = async () => {
     try {
@@ -70,121 +148,309 @@ export default function ChartScreen() {
           longitude: saved.longitude,
           houseSystem: saved.houseSystem,
         };
+
         const chart = AstrologyCalculator.generateNatalChart(birthData);
-        chart.id = saved.id;
-        chart.name = saved.name;
-        chart.createdAt = saved.createdAt;
-        chart.updatedAt = saved.updatedAt;
+
+        // attach DB metadata (safe even if your NatalChart type doesn’t declare them)
+        (chart as any).id = saved.id;
+        (chart as any).name = saved.name;
+        (chart as any).createdAt = saved.createdAt;
+        (chart as any).updatedAt = saved.updatedAt;
+
         setUserChart(chart);
+        setSavedUserChartId(saved.id);
+
+        // Load relationship charts for overlay (premium)
+        if (isPremium) {
+          try {
+            const rels = await localDb.getRelationshipCharts(saved.id);
+            setPeople(rels);
+          } catch (e) {
+            logger.error('Failed to load relationship charts:', e);
+          }
+        }
+      } else {
+        setUserChart(null);
+        setSavedUserChartId(null);
       }
     } catch (error) {
       logger.error('Failed to load chart:', error);
+      setUserChart(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const displayChart = userChart
-    ? ChartDisplayManager.formatChartWithTimeWarnings(userChart)
-    : null;
+  // ── Overlay handlers ──
+  const handleSelectOverlay = useCallback((person: RelationshipChart) => {
+    if (overlayPerson?.id === person.id) {
+      // Toggle off
+      setOverlayPerson(null);
+      setOverlayChart(null);
+      Haptics.selectionAsync();
+      return;
+    }
+
+    try {
+      const birthData: BirthData = {
+        date: person.birthDate,
+        time: person.birthTime,
+        hasUnknownTime: person.hasUnknownTime,
+        place: person.birthPlace,
+        latitude: person.latitude,
+        longitude: person.longitude,
+        timezone: person.timezone,
+      };
+      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      chart.name = person.name;
+      setOverlayPerson(person);
+      setOverlayChart(chart);
+      Haptics.selectionAsync();
+    } catch (e) {
+      logger.error('Failed to generate overlay chart:', e);
+      Alert.alert('Error', 'Could not generate chart for this person.');
+    }
+  }, [overlayPerson]);
+
+  const handleAddPerson = useCallback((type: RelationshipType) => {
+    setAddingRelationType(type);
+    setShowRelTypePicker(false);
+    setShowAddModal(true);
+  }, []);
+
+  const handleSaveNewPerson = useCallback(async (birthData: BirthData, extra?: { chartName?: string }) => {
+    if (!savedUserChartId) return;
+    try {
+      const now = new Date().toISOString();
+      const newRel: RelationshipChart = {
+        id: generateId(),
+        name: extra?.chartName || 'New Person',
+        relationship: addingRelationType,
+        birthDate: birthData.date,
+        birthTime: birthData.time,
+        hasUnknownTime: birthData.hasUnknownTime,
+        birthPlace: birthData.place,
+        latitude: birthData.latitude,
+        longitude: birthData.longitude,
+        timezone: birthData.timezone,
+        userChartId: savedUserChartId,
+        createdAt: now,
+        updatedAt: now,
+        isDeleted: false,
+      };
+      await localDb.saveRelationshipChart(newRel);
+      setPeople(prev => [newRel, ...prev]);
+      setShowAddModal(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Auto-select as overlay
+      handleSelectOverlay(newRel);
+    } catch (e) {
+      logger.error('Failed to save relationship chart:', e);
+      Alert.alert('Error', 'Failed to save person. Please try again.');
+    }
+  }, [savedUserChartId, addingRelationType, handleSelectOverlay]);
+
+  const handleDeletePerson = useCallback(async (person: RelationshipChart) => {
+    Alert.alert(
+      'Remove Chart',
+      `Remove ${person.name}'s chart?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await localDb.deleteRelationshipChart(person.id);
+              setPeople(prev => prev.filter(p => p.id !== person.id));
+              if (overlayPerson?.id === person.id) {
+                setOverlayPerson(null);
+                setOverlayChart(null);
+              }
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch (e) {
+              logger.error('Failed to delete relationship chart:', e);
+            }
+          },
+        },
+      ]
+    );
+  }, [overlayPerson]);
+
+  // The chart whose details are displayed below the wheel
+  const activeChart = overlayChart ?? userChart;
+
+  const displayChart = userChart ? ChartDisplayManager.formatChartWithTimeWarnings(userChart) : null;
 
   // ── All planet rows ──
   const planetRows = useMemo(() => {
-    if (!userChart) return [];
+    if (!activeChart) return [];
     const list: { label: string; p: PlanetPlacement }[] = [
-      { label: 'Sun', p: userChart.sun },
-      { label: 'Moon', p: userChart.moon },
-      { label: 'Mercury', p: userChart.mercury },
-      { label: 'Venus', p: userChart.venus },
-      { label: 'Mars', p: userChart.mars },
-      { label: 'Jupiter', p: userChart.jupiter },
-      { label: 'Saturn', p: userChart.saturn },
-      { label: 'Uranus', p: userChart.uranus },
-      { label: 'Neptune', p: userChart.neptune },
-      { label: 'Pluto', p: userChart.pluto },
+      { label: 'Sun', p: activeChart.sun },
+      { label: 'Moon', p: activeChart.moon },
+      { label: 'Mercury', p: activeChart.mercury },
+      { label: 'Venus', p: activeChart.venus },
+      { label: 'Mars', p: activeChart.mars },
+      { label: 'Jupiter', p: activeChart.jupiter },
+      { label: 'Saturn', p: activeChart.saturn },
+      { label: 'Uranus', p: activeChart.uranus },
+      { label: 'Neptune', p: activeChart.neptune },
+      { label: 'Pluto', p: activeChart.pluto },
     ];
-    if (userChart.ascendant) list.push({ label: 'Ascendant', p: userChart.ascendant });
-    if (userChart.midheaven) list.push({ label: 'Midheaven', p: userChart.midheaven });
+    if (activeChart.ascendant) list.push({ label: 'Ascendant', p: activeChart.ascendant });
+    if (activeChart.midheaven) list.push({ label: 'Midheaven', p: activeChart.midheaven });
     return list;
-  }, [userChart]);
+  }, [activeChart]);
 
-  // ── Sensitive points (Chiron, North Node, South Node) from enhanced planets ──
-  const sensitivePoints = useMemo(() => {
-    if (!userChart?.planets) return [];
-    const points: { label: string; iconName: string; sign: string; degree: number; minute: number; house?: number; retrograde: boolean }[] = [];
-    for (const p of userChart.planets) {
-      const name = p.planet.toLowerCase();
-      const deg = Math.floor(p.degree);
-      const min = Math.round((p.degree % 1) * 60);
+  // ── Sensitive points (Chiron, Nodes) ──
+  const sensitivePoints = useMemo<SensitivePointRow[]>(() => {
+    if (!activeChart?.planets) return [];
+    const points: SensitivePointRow[] = [];
+
+    for (const p of activeChart.planets as any[]) {
+      const name = safeString(p.planet).toLowerCase();
+      const signName = safeString(p.sign);
+      const lookup = SIGN_LOOKUP[signName] || { symbol: '', element: '' };
+      const { deg, min } = normalizeDegMin(Number(p.degree ?? 0));
+
+      const baseRow = {
+        sign: signName,
+        signSymbol: lookup.symbol,
+        element: lookup.element,
+        degree: deg,
+        minute: min,
+        house: typeof p.house === 'number' ? p.house : undefined,
+        retrograde: getRetrogradeFlag(p),
+      };
+
       if (name === 'chiron') {
-        points.push({ label: 'Chiron', iconName: 'key-outline', sign: p.sign, degree: deg, minute: min, house: p.house, retrograde: p.retrograde });
-      }
-      if (name === 'north node' || name === 'northnode' || name === 'true node') {
-        points.push({ label: 'North Node', iconName: 'arrow-up-circle-outline', sign: p.sign, degree: deg, minute: min, house: p.house, retrograde: p.retrograde });
-      }
-      if (name === 'south node' || name === 'southnode') {
-        points.push({ label: 'South Node', iconName: 'arrow-down-circle-outline', sign: p.sign, degree: deg, minute: min, house: p.house, retrograde: p.retrograde });
+        points.push({ label: 'Chiron', ...baseRow });
+      } else if (name === 'north node' || name === 'northnode' || name === 'true node') {
+        points.push({ label: 'North Node', ...baseRow });
+      } else if (name === 'south node' || name === 'southnode') {
+        points.push({ label: 'South Node', ...baseRow });
       }
     }
-    return points;
-  }, [userChart]);
+
+    const order: Record<SensitivePointRow['label'], number> = { 'North Node': 0, 'South Node': 1, Chiron: 2 };
+    return points.sort((a, b) => order[a.label] - order[b.label]);
+  }, [activeChart]);
 
   // ── Chiron & Node insights (premium) ──
   const chironInsight = useMemo<ChironInsight | null>(() => {
-    if (!userChart || !isPremium) return null;
-    return getChironInsightFromChart(userChart);
-  }, [userChart, isPremium]);
+    if (!activeChart || !isPremium) return null;
+    return getChironInsightFromChart(activeChart);
+  }, [activeChart, isPremium]);
 
   const nodeInsight = useMemo<NodeInsight | null>(() => {
-    if (!userChart || !isPremium) return null;
-    return getNodeInsight(userChart);
-  }, [userChart, isPremium]);
+    if (!activeChart || !isPremium) return null;
+    return getNodeInsight(activeChart);
+  }, [activeChart, isPremium]);
 
   // ── Sorted aspects (tightest first), gated by premium ──
   const FREE_ASPECT_TYPES = new Set(['conjunction', 'opposition', 'trine', 'square']);
   const sortedAspects = useMemo(() => {
-    if (!userChart) return [];
-    const all = [...userChart.aspects].sort((a, b) => a.orb - b.orb);
+    if (!activeChart) return [];
+    const all = [...(activeChart.aspects ?? [])].sort((a, b) => (a.orb ?? 99) - (b.orb ?? 99));
     if (isPremium) return all;
-    return all.filter(a => FREE_ASPECT_TYPES.has(a.type.name.toLowerCase()));
-  }, [userChart, isPremium]);
+    return all.filter((a) => FREE_ASPECT_TYPES.has(safeAspectTypeName(a)));
+  }, [activeChart, isPremium]);
 
   const hiddenAspectCount = useMemo(() => {
-    if (!userChart || isPremium) return 0;
-    return userChart.aspects.length - sortedAspects.length;
-  }, [userChart, isPremium, sortedAspects]);
+    if (!activeChart || isPremium) return 0;
+    return (activeChart.aspects?.length ?? 0) - sortedAspects.length;
+  }, [activeChart, isPremium, sortedAspects]);
 
   // ── Chart pattern analysis ──
   const chartPatterns = useMemo<ChartPatterns | null>(() => {
-    if (!userChart) return null;
-    return detectChartPatterns(userChart);
-  }, [userChart]);
+    if (!activeChart) return null;
+    return detectChartPatterns(activeChart);
+  }, [activeChart]);
 
-    // ── Part of Fortune (free) ──
-    const partOfFortune = useMemo(() => {
-      if (!userChart || !userChart.partOfFortune) return null;
-      return userChart.partOfFortune;
-    }, [userChart]);
+  // ── Part of Fortune (free) ──
+  const partOfFortune = useMemo(() => {
+    if (!activeChart?.partOfFortune) return null;
+    return activeChart.partOfFortune;
+  }, [activeChart]);
 
-    // ── Dominant Planet (free) ──
-    const dominantPlanet = useMemo(() => {
-      if (!userChart || !userChart.planets) return null;
-      // Count occurrences by planet
-      const planetCounts: Record<string, number> = {};
-      for (const p of userChart.planets) {
-        planetCounts[p.planet] = (planetCounts[p.planet] || 0) + 1;
+  // ── Dominant Planet (free) — improved scoring (aspects + angularity) ──
+  const dominantPlanet = useMemo(() => {
+    if (!activeChart) return null;
+
+    const majors = new Set([
+      'Sun',
+      'Moon',
+      'Mercury',
+      'Venus',
+      'Mars',
+      'Jupiter',
+      'Saturn',
+      'Uranus',
+      'Neptune',
+      'Pluto',
+    ]);
+
+    const base: { planet?: string; name?: string; sign?: any; degree?: number; house?: number }[] = [];
+
+    if (Array.isArray((activeChart as any).planets) && (activeChart as any).planets.length) {
+      for (const p of (activeChart as any).planets) {
+        const n = safeString((p as any).planet);
+        if (majors.has(n)) base.push(p as any);
       }
-      // Find planet with max count
-      let maxPlanet = '';
-      let maxCount = 0;
-      for (const [planet, count] of Object.entries(planetCounts)) {
-        if (count > maxCount) {
-          maxPlanet = planet;
-          maxCount = count;
+    } else {
+      base.push(
+        { planet: 'Sun', ...(activeChart.sun as any) },
+        { planet: 'Moon', ...(activeChart.moon as any) },
+        { planet: 'Mercury', ...(activeChart.mercury as any) },
+        { planet: 'Venus', ...(activeChart.venus as any) },
+        { planet: 'Mars', ...(activeChart.mars as any) },
+        { planet: 'Jupiter', ...(activeChart.jupiter as any) },
+        { planet: 'Saturn', ...(activeChart.saturn as any) },
+        { planet: 'Uranus', ...(activeChart.uranus as any) },
+        { planet: 'Neptune', ...(activeChart.neptune as any) },
+        { planet: 'Pluto', ...(activeChart.pluto as any) }
+      );
+    }
+
+    const scores: Record<string, number> = {};
+    for (const p of base) {
+      const n = safeString((p as any).planet ?? (p as any).name);
+      if (!n) continue;
+      scores[n] = 0;
+      const house = (p as any).house;
+      if (house === 1 || house === 4 || house === 7 || house === 10) scores[n] += 2;
+      if (house === 2 || house === 5 || house === 8 || house === 11) scores[n] += 1;
+    }
+
+    if (Array.isArray(activeChart.aspects)) {
+      for (const a of activeChart.aspects) {
+        const p1 = safeString(a.planet1?.name);
+        const p2 = safeString(a.planet2?.name);
+
+        if (p1 && scores[p1] !== undefined) scores[p1] += 1;
+        if (p2 && scores[p2] !== undefined) scores[p2] += 1;
+
+        if ((a.orb ?? 99) < 2) {
+          if (p1 && scores[p1] !== undefined) scores[p1] += 0.5;
+          if (p2 && scores[p2] !== undefined) scores[p2] += 0.5;
         }
       }
-      return userChart.planets.find(p => p.planet === maxPlanet) || null;
-    }, [userChart]);
+    }
+
+    let best: string | null = null;
+    let bestScore = -Infinity;
+    for (const [k, v] of Object.entries(scores)) {
+      if (v > bestScore) {
+        bestScore = v;
+        best = k;
+      }
+    }
+
+    if (!best) return null;
+    return base.find((p) => safeString((p as any).planet ?? (p as any).name) === best) || null;
+  }, [activeChart]);
+
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -206,6 +472,18 @@ export default function ChartScreen() {
     );
   }
 
+  const birthDateStr = (() => {
+    try {
+      const chart = activeChart ?? userChart;
+      const d = parseLocalDate((chart as any)?.birthData?.date);
+      return d?.toLocaleDateString() ?? '';
+    } catch {
+      return '';
+    }
+  })();
+
+  const houseCusps = activeChart.houseCusps ?? [];
+
   return (
     <View style={styles.container}>
       <StarField starCount={30} />
@@ -213,23 +491,147 @@ export default function ChartScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: 0 },
-          ]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 0 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Natal Chart</Text>
+            <Text style={styles.title}>
+              {overlayChart ? 'Synastry Chart' : 'Natal Chart'}
+            </Text>
             <Text style={styles.subtitle}>
-              {userChart.name || 'Your Chart'} · Born{' '}
-              {parseLocalDate(userChart.birthData.date).toLocaleDateString()}
+              {overlayChart
+                ? `${(userChart as any).name || 'You'} + ${overlayPerson?.name || 'Overlay'}`
+                : `${(userChart as any).name || 'Your Chart'}${birthDateStr ? ` · Born ${birthDateStr}` : ''}`
+              }
             </Text>
           </Animated.View>
 
+          {/* ── People Bar (Premium Multi-Chart) ── */}
+          {isPremium && (
+            <Animated.View entering={FadeInDown.delay(120).duration(600)} style={{ width: '100%' }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.peopleBar}
+              >
+                {/* Your chart chip (always first) */}
+                <Pressable
+                  style={[
+                    styles.personChip,
+                    !overlayPerson && styles.personChipActive,
+                  ]}
+                  onPress={() => {
+                    setOverlayPerson(null);
+                    setOverlayChart(null);
+                    Haptics.selectionAsync();
+                  }}
+                >
+                  <Ionicons
+                    name="person"
+                    size={14}
+                    color={!overlayPerson ? theme.primary : theme.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.personChipText,
+                      !overlayPerson && styles.personChipTextActive,
+                    ]}
+                  >
+                    You
+                  </Text>
+                </Pressable>
+
+                {/* People chips */}
+                {people.map((person) => (
+                  <Pressable
+                    key={person.id}
+                    style={[
+                      styles.personChip,
+                      overlayPerson?.id === person.id && styles.personChipActive,
+                    ]}
+                    onPress={() => handleSelectOverlay(person)}
+                    onLongPress={() => handleDeletePerson(person)}
+                  >
+                    <Ionicons
+                      name="layers-outline"
+                      size={14}
+                      color={overlayPerson?.id === person.id ? '#D4A0E0' : theme.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.personChipText,
+                        overlayPerson?.id === person.id && { color: '#D4A0E0' },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {person.name}
+                    </Text>
+                    <Text style={styles.personChipRelation}>
+                      {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
+                    </Text>
+                  </Pressable>
+                ))}
+
+                {/* Add person button */}
+                <Pressable
+                  style={styles.addPersonChip}
+                  onPress={() => setShowRelTypePicker(true)}
+                >
+                  <Ionicons name="add" size={16} color={theme.primary} />
+                  <Text style={styles.addPersonText}>Add</Text>
+                </Pressable>
+              </ScrollView>
+
+              {/* Overlay legend when active */}
+              {overlayChart && (
+                <View style={styles.overlayLegend}>
+                  <View style={styles.overlayLegendRow}>
+                    <View style={[styles.overlayLegendDot, { backgroundColor: theme.primary }]} />
+                    <Text style={styles.overlayLegendText}>Your planets</Text>
+                  </View>
+                  <View style={styles.overlayLegendRow}>
+                    <View style={[styles.overlayLegendDot, { backgroundColor: '#D4A0E0' }]} />
+                    <Text style={styles.overlayLegendText}>{overlayPerson?.name}'s planets</Text>
+                  </View>
+                  <View style={styles.overlayLegendRow}>
+                    <View style={[styles.overlayLegendDot, { backgroundColor: 'rgba(160,110,220,0.6)', borderStyle: 'dashed' }]} />
+                    <Text style={styles.overlayLegendText}>Cross-aspects</Text>
+                  </View>
+                </View>
+              )}
+            </Animated.View>
+          )}
+
+          {/* ── Relationship Type Picker Modal ── */}
+          {showRelTypePicker && (
+            <View style={styles.relTypePickerOverlay}>
+              <LinearGradient
+                colors={['rgba(30,45,71,0.95)', 'rgba(26,39,64,0.95)']}
+                style={styles.relTypePicker}
+              >
+                <Text style={styles.relTypeTitle}>What's their relationship to you?</Text>
+                {(Object.keys(RELATIONSHIP_LABELS) as RelationshipType[]).map((type) => (
+                  <Pressable
+                    key={type}
+                    style={styles.relTypeOption}
+                    onPress={() => handleAddPerson(type)}
+                  >
+                    <Text style={styles.relTypeOptionText}>{RELATIONSHIP_LABELS[type]}</Text>
+                  </Pressable>
+                ))}
+                <Pressable
+                  style={styles.relTypeCancelBtn}
+                  onPress={() => setShowRelTypePicker(false)}
+                >
+                  <Text style={styles.relTypeCancelText}>Cancel</Text>
+                </Pressable>
+              </LinearGradient>
+            </View>
+          )}
+
           {/* ── Birth time warning ── */}
-          {displayChart?.warnings.length ? (
+          {displayChart?.warnings?.length ? (
             <View style={styles.warningBox}>
               <Ionicons name="alert-circle" size={18} color={theme.warning} />
               <Text style={styles.warningText}>{displayChart.warnings[0]}</Text>
@@ -238,81 +640,113 @@ export default function ChartScreen() {
 
           {/* ── Chart Wheel ── */}
           <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ alignItems: 'center', width: '100%' }}>
-            <NatalChartWheel chart={userChart} showAspects={true} />
+            <NatalChartWheel
+              chart={userChart}
+              showAspects={true}
+              overlayChart={overlayChart ?? undefined}
+              overlayName={overlayPerson?.name}
+            />
           </Animated.View>
+
+          {/* ── Multi-Chart Upsell (Free users) ── */}
+          {!isPremium && (
+            <Animated.View entering={FadeInDown.delay(160).duration(600)} style={{ width: '100%' }}>
+              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                <LinearGradient
+                  colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']}
+                  style={styles.overlayUpsell}
+                >
+                  <Ionicons name="layers-outline" size={16} color={theme.primary} />
+                  <Text style={styles.overlayUpsellText}>
+                    Overlay charts with Deeper Sky — compare your planets with anyone
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={theme.primary} />
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          )}
 
           {/* ── Big Three Summary ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={{ width: '100%' }}>
-            <LinearGradient
-              colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-              style={styles.bigThreeCard}
-            >
+            <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.bigThreeCard}>
               <View style={styles.bigThreeRow}>
                 <View style={styles.bigThreeItem}>
                   <Text style={styles.bigThreeLabel}>☉ Sun</Text>
                   <Text style={styles.bigThreeSign}>
-                    {userChart.sun.sign.symbol} {userChart.sun.sign.name}
+                    {activeChart.sun.sign.symbol} {activeChart.sun.sign.name}
                   </Text>
                   <Text style={styles.bigThreeDeg}>
-                    {userChart.sun.degree}°{userChart.sun.minute}' · House {userChart.sun.house}
+                    {activeChart.sun.degree}°{String(activeChart.sun.minute).padStart(2, '0')}' · House {activeChart.sun.house}
                   </Text>
                 </View>
+
                 <View style={styles.bigThreeItem}>
                   <Text style={styles.bigThreeLabel}>☽ Moon</Text>
                   <Text style={styles.bigThreeSign}>
-                    {userChart.moon.sign.symbol} {userChart.moon.sign.name}
+                    {activeChart.moon.sign.symbol} {activeChart.moon.sign.name}
                   </Text>
                   <Text style={styles.bigThreeDeg}>
-                    {userChart.moon.degree}°{userChart.moon.minute}' · House {userChart.moon.house}
+                    {activeChart.moon.degree}°{String(activeChart.moon.minute).padStart(2, '0')}' · House {activeChart.moon.house}
                   </Text>
                 </View>
-                {userChart.ascendant && (
+
+                {activeChart.ascendant && (
                   <View style={styles.bigThreeItem}>
                     <Text style={styles.bigThreeLabel}>AC Rising</Text>
                     <Text style={styles.bigThreeSign}>
-                      {userChart.ascendant.sign.symbol} {userChart.ascendant.sign.name}
+                      {activeChart.ascendant.sign.symbol} {activeChart.ascendant.sign.name}
                     </Text>
                     <Text style={styles.bigThreeDeg}>
-                      {userChart.ascendant.degree}°{userChart.ascendant.minute}'
+                      {activeChart.ascendant.degree}°{String(activeChart.ascendant.minute).padStart(2, '0')}'
                     </Text>
                   </View>
                 )}
               </View>
-              {userChart.midheaven && (
+
+              {activeChart.midheaven && (
                 <View style={styles.mcRow}>
                   <Text style={styles.mcLabel}>MC Midheaven</Text>
-                  <Text style={styles.mcValue}>
-                    {userChart.midheaven.sign.symbol} {userChart.midheaven.sign.name} {userChart.midheaven.degree}°{userChart.midheaven.minute}'
+                  <Text style={styles.mcSign}>
+                    {activeChart.midheaven.sign.symbol} {activeChart.midheaven.sign.name}
+                  </Text>
+                  <Text style={styles.mcDeg}>
+                    {activeChart.midheaven.degree}°{String(activeChart.midheaven.minute).padStart(2, '0')}'
                   </Text>
                 </View>
               )}
             </LinearGradient>
           </Animated.View>
 
-          {/* ── Chiron & Nodes (Premium) ── */}
+          {/* ── Sensitive Points (Premium) ── */}
           {isPremium && sensitivePoints.length > 0 && (
             <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ width: '100%' }}>
-              <LinearGradient
-                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                style={styles.sensitiveCard}
-              >
+              <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.sensitiveCard}>
                 <Text style={styles.sensitiveTitle}>Sensitive Points</Text>
+
                 <View style={styles.sensitiveGrid}>
                   {sensitivePoints.map((pt) => (
                     <View key={pt.label} style={styles.sensitiveItem}>
-                      {pt.label === 'Chiron' ? (
-                        <Text style={{ fontSize: 22, color: theme.primary, fontWeight: '700', marginBottom: 4 }}>K</Text>
-                      ) : (
-                        <Ionicons name={pt.iconName as any} size={24} color={theme.primary} style={{ marginBottom: 4 }} />
-                      )}
+                      <View style={{ marginBottom: 4 }}>
+                        {pt.label === 'Chiron' && <ChironIcon size={20} color={theme.primary} />}
+                        {pt.label === 'North Node' && <NorthNodeIcon size={20} color={theme.primary} />}
+                        {pt.label === 'South Node' && <SouthNodeIcon size={20} color={theme.primary} />}
+                      </View>
                       <Text style={styles.sensitiveName}>{pt.label}</Text>
-                      <Text style={styles.sensitiveSign}>{pt.sign}</Text>
+                      <Text
+                        style={[
+                          styles.sensitiveSign,
+                          { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
+                        ]}
+                      >
+                        {pt.signSymbol} {pt.sign}
+                      </Text>
                       <Text style={styles.sensitiveDeg}>
                         {pt.degree}°{String(pt.minute).padStart(2, '0')}'{pt.house ? ` · H${pt.house}` : ''}
                       </Text>
                     </View>
                   ))}
                 </View>
+
                 {chironInsight && (
                   <View style={styles.insightBox}>
                     <Text style={styles.insightLabel}>Chiron Theme</Text>
@@ -320,6 +754,7 @@ export default function ChartScreen() {
                     <Text style={styles.insightText}>{chironInsight.theme}</Text>
                   </View>
                 )}
+
                 {nodeInsight && (
                   <View style={styles.insightBox}>
                     <Text style={styles.insightLabel}>Node Axis</Text>
@@ -339,9 +774,7 @@ export default function ChartScreen() {
                   style={styles.sensitiveUpsell}
                 >
                   <Ionicons name="sparkles" size={16} color={theme.primary} />
-                  <Text style={styles.sensitiveUpsellText}>
-                    Unlock Chiron & Node insights with Deeper Sky
-                  </Text>
+                  <Text style={styles.sensitiveUpsellText}>Unlock Chiron & Node insights with Deeper Sky</Text>
                   <Ionicons name="chevron-forward" size={16} color={theme.primary} />
                 </LinearGradient>
               </Pressable>
@@ -357,9 +790,12 @@ export default function ChartScreen() {
                 onPress={() => setActiveTab(tab)}
               >
                 <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                  {tab === 'planets' ? `Planets (${planetRows.length})`
-                    : tab === 'houses' ? `Houses (${userChart.houseCusps.length})`
-                    : tab === 'aspects' ? `Aspects (${sortedAspects.length})`
+                  {tab === 'planets'
+                    ? `Planets (${planetRows.length})`
+                    : tab === 'houses'
+                    ? `Houses (${houseCusps.length})`
+                    : tab === 'aspects'
+                    ? `Aspects (${sortedAspects.length})`
                     : 'Patterns'}
                 </Text>
               </Pressable>
@@ -369,7 +805,6 @@ export default function ChartScreen() {
           {/* ── Planets Table ── */}
           {activeTab === 'planets' && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-              {/* Table header */}
               <View style={styles.tableHeader}>
                 <Text style={[styles.th, { width: 140 }]}>Planet</Text>
                 <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
@@ -379,6 +814,9 @@ export default function ChartScreen() {
 
               {planetRows.map((row, idx) => {
                 const elColor = ELEMENT_COLORS[row.p.sign.element] || theme.textSecondary;
+                const retro = getRetrogradeFlag(row.p as any);
+                const planetSymbol = (row.p as any)?.planet?.symbol ?? '•';
+
                 return (
                   <LinearGradient
                     key={row.label}
@@ -390,25 +828,28 @@ export default function ChartScreen() {
                     style={styles.tableRow}
                   >
                     <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                      <Text style={styles.planetSymbol}>{row.p.planet.symbol}</Text>
+                      <Text style={[styles.planetSymbol, planetSymbol.length > 1 && { fontSize: 13 }]}>{planetSymbol}</Text>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.planetName}>{row.label}</Text>
-                        {row.p.isRetrograde && (
-                          <Text style={styles.retroLabel}>℞ Retrograde</Text>
-                        )}
+                        <Text style={[styles.planetName, MULTI_CHAR_PLANETS.has(row.label) && { fontSize: 11 }]}>{row.label}</Text>
+                        {retro && <Text style={styles.retroLabel}>℞ Retrograde</Text>}
                       </View>
                     </View>
+
                     <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
                       <Text style={[styles.signSymbol, { color: elColor }]}>{row.p.sign.symbol}</Text>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.signName, { color: elColor }]}>{row.p.sign.name}</Text>
-                        <Text style={styles.elementLabel}>{row.p.sign.element} · {row.p.sign.modality}</Text>
+                        <Text style={styles.elementLabel}>
+                          {row.p.sign.element} · {row.p.sign.modality}
+                        </Text>
                       </View>
                     </View>
+
                     <View style={[styles.td, { flex: 1 }]}>
                       <Text style={styles.degreeText}>{row.p.degree}°</Text>
                       <Text style={styles.minuteText}>{String(row.p.minute).padStart(2, '0')}'</Text>
                     </View>
+
                     <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
                       <Text style={styles.houseNum}>{row.p.house || '—'}</Text>
                     </View>
@@ -416,12 +857,13 @@ export default function ChartScreen() {
                 );
               })}
 
-              {/* Sensitive Points: Chiron, North Node */}
+              {/* Sensitive Points (table section) */}
               {sensitivePoints.length > 0 && (
                 <>
                   <View style={styles.pointsDivider}>
                     <Text style={styles.pointsLabel}>Sensitive Points</Text>
                   </View>
+
                   {sensitivePoints.map((pt, idx) => (
                     <LinearGradient
                       key={pt.label}
@@ -433,25 +875,44 @@ export default function ChartScreen() {
                       style={styles.tableRow}
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                        {pt.label === 'Chiron' ? (
-                          <Text style={styles.planetSymbol}>K</Text>
-                        ) : (
-                          <Ionicons name={pt.iconName as any} size={20} color={theme.primary} style={{ marginRight: 10, width: 28 }} />
-                        )}
+                        <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
+                          {pt.label === 'Chiron' && <ChironIcon size={18} color={theme.primary} />}
+                          {pt.label === 'North Node' && <NorthNodeIcon size={18} color={theme.primary} />}
+                          {pt.label === 'South Node' && <SouthNodeIcon size={18} color={theme.primary} />}
+                        </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
-                          {pt.retrograde && (
-                            <Text style={styles.retroLabel}>℞ Retrograde</Text>
-                          )}
+                          {pt.retrograde && <Text style={styles.retroLabel}>℞ Retrograde</Text>}
                         </View>
                       </View>
-                      <View style={[styles.td, { flex: 2 }]}>
-                        <Text style={styles.signName}>{pt.sign}</Text>
+
+                      <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
+                        <Text
+                          style={[
+                            styles.signSymbol,
+                            { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
+                          ]}
+                        >
+                          {pt.signSymbol}
+                        </Text>
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={[
+                              styles.signName,
+                              { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
+                            ]}
+                          >
+                            {pt.sign}
+                          </Text>
+                          <Text style={styles.elementLabel}>{pt.element}</Text>
+                        </View>
                       </View>
+
                       <View style={[styles.td, { flex: 1 }]}>
                         <Text style={styles.degreeText}>{pt.degree}°</Text>
                         <Text style={styles.minuteText}>{String(pt.minute).padStart(2, '0')}'</Text>
                       </View>
+
                       <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
                         <Text style={styles.houseNum}>{pt.house || '—'}</Text>
                       </View>
@@ -465,15 +926,24 @@ export default function ChartScreen() {
           {/* ── Houses Table ── */}
           {activeTab === 'houses' && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-              {userChart.houseCusps.length === 0 ? (
+              {houseCusps.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Ionicons name="alert-circle-outline" size={32} color={theme.textMuted} />
-                  <Text style={styles.emptyText}>
-                    House positions require a known birth time.
-                  </Text>
+                  <Text style={styles.emptyText}>House positions require a known birth time.</Text>
                 </View>
               ) : (
                 <>
+                  {activeChart.houseSystem && (
+                    <Text style={styles.houseSystemLabel}>
+                      {activeChart.houseSystem === 'whole-sign'
+                        ? 'Whole Sign'
+                        : activeChart.houseSystem === 'equal-house'
+                        ? 'Equal House'
+                        : activeChart.houseSystem.charAt(0).toUpperCase() + activeChart.houseSystem.slice(1)}{' '}
+                      Houses
+                    </Text>
+                  )}
+
                   <View style={styles.tableHeader}>
                     <Text style={[styles.th, { flex: 1 }]}>House</Text>
                     <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
@@ -481,11 +951,17 @@ export default function ChartScreen() {
                     <Text style={[styles.th, { flex: 3 }]}>Theme</Text>
                   </View>
 
-                  {userChart.houseCusps.map((cusp: HouseCusp, idx: number) => {
+                  {houseCusps.map((cusp: HouseCuspType, idx: number) => {
                     const houseInfo = HOUSE_MEANINGS[cusp.house as keyof typeof HOUSE_MEANINGS];
                     const elColor = ELEMENT_COLORS[cusp.sign.element] || theme.textSecondary;
-                    const deg = Math.floor(cusp.longitude % 30);
-                    const min = Math.floor((cusp.longitude % 1) * 60);
+
+                    const simpleH = (activeChart as any).houses?.[idx];
+                    const deg = simpleH ? Math.floor(simpleH.degree) : Math.floor(cusp.longitude % 30);
+                    const min = simpleH
+                      ? Math.round((simpleH.degree % 1) * 60)
+                      : Math.floor((cusp.longitude % 1) * 60);
+
+                    const isWholeSign = activeChart.houseSystem === 'whole-sign';
 
                     return (
                       <LinearGradient
@@ -500,15 +976,20 @@ export default function ChartScreen() {
                         <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
                           <Text style={styles.houseNumLarge}>{cusp.house}</Text>
                         </View>
+
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
                           <Text style={[styles.signSymbol, { color: elColor }]}>{cusp.sign.symbol}</Text>
                           <View style={{ flex: 1 }}>
                             <Text style={[styles.signName, { color: elColor }]}>{cusp.sign.name}</Text>
                           </View>
                         </View>
+
                         <View style={[styles.td, { flex: 1 }]}>
-                          <Text style={styles.degreeText}>{deg}°{String(min).padStart(2, '0')}'</Text>
+                          <Text style={styles.degreeText}>
+                            {isWholeSign ? '0°' : `${deg}°${String(min).padStart(2, '0')}'`}
+                          </Text>
                         </View>
+
                         <View style={[styles.td, { flex: 3 }]}>
                           <Text style={styles.houseTheme}>{houseInfo?.theme || ''}</Text>
                         </View>
@@ -539,9 +1020,38 @@ export default function ChartScreen() {
 
                   {sortedAspects.map((asp: Aspect, idx: number) => {
                     const natureColor = ASPECT_NATURE_COLORS[asp.type.nature] || theme.textSecondary;
+
+                    const renderPlanetIcon = (planet: { name: string; symbol: string }) => {
+                      if (planet.name === 'Chiron') {
+                        return (
+                          <View style={styles.aspectIconWrap}>
+                            <ChironIcon size={18} color={theme.primary} />
+                          </View>
+                        );
+                      }
+                      if (planet.name === 'North Node') {
+                        return (
+                          <View style={styles.aspectIconWrap}>
+                            <NorthNodeIcon size={18} color={theme.primary} />
+                          </View>
+                        );
+                      }
+                      if (planet.name === 'South Node') {
+                        return (
+                          <View style={styles.aspectIconWrap}>
+                            <SouthNodeIcon size={18} color={theme.primary} />
+                          </View>
+                        );
+                      }
+                      if (MULTI_CHAR_PLANETS.has(planet.name)) {
+                        return <Text style={[styles.aspectPlanetSymbol, { fontSize: 11 }]}>{planet.symbol}</Text>;
+                      }
+                      return <Text style={styles.aspectPlanetSymbol}>{planet.symbol}</Text>;
+                    };
+
                     return (
                       <LinearGradient
-                        key={`${asp.planet1.name}-${asp.type.name}-${asp.planet2.name}`}
+                        key={`${asp.planet1.name}-${asp.type.name}-${asp.planet2.name}-${idx}`}
                         colors={
                           idx % 2 === 0
                             ? ['rgba(30,45,71,0.5)', 'rgba(26,39,64,0.3)']
@@ -550,23 +1060,31 @@ export default function ChartScreen() {
                         style={styles.tableRow}
                       >
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                          <Text style={styles.aspectPlanetSymbol}>{asp.planet1.symbol}</Text>
-                          <Text style={[styles.aspectPlanetName, { flex: 1 }]}>{asp.planet1.name}</Text>
+                          {renderPlanetIcon(asp.planet1)}
+                          <Text style={[styles.aspectPlanetName, { flex: 1 }, MULTI_CHAR_PLANETS.has(asp.planet1.name) && { fontSize: 10 }]}>{asp.planet1.name}</Text>
                         </View>
+
                         <View style={[styles.td, { flex: 2, alignItems: 'center' }]}>
                           <Text style={[styles.aspectSymbol, { color: natureColor }]}>{asp.type.symbol}</Text>
                           <Text style={[styles.aspectName, { color: natureColor }]}>{asp.type.name}</Text>
                           <Text style={[styles.aspectNature, { color: natureColor }]}>{asp.type.nature}</Text>
                         </View>
+
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                          <Text style={styles.aspectPlanetSymbol}>{asp.planet2.symbol}</Text>
-                          <Text style={[styles.aspectPlanetName, { flex: 1 }]}>{asp.planet2.name}</Text>
+                          {renderPlanetIcon(asp.planet2)}
+                          <Text style={[styles.aspectPlanetName, { flex: 1 }, MULTI_CHAR_PLANETS.has(asp.planet2.name) && { fontSize: 10 }]}>{asp.planet2.name}</Text>
                         </View>
+
                         <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                          <Text style={[
-                            styles.orbText,
-                            { color: asp.orb < 2 ? '#6EBF8B' : asp.orb < 5 ? theme.primary : theme.textSecondary }
-                          ]}>
+                          <Text
+                            style={[
+                              styles.orbText,
+                              {
+                                color:
+                                  asp.orb < 2 ? '#6EBF8B' : asp.orb < 5 ? theme.primary : theme.textSecondary,
+                              },
+                            ]}
+                          >
                             {asp.orb.toFixed(1)}°
                           </Text>
                           {asp.isApplying && <Text style={styles.applyingLabel}>applying</Text>}
@@ -575,7 +1093,6 @@ export default function ChartScreen() {
                     );
                   })}
 
-                  {/* Legend */}
                   <View style={styles.legend}>
                     <Text style={styles.legendTitle}>Aspect Legend</Text>
                     <View style={styles.legendRow}>
@@ -590,12 +1107,9 @@ export default function ChartScreen() {
                       <View style={[styles.legendDot, { backgroundColor: '#C9A962' }]} />
                       <Text style={styles.legendText}>Neutral (conjunctions)</Text>
                     </View>
-                    <Text style={styles.legendNote}>
-                      Tighter orbs (lower numbers) = stronger influence
-                    </Text>
+                    <Text style={styles.legendNote}>Tighter orbs (lower numbers) = stronger influence</Text>
                   </View>
 
-                  {/* Premium upsell for hidden advanced aspects */}
                   {!isPremium && hiddenAspectCount > 0 && (
                     <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                       <LinearGradient
@@ -604,7 +1118,8 @@ export default function ChartScreen() {
                       >
                         <Ionicons name="sparkles" size={16} color={theme.primary} />
                         <Text style={styles.aspectUpsellText}>
-                          {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
+                          {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles,
+                          quincunxes, and more
                         </Text>
                         <Ionicons name="chevron-forward" size={16} color={theme.primary} />
                       </LinearGradient>
@@ -618,7 +1133,6 @@ export default function ChartScreen() {
           {/* ── Patterns Tab ── */}
           {activeTab === 'patterns' && chartPatterns && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-
               {/* Chart Ruler */}
               {chartPatterns.chartRuler && (
                 <LinearGradient
@@ -632,8 +1146,8 @@ export default function ChartScreen() {
                   <View style={styles.patternHighlight}>
                     <Text style={styles.patternHighlightText}>
                       {chartPatterns.chartRuler.planetSymbol} {chartPatterns.chartRuler.planet} in{' '}
-                      {chartPatterns.chartRuler.rulerSignSymbol} {chartPatterns.chartRuler.rulerSign}
-                      {' · '}House {chartPatterns.chartRuler.rulerHouse}
+                      {chartPatterns.chartRuler.rulerSignSymbol} {chartPatterns.chartRuler.rulerSign} · House{' '}
+                      {chartPatterns.chartRuler.rulerHouse}
                     </Text>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
@@ -647,392 +1161,222 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-                {/* Part of Fortune (free) */}
-                {partOfFortune && (
-                  <LinearGradient
-                    colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                    style={styles.patternCard}
-                  >
-                    <View style={styles.patternHeader}>
-                      <Ionicons name="sunny-outline" size={20} color={theme.primary} style={{ marginRight: 10 }} />
-                      <Text style={styles.patternTitle}>Part of Fortune</Text>
-                    </View>
-                    <View style={styles.patternHighlight}>
-                      <Text style={styles.patternHighlightText}>
-                        {partOfFortune.sign?.symbol} {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°
-                        {partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}
-                      </Text>
-                    </View>
-                    <Text style={styles.patternDesc}>
-                      The Part of Fortune marks where you find ease, flow, and natural abundance. Its sign and house placement show where you can access joy and resilience most easily.
-                    </Text>
-                    <View style={styles.tooltipBox}>
-                      <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                      <Text style={styles.tooltipText}>
-                        This point is calculated from your Sun, Moon, and Ascendant. It highlights your most effortless channel for well-being.
-                      </Text>
-                    </View>
-                  </LinearGradient>
-                )}
-
-                {/* Dominant Planet (free) */}
-                {dominantPlanet && (
-                  <LinearGradient
-                    colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                    style={styles.patternCard}
-                  >
-                    <View style={styles.patternHeader}>
-                      <Text style={styles.patternIcon}>🌟</Text>
-                      <Text style={styles.patternTitle}>Dominant Planet</Text>
-                    </View>
-                    <View style={styles.patternHighlight}>
-                      <Text style={styles.patternHighlightText}>
-                        {dominantPlanet.planet} in {dominantPlanet.sign?.name} · {Math.floor(dominantPlanet.degree)}°
-                        {dominantPlanet.house ? ` · House ${dominantPlanet.house}` : ''}
-                      </Text>
-                    </View>
-                    <Text style={styles.patternDesc}>
-                      Your dominant planet is the one most active in your chart. Its themes tend to color your personality, motivations, and life path more than others.
-                    </Text>
-                    <View style={styles.tooltipBox}>
-                      <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                      <Text style={styles.tooltipText}>
-                        This is determined by the planet with the most placements or strongest presence in your chart.
-                      </Text>
-                    </View>
-                  </LinearGradient>
-                )}
-
-              {/* Stelliums */}
-              {chartPatterns.stelliums.length > 0 && (
-                <LinearGradient
-                  colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                  style={styles.patternCard}
-                >
+              {/* Part of Fortune (free) */}
+              {partOfFortune && (
+                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>{chartPatterns.stelliums.some(s => s.type === 'combined') ? '◈' : '🔥'}</Text>
-                    <Text style={styles.patternTitle}>
-                      {chartPatterns.stelliums.length === 1
-                        ? chartPatterns.stelliums[0].cardTitle
-                        : `Emphasis Areas`}
+                    <Ionicons name="sunny-outline" size={20} color={theme.primary} style={{ marginRight: 10 }} />
+                    <Text style={styles.patternTitle}>Part of Fortune</Text>
+                  </View>
+                  <View style={styles.patternHighlight}>
+                    <Text style={styles.patternHighlightText}>
+                      {partOfFortune.sign?.symbol} {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°
+                      {partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}
                     </Text>
                   </View>
-                  {/* Free: show first stellium basics only */}
-                  {(isPremium ? chartPatterns.stelliums : chartPatterns.stelliums.slice(0, 1)).map((s, i) => (
-                    <View key={`${s.type}-${s.label}`} style={[styles.stelliumItem, i > 0 && styles.stelliumDivider]}>
-                      <View style={styles.stelliumBadge}>
-                        <Text style={styles.stelliumBadgeText}>
-                          {s.planets.length} planets in {s.label}
-                        </Text>
-                        <Text style={styles.stelliumType}>
-                          {s.type === 'combined' ? 'Focused Concentration' : s.type === 'sign' ? 'Sign Emphasis' : 'House Emphasis'}
-                        </Text>
-                      </View>
-                      <View style={styles.stelliumPlanets}>
-                        {s.planets.map((p) => (
-                          <View key={p} style={styles.stelliumChip}>
-                            <Text style={styles.stelliumChipText}>{p}</Text>
-                          </View>
-                        ))}
-                      </View>
-                      <Text style={styles.patternDesc}>{s.description}</Text>
-                      {isPremium && (
-                        <>
-                          {s.subtitle ? (
-                            <Text style={styles.stelliumSubtitle}>{s.subtitle}</Text>
-                          ) : null}
-                          {s.narrative ? (
-                            <Text style={styles.patternDesc}>{s.narrative}</Text>
-                          ) : null}
-                          {s.elementCloser ? (
-                            <Text style={styles.patternAnnotation}>{s.elementCloser}</Text>
-                          ) : null}
-                          {s.planetMixNote ? (
-                            <Text style={styles.patternAnnotation}>{s.planetMixNote}</Text>
-                          ) : null}
-                          {s.retroNote ? (
-                            <Text style={styles.patternAnnotation}>{s.retroNote}</Text>
-                          ) : null}
-                        </>
-                      )}
-                    </View>
-                  ))}
-                  {isPremium && chartPatterns.stelliumOverflow && (
-                    <Text style={styles.overflowNote}>Other areas also show notable concentration.</Text>
-                  )}
-                  {!isPremium && chartPatterns.stelliums.length > 1 && (
-                    <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} style={styles.patternUpsell}>
-                      <Ionicons name="lock-closed" size={14} color={theme.primary} />
-                      <Text style={styles.patternUpsellText}>
-                        {chartPatterns.stelliums.length - 1} more pattern{chartPatterns.stelliums.length > 2 ? 's' : ''} — unlock with Deeper Sky
-                      </Text>
-                    </Pressable>
-                  )}
+                  <Text style={styles.patternDesc}>
+                    The Part of Fortune marks where you find ease, flow, and natural abundance. Its sign and house
+                    placement show where you can access joy and resilience most easily.
+                  </Text>
                   <View style={styles.tooltipBox}>
                     <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
                     <Text style={styles.tooltipText}>
-                      An emphasis appears when three or more planets occupy the same sign or life area. These patterns highlight focus, not fate.
+                      This point is calculated from your Sun, Moon, and Ascendant. It highlights your most effortless
+                      channel for well-being.
                     </Text>
                   </View>
                 </LinearGradient>
               )}
 
-              {/* Conjunction Clusters */}
-              {chartPatterns.conjunctionClusters.length > 0 && (
+              {/* Dominant Planet (free) */}
+              {dominantPlanet && (
+                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                  <View style={styles.patternHeader}>
+                    <Text style={styles.patternIcon}>🌟</Text>
+                    <Text style={styles.patternTitle}>Dominant Planet</Text>
+                  </View>
+                  <View style={styles.patternHighlight}>
+                    <Text style={styles.patternHighlightText}>
+                      {safeString((dominantPlanet as any).planet ?? (dominantPlanet as any).name)} in{' '}
+                      {(dominantPlanet as any).sign?.name} · {Math.floor((dominantPlanet as any).degree ?? 0)}°
+                      {(dominantPlanet as any).house ? ` · House ${(dominantPlanet as any).house}` : ''}
+                    </Text>
+                  </View>
+                  <Text style={styles.patternDesc}>
+                    Your dominant planet is the one most “active” in your chart (aspect involvement + angularity). Its
+                    themes tend to color your personality, motivations, and life path more than others.
+                  </Text>
+                  <View style={styles.tooltipBox}>
+                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
+                    <Text style={styles.tooltipText}>
+                      This is a calculated highlight, not a fate statement — it points to the loudest recurring signal.
+                    </Text>
+                  </View>
+                </LinearGradient>
+              )}
+
+              {/* Stelliums */}
+              {chartPatterns.stelliums.map((stellium, idx) => (
                 <LinearGradient
-                  colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
+                  key={`stellium-${idx}`}
+                  colors={['rgba(201,169,98,0.12)', 'rgba(30,45,71,0.7)']}
                   style={styles.patternCard}
                 >
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>⚡</Text>
-                    <Text style={styles.patternTitle}>
-                      Conjunction Cluster{chartPatterns.conjunctionClusters.length > 1 ? 's' : ''}
+                    <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
+                  </View>
+                  <View style={styles.patternHighlight}>
+                    <Text style={styles.patternHighlightText}>
+                      {stellium.planets.join(', ')}
                     </Text>
                   </View>
-                  {isPremium ? (
-                    chartPatterns.conjunctionClusters.map((c, i) => (
-                      <View key={i} style={[styles.stelliumItem, i > 0 && styles.stelliumDivider]}>
-                        <View style={styles.stelliumPlanets}>
-                          {c.planets.map((p) => (
-                            <View key={p} style={[styles.stelliumChip, { backgroundColor: 'rgba(201,169,98,0.15)' }]}>
-                              <Text style={[styles.stelliumChipText, { color: theme.primary }]}>{p}</Text>
-                            </View>
-                          ))}
-                        </View>
-                        <Text style={styles.clusterOrb}>Tightest orb: {c.tightestOrb.toFixed(1)}°</Text>
-                        <Text style={styles.patternDesc}>{c.description}</Text>
-                      </View>
-                    ))
-                  ) : (
-                    <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} style={styles.patternUpsell}>
-                      <Ionicons name="lock-closed" size={14} color={theme.primary} />
-                      <Text style={styles.patternUpsellText}>
-                        {chartPatterns.conjunctionClusters.length} conjunction cluster{chartPatterns.conjunctionClusters.length > 1 ? 's' : ''} — unlock with Deeper Sky
-                      </Text>
-                    </Pressable>
+                  <Text style={styles.patternDesc}>{stellium.subtitle}</Text>
+                  <Text style={[styles.patternDesc, { marginTop: 8 }]}>{stellium.description}</Text>
+                  {stellium.planetMixNote && (
+                    <Text style={[styles.patternDesc, { marginTop: 6, fontStyle: 'italic', opacity: 0.8 }]}>
+                      {stellium.planetMixNote}
+                    </Text>
                   )}
-                  <View style={styles.tooltipBox}>
-                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                    <Text style={styles.tooltipText}>
-                      Planets within 10° of each other merge their energies, creating a concentrated force in your chart.
+                  {stellium.retroNote && (
+                    <Text style={[styles.patternDesc, { marginTop: 6, fontStyle: 'italic', opacity: 0.8 }]}>
+                      {stellium.retroNote}
                     </Text>
-                  </View>
-                </LinearGradient>
-              )}
-
-              {/* Retrograde Emphasis */}
-              <LinearGradient
-                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                style={styles.patternCard}
-              >
-                <View style={styles.patternHeader}>
-                  <Text style={styles.patternIcon}>℞</Text>
-                  <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
-                </View>
-                {chartPatterns.retrogradeEmphasis.count > 0 ? (
-                  <>
-                    <View style={styles.stelliumPlanets}>
-                      {chartPatterns.retrogradeEmphasis.planets.map((p) => (
-                        <View key={p} style={[styles.stelliumChip, { backgroundColor: 'rgba(224,122,122,0.12)' }]}>
-                          <Text style={[styles.stelliumChipText, { color: '#E07A7A' }]}>{p} ℞</Text>
-                        </View>
-                      ))}
+                  )}
+                  {stellium.elementCloser && (
+                    <View style={styles.tooltipBox}>
+                      <Ionicons name="leaf-outline" size={14} color={theme.textMuted} />
+                      <Text style={styles.tooltipText}>{stellium.elementCloser}</Text>
                     </View>
-                    <Text style={styles.retroCount}>
-                      {chartPatterns.retrogradeEmphasis.count} of 8 planets retrograde
-                    </Text>
-                  </>
-                ) : (
-                  <Text style={styles.retroCount}>No natal retrogrades — all planets direct</Text>
-                )}
-                <Text style={styles.patternDesc}>{chartPatterns.retrogradeEmphasis.description}</Text>
+                  )}
+                </LinearGradient>
+              ))}
+              {chartPatterns.stelliumOverflow && (
                 <View style={styles.tooltipBox}>
                   <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
                   <Text style={styles.tooltipText}>
-                    Retrograde planets (excluding Sun & Moon, which never retrograde) internalize their energy, inviting deeper reflection.
+                    Additional stelliums detected but not shown — your chart has several concentrated areas.
                   </Text>
                 </View>
-              </LinearGradient>
+              )}
+
+              {/* Conjunction Clusters */}
+              {chartPatterns.conjunctionClusters.map((cluster, idx) => (
+                <LinearGradient
+                  key={`cluster-${idx}`}
+                  colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
+                  style={styles.patternCard}
+                >
+                  <View style={styles.patternHeader}>
+                    <Text style={styles.patternIcon}>🔗</Text>
+                    <Text style={styles.patternTitle}>Conjunction Cluster</Text>
+                  </View>
+                  <View style={styles.patternHighlight}>
+                    <Text style={styles.patternHighlightText}>
+                      {cluster.planets.join(' · ')}
+                    </Text>
+                  </View>
+                  <Text style={styles.patternDesc}>{cluster.description}</Text>
+                  <View style={styles.tooltipBox}>
+                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
+                    <Text style={styles.tooltipText}>
+                      Tightest orb: {cluster.tightestOrb.toFixed(1)}° — these planets blend their energies closely.
+                    </Text>
+                  </View>
+                </LinearGradient>
+              ))}
+
+              {/* Retrograde Emphasis */}
+              {chartPatterns.retrogradeEmphasis.count >= 3 && (
+                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                  <View style={styles.patternHeader}>
+                    <Text style={styles.patternIcon}>℞</Text>
+                    <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
+                  </View>
+                  <View style={styles.patternHighlight}>
+                    <Text style={styles.patternHighlightText}>
+                      {chartPatterns.retrogradeEmphasis.count} planets retrograde: {chartPatterns.retrogradeEmphasis.planets.join(', ')}
+                    </Text>
+                  </View>
+                  <Text style={styles.patternDesc}>{chartPatterns.retrogradeEmphasis.description}</Text>
+                </LinearGradient>
+              )}
 
               {/* Element Balance */}
-              <LinearGradient
-                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                style={styles.patternCard}
-              >
-                <View style={styles.patternHeader}>
-                  <Text style={styles.patternIcon}>🌊</Text>
-                  <Text style={styles.patternTitle}>Element Balance</Text>
-                </View>
-                <View style={styles.elementGrid}>
-                  {Object.entries(chartPatterns.elementBalance.counts).map(([el, count]) => {
-                    const maxCount = Math.max(...Object.values(chartPatterns.elementBalance.counts));
-                    const barWidth = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                    const isDominant = el === chartPatterns.elementBalance.dominant;
-                    return (
-                      <View key={el} style={styles.elementRow}>
-                        <Text style={[styles.elementName, isDominant && { color: ELEMENT_COLORS[el], fontWeight: '700' }]}>
-                          {el}
-                        </Text>
-                        <View style={styles.elementBarBg}>
-                          <View
-                            style={[
-                              styles.elementBarFill,
-                              { width: `${barWidth}%`, backgroundColor: ELEMENT_COLORS[el] || theme.primary },
-                            ]}
-                          />
-                        </View>
-                        <Text style={[styles.elementCount, isDominant && { color: ELEMENT_COLORS[el] }]}>
-                          {count}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-                <Text style={styles.dominantLabel}>
-                  Dominant: <Text style={{ color: ELEMENT_COLORS[chartPatterns.elementBalance.dominant], fontWeight: '700' }}>
-                    {chartPatterns.elementBalance.dominant}
-                  </Text>
-                </Text>
-                {chartPatterns.elementBalance.missing && (
-                  <Text style={styles.missingLabel}>
-                    Missing: <Text style={{ color: '#E07A7A' }}>{chartPatterns.elementBalance.missing}</Text>
-                  </Text>
-                )}
-                <Text style={styles.patternDesc}>{chartPatterns.elementBalance.description}</Text>
-              </LinearGradient>
+              {chartPatterns.elementBalance && (
+                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                  <View style={styles.patternHeader}>
+                    <Text style={styles.patternIcon}>🜂</Text>
+                    <Text style={styles.patternTitle}>Element Balance</Text>
+                  </View>
+                  <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }]}>
+                    {Object.entries(chartPatterns.elementBalance.counts).map(([el, count]) => (
+                      <Text key={el} style={[styles.patternHighlightText, {
+                        color: el === chartPatterns.elementBalance.dominant ? ELEMENT_COLORS[el] || theme.primary : theme.textMuted,
+                        fontSize: el === chartPatterns.elementBalance.dominant ? 15 : 13,
+                      }]}>
+                        {el}: {count as number}
+                      </Text>
+                    ))}
+                  </View>
+                  <Text style={styles.patternDesc}>{chartPatterns.elementBalance.description}</Text>
+                  {chartPatterns.elementBalance.missing && (
+                    <View style={styles.tooltipBox}>
+                      <Ionicons name="water-outline" size={14} color={theme.textMuted} />
+                      <Text style={styles.tooltipText}>
+                        No planets in {chartPatterns.elementBalance.missing} — this element's themes may require more conscious effort.
+                      </Text>
+                    </View>
+                  )}
+                </LinearGradient>
+              )}
 
               {/* Modality Balance */}
-              <LinearGradient
-                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                style={styles.patternCard}
-              >
-                <View style={styles.patternHeader}>
-                  <Text style={styles.patternIcon}>⚙️</Text>
-                  <Text style={styles.patternTitle}>Modality Balance</Text>
-                </View>
-                <View style={styles.elementGrid}>
-                  {Object.entries(chartPatterns.modalityBalance.counts).map(([mod, count]) => {
-                    const maxCount = Math.max(...Object.values(chartPatterns.modalityBalance.counts));
-                    const barWidth = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                    const isDominant = mod === chartPatterns.modalityBalance.dominant;
-                    const modColor = isDominant ? theme.primary : theme.textSecondary;
-                    return (
-                      <View key={mod} style={styles.elementRow}>
-                        <Text style={[styles.elementName, isDominant && { color: modColor, fontWeight: '700' }]}>
-                          {mod}
-                        </Text>
-                        <View style={styles.elementBarBg}>
-                          <View
-                            style={[
-                              styles.elementBarFill,
-                              { width: `${barWidth}%`, backgroundColor: isDominant ? theme.primary : theme.textMuted },
-                            ]}
-                          />
-                        </View>
-                        <Text style={[styles.elementCount, isDominant && { color: modColor }]}>
-                          {count}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-                <Text style={styles.dominantLabel}>
-                  Dominant: <Text style={{ color: theme.primary, fontWeight: '700' }}>
-                    {chartPatterns.modalityBalance.dominant}
-                  </Text>
-                </Text>
-                <Text style={styles.patternDesc}>{chartPatterns.modalityBalance.description}</Text>
-              </LinearGradient>
-
-              {/* ── Chiron Insight (Premium) ── */}
-              {chironInsight && (
-                <LinearGradient
-                  colors={['rgba(122,139,224,0.12)', 'rgba(30,45,71,0.6)']}
-                  style={styles.patternCard}
-                >
+              {chartPatterns.modalityBalance && (
+                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={{ fontSize: 20, color: theme.primary, fontWeight: '700', marginRight: 10 }}>K</Text>
-                    <Text style={styles.patternTitle}>Chiron — {chironInsight.title}</Text>
+                    <Text style={styles.patternIcon}>⚖</Text>
+                    <Text style={styles.patternTitle}>Modality Balance</Text>
                   </View>
-                  <Text style={styles.patternDesc}>{chironInsight.description}</Text>
-                  <View style={styles.insightBox}>
-                    <Text style={styles.insightLabel}>Integration Theme</Text>
-                    <Text style={styles.insightHighlight}>{chironInsight.integrationTheme}</Text>
+                  <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 16, justifyContent: 'center' }]}>
+                    {Object.entries(chartPatterns.modalityBalance.counts).map(([mod, count]) => (
+                      <Text key={mod} style={[styles.patternHighlightText, {
+                        color: mod === chartPatterns.modalityBalance.dominant ? theme.primary : theme.textMuted,
+                        fontSize: mod === chartPatterns.modalityBalance.dominant ? 15 : 13,
+                      }]}>
+                        {mod}: {count as number}
+                      </Text>
+                    ))}
                   </View>
-                  <View style={styles.insightBox}>
-                    <Text style={styles.insightLabel}>Body Awareness</Text>
-                    <Text style={styles.insightText}>{chironInsight.bodyAwareness}</Text>
-                  </View>
+                  <Text style={styles.patternDesc}>{chartPatterns.modalityBalance.description}</Text>
                 </LinearGradient>
               )}
 
-              {/* ── Node Axis Insight (Premium) ── */}
-              {nodeInsight && (
-                <LinearGradient
-                  colors={['rgba(110,191,139,0.12)', 'rgba(30,45,71,0.6)']}
-                  style={styles.patternCard}
-                >
-                  <View style={styles.patternHeader}>
-                    <Ionicons name="swap-vertical-outline" size={20} color={theme.primary} style={{ marginRight: 10 }} />
-                    <Text style={styles.patternTitle}>Node Axis</Text>
-                  </View>
-                  <View style={styles.nodeRow}>
-                    <View style={styles.nodeHalf}>
-                      <Text style={styles.nodeDirection}>↓ South Node</Text>
-                      <Text style={styles.nodeTitle}>{nodeInsight.southNode.title}</Text>
-                      <Text style={styles.nodeTheme}>{nodeInsight.southNode.theme}</Text>
-                    </View>
-                    <View style={styles.nodeArrow}>
-                      <Ionicons name="arrow-forward" size={16} color={theme.primary} />
-                    </View>
-                    <View style={styles.nodeHalf}>
-                      <Text style={styles.nodeDirection}>↑ North Node</Text>
-                      <Text style={styles.nodeTitle}>{nodeInsight.northNode.title}</Text>
-                      <Text style={styles.nodeTheme}>{nodeInsight.northNode.theme}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.insightBox}>
-                    <Text style={styles.insightText}>{nodeInsight.fusionLine}</Text>
-                  </View>
-                </LinearGradient>
-              )}
-
-              {/* Chiron/Node upsell for free users */}
-              {!isPremium && (
-                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                  <LinearGradient
-                    colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']}
-                    style={styles.patternCard}
-                  >
-                    <View style={styles.patternHeader}>
-                      <Ionicons name="sparkles" size={18} color={theme.primary} style={{ marginRight: 8 }} />
-                      <Text style={[styles.patternTitle, { color: theme.primary }]}>Chiron & Node Depth</Text>
-                    </View>
-                    <Text style={styles.patternDesc}>
-                      Discover your sensitivity patterns, growth direction, and integration themes with Deeper Sky.
-                    </Text>
-                  </LinearGradient>
-                </Pressable>
-              )}
-
-              {/* No patterns fallback */}
+              {/* Fallback */}
               {chartPatterns.stelliums.length === 0 &&
                 chartPatterns.conjunctionClusters.length === 0 &&
                 !chartPatterns.chartRuler &&
                 chartPatterns.retrogradeEmphasis.count === 0 &&
                 !chironInsight &&
                 !nodeInsight && (
-                <View style={styles.emptyState}>
-                  <Ionicons name="sparkles-outline" size={32} color={theme.textMuted} />
-                  <Text style={styles.emptyText}>
-                    Your chart has a balanced distribution — no extreme concentrations detected.
-                  </Text>
-                </View>
-              )}
+                  <View style={styles.emptyState}>
+                    <Ionicons name="sparkles-outline" size={32} color={theme.textMuted} />
+                    <Text style={styles.emptyText}>
+                      Your chart has a balanced distribution — no extreme concentrations detected.
+                    </Text>
+                  </View>
+                )}
             </Animated.View>
           )}
         </ScrollView>
       </SafeAreaView>
+
+      {/* ── Add Person Modal ── */}
+      <BirthDataModal
+        visible={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleSaveNewPerson}
+      />
     </View>
   );
 }
@@ -1040,94 +1384,222 @@ export default function ChartScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   center: { justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: theme.textSecondary, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 32 },
-  goHomeBtn: { marginTop: 16, paddingVertical: 10, paddingHorizontal: 24, borderRadius: 12, backgroundColor: 'rgba(201,169,98,0.15)' },
+  loadingText: {
+    color: theme.textSecondary,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  goHomeBtn: {
+    marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(201,169,98,0.15)',
+  },
   goHomeText: { color: theme.primary, fontWeight: '700' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: theme.spacing.lg, alignItems: 'center' },
 
-  // Header
-  header: { alignItems: 'center', marginTop: theme.spacing.lg, marginBottom: theme.spacing.xl, width: '100%' },
-  title: { fontSize: 28, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', letterSpacing: 0.5, textAlign: 'center' },
-  subtitle: { color: theme.textSecondary, fontSize: 13, marginTop: 4, fontStyle: 'italic', textAlign: 'center' },
+  header: {
+    alignItems: 'center',
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
+    width: '100%',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    marginTop: 4,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
 
-  // Warning
-  warningBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,179,0,0.1)', borderRadius: theme.borderRadius.md, padding: theme.spacing.md, marginBottom: theme.spacing.lg, width: '100%' },
-  warningText: { color: theme.textSecondary, fontSize: 13, marginLeft: 8, flex: 1, textAlign: 'center' },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,179,0,0.1)',
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    width: '100%',
+  },
+  warningText: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    marginLeft: 8,
+    flex: 1,
+    textAlign: 'center',
+  },
 
-  // Big Three
-  bigThreeCard: { borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg, marginBottom: theme.spacing.lg, width: '100%', alignItems: 'center' },
+  bigThreeCard: {
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    width: '100%',
+    alignItems: 'center',
+  },
   bigThreeRow: { flexDirection: 'row', justifyContent: 'space-evenly' },
   bigThreeItem: { alignItems: 'center', flex: 1 },
   bigThreeLabel: { color: theme.textMuted, fontSize: 12, letterSpacing: 0.5, textAlign: 'center' },
   bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 16, marginTop: 4, textAlign: 'center' },
   bigThreeDeg: { color: theme.textSecondary, fontSize: 11, marginTop: 2, textAlign: 'center' },
-  mcRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: theme.spacing.md, paddingTop: theme.spacing.md, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', width: '100%' },
-  mcLabel: { color: theme.textMuted, fontSize: 12, marginRight: 8, textAlign: 'center' },
-  mcValue: { color: theme.primary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
+  mcRow: {
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    width: '100%',
+  },
+  mcLabel: { color: theme.textMuted, fontSize: 12, letterSpacing: 0.5, textAlign: 'center' },
+  mcSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 16, marginTop: 4, textAlign: 'center' },
+  mcDeg: { color: theme.textSecondary, fontSize: 11, marginTop: 2, textAlign: 'center' },
 
-  // Sensitive Points Card (premium)
-  sensitiveCard: { borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg, marginBottom: theme.spacing.lg, width: '100%', alignItems: 'center' },
-  sensitiveTitle: { color: theme.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: theme.spacing.md, textAlign: 'center' },
-  sensitiveGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: theme.spacing.lg, marginBottom: theme.spacing.md },
+  sensitiveCard: {
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    width: '100%',
+    alignItems: 'center',
+  },
+  sensitiveTitle: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
+  },
+  sensitiveGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+  },
   sensitiveItem: { alignItems: 'center', minWidth: 90 },
-  sensitiveSymbol: { fontSize: 22, color: theme.primary, marginBottom: 4 },
   sensitiveName: { color: theme.textPrimary, fontSize: 12, fontWeight: '600', textAlign: 'center' },
   sensitiveSign: { color: theme.textSecondary, fontSize: 13, fontWeight: '500', marginTop: 2, textAlign: 'center' },
   sensitiveDeg: { color: theme.textMuted, fontSize: 11, marginTop: 1, textAlign: 'center' },
-  sensitiveUpsell: { flexDirection: 'row', alignItems: 'center', borderRadius: theme.borderRadius.lg, padding: theme.spacing.md, marginBottom: theme.spacing.lg, gap: 8 },
+  sensitiveUpsell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    gap: 8,
+  },
   sensitiveUpsellText: { flex: 1, color: theme.primary, fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
 
-  // Insight boxes (reused in Sensitive Points + Patterns)
-  insightBox: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: theme.borderRadius.md, padding: theme.spacing.md, marginTop: theme.spacing.sm, width: '100%' },
-  insightLabel: { color: theme.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, textAlign: 'center' },
+  insightBox: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+    width: '100%',
+  },
+  insightLabel: {
+    color: theme.textMuted,
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
   insightTitle: { color: theme.primary, fontSize: 15, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
   insightText: { color: theme.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center' },
-  insightHighlight: { color: theme.primary, fontSize: 14, fontWeight: '600', fontStyle: 'italic', textAlign: 'center' },
 
-  // Node axis layout
-  nodeRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.sm },
-  nodeHalf: { flex: 1, alignItems: 'center' },
-  nodeArrow: { paddingHorizontal: theme.spacing.sm },
-  nodeDirection: { color: theme.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 0.5, marginBottom: 4 },
-  nodeTitle: { color: theme.textPrimary, fontSize: 14, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
-  nodeTheme: { color: theme.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 2, fontStyle: 'italic' },
+  pointsDivider: {
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(201,169,98,0.15)',
+  },
+  pointsLabel: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
 
-  // Sensitive points divider (planets tab)
-  pointsDivider: { marginTop: theme.spacing.lg, marginBottom: theme.spacing.sm, paddingBottom: theme.spacing.sm, borderBottomWidth: 1, borderBottomColor: 'rgba(201,169,98,0.15)' },
-  pointsLabel: { color: theme.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center' },
-
-  // Tabs
-  tabRow: { flexDirection: 'row', marginBottom: theme.spacing.lg, borderRadius: theme.borderRadius.lg, backgroundColor: 'rgba(26,39,64,0.5)', padding: 4, width: '100%' },
+  tabRow: {
+    flexDirection: 'row',
+    marginBottom: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: 'rgba(26,39,64,0.5)',
+    padding: 4,
+    width: '100%',
+  },
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
   tabBtnActive: { backgroundColor: 'rgba(201,169,98,0.2)' },
   tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
   tabTextActive: { color: theme.primary },
 
-  // Table
-  tableHeader: { flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(201,169,98,0.15)', width: '100%' },
-  th: { color: theme.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center' },
-  tableRow: { flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 14, borderRadius: 8, marginBottom: 2, width: '100%' },
+  tableHeader: {
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(201,169,98,0.15)',
+    width: '100%',
+  },
+  th: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    textAlign: 'center',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginBottom: 2,
+    width: '100%',
+  },
   td: { justifyContent: 'center', alignItems: 'center' },
 
-  // Planets
   planetSymbol: { fontSize: 20, color: theme.primary, marginRight: 10, width: 28, textAlign: 'center' },
   signSymbol: { fontSize: 18, marginRight: 6, width: 24, textAlign: 'center' },
   planetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
   retroLabel: { color: theme.warning, fontSize: 10, fontWeight: '700', textAlign: 'center' },
-  signName: { fontWeight: '600', fontSize: 14, textAlign: 'center' },
+  signName: { fontWeight: '600', fontSize: 12, textAlign: 'center' },
   elementLabel: { color: theme.textMuted, fontSize: 10, textAlign: 'center' },
   degreeText: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
   minuteText: { color: theme.textSecondary, fontSize: 11, textAlign: 'center' },
   houseNum: { color: theme.textPrimary, fontWeight: '700', fontSize: 16, textAlign: 'center' },
 
-  // Houses
+  houseSystemLabel: {
+    color: theme.textMuted,
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginBottom: theme.spacing.sm,
+    width: '100%',
+  },
   houseNumLarge: { color: theme.primary, fontWeight: '700', fontSize: 18, textAlign: 'center' },
   houseTheme: { color: theme.textSecondary, fontSize: 12, lineHeight: 16, textAlign: 'center' },
 
-  // Aspects
   aspectPlanetSymbol: { fontSize: 16, color: theme.primary, marginRight: 6, width: 24, textAlign: 'center' },
+  aspectIconWrap: { width: 24, marginRight: 6, alignItems: 'center', justifyContent: 'center' },
   aspectPlanetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 13, textAlign: 'center' },
   aspectSymbol: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
   aspectName: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
@@ -1135,236 +1607,180 @@ const styles = StyleSheet.create({
   orbText: { fontWeight: '700', fontSize: 14, textAlign: 'center' },
   applyingLabel: { color: theme.textMuted, fontSize: 9, fontStyle: 'italic', textAlign: 'center' },
 
-  // Legend
-  legend: { marginTop: theme.spacing.lg, padding: theme.spacing.lg, borderRadius: theme.borderRadius.lg, backgroundColor: 'rgba(26,39,64,0.4)', alignItems: 'center' },
-  legendTitle: { color: theme.textMuted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: theme.spacing.md, textAlign: 'center' },
+  legend: {
+    marginTop: theme.spacing.lg,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: 'rgba(26,39,64,0.4)',
+    alignItems: 'center',
+  },
+  legendTitle: {
+    color: theme.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
+  },
   legendRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, justifyContent: 'center' },
   legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
   legendText: { color: theme.textSecondary, fontSize: 13, textAlign: 'center' },
   legendNote: { color: theme.textMuted, fontSize: 11, fontStyle: 'italic', marginTop: theme.spacing.sm, textAlign: 'center' },
 
-  // Aspect upsell
-  aspectUpsell: {
+  aspectUpsell: { flexDirection: 'row', alignItems: 'center', borderRadius: theme.borderRadius.lg, padding: theme.spacing.md, marginTop: theme.spacing.md, gap: 8 },
+  aspectUpsellText: { flex: 1, color: theme.primary, fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },
+
+  emptyState: { alignItems: 'center', paddingVertical: 40 },
+  emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, textAlign: 'center' },
+
+  patternCard: { borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg, marginBottom: theme.spacing.md, width: '100%', alignItems: 'center' },
+  patternHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing.md },
+  patternIcon: { fontSize: 20, marginRight: 10 },
+  patternTitle: { color: theme.textPrimary, fontWeight: '700', fontSize: 17, textAlign: 'center' },
+  patternHighlight: { backgroundColor: 'rgba(201,169,98,0.12)', borderRadius: theme.borderRadius.md, paddingVertical: 10, paddingHorizontal: 14, marginBottom: theme.spacing.md, alignSelf: 'center' },
+  patternHighlightText: { color: theme.primary, fontWeight: '700', fontSize: 15, textAlign: 'center' },
+  patternDesc: { color: theme.textSecondary, fontSize: 13, lineHeight: 20, marginTop: theme.spacing.sm, textAlign: 'center' },
+  tooltipBox: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: theme.borderRadius.md, padding: 10, marginTop: theme.spacing.md },
+  tooltipText: { color: theme.textMuted, fontSize: 11, lineHeight: 16, marginLeft: 6, flex: 1, fontStyle: 'italic', textAlign: 'center' },
+
+  // ── People Bar (Multi-Chart) ──
+  peopleBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  personChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  personChipActive: {
+    backgroundColor: 'rgba(201,169,98,0.15)',
+    borderColor: 'rgba(201,169,98,0.4)',
+  },
+  personChipText: {
+    color: theme.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    maxWidth: 80,
+  },
+  personChipTextActive: {
+    color: theme.primary,
+  },
+  personChipRelation: {
+    color: theme.textMuted,
+    fontSize: 10,
+    fontStyle: 'italic',
+    opacity: 0.7,
+  },
+  addPersonChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(201,169,98,0.08)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(201,169,98,0.2)',
+    borderStyle: 'dashed',
+  },
+  addPersonText: {
+    color: theme.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // ── Overlay Legend ──
+  overlayLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  overlayLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  overlayLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  overlayLegendText: {
+    color: theme.textMuted,
+    fontSize: 10,
+    fontWeight: '500',
+  },
+
+  // ── Relationship Type Picker ──
+  relTypePickerOverlay: {
+    width: '100%',
+    marginBottom: theme.spacing.md,
+  },
+  relTypePicker: {
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    alignItems: 'center',
+  },
+  relTypeTitle: {
+    color: theme.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
+  },
+  relTypeOption: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    marginBottom: 6,
+    alignItems: 'center',
+  },
+  relTypeOptionText: {
+    color: theme.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  relTypeCancelBtn: {
+    marginTop: theme.spacing.sm,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  relTypeCancelText: {
+    color: theme.textMuted,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
+  // ── Overlay Upsell (Free users) ──
+  overlayUpsell: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
-    marginTop: theme.spacing.md,
     gap: 8,
+    marginBottom: theme.spacing.sm,
   },
-  aspectUpsellText: {
+  overlayUpsellText: {
     flex: 1,
     color: theme.primary,
     fontSize: 13,
     fontStyle: 'italic',
     lineHeight: 18,
-    textAlign: 'center',
-  },
-
-  // Empty
-  emptyState: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, textAlign: 'center' },
-
-  // Patterns
-  patternCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    width: '100%',
-    alignItems: 'center',
-  },
-  patternHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  patternIcon: { fontSize: 20, marginRight: 10 },
-  patternTitle: {
-    color: theme.textPrimary,
-    fontWeight: '700',
-    fontSize: 17,
-    textAlign: 'center',
-  },
-  patternHighlight: {
-    backgroundColor: 'rgba(201,169,98,0.12)',
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    marginBottom: theme.spacing.md,
-    alignSelf: 'center',
-  },
-  patternHighlightText: {
-    color: theme.primary,
-    fontWeight: '700',
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  patternDesc: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
-    marginTop: theme.spacing.sm,
-    textAlign: 'center',
-  },
-  tooltipBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: theme.borderRadius.md,
-    padding: 10,
-    marginTop: theme.spacing.md,
-  },
-  tooltipText: {
-    color: theme.textMuted,
-    fontSize: 11,
-    lineHeight: 16,
-    marginLeft: 6,
-    flex: 1,
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-  stelliumItem: { marginBottom: theme.spacing.sm },
-  stelliumDivider: {
-    paddingTop: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-  },
-  stelliumBadge: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  stelliumBadgeText: {
-    color: theme.textPrimary,
-    fontWeight: '700',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  stelliumType: {
-    color: theme.textMuted,
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  stelliumSubtitle: {
-    color: theme.primary,
-    fontSize: 13,
-    fontStyle: 'italic',
-    marginBottom: 8,
-    letterSpacing: 0.3,
-    textAlign: 'center',
-  },
-  patternAnnotation: {
-    color: theme.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
-    fontStyle: 'italic',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  patternUpsell: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-  },
-  patternUpsellText: {
-    fontSize: 13,
-    color: theme.primary,
-    fontWeight: '500',
-  },
-  overflowNote: {
-    color: theme.textMuted,
-    fontSize: 12,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  stelliumPlanets: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 4,
-    justifyContent: 'center',
-  },
-  stelliumChip: {
-    backgroundColor: 'rgba(110,191,139,0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: theme.borderRadius.full,
-  },
-  stelliumChipText: {
-    color: '#6EBF8B',
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  clusterOrb: {
-    color: theme.textMuted,
-    fontSize: 11,
-    fontStyle: 'italic',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  retroCount: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 4,
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  elementGrid: { marginBottom: theme.spacing.sm },
-  elementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  elementName: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    width: 70,
-    textAlign: 'center',
-  },
-  elementBarBg: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    marginHorizontal: 10,
-    overflow: 'hidden',
-  },
-  elementBarFill: {
-    height: 8,
-    borderRadius: 4,
-  },
-  elementCount: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-    width: 20,
-    textAlign: 'right',
-  },
-  dominantLabel: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  missingLabel: {
-    color: theme.textMuted,
-    fontSize: 12,
-    marginTop: 2,
     textAlign: 'center',
   },
 });

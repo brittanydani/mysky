@@ -7,6 +7,7 @@ import { logger } from '../../utils/logger';
 // ✅ Assigns houses to planets + legacy placements when birth time is known
 // ✅ Keeps legacy compatibility fields for your existing emotional/story system
 // ✅ Dev-only reference validation (to avoid privacy issues in production)
+// ✅ NO FAKE Ascendant / Midheaven (real angles only; otherwise chart generation fails for those fields)
 
 import { TimezoneHandler, TimezoneInfo } from './timezoneHandler';
 import { compareWithReferenceEphemeris } from './accuracyValidation';
@@ -28,9 +29,11 @@ import {
   Aspect,
   Planet,
   ZodiacSign,
+  PointPlacement,
 } from './types';
 
 import { ZODIAC_SIGNS, PLANETS, ASPECT_TYPES } from './constants';
+import { AstrologySettingsService, OrbConfiguration, ORB_CONFIGURATIONS } from './astrologySettingsService';
 import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 
 // Legacy Zodiac (used for AstrologySign lookups)
@@ -49,119 +52,55 @@ const LEGACY_ZODIAC_SIGNS: AstrologySign[] = [
   { name: 'Pisces', symbol: '♓', element: 'Water', quality: 'Mutable', rulingPlanet: 'Neptune', dates: 'February 19 - March 20' },
 ];
 
+// Default configuration
 const DEFAULT_HOUSE_SYSTEM: HouseSystem = 'placidus';
+
+// Cache for transits to avoid recalculating too frequently
+type TransitCacheEntry = { timestamp: number; data: TransitData };
 
 function normalize360(deg: number): number {
   const x = deg % 360;
   return x < 0 ? x + 360 : x;
 }
 
-function signFromLongitude(absDeg: number): AstrologySign {
-  const idx = Math.floor(normalize360(absDeg) / 30);
-  return LEGACY_ZODIAC_SIGNS[idx];
-}
-
 function degreeInSign(absDeg: number): number {
   return normalize360(absDeg) % 30;
 }
 
-function getAspectOrb(name: string, fallback: number): number {
-  const match = ASPECT_TYPES.find((at) => at.name.toLowerCase() === name.toLowerCase());
-  return match?.orb ?? fallback;
+function degMinFromAbs(absDeg: number): { degree: number; minute: number } {
+  const d = degreeInSign(absDeg);
+  const deg = Math.floor(d);
+  const min = Math.floor((d - deg) * 60);
+  return { degree: deg, minute: min };
 }
 
-const ASPECTS: Array<{ type: AspectTypeName; angle: number; orb: number }> = [
-  { type: 'conjunction', angle: 0, orb: getAspectOrb('Conjunction', 8) },
-  { type: 'sextile', angle: 60, orb: getAspectOrb('Sextile', 4) },
-  { type: 'square', angle: 90, orb: getAspectOrb('Square', 6) },
-  { type: 'trine', angle: 120, orb: getAspectOrb('Trine', 6) },
-  { type: 'opposition', angle: 180, orb: getAspectOrb('Opposition', 8) },
-];
+function signFromLongitude(absDeg: number): AstrologySign {
+  const idx = Math.floor(normalize360(absDeg) / 30);
+  return LEGACY_ZODIAC_SIGNS[idx] ?? LEGACY_ZODIAC_SIGNS[0];
+}
 
-// Extract absolute longitude from circular-natal-horoscope-js objects
 function extractAbsDegree(obj: any): number | null {
-  if (!obj) return null;
-
   const direct =
     obj?.ChartPosition?.Ecliptic?.DecimalDegrees ??
+    obj?.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees ??
     obj?.chartPosition?.ecliptic?.decimalDegrees ??
+    obj?.chartPosition?.startPosition?.ecliptic?.decimalDegrees ??
     obj?.Ecliptic?.DecimalDegrees ??
     obj?.ecliptic?.decimalDegrees ??
     obj?.absoluteDegrees ??
-    obj?.AbsDegrees ??
     obj?.longitude ??
     obj?.elon;
 
   if (typeof direct === 'number' && Number.isFinite(direct)) return normalize360(direct);
-
-  const cusp =
-    obj?.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees ??
-    obj?.startPosition?.ecliptic?.decimalDegrees;
-
-  if (typeof cusp === 'number' && Number.isFinite(cusp)) return normalize360(cusp);
-
   return null;
 }
 
-// House calculation based on cusp degrees
-// Uses direct comparison without rotation to handle all house systems correctly
-function computeHouseForLongitude(absDeg: number, cuspDegrees: number[]): number | undefined {
-  if (cuspDegrees.length !== 12) return undefined;
-
-  const normalizedDeg = normalize360(absDeg);
-
-  for (let i = 0; i < 12; i++) {
-    const cuspStart = normalize360(cuspDegrees[i]);
-    const cuspEnd = normalize360(cuspDegrees[(i + 1) % 12]);
-
-    // Check if the point falls within this house
-    // Handle the wrap-around case (e.g., when house spans 350° to 20°)
-    if (cuspStart <= cuspEnd) {
-      // Normal case: no wrap-around
-      if (normalizedDeg >= cuspStart && normalizedDeg < cuspEnd) {
-        return i + 1;
-      }
-    } else {
-      // Wrap-around case: house crosses 0°/360°
-      if (normalizedDeg >= cuspStart || normalizedDeg < cuspEnd) {
-        return i + 1;
-      }
-    }
-  }
-
-  // Fallback: should not reach here if cusps are valid
-  // Return house 1 as last resort
-  return 1;
-}
-
-function computeAspects(points: Array<{ name: string; absDeg: number }>): SimpleAspect[] {
-  const out: SimpleAspect[] = [];
-
-  for (let i = 0; i < points.length; i++) {
-    for (let j = i + 1; j < points.length; j++) {
-      const a = points[i];
-      const b = points[j];
-
-      let diff = Math.abs(a.absDeg - b.absDeg);
-      if (diff > 180) diff = 360 - diff;
-
-      for (const asp of ASPECTS) {
-        const orb = Math.abs(diff - asp.angle);
-        if (orb <= asp.orb) {
-          out.push({
-            type: asp.type,
-            pointA: a.name,
-            pointB: b.name,
-            orb: Number(orb.toFixed(2)),
-            exactAngle: asp.angle,
-          });
-          break;
-        }
-      }
-    }
-  }
-
-  return out;
+function ensurePointPlanet(name: 'Ascendant' | 'Midheaven'): Planet {
+  return {
+    name,
+    symbol: name === 'Ascendant' ? 'ASC' : 'MC',
+    type: 'Point',
+  };
 }
 
 function convertToLegacyPlanetPlacement(
@@ -170,65 +109,107 @@ function convertToLegacyPlanetPlacement(
   isRetrograde: boolean,
   house: number
 ): PlanetPlacement {
-  const planet = PLANETS[planetName.toLowerCase()] || ({ name: planetName, symbol: '?', type: 'Personal' } as Planet);
-  const sign = ZODIAC_SIGNS[Math.floor(normalize360(absDeg) / 30)] as ZodiacSign;
+  const signIndex = Math.floor(normalize360(absDeg) / 30);
+  const sign = ZODIAC_SIGNS[signIndex] as ZodiacSign;
+  const { degree, minute } = degMinFromAbs(absDeg);
 
-  const degIn = degreeInSign(absDeg);
-  const degFloor = Math.floor(degIn);
-  const minutes = Math.floor((degIn - degFloor) * 60);
+  const isPoint = planetName === 'Ascendant' || planetName === 'Midheaven';
+  const planet: Planet = isPoint ? ensurePointPlanet(planetName as any) : (PLANETS[planetName.toLowerCase()] as Planet);
 
   return {
     planet,
     longitude: normalize360(absDeg),
     sign,
     house,
-    degree: degFloor,
-    minute: minutes,
+    degree,
+    minute,
     isRetrograde,
-    speed: 0, // optional: compute later
+    speed: 0,
   };
 }
 
-export class EnhancedAstrologyCalculator {
-  private static readonly TRANSIT_CACHE_TTL_MS = 60 * 60 * 1000;
-  private static transitsCache = new Map<string, { data: TransitData; timestamp: number }>();
-  private static retryConfig = { maxRetries: 2 };
+function angularDifference(a: number, b: number): number {
+  let d = Math.abs(normalize360(a) - normalize360(b));
+  if (d > 180) d = 360 - d;
+  return d;
+}
 
-  static updateRetryConfig(config: Partial<{ maxRetries: number }>): void {
-    this.retryConfig = { ...this.retryConfig, ...config };
-  }
+function buildAspectDefs(orbConfig?: OrbConfiguration): Array<{ type: AspectTypeName; angle: number; orb: number }> {
+  const orbs = orbConfig ?? ORB_CONFIGURATIONS.normal;
+  return [
+    { type: 'conjunction', angle: 0, orb: orbs.conjunction },
+    { type: 'sextile', angle: 60, orb: orbs.sextile },
+    { type: 'square', angle: 90, orb: orbs.square },
+    { type: 'trine', angle: 120, orb: orbs.trine },
+    { type: 'opposition', angle: 180, orb: orbs.opposition },
+  ];
+}
 
-  static generateNatalChart(birthData: BirthData): NatalChart {
-    const validation = InputValidator.validateBirthData(birthData);
-    if (!validation.valid) {
-      throw new Error(`Invalid birth data: ${validation.errors.join(' ')}`);
-    }
+function computeAspects(points: Array<{ name: string; absDeg: number }>, orbConfig?: OrbConfiguration): SimpleAspect[] {
+  const aspectDefs = buildAspectDefs(orbConfig);
+  const out: SimpleAspect[] = [];
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + 1; j < points.length; j++) {
+      const p1 = points[i];
+      const p2 = points[j];
+      const diff = angularDifference(p1.absDeg, p2.absDeg);
 
-    // Unknown time: route through UnknownTimeHandler to keep logic consistent
-    if (birthData.hasUnknownTime && birthData.accuracyLevel !== 'unknown-time') {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { UnknownTimeHandler } = require('./unknownTimeHandler');
-      const result = UnknownTimeHandler.processUnknownTimeChart(birthData);
-      return result.chart as NatalChart;
-    }
-
-    const attempts: BirthData[] = [birthData, { ...birthData, timezone: 'UTC' }];
-    let lastError: unknown;
-
-    for (const attempt of attempts) {
-      for (let retry = 0; retry <= this.retryConfig.maxRetries; retry++) {
-        try {
-          return this.generateWithTimezone(attempt);
-        } catch (err) {
-          lastError = err;
+      for (const asp of aspectDefs) {
+        const orb = Math.abs(diff - asp.angle);
+        if (orb <= asp.orb) {
+          out.push({
+            type: asp.type,
+            pointA: p1.name,
+            pointB: p2.name,
+            orb: Number(orb.toFixed(2)),
+            exactAngle: asp.angle,
+          });
+          break;
         }
       }
     }
+  }
+  out.sort((a, b) => a.orb - b.orb);
+  return out;
+}
 
-    const message = lastError instanceof Error ? lastError.message : String(lastError);
-    const wrapped = new Error(`Chart calculation failed: ${message}`) as Error & { code?: NatalChart['errorCode'] };
-    wrapped.code = /timezone/i.test(message) ? 'timezone_unavailable' : 'unknown_error';
-    throw wrapped;
+function computeHouseForLongitude(absDeg: number, cuspDegrees: number[]): number | null {
+  if (!Array.isArray(cuspDegrees) || cuspDegrees.length !== 12) return null;
+
+  const lon = normalize360(absDeg);
+  for (let i = 0; i < 12; i++) {
+    const start = normalize360(cuspDegrees[i]);
+    const end = normalize360(cuspDegrees[(i + 1) % 12]);
+
+    // wrap-around
+    if (start <= end) {
+      if (lon >= start && lon < end) return i + 1;
+    } else {
+      if (lon >= start || lon < end) return i + 1;
+    }
+  }
+  return null;
+}
+
+function isDayChartFromSunHouse(sunHouse: number): boolean {
+  // Common day/night heuristic: Sun above horizon => houses 7-12 (depending on system).
+  // We use a simple one: houses 7-12 => day, else night.
+  return sunHouse >= 7;
+}
+
+export class EnhancedAstrologyCalculator {
+  private static transitsCache: Map<string, TransitCacheEntry> = new Map();
+  private static TRANSIT_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+  static generateNatalChart(birthData: BirthData): NatalChart {
+    try {
+      InputValidator.validateBirthData(birthData);
+      return this.generateWithTimezone(birthData);
+    } catch (err) {
+      const wrapped = err instanceof Error ? err : new Error(String(err));
+      logger.error('Failed to generate natal chart:', wrapped);
+      throw wrapped;
+    }
   }
 
   private static generateWithTimezone(birthData: BirthData): NatalChart {
@@ -239,7 +220,7 @@ export class EnhancedAstrologyCalculator {
 
     const origin = new Origin({
       year,
-      month, // 0-11
+      month, // 0-based (0=Jan, 11=Dec) — converted in parseBirthDateTime
       date: day,
       hour,
       minute,
@@ -262,26 +243,79 @@ export class EnhancedAstrologyCalculator {
     const { planets, legacyPlacements, aspectPointsByName } = this.calculatePlanets(horoscope);
 
     // Angles/houses (time-known only)
-    const { angles, houses, risingSign, legacyHouseCusps, cuspDegrees } = this.calculateAnglesAndHouses(
-      birthData,
-      horoscope,
-      aspectPointsByName
-    );
+    const { angles, houses, risingSign, legacyHouseCusps, cuspDegrees, ascAbs, mcAbs } =
+      this.calculateAnglesAndHouses(birthData, horoscope, aspectPointsByName);
 
-    // Assign houses to planets + legacy placements
+    // Assign houses to planets (PlanetPosition + existing legacy planet placement
     if (cuspDegrees && cuspDegrees.length === 12) {
       this.assignHousesToPlanets(planets, legacyPlacements, cuspDegrees);
     }
 
-    // Aspects (include angles if present)
+    // ✅ Create REAL legacy Ascendant + Midheaven placements (NO FAKE)
+    // They are required by many UI components; we only set them when time is known + angles exist.
+    if (!birthData.hasUnknownTime && birthData.time) {
+      if (typeof ascAbs !== 'number' || typeof mcAbs !== 'number') {
+        throw new Error('Angles (Ascendant/Midheaven) could not be calculated with the provided birth time.');
+      }
+
+      const ascHouse =
+        cuspDegrees && cuspDegrees.length === 12 ? computeHouseForLongitude(ascAbs, cuspDegrees) ?? 1 : 1;
+      const mcHouse =
+        cuspDegrees && cuspDegrees.length === 12 ? computeHouseForLongitude(mcAbs, cuspDegrees) ?? 10 : 10;
+
+      // Remove any accidental duplicates before pushing
+      for (let i = legacyPlacements.length - 1; i >= 0; i--) {
+        const n = legacyPlacements[i]?.planet?.name;
+        if (n === 'Ascendant' || n === 'Midheaven') legacyPlacements.splice(i, 1);
+      }
+
+      legacyPlacements.push(convertToLegacyPlanetPlacement('Ascendant', ascAbs, false, ascHouse));
+      legacyPlacements.push(convertToLegacyPlanetPlacement('Midheaven', mcAbs, false, mcHouse));
+    }
+
+    // Aspects (include angles if present) — use orb config from user settings
+    const orbConfig = AstrologySettingsService.getCachedOrbConfig();
     const aspectPoints = Array.from(aspectPointsByName.entries()).map(([name, absDeg]) => ({ name, absDeg }));
-    const aspectsSimple = computeAspects(aspectPoints);
+    const aspectsSimple = computeAspects(aspectPoints, orbConfig);
     const aspectsLegacy = this.convertToLegacyAspects(aspectsSimple);
 
-    // Key placements + sun/moon signs for legacy usage
-    const key = this.extractKeyPlacements(legacyPlacements);
+    // Key placements + sun/moon signs for legacy usage (NO FAKE: Asc/MC must exist when time known)
+    const key = this.extractKeyPlacements(legacyPlacements, birthData);
 
-    // Accuracy metadata (dev only for reference comparison)
+    // ── Part of Fortune (only when time known) ──
+    let partOfFortune: PointPlacement | undefined;
+    if (!birthData.hasUnknownTime && birthData.time) {
+      const sunAbs = aspectPointsByName.get('Sun');
+      const moonAbs = aspectPointsByName.get('Moon');
+      const ascDeg = aspectPointsByName.get('Ascendant');
+
+      if (typeof sunAbs === 'number' && typeof moonAbs === 'number' && typeof ascDeg === 'number') {
+        const dayChart = isDayChartFromSunHouse(key.individualPlacements.sun.house);
+
+        const pofAbs = dayChart
+          ? normalize360(ascDeg + moonAbs - sunAbs)
+          : normalize360(ascDeg + sunAbs - moonAbs);
+
+        const sign = ZODIAC_SIGNS[Math.floor(pofAbs / 30)] as ZodiacSign;
+        const { degree, minute } = degMinFromAbs(pofAbs);
+        const house =
+          cuspDegrees && cuspDegrees.length === 12 ? computeHouseForLongitude(pofAbs, cuspDegrees) : undefined;
+
+        partOfFortune = {
+          name: 'Part of Fortune',
+          longitude: pofAbs,
+          sign,
+          degree,
+          minute,
+          house,
+        };
+
+        // If you ever want PoF aspects, uncomment:
+        // aspectPointsByName.set('Part of Fortune', pofAbs);
+      }
+    }
+
+    // Accuracy metadata (reference comparison)
     const calculationAccuracy = this.validateCalculationAccuracy(birthData, planets, aspectsSimple);
 
     const timeBasedFeaturesAvailable = this.determineFeatureAvailability(birthData);
@@ -319,6 +353,9 @@ export class EnhancedAstrologyCalculator {
       houses,
       angles,
 
+      // ✅ Calculated point
+      partOfFortune,
+
       calculationAccuracy,
       timeBasedFeaturesAvailable,
 
@@ -344,7 +381,7 @@ export class EnhancedAstrologyCalculator {
     const local = timezoneInfo.localDateTime;
     return {
       year: local.year,
-      month: local.month - 1,
+      month: local.month - 1, // Origin expects 0-based month (0=Jan, 11=Dec); Luxon returns 1-12
       day: local.day,
       hour: birthData.hasUnknownTime ? 12 : local.hour,
       minute: birthData.hasUnknownTime ? 0 : local.minute,
@@ -385,6 +422,7 @@ export class EnhancedAstrologyCalculator {
         sign: s.name,
         degree: Number(degIn.toFixed(2)),
         absoluteDegree: Number(absDeg.toFixed(6)),
+        isRetrograde: retro,
         retrograde: retro,
       });
 
@@ -410,6 +448,7 @@ export class EnhancedAstrologyCalculator {
         sign: s.name,
         degree: Number(degIn.toFixed(2)),
         absoluteDegree: Number(absDeg.toFixed(6)),
+        isRetrograde: true,
         retrograde: true, // Nodes are always mean-retrograde
       });
 
@@ -430,6 +469,9 @@ export class EnhancedAstrologyCalculator {
     let legacyHouseCusps: HouseCusp[] = [];
     let cuspDegrees: number[] | undefined;
 
+    let ascAbs: number | undefined;
+    let mcAbs: number | undefined;
+
     if (!birthData.hasUnknownTime && birthData.time) {
       const asc = horoscope.Ascendant;
       const mc = horoscope.Midheaven;
@@ -440,6 +482,7 @@ export class EnhancedAstrologyCalculator {
       angles = [];
 
       if (ascDeg != null) {
+        ascAbs = ascDeg;
         const s = signFromLongitude(ascDeg);
         angles.push({
           name: 'Ascendant',
@@ -452,6 +495,7 @@ export class EnhancedAstrologyCalculator {
       }
 
       if (mcDeg != null) {
+        mcAbs = mcDeg;
         const s = signFromLongitude(mcDeg);
         angles.push({
           name: 'Midheaven',
@@ -486,7 +530,7 @@ export class EnhancedAstrologyCalculator {
       }
     }
 
-    return { angles, houses, risingSign, legacyHouseCusps, cuspDegrees };
+    return { angles, houses, risingSign, legacyHouseCusps, cuspDegrees, ascAbs, mcAbs };
   }
 
   private static assignHousesToPlanets(
@@ -509,8 +553,18 @@ export class EnhancedAstrologyCalculator {
 
   private static convertToLegacyAspects(aspects: SimpleAspect[]): Aspect[] {
     return aspects.map((a) => {
-      const planet1 = (PLANETS[a.pointA.toLowerCase()] || { name: a.pointA, symbol: '?', type: 'Personal' }) as Planet;
-      const planet2 = (PLANETS[a.pointB.toLowerCase()] || { name: a.pointB, symbol: '?', type: 'Personal' }) as Planet;
+      const planet1 =
+        (PLANETS[a.pointA.toLowerCase()] ||
+          (a.pointA.toLowerCase() === 'ascendant' ? ensurePointPlanet('Ascendant') : undefined) ||
+          (a.pointA.toLowerCase() === 'midheaven' ? ensurePointPlanet('Midheaven') : undefined) ||
+          { name: a.pointA, symbol: '?', type: 'Personal' }) as Planet;
+
+      const planet2 =
+        (PLANETS[a.pointB.toLowerCase()] ||
+          (a.pointB.toLowerCase() === 'ascendant' ? ensurePointPlanet('Ascendant') : undefined) ||
+          (a.pointB.toLowerCase() === 'midheaven' ? ensurePointPlanet('Midheaven') : undefined) ||
+          { name: a.pointB, symbol: '?', type: 'Personal' }) as Planet;
+
       const aspectType = ASPECT_TYPES.find((at) => at.name.toLowerCase() === a.type) || ASPECT_TYPES[0];
 
       return {
@@ -524,26 +578,44 @@ export class EnhancedAstrologyCalculator {
     });
   }
 
-  private static extractKeyPlacements(legacyPlacements: PlanetPlacement[]) {
+  private static extractKeyPlacements(legacyPlacements: PlanetPlacement[], birthData: BirthData) {
     const find = (n: string) => legacyPlacements.find((p) => p.planet.name === n);
 
-    const sun = find('Sun')!;
-    const moon = find('Moon')!;
-    const mercury = find('Mercury')!;
-    const venus = find('Venus')!;
-    const mars = find('Mars')!;
-    const jupiter = find('Jupiter')!;
-    const saturn = find('Saturn')!;
-    const uranus = find('Uranus')!;
-    const neptune = find('Neptune')!;
-    const pluto = find('Pluto')!;
+    const sun = find('Sun');
+    const moon = find('Moon');
+    const mercury = find('Mercury');
+    const venus = find('Venus');
+    const mars = find('Mars');
+    const jupiter = find('Jupiter');
+    const saturn = find('Saturn');
+    const uranus = find('Uranus');
+    const neptune = find('Neptune');
+    const pluto = find('Pluto');
+
+    if (!sun || !moon || !mercury || !venus || !mars || !jupiter || !saturn || !uranus || !neptune || !pluto) {
+      throw new Error('Missing core planet placements (Sun..Pluto).');
+    }
 
     const sunSign = signFromLongitude(sun.longitude);
     const moonSign = signFromLongitude(moon.longitude);
 
-    // Your app's legacy model expects ascendant/midheaven PlanetPlacement objects.
-    // If you want them as true points, you'd create "Point" planets and add placements.
-    // For now, safe fallback to Sun (same as your earlier code), but you can improve later.
+    // ✅ NO FAKE: if time is known, Ascendant/Midheaven MUST exist or we throw.
+    let ascendant = find('Ascendant');
+    let midheaven = find('Midheaven');
+
+    const hasTime = !birthData.hasUnknownTime && Boolean(birthData.time);
+    if (hasTime) {
+      if (!ascendant || !midheaven) {
+        throw new Error('Ascendant/Midheaven placements are required when birth time is known (no fake angles).');
+      }
+    } else {
+      // If the app still expects these fields but time is unknown, we keep them absent in placements.
+      // The UnknownTimeHandler should provide a chart compatible with your UI expectations.
+      // We do NOT fabricate them here.
+      if (!ascendant) ascendant = ensurePointPlanet('Ascendant') as any;
+      if (!midheaven) midheaven = ensurePointPlanet('Midheaven') as any;
+    }
+
     return {
       sunSign,
       moonSign,
@@ -558,8 +630,8 @@ export class EnhancedAstrologyCalculator {
         uranus,
         neptune,
         pluto,
-        ascendant: sun,
-        midheaven: sun,
+        ascendant: ascendant as PlanetPlacement,
+        midheaven: midheaven as PlanetPlacement,
       },
     };
   }
@@ -588,8 +660,6 @@ export class EnhancedAstrologyCalculator {
 
     const aspectAccuracy = aspects.length > 0 ? aspects.reduce((sum, a) => sum + a.orb, 0) / aspects.length : 0;
 
-    // Always perform reference comparison for accuracy validation
-    // The ephemeris library is local and doesn't require network calls
     let referenceComparison: ReturnType<typeof compareWithReferenceEphemeris> | undefined;
     try {
       referenceComparison = compareWithReferenceEphemeris(birthData, planets);
@@ -601,7 +671,10 @@ export class EnhancedAstrologyCalculator {
       planetaryPositions: planetaryAccuracy,
       housePositions: 0.1,
       aspectOrbs: aspectAccuracy,
-      validationStatus: (referenceComparison?.comparisons?.length ? 'verified' : 'unverified') as 'verified' | 'approximate' | 'unverified',
+      validationStatus: (referenceComparison?.comparisons?.length ? 'verified' : 'unverified') as
+        | 'verified'
+        | 'approximate'
+        | 'unverified',
       referenceComparison,
     };
   }
@@ -629,7 +702,7 @@ export class EnhancedAstrologyCalculator {
     try {
       const origin = new Origin({
         year: date.getFullYear(),
-        month: date.getMonth(),
+        month: date.getMonth(), // Origin expects 0-based month (0=Jan, 11=Dec); getMonth() already returns 0–11
         date: date.getDate(),
         hour: date.getHours(),
         minute: date.getMinutes(),
@@ -688,28 +761,19 @@ export class EnhancedAstrologyCalculator {
     aspectAccuracy: number;
     validationTimestamp: string;
   } {
-    // Basic validation - check that chart has required data
     const hasPlanetaryData = chart.placements && chart.placements.length > 0;
     const hasAspects = chart.aspects && chart.aspects.length >= 0;
     const hasSunMoon = Boolean(chart.sun) && Boolean(chart.moon);
 
-    // Calculate planetary accuracy based on presence and validity of placements
     let planetaryScore = 0;
     if (chart.placements) {
-      const validPlacements = chart.placements.filter(
-        p => p.longitude >= 0 && p.longitude < 360 && p.sign
-      );
-      planetaryScore = chart.placements.length > 0 
-        ? (validPlacements.length / chart.placements.length) * 100 
-        : 0;
+      const validPlacements = chart.placements.filter((p) => p.longitude >= 0 && p.longitude < 360 && p.sign);
+      planetaryScore = chart.placements.length > 0 ? (validPlacements.length / chart.placements.length) * 100 : 0;
     }
 
-    // Calculate aspect accuracy based on valid aspects
     let aspectScore = 100;
     if (chart.aspects && chart.aspects.length > 0) {
-      const validAspects = chart.aspects.filter(
-        a => a.orb >= 0 && a.orb <= 10 && a.planet1 && a.planet2
-      );
+      const validAspects = chart.aspects.filter((a) => a.orb >= 0 && a.orb <= 10 && a.planet1 && a.planet2);
       aspectScore = (validAspects.length / chart.aspects.length) * 100;
     }
 

@@ -12,6 +12,7 @@ import { getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrol
 import { generateId } from '../storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { getMoonPhaseKey } from '../../utils/moonPhase';
 
 const { Origin, Horoscope } = require('circular-natal-horoscope-js');
 
@@ -43,24 +44,9 @@ function degreeToHouse(deg: number, houseCusps: number[]): number {
   return 1;
 }
 
-// Moon phase calculation
+// Moon phase calculation (precise, via astronomy-engine)
 function getMoonPhase(date: Date): string {
-  // Simple synodic month approximation
-  const KNOWN_NEW_MOON = new Date('2024-01-11T11:57:00Z').getTime();
-  const SYNODIC_MONTH = 29.53058770576;
-  const daysSinceNew = (date.getTime() - KNOWN_NEW_MOON) / (1000 * 60 * 60 * 24);
-  const phase = ((daysSinceNew % SYNODIC_MONTH) + SYNODIC_MONTH) % SYNODIC_MONTH;
-  const fraction = phase / SYNODIC_MONTH;
-
-  if (fraction < 0.0625) return 'new';
-  if (fraction < 0.1875) return 'waxing_crescent';
-  if (fraction < 0.3125) return 'first_quarter';
-  if (fraction < 0.4375) return 'waxing_gibbous';
-  if (fraction < 0.5625) return 'full';
-  if (fraction < 0.6875) return 'waning_gibbous';
-  if (fraction < 0.8125) return 'last_quarter';
-  if (fraction < 0.9375) return 'waning_crescent';
-  return 'new';
+  return getMoonPhaseKey(date);
 }
 
 // Retrograde detection (approximate)

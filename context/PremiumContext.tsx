@@ -31,7 +31,7 @@ interface PremiumProviderProps {
 }
 
 export function PremiumProvider({ children }: PremiumProviderProps) {
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, setIsPremium] = useState(__DEV__ ? true : false);
   const [isReady, setIsReady] = useState(false);
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
@@ -39,7 +39,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
 
   const updateCustomerInfo = (info: CustomerInfo | null) => {
     setCustomerInfo(info);
-    setIsPremium(info ? revenueCatService.isPremium(info) : false);
+    setIsPremium(__DEV__ ? true : info ? revenueCatService.isPremium(info) : false);
   };
 
   const refreshCustomerInfo = async () => {

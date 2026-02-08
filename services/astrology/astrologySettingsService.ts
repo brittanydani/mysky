@@ -253,6 +253,16 @@ class AstrologySettingsServiceClass {
   }
 
   /**
+   * Get orb configuration synchronously from cache.
+   * Falls back to 'normal' if settings haven't been loaded yet.
+   * This allows the synchronous calculator to respect user orb preferences.
+   */
+  getCachedOrbConfig(): OrbConfiguration {
+    const preset = this.cachedSettings?.orbPreset ?? 'normal';
+    return ORB_CONFIGURATIONS[preset] ?? ORB_CONFIGURATIONS.normal;
+  }
+
+  /**
    * Get human-readable label for a house system
    */
   getHouseSystemLabel(houseSystem: HouseSystem): string {

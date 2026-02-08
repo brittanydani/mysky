@@ -15,8 +15,8 @@ export class MigrationService {
   static async isMigrationCompleted(): Promise<boolean> {
     try {
       await localDb.initialize();
-      const settings = await localDb.getSettings();
-      return settings?.id === MigrationService.MIGRATION_KEY;
+      const marker = await localDb.getMigrationMarker(MigrationService.MIGRATION_KEY);
+      return marker === true;
     } catch (error) {
       logger.error('[Migration] Error checking migration status:', error);
       return false;
@@ -62,18 +62,9 @@ export class MigrationService {
       }
 
       // Mark migration as completed
-      await localDb.saveSettings({
-        id: MigrationService.MIGRATION_KEY,
-        cloudSyncEnabled: existingSettings?.cloudSyncEnabled || false,
-        lastSyncAt: existingSettings?.lastSyncAt,
-        userId: existingSettings?.userId,
-        createdAt: existingSettings?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      await localDb.setMigrationMarker(MigrationService.MIGRATION_KEY);
 
       logger.info('[Migration] Data migration completed successfully');
-      // Purge legacy plaintext data after successful migration
-      await localDb.hardDeleteAllData();
       return { success: true };
 
     } catch (error: any) {
@@ -111,12 +102,7 @@ export class MigrationService {
 
       if (charts.length === 0 && entries.length === 0) {
         // No data to migrate, mark as completed
-        await localDb.saveSettings({
-          id: MigrationService.MIGRATION_KEY,
-          cloudSyncEnabled: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
+        await localDb.setMigrationMarker(MigrationService.MIGRATION_KEY);
         return;
       }
 

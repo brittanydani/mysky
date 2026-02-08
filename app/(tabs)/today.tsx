@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
@@ -21,9 +22,46 @@ import { detectChartPatterns, ChartPatterns } from '../../services/astrology/cha
 import { getChironInsightFromChart, ChironInsight } from '../../services/journal/chiron';
 import { getNodeInsight, NodeInsight } from '../../services/journal/nodes';
 import { PremiumDailyGuidanceGenerator, PremiumDailyGuidance } from '../../services/premium/premiumDailyGuidance';
+import { DailyAffirmationEngine, DailyAffirmation } from '../../services/energy/dailyAffirmation';
+import { TodayContentEngine, TodayContent } from '../../services/today/todayContentEngine';
+import { getTransitInfo } from '../../services/astrology/transits';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
+import { getMoonPhaseInfo } from '../../utils/moonPhase';
+
+// ── Moon phase (precise, via astronomy-engine) ──
+function getMoonPhase(date: Date): { name: string; emoji: string; message: string } {
+  const info = getMoonPhaseInfo(date);
+  return { name: info.name, emoji: info.emoji, message: info.message };
+}
+
+// ── Intensity glow colors ──
+const INTENSITY_COLORS: Record<string, string> = {
+  calm: 'rgba(139, 196, 232, 0.08)',
+  moderate: 'rgba(201, 169, 98, 0.10)',
+  intense: 'rgba(224, 122, 152, 0.12)',
+};
+
+// ── Domain glow color for highlight ring ──
+const DOMAIN_HIGHLIGHT: Record<string, string> = {
+  love: 'rgba(224, 122, 152, 0.25)',
+  energy: 'rgba(110, 191, 139, 0.25)',
+  growth: 'rgba(139, 196, 232, 0.25)',
+  focus: 'rgba(139, 196, 232, 0.25)',
+  mood: 'rgba(122, 139, 224, 0.25)',
+  direction: 'rgba(201, 169, 98, 0.25)',
+  home: 'rgba(110, 191, 139, 0.25)',
+};
+
+// ── Retrograde context messages ──
+const RETROGRADE_CONTEXT: Record<string, { icon: string; label: string; note: string }> = {
+  Mercury: { icon: '☿', label: 'Mercury Retrograde', note: 'Communication, tech, and plans may need extra patience. Double-check details.' },
+  Venus: { icon: '♀', label: 'Venus Retrograde', note: 'Relationships and values are under review. Old feelings may resurface.' },
+  Mars: { icon: '♂', label: 'Mars Retrograde', note: 'Energy turns inward. Strategy over action. Avoid forcing outcomes.' },
+  Jupiter: { icon: '♃', label: 'Jupiter Retrograde', note: 'Growth becomes internal. Revisit beliefs and what expansion means to you.' },
+  Saturn: { icon: '♄', label: 'Saturn Retrograde', note: 'Review your structures and commitments. Rebuild what needs a stronger foundation.' },
+};
 
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
@@ -34,17 +72,36 @@ export default function TodayScreen() {
   const [guidance, setGuidance] = useState<HumanDailyGuidance | null>(null);
   const [insight, setInsight] = useState<DailyInsight | null>(null);
   const [savedInsight, setSavedInsight] = useState<SavedInsight | null>(null);
+  const [yesterdayInsight, setYesterdayInsight] = useState<SavedInsight | null>(null);
   const [loading, setLoading] = useState(true);
   const [showWhyThis, setShowWhyThis] = useState(false);
+  const [showMoonWeek, setShowMoonWeek] = useState(false);
   const [shadowQuote, setShadowQuote] = useState<ShadowQuoteResult | null>(null);
   const [chartPatterns, setChartPatterns] = useState<ChartPatterns | null>(null);
   const [chironInsight, setChironInsight] = useState<ChironInsight | null>(null);
   const [nodeInsight, setNodeInsight] = useState<NodeInsight | null>(null);
   const [premiumGuidance, setPremiumGuidance] = useState<PremiumDailyGuidance | null>(null);
+  const [dailyAffirmation, setDailyAffirmation] = useState<DailyAffirmation | null>(null);
+  const [todayContent, setTodayContent] = useState<TodayContent | null>(null);
+  const [retrogradePlanets, setRetrogradePlanets] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadTodayData();
-  }, [isPremium]);
+  // Week's moon phases (today + 6 days)
+  const weekMoonPhases = useMemo(() => {
+    const today = new Date();
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + i);
+      const phase = getMoonPhase(d);
+      return { ...phase, label: i === 0 ? 'Today' : days[d.getDay()], date: d.getDate() };
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTodayData();
+    }, [isPremium])
+  );
 
   const loadTodayData = async () => {
     try {
@@ -77,6 +134,40 @@ export default function TodayScreen() {
         const dailyInsight = DailyInsightEngine.generateDailyInsight(chart);
         setInsight(dailyInsight);
 
+        // Detect retrograde transiting planets
+        try {
+          const transitInfo = getTransitInfo(
+            new Date(),
+            chart.birthData.latitude || 0,
+            chart.birthData.longitude || 0,
+          );
+          setRetrogradePlanets(transitInfo.retrogrades);
+        } catch (e) {
+          logger.error('Failed to detect retrogrades:', e);
+        }
+
+        // Generate daily affirmation from chart + transits
+        try {
+          const affirmation = DailyAffirmationEngine.getAffirmation(chart, new Date());
+          setDailyAffirmation(affirmation);
+        } catch (e) {
+          logger.error('Failed to generate daily affirmation:', e);
+        }
+
+        // Generate today's content from massive library (greetings, affirmations, reflections, cosmic weather)
+        try {
+          const content = await TodayContentEngine.generateTodayContent(
+            chart,
+            new Date(),
+            dailyGuidance.intensity,
+            dailyGuidance.dominantDomain,
+            (dailyGuidance as any).retrogradePlanets?.length > 0,
+          );
+          setTodayContent(content);
+        } catch (e) {
+          logger.error('Failed to generate today content:', e);
+        }
+
         // Generate today's shadow quote
         try {
           const shadow = await ShadowQuoteEngine.getDailyShadowQuote(chart);
@@ -105,6 +196,17 @@ export default function TodayScreen() {
             dailyInsight.signals
           );
           setSavedInsight(saved);
+
+          // Get yesterday's insight for continuity thread
+          try {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yStr = yesterday.toISOString().split('T')[0];
+            const yInsight = await InsightHistoryService.getInsightByDate(yStr, savedChart.id);
+            setYesterdayInsight(yInsight);
+          } catch {
+            // Not critical
+          }
         }
       }
     } catch (error) {
@@ -167,6 +269,13 @@ export default function TodayScreen() {
     });
   };
 
+  // Determine which card is most intense (for visual highlight ring)
+  const dominantDomain = guidance.dominantDomain || 'mood';
+  const intensity = guidance.intensity || 'calm';
+
+  // Relevant retrogrades (Mercury through Saturn are most noticeable)
+  const notableRetrogrades = retrogradePlanets.filter(p => RETROGRADE_CONTEXT[p]);
+
   return (
     <View style={styles.container}>
       <StarField starCount={30} />
@@ -180,7 +289,7 @@ export default function TodayScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {/* Greeting Header */}
+          {/* ── Greeting Header ── */}
           <Animated.View 
             entering={FadeInDown.delay(100).duration(600)}
             style={styles.header}
@@ -188,7 +297,7 @@ export default function TodayScreen() {
             <View style={styles.headerRow}>
               <View style={styles.headerText}>
                 <Text style={styles.date}>{formatDate(guidance.date)}</Text>
-                <Text style={styles.greeting}>{guidance.greeting}</Text>
+                <Text style={styles.greeting}>{todayContent?.greeting || guidance.greeting}</Text>
               </View>
               {/* Favorite button (premium) */}
               {isPremium && savedInsight && (
@@ -203,18 +312,143 @@ export default function TodayScreen() {
             </View>
           </Animated.View>
 
-          {/* Love */}
+          {/* ── 1. Cosmic Weather Summary ── */}
+          <Animated.View
+            entering={FadeInDown.delay(150).duration(600)}
+            style={styles.section}
+          >
+            <LinearGradient
+              colors={[INTENSITY_COLORS[intensity] || INTENSITY_COLORS.calm, 'rgba(26, 39, 64, 0.4)']}
+              style={styles.cosmicWeatherCard}
+            >
+              <View style={styles.cosmicWeatherHeader}>
+                <Ionicons name="partly-sunny" size={20} color={theme.primary} />
+                <Text style={styles.cosmicWeatherLabel}>COSMIC WEATHER</Text>
+              </View>
+              <Text style={styles.cosmicWeatherText}>{todayContent?.cosmicWeather || guidance.cosmicWeather}</Text>
+
+              {/* Intensity indicator */}
+              <View style={styles.intensityRow}>
+                <View style={[styles.intensityDot, { backgroundColor: intensity === 'calm' ? theme.growth : intensity === 'moderate' ? theme.primary : theme.love }]} />
+                <Text style={styles.intensityText}>
+                  {intensity === 'calm' ? 'Gentle day' : intensity === 'moderate' ? 'Active energy' : 'High intensity'}
+                </Text>
+              </View>
+            </LinearGradient>
+          </Animated.View>
+
+          {/* ── 2. Moon Phase + Sign ── */}
+          <Animated.View entering={FadeInDown.delay(180).duration(600)}>
+            <Pressable
+              style={styles.section}
+              onPress={() => setShowMoonWeek(prev => !prev)}
+            >
+              <LinearGradient
+                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
+                style={styles.moonPhaseCard}
+              >
+                <View style={styles.moonPhaseContent}>
+                  <Text style={styles.moonEmoji}>{guidance.moonPhaseEmoji || '🌙'}</Text>
+                  <View style={styles.moonPhaseTextContainer}>
+                    <Text style={styles.moonPhaseName}>{guidance.moonPhase || 'Moon Phase'}</Text>
+                    <Text style={styles.moonPhaseMessage}>{guidance.moonPhaseMessage || ''}</Text>
+                  </View>
+                  <Ionicons name={showMoonWeek ? 'chevron-up' : 'chevron-down'} size={20} color={theme.textMuted} />
+                </View>
+
+                {/* Moon sign */}
+                {guidance.moonSign && (
+                  <View style={styles.moonSignRow}>
+                    <Text style={styles.moonSignLabel}>Moon in</Text>
+                    <Text style={styles.moonSignValue}>{guidance.moonSign}</Text>
+                  </View>
+                )}
+
+                {/* Weekly moon phases (expandable) */}
+                {showMoonWeek && (
+                  <View style={styles.moonWeekRow}>
+                    {weekMoonPhases.map((day, i) => (
+                      <View key={i} style={[styles.moonWeekDay, i === 0 && styles.moonWeekDayToday]}>
+                        <Text style={styles.moonWeekEmoji}>{day.emoji}</Text>
+                        <Text style={[styles.moonWeekLabel, i === 0 && styles.moonWeekLabelToday]}>{day.label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+
+          {/* ── 3. Retrograde Awareness Banner ── */}
+          {notableRetrogrades.length > 0 && (
+            <Animated.View
+              entering={FadeInDown.delay(190).duration(600)}
+              style={styles.section}
+            >
+              {notableRetrogrades.map((planet) => {
+                const ctx = RETROGRADE_CONTEXT[planet];
+                return (
+                  <LinearGradient
+                    key={planet}
+                    colors={['rgba(224, 176, 122, 0.10)', 'rgba(224, 176, 122, 0.04)']}
+                    style={styles.retrogradeBanner}
+                  >
+                    <View style={styles.retrogradeHeader}>
+                      <Text style={styles.retrogradeIcon}>{ctx.icon}</Text>
+                      <Text style={styles.retrogradeLabel}>{ctx.label}</Text>
+                      <View style={styles.retrogradeBadge}>
+                        <Text style={styles.retrogradeBadgeText}>℞</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.retrogradeNote}>{ctx.note}</Text>
+                  </LinearGradient>
+                );
+              })}
+            </Animated.View>
+          )}
+
+          {/* ── 4. Yesterday → Today Thread ── */}
+          {yesterdayInsight && (
+            <Animated.View
+              entering={FadeInDown.delay(195).duration(600)}
+              style={styles.section}
+            >
+              <LinearGradient
+                colors={['rgba(30, 45, 71, 0.5)', 'rgba(26, 39, 64, 0.3)']}
+                style={styles.yesterdayCard}
+              >
+                <View style={styles.yesterdayHeader}>
+                  <Ionicons name="arrow-forward" size={14} color={theme.textMuted} />
+                  <Text style={styles.yesterdayLabel}>Building on yesterday</Text>
+                </View>
+                <Text style={styles.yesterdayText}>
+                  Yesterday&apos;s theme was <Text style={styles.yesterdayHighlight}>{yesterdayInsight.loveHeadline?.toLowerCase() || 'reflection'}</Text> — today builds on that energy.
+                </Text>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── 5. Love Card ── */}
           <Animated.View
             entering={FadeInDown.delay(200).duration(600)}
             style={styles.section}
           >
             <LinearGradient
               colors={['rgba(224, 122, 152, 0.12)', 'rgba(224, 122, 152, 0.04)']}
-              style={styles.guidanceCard}
+              style={[
+                styles.guidanceCard,
+                dominantDomain === 'love' && styles.guidanceCardHighlight,
+                dominantDomain === 'love' && { borderColor: DOMAIN_HIGHLIGHT.love },
+              ]}
             >
               <View style={styles.cardHeader}>
                 <Ionicons name="heart" size={18} color="#E07A98" />
                 <Text style={[styles.cardLabel, { color: '#E07A98' }]}>LOVE</Text>
+                {dominantDomain === 'love' && (
+                  <View style={styles.strongestBadge}>
+                    <Text style={styles.strongestBadgeText}>strongest today</Text>
+                  </View>
+                )}
               </View>
               <Text style={styles.cardHeadline}>{guidance.love.headline}</Text>
               <Text style={styles.cardMessage}>{guidance.love.message}</Text>
@@ -227,18 +461,27 @@ export default function TodayScreen() {
             </LinearGradient>
           </Animated.View>
 
-          {/* Energy */}
+          {/* ── 6. Energy Card ── */}
           <Animated.View
             entering={FadeInDown.delay(300).duration(600)}
             style={styles.section}
           >
             <LinearGradient
               colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']}
-              style={styles.guidanceCard}
+              style={[
+                styles.guidanceCard,
+                dominantDomain === 'energy' && styles.guidanceCardHighlight,
+                dominantDomain === 'energy' && { borderColor: DOMAIN_HIGHLIGHT.energy },
+              ]}
             >
               <View style={styles.cardHeader}>
                 <Ionicons name="flash" size={18} color="#6EBF8B" />
                 <Text style={[styles.cardLabel, { color: '#6EBF8B' }]}>ENERGY</Text>
+                {dominantDomain === 'energy' && (
+                  <View style={styles.strongestBadge}>
+                    <Text style={styles.strongestBadgeText}>strongest today</Text>
+                  </View>
+                )}
               </View>
               <Text style={styles.cardHeadline}>{guidance.energy.headline}</Text>
               <Text style={styles.cardMessage}>{guidance.energy.message}</Text>
@@ -251,18 +494,27 @@ export default function TodayScreen() {
             </LinearGradient>
           </Animated.View>
 
-          {/* Growth */}
+          {/* ── 7. Growth Card ── */}
           <Animated.View
             entering={FadeInDown.delay(400).duration(600)}
             style={styles.section}
           >
             <LinearGradient
               colors={['rgba(139, 196, 232, 0.12)', 'rgba(139, 196, 232, 0.04)']}
-              style={styles.guidanceCard}
+              style={[
+                styles.guidanceCard,
+                (dominantDomain === 'growth' || dominantDomain === 'focus' || dominantDomain === 'direction') && styles.guidanceCardHighlight,
+                (dominantDomain === 'growth' || dominantDomain === 'focus' || dominantDomain === 'direction') && { borderColor: DOMAIN_HIGHLIGHT.growth },
+              ]}
             >
               <View style={styles.cardHeader}>
                 <Ionicons name="leaf" size={18} color="#8BC4E8" />
                 <Text style={[styles.cardLabel, { color: '#8BC4E8' }]}>GROWTH</Text>
+                {(dominantDomain === 'growth' || dominantDomain === 'focus' || dominantDomain === 'direction') && (
+                  <View style={styles.strongestBadge}>
+                    <Text style={styles.strongestBadgeText}>strongest today</Text>
+                  </View>
+                )}
               </View>
               <Text style={styles.cardHeadline}>{guidance.growth.headline}</Text>
               <Text style={styles.cardMessage}>{guidance.growth.message}</Text>
@@ -275,7 +527,7 @@ export default function TodayScreen() {
             </LinearGradient>
           </Animated.View>
 
-          {/* Premium: Emotional Weather */}
+          {/* ── 8. Premium: Emotional Weather ── */}
           {premiumEmotional && (
             <Animated.View
               entering={FadeInDown.delay(420).duration(600)}
@@ -283,11 +535,20 @@ export default function TodayScreen() {
             >
               <LinearGradient
                 colors={['rgba(122, 139, 224, 0.12)', 'rgba(122, 139, 224, 0.04)']}
-                style={styles.guidanceCard}
+                style={[
+                  styles.guidanceCard,
+                  dominantDomain === 'mood' && styles.guidanceCardHighlight,
+                  dominantDomain === 'mood' && { borderColor: DOMAIN_HIGHLIGHT.mood },
+                ]}
               >
                 <View style={styles.cardHeader}>
                   <Ionicons name="water" size={18} color="#7A8BE0" />
                   <Text style={[styles.cardLabel, { color: '#7A8BE0' }]}>EMOTIONAL WEATHER</Text>
+                  {dominantDomain === 'mood' && (
+                    <View style={styles.strongestBadge}>
+                      <Text style={styles.strongestBadgeText}>strongest today</Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={styles.cardHeadline}>
                   {premiumEmotional.keyInsight}
@@ -304,52 +565,25 @@ export default function TodayScreen() {
             </Animated.View>
           )}
 
-          {/* Shadow Quote — quiet, honest, never dominates */}
-          {/* On heavy days: footer variant (soft, low-key). Otherwise: standalone card */}
-          {shadowQuote && (
-            <Animated.View
-              entering={FadeInDown.delay(450).duration(600)}
-              style={styles.section}
-            >
-              <ShadowQuoteCard
-                quote={shadowQuote.quote}
-                variant={shadowQuote.isHeavyDay ? 'footer' : 'standalone'}
-                animationDelay={0}
-              />
-              {shadowQuote.activationReason && (
-                <Text style={styles.shadowReason}>{shadowQuote.activationReason}</Text>
-              )}
-            </Animated.View>
-          )}
-
-          {/* Journal Prompt */}
-          <Animated.View 
-            entering={FadeInDown.delay(600).duration(600)}
+          {/* ── 9. Daily Affirmation Card ── */}
+          <Animated.View
+            entering={FadeInDown.delay(440).duration(600)}
             style={styles.section}
           >
-            <View style={styles.promptSection}>
-              <Text style={styles.promptLabel}>Today&apos;s reflection</Text>
-              <Text style={styles.promptText}>{guidance.journalPrompt}</Text>
-              
-              <Pressable
-                style={styles.journalButton}
-                onPress={() => router.push('/(tabs)/journal' as Href)}
-              >
-                <LinearGradient
-                  colors={['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.1)']}
-                  style={styles.journalGradient}
-                >
-                  <Ionicons name="create-outline" size={18} color={theme.primary} />
-                  <Text style={styles.journalButtonText}>Write in Journal</Text>
-                </LinearGradient>
-              </Pressable>
-            </View>
+            <LinearGradient
+              colors={['rgba(30,45,71,0.6)', 'rgba(26,39,64,0.35)']}
+              style={styles.affirmationCard}
+            >
+              <Ionicons name="sparkles" size={18} color={theme.primary} style={{ marginBottom: 8 }} />
+              <Text style={styles.affirmationText}>&ldquo;{todayContent?.affirmation || dailyAffirmation?.text || 'I trust my own timing.'}&rdquo;</Text>
+              <Text style={styles.affirmationSource}>{todayContent?.affirmationSource || dailyAffirmation?.source || ''}</Text>
+            </LinearGradient>
           </Animated.View>
 
-          {/* Premium: Evening Reflection */}
+          {/* ── 12. Premium: Evening Reflection ── */}
           {premiumGuidance && (
             <Animated.View
-              entering={FadeInDown.delay(620).duration(600)}
+              entering={FadeInDown.delay(520).duration(600)}
               style={styles.section}
             >
               <LinearGradient
@@ -358,17 +592,30 @@ export default function TodayScreen() {
               >
                 <Text style={styles.promptLabel}>Evening reflection</Text>
                 <Text style={styles.reminderText}>{premiumGuidance.eveningReflection}</Text>
+                
+                <Pressable
+                  style={[styles.journalButton, { marginTop: 16 }]}
+                  onPress={() => router.push('/(tabs)/journal' as Href)}
+                >
+                  <LinearGradient
+                    colors={['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.1)']}
+                    style={styles.journalGradient}
+                  >
+                    <Ionicons name="create-outline" size={18} color={theme.primary} />
+                    <Text style={styles.journalButtonText}>Write in Journal</Text>
+                  </LinearGradient>
+                </Pressable>
               </LinearGradient>
             </Animated.View>
           )}
 
-          {/* Premium: Why This? + Timeline */}
-          {isPremium && insight && (
+          {/* ── 13. Why This? (Premium: full, Free: teaser with first signal) ── */}
+          {insight && (
             <Animated.View 
-              entering={FadeInDown.delay(650).duration(600)}
+              entering={FadeInDown.delay(550).duration(600)}
               style={styles.section}
             >
-              <Pressable onPress={toggleWhyThis}>
+              <Pressable onPress={isPremium ? toggleWhyThis : () => router.push('/(tabs)/premium' as Href)}>
                 <LinearGradient
                   colors={['rgba(201, 169, 98, 0.1)', 'rgba(201, 169, 98, 0.05)']}
                   style={styles.whyThisCard}
@@ -378,14 +625,35 @@ export default function TodayScreen() {
                       <Ionicons name="telescope" size={18} color={theme.primary} />
                       <Text style={styles.whyThisTitle}>Why this insight?</Text>
                     </View>
-                    <Ionicons 
-                      name={showWhyThis ? 'chevron-up' : 'chevron-down'} 
-                      size={20} 
-                      color={theme.textMuted} 
-                    />
+                    {isPremium ? (
+                      <Ionicons 
+                        name={showWhyThis ? 'chevron-up' : 'chevron-down'} 
+                        size={20} 
+                        color={theme.textMuted} 
+                      />
+                    ) : (
+                      <Ionicons name="lock-closed" size={16} color={theme.textMuted} />
+                    )}
                   </View>
+
+                  {/* Free users: show teaser (first signal) */}
+                  {!isPremium && insight.signals.length > 0 && (
+                    <View style={styles.whyThisTeaser}>
+                      <View style={styles.signalRow}>
+                        <View style={styles.signalDot} />
+                        <Text style={styles.signalText}>{insight.signals[0].description}</Text>
+                        <Text style={styles.signalOrb}>{insight.signals[0].orb}</Text>
+                      </View>
+                      {insight.signals.length > 1 && (
+                        <Text style={styles.teaserMore}>
+                          + {insight.signals.length - 1} more transit{insight.signals.length > 2 ? 's' : ''} shaping your day
+                        </Text>
+                      )}
+                    </View>
+                  )}
                   
-                  {showWhyThis && (
+                  {/* Premium users: full expanded view */}
+                  {isPremium && showWhyThis && (
                     <View style={styles.whyThisContent}>
                       {/* Timeline */}
                       {insight.timeline && (
@@ -416,7 +684,7 @@ export default function TodayScreen() {
                         ))}
                       </View>
 
-                      {/* Shadow quote — under transit signals, quiet truth */}
+                      {/* Shadow quote — under transit signals */}
                       {shadowQuote && (
                         <View style={styles.transitShadowContainer}>
                           <ShadowQuoteCard
@@ -461,10 +729,10 @@ export default function TodayScreen() {
             </Animated.View>
           )}
 
-          {/* Gentle premium nudge for free users */}
+          {/* ── 14. Gentle premium nudge for free users ── */}
           {!isPremium && (
             <Animated.View 
-              entering={FadeInDown.delay(650).duration(600)}
+              entering={FadeInDown.delay(600).duration(600)}
               style={styles.section}
             >
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
@@ -474,7 +742,7 @@ export default function TodayScreen() {
                 >
                   <View style={styles.upsellContent}>
                     <Ionicons name="telescope" size={20} color={theme.primary} />
-                    <View style={styles.upsellText}>
+                    <View style={styles.upsellTextContainer}>
                       <Text style={styles.upsellTitle}>See how this evolves over time</Text>
                       <Text style={styles.upsellDescription}>
                         Exact transits, timing, and the patterns behind your daily insights
@@ -542,7 +810,7 @@ const styles = StyleSheet.create({
   },
   header: {
     marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
   headerRow: {
     flexDirection: 'row',
@@ -573,11 +841,207 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: theme.spacing.lg,
   },
+
+  // ── Cosmic Weather Summary ──
+  cosmicWeatherCard: {
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 169, 98, 0.15)',
+  },
+  cosmicWeatherHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  cosmicWeatherLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: theme.primary,
+    marginLeft: theme.spacing.sm,
+  },
+  cosmicWeatherText: {
+    fontSize: 16,
+    color: theme.textPrimary,
+    lineHeight: 24,
+    fontFamily: 'serif',
+  },
+  intensityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  intensityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: theme.spacing.sm,
+  },
+  intensityText: {
+    fontSize: 12,
+    color: theme.textMuted,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+
+  // ── Moon Phase ──
+  moonPhaseCard: {
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  moonPhaseContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  moonEmoji: {
+    fontSize: 36,
+    marginRight: theme.spacing.md,
+  },
+  moonPhaseTextContainer: {
+    flex: 1,
+  },
+  moonPhaseName: {
+    color: theme.textPrimary,
+    fontWeight: '600',
+    fontSize: 17,
+  },
+  moonPhaseMessage: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  moonSignRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  moonSignLabel: {
+    color: theme.textMuted,
+    fontSize: 13,
+    marginRight: 6,
+  },
+  moonSignValue: {
+    color: theme.primary,
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  moonWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  moonWeekDay: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  moonWeekDayToday: {
+    opacity: 1,
+  },
+  moonWeekEmoji: {
+    fontSize: 22,
+    marginBottom: 4,
+  },
+  moonWeekLabel: {
+    fontSize: 11,
+    color: theme.textMuted,
+  },
+  moonWeekLabelToday: {
+    color: theme.primary,
+    fontWeight: '600',
+  },
+
+  // ── Retrograde Banner ──
+  retrogradeBanner: {
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(224, 176, 122, 0.15)',
+    marginBottom: theme.spacing.sm,
+  },
+  retrogradeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  retrogradeIcon: {
+    fontSize: 16,
+    marginRight: theme.spacing.sm,
+  },
+  retrogradeLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.warning,
+    flex: 1,
+  },
+  retrogradeBadge: {
+    backgroundColor: 'rgba(224, 176, 122, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  retrogradeBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.warning,
+  },
+  retrogradeNote: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 19,
+  },
+
+  // ── Yesterday Thread ──
+  yesterdayCard: {
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  yesterdayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  yesterdayLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.textMuted,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginLeft: theme.spacing.xs,
+  },
+  yesterdayText: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    lineHeight: 20,
+  },
+  yesterdayHighlight: {
+    color: theme.primary,
+    fontStyle: 'italic',
+  },
+
+  // ── Guidance Cards ──
   guidanceCard: {
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.xl,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  guidanceCardHighlight: {
+    borderWidth: 1.5,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -589,6 +1053,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 2,
     marginLeft: theme.spacing.sm,
+  },
+  strongestBadge: {
+    marginLeft: 'auto',
+    backgroundColor: 'rgba(201, 169, 98, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: theme.borderRadius.sm,
+  },
+  strongestBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.primary,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   cardHeadline: {
     fontSize: 18,
@@ -602,21 +1080,72 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     lineHeight: 24,
   },
-  reminderCard: {
+  premiumExtra: {
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  premiumKeyInsight: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.primary,
+    fontStyle: 'italic',
+    marginBottom: 4,
+  },
+  premiumAction: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 19,
+  },
+
+  // ── Daily Affirmation ──
+  affirmationCard: {
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.xl,
+    alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.2)',
-    alignItems: 'center',
+    borderColor: 'rgba(201, 169, 98, 0.1)',
   },
-  reminderText: {
+  affirmationText: {
+    color: theme.primary,
     fontSize: 16,
-    color: theme.textPrimary,
+    fontStyle: 'italic' as const,
+    fontFamily: 'serif',
+    lineHeight: 24,
+    textAlign: 'center' as const,
+  },
+  affirmationSource: {
+    color: theme.textMuted,
+    fontSize: 11,
+    marginTop: theme.spacing.sm,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase' as const,
+  },
+  mantraRow: {
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  mantraText: {
+    color: theme.textSecondary,
+    fontSize: 14,
     fontStyle: 'italic',
     textAlign: 'center',
-    lineHeight: 26,
-    fontFamily: 'serif',
+    lineHeight: 20,
   },
+
+  // ── Shadow Quote ──
+  shadowReason: {
+    fontSize: 11,
+    color: theme.textMuted,
+    textAlign: 'center' as const,
+    marginTop: 6,
+    letterSpacing: 0.3,
+  },
+
+  // ── Journal Prompt ──
   promptSection: {
     backgroundColor: 'rgba(30, 45, 71, 0.5)',
     borderRadius: theme.borderRadius.xl,
@@ -657,26 +1186,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: theme.spacing.sm,
   },
-  // Premium guidance extras
-  premiumExtra: {
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+
+  // ── Evening Reflection ──
+  reminderCard: {
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 169, 98, 0.2)',
+    alignItems: 'center',
   },
-  premiumKeyInsight: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.primary,
+  reminderText: {
+    fontSize: 16,
+    color: theme.textPrimary,
     fontStyle: 'italic',
-    marginBottom: 4,
+    textAlign: 'center',
+    lineHeight: 26,
+    fontFamily: 'serif',
   },
-  premiumAction: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    lineHeight: 19,
-  },
-  // Premium: Why This?
+
+  // ── Why This? ──
   whyThisCard: {
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
@@ -697,6 +1225,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: theme.primary,
+  },
+  whyThisTeaser: {
+    marginTop: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  teaserMore: {
+    fontSize: 12,
+    color: theme.primary,
+    fontStyle: 'italic',
+    marginTop: theme.spacing.sm,
   },
   whyThisContent: {
     marginTop: theme.spacing.lg,
@@ -760,7 +1300,6 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
     fontFamily: 'monospace',
   },
-  // Premium resonance layers
   resonanceSection: {
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.md,
@@ -779,20 +1318,12 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontStyle: 'italic' as const,
   },
-  // Shadow quote under transit signals
   transitShadowContainer: {
     marginTop: theme.spacing.md,
     paddingTop: theme.spacing.sm,
   },
-  // Shadow quote activation reason
-  shadowReason: {
-    fontSize: 11,
-    color: theme.textMuted,
-    textAlign: 'center' as const,
-    marginTop: 6,
-    letterSpacing: 0.3,
-  },
-  // Free user upsell
+
+  // ── Free user upsell ──
   upsellCard: {
     borderRadius: theme.borderRadius.xl,
     padding: theme.spacing.lg,
@@ -804,7 +1335,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: theme.spacing.md,
   },
-  upsellText: {
+  upsellTextContainer: {
     flex: 1,
   },
   upsellTitle: {

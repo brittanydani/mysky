@@ -12,6 +12,7 @@ import BirthDataModal from './BirthDataModal';
 import { BirthData } from '../services/astrology/types';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { localDb } from '../services/storage/localDb';
+import { BackupService } from '../services/storage/backupService';
 import { logger } from '../utils/logger';
 
 interface OnboardingModalProps {
@@ -44,6 +45,63 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
     Haptics.selectionAsync();
     setStep('birth-data');
     setShowBirthModal(true);
+  };
+
+  const handleRestoreBackup = async () => {
+    Haptics.selectionAsync();
+    try {
+      const uri = await BackupService.pickBackupFile();
+      if (!uri) return;
+
+      Alert.prompt(
+        'Enter Backup Passphrase',
+        'This is the passphrase you set when you created the backup.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Restore',
+            onPress: async (passphrase) => {
+              if (!passphrase || passphrase.trim().length < 8) {
+                Alert.alert('Invalid Passphrase', 'Passphrase must be at least 8 characters.');
+                return;
+              }
+              setStep('generating');
+              try {
+                await BackupService.restoreFromBackupFile(uri, passphrase);
+                const charts = await localDb.getCharts();
+                if (charts.length > 0) {
+                  const birthData = {
+                    date: charts[0].birthDate,
+                    time: charts[0].birthTime,
+                    hasUnknownTime: charts[0].hasUnknownTime,
+                    place: charts[0].birthPlace,
+                    latitude: charts[0].latitude,
+                    longitude: charts[0].longitude,
+                    houseSystem: charts[0].houseSystem,
+                  };
+                  const chart = AstrologyCalculator.generateNatalChart(birthData);
+                  timeoutRef.current = setTimeout(() => {
+                    onComplete(chart);
+                  }, 900);
+                } else {
+                  Alert.alert('No Charts Found', 'The backup did not contain any chart data.', [
+                    { text: 'OK', onPress: () => setStep('welcome') },
+                  ]);
+                }
+              } catch (error) {
+                logger.error('Failed to restore backup:', error);
+                Alert.alert('Restore Failed', 'Could not restore from backup. Please check your passphrase and try again.', [
+                  { text: 'OK', onPress: () => setStep('welcome') },
+                ]);
+              }
+            },
+          },
+        ],
+        'secure-text'
+      );
+    } catch (error) {
+      logger.error('Failed to pick backup file:', error);
+    }
   };
 
   const handleBirthModalClose = () => {
@@ -155,6 +213,11 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                     </LinearGradient>
                   </Pressable>
 
+                  <Pressable style={styles.restoreButton} onPress={handleRestoreBackup}>
+                    <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
+                    <Text style={styles.restoreText}>Restore from Backup</Text>
+                  </Pressable>
+
                   <Text style={styles.privacyText}>Your birth data is stored securely on your device</Text>
                 </Animated.View>
               </>
@@ -245,7 +308,19 @@ const styles = StyleSheet.create({
   ctaButton: { width: '100%', borderRadius: theme.borderRadius.lg, overflow: 'hidden', marginBottom: theme.spacing.md, ...theme.shadows.glow },
   ctaPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl },
-  ctaText: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', fontFamily: 'serif', marginRight: theme.spacing.sm },
+  ctaText: { fontSize: 18, fontWeight: '700', color: '#0D1421', fontFamily: 'serif', marginRight: theme.spacing.sm },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  restoreText: {
+    fontSize: 14,
+    color: theme.primary,
+    marginLeft: theme.spacing.sm,
+  },
   privacyText: { fontSize: 12, color: theme.textMuted, textAlign: 'center', paddingHorizontal: theme.spacing.lg },
   generatingContainer: { alignItems: 'center', justifyContent: 'center', flex: 1 },
   generatingIcon: { marginBottom: theme.spacing.xl },

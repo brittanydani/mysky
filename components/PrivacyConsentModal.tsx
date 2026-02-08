@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   declineButton: { borderRadius: theme.borderRadius.lg, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.2)', paddingVertical: theme.spacing.lg, alignItems: 'center' },
   buttonPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   buttonGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl },
-  acceptButtonText: { fontSize: 16, fontWeight: '600', color: '#1A1A1A', marginLeft: theme.spacing.sm },
+  acceptButtonText: { fontSize: 16, fontWeight: '600', color: '#0D1421', marginLeft: theme.spacing.sm },
   declineButtonText: { fontSize: 16, fontWeight: '600', color: theme.textSecondary },
   policyContainer: { flex: 1 },
   policyHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xl },

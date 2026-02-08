@@ -59,12 +59,10 @@ export default function TermsOfServiceScreen() {
               • Premium features including encrypted backup and extended content
             </Text>
 
-            <Text style={styles.sectionTitle}>User Accounts</Text>
+            <Text style={styles.sectionTitle}>Your Data</Text>
             <Text style={styles.paragraph}>
-              • You are responsible for maintaining the confidentiality of your account{'\n'}
-              • You must provide accurate and complete information{'\n'}
-              • You are responsible for all activities under your account{'\n'}
-              • You must notify us immediately of any unauthorized use
+              MySky does not require an account. All data is stored locally on your device.{' '}
+              You are responsible for maintaining your device&apos;s security and for any backup files you create.
             </Text>
 
             <Text style={styles.sectionTitle}>Subscriptions and Payments</Text>
@@ -72,22 +70,21 @@ export default function TermsOfServiceScreen() {
               <Text style={styles.bold}>Premium Subscriptions:</Text> MySky offers premium subscriptions with additional features. Subscriptions automatically renew unless cancelled.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Billing:</Text> You will be charged through your App Store or Google Play account. Prices may vary by location.
+              <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (e.g. the App Store or Google Play). Prices may vary by location.
             </Text>
             <Text style={styles.paragraph}>
               <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings. Cancellation takes effect at the end of the current billing period.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Refunds:</Text> Refunds are handled according to App Store and Google Play policies.
+              <Text style={styles.bold}>Refunds:</Text> Refunds are handled according to your app store&apos;s policies.
             </Text>
 
             <Text style={styles.sectionTitle}>Acceptable Use</Text>
             <Text style={styles.paragraph}>
               You agree not to:{'\n'}
               • Use the app for any illegal or unauthorized purpose{'\n'}
-              • Attempt to gain unauthorized access to our systems{'\n'}
+              • Attempt to reverse-engineer, decompile, or tamper with the app{'\n'}
               • Interfere with or disrupt the app&apos;s functionality{'\n'}
-              • Share your account credentials with others{'\n'}
               • Use the app to harm, harass, or impersonate others
             </Text>
 
@@ -116,7 +113,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Termination</Text>
             <Text style={styles.paragraph}>
-              We may terminate or suspend your account at any time for violation of these terms. You may delete your account at any time through the app settings.
+              We may revoke access to premium features for violation of these terms. You may delete all your data at any time through the Privacy Settings in the app.
             </Text>
 
             <Text style={styles.sectionTitle}>Changes to Terms</Text>

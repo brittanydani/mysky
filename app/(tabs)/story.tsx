@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
@@ -22,9 +23,11 @@ export default function StoryScreen() {
   const [chapters, setChapters] = useState<GeneratedChapter[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadStoryData();
-  }, [isPremium]);
+  useFocusEffect(
+    useCallback(() => {
+      loadStoryData();
+    }, [isPremium])
+  );
 
   const loadStoryData = async () => {
     try {
@@ -71,7 +74,7 @@ export default function StoryScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: 0 },
+            { paddingBottom: 100 },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -99,6 +102,8 @@ export default function StoryScreen() {
                   title={chapter.title}
                   content={chapter.content}
                   preview={isLocked ? chapter.reflection : undefined}
+                  reflection={!isLocked ? chapter.reflection : undefined}
+                  affirmation={!isLocked ? chapter.affirmation : undefined}
                   isLocked={isLocked}
                   onPress={() => {
                     if (isLocked) router.push('/(tabs)/premium' as Href);

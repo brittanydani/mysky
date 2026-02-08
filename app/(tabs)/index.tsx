@@ -1,22 +1,23 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, FlatList, Dimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
-import StorageIndicator from '../../components/ui/StorageIndicator';
 import OnboardingModal from '../../components/OnboardingModal';
-import { getDailyInsight } from '../../services/mockData';
+import BirthDataModal from '../../components/BirthDataModal';
 import { localDb } from '../../services/storage/localDb';
-import { NatalChart, PlanetPlacement } from '../../services/astrology/types';
+import { NatalChart, PlanetPlacement, BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { DailyInsightEngine, DailyInsight as DailyInsightData, DailyInsightCard } from '../../services/astrology/dailyInsightEngine';
+import { HumanGuidanceGenerator } from '../../services/astrology/humanGuidance';
+import { InsightHistoryService } from '../../services/storage/insightHistory';
 import { detectChartPatterns, ChartPatterns } from '../../services/astrology/chartPatterns';
 import { config } from '../../constants/config';
 import { usePremium } from '../../context/PremiumContext';
@@ -24,23 +25,6 @@ import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// ── Moon phase calculation (matches dailyInsightEngine.ts) ──
-function getMoonPhase(date: Date): { name: string; emoji: string; message: string } {
-  const synodicMonth = 29.53059;
-  const knownNewMoon = new Date('2024-01-11');
-  const daysSinceNew = (date.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
-  const phaseDay = ((daysSinceNew % synodicMonth) + synodicMonth) % synodicMonth;
-
-  if (phaseDay < 1.85) return { name: 'New Moon', emoji: '🌑', message: 'Set intentions. Plant seeds in the dark.' };
-  if (phaseDay < 7.38) return { name: 'Waxing Crescent', emoji: '🌒', message: 'Momentum is building. Keep going.' };
-  if (phaseDay < 9.23) return { name: 'First Quarter', emoji: '🌓', message: 'Push through resistance. Commit.' };
-  if (phaseDay < 14.77) return { name: 'Waxing Gibbous', emoji: '🌔', message: 'Refine and adjust. Almost there.' };
-  if (phaseDay < 16.61) return { name: 'Full Moon', emoji: '🌕', message: 'Illuminate. See clearly what\'s been hidden.' };
-  if (phaseDay < 22.15) return { name: 'Waning Gibbous', emoji: '🌖', message: 'Share what you\'ve learned. Give back.' };
-  if (phaseDay < 23.99) return { name: 'Last Quarter', emoji: '🌗', message: 'Release what no longer serves you.' };
-  return { name: 'Waning Crescent', emoji: '🌘', message: 'Rest and surrender. Trust the cycle.' };
-}
 
 // ── Element color mapping ──
 const ELEMENT_COLORS: Record<string, string> = {
@@ -121,31 +105,16 @@ export default function HomeScreen() {
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showEditBirth, setShowEditBirth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dailyInsight, setDailyInsight] = useState<DailyInsightData | null>(null);
 
-  // Get today's deep insight (fallback)
-  const todayInsight = useMemo(() => getDailyInsight(new Date()), []);
-
-  // Real moon phase
-  const moonPhase = useMemo(() => getMoonPhase(new Date()), []);
-  const [showMoonWeek, setShowMoonWeek] = useState(false);
-
-  // Week's moon phases (today + 6 days)
-  const weekMoonPhases = useMemo(() => {
-    const today = new Date();
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(d.getDate() + i);
-      const phase = getMoonPhase(d);
-      return { ...phase, label: i === 0 ? 'Today' : days[d.getDay()], date: d.getDate() };
-    });
-  }, []);
-
-  useEffect(() => {
-    loadUserChart();
-  }, []);
+  // Reload chart every time this screen is focused (picks up edits from settings or other screens)
+  useFocusEffect(
+    useCallback(() => {
+      loadUserChart();
+    }, [])
+  );
 
   const loadUserChart = async () => {
     try {
@@ -176,6 +145,16 @@ export default function HomeScreen() {
         try {
           const insight = DailyInsightEngine.generateDailyInsight(chart, new Date());
           setDailyInsight(insight);
+
+          // Save to insight history for premium memory/recall
+          if (isPremium && savedChart.id) {
+            try {
+              const guidance = HumanGuidanceGenerator.generateDailyGuidance(chart);
+              await InsightHistoryService.saveInsight(guidance, savedChart.id, insight.signals);
+            } catch (historyErr) {
+              logger.error('Failed to save insight to history:', historyErr);
+            }
+          }
         } catch (e) {
           logger.error('Failed to generate daily insight:', e);
         }
@@ -198,8 +177,60 @@ export default function HomeScreen() {
     try {
       const insight = DailyInsightEngine.generateDailyInsight(chart, new Date());
       setDailyInsight(insight);
+
+      // Save to insight history for premium memory/recall
+      if (isPremium && chart.id) {
+        const guidance = HumanGuidanceGenerator.generateDailyGuidance(chart);
+        InsightHistoryService.saveInsight(guidance, chart.id, insight.signals).catch(e =>
+          logger.error('Failed to save initial insight to history:', e)
+        );
+      }
     } catch (e) {
       logger.error('Failed to generate daily insight:', e);
+    }
+  };
+
+  const handleEditBirthData = async (birthData: BirthData, extra?: { chartName?: string }) => {
+    setShowEditBirth(false);
+    try {
+      const chart = AstrologyCalculator.generateNatalChart(birthData);
+
+      // Update the existing chart in DB (or save as new if none existed)
+      const charts = await localDb.getCharts();
+      const existingId = charts.length > 0 ? charts[0].id : chart.id;
+
+      const savedChart = {
+        id: existingId,
+        name: extra?.chartName ?? chart.name,
+        birthDate: chart.birthData.date,
+        birthTime: chart.birthData.time,
+        hasUnknownTime: chart.birthData.hasUnknownTime,
+        birthPlace: chart.birthData.place,
+        latitude: chart.birthData.latitude,
+        longitude: chart.birthData.longitude,
+        houseSystem: chart.birthData.houseSystem,
+        createdAt: charts.length > 0 ? charts[0].createdAt : chart.createdAt,
+        updatedAt: new Date().toISOString(),
+        isDeleted: false,
+      };
+
+      await localDb.saveChart(savedChart);
+
+      chart.id = existingId;
+      chart.name = savedChart.name;
+      chart.createdAt = savedChart.createdAt;
+      chart.updatedAt = savedChart.updatedAt;
+      setUserChart(chart);
+
+      // Regenerate daily insight
+      try {
+        const insight = DailyInsightEngine.generateDailyInsight(chart, new Date());
+        setDailyInsight(insight);
+      } catch (e) {
+        logger.error('Failed to regenerate daily insight:', e);
+      }
+    } catch (error) {
+      logger.error('Failed to update chart:', error);
     }
   };
 
@@ -272,10 +303,6 @@ export default function HomeScreen() {
                     : config.tagline}
                 </Text>
               </View>
-              <StorageIndicator
-                compact
-                onPress={() => router.push('/(tabs)/settings' as Href)}
-              />
             </View>
           </Animated.View>
 
@@ -338,12 +365,48 @@ export default function HomeScreen() {
                   )}
                 </View>
 
+                <View style={styles.chartActions}>
+                  <Pressable
+                    style={styles.viewChartButton}
+                    onPress={() => router.push('/(tabs)/chart' as Href)}
+                  >
+                    <Text style={styles.viewChartText}>View Full Chart</Text>
+                    <Ionicons name="arrow-forward" size={16} color={theme.primary} />
+                  </Pressable>
+
+                  <Pressable
+                    style={styles.editBirthButton}
+                    onPress={() => setShowEditBirth(true)}
+                  >
+                    <Ionicons name="create-outline" size={16} color={theme.textSecondary} />
+                    <Text style={styles.editBirthText}>Edit Birth Data</Text>
+                  </Pressable>
+                </View>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── Create Chart CTA (when no chart exists) ── */}
+          {!userChart && !loading && (
+            <Animated.View
+              entering={FadeInDown.delay(200).duration(600)}
+              style={styles.chartSummary}
+            >
+              <LinearGradient
+                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
+                style={styles.chartCard}
+              >
+                <View style={styles.chartHeader}>
+                  <Text style={styles.chartTitle}>Discover Your Cosmic Blueprint</Text>
+                  <Text style={styles.chartDate}>Enter your birth details to get started</Text>
+                </View>
+
                 <Pressable
-                  style={styles.viewChartButton}
-                  onPress={() => router.push('/(tabs)/chart' as Href)}
+                  style={styles.createChartButton}
+                  onPress={() => setShowOnboarding(true)}
                 >
-                  <Text style={styles.viewChartText}>View Full Chart</Text>
-                  <Ionicons name="arrow-forward" size={16} color={theme.primary} />
+                  <Ionicons name="add-circle-outline" size={20} color={theme.primary} />
+                  <Text style={styles.createChartText}>Create Your Chart</Text>
                 </Pressable>
               </LinearGradient>
             </Animated.View>
@@ -379,31 +442,6 @@ export default function HomeScreen() {
               />
             </Animated.View>
           )}
-
-          {/* ── Daily Reflection (Shadow) ── */}
-          <Animated.View entering={FadeInDown.delay(260).duration(600)}>
-            <Pressable
-              style={styles.heroCard}
-              onPress={() => router.push('/(tabs)/journal' as Href)}
-            >
-              <LinearGradient colors={['#1A2740', '#0D1421']} style={styles.heroGradient}>
-                <Image
-                  source={require('../../assets/images/constellation-hero.png')}
-                  style={styles.heroImage}
-                  contentFit="cover"
-                />
-                <LinearGradient
-                  colors={['transparent', 'rgba(13,20,33,0.95)']}
-                  style={styles.heroOverlay}
-                >
-                  <Text style={styles.insightLabel}>{todayInsight.title}</Text>
-                  <Text style={styles.insightText}>
-                    {todayInsight.message}
-                  </Text>
-                </LinearGradient>
-              </LinearGradient>
-            </Pressable>
-          </Animated.View>
 
           {/* ── Chart Highlights (stelliums, chart ruler, clusters, retrogrades) ── */}
           {userChart && hasHighlights && chartPatterns && (
@@ -616,49 +654,6 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* ── Moon Phase (real calculation) ── */}
-          <Animated.View entering={FadeInDown.delay(550).duration(600)}>
-            <Pressable
-              style={styles.moonPhaseCard}
-              onPress={() => setShowMoonWeek(prev => !prev)}
-            >
-              <LinearGradient
-                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
-                style={styles.moonPhaseGradient}
-              >
-                <View style={styles.moonPhaseContent}>
-                  <Text style={styles.moonEmoji}>{moonPhase.emoji}</Text>
-                  <View style={styles.moonPhaseText}>
-                    <Text style={styles.moonPhaseLabel}>Moon Phase</Text>
-                    <Text style={styles.moonPhaseName}>{moonPhase.name}</Text>
-                    <Text style={styles.moonPhaseMessage}>{moonPhase.message}</Text>
-                  </View>
-                  <Ionicons name={showMoonWeek ? 'chevron-up' : 'chevron-down'} size={20} color={theme.textMuted} />
-                </View>
-
-                {/* Moon sign from real transits */}
-                {dailyInsight?.moonSign && (
-                  <View style={styles.moonSignRow}>
-                    <Text style={styles.moonSignLabel}>Moon in</Text>
-                    <Text style={styles.moonSignValue}>{dailyInsight.moonSign}</Text>
-                  </View>
-                )}
-
-                {/* Weekly moon phases */}
-                {showMoonWeek && (
-                  <View style={styles.moonWeekRow}>
-                    {weekMoonPhases.map((day, i) => (
-                      <View key={i} style={[styles.moonWeekDay, i === 0 && styles.moonWeekDayToday]}>
-                        <Text style={styles.moonWeekEmoji}>{day.emoji}</Text>
-                        <Text style={[styles.moonWeekLabel, i === 0 && styles.moonWeekLabelToday]}>{day.label}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </LinearGradient>
-            </Pressable>
-          </Animated.View>
-
           {/* ── Quick Links ── */}
           <Animated.View entering={FadeInDown.delay(600).duration(600)} style={styles.sectionBlock}>
             <Text style={styles.sectionTitle}>Explore</Text>
@@ -713,6 +708,22 @@ export default function HomeScreen() {
         visible={showOnboarding}
         onComplete={handleOnboardingComplete}
       />
+
+      <BirthDataModal
+        visible={showEditBirth}
+        onClose={() => setShowEditBirth(false)}
+        onSave={handleEditBirthData}
+        initialData={userChart ? {
+          date: userChart.birthData.date,
+          time: userChart.birthData.time,
+          hasUnknownTime: userChart.birthData.hasUnknownTime,
+          place: userChart.birthData.place,
+          latitude: userChart.birthData.latitude,
+          longitude: userChart.birthData.longitude,
+          houseSystem: userChart.birthData.houseSystem,
+          chartName: userChart.name,
+        } : undefined}
+      />
     </View>
   );
 }
@@ -740,8 +751,13 @@ const styles = StyleSheet.create({
   signLabel: { color: theme.textMuted },
   signValue: { color: theme.textPrimary, fontWeight: '600' },
   signElement: { color: theme.primary, fontStyle: 'italic' },
-  viewChartButton: { flexDirection: 'row', justifyContent: 'center', marginTop: theme.spacing.md },
+  chartActions: { marginTop: theme.spacing.md, gap: theme.spacing.sm },
+  viewChartButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   viewChartText: { color: theme.primary, marginRight: 6 },
+  editBirthButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingTop: theme.spacing.sm, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
+  editBirthText: { color: theme.textSecondary, fontSize: 13, marginLeft: 6 },
+  createChartButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: theme.spacing.md, paddingVertical: theme.spacing.md, borderRadius: theme.borderRadius.md, backgroundColor: 'rgba(201,169,98,0.15)' },
+  createChartText: { color: theme.primary, fontWeight: '600', fontSize: 16, marginLeft: 8 },
 
   // Section
   sectionBlock: { marginBottom: theme.spacing.lg },
@@ -867,16 +883,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // Retrograde
-  retroCard: { borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg },
-  retroHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
-  retroTitle: { color: theme.warning, fontWeight: '700', fontSize: 15, marginLeft: theme.spacing.sm },
-  retroPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: theme.spacing.md },
-  retroPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(224,176,122,0.12)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: theme.borderRadius.full },
-  retroPillSymbol: { color: theme.warning, fontSize: 14, marginRight: 4 },
-  retroPillText: { color: theme.textPrimary, fontSize: 13, fontWeight: '600' },
-  retroHint: { color: theme.textSecondary, fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
-
   // Today's Weather
   weatherHeadlineCard: { borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg, marginBottom: theme.spacing.md },
   weatherHeadline: { color: theme.textPrimary, fontSize: 20, fontWeight: '700', lineHeight: 28 },
@@ -892,34 +898,6 @@ const styles = StyleSheet.create({
   insightCardDomain: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5 },
   insightCardObservation: { color: theme.textPrimary, fontSize: 15, lineHeight: 22, marginBottom: 8 },
   insightCardChoice: { color: theme.textSecondary, fontSize: 13, lineHeight: 18, fontStyle: 'italic' },
-
-  // Hero (Daily Reflection)
-  heroCard: { borderRadius: theme.borderRadius.xl, overflow: 'hidden', marginBottom: theme.spacing.lg, marginTop: -theme.spacing.md },
-  heroGradient: { minHeight: 200 },
-  heroImage: { ...StyleSheet.absoluteFillObject, opacity: 0.4 },
-  heroOverlay: { ...StyleSheet.absoluteFillObject, padding: theme.spacing.xl, justifyContent: 'flex-end' },
-  heroTitle: { color: theme.textPrimary, fontWeight: '700', fontSize: 20 },
-  insightText: { color: theme.textPrimary, fontSize: 17, lineHeight: 26, fontStyle: 'italic', letterSpacing: 0.3 },
-  insightLabel: { color: theme.primary, fontWeight: '700', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', marginBottom: theme.spacing.sm },
-
-  // Moon Phase
-  moonPhaseCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', marginBottom: theme.spacing.lg },
-  moonPhaseGradient: { padding: theme.spacing.lg },
-  moonPhaseContent: { flexDirection: 'row', alignItems: 'center' },
-  moonEmoji: { fontSize: 36, marginRight: theme.spacing.md },
-  moonPhaseText: { flex: 1 },
-  moonPhaseLabel: { color: theme.textMuted, fontSize: 12 },
-  moonPhaseName: { color: theme.textPrimary, fontWeight: '600', fontSize: 18 },
-  moonPhaseMessage: { color: theme.textSecondary, fontSize: 13, fontStyle: 'italic', marginTop: 2 },
-  moonSignRow: { flexDirection: 'row', alignItems: 'center', marginTop: theme.spacing.md, paddingTop: theme.spacing.md, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  moonSignLabel: { color: theme.textMuted, fontSize: 13, marginRight: 6 },
-  moonSignValue: { color: theme.primary, fontWeight: '700', fontSize: 15 },
-  moonWeekRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: theme.spacing.md, paddingTop: theme.spacing.md, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  moonWeekDay: { alignItems: 'center', flex: 1 },
-  moonWeekDayToday: { opacity: 1 },
-  moonWeekEmoji: { fontSize: 22, marginBottom: 4 },
-  moonWeekLabel: { fontSize: 11, color: theme.textMuted },
-  moonWeekLabelToday: { color: theme.primary, fontWeight: '600' },
 
   // Quick Links
   quickLinksRow: { flexDirection: 'row', gap: theme.spacing.sm },

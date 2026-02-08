@@ -30,6 +30,7 @@ import {
 } from './promptLibrary';
 import { getChironPlacement } from './chiron';
 import { getNodeAxis } from './nodes';
+import { getMoonPhaseKey } from '../../utils/moonPhase';
 import { getChakraForHouse, getChakraForPlanet, generateChakraInsightCard, ChakraInsightCard } from './chakraSystem';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -292,21 +293,7 @@ function getDayOfYear(date: Date): number {
 }
 
 function getMoonPhaseTag(date: Date): MoonPhaseTag {
-  // Synodic month ~29.53 days. Use a known new moon as reference.
-  const refNewMoon = new Date('2024-01-11T11:57:00Z').getTime();
-  const synodicMonth = 29.53058867;
-  const daysSinceNew = (date.getTime() - refNewMoon) / (1000 * 60 * 60 * 24);
-  const phase = ((daysSinceNew % synodicMonth) + synodicMonth) % synodicMonth;
-  const phaseFraction = phase / synodicMonth;
-
-  if (phaseFraction < 0.0625) return 'new';
-  if (phaseFraction < 0.1875) return 'waxing_crescent';
-  if (phaseFraction < 0.3125) return 'first_quarter';
-  if (phaseFraction < 0.4375) return 'waxing_gibbous';
-  if (phaseFraction < 0.5625) return 'full';
-  if (phaseFraction < 0.6875) return 'waning_gibbous';
-  if (phaseFraction < 0.8125) return 'last_quarter';
-  return 'waning_crescent';
+  return getMoonPhaseKey(date) as MoonPhaseTag;
 }
 
 function mapPlanetToTransitTrigger(signalDescription: string): TransitTrigger | null {

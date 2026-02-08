@@ -4,7 +4,7 @@ import { SavedInsight } from './insightHistory';
 import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 
-const CURRENT_DB_VERSION = 5;
+const CURRENT_DB_VERSION = 6;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -55,6 +55,10 @@ class LocalDatabase {
     if (fromVersion < 5) {
       await this.migrateToVersion5();
     }
+
+    if (fromVersion < 6) {
+      await this.migrateToVersion6();
+    }
   }
 
   private async createInitialSchema(): Promise<void> {
@@ -104,6 +108,14 @@ class LocalDatabase {
         user_id TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
+      );
+    `);
+
+    // Create migration_markers table
+    await this.db.execAsync(`
+      CREATE TABLE IF NOT EXISTS migration_markers (
+        key TEXT PRIMARY KEY,
+        completed_at TEXT NOT NULL
       );
     `);
 
@@ -289,6 +301,16 @@ class LocalDatabase {
     }));
   }
 
+  async updateAllChartsHouseSystem(houseSystem: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const now = new Date().toISOString();
+    await this.db.runAsync(
+      'UPDATE saved_charts SET house_system = ?, updated_at = ? WHERE is_deleted = 0',
+      [houseSystem, now]
+    );
+  }
+
   async deleteChart(id: string): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
@@ -467,6 +489,7 @@ class LocalDatabase {
       DELETE FROM app_settings;
       VACUUM;
     `);
+    // Note: migration_markers is intentionally preserved
   }
 
   // Alias methods for consistency with other parts of the app
@@ -491,6 +514,27 @@ class LocalDatabase {
 
   async saveSettings(settings: AppSettings): Promise<void> {
     return this.updateSettings(settings);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Migration Markers
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  async getMigrationMarker(key: string): Promise<boolean> {
+    if (!this.db) throw new Error('Database not initialized');
+    const result = await this.db.getFirstAsync(
+      'SELECT key FROM migration_markers WHERE key = ?',
+      [key]
+    );
+    return result != null;
+  }
+
+  async setMigrationMarker(key: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    await this.db.runAsync(
+      'INSERT OR REPLACE INTO migration_markers (key, completed_at) VALUES (?, ?)',
+      [key, new Date().toISOString()]
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -777,6 +821,20 @@ class LocalDatabase {
     `);
 
     logger.info('[LocalDB] Version 5 migration complete');
+  }
+
+  private async migrateToVersion6(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    logger.info('[LocalDB] Migrating to version 6 (migration markers)...');
+
+    await this.db.execAsync(`
+      CREATE TABLE IF NOT EXISTS migration_markers (
+        key TEXT PRIMARY KEY,
+        completed_at TEXT NOT NULL
+      );
+    `);
+
+    logger.info('[LocalDB] Version 6 migration complete');
   }
 
   // ═══════════════════════════════════════════════════

@@ -26,7 +26,7 @@ export default function PrivacyPolicyScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>Privacy Policy</Text>
-          <Text style={styles.lastUpdated}>Last updated: February 5, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: February 7, 2026</Text>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Our Commitment to Your Privacy</Text>
@@ -65,11 +65,12 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Storage and Security</Text>
             <Text style={styles.paragraph}>
-              Your data is stored locally on your device using encrypted storage:
+              Your data is stored locally on your device using multiple layers of protection:
             </Text>
-            <Text style={styles.bulletPoint}>• All personal data is encrypted using your device&apos;s security system</Text>
-            <Text style={styles.bulletPoint}>• Data is stored in your device&apos;s secure keychain/keystore</Text>
-            <Text style={styles.bulletPoint}>• No personal information is uploaded to external servers by default</Text>
+            <Text style={styles.bulletPoint}>• Chart and journal data is stored in a local database on your device</Text>
+            <Text style={styles.bulletPoint}>• Sensitive fields are encrypted with AES-256 before being saved</Text>
+            <Text style={styles.bulletPoint}>• Encryption keys are stored in your device&apos;s secure keychain/keystore</Text>
+            <Text style={styles.bulletPoint}>• No personal information is uploaded to external servers</Text>
             <Text style={styles.bulletPoint}>• Encrypted backup is optional and requires explicit consent</Text>
           </View>
 
@@ -101,13 +102,13 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Encrypted Backup (Optional)</Text>
             <Text style={styles.paragraph}>
-              If you choose to enable encrypted backup:
+              If you choose to create an encrypted backup:
             </Text>
-            <Text style={styles.bulletPoint}>• Your data is encrypted before it leaves your device</Text>
-            <Text style={styles.bulletPoint}>• Protected by a passphrase you create</Text>
-            <Text style={styles.bulletPoint}>• Stored in your cloud drive for backup and restore</Text>
-            <Text style={styles.bulletPoint}>• Used only for backup and restore across devices</Text>
-            <Text style={styles.bulletPoint}>• Can be disabled and deleted at any time</Text>
+            <Text style={styles.bulletPoint}>• Your data is encrypted with AES-256 using a passphrase you create</Text>
+            <Text style={styles.bulletPoint}>• A .msky backup file is created on your device</Text>
+            <Text style={styles.bulletPoint}>• You choose where to save or share the file (Files, AirDrop, email, etc.)</Text>
+            <Text style={styles.bulletPoint}>• MySky never uploads your data to any server</Text>
+            <Text style={styles.bulletPoint}>• You can restore from a backup file at any time</Text>
           </View>
 
           <View style={styles.section}>

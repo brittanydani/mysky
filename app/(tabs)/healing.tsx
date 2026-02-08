@@ -1,29 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import InsightCard from '../../components/ui/InsightCard';
 import ShadowQuoteCard from '../../components/ui/ShadowQuoteCard';
-import { healingInsights } from '../../services/mockData';
+import { HealingInsightsGenerator, HealingInsights } from '../../services/premium/healingInsights';
 import { ShadowQuoteEngine, ShadowQuote } from '../../services/astrology/shadowQuotes';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { localDb } from '../../services/storage/localDb';
+import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 export default function HealingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isPremium } = usePremium();
   const [healingQuote, setHealingQuote] = useState<ShadowQuote | null>(null);
+  const [healingData, setHealingData] = useState<HealingInsights | null>(null);
 
-  useEffect(() => {
-    loadHealingQuote();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadHealingData();
+    }, [])
+  );
 
-  const loadHealingQuote = async () => {
+  const loadHealingData = async () => {
     try {
       const charts = await localDb.getCharts();
       if (charts.length > 0) {
@@ -38,6 +44,12 @@ export default function HealingScreen() {
           houseSystem: savedChart.houseSystem,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
+
+        // Generate chart-derived healing insights
+        const insights = HealingInsightsGenerator.generateHealingInsights(chart);
+        setHealingData(insights);
+
+        // Load shadow quote for healing screen
         const result = await ShadowQuoteEngine.getDailyShadowQuote(chart);
         // Prefer protective/release tones on the healing screen
         if (result.quote.tone === 'protective' || result.quote.tone === 'release') {
@@ -48,20 +60,18 @@ export default function HealingScreen() {
         }
       }
     } catch (e) {
-      logger.error('[Healing] Failed to load shadow quote:', e);
+      logger.error('[Healing] Failed to load healing data:', e);
     }
   };
 
-  const handleInsightPress = (insight: typeof healingInsights[0]) => {
-    if (insight.isLocked) {
-      router.push('/(tabs)/premium' as Href);
-    }
+  const goToPremium = () => {
+    router.push('/(tabs)/premium' as Href);
   };
 
   return (
     <View style={styles.container}>
       <StarField starCount={25} />
-      
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
@@ -72,7 +82,7 @@ export default function HealingScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <Animated.View 
+          <Animated.View
             entering={FadeInDown.delay(100).duration(600)}
             style={styles.header}
           >
@@ -90,38 +100,66 @@ export default function HealingScreen() {
             </Animated.View>
           )}
 
-          {/* Inner Child Needs - Featured */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-            <InsightCard
-              title={healingInsights[0].title}
-              content={healingInsights[0].content}
-              icon="heart"
-              variant="featured"
-              onPress={() => handleInsightPress(healingInsights[0])}
-            />
-          </Animated.View>
-
-          {/* Current Growth Theme */}
-          <Animated.View 
-            entering={FadeInDown.delay(300).duration(600)}
-            style={styles.section}
-          >
-            <Text style={styles.sectionTitle}>Current Growth Theme</Text>
-            
-            {healingInsights.slice(1).map((insight) => (
+          {/* Inner Child Needs - Featured (free) */}
+          {healingData && (
+            <Animated.View entering={FadeInDown.delay(200).duration(600)}>
               <InsightCard
-                key={insight.id}
-                title={insight.title}
-                content={insight.content}
-                icon={
-                  insight.id === '2' ? 'shield' :
-                  insight.id === '3' ? 'link' : 'moon'
-                }
-                locked={insight.isLocked}
-                onPress={() => handleInsightPress(insight)}
+                title="Inner Child Needs"
+                content={healingData.reparenting.innerChildNeeds}
+                icon="heart"
+                variant="featured"
               />
-            ))}
-          </Animated.View>
+            </Animated.View>
+          )}
+
+          {/* Deeper Healing — premium-gated */}
+          {healingData && (
+            <Animated.View
+              entering={FadeInDown.delay(300).duration(600)}
+              style={styles.section}
+            >
+              <Text style={styles.sectionTitle}>Deeper Healing</Text>
+
+              <InsightCard
+                title="Fear Patterns"
+                content={isPremium ? healingData.fears.coreFear : 'Identifying the root of your anxiety...'}
+                icon="shield"
+                locked={!isPremium}
+                onPress={!isPremium ? goToPremium : undefined}
+              />
+
+              <InsightCard
+                title="Attachment Themes"
+                content={isPremium ? healingData.attachment.headline : 'Exploring how you connect with others...'}
+                icon="link"
+                locked={!isPremium}
+                onPress={!isPremium ? goToPremium : undefined}
+              />
+
+              <InsightCard
+                title="Safety & Regulation"
+                content={isPremium ? healingData.safety.whatFeelsSafe : 'Understanding what your nervous system needs...'}
+                icon="moon"
+                locked={!isPremium}
+                onPress={!isPremium ? goToPremium : undefined}
+              />
+            </Animated.View>
+          )}
+
+          {/* Daily healing prompt — premium */}
+          {healingData && isPremium && (
+            <Animated.View
+              entering={FadeInDown.delay(400).duration(600)}
+              style={styles.section}
+            >
+              <Text style={styles.sectionTitle}>Today's Healing Prompt</Text>
+              <InsightCard
+                title="Journal Prompt"
+                content={healingData.dailyJournalPrompt}
+                icon="book"
+              />
+            </Animated.View>
+          )}
 
         </ScrollView>
       </SafeAreaView>

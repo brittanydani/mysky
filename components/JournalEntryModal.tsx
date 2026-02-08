@@ -593,5 +593,5 @@ const styles = StyleSheet.create({
   saveButton: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', ...theme.shadows.glow },
   saveButtonPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   saveGradient: { paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl, alignItems: 'center' },
-  saveButtonText: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', fontFamily: 'serif' },
+  saveButtonText: { fontSize: 18, fontWeight: '700', color: '#0D1421', fontFamily: 'serif' },
 });

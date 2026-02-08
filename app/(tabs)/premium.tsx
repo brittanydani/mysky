@@ -66,48 +66,85 @@ export default function PremiumScreen() {
     }
   };
 
-  // If user is already premium, show premium features
+  // If user is already premium, show warm personal view
   if (isPremium) {
     return (
       <View style={styles.container}>
         <StarField starCount={50} />
-        
+
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: 0 },
+              { paddingBottom: insets.bottom + 40 },
             ]}
             showsVerticalScrollIndicator={false}
           >
-            <Animated.View 
-              entering={FadeInDown.delay(100).duration(600)}
+            {/* Warm glowing header */}
+            <Animated.View
+              entering={FadeInDown.delay(100).duration(800)}
               style={styles.premiumHeader}
             >
-              <View style={styles.premiumBadge}>
-                <Text style={styles.deeperSkyBadgeText}>✨</Text>
-                <Text style={styles.premiumTitle}>Deeper Sky</Text>
+              <View style={styles.premiumGlowOrb}>
+                <Text style={styles.premiumOrbEmoji}>{'  '}</Text>
               </View>
+              <Text style={styles.premiumHeadline}>Your sky is open.</Text>
               <Text style={styles.premiumSubtitle}>
-                You have access to all premium features
+                You chose to go deeper with yourself.{'\n'}That matters.
               </Text>
             </Animated.View>
 
-            <Animated.View 
-              entering={FadeInDown.delay(200).duration(600)}
-              style={styles.featuresContainer}
+            {/* Gentle affirmation card */}
+            <Animated.View
+              entering={FadeInDown.delay(300).duration(600)}
             >
-              <Text style={styles.featuresTitle}>Your Deeper Sky Features</Text>
+              <LinearGradient
+                colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.premiumAffirmationCard}
+              >
+                <Text style={styles.premiumAffirmationText}>
+                  "The sky doesn't rush to reveal itself.{'\n'}Neither do you."
+                </Text>
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Feature list with warm emojis */}
+            <Animated.View
+              entering={FadeInDown.delay(450).duration(600)}
+              style={styles.premiumFeatureList}
+            >
+              <Text style={styles.premiumFeatureListLabel}>Everything in Deeper Sky</Text>
               {DEEPER_SKY_FEATURES.map((feature, index) => (
-                <View key={feature.id} style={styles.premiumFeatureCard}>
-                  <View style={styles.premiumFeatureHeader}>
-                    <Text style={styles.premiumFeatureIcon}>{feature.icon}</Text>
-                    <Text style={styles.premiumFeatureName}>{feature.name}</Text>
-                  </View>
-                  <Text style={styles.premiumFeatureDescription}>{feature.description}</Text>
-                </View>
+                <Animated.View
+                  key={feature.id}
+                  entering={FadeInDown.delay(500 + index * 60).duration(400)}
+                  style={styles.premiumFeatureRow}
+                >
+                  <Ionicons name={feature.icon as any} size={16} color={theme.primary} style={{ opacity: 0.8 }} />
+                  <Text style={styles.premiumFeatureRowName}>{feature.name}</Text>
+                </Animated.View>
               ))}
+            </Animated.View>
+
+            {/* Footer */}
+            <Animated.View
+              entering={FadeInDown.delay(700).duration(600)}
+              style={styles.premiumFooter}
+            >
+              <Pressable
+                style={styles.manageButton}
+                onPress={() => {
+                  Alert.alert(
+                    'Manage Subscription',
+                    'To manage your subscription, go to your device settings:\n\niOS: Settings > Apple ID > Subscriptions\nAndroid: Play Store > Account > Subscriptions'
+                  );
+                }}
+              >
+                <Text style={styles.manageText}>Manage Subscription</Text>
+              </Pressable>
             </Animated.View>
           </ScrollView>
         </SafeAreaView>
@@ -170,7 +207,7 @@ export default function PremiumScreen() {
             <View style={styles.featureRow}>
               <View style={styles.featureRowText}>
                 <Text style={styles.featureRowName}>Encrypted Backup</Text>
-                <Text style={styles.featureRowDescription}>Sync your charts across devices</Text>
+                <Text style={styles.featureRowDescription}>Back up and restore your data securely</Text>
               </View>
             </View>
           </Animated.View>
@@ -327,33 +364,79 @@ const styles = StyleSheet.create({
   },
   premiumHeader: {
     alignItems: 'center',
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.xxl + 16,
     marginBottom: theme.spacing.xl,
-  },
-  premiumBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(201, 169, 98, 0.2)',
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.full,
+  },
+  premiumGlowOrb: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(201, 169, 98, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+    ...theme.shadows.glow,
+  },
+  premiumOrbEmoji: {
+    fontSize: 32,
+  },
+  premiumHeadline: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+    textAlign: 'center',
     marginBottom: theme.spacing.md,
   },
-  deeperSkyBadgeText: {
-    fontSize: 20,
-    marginRight: theme.spacing.xs,
-  },
-  premiumTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: theme.primary,
-    fontFamily: 'serif',
-    marginLeft: theme.spacing.xs,
-  },
   premiumSubtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: theme.textSecondary,
     textAlign: 'center',
+    lineHeight: 24,
+  },
+  premiumAffirmationCard: {
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.xl,
+    marginBottom: theme.spacing.xxl,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 169, 98, 0.15)',
+    alignItems: 'center',
+  },
+  premiumAffirmationText: {
+    fontSize: 16,
+    color: theme.primary,
+    fontStyle: 'italic',
+    fontFamily: 'serif',
+    textAlign: 'center',
+    lineHeight: 26,
+  },
+  premiumFeatureList: {
+    marginBottom: theme.spacing.xl,
+  },
+  premiumFeatureListLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: theme.spacing.lg,
+    textAlign: 'center',
+  },
+  premiumFeatureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+  },
+  premiumFeatureRowName: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    marginLeft: theme.spacing.md,
+  },
+  premiumFooter: {
+    alignItems: 'center',
+    marginTop: theme.spacing.lg,
   },
   illustrationContainer: {
     alignItems: 'center',
@@ -403,36 +486,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.textSecondary,
     lineHeight: 18,
-  },
-  // Premium Feature Card (for active subscribers)
-  premiumFeatureCard: {
-    backgroundColor: 'rgba(201, 169, 98, 0.08)',
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.2)',
-  },
-  premiumFeatureHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  premiumFeatureIcon: {
-    fontSize: 24,
-    marginRight: theme.spacing.md,
-  },
-  premiumFeatureName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.primary,
-    fontFamily: 'serif',
-  },
-  premiumFeatureDescription: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    lineHeight: 20,
-    paddingLeft: 40,
   },
   featureRow: {
     flexDirection: 'row',
@@ -484,7 +537,7 @@ const styles = StyleSheet.create({
   ctaTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: '#0D1421',
     fontFamily: 'serif',
   },
   restoreButton: {

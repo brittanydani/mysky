@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,8 @@ interface ChapterCardProps {
   title: string;
   content?: string;
   preview?: string;
+  reflection?: string;
+  affirmation?: string;
   isLocked?: boolean;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
@@ -19,19 +21,30 @@ function ChapterCard({
   title,
   content,
   preview,
+  reflection,
+  affirmation,
   isLocked = false,
   onPress,
   style,
 }: ChapterCardProps) {
+  const [expanded, setExpanded] = useState(true);
   const displayText = isLocked ? preview ?? '' : content ?? '';
+  const isLong = !isLocked && !!content && content.length > 200;
+
+  const handlePress = () => {
+    if (isLocked) {
+      onPress?.();
+    } else if (isLong) {
+      setExpanded(prev => !prev);
+    }
+  };
 
   return (
     <Pressable
-      onPress={isLocked ? undefined : onPress}
-      disabled={isLocked}
+      onPress={handlePress}
       accessibilityRole="button"
-      accessibilityState={{ disabled: isLocked }}
-      style={({ pressed }) => [styles.container, style, pressed && !isLocked && styles.pressed]}
+      accessibilityState={{ disabled: false }}
+      style={({ pressed }) => [styles.container, style, pressed && styles.pressed]}
       android_ripple={{ color: 'rgba(255,255,255,0.08)' }}
     >
       <LinearGradient
@@ -56,19 +69,40 @@ function ChapterCard({
 
         <Text style={[styles.title, isLocked && styles.lockedTitle]}>{title}</Text>
 
-        <Text style={[styles.content, isLocked && styles.lockedContent]} numberOfLines={isLocked ? 2 : 6}>
+        <Text
+          style={[styles.content, isLocked && styles.lockedContent]}
+          numberOfLines={isLocked ? 2 : undefined}
+        >
           {displayText}
         </Text>
 
-        {!isLocked && content && content.length > 200 && (
-          <Text style={styles.readMore}>Continue reading…</Text>
+        {/* Reflection + Affirmation when expanded */}
+        {expanded && reflection ? (
+          <View style={styles.reflectionBox}>
+            <Text style={styles.reflectionLabel}>Reflection</Text>
+            <Text style={styles.reflectionText}>{reflection}</Text>
+          </View>
+        ) : null}
+
+        {expanded && affirmation ? (
+          <View style={styles.affirmationBox}>
+            <Text style={styles.affirmationText}>{affirmation}</Text>
+          </View>
+        ) : null}
+
+        {/* Toggle text for long unlocked content */}
+        {isLong && (
+          <Text style={styles.readMore}>
+            {expanded ? 'Show less' : 'Continue reading…'}
+          </Text>
         )}
+
       </LinearGradient>
     </Pressable>
   );
 }
 
-export default memo(ChapterCard);
+export default ChapterCard;
 
 const styles = StyleSheet.create({
   container: {
@@ -134,5 +168,55 @@ const styles = StyleSheet.create({
     color: theme.primary,
     marginTop: theme.spacing.md,
     fontWeight: '500',
+  },
+  reflectionBox: {
+    marginTop: theme.spacing.lg,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: 'rgba(201, 169, 98, 0.08)',
+    borderLeftWidth: 3,
+    borderLeftColor: theme.primary,
+  },
+  reflectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: theme.spacing.xs,
+  },
+  reflectionText: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    lineHeight: 22,
+    fontStyle: 'italic',
+  },
+  affirmationBox: {
+    marginTop: theme.spacing.md,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: 'rgba(201, 169, 98, 0.06)',
+    alignItems: 'center',
+  },
+  affirmationText: {
+    fontSize: 15,
+    color: theme.primary,
+    fontWeight: '600',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  lockedCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+  },
+  lockedCtaText: {
+    fontSize: 13,
+    color: theme.primary,
+    fontWeight: '500',
+    marginLeft: theme.spacing.xs,
   },
 });

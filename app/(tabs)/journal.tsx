@@ -10,7 +10,6 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
-import StorageIndicator from '../../components/ui/StorageIndicator';
 import { localDb } from '../../services/storage/localDb';
 import { JournalEntry, generateId } from '../../services/storage/models';
 import JournalEntryModal from '../../components/JournalEntryModal';
@@ -18,6 +17,7 @@ import { JournalPatternAnalyzer } from '../../services/astrology/journalPatterns
 import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel } from '../../services/premium/advancedJournal';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
+import { parseLocalDate } from '../../utils/dateUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -187,7 +187,7 @@ export default function JournalScreen() {
     const moodValues = { calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1 };
     
     return {
-      labels: last7Days.map(entry => new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short' })),
+      labels: last7Days.map(entry => parseLocalDate(entry.date).toLocaleDateString('en-US', { weekday: 'short' })),
       datasets: [{
         data: last7Days.map(entry => moodValues[entry.mood]),
         color: (opacity = 1) => `rgba(201, 169, 98, ${opacity})`,
@@ -197,7 +197,7 @@ export default function JournalScreen() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = parseLocalDate(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
@@ -229,10 +229,6 @@ export default function JournalScreen() {
               <Text style={styles.title}>Journal</Text>
               <Text style={styles.subtitle}>Your inner landscape</Text>
             </View>
-            <StorageIndicator
-              compact
-              onPress={() => router.push('/(tabs)/premium' as Href)}
-            />
           </View>
           
           {/* Poetic Introduction */}

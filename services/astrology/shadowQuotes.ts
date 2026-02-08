@@ -25,6 +25,7 @@ import { detectChartPatterns } from './chartPatterns';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transits';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { getMoonPhaseName } from '../../utils/moonPhase';
 
 // ════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -847,23 +848,9 @@ function getDayOfYear(date: Date): number {
   return Math.floor(diff / 86400000);
 }
 
-/**
- * Lightweight moon phase calculation (same logic as dailyInsightEngine)
- */
+// getMoonPhaseSimple replaced by precise getMoonPhaseName from utils/moonPhase
 function getMoonPhaseSimple(date: Date): string {
-  const LUNAR_CYCLE = 29.53059;
-  const KNOWN_NEW_MOON = new Date('2024-01-11T11:57:00Z');
-  const diffDays = (date.getTime() - KNOWN_NEW_MOON.getTime()) / 86400000;
-  const phase = ((diffDays % LUNAR_CYCLE) + LUNAR_CYCLE) % LUNAR_CYCLE;
-
-  if (phase < 1.5 || phase > 28) return 'New Moon';
-  if (phase < 7.4) return 'Waxing Crescent';
-  if (phase < 8.4) return 'First Quarter';
-  if (phase < 14.3) return 'Waxing Gibbous';
-  if (phase < 15.8) return 'Full Moon';
-  if (phase < 22.1) return 'Waning Gibbous';
-  if (phase < 23.1) return 'Last Quarter';
-  return 'Waning Crescent';
+  return getMoonPhaseName(date);
 }
 
 /**

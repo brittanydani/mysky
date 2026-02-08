@@ -5,23 +5,6 @@ export const config = {
   tagline: 'Your story in the stars',
   version: '1.0.0',
   
-  // User's chart data (mocked for display)
-  userChart: {
-    sunSign: 'Cancer',
-    moonSign: 'Pisces',
-    risingSign: 'Scorpio',
-    birthDate: 'July 5, 1992',
-    birthTime: '3:42 AM',
-    birthPlace: 'Portland, Oregon',
-  },
-  
-  // Moon phase data
-  currentMoonPhase: {
-    name: 'Waning Crescent',
-    illumination: 23,
-    message: 'A time for release and reflection',
-  },
-  
   // Premium pricing tiers (for display only)
   premium: {
     tiers: [
@@ -58,22 +41,22 @@ export const config = {
   // Premium features list
   premiumFeatures: {
     free: [
-      'Shortened natal story',
+      'Shortened natal story (3 chapters)',
       'Basic daily guidance',
-      'One saved chart',
-      'Limited relationship summary',
-      'Basic journal',
+      'Full natal chart with major aspects',
+      'One relationship chart',
+      'Basic journal with mood tracking',
       'Local device storage',
     ],
     premium: [
-      'Full natal story (10+ chapters)',
-      'Personalized daily guidance',
+      'Full natal story (10 chapters)',
+      'Personalized daily guidance with action steps',
       'Healing & trauma insights',
       'Unlimited relationship charts',
-      'Advanced journaling & patterns',
-      'Encrypted backup & restore across devices',
-      'Secure backup',
-      'Exclusive visual themes',
+      'Advanced journaling & pattern analysis',
+      'Chiron & Node depth insights',
+      'Energy chakra mapping',
+      'Encrypted backup & restore',
     ],
   },
 };

@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: Platform.OS === 'ios' ? '600' : '500',
-    color: '#1D1D1F',
+    color: '#0D1421',
     marginBottom: 8,
     textAlign: 'center',
     letterSpacing: Platform.OS === 'ios' ? -0.24 : 0,

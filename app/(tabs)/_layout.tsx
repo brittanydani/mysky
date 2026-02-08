@@ -36,81 +36,53 @@ export default function TabLayout() {
         },
       }}
     >
+      {/* Visible tabs (exactly 5) */}
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={22} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="home" size={22} color={color} />,
         }}
       />
+
       <Tabs.Screen
         name="today"
         options={{
           title: 'Today',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="partly-sunny" size={22} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="partly-sunny" size={22} color={color} />,
         }}
       />
+
       <Tabs.Screen
-        name="you"
+        name="energy"
         options={{
-          title: 'You',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={22} color={color} />
-          ),
+          title: 'Energy',
+          tabBarIcon: ({ color }) => <Ionicons name="sparkles" size={22} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="chart"
-        options={{
-          href: null, // Hidden - accessible from Home/You
-        }}
-      />
-      <Tabs.Screen
-        name="story"
-        options={{
-          href: null, // Hidden - accessible from You tab
-        }}
-      />
+
       <Tabs.Screen
         name="journal"
         options={{
           title: 'Journal',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="journal" size={22} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="journal" size={22} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="relationships"
-        options={{
-          href: null, // Hidden - accessible from elsewhere
-        }}
-      />
-      <Tabs.Screen
-        name="healing"
-        options={{
-          href: null, // Hidden - accessible from Home
-        }}
-      />
+
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="settings" size={22} color={color} />
-          ),
+          tabBarIcon: ({ color }) => <Ionicons name="settings" size={22} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="premium"
-        options={{
-          href: null, // Hidden - accessible from Settings
-        }}
-      />
+
+      {/* Hidden routes (still accessible via navigation) */}
+      <Tabs.Screen name="chart" options={{ href: null }} />
+      <Tabs.Screen name="story" options={{ href: null }} />
+      <Tabs.Screen name="relationships" options={{ href: null }} />
+      <Tabs.Screen name="healing" options={{ href: null }} />
+      <Tabs.Screen name="premium" options={{ href: null }} />
     </Tabs>
   );
 }

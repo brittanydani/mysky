@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: '#0D1421',
   },
   helperText: {
     marginTop: theme.spacing.lg,

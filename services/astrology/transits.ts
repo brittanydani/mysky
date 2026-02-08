@@ -31,17 +31,86 @@ function extractAbsDegree(obj: any): number | null {
   return null;
 }
 
+export interface TransitInfo {
+  longitudes: Record<string, number>;
+  retrogrades: string[]; // planet names currently retrograde
+}
+
+/**
+ * Detect retrograde by comparing a planet's longitude today vs. 2 days later.
+ * If longitude decreases (accounting for 360° wrap), the planet is retrograde.
+ */
+function detectRetrogrades(
+  todayLongitudes: Record<string, number>,
+  latitude: number,
+  longitude: number,
+  houseSystem: HouseSystem,
+  date: Date
+): string[] {
+  const retrogrades: string[] = [];
+  // Only check planets that can be retrograde (not Sun/Moon)
+  const candidates = ['Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+
+  // Get positions 2 days later
+  const futureDate = new Date(date);
+  futureDate.setDate(futureDate.getDate() + 2);
+  const futureOrigin = new Origin({
+    year: futureDate.getFullYear(),
+    month: futureDate.getMonth(), // Origin expects 0-based month (0=Jan, 11=Dec); getMonth() already returns 0–11
+    date: futureDate.getDate(),
+    hour: futureDate.getHours(),
+    minute: futureDate.getMinutes(),
+    latitude,
+    longitude,
+  });
+  const futureHoroscope = new Horoscope({
+    origin: futureOrigin,
+    houseSystem,
+    zodiac: 'tropical',
+    aspectPoints: ['bodies'],
+    aspectWithPoints: ['bodies'],
+    aspectTypes: [],
+    customOrbs: {},
+    language: 'en',
+  });
+  const futureBodies = (futureHoroscope as any).CelestialBodies || {};
+
+  for (const planet of candidates) {
+    const todayDeg = todayLongitudes[planet];
+    const futureDeg = extractAbsDegree(futureBodies[planet.toLowerCase()]);
+    if (todayDeg == null || futureDeg == null) continue;
+
+    // Calculate forward motion (accounting for 360° wrap)
+    let motion = futureDeg - todayDeg;
+    if (motion > 180) motion -= 360;
+    if (motion < -180) motion += 360;
+
+    if (motion < 0) retrogrades.push(planet);
+  }
+
+  return retrogrades;
+}
+
 export function getTransitingLongitudes(
   date: Date,
   latitude: number,
   longitude: number,
   houseSystem: HouseSystem = 'placidus'
 ): Record<string, number> {
+  return getTransitInfo(date, latitude, longitude, houseSystem).longitudes;
+}
+
+export function getTransitInfo(
+  date: Date,
+  latitude: number,
+  longitude: number,
+  houseSystem: HouseSystem = 'placidus'
+): TransitInfo {
   // Note: for geocentric longitudes, location doesn't materially change planet positions,
   // but we pass latitude/longitude to keep the library happy and support future features.
   const origin = new Origin({
     year: date.getFullYear(),
-    month: date.getMonth(),
+    month: date.getMonth(), // Origin expects 0-based month (0=Jan, 11=Dec); getMonth() already returns 0–11
     date: date.getDate(),
     hour: date.getHours(),
     minute: date.getMinutes(),
@@ -81,7 +150,9 @@ export function getTransitingLongitudes(
     if (abs != null) map[label] = abs;
   }
 
-  return map;
+  const retrogrades = detectRetrogrades(map, latitude, longitude, houseSystem, date);
+
+  return { longitudes: map, retrogrades };
 }
 
 export function computeTransitAspectsToNatal(

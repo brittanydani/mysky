@@ -240,7 +240,7 @@ export class DynamicInsightGenerator {
           message: `The Moon is in the same house as ${sameHouseHistory.length} previous check-ins. Your average mood during these days: ${avgMood.toFixed(1)}/10.`,
           icon: '🔮',
           isActionable: true,
-          action: '/(tabs)/you',
+          action: '/(tabs)/energy',
         });
       }
     }

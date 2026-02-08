@@ -7,6 +7,7 @@ import { PremiumProvider } from '../context/PremiumContext';
 import { useEffect, useState } from 'react';
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
+import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
 import { logger } from '../utils/logger';
 
@@ -27,6 +28,8 @@ export default function RootLayout() {
         // If user has consent, perform migration if needed
         if (!consentStatus.required) {
           await MigrationService.performMigrationIfNeeded();
+          // Pre-load astrology settings cache so calculator uses correct orbs/house system
+          await AstrologySettingsService.getSettings();
         }
         
         setDbReady(true);

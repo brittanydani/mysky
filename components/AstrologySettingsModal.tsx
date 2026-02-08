@@ -21,7 +21,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import Animated, { FadeIn, FadeOut, SlideInDown } from 'react-native-reanimated';
+// Animated entering/exiting removed — causes invisible modal inside <Modal> on some RN/Reanimated versions
 
 import { theme } from '../constants/theme';
 import {
@@ -32,6 +32,7 @@ import {
   OrbPreset,
 } from '../services/astrology/astrologySettingsService';
 import { HouseSystem } from '../services/astrology/types';
+import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 
 interface AstrologySettingsModalProps {
@@ -82,6 +83,14 @@ export default function AstrologySettingsModal({
         orbPreset: selectedOrbPreset,
       });
 
+      // Persist house system to all saved charts in the database
+      // so every screen that reads savedChart.houseSystem picks it up
+      try {
+        await localDb.updateAllChartsHouseSystem(selectedHouseSystem);
+      } catch (e) {
+        logger.error('[AstrologySettingsModal] Failed to update charts house system:', e);
+      }
+
       setSettings(updated);
       onSettingsChanged?.(updated);
 
@@ -118,17 +127,10 @@ export default function AstrologySettingsModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlayBackground}>
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(200)}
-          style={styles.overlay}
-        >
+        <View style={styles.overlay}>
           <Pressable style={styles.dismissArea} onPress={onClose} />
 
-          <Animated.View
-            entering={SlideInDown.duration(400).springify()}
-            style={styles.modalContainer}
-          >
+          <View style={styles.modalContainer}>
             <LinearGradient
               colors={[theme.surface, 'rgba(18, 25, 38, 0.98)']}
               style={styles.modalContent}
@@ -280,18 +282,18 @@ export default function AstrologySettingsModal({
                   disabled={!hasChanges || saving}
                 >
                   {saving ? (
-                    <ActivityIndicator color="#000" size="small" />
+                    <ActivityIndicator color="#0D1421" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="checkmark" size={18} color="#000" />
+                      <Ionicons name="checkmark" size={18} color="#0D1421" />
                       <Text style={styles.saveButtonText}>Save</Text>
                     </>
                   )}
                 </Pressable>
               </View>
             </LinearGradient>
-          </Animated.View>
-        </Animated.View>
+          </View>
+        </View>
       </View>
     </Modal>
   );
@@ -518,6 +520,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#0D1421',
   },
 });

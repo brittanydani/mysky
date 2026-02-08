@@ -151,6 +151,9 @@ export class BackupService {
     if (payload.settings) {
       await localDb.saveSettings(payload.settings);
     }
+
+    // Mark migration as completed so the migration service doesn't wipe restored data
+    await localDb.setMigrationMarker('data_migration_completed');
   }
 
   static async shareBackupFile(uri: string): Promise<void> {

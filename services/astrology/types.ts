@@ -1,5 +1,8 @@
 // File: services/astrology/types.ts
-// Astronomical and astrological data types (with absoluteDegree added to PlanetPosition)
+// Astronomical and astrological data types
+// ✅ Backward-compatible unions for sign typing and retrograde naming.
+// ✅ Optional angles/house cusps when birth time unknown (so UI won’t crash)
+// ✅ Part of Fortune included as PointPlacement
 
 export type HouseSystem =
   | 'placidus'
@@ -10,12 +13,7 @@ export type HouseSystem =
   | 'regiomontanus'
   | 'topocentric';
 
-export type AspectTypeName =
-  | 'conjunction'
-  | 'opposition'
-  | 'trine'
-  | 'square'
-  | 'sextile';
+export type AspectTypeName = 'conjunction' | 'opposition' | 'trine' | 'square' | 'sextile';
 
 export interface RetryConfig {
   maxRetries: number;
@@ -30,43 +28,49 @@ export interface BirthData {
   place: string;
   latitude: number;
   longitude: number;
-  timezone?: string; // IANA timezone identifier (library can derive / you can provide)
-  houseSystem?: HouseSystem; // house system selection
+  timezone?: string;
+  houseSystem?: HouseSystem;
+  orbPreset?: string;
   accuracyLevel?: 'exact' | 'approximate' | 'unknown-time';
 }
 
 export interface SimpleAspect {
   type: AspectTypeName;
-  pointA: string; // e.g. "Moon"
-  pointB: string; // e.g. "Saturn"
-  orb: number; // degrees from exact aspect angle
-  exactAngle: number; // 0, 60, 90, 120, 180
+  pointA: string;
+  pointB: string;
+  orb: number;
+  exactAngle: number;
 }
+
+/**
+ * Some parts of the app store sign as string (legacy),
+ * while newer code prefers full ZodiacSign (element/modality).
+ * Keep both to avoid breaking older builders.
+ */
+export type SignLike = ZodiacSign | string;
 
 export interface AnglePosition {
   name: 'Ascendant' | 'Midheaven';
-  sign: string;
-  degree: number;
-  absoluteDegree: number; // 0-360
+  sign: SignLike; // ✅ string | ZodiacSign
+  degree: number; // 0–29
+  absoluteDegree: number; // 0–360
 }
 
 export interface SimpleHouseCusp {
-  house: number; // 1..12
-  sign: string;
-  degree: number; // 0..30 within sign
-  absoluteDegree: number; // 0..360
+  house: number; // 1–12
+  sign: SignLike; // ✅ string | ZodiacSign
+  degree: number; // 0–29
+  absoluteDegree: number; // 0–360
 }
 
-// Raw astronomical positions from ephemeris (optional future use)
 export interface PlanetaryPosition {
-  longitude: number; // 0-360 degrees
+  longitude: number;
   latitude: number;
   distance: number;
-  speed: number; // daily motion
+  speed: number;
   isRetrograde: boolean;
 }
 
-// Planet and Zodiac types used by constants + legacy system
 export interface Planet {
   name: string;
   symbol: string;
@@ -79,32 +83,31 @@ export interface ZodiacSign {
   element: 'Fire' | 'Earth' | 'Air' | 'Water';
   modality: 'Cardinal' | 'Fixed' | 'Mutable';
   ruler: Planet;
-  number: number; // 1-12
+  number: number; // 1–12 Aries..Pisces
 }
 
-// Astrological interpretation of astronomical position (legacy format used across your app)
 export interface PlanetPlacement {
   planet: Planet;
-  longitude: number; // 0-360 degrees
-  sign: ZodiacSign;
-  house: number; // 1-12
-  degree: number; // 0-29 within sign
-  minute: number; // 0-59 within degree
+  longitude: number; // 0–360
+  sign: ZodiacSign; // ✅ canonical as full ZodiacSign
+  house: number; // 1–12 (or 0 when unknown-time; UI can show "—")
+  degree: number; // 0–29
+  minute: number; // 0–59
   isRetrograde: boolean;
   speed: number;
 }
 
 export interface HouseCusp {
-  house: number; // 1-12
-  longitude: number; // 0-360 degrees
+  house: number; // 1–12
+  longitude: number; // 0–360
   sign: ZodiacSign;
 }
 
 export interface AspectType {
-  name: string;
+  name: string; // e.g. "Trine" (UI) or "trine" (some legacy code) — callers should normalize casing
   symbol: string;
   degrees: number;
-  orb: number; // maximum orb allowed
+  orb: number;
   nature: 'Harmonious' | 'Challenging' | 'Neutral';
 }
 
@@ -112,12 +115,12 @@ export interface Aspect {
   planet1: Planet;
   planet2: Planet;
   type: AspectType;
-  orb: number; // degrees from exact
+  orb: number;
   isApplying: boolean;
-  strength: number; // 0-1, based on orb tightness
+  strength: number;
 }
 
-// Legacy zodiac sign interface for emotional system + quick display
+// Legacy / UI type (your older emotional system)
 export interface AstrologySign {
   name: string;
   symbol: string;
@@ -127,34 +130,52 @@ export interface AstrologySign {
   dates: string;
 }
 
-// ✅ Enhanced planet position output (from circular-natal-horoscope-js)
-// NOTE: This is your “new” normalized planet output used for calculations and future features.
+/**
+ * Normalized output used for calculations.
+ * ✅ Canonical retrograde name: isRetrograde
+ * ✅ Legacy alias: retrograde (optional)
+ */
 export interface PlanetPosition {
-  planet: string;          // "Sun", "Moon", ...
-  sign: string;            // "Aries", ...
-  degree: number;          // 0..30 within sign (with decimals)
-  absoluteDegree: number;  // ✅ 0..360 (critical for aspects/transits/synastry)
-  house?: number;          // 1..12 (only when time known)
-  retrograde: boolean;
+  planet: string; // e.g. "Sun"
+  sign: string; // e.g. "Leo"
+  degree: number; // 0–29
+  absoluteDegree: number; // 0–360
+  house?: number; // optional when birth time unknown
+  isRetrograde: boolean; // ✅ canonical
+  retrograde?: boolean; // ✅ legacy alias
 }
 
-// Complete natal chart with all astronomical data
+/**
+ * Generic sensitive / calculated point (e.g. Part of Fortune)
+ */
+export interface PointPlacement {
+  name: 'Part of Fortune';
+  longitude: number; // 0–360
+  sign: ZodiacSign;
+  degree: number; // 0–29
+  minute: number; // 0–59
+  house?: number;
+}
+
+/**
+ * Complete natal chart
+ */
 export interface NatalChart {
   id: string;
   name?: string;
   birthData: BirthData;
 
-  // Legacy format for emotional system compatibility
+  // Legacy emotional system
   sunSign: AstrologySign;
   moonSign: AstrologySign;
   risingSign: AstrologySign | null;
 
-  // Core placements (legacy format)
+  // Core placements (legacy + UI)
   placements: PlanetPlacement[];
   houseCusps: HouseCusp[];
   aspects: Aspect[];
 
-  // Quick access to key placements (legacy format)
+  // Quick access
   sun: PlanetPlacement;
   moon: PlanetPlacement;
   mercury: PlanetPlacement;
@@ -165,20 +186,28 @@ export interface NatalChart {
   uranus: PlanetPlacement;
   neptune: PlanetPlacement;
   pluto: PlanetPlacement;
-  ascendant: PlanetPlacement;
-  midheaven: PlanetPlacement;
 
-  // Enhanced astronomical data
+  // Angles
+  // NOTE: make optional to support unknown-time charts without crashing UI that guards these fields
+  ascendant?: PlanetPlacement;
+  midheaven?: PlanetPlacement;
+
+  // Enhanced / calculation-friendly
   planets?: PlanetPosition[];
   houseSystem?: HouseSystem;
+
+  // Lightweight consumers
   houses?: SimpleHouseCusp[];
   angles?: AnglePosition[];
 
-  // Accuracy and validation metadata
+  // Calculated points
+  partOfFortune?: PointPlacement;
+
+  // Accuracy metadata
   calculationAccuracy?: {
-    planetaryPositions: number; // degrees accuracy (summary/target)
-    housePositions: number; // degrees accuracy (summary/target)
-    aspectOrbs: number; // average orb across found aspects
+    planetaryPositions: number;
+    housePositions: number;
+    aspectOrbs: number;
     validationStatus: 'verified' | 'approximate' | 'unverified';
     referenceComparison?: {
       reference: 'ephemeris';
@@ -193,7 +222,6 @@ export interface NatalChart {
     };
   };
 
-  // Unknown time handling
   timeBasedFeaturesAvailable?: {
     risingSign: boolean;
     houses: boolean;
@@ -202,33 +230,28 @@ export interface NatalChart {
     exactBirthTime?: boolean;
   };
 
-  // Error metadata
   errorCode?: 'ephemeris_unavailable' | 'timezone_unavailable' | 'validation_failed' | 'unknown_error';
   errorDetails?: string;
 
-  // Chart metadata
   createdAt: string;
   updatedAt: string;
 }
 
-// Current planetary positions for transits
 export interface TransitData {
   date: string;
   placements: PlanetPlacement[];
-  aspects: Aspect[]; // aspects to natal chart (computed elsewhere)
+  aspects: Aspect[];
 }
 
-// Emotional interpretation patterns
 export interface EmotionalPattern {
   id: string;
   name: string;
   description: string;
   triggers: PlacementRule[];
-  intensity: number; // 0-1
+  intensity: number;
   themes: string[];
 }
 
-// Rule-based placement interpretation
 export interface PlacementRule {
   planet?: Planet;
   sign?: ZodiacSign;
@@ -238,10 +261,9 @@ export interface PlacementRule {
     type: AspectType;
     maxOrb?: number;
   };
-  weight: number; // contribution to pattern
+  weight: number;
 }
 
-// Daily emotional weather based on transits
 export interface DailyEmotionalWeather {
   date: string;
   emotionalClimate: string;
@@ -249,17 +271,16 @@ export interface DailyEmotionalWeather {
   energyGuidance: string;
   gentlenessAreas: string[];
   careAction: string;
-  intensity: number; // 0-1
+  intensity: number;
   themes: string[];
 }
 
-// Relationship compatibility analysis
 export interface CompatibilityAnalysis {
   person1Chart: NatalChart;
   person2Chart: NatalChart;
   synastryAspects: Aspect[];
   compositeChart: NatalChart;
-  emotionalCompatibility: number; // 0-1
+  emotionalCompatibility: number;
   communicationStyle: string;
   conflictAreas: string[];
   strengths: string[];

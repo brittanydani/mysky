@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   homeButtonText: {
-    color: '#0a0a0a',
+    color: '#0D1421',
     fontWeight: 'bold',
     fontSize: 16,
   },
