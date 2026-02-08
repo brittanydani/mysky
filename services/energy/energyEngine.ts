@@ -167,7 +167,7 @@ const CHAKRA_DEFS = [
   { name: 'Root',        emoji: '🔴', color: '#E07A7A' },
   { name: 'Sacral',      emoji: '🟠', color: '#E0B07A' },
   { name: 'Solar Plexus', emoji: '🟡', color: '#E0D07A' },
-  { name: 'Heart',       emoji: '💚', color: '#6EBF8B' },
+  { name: 'Heart',       emoji: '🟢', color: '#6EBF8B' },
   { name: 'Throat',      emoji: '🔵', color: '#7AA8E0' },
   { name: 'Third Eye',   emoji: '🟣', color: '#9B7AE0' },
   { name: 'Crown',       emoji: '⚪', color: '#D0C8E8' },

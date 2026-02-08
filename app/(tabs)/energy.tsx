@@ -44,6 +44,8 @@ import { CheckInService, CheckInInput } from '../../services/patterns/checkInSer
 import { PatternAnalyzer } from '../../services/patterns/patternAnalyzer';
 import { PatternCard, DailyCheckIn } from '../../services/patterns/types';
 import { logger } from '../../utils/logger';
+import ChakraWheelComponent, { ChakraLegend } from '../../components/ui/ChakraWheel';
+import IntensityBar from '../../components/ui/IntensityBar';
 
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -329,48 +331,13 @@ export default function EnergyScreen() {
           <Animated.View entering={FadeInDown.delay(180).duration(600)}>
             <LinearGradient colors={['rgba(30,45,71,0.60)', 'rgba(26,39,64,0.40)']} style={[styles.card, styles.cardPad]}>
               <View style={styles.wheelContainer}>
-                <View style={[styles.wheel, { width: WHEEL_SIZE, height: WHEEL_SIZE }]}>
-                  {snapshot.chakras.map((c, idx) => {
-                    const angle = (idx / 7) * Math.PI * 2 - Math.PI / 2;
-                    const radius = WHEEL_SIZE * 0.38;
-                    const x = Math.cos(angle) * radius;
-                    const y = Math.sin(angle) * radius;
-                    const nodeSize = c.state === 'Quiet' ? 28 : 36;
-                    return (
-                      <View
-                        key={c.name}
-                        style={[
-                          styles.wheelNode,
-                          {
-                            left: WHEEL_SIZE / 2 + x - nodeSize / 2,
-                            top: WHEEL_SIZE / 2 + y - nodeSize / 2,
-                            width: nodeSize,
-                            height: nodeSize,
-                            borderRadius: nodeSize / 2,
-                            backgroundColor: CHAKRA_STATE_COLORS[c.state],
-                            borderColor: c.state === 'Grounding Needed' ? theme.stormy : 'rgba(255,255,255,0.15)',
-                          },
-                        ]}
-                      >
-                        <Text style={styles.wheelNodeEmoji}>{c.emoji}</Text>
-                      </View>
-                    );
-                  })}
-                  <View style={styles.wheelCenter}>
-                    <Text style={styles.wheelCenterEmoji}>{snapshot.dominantChakra.emoji}</Text>
-                    <Text style={styles.wheelCenterName}>{snapshot.dominantChakra.name}</Text>
-                    <Text style={styles.wheelCenterState}>{snapshot.dominantChakra.state}</Text>
-                  </View>
-                </View>
+                <ChakraWheelComponent
+                  chakras={snapshot.chakras}
+                  dominantChakra={snapshot.dominantChakra}
+                  size={WHEEL_SIZE}
+                />
               </View>
-              <View style={styles.legendRow}>
-                {(['Flowing', 'Sensitive', 'Grounding Needed', 'Quiet'] as ChakraState[]).map(s => (
-                  <View key={s} style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: CHAKRA_STATE_COLORS[s] }]} />
-                    <Text style={styles.legendLabel}>{s}</Text>
-                  </View>
-                ))}
-              </View>
+              <ChakraLegend />
               {!isPremium && (
                 <View style={styles.lockBanner}>
                   <Ionicons name="lock-closed" size={14} color={theme.primary} />

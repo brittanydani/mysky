@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LineChart } from 'react-native-chart-kit';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
+import MoodGraph from '../../components/ui/MoodGraph';
 import { localDb } from '../../services/storage/localDb';
 import { JournalEntry, generateId } from '../../services/storage/models';
 import JournalEntryModal from '../../components/JournalEntryModal';
@@ -18,8 +18,6 @@ import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel } 
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
-
-const { width } = Dimensions.get('window');
 
 const moodColors = {
   calm: '#6EBF8B',
@@ -182,18 +180,14 @@ export default function JournalScreen() {
     );
   };
 
-  const getMoodTrendData = () => {
+  const getMoodGraphData = () => {
     const last7Days = entries.slice(0, 7).reverse();
-    const moodValues = { calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1 };
-    
-    return {
-      labels: last7Days.map(entry => parseLocalDate(entry.date).toLocaleDateString('en-US', { weekday: 'short' })),
-      datasets: [{
-        data: last7Days.map(entry => moodValues[entry.mood]),
-        color: (opacity = 1) => `rgba(201, 169, 98, ${opacity})`,
-        strokeWidth: 2,
-      }],
-    };
+    const moodValues: Record<string, number> = { calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1 };
+    return last7Days.map(entry => ({
+      label: parseLocalDate(entry.date).toLocaleDateString('en-US', { weekday: 'short' }),
+      value: moodValues[entry.mood] || 3,
+      mood: entry.mood,
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -247,59 +241,49 @@ export default function JournalScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Mood Trend Chart */}
-          {entries.length >= 2 && (
-            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.chartContainer}>
-              <Text style={styles.chartTitle}>7-Day Mood Pattern</Text>
-              <View style={styles.chartWrapper}>
-                <LineChart
-                  data={getMoodTrendData()}
-                  width={width - 32}
-                  height={180}
-                  chartConfig={{
-                    backgroundColor: 'transparent',
-                    backgroundGradientFrom: theme.backgroundTertiary,
-                    backgroundGradientTo: theme.backgroundTertiary,
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(201, 169, 98, ${opacity})`,
-                    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity * 0.7})`,
-                    style: {
-                      borderRadius: theme.borderRadius.lg,
-                    },
-                    propsForDots: {
-                      r: '4',
-                      strokeWidth: '2',
-                      stroke: theme.primary,
-                    },
-                  }}
-                  bezier
-                  style={styles.chart}
-                />
-              </View>
-              <View style={styles.moodLegend}>
-                <Text style={styles.legendLabel}>Stormy</Text>
-                <Text style={styles.legendLabel}>Heavy</Text>
-                <Text style={styles.legendLabel}>Okay</Text>
-                <Text style={styles.legendLabel}>Soft</Text>
-                <Text style={styles.legendLabel}>Calm</Text>
-              </View>
-              
-              {/* Weekly Pattern Insight */}
-              {(() => {
-                const weekMoods = entries.slice(0, 7).map(e => e.mood);
-                const pattern = JournalPatternAnalyzer.getWeeklyPattern(weekMoods);
-                return (
-                  <LinearGradient
-                    colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
-                    style={styles.patternCard}
-                  >
-                    <Text style={styles.patternTitle}>{pattern.title}</Text>
-                    <Text style={styles.patternMessage}>{pattern.message}</Text>
-                    <Text style={styles.patternPrompt}>{pattern.prompt}</Text>
-                  </LinearGradient>
-                );
-              })()}
-            </Animated.View>
-          )}
+          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>7-Day Mood Pattern</Text>
+            {entries.length >= 2 ? (
+              <>
+                <View style={styles.chartWrapper}>
+                  <MoodGraph data={getMoodGraphData()} />
+                </View>
+                
+                {/* Weekly Pattern Insight */}
+                {(() => {
+                  const weekMoods = entries.slice(0, 7).map(e => e.mood);
+                  const pattern = JournalPatternAnalyzer.getWeeklyPattern(weekMoods);
+                  return (
+                    <LinearGradient
+                      colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
+                      style={styles.patternCard}
+                    >
+                      <Text style={styles.patternTitle}>{pattern.title}</Text>
+                      <Text style={styles.patternMessage}>{pattern.message}</Text>
+                      <Text style={styles.patternPrompt}>{pattern.prompt}</Text>
+                    </LinearGradient>
+                  );
+                })()}
+              </>
+            ) : (
+              <LinearGradient
+                colors={['rgba(201, 169, 98, 0.10)', 'rgba(201, 169, 98, 0.04)']}
+                style={styles.moodEmptyCard}
+              >
+                <Ionicons name="analytics-outline" size={28} color={theme.primary} style={{ marginBottom: 8 }} />
+                <Text style={styles.moodEmptyTitle}>
+                  {entries.length === 0
+                    ? 'Your mood pattern will appear here'
+                    : 'One more entry to see your pattern'}
+                </Text>
+                <Text style={styles.moodEmptyText}>
+                  {entries.length === 0
+                    ? 'Add your first journal entry to start tracking how your emotional weather shifts over time.'
+                    : 'Add one more entry and your 7-day mood graph will begin to take shape.'}
+                </Text>
+              </LinearGradient>
+            )}
+          </Animated.View>
 
           {/* Premium: Pattern Insights */}
           {isPremium && patternInsights.length > 0 && (
@@ -529,19 +513,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: theme.cardBorder,
-  },
-  chart: {
-    borderRadius: theme.borderRadius.lg,
-  },
-  moodLegend: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-  },
-  legendLabel: {
-    fontSize: 10,
-    color: theme.textMuted,
+    backgroundColor: theme.backgroundTertiary,
+    paddingVertical: 8,
   },
   patternCard: {
     marginTop: theme.spacing.lg,
@@ -549,6 +522,26 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
     borderColor: 'rgba(201, 169, 98, 0.2)',
+  },
+  moodEmptyCard: {
+    padding: 24,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 169, 98, 0.15)',
+    alignItems: 'center',
+  },
+  moodEmptyTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  moodEmptyText: {
+    fontSize: 13,
+    color: theme.textMuted,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   patternTitle: {
     fontSize: 16,

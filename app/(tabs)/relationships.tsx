@@ -28,6 +28,8 @@ import { PremiumRelationshipService, RelationshipComparison } from '../../servic
 import { usePremium } from '../../context/PremiumContext';
 import { generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
+import NeedsComparison from '../../components/ui/NeedsComparison';
+import AspectRow from '../../components/ui/AspectRow';
 
 type ViewMode = 'list' | 'detail';
 type RelationshipType = 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other';
@@ -70,6 +72,9 @@ export default function RelationshipsScreen() {
   const [comparison, setComparison] = useState<RelationshipComparison | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'aspects' | 'dynamics'>('overview');
   
+  // Synastry preview for list cards (top aspects per relationship)
+  const [synastryPreviews, setSynastryPreviews] = useState<Record<string, { aspects: SynastryAspect[]; connection: string }>>({});
+
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingRelationType, setAddingRelationType] = useState<RelationshipType>('partner');
@@ -107,6 +112,43 @@ export default function RelationshipsScreen() {
         // Load relationship charts
         const rels = await localDb.getRelationshipCharts(saved.id);
         setRelationships(rels);
+
+        // Pre-compute synastry previews for list cards
+        const previews: Record<string, { aspects: SynastryAspect[]; connection: string }> = {};
+        for (const rel of rels) {
+          try {
+            const relBirthData: BirthData = {
+              date: rel.birthDate,
+              time: rel.birthTime,
+              hasUnknownTime: rel.hasUnknownTime,
+              place: rel.birthPlace,
+              latitude: rel.latitude,
+              longitude: rel.longitude,
+              timezone: rel.timezone,
+            };
+            const otherChart = AstrologyCalculator.generateNatalChart(relBirthData);
+            otherChart.name = rel.name;
+            const report = SynastryEngine.calculateSynastry(chart, otherChart);
+            // Pick top 3 strongest aspects across all categories
+            const topAspects = report.aspects
+              .filter(a => a.strength === 'strong')
+              .slice(0, 3);
+            // If fewer than 3 strong, fill with moderate
+            if (topAspects.length < 3) {
+              const moderate = report.aspects
+                .filter(a => a.strength === 'moderate' && !topAspects.includes(a))
+                .slice(0, 3 - topAspects.length);
+              topAspects.push(...moderate);
+            }
+            previews[rel.id] = {
+              aspects: topAspects,
+              connection: report.primaryConnection,
+            };
+          } catch (e) {
+            logger.error(`Failed to compute synastry preview for ${rel.name}:`, e);
+          }
+        }
+        setSynastryPreviews(previews);
       }
     } catch (error) {
       logger.error('Failed to load relationships data:', error);
@@ -162,7 +204,25 @@ export default function RelationshipsScreen() {
       await localDb.saveRelationshipChart(newRelationship);
       setRelationships(prev => [newRelationship, ...prev]);
       setShowAddModal(false);
-      
+
+      // Compute synastry preview for the new card
+      if (userChart) {
+        try {
+          const otherChart = AstrologyCalculator.generateNatalChart(birthData);
+          otherChart.name = extra?.chartName || 'Someone Special';
+          const report = SynastryEngine.calculateSynastry(userChart, otherChart);
+          const topAspects = report.aspects.filter(a => a.strength === 'strong').slice(0, 3);
+          if (topAspects.length < 3) {
+            const moderate = report.aspects.filter(a => a.strength === 'moderate' && !topAspects.includes(a)).slice(0, 3 - topAspects.length);
+            topAspects.push(...moderate);
+          }
+          setSynastryPreviews(prev => ({
+            ...prev,
+            [newRelationship.id]: { aspects: topAspects, connection: report.primaryConnection },
+          }));
+        } catch (_e) {}
+      }
+
       // Automatically open the detail view
       handleSelectRelationship(newRelationship);
       
@@ -234,10 +294,13 @@ export default function RelationshipsScreen() {
 
   const handleDeleteRelationship = () => {
     if (!selectedRelationship) return;
-    
+    confirmDeleteRelationship(selectedRelationship, true);
+  };
+
+  const confirmDeleteRelationship = (rel: RelationshipChart, fromDetail: boolean = false) => {
     Alert.alert(
       'Remove Relationship',
-      `Remove ${selectedRelationship.name} from your relationships? This cannot be undone.`,
+      `Remove ${rel.name} from your relationships? This cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -245,15 +308,34 @@ export default function RelationshipsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await localDb.deleteRelationshipChart(selectedRelationship.id);
-              setRelationships(prev => prev.filter(r => r.id !== selectedRelationship.id));
-              handleBack();
+              await localDb.deleteRelationshipChart(rel.id);
+              setRelationships(prev => prev.filter(r => r.id !== rel.id));
+              if (fromDetail) {
+                handleBack();
+              }
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             } catch (error) {
               logger.error('Failed to delete relationship:', error);
             }
           },
         },
+      ]
+    );
+  };
+
+  const handleLongPressRelationship = (rel: RelationshipChart) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      rel.name,
+      RELATIONSHIP_LABELS[rel.relationship],
+      [
+        { text: 'View', onPress: () => handleSelectRelationship(rel) },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => confirmDeleteRelationship(rel, false),
+        },
+        { text: 'Cancel', style: 'cancel' },
       ]
     );
   };
@@ -367,27 +449,12 @@ export default function RelationshipsScreen() {
                   <>
                     <Text style={styles.sectionHeader}>What Each Person Needs</Text>
                     
-                    <View style={styles.needsRow}>
-                      <View style={styles.needsColumn}>
-                        <Text style={styles.needsName}>{userChart.name || 'You'}</Text>
-                        {comparison.person1Needs.slice(0, 3).map((need, i) => (
-                          <View key={i} style={styles.needItem}>
-                            <Ionicons name="checkmark" size={14} color={theme.primary} />
-                            <Text style={styles.needText}>{need}</Text>
-                          </View>
-                        ))}
-                      </View>
-                      <View style={styles.needsDivider} />
-                      <View style={styles.needsColumn}>
-                        <Text style={styles.needsName}>{selectedRelationship.name}</Text>
-                        {comparison.person2Needs.slice(0, 3).map((need, i) => (
-                          <View key={i} style={styles.needItem}>
-                            <Ionicons name="checkmark" size={14} color={theme.primary} />
-                            <Text style={styles.needText}>{need}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
+                    <NeedsComparison
+                      person1Name={userChart.name || 'You'}
+                      person1Needs={comparison.person1Needs}
+                      person2Name={selectedRelationship.name}
+                      person2Needs={comparison.person2Needs}
+                    />
 
                     {/* Reminder */}
                     <View style={styles.reminderCard}>
@@ -416,41 +483,44 @@ export default function RelationshipsScreen() {
 
             {activeTab === 'aspects' && (
               <Animated.View entering={FadeInDown.duration(400)}>
+                {/* Key Aspects — unified list with colored category dots */}
+                <Text style={styles.sectionHeader}>Key Aspects</Text>
+
                 {/* Connection aspects */}
-                {synastryReport.connectionAspects.length > 0 && (
-                  <>
-                    <Text style={styles.sectionHeader}>
-                      <Ionicons name="heart" size={16} color={theme.primary} /> Connection Points
-                    </Text>
-                    {synastryReport.connectionAspects.slice(0, isPremium ? 10 : 2).map((aspect, i) => (
-                      <AspectCard key={i} aspect={aspect} />
-                    ))}
-                  </>
-                )}
+                {synastryReport.connectionAspects.slice(0, isPremium ? 10 : 2).map((aspect, i) => (
+                  <AspectRow
+                    key={`conn-${i}`}
+                    description={`Your ${aspect.person1Planet.planet.name} ${aspect.aspectType.symbol} their ${aspect.person2Planet.planet.name}`}
+                    title={aspect.title}
+                    category={aspect.category}
+                    strength={aspect.strength}
+                    detail={aspect.description}
+                  />
+                ))}
 
                 {/* Chemistry aspects */}
-                {synastryReport.chemistryAspects.length > 0 && (
-                  <>
-                    <Text style={styles.sectionHeader}>
-                      <Ionicons name="flame" size={16} color="#F87171" /> Chemistry
-                    </Text>
-                    {synastryReport.chemistryAspects.slice(0, isPremium ? 10 : 2).map((aspect, i) => (
-                      <AspectCard key={i} aspect={aspect} />
-                    ))}
-                  </>
-                )}
+                {synastryReport.chemistryAspects.slice(0, isPremium ? 10 : 2).map((aspect, i) => (
+                  <AspectRow
+                    key={`chem-${i}`}
+                    description={`Your ${aspect.person1Planet.planet.name} ${aspect.aspectType.symbol} their ${aspect.person2Planet.planet.name}`}
+                    title={aspect.title}
+                    category={aspect.category}
+                    strength={aspect.strength}
+                    detail={aspect.description}
+                  />
+                ))}
 
-                {/* Challenge aspects */}
-                {synastryReport.challengeAspects.length > 0 && (
-                  <>
-                    <Text style={styles.sectionHeader}>
-                      <Ionicons name="trending-up" size={16} color="#93C5FD" /> Growth Areas
-                    </Text>
-                    {synastryReport.challengeAspects.slice(0, isPremium ? 10 : 2).map((aspect, i) => (
-                      <AspectCard key={i} aspect={aspect} />
-                    ))}
-                  </>
-                )}
+                {/* Growth / Challenge aspects */}
+                {synastryReport.challengeAspects.slice(0, isPremium ? 10 : 2).map((aspect, i) => (
+                  <AspectRow
+                    key={`grow-${i}`}
+                    description={`Your ${aspect.person1Planet.planet.name} ${aspect.aspectType.symbol} their ${aspect.person2Planet.planet.name}`}
+                    title={aspect.title}
+                    category={aspect.category}
+                    strength={aspect.strength}
+                    detail={aspect.description}
+                  />
+                ))}
 
                 {!isPremium && synastryReport.aspects.length > 4 && (
                   <View style={styles.upsellCard}>
@@ -557,33 +627,67 @@ export default function RelationshipsScreen() {
           {relationships.length > 0 && (
             <Animated.View entering={FadeInDown.delay(100).duration(400)}>
               <Text style={styles.listSectionTitle}>Your People</Text>
-              {relationships.map((rel, index) => (
-                <Pressable
-                  key={rel.id}
-                  style={styles.relationshipCard}
-                  onPress={() => handleSelectRelationship(rel)}
-                >
-                  <LinearGradient
-                    colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
-                    style={styles.relationshipCardGradient}
+              {relationships.map((rel, index) => {
+                const preview = synastryPreviews[rel.id];
+                return (
+                  <Pressable
+                    key={rel.id}
+                    style={styles.relationshipCard}
+                    onPress={() => handleSelectRelationship(rel)}
+                    onLongPress={() => handleLongPressRelationship(rel)}
                   >
-                    <View style={styles.relationshipIcon}>
-                      <Ionicons
-                        name={RELATIONSHIP_ICONS[rel.relationship]}
-                        size={24}
-                        color={theme.primary}
-                      />
-                    </View>
-                    <View style={styles.relationshipInfo}>
-                      <Text style={styles.relationshipName}>{rel.name}</Text>
-                      <Text style={styles.relationshipType}>
-                        {RELATIONSHIP_LABELS[rel.relationship]}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
-                  </LinearGradient>
-                </Pressable>
-              ))}
+                    <LinearGradient
+                      colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
+                      style={styles.relationshipCardGradient}
+                    >
+                      {/* Header row */}
+                      <View style={styles.cardHeaderRow}>
+                        <View style={styles.relationshipIcon}>
+                          <Ionicons
+                            name={RELATIONSHIP_ICONS[rel.relationship]}
+                            size={24}
+                            color={theme.primary}
+                          />
+                        </View>
+                        <View style={styles.relationshipInfo}>
+                          <Text style={styles.relationshipName}>{rel.name}</Text>
+                          <Text style={styles.relationshipType}>
+                            {RELATIONSHIP_LABELS[rel.relationship]}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                      </View>
+
+                      {/* Key aspects preview */}
+                      {preview && preview.aspects.length > 0 && (
+                        <View style={styles.previewSection}>
+                          <View style={styles.previewDivider} />
+                          {preview.aspects.map((aspect, i) => {
+                            const catColors: Record<string, string> = {
+                              connection: '#6EBF8B',
+                              chemistry: '#E07A98',
+                              growth: '#8BC4E8',
+                              challenge: '#E0B07A',
+                            };
+                            const catColor = catColors[aspect.category] || theme.textMuted;
+                            return (
+                              <View key={i} style={styles.previewAspectRow}>
+                                <View style={[styles.previewDot, { backgroundColor: catColor }]} />
+                                <Text style={styles.previewPlanets} numberOfLines={1}>
+                                  {aspect.person1Planet.planet.name} {aspect.aspectType.symbol} {aspect.person2Planet.planet.name}
+                                </Text>
+                                <Text style={[styles.previewCategory, { color: catColor }]}>
+                                  {aspect.category}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      )}
+                    </LinearGradient>
+                  </Pressable>
+                );
+              })}
             </Animated.View>
           )}
 
@@ -675,30 +779,6 @@ export default function RelationshipsScreen() {
   );
 }
 
-// Aspect card component
-function AspectCard({ aspect }: { aspect: SynastryAspect }) {
-  return (
-    <View style={styles.aspectCard}>
-      <View style={styles.aspectHeader}>
-        <View style={styles.aspectPlanets}>
-          <Text style={styles.aspectPlanetText}>
-            {aspect.person1Planet.planet.name} {aspect.aspectType.symbol} {aspect.person2Planet.planet.name}
-          </Text>
-          <View style={[
-            styles.aspectStrength,
-            aspect.strength === 'strong' && styles.aspectStrengthStrong,
-            aspect.strength === 'moderate' && styles.aspectStrengthModerate,
-          ]}>
-            <Text style={styles.aspectStrengthText}>{aspect.strength}</Text>
-          </View>
-        </View>
-        <Text style={styles.aspectTitle}>{aspect.title}</Text>
-      </View>
-      <Text style={styles.aspectDescription}>{aspect.description}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -769,12 +849,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   relationshipCardGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(201, 169, 98, 0.2)',
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   relationshipIcon: {
     width: 48,
@@ -955,39 +1037,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontFamily: 'serif',
   },
-  needsRow: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  needsColumn: {
-    flex: 1,
-  },
-  needsDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    marginHorizontal: 16,
-  },
-  needsName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.primary,
-    marginBottom: 12,
-  },
-  needItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  needText: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    marginLeft: 8,
-    flex: 1,
-  },
   reminderCard: {
     marginTop: 20,
     padding: 20,
@@ -1025,57 +1074,6 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
     textAlign: 'center',
     marginTop: 8,
-  },
-
-  // Aspect card styles
-  aspectCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  aspectHeader: {
-    marginBottom: 8,
-  },
-  aspectPlanets: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  aspectPlanetText: {
-    fontSize: 13,
-    color: theme.textMuted,
-    fontFamily: 'monospace',
-  },
-  aspectStrength: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  aspectStrengthStrong: {
-    backgroundColor: 'rgba(201, 169, 98, 0.2)',
-  },
-  aspectStrengthModerate: {
-    backgroundColor: 'rgba(147, 197, 253, 0.2)',
-  },
-  aspectStrengthText: {
-    fontSize: 11,
-    color: theme.textMuted,
-    textTransform: 'uppercase',
-  },
-  aspectTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    marginTop: 4,
-  },
-  aspectDescription: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    lineHeight: 20,
   },
 
   // Dynamic card styles
@@ -1133,5 +1131,36 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     marginLeft: 12,
     lineHeight: 20,
+  },
+  // Synastry preview on list cards
+  previewSection: {
+    marginTop: 2,
+  },
+  previewDivider: {
+    height: 1,
+    backgroundColor: 'rgba(201, 169, 98, 0.12)',
+    marginVertical: 10,
+  },
+  previewAspectRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 3,
+  },
+  previewDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 8,
+  },
+  previewPlanets: {
+    flex: 1,
+    fontSize: 12,
+    color: theme.textSecondary,
+  },
+  previewCategory: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
