@@ -30,3 +30,7 @@ android/app/build/
 *.orig
 *~
 *.swp
+
+# Local scripts
+scripts/
+*.log
