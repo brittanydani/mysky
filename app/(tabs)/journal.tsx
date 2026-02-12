@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Dimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
@@ -18,6 +19,11 @@ import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel } 
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
+import { CheckInService } from '../../services/patterns/checkInService';
+import { DailyCheckIn } from '../../services/patterns/types';
+import CheckInTrendGraph from '../../components/ui/CheckInTrendGraph';
+
+const { width } = Dimensions.get('window');
 
 const moodColors = {
   calm: '#6EBF8B',
@@ -50,11 +56,15 @@ export default function JournalScreen() {
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>();
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
+  const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const { isPremium } = usePremium();
 
-  useEffect(() => {
-    loadEntries();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadEntries();
+      loadCheckIns();
+    }, [])
+  );
 
   // Generate premium pattern insights whenever entries change
   useEffect(() => {
@@ -108,6 +118,19 @@ export default function JournalScreen() {
       Alert.alert('Error', 'Failed to load journal entries');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCheckIns = async () => {
+    try {
+      const charts = await localDb.getCharts();
+      if (!charts || charts.length === 0) return;
+      const chartId = charts[0]?.id ?? '';
+      const all = await CheckInService.getAllCheckIns(chartId, 30);
+      const sorted = [...all].sort((a, b) => a.date.localeCompare(b.date));
+      setCheckIns(sorted);
+    } catch (e) {
+      logger.error('[Journal] Failed to load check-ins:', e);
     }
   };
 
@@ -180,12 +203,12 @@ export default function JournalScreen() {
     );
   };
 
+  const moodValues: Record<string, number> = { calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1 };
+
   const getMoodGraphData = () => {
-    const last7Days = entries.slice(0, 7).reverse();
-    const moodValues: Record<string, number> = { calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1 };
-    return last7Days.map(entry => ({
+    return entries.slice(0, 7).reverse().map(entry => ({
       label: parseLocalDate(entry.date).toLocaleDateString('en-US', { weekday: 'short' }),
-      value: moodValues[entry.mood] || 3,
+      value: moodValues[entry.mood] ?? 3,
       mood: entry.mood,
     }));
   };
@@ -236,54 +259,42 @@ export default function JournalScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: 0 },
+            { paddingBottom: insets.bottom + 80 },
           ]}
           showsVerticalScrollIndicator={false}
         >
           {/* Mood Trend Chart */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>7-Day Mood Pattern</Text>
-            {entries.length >= 2 ? (
-              <>
-                <View style={styles.chartWrapper}>
-                  <MoodGraph data={getMoodGraphData()} />
-                </View>
-                
-                {/* Weekly Pattern Insight */}
-                {(() => {
-                  const weekMoods = entries.slice(0, 7).map(e => e.mood);
-                  const pattern = JournalPatternAnalyzer.getWeeklyPattern(weekMoods);
-                  return (
-                    <LinearGradient
-                      colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
-                      style={styles.patternCard}
-                    >
-                      <Text style={styles.patternTitle}>{pattern.title}</Text>
-                      <Text style={styles.patternMessage}>{pattern.message}</Text>
-                      <Text style={styles.patternPrompt}>{pattern.prompt}</Text>
-                    </LinearGradient>
-                  );
-                })()}
-              </>
-            ) : (
-              <LinearGradient
-                colors={['rgba(201, 169, 98, 0.10)', 'rgba(201, 169, 98, 0.04)']}
-                style={styles.moodEmptyCard}
-              >
-                <Ionicons name="analytics-outline" size={28} color={theme.primary} style={{ marginBottom: 8 }} />
-                <Text style={styles.moodEmptyTitle}>
-                  {entries.length === 0
-                    ? 'Your mood pattern will appear here'
-                    : 'One more entry to see your pattern'}
-                </Text>
-                <Text style={styles.moodEmptyText}>
-                  {entries.length === 0
-                    ? 'Add your first journal entry to start tracking how your emotional weather shifts over time.'
-                    : 'Add one more entry and your 7-day mood graph will begin to take shape.'}
-                </Text>
-              </LinearGradient>
-            )}
-          </Animated.View>
+          {entries.length >= 2 && (
+            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.chartContainer}>
+              <Text style={styles.chartTitle}>7-Day Mood Pattern</Text>
+              <MoodGraph data={getMoodGraphData()} width={width - 32} height={180} />
+              
+              {/* Weekly Pattern Insight */}
+              {(() => {
+                const weekMoods = entries.slice(0, 7).map(e => e.mood);
+                const pattern = JournalPatternAnalyzer.getWeeklyPattern(weekMoods);
+                return (
+                  <LinearGradient
+                    colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
+                    style={styles.patternCard}
+                  >
+                    <Text style={styles.patternTitle}>{pattern.title}</Text>
+                    <Text style={styles.patternMessage}>{pattern.message}</Text>
+                    <Text style={styles.patternPrompt}>{pattern.prompt}</Text>
+                  </LinearGradient>
+                );
+              })()}
+            </Animated.View>
+          )}
+
+          {/* Check-In Trends Graph */}
+          {checkIns.length >= 2 && (
+            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
+              <Text style={styles.chartTitle}>7-Day Check-In Trends</Text>
+              <Text style={styles.checkInTrendSubtitle}>From your energy check-ins</Text>
+              <CheckInTrendGraph checkIns={checkIns} width={width - 32} />
+            </Animated.View>
+          )}
 
           {/* Premium: Pattern Insights */}
           {isPremium && patternInsights.length > 0 && (
@@ -508,40 +519,13 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     marginBottom: theme.spacing.md,
   },
-  chartWrapper: {
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.backgroundTertiary,
-    paddingVertical: 8,
-  },
+
   patternCard: {
     marginTop: theme.spacing.lg,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
     borderColor: 'rgba(201, 169, 98, 0.2)',
-  },
-  moodEmptyCard: {
-    padding: 24,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.15)',
-    alignItems: 'center',
-  },
-  moodEmptyTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  moodEmptyText: {
-    fontSize: 13,
-    color: theme.textMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   patternTitle: {
     fontSize: 16,
@@ -561,6 +545,15 @@ const styles = StyleSheet.create({
     color: theme.primary,
     fontStyle: 'italic',
     lineHeight: 22,
+  },
+  checkInTrendSection: {
+    marginBottom: theme.spacing.xl,
+  },
+  checkInTrendSubtitle: {
+    fontSize: 13,
+    color: theme.textMuted,
+    fontStyle: 'italic',
+    marginBottom: theme.spacing.md,
   },
   // Premium Pattern Insights
   insightsSection: {

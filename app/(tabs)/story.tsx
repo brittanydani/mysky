@@ -84,13 +84,30 @@ export default function StoryScreen() {
             style={styles.header}
           >
             <Text style={styles.title}>Your Cosmic Story</Text>
-            <Text style={styles.subtitle}>
-              {chapters.length} chapters — {unlockedCount} unlocked
-            </Text>
+            {chapters.length > 0 && (
+              <Text style={styles.subtitle}>
+                {chapters.length} chapters — {unlockedCount} unlocked
+              </Text>
+            )}
           </Animated.View>
 
           {/* Chapters */}
-          {chapters.map((chapter, index) => {
+          {chapters.length === 0 ? (
+            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyState}>
+              <Ionicons name="book-outline" size={48} color={theme.textMuted} />
+              <Text style={styles.emptyTitle}>Your story awaits</Text>
+              <Text style={styles.emptySubtitle}>
+                Create your natal chart to reveal your personalized cosmic narrative.
+              </Text>
+              <Pressable
+                onPress={() => router.push('/(tabs)/chart' as Href)}
+                style={styles.emptyButton}
+              >
+                <Text style={styles.emptyButtonText}>Create Chart</Text>
+              </Pressable>
+            </Animated.View>
+          ) : (
+          chapters.map((chapter, index) => {
             const isLocked = !isPremium && chapter.isPremium;
             return (
               <Animated.View
@@ -111,7 +128,8 @@ export default function StoryScreen() {
                 />
               </Animated.View>
             );
-          })}
+          })
+          )}
 
           {/* Unlock prompt for free users */}
           {!isPremium && (
@@ -191,5 +209,36 @@ const styles = StyleSheet.create({
     color: theme.primary,
     fontWeight: '500',
     marginLeft: theme.spacing.sm,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    marginTop: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 260,
+  },
+  emptyButton: {
+    marginTop: 12,
+    backgroundColor: theme.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: theme.borderRadius.full,
+  },
+  emptyButtonText: {
+    color: theme.background,
+    fontWeight: '600',
+    fontSize: 15,
   },
 });

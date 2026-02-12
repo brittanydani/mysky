@@ -9,8 +9,6 @@ import {
   ScrollView,
   Pressable,
   Dimensions,
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,16 +42,16 @@ import { CheckInService, CheckInInput } from '../../services/patterns/checkInSer
 import { PatternAnalyzer } from '../../services/patterns/patternAnalyzer';
 import { PatternCard, DailyCheckIn } from '../../services/patterns/types';
 import { logger } from '../../utils/logger';
-import ChakraWheelComponent, { ChakraLegend } from '../../components/ui/ChakraWheel';
-import IntensityBar from '../../components/ui/IntensityBar';
+import ChakraWheelComponent from '../../components/ui/ChakraWheel';
+import ChakraWheelPlate from '../../components/ui/ChakraWheelPlate';
 
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');
-const WHEEL_SIZE = SCREEN_W * 0.55;
+const WHEEL_SIZE = SCREEN_W * 0.88;
 
 const INTENSITY_BAR: Record<EnergyIntensity, { fill: number; color: string; label: string }> = {
-  Low:      { fill: 0.3,  color: theme.calm,  label: 'Gentle' },
-  Moderate: { fill: 0.6,  color: theme.okay,  label: 'Moderate' },
+  Low:      { fill: 0.3,  color: theme.calm,  label: 'Low' },
+  Moderate: { fill: 0.6,  color: theme.okay,  label: 'Steady' },
   High:     { fill: 0.95, color: theme.stormy, label: 'Elevated' },
 };
 
@@ -81,9 +79,9 @@ function formatToday(): string {
 type CheckInStep = 'idle' | 'q1' | 'q2' | 'q3' | 'done';
 
 const CHECK_IN_QUESTIONS = [
-  { key: 'q1' as const, question: 'How does your body feel right now?', options: ['Tense', 'Calm', 'Restless', 'Heavy', 'Light'] },
-  { key: 'q2' as const, question: 'How clear is your mind?', options: ['Foggy', 'Sharp', 'Scattered', 'Still', 'Racing'] },
-  { key: 'q3' as const, question: 'What emotion is most present?', options: ['Anxious', 'Content', 'Sad', 'Energized', 'Numb'] },
+  { key: 'q1' as const, question: 'How is your mood right now?', options: ['Struggling', 'Low', 'Okay', 'Good', 'Great'] },
+  { key: 'q2' as const, question: 'How is your energy level?', options: ['Depleted', 'Low', 'Steady', 'Active', 'Elevated'] },
+  { key: 'q3' as const, question: 'How much stress are you holding?', options: ['None', 'A little', 'Some', 'A lot', 'Overwhelmed'] },
 ];
 
 /* ════════════════════════════════════════════════
@@ -107,6 +105,7 @@ export default function EnergyScreen() {
   const [checkInCount, setCheckInCount] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
+  const [wheelTooltip, setWheelTooltip] = useState<string | null>(null);
 
   /* pulse animation for intensity bar */
   const pulse = useSharedValue(0.7);
@@ -124,6 +123,9 @@ export default function EnergyScreen() {
   /* load chart + generate snapshot */
   useFocusEffect(
     useCallback(() => {
+      // Gentle haptic on tab open
+      Haptics.selectionAsync().catch(() => {});
+
       const load = async () => {
         try {
           setLoading(true);
@@ -202,19 +204,19 @@ export default function EnergyScreen() {
       // Save check-in via CheckInService
       if (userChart && chartId) {
         try {
-          const bodyAnswer = updated.q1 || '';
-          const mindAnswer = updated.q2 || '';
-          const emotionAnswer = updated.q3 || '';
-          // Map answers to check-in input
-          const moodMap: Record<string, number> = { 'Content': 7, 'Energized': 8, 'Calm': 6, 'Anxious': 3, 'Sad': 3, 'Numb': 4, 'Light': 7, 'Heavy': 3, 'Tense': 4, 'Restless': 5 };
-          const energyMap: Record<string, 'low' | 'medium' | 'high'> = { 'Heavy': 'low', 'Tense': 'medium', 'Calm': 'medium', 'Restless': 'high', 'Light': 'high', 'Foggy': 'low', 'Sharp': 'high', 'Scattered': 'medium', 'Still': 'medium', 'Racing': 'high' };
-          const stressMap: Record<string, 'low' | 'medium' | 'high'> = { 'Calm': 'low', 'Light': 'low', 'Content': 'low', 'Tense': 'high', 'Heavy': 'high', 'Anxious': 'high', 'Restless': 'medium', 'Foggy': 'medium', 'Scattered': 'medium', 'Energized': 'low', 'Sad': 'medium', 'Numb': 'medium', 'Racing': 'high', 'Sharp': 'low', 'Still': 'low' };
+          const moodAnswer = updated.q1 || '';
+          const energyAnswer = updated.q2 || '';
+          const stressAnswer = updated.q3 || '';
+          // Direct maps — each question feeds one graph metric
+          const moodMap: Record<string, number> = { 'Struggling': 2, 'Low': 4, 'Okay': 5, 'Good': 7, 'Great': 9 };
+          const energyMap: Record<string, 'low' | 'medium' | 'high'> = { 'Depleted': 'low', 'Low': 'low', 'Steady': 'medium', 'Active': 'high', 'Elevated': 'high' };
+          const stressMap: Record<string, 'low' | 'medium' | 'high'> = { 'None': 'low', 'A little': 'low', 'Some': 'medium', 'A lot': 'high', 'Overwhelmed': 'high' };
           const input: CheckInInput = {
-            moodScore: moodMap[emotionAnswer] || 5,
-            energyLevel: energyMap[bodyAnswer] || 'medium',
-            stressLevel: stressMap[emotionAnswer] || 'medium',
+            moodScore: moodMap[moodAnswer] || 5,
+            energyLevel: energyMap[energyAnswer] || 'medium',
+            stressLevel: stressMap[stressAnswer] || 'medium',
             tags: [],
-            note: `${bodyAnswer}|${mindAnswer}|${emotionAnswer}`,
+            note: `${moodAnswer}|${energyAnswer}|${stressAnswer}`,
           };
           const saved = await CheckInService.saveCheckIn(input, userChart, chartId);
           setTodayCheckIn(saved);
@@ -287,7 +289,7 @@ export default function EnergyScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={40} />
+      <StarField starCount={80} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
           <Text style={styles.title}>Energy</Text>
@@ -301,60 +303,95 @@ export default function EnergyScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 32) + 20 }]}
           showsVerticalScrollIndicator={false}
         >
-          {/* ═══ S1 — ENERGY SNAPSHOT (Hero) — FREE ═══ */}
+          {/* ═══ S1 — ENERGY SNAPSHOT (supporting context) — FREE ═══ */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
             <LinearGradient
-              colors={['rgba(30,45,71,0.75)', 'rgba(26,39,64,0.55)']}
-              style={[styles.card, styles.cardPad]}
+              colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
+              style={[styles.card, { paddingHorizontal: 18, paddingVertical: 14 }]}
             >
               <View style={styles.toneBadge}>
-                <View style={[styles.toneDot, { backgroundColor: barInfo.color }]} />
                 <Text style={styles.toneLabel}>{snapshot.tone}</Text>
-                <Text style={styles.intensityLabel}>{'\u2022'} {barInfo.label}</Text>
+                <View style={styles.toneSeparator} />
+                <Text style={styles.intensityLabel}>{barInfo.label}</Text>
               </View>
               <View style={styles.intensityBarOuter}>
                 <Animated.View
                   style={[
-                    styles.intensityBarInner,
+                    styles.intensityBarGlow,
                     { width: `${barInfo.fill * 100}%`, backgroundColor: barInfo.color },
                     pulseStyle,
                   ]}
                 />
+                <View
+                  style={[
+                    styles.intensityBarInner,
+                    { width: `${barInfo.fill * 100}%`, backgroundColor: barInfo.color },
+                  ]}
+                />
               </View>
-              <Text style={styles.driverText}>{snapshot.primaryDriver}</Text>
               <Text style={[styles.body, { marginTop: 6 }]}>{snapshot.quickMeaning}</Text>
             </LinearGradient>
           </Animated.View>
 
-          {/* ═══ S2 — PERSONAL ENERGY WHEEL ═══ */}
-          <SectionHeader icon="radio-outline" title="Energy Wheel" delay={160} />
-          <Animated.View entering={FadeInDown.delay(180).duration(600)}>
-            <LinearGradient colors={['rgba(30,45,71,0.60)', 'rgba(26,39,64,0.40)']} style={[styles.card, styles.cardPad]}>
-              <View style={styles.wheelContainer}>
-                <ChakraWheelComponent
-                  chakras={snapshot.chakras}
-                  dominantChakra={snapshot.dominantChakra}
-                  size={WHEEL_SIZE}
-                />
-              </View>
-              <ChakraLegend />
-              {!isPremium && (
-                <View style={styles.lockBanner}>
-                  <Ionicons name="lock-closed" size={14} color={theme.primary} />
-                  <Text style={styles.lockText}>Tap chakras for body cues and triggers {'\u2014'} Premium</Text>
-                </View>
+          {/* ═══ S2 — ENERGY WHEEL (purely visual) ═══ */}
+          <Animated.View entering={FadeInDown.delay(160).duration(600)}>
+            <Pressable
+              style={styles.wheelContainer}
+              onPress={() => {
+                safeHaptic();
+                if (snapshot) {
+                  const dc = snapshot.dominantChakra;
+                  const stateHint: Record<string, string> = {
+                    'Grounding Needed': 'is overactive — grounding helps',
+                    'Sensitive': 'is heightened — move gently',
+                    'Flowing': 'is open and moving freely',
+                    'Quiet': 'is resting quietly',
+                  };
+                  const tip = `${dc.name} ${stateHint[dc.state] || dc.state}`;
+                  setWheelTooltip(tip);
+                  setTimeout(() => setWheelTooltip(null), 2800);
+                }
+              }}
+            >
+              <ChakraWheelComponent
+                chakras={snapshot.chakras}
+                dominantChakra={snapshot.dominantChakra}
+                size={WHEEL_SIZE}
+                showLabels={false}
+              />
+              {wheelTooltip && (
+                <Animated.View
+                  entering={FadeInDown.duration(300)}
+                  style={styles.wheelTooltip}
+                >
+                  <Text style={styles.wheelTooltipText}>{wheelTooltip}</Text>
+                </Animated.View>
               )}
-            </LinearGradient>
+            </Pressable>
           </Animated.View>
 
-          {/* ═══ S3 — CHAKRA FOCUS TODAY ═══ */}
-          <SectionHeader icon="body-outline" title="Chakra Focus" delay={240} />
-          <Animated.View entering={FadeInDown.delay(260).duration(600)}>
+          {/* ═══ S3 — CHAKRA FOCUS TODAY (truth anchor) ═══ */}
+          <SectionHeader icon="body-outline" title="Today's Focus" delay={220} />
+          <Animated.View entering={FadeInDown.delay(240).duration(600)}>
             <ChakraCard chakra={snapshot.dominantChakra} highlight />
             {isPremium ? (
-              snapshot.chakras
-                .filter(c => c.name !== snapshot.dominantChakra.name)
-                .map(c => <ChakraCard key={c.name} chakra={c} role={chakraRoleFromState(c.state)} />)
+              <>
+                {/* Secondary chakras (Sensitive / Grounding Needed) */}
+                {snapshot.chakras
+                  .filter(c => c.name !== snapshot.dominantChakra.name && (c.state === 'Sensitive' || c.state === 'Grounding Needed'))
+                  .map(c => <ChakraCard key={c.name} chakra={c} role="secondary" />)}
+                {/* Background chakras (compact) */}
+                {snapshot.chakras
+                  .filter(c => c.name !== snapshot.dominantChakra.name && c.state !== 'Sensitive' && c.state !== 'Grounding Needed')
+                  .length > 0 && (
+                  <View style={styles.bgChakraSection}>
+                    <Text style={styles.bgChakraLabel}>In the background</Text>
+                    {snapshot.chakras
+                      .filter(c => c.name !== snapshot.dominantChakra.name && c.state !== 'Sensitive' && c.state !== 'Grounding Needed')
+                      .map(c => <ChakraCard key={c.name} chakra={c} role="background" />)}
+                  </View>
+                )}
+              </>
             ) : (
               <LinearGradient colors={['rgba(30,45,71,0.50)', 'rgba(26,39,64,0.30)']} style={[styles.card, styles.cardPad]}>
                 <View style={styles.lockBanner}>
@@ -532,7 +569,7 @@ export default function EnergyScreen() {
                     <Text style={styles.checkInDoneTitle}>Checked in</Text>
                   </View>
                   <Text style={styles.body}>
-                    Body: {checkInAnswers.q1} {'\u00b7'} Mind: {checkInAnswers.q2} {'\u00b7'} Emotion: {checkInAnswers.q3}
+                    Mood: {checkInAnswers.q1} {' \u00b7 '} Energy: {checkInAnswers.q2} {' \u00b7 '} Stress: {checkInAnswers.q3}
                   </Text>
                   <Text style={[styles.bodyMuted, { marginTop: 8 }]}>
                     This is a snapshot, not a score. It is a way of noticing, not measuring.
@@ -653,59 +690,118 @@ function SectionHeader({ icon, title, delay }: { icon: keyof typeof Ionicons.gly
 
 type ChakraRole = 'primary' | 'secondary' | 'background';
 
-const CHAKRA_ROLE_LABELS: Record<ChakraRole, { label: string; color: string }> = {
-  primary:    { label: 'Primary focus today', color: theme.primary },
-  secondary:  { label: 'Secondary',           color: theme.textSecondary },
-  background: { label: 'Background',          color: theme.textMuted },
-};
 
-function chakraRoleFromState(state: ChakraState): ChakraRole {
-  if (state === 'Grounding Needed' || state === 'Sensitive') return 'secondary';
-  return 'background';
-}
 
 function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highlight?: boolean; role?: ChakraRole }) {
   const resolvedRole = highlight ? 'primary' : (role ?? 'background');
-  const roleInfo = CHAKRA_ROLE_LABELS[resolvedRole];
+
+  /* ── Background: compact one-liner ── */
+  if (resolvedRole === 'background') {
+    return (
+      <LinearGradient
+        colors={['rgba(25,38,58,0.40)', 'rgba(20,32,50,0.25)']}
+        style={[styles.card, { padding: 14, marginBottom: 6 }]}
+      >
+        <View style={styles.chakraHeader}>
+          <Text style={[styles.chakraEmoji, { fontSize: 20 }]}>{chakra.emoji}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.chakraName, { fontSize: 14, color: theme.textMuted }]}>{chakra.name}</Text>
+            <Text style={[styles.bodyMuted, { fontSize: 12, marginTop: 1 }]}>
+              {chakra.state === 'Quiet' ? 'Remains steady' : chakra.state === 'Flowing' ? 'Energy moving freely' : chakra.state}
+            </Text>
+          </View>
+          <View style={[styles.chakraStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
+        </View>
+      </LinearGradient>
+    );
+  }
+
+  /* ── Secondary: brief with body cue + suggestion ── */
+  if (resolvedRole === 'secondary') {
+    return (
+      <LinearGradient
+        colors={['rgba(30,45,71,0.50)', 'rgba(26,39,64,0.30)']}
+        style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
+      >
+        <View style={styles.chakraHeader}>
+          <Text style={styles.chakraEmoji}>{chakra.emoji}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.chakraName}>{chakra.name}</Text>
+            <View style={styles.chakraStateRow}>
+              <View style={[styles.chakraStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
+              <Text style={[styles.chakraStateText, { color: CHAKRA_STATE_COLORS[chakra.state] }]}>{chakra.state}</Text>
+            </View>
+          </View>
+        </View>
+        <Text style={[styles.bodyMuted, { marginTop: 6, fontStyle: 'italic' }]}>
+          You may notice: {chakra.bodyCue.charAt(0).toLowerCase() + chakra.bodyCue.slice(1)}
+        </Text>
+        <View style={styles.chakraDetailRow}>
+          <Ionicons name="heart-outline" size={13} color={theme.calm} />
+          <Text style={styles.chakraDetailText}>{chakra.healingSuggestion}</Text>
+        </View>
+      </LinearGradient>
+    );
+  }
+
+  /* ── Primary: the "truth anchor" card with structured sections ── */
+  const cueItems = chakra.bodyCue
+    .split(/[,;]|(?<=\.)\s+/)
+    .map(s => s.trim().replace(/\.$/, ''))
+    .filter(s => s.length > 3);
 
   return (
     <LinearGradient
-      colors={
-        highlight
-          ? ['rgba(40,55,85,0.70)', 'rgba(30,45,71,0.50)']
-          : ['rgba(30,45,71,0.50)', 'rgba(26,39,64,0.30)']
-      }
-      style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
+      colors={['rgba(40,55,85,0.75)', 'rgba(30,45,71,0.55)']}
+      style={[styles.card, styles.cardPad, { marginBottom: 10 }]}
     >
-      {/* Hierarchy label */}
-      <View style={styles.chakraRoleBadge}>
-        <Text style={[styles.chakraRoleText, { color: roleInfo.color }]}>{roleInfo.label}</Text>
+      {/* HEADER — Role + Chakra Name + State */}
+      <Text style={styles.focusRoleLabel}>Primary Focus Today</Text>
+
+      <View style={styles.focusHeaderBlock}>
+        <Text style={styles.focusChakraEmoji}>{chakra.emoji}</Text>
+        <Text style={styles.focusChakraName}>{chakra.name}</Text>
       </View>
 
-      <View style={styles.chakraHeader}>
-        <Text style={styles.chakraEmoji}>{chakra.emoji}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.chakraName}>{chakra.name}</Text>
-          <View style={styles.chakraStateRow}>
-            <View style={[styles.chakraStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
-            <Text style={[styles.chakraStateText, { color: CHAKRA_STATE_COLORS[chakra.state] }]}>{chakra.state}</Text>
+      <View style={styles.focusStateBadge}>
+        <View style={[styles.focusStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
+        <Text style={[styles.focusStateText, { color: CHAKRA_STATE_COLORS[chakra.state] }]}>{chakra.state}</Text>
+      </View>
+
+      {/* SECTION 1 — What you may notice */}
+      <View style={styles.focusDivider} />
+      <Text style={styles.focusSectionLabel}>What you may notice</Text>
+      {cueItems.length > 1 ? (
+        cueItems.map((item, i) => (
+          <View key={i} style={styles.focusBulletRow}>
+            <Text style={styles.focusBulletDot}>{'\u2022'}</Text>
+            <Text style={styles.focusBulletText}>
+              {item.charAt(0).toUpperCase() + item.slice(1)}
+            </Text>
           </View>
+        ))
+      ) : (
+        <Text style={styles.focusBodyText}>
+          You may notice {chakra.bodyCue.charAt(0).toLowerCase() + chakra.bodyCue.slice(1)}
+        </Text>
+      )}
+
+      {/* SECTION 2 — Why */}
+      <View style={styles.focusDivider} />
+      <Text style={styles.focusSectionLabel}>Why</Text>
+      <Text style={styles.focusWhyText}>{chakra.elementConnection}</Text>
+
+      {/* SECTION 3 — What helps */}
+      <View style={styles.focusDivider} />
+      <Text style={styles.focusSectionLabel}>What helps</Text>
+      <Text style={styles.focusHelpText}>{chakra.healingSuggestion}</Text>
+
+      {/* Affirmation (soft close) */}
+      {chakra.affirmation ? (
+        <View style={styles.affirmationWrap}>
+          <Text style={styles.affirmationText}>{'\u201C'}{chakra.affirmation}{'\u201D'}</Text>
         </View>
-      </View>
-      <Text style={[styles.bodyMuted, { marginTop: 6 }]}>{chakra.trigger}</Text>
-      <Text style={[styles.body, { marginTop: 4 }]}>{chakra.bodyCue}</Text>
-
-      {/* Element connection */}
-      <View style={styles.chakraDetailRow}>
-        <Ionicons name="leaf-outline" size={13} color={theme.energy} />
-        <Text style={styles.chakraDetailText}>{chakra.elementConnection}</Text>
-      </View>
-
-      {/* Healing suggestion */}
-      <View style={styles.chakraDetailRow}>
-        <Ionicons name="heart-outline" size={13} color={theme.calm} />
-        <Text style={styles.chakraDetailText}>{chakra.healingSuggestion}</Text>
-      </View>
+      ) : null}
     </LinearGradient>
   );
 }
@@ -807,24 +903,26 @@ const styles = StyleSheet.create({
   toneBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
+    gap: 6,
+    marginBottom: 8,
   },
-  toneDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  toneSeparator: {
+    width: 1,
+    height: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginHorizontal: 2,
   },
   toneLabel: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: theme.textPrimary,
-    fontFamily: 'serif',
+    letterSpacing: 0.3,
   },
   intensityLabel: {
-    fontSize: 14,
-    color: theme.textMuted,
+    fontSize: 13,
+    color: theme.textSecondary ?? 'rgba(255,255,255,0.72)',
     fontWeight: '500',
+    letterSpacing: 0.3,
   },
   heroToneText: {
     fontSize: 20,
@@ -833,15 +931,24 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
   },
   intensityBarOuter: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    marginBottom: 14,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginBottom: 12,
     overflow: 'hidden',
+    position: 'relative' as const,
+  },
+  intensityBarGlow: {
+    position: 'absolute' as const,
+    top: -2,
+    left: 0,
+    height: 8,
+    borderRadius: 4,
+    opacity: 0.25,
   },
   intensityBarInner: {
-    height: 6,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 2,
   },
   driverText: {
     fontSize: 13,
@@ -932,6 +1039,23 @@ const styles = StyleSheet.create({
   wheelContainer: {
     alignItems: 'center',
     paddingVertical: theme.spacing.md,
+  },
+  wheelTooltip: {
+    position: 'absolute',
+    bottom: 8,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(20,32,52,0.92)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(201,169,98,0.25)',
+  },
+  wheelTooltipText: {
+    color: theme.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   wheel: {
     position: 'relative',
@@ -1102,6 +1226,120 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     fontSize: 13,
     lineHeight: 18,
+  },
+  /* ── Primary Focus card styles ── */
+  focusRoleLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: theme.primary,
+    marginBottom: 14,
+  },
+  focusHeaderBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  focusChakraEmoji: {
+    fontSize: 36,
+  },
+  focusChakraName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+  },
+  focusStateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  focusStateDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  focusStateText: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  focusDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  focusSectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  focusBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 4,
+  },
+  focusBulletDot: {
+    color: theme.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 1,
+  },
+  focusBulletText: {
+    flex: 1,
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  focusBodyText: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  focusWhyText: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  focusHelpText: {
+    color: theme.textPrimary,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: '600',
+  },
+  affirmationWrap: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+  },
+  affirmationText: {
+    color: theme.primary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  /* ── Background chakra section ── */
+  bgChakraSection: {
+    marginTop: 12,
+  },
+  bgChakraLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.textMuted,
+    marginBottom: 8,
+    fontStyle: 'italic',
   },
   guidanceBlock: {
     marginBottom: 4,

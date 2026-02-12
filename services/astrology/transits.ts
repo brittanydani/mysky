@@ -95,7 +95,7 @@ export function getTransitingLongitudes(
   date: Date,
   latitude: number,
   longitude: number,
-  houseSystem: HouseSystem = 'placidus'
+  houseSystem: HouseSystem = 'whole-sign'
 ): Record<string, number> {
   return getTransitInfo(date, latitude, longitude, houseSystem).longitudes;
 }
@@ -104,7 +104,7 @@ export function getTransitInfo(
   date: Date,
   latitude: number,
   longitude: number,
-  houseSystem: HouseSystem = 'placidus'
+  houseSystem: HouseSystem = 'whole-sign'
 ): TransitInfo {
   // Note: for geocentric longitudes, location doesn't materially change planet positions,
   // but we pass latitude/longitude to keep the library happy and support future features.

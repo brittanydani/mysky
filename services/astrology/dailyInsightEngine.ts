@@ -1168,7 +1168,7 @@ export class DailyInsightEngine {
 
     const horoscope = new Horoscope({
       origin,
-      houseSystem: natalChart.houseSystem || 'placidus',
+      houseSystem: natalChart.houseSystem || 'whole-sign',
       zodiac: 'tropical',
       aspectPoints: ['bodies'],
       aspectWithPoints: ['bodies'],

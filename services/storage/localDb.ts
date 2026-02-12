@@ -1,5 +1,7 @@
+// File: services/storage/localDb.ts
+
 import * as SQLite from 'expo-sqlite';
-import { SavedChart, JournalEntry, AppSettings, CachedInterpretation, RelationshipChart } from './models';
+import { SavedChart, JournalEntry, AppSettings, RelationshipChart } from './models';
 import { SavedInsight } from './insightHistory';
 import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
@@ -9,33 +11,56 @@ const CURRENT_DB_VERSION = 6;
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
 
+  // ✅ NEW: tracks in-flight init so multiple callers don't race
+  private initPromise: Promise<void> | null = null;
+
+  /**
+   * Initialize DB once. Safe to call multiple times.
+   */
   async initialize(): Promise<void> {
     if (this.db) return;
+    if (this.initPromise) return this.initPromise;
 
-    this.db = await SQLite.openDatabaseAsync('mysky.db');
-    await this.handleMigrations();
+    this.initPromise = (async () => {
+      this.db = await SQLite.openDatabaseAsync('mysky.db');
+      await this.handleMigrations();
+    })();
+
+    return this.initPromise;
+  }
+
+  /**
+   * ✅ NEW: ensures DB is initialized before any query runs.
+   * This prevents "Database not initialized" across the entire app.
+   */
+  private async ensureReady(): Promise<SQLite.SQLiteDatabase> {
+    if (!this.db) {
+      await this.initialize();
+    }
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+    return this.db;
   }
 
   private async handleMigrations(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    // Get current version
-    const result = await this.db.getFirstAsync('PRAGMA user_version');
+    const result = await db.getFirstAsync('PRAGMA user_version');
     const currentVersion = (result as any)?.user_version || 0;
 
     logger.info(`[LocalDB] Current version: ${currentVersion}, Target version: ${CURRENT_DB_VERSION}`);
 
     if (currentVersion < CURRENT_DB_VERSION) {
       await this.runMigrations(currentVersion);
-      await this.db.execAsync(`PRAGMA user_version = ${CURRENT_DB_VERSION}`);
+      await db.execAsync(`PRAGMA user_version = ${CURRENT_DB_VERSION}`);
       logger.info(`[LocalDB] Migrated to version ${CURRENT_DB_VERSION}`);
     }
   }
 
   private async runMigrations(fromVersion: number): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    await this.ensureReady();
 
-    // Migration from version 0 to 1 (initial schema)
     if (fromVersion < 1) {
       await this.createInitialSchema();
     }
@@ -62,12 +87,11 @@ class LocalDatabase {
   }
 
   private async createInitialSchema(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
     logger.info('[LocalDB] Creating initial schema...');
 
-    // Create saved_charts table
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS saved_charts (
         id TEXT PRIMARY KEY,
         name TEXT,
@@ -84,8 +108,7 @@ class LocalDatabase {
       );
     `);
 
-    // Create journal_entries table
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS journal_entries (
         id TEXT PRIMARY KEY,
         date TEXT NOT NULL,
@@ -99,8 +122,7 @@ class LocalDatabase {
       );
     `);
 
-    // Create app_settings table
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS app_settings (
         id TEXT PRIMARY KEY,
         cloud_sync_enabled INTEGER NOT NULL DEFAULT 0,
@@ -111,16 +133,14 @@ class LocalDatabase {
       );
     `);
 
-    // Create migration_markers table
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS migration_markers (
         key TEXT PRIMARY KEY,
         completed_at TEXT NOT NULL
       );
     `);
 
-    // Create cached_interpretations table
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS cached_interpretations (
         id TEXT PRIMARY KEY,
         chart_id TEXT NOT NULL,
@@ -132,8 +152,7 @@ class LocalDatabase {
       );
     `);
 
-    // Create indexes for performance
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_saved_charts_updated_at ON saved_charts(updated_at);
       CREATE INDEX IF NOT EXISTS idx_saved_charts_is_deleted ON saved_charts(is_deleted);
       CREATE INDEX IF NOT EXISTS idx_journal_entries_date ON journal_entries(date);
@@ -142,7 +161,6 @@ class LocalDatabase {
       CREATE INDEX IF NOT EXISTS idx_cached_interpretations_chart_id ON cached_interpretations(chart_id);
     `);
 
-    // Insert default settings if not exists
     const settings = await this.getSettings();
     if (!settings) {
       await this.updateSettings({
@@ -150,25 +168,22 @@ class LocalDatabase {
         cloudSyncEnabled: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      });
+      } as AppSettings);
     }
 
     logger.info('[LocalDB] Initial schema created successfully');
   }
 
   private async migrateToVersion2(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
     logger.info('[LocalDB] Migrating to version 2...');
 
-    // Check if house_system column already exists (it's in the initial schema now)
     try {
-      const tableInfo = await this.db.getAllAsync('PRAGMA table_info(saved_charts)');
-      const hasHouseSystem = (tableInfo as any[]).some(col => col.name === 'house_system');
-      
+      const tableInfo = await db.getAllAsync('PRAGMA table_info(saved_charts)');
+      const hasHouseSystem = (tableInfo as any[]).some((col) => col.name === 'house_system');
+
       if (!hasHouseSystem) {
-        await this.db.execAsync(`
-          ALTER TABLE saved_charts ADD COLUMN house_system TEXT;
-        `);
+        await db.execAsync(`ALTER TABLE saved_charts ADD COLUMN house_system TEXT;`);
         logger.info('[LocalDB] Added house_system column');
       } else {
         logger.info('[LocalDB] house_system column already exists, skipping');
@@ -179,11 +194,10 @@ class LocalDatabase {
   }
 
   private async migrateToVersion3(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
     logger.info('[LocalDB] Migrating to version 3 (insight history)...');
 
-    // Create insight_history table
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS insight_history (
         id TEXT PRIMARY KEY,
         date TEXT NOT NULL,
@@ -208,8 +222,7 @@ class LocalDatabase {
       );
     `);
 
-    // Create indexes for performance
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_insight_history_date ON insight_history(date);
       CREATE INDEX IF NOT EXISTS idx_insight_history_chart_id ON insight_history(chart_id);
       CREATE INDEX IF NOT EXISTS idx_insight_history_favorite ON insight_history(is_favorite);
@@ -219,11 +232,10 @@ class LocalDatabase {
   }
 
   private async migrateToVersion4(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
     logger.info('[LocalDB] Migrating to version 4 (relationship charts)...');
 
-    // Create relationship_charts table
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS relationship_charts (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -244,8 +256,7 @@ class LocalDatabase {
       );
     `);
 
-    // Create indexes for performance
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_relationship_charts_user ON relationship_charts(user_chart_id);
       CREATE INDEX IF NOT EXISTS idx_relationship_charts_deleted ON relationship_charts(is_deleted);
     `);
@@ -253,11 +264,68 @@ class LocalDatabase {
     logger.info('[LocalDB] Version 4 migration complete');
   }
 
-  // Chart operations
-  async upsertChart(chart: SavedChart): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+  // ═══════════════════════════════════════════════════
+  // Migration v5: Daily Check-Ins
+  // ═══════════════════════════════════════════════════
+  private async migrateToVersion5(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 5 (daily check-ins)...');
 
-    await this.db.runAsync(
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS daily_check_ins (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL,
+        chart_id TEXT NOT NULL,
+        mood_score INTEGER NOT NULL,
+        energy_level TEXT NOT NULL,
+        stress_level TEXT NOT NULL,
+        tags TEXT NOT NULL,
+        note TEXT,
+        wins TEXT,
+        challenges TEXT,
+        moon_sign TEXT,
+        moon_house INTEGER,
+        sun_house INTEGER,
+        transit_events TEXT,
+        lunar_phase TEXT,
+        retrogrades TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(date, chart_id)
+      );
+    `);
+
+    await db.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_check_ins_date ON daily_check_ins(date);
+      CREATE INDEX IF NOT EXISTS idx_check_ins_chart ON daily_check_ins(chart_id);
+      CREATE INDEX IF NOT EXISTS idx_check_ins_mood ON daily_check_ins(mood_score);
+    `);
+
+    logger.info('[LocalDB] Version 5 migration complete');
+  }
+
+  private async migrateToVersion6(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 6 (migration markers)...');
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS migration_markers (
+        key TEXT PRIMARY KEY,
+        completed_at TEXT NOT NULL
+      );
+    `);
+
+    logger.info('[LocalDB] Version 6 migration complete');
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Chart operations
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  async upsertChart(chart: SavedChart): Promise<void> {
+    const db = await this.ensureReady();
+
+    await db.runAsync(
       `INSERT OR REPLACE INTO saved_charts 
        (id, name, birth_date, birth_time, has_unknown_time, birth_place, latitude, longitude, house_system, created_at, updated_at, is_deleted)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -279,13 +347,13 @@ class LocalDatabase {
   }
 
   async getCharts(): Promise<SavedChart[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const result = await this.db.getAllAsync(
+    const result = await db.getAllAsync(
       'SELECT * FROM saved_charts WHERE is_deleted = 0 ORDER BY created_at DESC'
     );
 
-    return result.map((row: any) => ({
+    return (result as any[]).map((row: any) => ({
       id: row.id,
       name: row.name,
       birthDate: row.birth_date,
@@ -302,35 +370,38 @@ class LocalDatabase {
   }
 
   async updateAllChartsHouseSystem(houseSystem: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
+    const db = await this.ensureReady();
     const now = new Date().toISOString();
-    await this.db.runAsync(
+
+    await db.runAsync(
       'UPDATE saved_charts SET house_system = ?, updated_at = ? WHERE is_deleted = 0',
       [houseSystem, now]
     );
   }
 
   async deleteChart(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
+    const db = await this.ensureReady();
     const now = new Date().toISOString();
-    await this.db.runAsync(
+
+    await db.runAsync(
       'UPDATE saved_charts SET is_deleted = 1, updated_at = ? WHERE id = ?',
       [now, id]
     );
   }
 
   async hardDeleteChart(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    await this.db.runAsync('DELETE FROM saved_charts WHERE id = ?', [id]);
+    const db = await this.ensureReady();
+    await db.runAsync('DELETE FROM saved_charts WHERE id = ?', [id]);
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
   // Journal operations
-  async addJournalEntry(entry: JournalEntry): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+  // ─────────────────────────────────────────────────────────────────────────────
 
-    await this.db.runAsync(
+  async addJournalEntry(entry: JournalEntry): Promise<void> {
+    const db = await this.ensureReady();
+
+    await db.runAsync(
       `INSERT INTO journal_entries 
        (id, date, mood, moon_phase, title, content, created_at, updated_at, is_deleted)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -349,13 +420,13 @@ class LocalDatabase {
   }
 
   async getJournalEntries(): Promise<JournalEntry[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const result = await this.db.getAllAsync(
+    const result = await db.getAllAsync(
       'SELECT * FROM journal_entries WHERE is_deleted = 0 ORDER BY date DESC, created_at DESC'
     );
 
-    return result.map((row: any) => ({
+    return (result as any[]).map((row: any) => ({
       id: row.id,
       date: row.date,
       mood: row.mood,
@@ -369,9 +440,9 @@ class LocalDatabase {
   }
 
   async updateJournalEntry(entry: JournalEntry): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    await this.db.runAsync(
+    await db.runAsync(
       `UPDATE journal_entries 
        SET mood = ?, moon_phase = ?, title = ?, content = ?, updated_at = ?
        WHERE id = ?`,
@@ -380,29 +451,28 @@ class LocalDatabase {
   }
 
   async deleteJournalEntry(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
+    const db = await this.ensureReady();
     const now = new Date().toISOString();
-    await this.db.runAsync(
+
+    await db.runAsync(
       'UPDATE journal_entries SET is_deleted = 1, updated_at = ? WHERE id = ?',
       [now, id]
     );
   }
 
   async hardDeleteJournalEntry(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    await this.db.runAsync('DELETE FROM journal_entries WHERE id = ?', [id]);
+    const db = await this.ensureReady();
+    await db.runAsync('DELETE FROM journal_entries WHERE id = ?', [id]);
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
   // Settings operations
+  // ─────────────────────────────────────────────────────────────────────────────
+
   async getSettings(): Promise<AppSettings | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const result = await this.db.getFirstAsync(
-      'SELECT * FROM app_settings WHERE id = ?',
-      ['default']
-    );
-
+    const result = await db.getFirstAsync('SELECT * FROM app_settings WHERE id = ?', ['default']);
     if (!result) return null;
 
     return {
@@ -416,9 +486,9 @@ class LocalDatabase {
   }
 
   async updateSettings(settings: AppSettings): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    await this.db.runAsync(
+    await db.runAsync(
       `INSERT OR REPLACE INTO app_settings 
        (id, cloud_sync_enabled, last_sync_at, user_id, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -433,16 +503,19 @@ class LocalDatabase {
     );
   }
 
-  // Get entries modified since timestamp (for sync)
-  async getChartsModifiedSince(timestamp: string): Promise<SavedChart[]> {
-    if (!this.db) throw new Error('Database not initialized');
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Sync helpers
+  // ─────────────────────────────────────────────────────────────────────────────
 
-    const result = await this.db.getAllAsync(
+  async getChartsModifiedSince(timestamp: string): Promise<SavedChart[]> {
+    const db = await this.ensureReady();
+
+    const result = await db.getAllAsync(
       'SELECT * FROM saved_charts WHERE updated_at > ? ORDER BY updated_at ASC',
       [timestamp]
     );
 
-    return result.map((row: any) => ({
+    return (result as any[]).map((row: any) => ({
       id: row.id,
       name: row.name,
       birthDate: row.birth_date,
@@ -459,14 +532,14 @@ class LocalDatabase {
   }
 
   async getJournalEntriesModifiedSince(timestamp: string): Promise<JournalEntry[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const result = await this.db.getAllAsync(
+    const result = await db.getAllAsync(
       'SELECT * FROM journal_entries WHERE updated_at > ? ORDER BY updated_at ASC',
       [timestamp]
     );
 
-    return result.map((row: any) => ({
+    return (result as any[]).map((row: any) => ({
       id: row.id,
       date: row.date,
       mood: row.mood,
@@ -480,31 +553,27 @@ class LocalDatabase {
   }
 
   async hardDeleteAllData(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       DELETE FROM saved_charts;
       DELETE FROM journal_entries;
       DELETE FROM cached_interpretations;
       DELETE FROM app_settings;
       VACUUM;
     `);
-    // Note: migration_markers is intentionally preserved
   }
 
-  // Alias methods for consistency with other parts of the app
+  // Aliases
   async saveChart(chart: SavedChart): Promise<void> {
     return this.upsertChart(chart);
   }
 
   async saveJournalEntry(entry: JournalEntry): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    
-    const exists = await this.db.getFirstAsync(
-      'SELECT id FROM journal_entries WHERE id = ?',
-      [entry.id]
-    );
-    
+    const db = await this.ensureReady();
+
+    const exists = await db.getFirstAsync('SELECT id FROM journal_entries WHERE id = ?', [entry.id]);
+
     if (exists) {
       await this.updateJournalEntry(entry);
     } else {
@@ -521,17 +590,14 @@ class LocalDatabase {
   // ─────────────────────────────────────────────────────────────────────────────
 
   async getMigrationMarker(key: string): Promise<boolean> {
-    if (!this.db) throw new Error('Database not initialized');
-    const result = await this.db.getFirstAsync(
-      'SELECT key FROM migration_markers WHERE key = ?',
-      [key]
-    );
+    const db = await this.ensureReady();
+    const result = await db.getFirstAsync('SELECT key FROM migration_markers WHERE key = ?', [key]);
     return result != null;
   }
 
   async setMigrationMarker(key: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    await this.db.runAsync(
+    const db = await this.ensureReady();
+    await db.runAsync(
       'INSERT OR REPLACE INTO migration_markers (key, completed_at) VALUES (?, ?)',
       [key, new Date().toISOString()]
     );
@@ -542,9 +608,9 @@ class LocalDatabase {
   // ─────────────────────────────────────────────────────────────────────────────
 
   async saveInsight(insight: SavedInsight): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    await this.db.runAsync(
+    await db.runAsync(
       `INSERT OR REPLACE INTO insight_history 
        (id, date, chart_id, greeting, love_headline, love_message, energy_headline, 
         energy_message, growth_headline, growth_message, gentle_reminder, journal_prompt,
@@ -575,24 +641,21 @@ class LocalDatabase {
   }
 
   async getInsightByDate(date: string, chartId: string): Promise<SavedInsight | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const result = await this.db.getFirstAsync(
-      'SELECT * FROM insight_history WHERE date = ? AND chart_id = ?',
-      [date, chartId]
-    );
+    const result = await db.getFirstAsync('SELECT * FROM insight_history WHERE date = ? AND chart_id = ?', [
+      date,
+      chartId,
+    ]);
 
     if (!result) return null;
     return this.mapInsightRow(result);
   }
 
   async getInsightById(id: string): Promise<SavedInsight | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const result = await this.db.getFirstAsync(
-      'SELECT * FROM insight_history WHERE id = ?',
-      [id]
-    );
+    const result = await db.getFirstAsync('SELECT * FROM insight_history WHERE id = ?', [id]);
 
     if (!result) return null;
     return this.mapInsightRow(result);
@@ -600,14 +663,9 @@ class LocalDatabase {
 
   async getInsightHistory(
     chartId: string,
-    options?: {
-      limit?: number;
-      startDate?: string;
-      endDate?: string;
-      favoritesOnly?: boolean;
-    }
+    options?: { limit?: number; startDate?: string; endDate?: string; favoritesOnly?: boolean }
   ): Promise<SavedInsight[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
     let query = 'SELECT * FROM insight_history WHERE chart_id = ?';
     const params: any[] = [chartId];
@@ -633,27 +691,24 @@ class LocalDatabase {
       params.push(options.limit);
     }
 
-    const result = await this.db.getAllAsync(query, params);
-    return result.map((row: any) => this.mapInsightRow(row));
+    const result = await db.getAllAsync(query, params);
+    return (result as any[]).map((row: any) => this.mapInsightRow(row));
   }
 
   async updateInsightFavorite(id: string, isFavorite: boolean): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
+    const db = await this.ensureReady();
     const now = new Date().toISOString();
-    await this.db.runAsync(
-      'UPDATE insight_history SET is_favorite = ?, updated_at = ? WHERE id = ?',
-      [isFavorite ? 1 : 0, now, id]
-    );
+
+    await db.runAsync('UPDATE insight_history SET is_favorite = ?, updated_at = ? WHERE id = ?', [
+      isFavorite ? 1 : 0,
+      now,
+      id,
+    ]);
   }
 
   async updateInsightViewedAt(id: string, viewedAt: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
-    await this.db.runAsync(
-      'UPDATE insight_history SET viewed_at = ? WHERE id = ?',
-      [viewedAt, id]
-    );
+    const db = await this.ensureReady();
+    await db.runAsync('UPDATE insight_history SET viewed_at = ? WHERE id = ?', [viewedAt, id]);
   }
 
   private mapInsightRow(row: any): SavedInsight {
@@ -680,11 +735,14 @@ class LocalDatabase {
     };
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
   // Relationship chart operations
-  async saveRelationshipChart(chart: RelationshipChart): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+  // ─────────────────────────────────────────────────────────────────────────────
 
-    await this.db.runAsync(
+  async saveRelationshipChart(chart: RelationshipChart): Promise<void> {
+    const db = await this.ensureReady();
+
+    await db.runAsync(
       `INSERT OR REPLACE INTO relationship_charts 
        (id, name, relationship, birth_date, birth_time, has_unknown_time, birth_place, 
         latitude, longitude, timezone, user_chart_id, created_at, updated_at, is_deleted, deleted_at)
@@ -710,7 +768,7 @@ class LocalDatabase {
   }
 
   async getRelationshipCharts(userChartId?: string): Promise<RelationshipChart[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
     let query = 'SELECT * FROM relationship_charts WHERE is_deleted = 0';
     const params: any[] = [];
@@ -722,14 +780,14 @@ class LocalDatabase {
 
     query += ' ORDER BY updated_at DESC';
 
-    const result = await this.db.getAllAsync(query, params);
-    return result.map((row: any) => this.mapRelationshipRow(row));
+    const result = await db.getAllAsync(query, params);
+    return (result as any[]).map((row: any) => this.mapRelationshipRow(row));
   }
 
   async getRelationshipChartById(id: string): Promise<RelationshipChart | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const result = await this.db.getFirstAsync(
+    const result = await db.getFirstAsync(
       'SELECT * FROM relationship_charts WHERE id = ? AND is_deleted = 0',
       [id]
     );
@@ -738,17 +796,17 @@ class LocalDatabase {
   }
 
   async deleteRelationshipChart(id: string): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-
+    const db = await this.ensureReady();
     const now = new Date().toISOString();
-    await this.db.runAsync(
+
+    await db.runAsync(
       'UPDATE relationship_charts SET is_deleted = 1, deleted_at = ?, updated_at = ? WHERE id = ?',
       [now, now, id]
     );
   }
 
   async getRelationshipChartCount(userChartId?: string): Promise<number> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
     let query = 'SELECT COUNT(*) as count FROM relationship_charts WHERE is_deleted = 0';
     const params: any[] = [];
@@ -758,7 +816,7 @@ class LocalDatabase {
       params.push(userChartId);
     }
 
-    const result = await this.db.getFirstAsync(query, params) as any;
+    const result = (await db.getFirstAsync(query, params)) as any;
     return result?.count ?? 0;
   }
 
@@ -782,69 +840,14 @@ class LocalDatabase {
     };
   }
 
-  // ═══════════════════════════════════════════════════
-  // Migration v5: Daily Check-Ins (Pattern Tracking)
-  // ═══════════════════════════════════════════════════
-
-  private async migrateToVersion5(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    logger.info('[LocalDB] Migrating to version 5 (daily check-ins)...');
-
-    await this.db.execAsync(`
-      CREATE TABLE IF NOT EXISTS daily_check_ins (
-        id TEXT PRIMARY KEY,
-        date TEXT NOT NULL,
-        chart_id TEXT NOT NULL,
-        mood_score INTEGER NOT NULL,
-        energy_level TEXT NOT NULL,
-        stress_level TEXT NOT NULL,
-        tags TEXT NOT NULL,
-        note TEXT,
-        wins TEXT,
-        challenges TEXT,
-        moon_sign TEXT,
-        moon_house INTEGER,
-        sun_house INTEGER,
-        transit_events TEXT,
-        lunar_phase TEXT,
-        retrogrades TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        UNIQUE(date, chart_id)
-      );
-    `);
-
-    await this.db.execAsync(`
-      CREATE INDEX IF NOT EXISTS idx_check_ins_date ON daily_check_ins(date);
-      CREATE INDEX IF NOT EXISTS idx_check_ins_chart ON daily_check_ins(chart_id);
-      CREATE INDEX IF NOT EXISTS idx_check_ins_mood ON daily_check_ins(mood_score);
-    `);
-
-    logger.info('[LocalDB] Version 5 migration complete');
-  }
-
-  private async migrateToVersion6(): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
-    logger.info('[LocalDB] Migrating to version 6 (migration markers)...');
-
-    await this.db.execAsync(`
-      CREATE TABLE IF NOT EXISTS migration_markers (
-        key TEXT PRIMARY KEY,
-        completed_at TEXT NOT NULL
-      );
-    `);
-
-    logger.info('[LocalDB] Version 6 migration complete');
-  }
-
-  // ═══════════════════════════════════════════════════
+  // ─────────────────────────────────────────────────────────────────────────────
   // Check-In CRUD
-  // ═══════════════════════════════════════════════════
+  // ─────────────────────────────────────────────────────────────────────────────
 
   async saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    await this.db.runAsync(
+    await db.runAsync(
       `INSERT OR REPLACE INTO daily_check_ins
        (id, date, chart_id, mood_score, energy_level, stress_level, tags, note, wins, challenges,
         moon_sign, moon_house, sun_house, transit_events, lunar_phase, retrogrades, created_at, updated_at)
@@ -873,19 +876,19 @@ class LocalDatabase {
   }
 
   async getCheckInByDate(date: string, chartId: string): Promise<DailyCheckIn | null> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
-    const row = await this.db.getFirstAsync(
-      'SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ?',
-      [date, chartId]
-    );
+    const row = await db.getFirstAsync('SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ?', [
+      date,
+      chartId,
+    ]);
 
     if (!row) return null;
     return this.mapCheckInRow(row);
   }
 
   async getCheckIns(chartId: string, limit?: number): Promise<DailyCheckIn[]> {
-    if (!this.db) throw new Error('Database not initialized');
+    const db = await this.ensureReady();
 
     let query = 'SELECT * FROM daily_check_ins WHERE chart_id = ? ORDER BY date DESC';
     const params: any[] = [chartId];
@@ -895,8 +898,8 @@ class LocalDatabase {
       params.push(limit);
     }
 
-    const rows = await this.db.getAllAsync(query, params);
-    return (rows as any[]).map(row => this.mapCheckInRow(row));
+    const rows = await db.getAllAsync(query, params);
+    return (rows as any[]).map((row: any) => this.mapCheckInRow(row));
   }
 
   private mapCheckInRow(row: any): DailyCheckIn {

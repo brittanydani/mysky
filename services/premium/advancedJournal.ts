@@ -189,7 +189,7 @@ export class AdvancedJournalAnalyzer {
    * Capture transit snapshot for a journal entry
    */
   static captureTransitSnapshot(natalChart: NatalChart, date: Date = new Date()): TransitSnapshot {
-    const houseSystem = natalChart.houseSystem ?? 'placidus';
+    const houseSystem = natalChart.houseSystem ?? 'whole-sign';
     const transits = getTransitingLongitudes(
       date,
       natalChart.birthData.latitude,

@@ -234,7 +234,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
   const [longitude, setLongitude] = useState<number>(initialData?.longitude ?? 0);
   const [timezone, setTimezone] = useState<string>(initialData?.timezone || '');
 
-  const [houseSystem, setHouseSystem] = useState<HouseSystem>(initialData?.houseSystem || 'placidus');
+  const houseSystem: HouseSystem = initialData?.houseSystem || 'whole-sign';
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -279,7 +279,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
         setLongitude(initialData.longitude ?? 0);
         setTimezone(initialData.timezone || '');
 
-        setHouseSystem(initialData.houseSystem || 'placidus');
+        // houseSystem is read-only here; user changes it in Settings
         setLocationSelected(
           Boolean(
             initialData.place &&
@@ -541,33 +541,8 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                 )}
               </Animated.View>
 
-              {/* House System */}
-              <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>House System</Text>
-                <Text style={styles.sectionSubtitle}>Choose how houses are calculated</Text>
-                <View style={styles.houseSystemRow}>
-                  {(['placidus', 'whole-sign', 'equal-house'] as HouseSystem[]).map((system) => {
-                    const isSelected = houseSystem === system;
-                    return (
-                      <Pressable
-                        key={system}
-                        style={[styles.houseSystemOption, isSelected && styles.houseSystemOptionActive]}
-                        onPress={() => {
-                          setHouseSystem(system);
-                          Haptics.selectionAsync();
-                        }}
-                      >
-                        <Text style={[styles.houseSystemText, isSelected && styles.houseSystemTextActive]}>
-                          {system === 'placidus' ? 'Placidus' : system === 'whole-sign' ? 'Whole Sign' : 'Equal'}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </Animated.View>
-
               {/* Location */}
-              <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.section}>
+              <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Birth Location</Text>
 
                 <View style={styles.inputContainer}>
@@ -808,18 +783,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   noResultsText: { fontSize: 14, color: theme.textMuted, marginLeft: theme.spacing.sm, textAlign: 'center' },
-  houseSystemRow: { flexDirection: 'row', gap: theme.spacing.sm, flexWrap: 'wrap' },
-  houseSystemOption: {
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.backgroundTertiary,
-  },
-  houseSystemOptionActive: { borderColor: theme.primary, backgroundColor: 'rgba(201, 169, 98, 0.2)' },
-  houseSystemText: { fontSize: 12, color: theme.textSecondary, fontWeight: '600' },
-  houseSystemTextActive: { color: theme.primary },
   saveContainer: { marginTop: theme.spacing.xl },
   saveButton: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', ...theme.shadows.glow },
   saveButtonPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },

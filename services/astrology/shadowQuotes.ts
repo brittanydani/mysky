@@ -725,7 +725,7 @@ export class ShadowQuoteEngine {
         date,
         chart.birthData.latitude,
         chart.birthData.longitude,
-        chart.houseSystem || 'placidus',
+        chart.houseSystem || 'whole-sign',
       );
       const aspects = computeTransitAspectsToNatal(chart, transits);
       transitSignals = transitAspectsToActivationSignals(aspects);

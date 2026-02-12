@@ -22,7 +22,7 @@ export class DailyGuidanceGenerator {
    * Generate daily emotional weather for a specific date
    */
   static generateDailyWeather(natalChart: NatalChart, date: Date = new Date()): DailyEmotionalWeather {
-    const houseSystem = natalChart.houseSystem ?? 'placidus';
+    const houseSystem = natalChart.houseSystem ?? 'whole-sign';
 
     // Transiting longitudes keyed by planet name ("Moon", "Sun", etc.) in absolute degrees 0..360
     const transits = getTransitingLongitudes(
@@ -267,7 +267,7 @@ export class DailyGuidanceGenerator {
   ): string[] {
     const prompts: string[] = [];
 
-    const houseSystem = natalChart.houseSystem ?? 'placidus';
+    const houseSystem = natalChart.houseSystem ?? 'whole-sign';
     const transits = getTransitingLongitudes(
       date,
       natalChart.birthData.latitude,

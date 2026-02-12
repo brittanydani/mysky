@@ -53,7 +53,7 @@ const LEGACY_ZODIAC_SIGNS: AstrologySign[] = [
 ];
 
 // Default configuration
-const DEFAULT_HOUSE_SYSTEM: HouseSystem = 'placidus';
+const DEFAULT_HOUSE_SYSTEM: HouseSystem = 'whole-sign';
 
 // Cache for transits to avoid recalculating too frequently
 type TransitCacheEntry = { timestamp: number; data: TransitData };
@@ -712,7 +712,7 @@ export class EnhancedAstrologyCalculator {
 
       const horoscope = new Horoscope({
         origin,
-        houseSystem: 'placidus',
+        houseSystem: 'whole-sign',
         zodiac: 'tropical',
         aspectPoints: ['bodies'],
         aspectWithPoints: ['bodies'],

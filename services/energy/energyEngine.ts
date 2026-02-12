@@ -130,18 +130,18 @@ function dayOfYear(d: Date = new Date()): number {
 // ── Tone Mapping ─────────────────────────────────────────────
 
 const MOON_TONES: Record<string, { tone: string; intensity: EnergyIntensity }> = {
-  Aries:       { tone: 'Activated',         intensity: 'High' },
-  Taurus:      { tone: 'Grounded',          intensity: 'Low' },
-  Gemini:      { tone: 'Mentally Charged',  intensity: 'Moderate' },
-  Cancer:      { tone: 'Tender',            intensity: 'Moderate' },
-  Leo:         { tone: 'Expressive',        intensity: 'High' },
-  Virgo:       { tone: 'Focused',           intensity: 'Moderate' },
-  Libra:       { tone: 'Harmonizing',       intensity: 'Low' },
-  Scorpio:     { tone: 'Intense',           intensity: 'High' },
-  Sagittarius: { tone: 'Restless',          intensity: 'High' },
-  Capricorn:   { tone: 'Structured',        intensity: 'Moderate' },
-  Aquarius:    { tone: 'Detached',          intensity: 'Moderate' },
-  Pisces:      { tone: 'Porous',            intensity: 'Low' },
+  Aries:       { tone: 'Energy in Motion',      intensity: 'High' },
+  Taurus:      { tone: 'Grounded',               intensity: 'Low' },
+  Gemini:      { tone: 'Active',                 intensity: 'Moderate' },
+  Cancer:      { tone: 'Sensitive',               intensity: 'Moderate' },
+  Leo:         { tone: 'Expressive',              intensity: 'High' },
+  Virgo:       { tone: 'Focused',                 intensity: 'Moderate' },
+  Libra:       { tone: 'Flowing',                 intensity: 'Low' },
+  Scorpio:     { tone: 'Inward',                  intensity: 'High' },
+  Sagittarius: { tone: 'Seeking Movement',        intensity: 'High' },
+  Capricorn:   { tone: 'Quiet',                   intensity: 'Moderate' },
+  Aquarius:    { tone: 'Observing',               intensity: 'Moderate' },
+  Pisces:      { tone: 'Open & Receiving',        intensity: 'Low' },
 };
 
 // ── Quick Meanings ───────────────────────────────────────────
@@ -155,7 +155,7 @@ const QUICK_MEANINGS: Record<string, string> = {
   Virgo:       'A desire to refine and improve surfaces; small corrections matter.',
   Libra:       'Relationship awareness sharpens; balance between self and other is the theme.',
   Scorpio:     'Emotional depth intensifies; honesty with yourself is the invitation.',
-  Sagittarius: 'Restlessness seeks meaning; expansion feels urgent but patience serves better.',
+  Sagittarius: 'Your energy is seeking expansion; movement feels urgent but patience serves better.',
   Capricorn:   'Structure and responsibility feel stabilizing; do the next right thing.',
   Aquarius:    'Mental detachment offers perspective; innovation over repetition.',
   Pisces:      'Boundaries soften; intuition rises but overwhelm is possible without grounding.',

@@ -397,7 +397,7 @@ export class PatternAnalyzer {
         isPremium: true,
         icon: '🫧',
         color: '#E07A98',
-        dataPoints: parseInt(topStressHouse[1]),
+        dataPoints: topStressHouse[1],
       });
     }
 
@@ -418,7 +418,7 @@ export class PatternAnalyzer {
         type: 'stress_pattern',
         title: 'Stress trigger',
         insight: `${TAG_LABELS[topStressTag[0] as ThemeTag]} is your most common theme on high-stress days. Recognizing this pattern is the first step toward breaking it.`,
-        strength: this.getStrength(parseInt(topStressTag[1])),
+        strength: this.getStrength(topStressTag[1]),
         isPremium: true,
         icon: '🎯',
         color: '#E07A7A',

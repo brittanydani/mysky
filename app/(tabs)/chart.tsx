@@ -368,6 +368,21 @@ export default function ChartScreen() {
     return detectChartPatterns(activeChart);
   }, [activeChart]);
 
+  // ── Pattern count for tab label ──
+  const patternCount = useMemo(() => {
+    if (!chartPatterns) return 0;
+    let count = 0;
+    if (chartPatterns.chartRuler) count++;
+    if (activeChart?.partOfFortune) count++;
+    count++; // dominant planet (always computed)
+    count += chartPatterns.stelliums.length;
+    count += chartPatterns.conjunctionClusters.length;
+    if (chartPatterns.retrogradeEmphasis.count >= 3) count++;
+    if (chartPatterns.elementBalance) count++;
+    if (chartPatterns.modalityBalance) count++;
+    return count;
+  }, [chartPatterns, activeChart]);
+
   // ── Part of Fortune (free) ──
   const partOfFortune = useMemo(() => {
     if (!activeChart?.partOfFortune) return null;
@@ -491,7 +506,7 @@ export default function ChartScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 0 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header ── */}
@@ -796,7 +811,7 @@ export default function ChartScreen() {
                     ? `Houses (${houseCusps.length})`
                     : tab === 'aspects'
                     ? `Aspects (${sortedAspects.length})`
-                    : 'Patterns'}
+                    : `Patterns (${patternCount})`}
                 </Text>
               </Pressable>
             ))}
@@ -1140,7 +1155,7 @@ export default function ChartScreen() {
                   style={styles.patternCard}
                 >
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>👑</Text>
+                    <Text style={[styles.patternIcon, { marginTop: -7 }]}>👑</Text>
                     <Text style={styles.patternTitle}>Chart Ruler</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1223,7 +1238,7 @@ export default function ChartScreen() {
                   style={styles.patternCard}
                 >
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>⚡</Text>
+                    <Text style={[styles.patternIcon, { marginRight: -8, marginTop: -20, fontSize: 11 }]}>⚡</Text>
                     <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
                   </View>
                   <View style={styles.patternHighlight}>

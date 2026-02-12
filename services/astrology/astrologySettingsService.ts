@@ -62,8 +62,8 @@ export interface AstrologySettings {
 const SETTINGS_KEY = 'astrology_settings';
 
 export const HOUSE_SYSTEM_OPTIONS: Array<{ value: HouseSystem; label: string; description: string }> = [
-  { value: 'placidus', label: 'Placidus', description: 'Most common in Western astrology' },
   { value: 'whole-sign', label: 'Whole Sign', description: 'Traditional/Hellenistic, rising sign = 1st house' },
+  { value: 'placidus', label: 'Placidus', description: 'Most common in Western astrology' },
   { value: 'equal-house', label: 'Equal House', description: 'Each house is exactly 30°' },
   { value: 'koch', label: 'Koch', description: 'Time-based division, popular in Europe' },
   { value: 'campanus', label: 'Campanus', description: 'Space-based, good for extreme latitudes' },
@@ -115,7 +115,7 @@ export const ORB_CONFIGURATIONS: Record<OrbPreset, OrbConfiguration> = {
 };
 
 const DEFAULT_SETTINGS: AstrologySettings = {
-  houseSystem: 'placidus',
+  houseSystem: 'whole-sign',
   zodiacSystem: 'tropical',
   orbPreset: 'normal',
   showMinorAspects: false,

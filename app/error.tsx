@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter, Href } from 'expo-router';
+import { theme } from '../constants/theme';
 import { logger } from '../utils/logger';
 
 export default function GlobalError({ error, retry }: { error: Error; retry?: () => void }) {
@@ -15,7 +16,7 @@ export default function GlobalError({ error, retry }: { error: Error; retry?: ()
   }, [error]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0D1421', padding: 24, justifyContent: 'center' }}>
+    <View style={{ flex: 1, backgroundColor: theme.background, padding: 24, justifyContent: 'center' }}>
       <Text style={{ color: 'white', fontSize: 22, fontWeight: '700', marginBottom: 12 }}>
         Something went wrong
       </Text>

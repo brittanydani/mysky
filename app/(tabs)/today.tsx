@@ -285,7 +285,7 @@ export default function TodayScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: 0 },
+            { paddingBottom: insets.bottom + 80 },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -1057,15 +1057,15 @@ const styles = StyleSheet.create({
   strongestBadge: {
     marginLeft: 'auto',
     backgroundColor: 'rgba(201, 169, 98, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: theme.borderRadius.sm,
   },
   strongestBadgeText: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '600',
     color: theme.primary,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
     textTransform: 'uppercase',
   },
   cardHeadline: {

@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
+import { Ionicons } from '@expo/vector-icons';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
@@ -77,7 +78,7 @@ export default function HealingScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: 0 },
+            { paddingBottom: insets.bottom + 80 },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -88,6 +89,23 @@ export default function HealingScreen() {
           >
             <Text style={styles.title}>Healing Insights</Text>
           </Animated.View>
+
+          {/* Empty state — no chart yet */}
+          {!healingData && !healingQuote && (
+            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyState}>
+              <Ionicons name="heart-outline" size={48} color={theme.textMuted} />
+              <Text style={styles.emptyTitle}>No chart yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Create your natal chart to unlock personalized healing insights.
+              </Text>
+              <Pressable
+                onPress={() => router.push('/(tabs)/chart' as Href)}
+                style={styles.emptyButton}
+              >
+                <Text style={styles.emptyButtonText}>Create Chart</Text>
+              </Pressable>
+            </Animated.View>
+          )}
 
           {/* Shadow quote — soft Chiron/release truth */}
           {healingQuote && (
@@ -205,5 +223,36 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: theme.spacing.md,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    marginTop: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 260,
+  },
+  emptyButton: {
+    marginTop: 12,
+    backgroundColor: theme.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: theme.borderRadius.full,
+  },
+  emptyButtonText: {
+    color: theme.background,
+    fontWeight: '600',
+    fontSize: 15,
   },
 });

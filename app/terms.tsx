@@ -38,7 +38,7 @@ export default function TermsOfServiceScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-            <Text style={styles.lastUpdated}>Last updated: {new Date().toLocaleDateString()}</Text>
+            <Text style={styles.lastUpdated}>Last updated: February 11, 2026</Text>
             
             <Text style={styles.sectionTitle}>Welcome to MySky</Text>
             <Text style={styles.paragraph}>

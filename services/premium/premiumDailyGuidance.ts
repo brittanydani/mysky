@@ -253,7 +253,7 @@ export class PremiumDailyGuidanceGenerator {
       return this.generateFreeGuidance(natalChart, date);
     }
 
-    const houseSystem = natalChart.houseSystem ?? 'placidus';
+    const houseSystem = natalChart.houseSystem ?? 'whole-sign';
     const transits = getTransitingLongitudes(
       date,
       natalChart.birthData.latitude,

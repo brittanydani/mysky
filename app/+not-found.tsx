@@ -1,24 +1,20 @@
-/*
- * @Description: 
- */
-
-// Powered by OnSpace.AI
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Href } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '../constants/theme';
 
 export default function NotFoundScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#0a0a0a', '#1a1a1a']}
+        colors={[theme.background, theme.backgroundSecondary]}
         style={StyleSheet.absoluteFillObject}
       />
       
       <View style={styles.content}>
-        <MaterialIcons name="photo-camera" size={80} color="#FFD700" />
+        <Ionicons name="moon-outline" size={72} color={theme.primary} />
         <Text style={styles.title}>Page Not Found</Text>
         <Text style={styles.message}>
           The moment you&apos;re looking for seems to have been lost in the shadows.
@@ -38,7 +34,7 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: theme.background,
   },
   content: {
     flex: 1,
@@ -49,25 +45,25 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     marginTop: 20,
     marginBottom: 10,
   },
   message: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: theme.textSecondary,
     textAlign: 'center',
     marginBottom: 40,
     lineHeight: 22,
   },
   homeButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: theme.primary,
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 25,
   },
   homeButtonText: {
-    color: '#0D1421',
+    color: theme.background,
     fontWeight: 'bold',
     fontSize: 16,
   },

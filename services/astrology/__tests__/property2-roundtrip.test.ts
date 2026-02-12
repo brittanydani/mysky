@@ -60,13 +60,13 @@ class AstronomicalDataFormatter {
       houseSystem: chart.houseSystem,
       houses: chart.houses?.map(h => ({
         house: h.house,
-        sign: h.sign,
+        sign: h.sign as string,
         degree: h.degree,
         absoluteDegree: h.absoluteDegree
       })) || [],
       angles: chart.angles?.map(a => ({
         name: a.name,
-        sign: a.sign,
+        sign: a.sign as string,
         degree: a.degree,
         absoluteDegree: a.absoluteDegree
       })) || [],
