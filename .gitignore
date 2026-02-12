@@ -34,3 +34,4 @@ android/app/build/
 # Local scripts
 scripts/
 *.log
+.github/
