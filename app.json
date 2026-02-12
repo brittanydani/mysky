@@ -6,18 +6,13 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mysky",
-    "userInterfaceStyle": "dark",
 
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
       "supportsTablet": false,
-      "buildNumber": "1",
+      "buildNumber": "3",
       "infoPlist": {
-        "NSUserTrackingUsageDescription": "This app does not track users across apps or websites.",
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "config": {
-        "usesNonExemptEncryption": false
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -34,7 +29,7 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#0D1421"
+        "backgroundColor": "#141222"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [],
@@ -66,13 +61,14 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0D1421",
+          "backgroundColor": "#141222",
           "image": "./assets/images/splash.png",
+          "resizeMode": "contain",
           "dark": {
-            "backgroundColor": "#0D1421",
-            "image": "./assets/images/splash.png"
-          },
-          "imageWidth": 200
+            "backgroundColor": "#141222",
+            "image": "./assets/images/splash.png",
+            "resizeMode": "contain"
+          }
         }
       ],
       "expo-web-browser",
@@ -94,4 +90,3 @@
     "owner": "brittanyhornick"
   }
 }
-
