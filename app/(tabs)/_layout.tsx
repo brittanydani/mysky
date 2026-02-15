@@ -2,10 +2,13 @@ import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+
 import { theme } from '../../constants/theme';
+import { usePremium } from '../../context/PremiumContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { isPremium } = usePremium();
 
   return (
     <Tabs
@@ -69,6 +72,7 @@ export default function TabLayout() {
         }}
       />
 
+
       <Tabs.Screen
         name="settings"
         options={{
@@ -76,6 +80,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="settings" size={22} color={color} />,
         }}
       />
+
 
       {/* Hidden routes (still accessible via navigation) */}
       <Tabs.Screen name="chart" options={{ href: null }} />

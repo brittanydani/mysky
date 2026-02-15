@@ -8,7 +8,7 @@
 import { DailyCheckIn, TransitEvent, ThemeTag, EnergyLevel, StressLevel } from './types';
 import { localDb } from '../storage/localDb';
 import { NatalChart } from '../astrology/types';
-import { getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
+import { getTransitInfo, getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
 import { generateId } from '../storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
@@ -49,26 +49,14 @@ function getMoonPhase(date: Date): string {
   return getMoonPhaseKey(date);
 }
 
-// Retrograde detection (approximate)
-function getRetrogradePlanets(date: Date): string[] {
-  // In a real app you'd compute this from ephemeris.
-  // For now, use known retrograde periods for 2025-2026.
-  const retrogrades: string[] = [];
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
-
-  // Mercury retrogrades ~3x/year
-  if (year === 2026) {
-    if ((month >= 1 && month <= 1) || (month >= 5 && month <= 5) || (month >= 9 && month <= 9)) {
-      retrogrades.push('Mercury');
-    }
+// Retrograde detection — uses real ephemeris via transits module
+function getRetrogradePlanets(date: Date, latitude: number, longitude: number): string[] {
+  try {
+    const info = getTransitInfo(date, latitude, longitude);
+    return info.retrogrades;
+  } catch {
+    return [];
   }
-  // Saturn retrogrades ~4.5 months/year (roughly June–October)
-  if (month >= 6 && month <= 10) retrogrades.push('Saturn');
-  // Jupiter retrogrades ~4 months/year (varies)
-  if (month >= 7 && month <= 11) retrogrades.push('Jupiter');
-
-  return retrogrades;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -110,14 +98,14 @@ export function captureSkySnapshot(chart: NatalChart, date: Date = new Date()): 
       natalPlanet: a.pointB,
       aspect: a.type,
       orb: a.orb,
-      isApplying: true, // simplified
+      isApplying: a.orb < 2, // tighter orbs are more likely applying; exact would need velocity data
     }));
 
     // Moon phase
     const lunarPhase = getMoonPhase(date);
 
-    // Retrogrades
-    const retrogrades = getRetrogradePlanets(date);
+    // Retrogrades — real ephemeris-based detection
+    const retrogrades = getRetrogradePlanets(date, lat, lng);
 
     return {
       moonSign,

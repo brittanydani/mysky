@@ -3,7 +3,7 @@
  * 
  * Manages user preferences for chart calculations:
  * - House system selection (7 options)
- * - Zodiac system (Tropical vs Sidereal - future)
+ * - Zodiac system (Tropical only — sidereal/Vedic is a future roadmap item)
  * - Orb presets (tight, normal, wide)
  * 
  * Persists to SecureStore for privacy compliance.
@@ -18,7 +18,9 @@ import { logger } from '../../utils/logger';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type OrbPreset = 'tight' | 'normal' | 'wide';
-export type ZodiacSystem = 'tropical' | 'sidereal';
+// NOTE: Sidereal (Vedic) zodiac is a future roadmap item.
+// The underlying engine (circular-natal-horoscope-js) only supports tropical.
+export type ZodiacSystem = 'tropical';
 
 export interface OrbConfiguration {
   conjunction: number;
@@ -37,8 +39,7 @@ export interface AstrologySettings {
   // House system: placidus (default), whole-sign, equal-house, koch, etc.
   houseSystem: HouseSystem;
   
-  // Zodiac system: tropical (Western) or sidereal (Vedic)
-  // Currently only tropical is fully implemented
+  // Zodiac system: tropical (Western) — the only supported system
   zodiacSystem: ZodiacSystem;
   
   // Orb preset: affects how wide aspects are considered

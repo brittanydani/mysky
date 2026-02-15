@@ -15,6 +15,7 @@ import BackupPassphraseModal from '../../components/BackupPassphraseModal';
 import PrivacySettingsModal from '../../components/PrivacySettingsModal';
 import AstrologySettingsModal from '../../components/AstrologySettingsModal';
 import { usePremium } from '../../context/PremiumContext';
+import PremiumModal from '../../components/PremiumModal';
 import { localDb } from '../../services/storage/localDb';
 import { BackupService } from '../../services/storage/backupService';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
@@ -179,6 +180,7 @@ export default function SettingsScreen() {
   const { isPremium } = usePremium();
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
   const [backupInProgress, setBackupInProgress] = useState(false);
   const [restoreInProgress, setRestoreInProgress] = useState(false);
@@ -760,32 +762,37 @@ export default function SettingsScreen() {
               </LinearGradient>
             </Pressable>
 
-            <Text style={styles.versionText}>MySky v1.0.0</Text>
+            {/* Version text moved below premium card only */}
           </Animated.View>
+
 
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(575).duration(600)} style={styles.section}>
-              <Pressable style={styles.premiumCard} onPress={() => router.push('/(tabs)/premium' as Href)}>
+              <Pressable style={styles.settingCard} onPress={() => setShowPremiumModal(true)}>
                 <LinearGradient
-                  colors={['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.1)']}
+                  colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
                   style={styles.cardGradient}
                 >
-                  <View style={styles.premiumContent}>
-                    <View style={styles.premiumIcon}>
-                      <Ionicons name="star" size={24} color={theme.primary} />
-                    </View>
-                    <View style={styles.premiumInfo}>
-                      <Text style={styles.premiumTitle}>Go deeper with your patterns</Text>
-                      <Text style={styles.premiumDescription}>
-                        Encrypted backup, full stellium depth, Chiron & Node mapping, and more
+                  <View style={styles.settingRow}>
+                    <View style={styles.settingInfo}>
+                      <View style={styles.settingHeader}>
+                        <Ionicons name="star" size={20} color={theme.primary} />
+                        <Text style={styles.settingTitle}>Go deeper with your patterns</Text>
+                      </View>
+                      <Text style={styles.settingDescription}>
+                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Free:</Text> Natal chart, sun/moon/rising, basic journaling, daily energy, astrology glossary, privacy controls.{"\n"}
+                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Premium:</Text> Encrypted backup, full natal story, advanced pattern analysis, Chiron & Node mapping, personalized daily guidance, and more.
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color={theme.primary} />
                   </View>
                 </LinearGradient>
               </Pressable>
+              <Text style={styles.versionText}>MySky v1.0.0</Text>
             </Animated.View>
           )}
+
+      <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
         </ScrollView>
 
       </SafeAreaView>

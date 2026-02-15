@@ -221,12 +221,72 @@ export interface ChironNodeInsight {
   close: string;
 }
 
+const CHIRON_NODE_FUSION: Record<number, ChironNodeInsight> = {
+  1: {
+    context: 'Your wound lives in how you present yourself. Growth asks you to show up authentically, even when visibility feels unsafe.',
+    prompt: 'Where are you dimming yourself to avoid being seen — and what would it cost to stop?',
+    close: 'You don\'t have to perform wholeness. Showing up imperfectly is its own kind of courage.',
+  },
+  2: {
+    context: 'Your wound lives in self-worth and resources. Growth asks you to value yourself without external proof.',
+    prompt: 'What would you allow yourself to have if you believed you deserved it?',
+    close: 'Your value was never something you had to earn. It was always already here.',
+  },
+  3: {
+    context: 'Your wound lives in communication and early learning. Growth asks you to trust your voice even when it trembles.',
+    prompt: 'What truth have you been rehearsing but never spoken aloud?',
+    close: 'Your words carry weight, even the quiet ones.',
+  },
+  4: {
+    context: 'Your wound lives in home and emotional foundations. Growth asks you to build safety from within rather than from circumstance.',
+    prompt: 'What does "home" mean when it\'s not a place but a feeling inside you?',
+    close: 'You are allowed to outgrow the definition of home you were given.',
+  },
+  5: {
+    context: 'Your wound lives in self-expression and creativity. Growth asks you to create without needing applause.',
+    prompt: 'What would you make or share if no one were watching?',
+    close: 'Joy doesn\'t need a reason. Let it exist without justification.',
+  },
+  6: {
+    context: 'Your wound lives in daily routines, health, and service. Growth asks you to care for yourself as attentively as you care for others.',
+    prompt: 'Where are you over-giving while quietly neglecting your own needs?',
+    close: 'Tending to yourself is not selfish. It\'s the foundation everything else rests on.',
+  },
+  7: {
+    context: 'Your wound lives in partnership and how you relate to others. Growth asks you to stay whole inside connection.',
+    prompt: 'What part of yourself do you abandon when you enter a relationship?',
+    close: 'You can be devoted and still belong to yourself.',
+  },
+  8: {
+    context: 'Your wound lives in trust, intimacy, and shared power. Growth asks you to be vulnerable without guarantees.',
+    prompt: 'What would change if you trusted someone with the part you\'ve been protecting?',
+    close: 'Depth is not dangerous. It\'s where healing lives.',
+  },
+  9: {
+    context: 'Your wound lives in belief systems, meaning, and expansion. Growth asks you to hold your truth loosely enough to let it evolve.',
+    prompt: 'What belief are you outgrowing — and what\'s forming in its place?',
+    close: 'You don\'t have to have all the answers. The questions are doing the work.',
+  },
+  10: {
+    context: 'Your wound lives in ambition, legacy, and public identity. Growth asks you to define success on your own terms.',
+    prompt: 'Whose version of success are you still chasing — and is it yours?',
+    close: 'Your path doesn\'t have to look like anyone else\'s to be valid.',
+  },
+  11: {
+    context: 'Your wound lives in belonging, community, and the future. Growth asks you to find your people without losing yourself.',
+    prompt: 'Where have you been reshaping yourself to fit — and what would it feel like to stop?',
+    close: 'The right people won\'t ask you to shrink. Belonging starts with self-acceptance.',
+  },
+  12: {
+    context: 'Your wound lives in the unseen — the unconscious, spiritual, and liminal. Growth asks you to trust what you cannot prove.',
+    prompt: 'What is asking for your attention in the silence?',
+    close: 'You don\'t need to resolve this. Some things heal by being witnessed, not fixed.',
+  },
+};
+
 export function getChironNodeFusion(chironHouse: number): ChironNodeInsight {
-  return {
-    context: 'Growth asks you to move forward without abandoning sensitivity.',
-    prompt: 'What would growth look like if it felt safe?',
-    close: 'You don\'t need to resolve this.',
-  };
+  const house = chironHouse >= 1 && chironHouse <= 12 ? chironHouse : 1;
+  return CHIRON_NODE_FUSION[house];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -2,18 +2,23 @@
  * Field-Level Encryption Service
  * 
  * Encrypts sensitive text fields (journal content, birth data) at rest
- * using AES-256-GCM with a Data Encryption Key (DEK) stored in Keychain.
+ * using AES-256-GCM via WebCrypto (crypto.subtle), with a Data Encryption
+ * Key (DEK) stored in Keychain via SecureStore.
  * 
  * Architecture:
  * - DEK is generated once and stored in SecureStore (Keychain/Keystore)
- * - Each field encrypted with AES-GCM using random IV
- * - Format: base64(iv):base64(ciphertext):base64(authTag)
+ * - Each field encrypted with real AES-256-GCM using random IV
+ * - Format: ENC:base64(iv):base64(ciphertext+authTag)
+ * - WebCrypto polyfill provided by expo-standard-web-crypto
  * 
  * This protects data even if the SQLite DB is extracted.
  */
 
 import * as SecureStore from 'expo-secure-store';
-import * as Crypto from 'expo-crypto';
+
+// Polyfill WebCrypto (crypto.subtle) for Expo
+import 'expo-standard-web-crypto';
+
 import { logger } from '../../utils/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,23 +30,64 @@ const DEK_SIZE = 32; // 256 bits for AES-256
 const IV_SIZE = 12;  // 96 bits for GCM
 const ENCRYPTED_PREFIX = 'ENC:';
 
+// Prefix to distinguish new AES-GCM encrypted data from legacy XOR data
+const AES_PREFIX = 'ENC2:';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface EncryptedData {
   iv: string;        // Base64 encoded IV
-  ciphertext: string; // Base64 encoded ciphertext
-  tag: string;       // Base64 encoded auth tag
+  ciphertext: string; // Base64 encoded ciphertext (includes GCM auth tag)
+}
+
+// Legacy format (XOR-based) for backward compatibility during migration
+interface LegacyEncryptedData {
+  iv: string;
+  ciphertext: string;
+  tag: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WebCrypto helpers (same pattern as backupService.ts)
+// ─────────────────────────────────────────────────────────────────────────────
+
+type SubtleLike = {
+  importKey: (...args: any[]) => Promise<any>;
+  encrypt: (...args: any[]) => Promise<ArrayBuffer>;
+  decrypt: (...args: any[]) => Promise<ArrayBuffer>;
+};
+
+function getSubtle(): SubtleLike {
+  const cryptoObj = (globalThis as any)?.crypto;
+  const subtle = cryptoObj?.subtle as SubtleLike | undefined;
+
+  if (!subtle) {
+    throw new Error(
+      '[FieldEncryption] WebCrypto (crypto.subtle) is not available. Ensure expo-standard-web-crypto is installed and imported.'
+    );
+  }
+  return subtle;
+}
+
+/**
+ * Copy bytes into a fresh ArrayBuffer to avoid ArrayBuffer | SharedArrayBuffer TS errors.
+ */
+function u8ToArrayBuffer(u8: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(u8.byteLength);
+  copy.set(u8);
+  return copy.buffer;
+}
+
+function arrayBufferToU8(buf: ArrayBuffer | SharedArrayBuffer): Uint8Array {
+  return new Uint8Array(buf as ArrayBuffer);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utility Functions
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Convert Uint8Array to base64 string
- */
 function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
@@ -50,9 +96,6 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-/**
- * Convert base64 string to Uint8Array
- */
 function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -63,95 +106,78 @@ function base64ToUint8Array(base64: string): Uint8Array {
 }
 
 /**
- * Generate random bytes
+ * Generate cryptographically secure random bytes via WebCrypto.
  */
 function generateRandomBytes(size: number): Uint8Array {
   const bytes = new Uint8Array(size);
-  // Use crypto.getRandomValues if available, otherwise fallback
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(bytes);
+  const cryptoObj = (globalThis as any)?.crypto;
+  if (cryptoObj?.getRandomValues) {
+    cryptoObj.getRandomValues(bytes);
   } else {
-    // Fallback for React Native
-    for (let i = 0; i < size; i++) {
-      bytes[i] = Math.floor(Math.random() * 256);
-    }
+    throw new Error('[FieldEncryption] crypto.getRandomValues is not available. Ensure expo-standard-web-crypto is installed.');
   }
   return bytes;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// AES-256-GCM Encryption / Decryption
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * XOR-based lightweight encryption for React Native
- * (expo-crypto doesn't expose raw AES - this is a simplified approach)
- * 
- * For production, consider react-native-quick-crypto or expo-crypto-polyfill
+ * Import a raw DEK as a WebCrypto CryptoKey for AES-GCM.
  */
-async function xorEncrypt(plaintext: string, key: Uint8Array, iv: Uint8Array): Promise<{ ciphertext: Uint8Array; tag: Uint8Array }> {
-  // Create a hash-based key expansion
-  const expandedKey = await expandKey(key, iv, plaintext.length);
-  
-  // Encode plaintext to bytes
+async function importAesKey(rawKey: Uint8Array): Promise<any> {
+  const subtle = getSubtle();
+  return subtle.importKey(
+    'raw',
+    u8ToArrayBuffer(rawKey),
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * Encrypt plaintext using AES-256-GCM.
+ * Returns ciphertext with appended 128-bit auth tag (WebCrypto default).
+ */
+async function aesGcmEncrypt(plaintext: string, rawKey: Uint8Array, iv: Uint8Array): Promise<Uint8Array> {
+  const subtle = getSubtle();
+  const key = await importAesKey(rawKey);
   const plaintextBytes = new TextEncoder().encode(plaintext);
   
-  // XOR encryption
-  const ciphertext = new Uint8Array(plaintextBytes.length);
-  for (let i = 0; i < plaintextBytes.length; i++) {
-    ciphertext[i] = plaintextBytes[i] ^ expandedKey[i];
-  }
-  
-  // Generate authentication tag (HMAC-like)
-  const tagInput = new Uint8Array([...iv, ...ciphertext]);
-  const tagHash = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    uint8ArrayToBase64(tagInput) + uint8ArrayToBase64(key)
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-GCM', iv: u8ToArrayBuffer(iv) },
+    key,
+    u8ToArrayBuffer(plaintextBytes)
   );
-  const tag = base64ToUint8Array(btoa(tagHash.slice(0, 24))); // Truncate to 128 bits
   
-  return { ciphertext, tag };
+  return arrayBufferToU8(ciphertext);
 }
 
 /**
- * XOR-based decryption
+ * Decrypt ciphertext (with appended auth tag) using AES-256-GCM.
  */
-async function xorDecrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, expectedTag: Uint8Array): Promise<string> {
-  // Verify authentication tag first
-  const tagInput = new Uint8Array([...iv, ...ciphertext]);
-  const tagHash = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    uint8ArrayToBase64(tagInput) + uint8ArrayToBase64(key)
+async function aesGcmDecrypt(ciphertextWithTag: Uint8Array, rawKey: Uint8Array, iv: Uint8Array): Promise<string> {
+  const subtle = getSubtle();
+  const key = await importAesKey(rawKey);
+  
+  const plaintext = await subtle.decrypt(
+    { name: 'AES-GCM', iv: u8ToArrayBuffer(iv) },
+    key,
+    u8ToArrayBuffer(ciphertextWithTag)
   );
-  const computedTag = base64ToUint8Array(btoa(tagHash.slice(0, 24)));
   
-  // Constant-time comparison
-  let valid = true;
-  if (computedTag.length !== expectedTag.length) {
-    valid = false;
-  } else {
-    for (let i = 0; i < computedTag.length; i++) {
-      if (computedTag[i] !== expectedTag[i]) {
-        valid = false;
-      }
-    }
-  }
-  
-  if (!valid) {
-    throw new Error('Authentication failed - data may be tampered');
-  }
-  
-  // Expand key and decrypt
-  const expandedKey = await expandKey(key, iv, ciphertext.length);
-  
-  const plaintext = new Uint8Array(ciphertext.length);
-  for (let i = 0; i < ciphertext.length; i++) {
-    plaintext[i] = ciphertext[i] ^ expandedKey[i];
-  }
-  
-  return new TextDecoder().decode(plaintext);
+  return new TextDecoder().decode(arrayBufferToU8(plaintext));
 }
 
-/**
- * Expand key to required length using iterative hashing
- */
-async function expandKey(key: Uint8Array, iv: Uint8Array, length: number): Promise<Uint8Array> {
+// ─────────────────────────────────────────────────────────────────────────────
+// Legacy XOR decryption (read-only, for migrating old encrypted data)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function legacyExpandKey(key: Uint8Array, iv: Uint8Array, length: number): Promise<Uint8Array> {
+  // Use expo-crypto for SHA-256 digest (legacy path only)
+  const Crypto = await import('expo-crypto');
   const blocks: Uint8Array[] = [];
   let totalLength = 0;
   let counter = 0;
@@ -165,7 +191,6 @@ async function expandKey(key: Uint8Array, iv: Uint8Array, length: number): Promi
       Crypto.CryptoDigestAlgorithm.SHA256,
       input
     );
-    // Convert hex to bytes
     const hashBytes = new Uint8Array(32);
     for (let i = 0; i < 32; i++) {
       hashBytes[i] = parseInt(hash.substr(i * 2, 2), 16);
@@ -175,7 +200,6 @@ async function expandKey(key: Uint8Array, iv: Uint8Array, length: number): Promi
     counter++;
   }
   
-  // Concatenate and trim to exact length
   const result = new Uint8Array(length);
   let offset = 0;
   for (const block of blocks) {
@@ -183,8 +207,42 @@ async function expandKey(key: Uint8Array, iv: Uint8Array, length: number): Promi
       result[offset] = block[i];
     }
   }
-  
   return result;
+}
+
+/**
+ * Decrypt data encrypted with the old XOR scheme (for backward compat).
+ * Only used during migration — new data is always AES-256-GCM.
+ */
+async function legacyXorDecrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, expectedTag: Uint8Array): Promise<string> {
+  const Crypto = await import('expo-crypto');
+  // Verify tag
+  const tagInput = new Uint8Array([...iv, ...ciphertext]);
+  const tagHash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    uint8ArrayToBase64(tagInput) + uint8ArrayToBase64(key)
+  );
+  const computedTag = base64ToUint8Array(btoa(tagHash.slice(0, 24)));
+  
+  let valid = true;
+  if (computedTag.length !== expectedTag.length) {
+    valid = false;
+  } else {
+    for (let i = 0; i < computedTag.length; i++) {
+      if (computedTag[i] !== expectedTag[i]) valid = false;
+    }
+  }
+  
+  if (!valid) {
+    throw new Error('Legacy authentication failed - data may be tampered');
+  }
+  
+  const expandedKey = await legacyExpandKey(key, iv, ciphertext.length);
+  const plaintext = new Uint8Array(ciphertext.length);
+  for (let i = 0; i < ciphertext.length; i++) {
+    plaintext[i] = ciphertext[i] ^ expandedKey[i];
+  }
+  return new TextDecoder().decode(plaintext);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -233,8 +291,8 @@ class FieldEncryptionServiceClass {
   }
 
   /**
-   * Encrypt a text field for storage
-   * Returns encrypted string in format: ENC:iv:ciphertext:tag
+   * Encrypt a text field for storage using AES-256-GCM.
+   * Returns encrypted string in format: ENC2:iv:ciphertext (with embedded auth tag)
    */
   async encryptField(plaintext: string): Promise<string> {
     if (!plaintext || plaintext.length === 0) {
@@ -242,7 +300,7 @@ class FieldEncryptionServiceClass {
     }
 
     // Don't double-encrypt
-    if (plaintext.startsWith(ENCRYPTED_PREFIX)) {
+    if (plaintext.startsWith(AES_PREFIX) || plaintext.startsWith(ENCRYPTED_PREFIX)) {
       return plaintext;
     }
 
@@ -250,70 +308,86 @@ class FieldEncryptionServiceClass {
       const dek = await this.getDek();
       const iv = generateRandomBytes(IV_SIZE);
       
-      const { ciphertext, tag } = await xorEncrypt(plaintext, dek, iv);
+      const ciphertextWithTag = await aesGcmEncrypt(plaintext, dek, iv);
       
-      const encrypted: EncryptedData = {
-        iv: uint8ArrayToBase64(iv),
-        ciphertext: uint8ArrayToBase64(ciphertext),
-        tag: uint8ArrayToBase64(tag),
-      };
-      
-      return `${ENCRYPTED_PREFIX}${encrypted.iv}:${encrypted.ciphertext}:${encrypted.tag}`;
+      return `${AES_PREFIX}${uint8ArrayToBase64(iv)}:${uint8ArrayToBase64(ciphertextWithTag)}`;
     } catch (error) {
-      logger.error('[FieldEncryption] Encryption failed:', error);
+      logger.error('[FieldEncryption] AES-GCM encryption failed:', error);
       // Return original on failure to avoid data loss
       return plaintext;
     }
   }
 
   /**
-   * Decrypt a text field from storage
-   * Handles both encrypted (ENC:...) and plaintext strings
+   * Decrypt a text field from storage.
+   * Handles:
+   *   - AES-256-GCM (ENC2:iv:ciphertext) — current format
+   *   - Legacy XOR (ENC:iv:ciphertext:tag) — backward compatibility
+   *   - Plaintext — returned as-is
    */
   async decryptField(encrypted: string): Promise<string> {
     if (!encrypted || encrypted.length === 0) {
       return encrypted;
     }
 
-    // Check if actually encrypted
-    if (!encrypted.startsWith(ENCRYPTED_PREFIX)) {
-      return encrypted; // Already plaintext
+    // New AES-GCM format
+    if (encrypted.startsWith(AES_PREFIX)) {
+      try {
+        const dek = await this.getDek();
+        const payload = encrypted.slice(AES_PREFIX.length);
+        const parts = payload.split(':');
+        
+        if (parts.length !== 2) {
+          throw new Error('Invalid AES encrypted format');
+        }
+        
+        const iv = base64ToUint8Array(parts[0]);
+        const ciphertextWithTag = base64ToUint8Array(parts[1]);
+        
+        return await aesGcmDecrypt(ciphertextWithTag, dek, iv);
+      } catch (error) {
+        logger.error('[FieldEncryption] AES-GCM decryption failed:', error);
+        return encrypted;
+      }
+    }
+    
+    // Legacy XOR format (backward compatibility)
+    if (encrypted.startsWith(ENCRYPTED_PREFIX)) {
+      try {
+        const dek = await this.getDek();
+        const payload = encrypted.slice(ENCRYPTED_PREFIX.length);
+        const parts = payload.split(':');
+        
+        if (parts.length !== 3) {
+          throw new Error('Invalid legacy encrypted format');
+        }
+        
+        const legacyData: LegacyEncryptedData = {
+          iv: parts[0],
+          ciphertext: parts[1],
+          tag: parts[2],
+        };
+        
+        const iv = base64ToUint8Array(legacyData.iv);
+        const ciphertext = base64ToUint8Array(legacyData.ciphertext);
+        const tag = base64ToUint8Array(legacyData.tag);
+        
+        return await legacyXorDecrypt(ciphertext, dek, iv, tag);
+      } catch (error) {
+        logger.error('[FieldEncryption] Legacy decryption failed:', error);
+        return encrypted;
+      }
     }
 
-    try {
-      const dek = await this.getDek();
-      
-      // Parse encrypted format
-      const payload = encrypted.slice(ENCRYPTED_PREFIX.length);
-      const parts = payload.split(':');
-      
-      if (parts.length !== 3) {
-        throw new Error('Invalid encrypted format');
-      }
-      
-      const data: EncryptedData = {
-        iv: parts[0],
-        ciphertext: parts[1],
-        tag: parts[2],
-      };
-      
-      const iv = base64ToUint8Array(data.iv);
-      const ciphertext = base64ToUint8Array(data.ciphertext);
-      const tag = base64ToUint8Array(data.tag);
-      
-      return await xorDecrypt(ciphertext, dek, iv, tag);
-    } catch (error) {
-      logger.error('[FieldEncryption] Decryption failed:', error);
-      // Return as-is if decryption fails (might be corrupted or wrong key)
-      return encrypted;
-    }
+    // Already plaintext
+    return encrypted;
   }
 
   /**
-   * Check if a string is encrypted
+   * Check if a string is encrypted (either format)
    */
   isEncrypted(value: string): boolean {
-    return value?.startsWith(ENCRYPTED_PREFIX) ?? false;
+    return (value?.startsWith(AES_PREFIX) || value?.startsWith(ENCRYPTED_PREFIX)) ?? false;
   }
 
   /**

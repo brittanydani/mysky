@@ -301,27 +301,32 @@ export class TimezoneHandler {
   }
 
   /**
-   * Get all available IANA timezone identifiers
+   * Get all available IANA timezone identifiers.
+   * Uses the runtime's Intl API for a comprehensive list; falls back to common zones.
    */
   static getAvailableTimezones(): string[] {
-    // Return common timezones - in a full implementation, you'd get this from the IANA database
+    try {
+      // Intl.supportedValuesOf('timeZone') returns all IANA zones the runtime supports
+      if (typeof Intl !== 'undefined' && typeof Intl.supportedValuesOf === 'function') {
+        return Intl.supportedValuesOf('timeZone');
+      }
+    } catch {
+      // Not supported in this runtime — fall through to static list
+    }
+    // Fallback: common timezones covering major regions
     return [
       'UTC',
-      'America/New_York',
-      'America/Chicago',
-      'America/Denver', 
-      'America/Los_Angeles',
-      'America/Toronto',
-      'Europe/London',
-      'Europe/Berlin',
-      'Europe/Paris',
-      'Europe/Rome',
-      'Asia/Tokyo',
-      'Asia/Shanghai',
-      'Asia/Kolkata',
-      'Australia/Sydney',
-      'Australia/Melbourne',
-      'Pacific/Auckland'
+      'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+      'America/Toronto', 'America/Sao_Paulo', 'America/Mexico_City', 'America/Anchorage',
+      'America/Halifax', 'America/Phoenix', 'America/Bogota', 'America/Buenos_Aires',
+      'Europe/London', 'Europe/Berlin', 'Europe/Paris', 'Europe/Rome',
+      'Europe/Madrid', 'Europe/Moscow', 'Europe/Istanbul', 'Europe/Athens',
+      'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata', 'Asia/Dubai',
+      'Asia/Seoul', 'Asia/Singapore', 'Asia/Bangkok', 'Asia/Hong_Kong',
+      'Asia/Karachi', 'Asia/Jakarta', 'Asia/Tehran', 'Asia/Manila',
+      'Africa/Cairo', 'Africa/Johannesburg', 'Africa/Lagos', 'Africa/Nairobi',
+      'Australia/Sydney', 'Australia/Melbourne', 'Australia/Perth', 'Australia/Brisbane',
+      'Pacific/Auckland', 'Pacific/Honolulu', 'Pacific/Fiji',
     ];
   }
 }

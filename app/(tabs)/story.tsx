@@ -13,10 +13,12 @@ import { localDb } from '../../services/storage/localDb';
 import { NatalChart } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { FullNatalStoryGenerator, GeneratedChapter } from '../../services/premium/fullNatalStory';
+import PremiumRequiredScreen from '../../components/PremiumRequiredScreen';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 export default function StoryScreen() {
+  const [showPremiumRequired, setShowPremiumRequired] = useState(false);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
@@ -53,6 +55,10 @@ export default function StoryScreen() {
       setLoading(false);
     }
   };
+
+  if (showPremiumRequired) {
+    return <PremiumRequiredScreen />;
+  }
 
   if (loading) {
     return (
@@ -123,7 +129,7 @@ export default function StoryScreen() {
                   affirmation={!isLocked ? chapter.affirmation : undefined}
                   isLocked={isLocked}
                   onPress={() => {
-                    if (isLocked) router.push('/(tabs)/premium' as Href);
+                    if (isLocked) setShowPremiumRequired(true);
                   }}
                 />
               </Animated.View>

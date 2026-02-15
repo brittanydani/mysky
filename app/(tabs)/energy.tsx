@@ -79,9 +79,9 @@ function formatToday(): string {
 type CheckInStep = 'idle' | 'q1' | 'q2' | 'q3' | 'done';
 
 const CHECK_IN_QUESTIONS = [
-  { key: 'q1' as const, question: 'How is your mood right now?', options: ['Struggling', 'Low', 'Okay', 'Good', 'Great'] },
-  { key: 'q2' as const, question: 'How is your energy level?', options: ['Depleted', 'Low', 'Steady', 'Active', 'Elevated'] },
-  { key: 'q3' as const, question: 'How much stress are you holding?', options: ['None', 'A little', 'Some', 'A lot', 'Overwhelmed'] },
+  { key: 'q1' as const, question: 'What is your current energy vibe?', options: ['Calm', 'Focused', 'Restless', 'Inspired', 'Drained'] },
+  { key: 'q2' as const, question: 'Where do you feel energy most in your body?', options: ['Head', 'Heart', 'Gut', 'Limbs', 'Nowhere'] },
+  { key: 'q3' as const, question: 'What do you need most right now?', options: ['Rest', 'Movement', 'Connection', 'Solitude', 'Clarity'] },
 ];
 
 /* ════════════════════════════════════════════════
@@ -207,10 +207,28 @@ export default function EnergyScreen() {
           const moodAnswer = updated.q1 || '';
           const energyAnswer = updated.q2 || '';
           const stressAnswer = updated.q3 || '';
-          // Direct maps — each question feeds one graph metric
-          const moodMap: Record<string, number> = { 'Struggling': 2, 'Low': 4, 'Okay': 5, 'Good': 7, 'Great': 9 };
-          const energyMap: Record<string, 'low' | 'medium' | 'high'> = { 'Depleted': 'low', 'Low': 'low', 'Steady': 'medium', 'Active': 'high', 'Elevated': 'high' };
-          const stressMap: Record<string, 'low' | 'medium' | 'high'> = { 'None': 'low', 'A little': 'low', 'Some': 'medium', 'A lot': 'high', 'Overwhelmed': 'high' };
+          // Updated maps for new check-in questions
+          const moodMap: Record<string, number> = {
+            'Calm': 7,
+            'Focused': 8,
+            'Restless': 4,
+            'Inspired': 9,
+            'Drained': 2,
+          };
+          const energyMap: Record<string, 'low' | 'medium' | 'high'> = {
+            'Head': 'medium',
+            'Heart': 'high',
+            'Gut': 'medium',
+            'Limbs': 'high',
+            'Nowhere': 'low',
+          };
+          const stressMap: Record<string, 'low' | 'medium' | 'high'> = {
+            'Rest': 'low',
+            'Movement': 'medium',
+            'Connection': 'medium',
+            'Solitude': 'low',
+            'Clarity': 'high',
+          };
           const input: CheckInInput = {
             moodScore: moodMap[moodAnswer] || 5,
             energyLevel: energyMap[energyAnswer] || 'medium',

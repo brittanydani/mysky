@@ -276,7 +276,8 @@ export default function RelationshipsScreen() {
         userChart,
         otherChart,
         rel.relationship,
-        isPremium
+        isPremium,
+        synastry
       );
       setComparison(comp);
     }

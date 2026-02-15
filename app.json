@@ -10,7 +10,7 @@
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
       "supportsTablet": false,
-      "buildNumber": "3",
+      "buildNumber": "5",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -63,11 +63,11 @@
         {
           "backgroundColor": "#141222",
           "image": "./assets/images/splash.png",
-          "resizeMode": "contain",
+          "resizeMode": "cover",
           "dark": {
             "backgroundColor": "#141222",
             "image": "./assets/images/splash.png",
-            "resizeMode": "contain"
+            "resizeMode": "cover"
           }
         }
       ],

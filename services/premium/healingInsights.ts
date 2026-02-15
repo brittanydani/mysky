@@ -249,24 +249,87 @@ const WEEKLY_REFLECTIONS = [
 
 export class HealingInsightsGenerator {
   /**
-   * Generate complete healing insights for premium users
+   * Generate complete healing insights for premium users.
+   * Uses Moon sign for attachment/safety/reparenting, Sun sign for fears,
+   * and adds sign-specific nuance on top of element-level foundations.
    */
   static generateHealingInsights(chart: NatalChart): HealingInsights {
-    const moonElement = this.getElement(chart.moonSign?.name || 'Cancer');
-    const sunElement = this.getElement(chart.sunSign?.name || 'Aries');
+    const moonSign = chart.moonSign?.name || 'Cancer';
+    const sunSign = chart.sunSign?.name || 'Aries';
+    const moonElement = this.getElement(moonSign);
+    const sunElement = this.getElement(sunSign);
     
     // Use date to vary daily/weekly content
     const today = new Date();
     const dayIndex = today.getDate() % HEALING_JOURNAL_PROMPTS.length;
     const weekIndex = Math.floor(today.getDate() / 7) % WEEKLY_REFLECTIONS.length;
     
+    // Start from element-level then enrich with sign-specific detail
+    const attachment = this.enrichAttachment(ATTACHMENT_INSIGHTS[moonElement] || ATTACHMENT_INSIGHTS.water, moonSign);
+    const fears = this.enrichFears(FEAR_PATTERNS[sunElement] || FEAR_PATTERNS.water, sunSign);
+    const safety = this.enrichSafety(SAFETY_PATTERNS[moonElement] || SAFETY_PATTERNS.water, moonSign);
+    const reparenting = this.enrichReparenting(REPARENTING_GUIDES[moonElement] || REPARENTING_GUIDES.water, moonSign);
+    
     return {
-      attachment: ATTACHMENT_INSIGHTS[moonElement] || ATTACHMENT_INSIGHTS.water,
-      fears: FEAR_PATTERNS[sunElement] || FEAR_PATTERNS.water,
-      safety: SAFETY_PATTERNS[moonElement] || SAFETY_PATTERNS.water,
-      reparenting: REPARENTING_GUIDES[moonElement] || REPARENTING_GUIDES.water,
+      attachment,
+      fears,
+      safety,
+      reparenting,
       dailyJournalPrompt: HEALING_JOURNAL_PROMPTS[dayIndex],
       weeklyReflection: WEEKLY_REFLECTIONS[weekIndex],
+    };
+  }
+  
+  /**
+   * Enrich attachment insight with sign-specific nuance.
+   */
+  private static enrichAttachment(base: AttachmentInsight, moonSign: string): AttachmentInsight {
+    const signNuance = SIGN_ATTACHMENT_NUANCE[moonSign];
+    if (!signNuance) return base;
+    return {
+      ...base,
+      headline: signNuance.headline || base.headline,
+      description: `${base.description}\n\n${signNuance.addendum}`,
+      affirmation: signNuance.affirmation || base.affirmation,
+    };
+  }
+  
+  /**
+   * Enrich fear pattern with sign-specific nuance.
+   */
+  private static enrichFears(base: FearPattern, sunSign: string): FearPattern {
+    const signNuance = SIGN_FEAR_NUANCE[sunSign];
+    if (!signNuance) return base;
+    return {
+      ...base,
+      coreFear: signNuance.coreFear || base.coreFear,
+      journalPrompt: signNuance.journalPrompt || base.journalPrompt,
+    };
+  }
+
+  /**
+   * Enrich safety pattern with sign-specific nuance.
+   */
+  private static enrichSafety(base: SafetyPattern, moonSign: string): SafetyPattern {
+    const signNuance = SIGN_SAFETY_NUANCE[moonSign];
+    if (!signNuance) return base;
+    return {
+      ...base,
+      whatFeelsSafe: signNuance.whatFeelsSafe || base.whatFeelsSafe,
+      selfSoothingTools: signNuance.selfSoothingTools || base.selfSoothingTools,
+    };
+  }
+
+  /**
+   * Enrich reparenting guide with sign-specific nuance.
+   */
+  private static enrichReparenting(base: ReparentingGuide, moonSign: string): ReparentingGuide {
+    const signNuance = SIGN_REPARENTING_NUANCE[moonSign];
+    if (!signNuance) return base;
+    return {
+      ...base,
+      innerChildNeeds: signNuance.innerChildNeeds || base.innerChildNeeds,
+      dailyPractice: signNuance.dailyPractice || base.dailyPractice,
     };
   }
   
@@ -280,7 +343,7 @@ export class HealingInsightsGenerator {
   }
   
   /**
-   * Get the current week\'s reflection focus
+   * Get the current week's reflection focus
    */
   static getWeeklyFocus(): string {
     const today = new Date();
@@ -299,3 +362,116 @@ export class HealingInsightsGenerator {
     return 'water';
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sign-specific nuances (12 signs × 4 categories)
+// These layer onto the element-level foundations for richer, more personal output
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SIGN_ATTACHMENT_NUANCE: Record<string, { headline?: string; addendum: string; affirmation?: string }> = {
+  Aries: {
+    headline: 'You learned to stay alert instead of relaxed',
+    addendum: 'With Moon in Aries, your attachment pattern carries an urgency — a need to be first, to be chosen immediately. Waiting for reassurance feels like rejection. You learned early that hesitation meant being left behind.',
+    affirmation: 'I don\'t have to rush toward love. I am chosen even when I am still.',
+  },
+  Taurus: {
+    headline: 'You learned to need less than you actually need',
+    addendum: 'With Moon in Taurus, your attachment style anchors in the physical — you need touch, consistency, routine proof that love is real. When comfort is disrupted, it feels like the ground itself is shifting.',
+    affirmation: 'I deserve comfort without earning it. My need for stability is wisdom, not weakness.',
+  },
+  Gemini: {
+    headline: 'You learned to live in your head to escape your heart',
+    addendum: 'With Moon in Gemini, your attachment uses words as bridges — and sometimes as shields. You may talk about feelings without actually feeling them, or need constant communication to feel secure.',
+    affirmation: 'Silence does not mean abandonment. I can be still and still be connected.',
+  },
+  Cancer: {
+    headline: 'You learned to feel everything to anticipate everything',
+    addendum: 'With Moon in Cancer, your attachment runs deep as blood. Home, family, and belonging are not preferences — they are survival needs. Rejection doesn\'t just hurt, it threatens your foundation.',
+    affirmation: 'I can create the home I needed inside myself. I am my own safe harbor.',
+  },
+  Leo: {
+    headline: 'You learned to perform for love instead of simply receiving it',
+    addendum: 'With Moon in Leo, your attachment pattern centers around visibility. You need to be seen, acknowledged, and appreciated to feel safe. Indifference wounds you more than criticism.',
+    affirmation: 'I am lovable in my ordinary moments, not just my performances.',
+  },
+  Virgo: {
+    headline: 'You learned that being useful was the only way to be loved',
+    addendum: 'With Moon in Virgo, your attachment pattern manifests as service — you prove love by fixing, helping, perfecting. Rest feels selfish. Being imperfect feels dangerous.',
+    affirmation: 'I am worthy of love even when I have nothing to offer. My presence alone is enough.',
+  },
+  Libra: {
+    headline: 'You learned to disappear inside other people\'s needs',
+    addendum: 'With Moon in Libra, your attachment pattern revolves around harmony. Conflict feels like abandonment. You may abandon yourself to keep the peace — becoming what others need at the expense of what you need.',
+    affirmation: 'I can disagree and still be loved. My needs are not a burden.',
+  },
+  Scorpio: {
+    headline: 'You learned that trust is a risk you can\'t afford',
+    addendum: 'With Moon in Scorpio, your attachment runs beneath the surface — intense, all-or-nothing, and terrified of betrayal. You test people before letting them close, because being vulnerable without certainty feels like free-falling.',
+    affirmation: 'I can open without guarantees. Not everyone will use my vulnerability against me.',
+  },
+  Sagittarius: {
+    headline: 'You learned that closeness means captivity',
+    addendum: 'With Moon in Sagittarius, your attachment pattern equates freedom with safety. Getting too close feels like losing yourself. You may use humor, travel, or philosophy to maintain emotional distance.',
+    affirmation: 'Intimacy doesn\'t have to be a cage. I can be free and connected.',
+  },
+  Capricorn: {
+    headline: 'You learned to carry everything alone',
+    addendum: 'With Moon in Capricorn, your attachment pattern masks need as strength. You were the responsible one. Asking for help feels like admitting defeat. Emotional vulnerability feels unprofessional, even in love.',
+    affirmation: 'Needing support is human, not weak. I can let someone else carry something for once.',
+  },
+  Aquarius: {
+    headline: 'You learned that being different meant being alone',
+    addendum: 'With Moon in Aquarius, your attachment pattern keeps one foot out the door — not from disinterest, but from self-protection. If you never fully merge, you can\'t fully lose. Your intellect shields your heart.',
+    affirmation: 'I can belong without losing my identity. My uniqueness is lovable, not isolating.',
+  },
+  Pisces: {
+    headline: 'You learned to absorb others\' pain to earn your place',
+    addendum: 'With Moon in Pisces, your attachment pattern dissolves boundaries. You feel others so deeply that you lose track of where they end and you begin. Love can feel like drowning in someone else\'s ocean.',
+    affirmation: 'I can love deeply without losing myself. My empathy needs boundaries to survive.',
+  },
+};
+
+const SIGN_FEAR_NUANCE: Record<string, { coreFear?: string; journalPrompt?: string }> = {
+  Aries: { coreFear: 'Being irrelevant. Losing your edge. Being forgotten.', journalPrompt: 'What would you do if you couldn\'t compete? What would remain?' },
+  Taurus: { coreFear: 'Losing what you\'ve built. Having the ground shift beneath you.', journalPrompt: 'What would remain if everything external was stripped away?' },
+  Gemini: { coreFear: 'Being pinned down. Running out of ideas. Being boring.', journalPrompt: 'What would happen if you stopped being interesting? Who would stay?' },
+  Cancer: { coreFear: 'Being abandoned. Having no one who truly knows you.', journalPrompt: 'What would you do if you knew you\'d always be held? What would you stop bracing for?' },
+  Leo: { coreFear: 'Being ordinary. Being unseen. Not mattering.', journalPrompt: 'What would you do if no one were watching? What would still feel worth doing?' },
+  Virgo: { coreFear: 'Being flawed beyond repair. Making a mistake that can\'t be fixed.', journalPrompt: 'What if the flaw you\'re trying to fix is actually the most human thing about you?' },
+  Libra: { coreFear: 'Being alone. Being judged. Creating conflict.', journalPrompt: 'What truth are you withholding to keep the peace? What is it costing you?' },
+  Scorpio: { coreFear: 'Being betrayed. Being powerless. Having your trust weaponized.', journalPrompt: 'What would change if you trusted that not everyone is hiding something?' },
+  Sagittarius: { coreFear: 'Being trapped. Losing meaning. Having nothing to believe in.', journalPrompt: 'What would you believe in if every ideology failed you? What remains?' },
+  Capricorn: { coreFear: 'Failure. Wasted effort. Never being enough despite how hard you try.', journalPrompt: 'What if "enough" isn\'t a destination? What if you\'re already there?' },
+  Aquarius: { coreFear: 'Conformity. Being erased. Losing your sense of self in the collective.', journalPrompt: 'What would happen if you belonged somewhere without losing your edge?' },
+  Pisces: { coreFear: 'Losing connection. Being shut out from the emotional world. Spiritual emptiness.', journalPrompt: 'What would you do if you could feel everything without drowning in it?' },
+};
+
+const SIGN_SAFETY_NUANCE: Record<string, { whatFeelsSafe?: string; selfSoothingTools?: string[] }> = {
+  Aries: { whatFeelsSafe: 'Autonomy, movement, direct communication, and environments where you can act immediately without permission.', selfSoothingTools: ['Intense physical exercise', 'Punching a pillow or vigorous stretching', 'Making a quick decision you\'ve been putting off', 'Solo adventure — walk with no destination'] },
+  Taurus: { whatFeelsSafe: 'Familiar environments, physical comfort, reliable people, and unhurried routines.', selfSoothingTools: ['Warm bath with essential oils', 'Comfort food prepared with care', 'Soft textures — weighted blankets, cashmere', 'Slow walk in a garden or park'] },
+  Gemini: { whatFeelsSafe: 'Conversation, having information, variety, and the freedom to change your mind.', selfSoothingTools: ['Voice-note journaling — talk it through', 'Reading something completely unrelated to your stress', 'Texting a friend who gets it', 'Making a list to externalize the mental noise'] },
+  Cancer: { whatFeelsSafe: 'Home, family, emotional attunement, and knowing you have a soft place to land.', selfSoothingTools: ['Cooking something nostalgic', 'Holding something comforting (blanket, mug, pet)', 'Looking at old photos that remind you of love', 'A good, unashamed cry'] },
+  Leo: { whatFeelsSafe: 'Being appreciated, creative outlets, joyful environments, and being genuinely seen.', selfSoothingTools: ['Creating something — anything — that expresses how you feel', 'Dressing up just for yourself', 'Playing your favorite music loudly', 'Calling someone who truly celebrates you'] },
+  Virgo: { whatFeelsSafe: 'Order, usefulness, clear expectations, and knowing exactly what\'s expected.', selfSoothingTools: ['Cleaning or organizing one small space', 'Making a detailed plan for tomorrow', 'Herbal tea with a specific health benefit', 'Journaling a precise account of what happened and why'] },
+  Libra: { whatFeelsSafe: 'Harmony, beauty, partnership, and environments without conflict.', selfSoothingTools: ['Rearranging something to make it more beautiful', 'Listening to music that matches your exact mood', 'One gentle conversation with someone who cares', 'Art — looking at it or making it'] },
+  Scorpio: { whatFeelsSafe: 'Control, truth, emotional honesty, and knowing that nothing is being hidden from you.', selfSoothingTools: ['Journaling the raw, uncensored truth', 'A long shower — let water carry the intensity', 'Research the thing you\'re feeling (name it to tame it)', 'Solitude with no obligation to perform okay-ness'] },
+  Sagittarius: { whatFeelsSafe: 'Freedom, meaning, humor, and the sense that there\'s always more to explore.', selfSoothingTools: ['Planning a future trip or experience', 'Reading philosophy or listening to a thought-provoking podcast', 'Going somewhere you\'ve never been, even a new café', 'Laughing — even at yourself — to discharge tension'] },
+  Capricorn: { whatFeelsSafe: 'Structure, competence, respect, and knowing that your efforts aren\'t wasted.', selfSoothingTools: ['Completing one small, tangible task', 'Writing down your accomplishments from this week', 'A disciplined physical practice (running, weights)', 'Giving yourself explicit permission to rest without guilt'] },
+  Aquarius: { whatFeelsSafe: 'Independence, intellectual stimulation, authenticity, and non-judgmental community.', selfSoothingTools: ['Working on a passion project with no deadline', 'Connecting with a like-minded community online', 'Reframing your experience through a wider perspective', 'Doing something deliberately unconventional'] },
+  Pisces: { whatFeelsSafe: 'Emotional attunement, creative flow, spiritual connection, and permission to feel without explanation.', selfSoothingTools: ['Listening to music that makes you feel understood', 'A long bath with candles and no time limit', 'Creative expression — painting, writing, movement', 'Meditation or prayer — connecting to something larger'] },
+};
+
+const SIGN_REPARENTING_NUANCE: Record<string, { innerChildNeeds?: string; dailyPractice?: string }> = {
+  Aries: { innerChildNeeds: 'To be told "your courage matters" and "you don\'t have to fight for your place here."', dailyPractice: 'Each morning: "I don\'t have to prove myself today." Each evening: name one brave thing you did.' },
+  Taurus: { innerChildNeeds: 'To be told "I\'m not going anywhere" and "you can have what you want without apologizing."', dailyPractice: 'Each morning: "I deserve comfort today." Each evening: notice one thing your body enjoyed.' },
+  Gemini: { innerChildNeeds: 'To be told "your thoughts matter" and "you don\'t have to be interesting to be loved."', dailyPractice: 'Each morning: "My mind is a gift, not a burden." Each evening: write one thought without editing it.' },
+  Cancer: { innerChildNeeds: 'To be told "I\'ll always come back" and "your feelings make sense."', dailyPractice: 'Each morning: "I am safe today. I am held." Each evening: honor one feeling without trying to fix it.' },
+  Leo: { innerChildNeeds: 'To be told "you\'re special even when you\'re ordinary" and "I see you even now."', dailyPractice: 'Each morning: "I don\'t need applause today." Each evening: celebrate one quiet win no one else saw.' },
+  Virgo: { innerChildNeeds: 'To be told "you are enough as you are" and "mistakes don\'t erase your worth."', dailyPractice: 'Each morning: "I don\'t have to be perfect today." Each evening: name one imperfection and accept it with kindness.' },
+  Libra: { innerChildNeeds: 'To be told "your needs matter too" and "conflict doesn\'t mean loss."', dailyPractice: 'Each morning: "I will honor what I need today." Each evening: note one time you chose yourself.' },
+  Scorpio: { innerChildNeeds: 'To be told "your depth is safe here" and "I won\'t use your vulnerability against you."', dailyPractice: 'Each morning: "I can trust today." Each evening: name one moment you let your guard down.' },
+  Sagittarius: { innerChildNeeds: 'To be told "you can explore and still have a home" and "your questions are welcome."', dailyPractice: 'Each morning: "I don\'t have to know everything today." Each evening: notice one thing that brought you meaning.' },
+  Capricorn: { innerChildNeeds: 'To be told "you can rest now" and "you\'ve done enough."', dailyPractice: 'Each morning: "I don\'t have to earn my worth today." Each evening: acknowledge one moment you allowed yourself softness.' },
+  Aquarius: { innerChildNeeds: 'To be told "you belong here, exactly as you are" and "your differences are not defects."', dailyPractice: 'Each morning: "I am part of something, not separate from it." Each evening: note one connection that felt genuine.' },
+  Pisces: { innerChildNeeds: 'To be told "your feelings are real" and "you don\'t have to absorb everyone else\'s pain."', dailyPractice: 'Each morning: "I will feel my own feelings today." Each evening: notice which emotions were yours and which you absorbed.' },
+};

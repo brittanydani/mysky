@@ -11,6 +11,7 @@
 import { NatalChart } from '../astrology/types';
 import { RelationshipChart } from '../storage/models';
 import { RelationshipGuidanceGenerator, HumanRelationshipGuidance } from '../astrology/relationshipGuidance';
+import { SynastryEngine, SynastryReport, SynastryAspect } from '../astrology/synastryEngine';
 
 export interface RelationshipComparison {
   person1Name: string;
@@ -174,12 +175,15 @@ export class PremiumRelationshipService {
   
   /**
    * Generate full relationship comparison (premium only)
+   * When a SynastryReport is provided, real cross-chart aspects are woven
+   * into the element-level base to give much richer, personalised output.
    */
   static generateComparison(
     userChart: NatalChart,
     otherChart: NatalChart,
     relationshipType: string,
-    isPremium: boolean
+    isPremium: boolean,
+    synastryReport?: SynastryReport
   ): RelationshipComparison | null {
     if (!isPremium) {
       return null; // Return null for free users, they get limited insight only
@@ -190,21 +194,151 @@ export class PremiumRelationshipService {
     
     const elementPair = this.getElementPair(userElement, otherElement);
     
-    const strengths = CONNECTION_STRENGTHS[elementPair] || CONNECTION_STRENGTHS['water-water'];
-    const growthAreas = GROWTH_AREAS[elementPair] || GROWTH_AREAS['water-water'];
+    // Start with element-level templates as a base
+    const baseStrengths = CONNECTION_STRENGTHS[elementPair] || CONNECTION_STRENGTHS['water-water'];
+    const baseGrowthAreas = GROWTH_AREAS[elementPair] || GROWTH_AREAS['water-water'];
     
+    // Enrich with real synastry aspects when available
+    const connectionStrengths = synastryReport
+      ? this.enrichConnectionsFromSynastry(baseStrengths, synastryReport)
+      : baseStrengths;
+
+    const growthAreas = synastryReport
+      ? this.enrichGrowthFromSynastry(baseGrowthAreas, synastryReport)
+      : baseGrowthAreas;
+    
+    const emotionalDynamics = synastryReport
+      ? this.enrichEmotionalDynamicsFromSynastry(
+          this.getEmotionalDynamics(userChart, otherChart),
+          synastryReport
+        )
+      : this.getEmotionalDynamics(userChart, otherChart);
+
+    const communicationDynamics = synastryReport
+      ? this.enrichCommunicationFromSynastry(
+          this.getCommunicationDynamics(userChart, otherChart),
+          synastryReport
+        )
+      : this.getCommunicationDynamics(userChart, otherChart);
+
+    const growthPotential = synastryReport?.overallDynamic
+      ? `${synastryReport.overallDynamic} ${this.getGrowthPotential(elementPair)}`
+      : this.getGrowthPotential(elementPair);
+
     return {
       person1Name: userChart.name || 'You',
       person2Name: otherChart.name || 'Them',
       relationshipType,
-      connectionStrengths: strengths,
-      growthAreas: growthAreas,
+      connectionStrengths,
+      growthAreas,
       person1Needs: this.getPersonNeeds(userChart),
       person2Needs: this.getPersonNeeds(otherChart),
-      communicationDynamics: this.getCommunicationDynamics(userChart, otherChart),
-      emotionalDynamics: this.getEmotionalDynamics(userChart, otherChart),
-      growthPotential: this.getGrowthPotential(elementPair),
+      communicationDynamics,
+      emotionalDynamics,
+      growthPotential,
       reminder: this.getRelationshipReminder(),
+    };
+  }
+
+  // ── Synastry enrichment helpers ──────────────────────────────
+
+  /**
+   * Augment element-level connection strengths with real cross-chart aspects
+   * categorised as "connection" or "chemistry" by the synastry engine.
+   */
+  private static enrichConnectionsFromSynastry(
+    base: ConnectionStrength[],
+    report: SynastryReport
+  ): ConnectionStrength[] {
+    const synastryStrengths: ConnectionStrength[] = [
+      ...report.connectionAspects.slice(0, 2).map((a) => ({
+        title: a.title,
+        description: a.description,
+        icon: 'heart',
+      })),
+      ...report.chemistryAspects.slice(0, 1).map((a) => ({
+        title: a.title,
+        description: a.description,
+        icon: 'flash',
+      })),
+    ];
+
+    // Deduplicate: prefer synastry-derived items, then fill with base
+    return synastryStrengths.length > 0
+      ? [...synastryStrengths, ...base].slice(0, 4)
+      : base;
+  }
+
+  /**
+   * Augment element-level growth areas with real challenge / growth aspects.
+   */
+  private static enrichGrowthFromSynastry(
+    base: GrowthArea[],
+    report: SynastryReport
+  ): GrowthArea[] {
+    const synastryGrowth: GrowthArea[] = [
+      ...report.challengeAspects.slice(0, 2).map((a) => ({
+        title: a.title,
+        description: a.description,
+        healingQuestion: `How can you both work with the ${a.person1Planet.name}–${a.person2Planet.name} tension compassionately?`,
+      })),
+      ...report.growthAspects.slice(0, 1).map((a) => ({
+        title: a.title,
+        description: a.description,
+        healingQuestion: `What does the ${a.person1Planet.name}–${a.person2Planet.name} connection teach you about each other?`,
+      })),
+    ];
+
+    return synastryGrowth.length > 0
+      ? [...synastryGrowth, ...base].slice(0, 4)
+      : base;
+  }
+
+  /**
+   * Layer synastry-derived emotional detail on top of the element-level base.
+   */
+  private static enrichEmotionalDynamicsFromSynastry(
+    base: EmotionalDynamicInsight,
+    report: SynastryReport
+  ): EmotionalDynamicInsight {
+    // Find Moon-related synastry aspects for emotional insight
+    const moonAspects = report.aspects.filter(
+      (a) =>
+        a.person1Planet.name === 'Moon' ||
+        a.person2Planet.name === 'Moon'
+    );
+
+    if (moonAspects.length === 0) return base;
+
+    const primary = moonAspects[0];
+    return {
+      ...base,
+      howYouNurtureEachOther: `${primary.description} ${base.howYouNurtureEachOther}`,
+      healingPath: report.primaryChallenge
+        ? `${report.primaryChallenge} ${base.healingPath}`
+        : base.healingPath,
+    };
+  }
+
+  /**
+   * Layer synastry-derived communication detail (Mercury aspects) on top of element base.
+   */
+  private static enrichCommunicationFromSynastry(
+    base: CommunicationInsight,
+    report: SynastryReport
+  ): CommunicationInsight {
+    const mercuryAspects = report.aspects.filter(
+      (a) =>
+        a.person1Planet.name === 'Mercury' ||
+        a.person2Planet.name === 'Mercury'
+    );
+
+    if (mercuryAspects.length === 0) return base;
+
+    const primary = mercuryAspects[0];
+    return {
+      ...base,
+      dynamicDescription: `${primary.description} ${base.dynamicDescription}`,
     };
   }
   
