@@ -187,7 +187,7 @@ export default function ChartScreen() {
       // Toggle off
       setOverlayPerson(null);
       setOverlayChart(null);
-      Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
       return;
     }
 
@@ -205,7 +205,7 @@ export default function ChartScreen() {
       chart.name = person.name;
       setOverlayPerson(person);
       setOverlayChart(chart);
-      Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
     } catch (e) {
       logger.error('Failed to generate overlay chart:', e);
       Alert.alert('Error', 'Could not generate chart for this person.');
@@ -241,7 +241,7 @@ export default function ChartScreen() {
       await localDb.saveRelationshipChart(newRel);
       setPeople(prev => [newRel, ...prev]);
       setShowAddModal(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
       // Auto-select as overlay
       handleSelectOverlay(newRel);
@@ -268,7 +268,7 @@ export default function ChartScreen() {
                 setOverlayPerson(null);
                 setOverlayChart(null);
               }
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
             } catch (e) {
               logger.error('Failed to delete relationship chart:', e);
             }
@@ -539,7 +539,7 @@ export default function ChartScreen() {
                   onPress={() => {
                     setOverlayPerson(null);
                     setOverlayChart(null);
-                    Haptics.selectionAsync();
+                    Haptics.selectionAsync().catch(() => {});
                   }}
                 >
                   <Ionicons

@@ -26,7 +26,7 @@ export default function PrivacyPolicyScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.title}>Privacy Policy</Text>
-          <Text style={styles.lastUpdated}>Last updated: February 7, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: February 14, 2026</Text>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Our Commitment to Your Privacy</Text>
@@ -42,7 +42,8 @@ export default function PrivacyPolicyScreen() {
               MySky collects only the information you provide:
             </Text>
             <Text style={styles.bulletPoint}>• Birth date, time, and location for astrological calculations</Text>
-            <Text style={styles.bulletPoint}>• Journal entries you create</Text>
+            <Text style={styles.bulletPoint}>• Journal entries and mood check-ins you create</Text>
+            <Text style={styles.bulletPoint}>• Energy check-in data you submit</Text>
             <Text style={styles.bulletPoint}>• App preferences and settings</Text>
             <Text style={styles.paragraph}>
               We do not collect any other personal information, device identifiers, or tracking data.
@@ -55,8 +56,10 @@ export default function PrivacyPolicyScreen() {
               Your birth information is used solely to:
             </Text>
             <Text style={styles.bulletPoint}>• Generate accurate astrological charts and calculations</Text>
-            <Text style={styles.bulletPoint}>• Provide personalized cosmic insights and guidance</Text>
+            <Text style={styles.bulletPoint}>• Provide personalized cosmic insights and daily guidance</Text>
             <Text style={styles.bulletPoint}>• Create relationship compatibility analyses</Text>
+            <Text style={styles.bulletPoint}>• Map chakra energy patterns from your natal chart</Text>
+            <Text style={styles.bulletPoint}>• Generate your natal story and PDF export</Text>
             <Text style={styles.paragraph}>
               We do not use your data for advertising, marketing, or any other purposes.
             </Text>
@@ -67,11 +70,11 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.paragraph}>
               Your data is stored locally on your device using multiple layers of protection:
             </Text>
-            <Text style={styles.bulletPoint}>• Chart and journal data is stored in a local database on your device</Text>
-            <Text style={styles.bulletPoint}>• Sensitive fields are encrypted with AES-256 before being saved</Text>
+            <Text style={styles.bulletPoint}>• All data is stored in a local database on your device — never on external servers</Text>
+            <Text style={styles.bulletPoint}>• Sensitive fields (birth data, journal content) are encrypted at rest with AES-256</Text>
             <Text style={styles.bulletPoint}>• Encryption keys are stored in your device&apos;s secure keychain/keystore</Text>
-            <Text style={styles.bulletPoint}>• No personal information is uploaded to external servers</Text>
-            <Text style={styles.bulletPoint}>• Encrypted backup is optional and requires explicit consent</Text>
+            <Text style={styles.bulletPoint}>• Your device passcode and biometrics provide an additional layer of protection</Text>
+            <Text style={styles.bulletPoint}>• Encrypted backup is optional and requires your explicit action</Text>
           </View>
 
           <View style={styles.section}>
@@ -86,29 +89,50 @@ export default function PrivacyPolicyScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Rights</Text>
+            <Text style={styles.sectionTitle}>PDF Export</Text>
             <Text style={styles.paragraph}>
-              You have complete control over your data:
+              When you export your chart as a PDF:
             </Text>
-            <Text style={styles.bulletPoint}>• Access: View all your stored data anytime</Text>
-            <Text style={styles.bulletPoint}>• Export: Download your data in a readable format</Text>
-            <Text style={styles.bulletPoint}>• Delete: Permanently remove all data from the app</Text>
-            <Text style={styles.bulletPoint}>• Portability: Take your data with you</Text>
-            <Text style={styles.paragraph}>
-              These rights can be exercised through the Privacy Settings in the app.
-            </Text>
+            <Text style={styles.bulletPoint}>• The PDF is generated entirely on your device</Text>
+            <Text style={styles.bulletPoint}>• It is saved to your device&apos;s temporary cache, then the share sheet opens</Text>
+            <Text style={styles.bulletPoint}>• You choose where to save or share the file</Text>
+            <Text style={styles.bulletPoint}>• MySky does not upload or retain the PDF</Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Encrypted Backup (Optional)</Text>
+            <Text style={styles.sectionTitle}>Encrypted Backup (Premium)</Text>
             <Text style={styles.paragraph}>
               If you choose to create an encrypted backup:
             </Text>
             <Text style={styles.bulletPoint}>• Your data is encrypted with AES-256 using a passphrase you create</Text>
             <Text style={styles.bulletPoint}>• A .msky backup file is created on your device</Text>
-            <Text style={styles.bulletPoint}>• You choose where to save or share the file (Files, AirDrop, email, etc.)</Text>
-            <Text style={styles.bulletPoint}>• MySky never uploads your data to any server</Text>
+            <Text style={styles.bulletPoint}>• The share sheet opens and you choose the destination (Files, iCloud, AirDrop, email, etc.)</Text>
+            <Text style={styles.bulletPoint}>• MySky never uploads your backup to any server</Text>
             <Text style={styles.bulletPoint}>• You can restore from a backup file at any time</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Subscriptions</Text>
+            <Text style={styles.paragraph}>
+              Subscription purchases are handled by Apple through the App Store. 
+              We use RevenueCat for subscription management, which receives only 
+              anonymized app user IDs — not your personal data or billing information.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Rights</Text>
+            <Text style={styles.paragraph}>
+              You have complete control over your data:
+            </Text>
+            <Text style={styles.bulletPoint}>• Access: View all your stored data anytime</Text>
+            <Text style={styles.bulletPoint}>• Export: Download your chart as a PDF or create an encrypted backup</Text>
+            <Text style={styles.bulletPoint}>• Delete: Permanently remove all data from the app</Text>
+            <Text style={styles.bulletPoint}>• Portability: Take your data with you via encrypted backup</Text>
+            <Text style={styles.bulletPoint}>• No account required: MySky works without creating any account</Text>
+            <Text style={styles.paragraph}>
+              These rights can be exercised through the Privacy Settings in the app.
+            </Text>
           </View>
 
           <View style={styles.section}>

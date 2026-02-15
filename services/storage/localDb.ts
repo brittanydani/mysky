@@ -5,8 +5,9 @@ import { SavedChart, JournalEntry, AppSettings, RelationshipChart } from './mode
 import { SavedInsight } from './insightHistory';
 import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
+import { FieldEncryptionService } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 6;
+const CURRENT_DB_VERSION = 7;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -22,8 +23,17 @@ class LocalDatabase {
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = (async () => {
-      this.db = await SQLite.openDatabaseAsync('mysky.db');
-      await this.handleMigrations();
+      try {
+        this.db = await SQLite.openDatabaseAsync('mysky.db');
+        // Initialize field encryption DEK (creates key on first run)
+        await FieldEncryptionService.initialize();
+        await this.handleMigrations();
+      } catch (error) {
+        // Reset so next call can retry instead of being permanently bricked
+        this.db = null;
+        this.initPromise = null;
+        throw error;
+      }
     })();
 
     return this.initPromise;
@@ -83,6 +93,10 @@ class LocalDatabase {
 
     if (fromVersion < 6) {
       await this.migrateToVersion6();
+    }
+
+    if (fromVersion < 7) {
+      await this.migrateToVersion7();
     }
   }
 
@@ -318,12 +332,169 @@ class LocalDatabase {
     logger.info('[LocalDB] Version 6 migration complete');
   }
 
+  // ═══════════════════════════════════════════════════
+  // Migration v7: Encrypt sensitive fields at rest
+  // Idempotent: safe to re-run; uses migration marker + ENC prefix check.
+  // ═══════════════════════════════════════════════════
+  private async migrateToVersion7(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 7 (field encryption at rest)...');
+
+    // Idempotency: skip if already completed
+    const markerKey = 'v7_field_encryption';
+    try {
+      const alreadyDone = await db.getFirstAsync(
+        'SELECT key FROM migration_markers WHERE key = ?',
+        [markerKey]
+      );
+      if (alreadyDone) {
+        logger.info('[LocalDB] v7 migration already completed (marker found), skipping');
+        return;
+      }
+    } catch {
+      // migration_markers table may not exist yet in edge cases; continue
+    }
+
+    let encrypted = 0;
+    let failures = 0;
+
+    // 1. Encrypt saved_charts.birth_place
+    try {
+      const charts = await db.getAllAsync(
+        'SELECT id, birth_place FROM saved_charts WHERE birth_place IS NOT NULL'
+      ) as any[];
+      for (const row of charts) {
+        try {
+          if (row.birth_place && !FieldEncryptionService.isEncrypted(row.birth_place)) {
+            const enc = await FieldEncryptionService.encryptField(row.birth_place);
+            await db.runAsync('UPDATE saved_charts SET birth_place = ? WHERE id = ?', [enc, row.id]);
+            encrypted++;
+          }
+        } catch (rowErr) {
+          failures++;
+          logger.error(`[LocalDB] v7: failed to encrypt saved_charts row ${row.id}`);
+        }
+      }
+    } catch (e) {
+      logger.error('[LocalDB] v7: failed to encrypt saved_charts.birth_place', e);
+    }
+
+    // 2. Encrypt journal_entries.content and title
+    try {
+      const entries = await db.getAllAsync(
+        'SELECT id, content, title FROM journal_entries WHERE content IS NOT NULL'
+      ) as any[];
+      for (const row of entries) {
+        try {
+          const updates: string[] = [];
+          const params: any[] = [];
+          if (row.content && !FieldEncryptionService.isEncrypted(row.content)) {
+            updates.push('content = ?');
+            params.push(await FieldEncryptionService.encryptField(row.content));
+            encrypted++;
+          }
+          if (row.title && !FieldEncryptionService.isEncrypted(row.title)) {
+            updates.push('title = ?');
+            params.push(await FieldEncryptionService.encryptField(row.title));
+            encrypted++;
+          }
+          if (updates.length > 0) {
+            params.push(row.id);
+            await db.runAsync(`UPDATE journal_entries SET ${updates.join(', ')} WHERE id = ?`, params);
+          }
+        } catch (rowErr) {
+          failures++;
+          logger.error(`[LocalDB] v7: failed to encrypt journal_entries row ${row.id}`);
+        }
+      }
+    } catch (e) {
+      logger.error('[LocalDB] v7: failed to encrypt journal_entries', e);
+    }
+
+    // 3. Encrypt relationship_charts.birth_place
+    try {
+      const rels = await db.getAllAsync(
+        'SELECT id, birth_place FROM relationship_charts WHERE birth_place IS NOT NULL'
+      ) as any[];
+      for (const row of rels) {
+        try {
+          if (row.birth_place && !FieldEncryptionService.isEncrypted(row.birth_place)) {
+            const enc = await FieldEncryptionService.encryptField(row.birth_place);
+            await db.runAsync('UPDATE relationship_charts SET birth_place = ? WHERE id = ?', [enc, row.id]);
+            encrypted++;
+          }
+        } catch (rowErr) {
+          failures++;
+          logger.error(`[LocalDB] v7: failed to encrypt relationship_charts row ${row.id}`);
+        }
+      }
+    } catch (e) {
+      logger.error('[LocalDB] v7: failed to encrypt relationship_charts.birth_place', e);
+    }
+
+    // 4. Encrypt daily_check_ins.note, wins, challenges
+    try {
+      const checkins = await db.getAllAsync(
+        'SELECT id, note, wins, challenges FROM daily_check_ins'
+      ) as any[];
+      for (const row of checkins) {
+        try {
+          const updates: string[] = [];
+          const params: any[] = [];
+          if (row.note && !FieldEncryptionService.isEncrypted(row.note)) {
+            updates.push('note = ?');
+            params.push(await FieldEncryptionService.encryptField(row.note));
+            encrypted++;
+          }
+          if (row.wins && !FieldEncryptionService.isEncrypted(row.wins)) {
+            updates.push('wins = ?');
+            params.push(await FieldEncryptionService.encryptField(row.wins));
+            encrypted++;
+          }
+          if (row.challenges && !FieldEncryptionService.isEncrypted(row.challenges)) {
+            updates.push('challenges = ?');
+            params.push(await FieldEncryptionService.encryptField(row.challenges));
+            encrypted++;
+          }
+          if (updates.length > 0) {
+            params.push(row.id);
+            await db.runAsync(`UPDATE daily_check_ins SET ${updates.join(', ')} WHERE id = ?`, params);
+          }
+        } catch (rowErr) {
+          failures++;
+          logger.error(`[LocalDB] v7: failed to encrypt daily_check_ins row ${row.id}`);
+        }
+      }
+    } catch (e) {
+      logger.error('[LocalDB] v7: failed to encrypt daily_check_ins', e);
+    }
+
+    // Set idempotency marker so this migration won't re-run
+    try {
+      await db.runAsync(
+        'INSERT OR REPLACE INTO migration_markers (key, completed_at) VALUES (?, ?)',
+        [markerKey, new Date().toISOString()]
+      );
+    } catch {
+      // Non-fatal: marker table may not exist in edge cases
+    }
+
+    if (failures > 0) {
+      logger.warn(`[LocalDB] Version 7 migration completed with ${failures} row failures — encrypted ${encrypted} fields`);
+    } else {
+      logger.info(`[LocalDB] Version 7 migration complete — encrypted ${encrypted} fields`);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
 
   async upsertChart(chart: SavedChart): Promise<void> {
     const db = await this.ensureReady();
+
+    // Encrypt sensitive fields before writing to SQLite
+    const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
 
     await db.runAsync(
       `INSERT OR REPLACE INTO saved_charts 
@@ -335,7 +506,7 @@ class LocalDatabase {
         chart.birthDate,
         chart.birthTime || null,
         chart.hasUnknownTime ? 1 : 0,
-        chart.birthPlace,
+        encBirthPlace,
         chart.latitude,
         chart.longitude,
         chart.houseSystem || null,
@@ -353,20 +524,21 @@ class LocalDatabase {
       'SELECT * FROM saved_charts WHERE is_deleted = 0 ORDER BY created_at DESC'
     );
 
-    return (result as any[]).map((row: any) => ({
+    // Decrypt sensitive fields after reading from SQLite
+    return Promise.all((result as any[]).map(async (row: any) => ({
       id: row.id,
       name: row.name,
       birthDate: row.birth_date,
       birthTime: row.birth_time,
       hasUnknownTime: row.has_unknown_time === 1,
-      birthPlace: row.birth_place,
+      birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,
       longitude: row.longitude,
       houseSystem: row.house_system || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       isDeleted: row.is_deleted === 1,
-    }));
+    })));
   }
 
   async updateAllChartsHouseSystem(houseSystem: string): Promise<void> {
@@ -401,6 +573,10 @@ class LocalDatabase {
   async addJournalEntry(entry: JournalEntry): Promise<void> {
     const db = await this.ensureReady();
 
+    // Encrypt sensitive fields
+    const encContent = await FieldEncryptionService.encryptField(entry.content);
+    const encTitle = entry.title ? await FieldEncryptionService.encryptField(entry.title) : null;
+
     await db.runAsync(
       `INSERT INTO journal_entries 
        (id, date, mood, moon_phase, title, content, created_at, updated_at, is_deleted)
@@ -410,8 +586,8 @@ class LocalDatabase {
         entry.date,
         entry.mood,
         entry.moonPhase,
-        entry.title || null,
-        entry.content,
+        encTitle,
+        encContent,
         entry.createdAt,
         entry.updatedAt,
         entry.isDeleted ? 1 : 0,
@@ -426,27 +602,30 @@ class LocalDatabase {
       'SELECT * FROM journal_entries WHERE is_deleted = 0 ORDER BY date DESC, created_at DESC'
     );
 
-    return (result as any[]).map((row: any) => ({
+    return Promise.all((result as any[]).map(async (row: any) => ({
       id: row.id,
       date: row.date,
       mood: row.mood,
       moonPhase: row.moon_phase,
-      title: row.title,
-      content: row.content,
+      title: row.title ? await FieldEncryptionService.decryptField(row.title) : row.title,
+      content: await FieldEncryptionService.decryptField(row.content),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       isDeleted: row.is_deleted === 1,
-    }));
+    })));
   }
 
   async updateJournalEntry(entry: JournalEntry): Promise<void> {
     const db = await this.ensureReady();
 
+    const encContent = await FieldEncryptionService.encryptField(entry.content);
+    const encTitle = entry.title ? await FieldEncryptionService.encryptField(entry.title) : null;
+
     await db.runAsync(
       `UPDATE journal_entries 
        SET mood = ?, moon_phase = ?, title = ?, content = ?, updated_at = ?
        WHERE id = ?`,
-      [entry.mood, entry.moonPhase, entry.title || null, entry.content, entry.updatedAt, entry.id]
+      [entry.mood, entry.moonPhase, encTitle, encContent, entry.updatedAt, entry.id]
     );
   }
 
@@ -515,20 +694,20 @@ class LocalDatabase {
       [timestamp]
     );
 
-    return (result as any[]).map((row: any) => ({
+    return Promise.all((result as any[]).map(async (row: any) => ({
       id: row.id,
       name: row.name,
       birthDate: row.birth_date,
       birthTime: row.birth_time,
       hasUnknownTime: row.has_unknown_time === 1,
-      birthPlace: row.birth_place,
+      birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,
       longitude: row.longitude,
       houseSystem: row.house_system || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       isDeleted: row.is_deleted === 1,
-    }));
+    })));
   }
 
   async getJournalEntriesModifiedSince(timestamp: string): Promise<JournalEntry[]> {
@@ -539,17 +718,17 @@ class LocalDatabase {
       [timestamp]
     );
 
-    return (result as any[]).map((row: any) => ({
+    return Promise.all((result as any[]).map(async (row: any) => ({
       id: row.id,
       date: row.date,
       mood: row.mood,
       moonPhase: row.moon_phase,
-      title: row.title,
-      content: row.content,
+      title: row.title ? await FieldEncryptionService.decryptField(row.title) : row.title,
+      content: await FieldEncryptionService.decryptField(row.content),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       isDeleted: row.is_deleted === 1,
-    }));
+    })));
   }
 
   async hardDeleteAllData(): Promise<void> {
@@ -742,6 +921,8 @@ class LocalDatabase {
   async saveRelationshipChart(chart: RelationshipChart): Promise<void> {
     const db = await this.ensureReady();
 
+    const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
+
     await db.runAsync(
       `INSERT OR REPLACE INTO relationship_charts 
        (id, name, relationship, birth_date, birth_time, has_unknown_time, birth_place, 
@@ -754,7 +935,7 @@ class LocalDatabase {
         chart.birthDate,
         chart.birthTime || null,
         chart.hasUnknownTime ? 1 : 0,
-        chart.birthPlace,
+        encBirthPlace,
         chart.latitude,
         chart.longitude,
         chart.timezone || null,
@@ -781,7 +962,7 @@ class LocalDatabase {
     query += ' ORDER BY updated_at DESC';
 
     const result = await db.getAllAsync(query, params);
-    return (result as any[]).map((row: any) => this.mapRelationshipRow(row));
+    return Promise.all((result as any[]).map((row: any) => this.mapRelationshipRow(row)));
   }
 
   async getRelationshipChartById(id: string): Promise<RelationshipChart | null> {
@@ -792,7 +973,7 @@ class LocalDatabase {
       [id]
     );
 
-    return result ? this.mapRelationshipRow(result) : null;
+    return result ? await this.mapRelationshipRow(result) : null;
   }
 
   async deleteRelationshipChart(id: string): Promise<void> {
@@ -820,7 +1001,7 @@ class LocalDatabase {
     return result?.count ?? 0;
   }
 
-  private mapRelationshipRow(row: any): RelationshipChart {
+  private async mapRelationshipRow(row: any): Promise<RelationshipChart> {
     return {
       id: row.id,
       name: row.name,
@@ -828,7 +1009,7 @@ class LocalDatabase {
       birthDate: row.birth_date,
       birthTime: row.birth_time,
       hasUnknownTime: row.has_unknown_time === 1,
-      birthPlace: row.birth_place,
+      birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,
       longitude: row.longitude,
       timezone: row.timezone,
@@ -847,6 +1028,11 @@ class LocalDatabase {
   async saveCheckIn(checkIn: DailyCheckIn): Promise<void> {
     const db = await this.ensureReady();
 
+    // Encrypt free-text fields
+    const encNote = checkIn.note ? await FieldEncryptionService.encryptField(checkIn.note) : null;
+    const encWins = checkIn.wins ? await FieldEncryptionService.encryptField(checkIn.wins) : null;
+    const encChallenges = checkIn.challenges ? await FieldEncryptionService.encryptField(checkIn.challenges) : null;
+
     await db.runAsync(
       `INSERT OR REPLACE INTO daily_check_ins
        (id, date, chart_id, mood_score, energy_level, stress_level, tags, note, wins, challenges,
@@ -860,9 +1046,9 @@ class LocalDatabase {
         checkIn.energyLevel,
         checkIn.stressLevel,
         JSON.stringify(checkIn.tags),
-        checkIn.note || null,
-        checkIn.wins || null,
-        checkIn.challenges || null,
+        encNote,
+        encWins,
+        encChallenges,
         checkIn.moonSign,
         checkIn.moonHouse,
         checkIn.sunHouse,
@@ -899,10 +1085,10 @@ class LocalDatabase {
     }
 
     const rows = await db.getAllAsync(query, params);
-    return (rows as any[]).map((row: any) => this.mapCheckInRow(row));
+    return Promise.all((rows as any[]).map((row: any) => this.mapCheckInRow(row)));
   }
 
-  private mapCheckInRow(row: any): DailyCheckIn {
+  private async mapCheckInRow(row: any): Promise<DailyCheckIn> {
     return {
       id: row.id,
       date: row.date,
@@ -911,9 +1097,9 @@ class LocalDatabase {
       energyLevel: row.energy_level,
       stressLevel: row.stress_level,
       tags: JSON.parse(row.tags || '[]'),
-      note: row.note,
-      wins: row.wins,
-      challenges: row.challenges,
+      note: row.note ? await FieldEncryptionService.decryptField(row.note) : row.note,
+      wins: row.wins ? await FieldEncryptionService.decryptField(row.wins) : row.wins,
+      challenges: row.challenges ? await FieldEncryptionService.decryptField(row.challenges) : row.challenges,
       moonSign: row.moon_sign,
       moonHouse: row.moon_house,
       sunHouse: row.sun_house,

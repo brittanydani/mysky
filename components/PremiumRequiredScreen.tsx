@@ -6,6 +6,15 @@ import { useRouter, Href } from 'expo-router';
 
 export default function PremiumRequiredScreen() {
   const router = useRouter();
+
+  const safeGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/settings' as Href);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Ionicons name="star" size={48} color={theme.primary} style={styles.icon} />
@@ -20,7 +29,7 @@ export default function PremiumRequiredScreen() {
         <Ionicons name="sparkles" size={16} color={theme.background} />
         <Text style={styles.upgradeButtonText}>Unlock Deeper Sky</Text>
       </Pressable>
-      <Pressable style={styles.button} onPress={() => router.back()}>
+      <Pressable style={styles.button} onPress={safeGoBack}>
         <Text style={styles.buttonText}>Go Back</Text>
       </Pressable>
     </View>

@@ -40,16 +40,25 @@ export class DataRightsHandler {
 
   async handleDataDeletionRequest(onProgress?: ProgressCallback): Promise<DeletionResult> {
     const startedAt = Date.now();
-    onProgress?.('deletion_started');
-    await secureStorage.deleteAllUserData();
-    await localDb.initialize();
-    await localDb.hardDeleteAllData();
-    await this.recordPrivacyOperation('data_deletion', Date.now() - startedAt, true);
-    onProgress?.('deletion_completed');
-    return {
-      success: true,
-      completedAt: new Date().toISOString(),
-    };
+    try {
+      onProgress?.('deletion_started');
+      await secureStorage.deleteAllUserData();
+      await localDb.initialize();
+      await localDb.hardDeleteAllData();
+      await this.recordPrivacyOperation('data_deletion', Date.now() - startedAt, true);
+      onProgress?.('deletion_completed');
+      return {
+        success: true,
+        completedAt: new Date().toISOString(),
+      };
+    } catch (error: any) {
+      logger.error('[Privacy] Data deletion failed:', error);
+      await this.recordPrivacyOperation('data_deletion', Date.now() - startedAt, false, error).catch(() => {});
+      return {
+        success: false,
+        completedAt: new Date().toISOString(),
+      };
+    }
   }
 
   async handleDataAccessRequest(): Promise<AccessResult> {

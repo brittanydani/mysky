@@ -119,8 +119,16 @@ function buildTagProfile(
 ): TagProfile {
   const tags = new Map<ContentTag, number>();
 
+  // Helper: extract sign name string from ZodiacSign object or plain string
+  const getSignName = (s: unknown): string => {
+    if (!s) return '';
+    if (typeof s === 'string') return s;
+    const obj = s as { name?: string };
+    return obj?.name ?? '';
+  };
+
   // Sun element & modality (weight 3)
-  const sunSign = (chart.sun?.sign || chart.planets?.find(p => p.planet === 'Sun')?.sign) as string | undefined;
+  const sunSign = getSignName(chart.sun?.sign) || getSignName(chart.planets?.find(p => p.planet === 'Sun')?.sign);
   if (sunSign) {
     const el = SIGN_ELEMENTS[sunSign];
     if (el) tags.set(el, (tags.get(el) || 0) + 3);
@@ -129,15 +137,15 @@ function buildTagProfile(
   }
 
   // Moon element (weight 3)
-  const moonSign = (chart.moon?.sign || chart.planets?.find(p => p.planet === 'Moon')?.sign) as string | undefined;
+  const moonSign = getSignName(chart.moon?.sign) || getSignName(chart.planets?.find(p => p.planet === 'Moon')?.sign);
   if (moonSign) {
     const el = SIGN_ELEMENTS[moonSign];
     if (el) tags.set(el, (tags.get(el) || 0) + 3);
   }
 
   // Rising/Ascendant element (weight 2)
-  const risingSign = (chart.ascendant?.sign ||
-    (chart.houses?.[0] ? signFromLongitude(chart.houses[0].absoluteDegree) : undefined)) as string | undefined;
+  const risingSign = getSignName(chart.ascendant?.sign) ||
+    (chart.houses?.[0] ? signFromLongitude(chart.houses[0].absoluteDegree) : '');
   if (risingSign) {
     const el = SIGN_ELEMENTS[risingSign];
     if (el) tags.set(el, (tags.get(el) || 0) + 2);

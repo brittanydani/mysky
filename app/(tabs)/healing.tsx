@@ -23,6 +23,7 @@ export default function HealingScreen() {
   const { isPremium } = usePremium();
   const [healingQuote, setHealingQuote] = useState<ShadowQuote | null>(null);
   const [healingData, setHealingData] = useState<HealingInsights | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -62,6 +63,8 @@ export default function HealingScreen() {
       }
     } catch (e) {
       logger.error('[Healing] Failed to load healing data:', e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,7 +94,7 @@ export default function HealingScreen() {
           </Animated.View>
 
           {/* Empty state — no chart yet */}
-          {!healingData && !healingQuote && (
+          {!loading && !healingData && !healingQuote && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyState}>
               <Ionicons name="heart-outline" size={48} color={theme.textMuted} />
               <Text style={styles.emptyTitle}>No chart yet</Text>

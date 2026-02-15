@@ -9,38 +9,46 @@ import { logger } from '../../utils/logger';
 import { Platform } from 'react-native';
 
 class RevenueCatService {
+  private initPromise: Promise<void> | null = null;
   private initialized = false;
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
 
-    // Set flag immediately to prevent races
-    this.initialized = true;
+    this.initPromise = (async () => {
+      // Enable verbose logging for debugging
+      if (__DEV__) { Purchases.setLogLevel(LOG_LEVEL.VERBOSE); } else { Purchases.setLogLevel(LOG_LEVEL.WARN); }
 
-    // Enable verbose logging for debugging
-    if (__DEV__) { Purchases.setLogLevel(LOG_LEVEL.VERBOSE); } else { Purchases.setLogLevel(LOG_LEVEL.WARN); }
+      const apiKey = Platform.select({
+        ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+        android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
+      });
 
-    const apiKey = Platform.select({
-      ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
-      android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
-    });
+      // Sanity check logging
+      logger.info('[RevenueCat] Platform:', Platform.OS);
+      logger.info('[RevenueCat] Using key prefix:', apiKey?.slice(0, 5));
 
-    // Sanity check logging
-    logger.info('[RevenueCat] Platform:', Platform.OS);
-    logger.info('[RevenueCat] Using key prefix:', apiKey?.slice(0, 5));
+      // Fail fast if wrong key format
+      if (!apiKey || !(apiKey.startsWith("appl_") || apiKey.startsWith("goog_") || apiKey.startsWith("test_"))) {
+        throw new Error(`[RevenueCat] Invalid API key: ${apiKey}`);
+      }
 
-    // Fail fast if wrong key format
-    if (!apiKey || !(apiKey.startsWith("appl_") || apiKey.startsWith("goog_") || apiKey.startsWith("test_"))) {
-      this.initialized = false; // revert on failure
-      throw new Error(`[RevenueCat] Invalid API key: ${apiKey}`);
-    }
+      try {
+        await Purchases.configure({ apiKey });
+        this.initialized = true;
+        logger.info('[RevenueCat] Initialized successfully');
+      } catch (error) {
+        logger.error('[RevenueCat] Failed to initialize:', error);
+        throw error;
+      }
+    })();
 
     try {
-      await Purchases.configure({ apiKey });
-      logger.info('[RevenueCat] Initialized successfully');
+      await this.initPromise;
     } catch (error) {
-      this.initialized = false; // revert on failure
-      logger.error('[RevenueCat] Failed to initialize:', error);
+      // Reset so next call can retry
+      this.initPromise = null;
       throw error;
     }
   }

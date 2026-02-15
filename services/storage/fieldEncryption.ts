@@ -15,6 +15,7 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 
 // Polyfill WebCrypto (crypto.subtle) for Expo
 import 'expo-standard-web-crypto';
@@ -106,17 +107,10 @@ function base64ToUint8Array(base64: string): Uint8Array {
 }
 
 /**
- * Generate cryptographically secure random bytes via WebCrypto.
+ * Generate cryptographically secure random bytes via expo-crypto (native).
  */
 function generateRandomBytes(size: number): Uint8Array {
-  const bytes = new Uint8Array(size);
-  const cryptoObj = (globalThis as any)?.crypto;
-  if (cryptoObj?.getRandomValues) {
-    cryptoObj.getRandomValues(bytes);
-  } else {
-    throw new Error('[FieldEncryption] crypto.getRandomValues is not available. Ensure expo-standard-web-crypto is installed.');
-  }
-  return bytes;
+  return Crypto.getRandomBytes(size);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -304,18 +298,15 @@ class FieldEncryptionServiceClass {
       return plaintext;
     }
 
-    try {
-      const dek = await this.getDek();
-      const iv = generateRandomBytes(IV_SIZE);
-      
-      const ciphertextWithTag = await aesGcmEncrypt(plaintext, dek, iv);
-      
-      return `${AES_PREFIX}${uint8ArrayToBase64(iv)}:${uint8ArrayToBase64(ciphertextWithTag)}`;
-    } catch (error) {
-      logger.error('[FieldEncryption] AES-GCM encryption failed:', error);
-      // Return original on failure to avoid data loss
-      return plaintext;
-    }
+    // Fail closed: if encryption fails, throw rather than writing plaintext to SQLite.
+    // The caller (localDb) should catch and surface the error rather than silently
+    // persisting unencrypted sensitive data.
+    const dek = await this.getDek();
+    const iv = generateRandomBytes(IV_SIZE);
+    
+    const ciphertextWithTag = await aesGcmEncrypt(plaintext, dek, iv);
+    
+    return `${AES_PREFIX}${uint8ArrayToBase64(iv)}:${uint8ArrayToBase64(ciphertextWithTag)}`;
   }
 
   /**
@@ -346,8 +337,10 @@ class FieldEncryptionServiceClass {
         
         return await aesGcmDecrypt(ciphertextWithTag, dek, iv);
       } catch (error) {
-        logger.error('[FieldEncryption] AES-GCM decryption failed:', error);
-        return encrypted;
+        // Never return the raw encrypted blob — it would show gibberish in the UI.
+        // Return a controlled, user-safe placeholder so the app remains usable.
+        logger.error('[FieldEncryption] AES-GCM decryption failed (encryption key may be unavailable)');
+        return '[Unable to access encrypted data on this device]';
       }
     }
     
@@ -374,8 +367,9 @@ class FieldEncryptionServiceClass {
         
         return await legacyXorDecrypt(ciphertext, dek, iv, tag);
       } catch (error) {
-        logger.error('[FieldEncryption] Legacy decryption failed:', error);
-        return encrypted;
+        // Never return the raw encrypted blob — it would show gibberish in the UI.
+        logger.error('[FieldEncryption] Legacy decryption failed (encryption key may be unavailable)');
+        return '[Unable to access encrypted data on this device]';
       }
     }
 
@@ -477,6 +471,21 @@ class FieldEncryptionServiceClass {
     await SecureStore.setItemAsync(DEK_KEY, dekBase64);
     this.dekCache = dekBytes;
     logger.info('[FieldEncryption] DEK imported');
+  }
+
+  /**
+   * Check whether the Data Encryption Key is available on this device.
+   * Returns false if the DEK cannot be retrieved from SecureStore (e.g.
+   * after an OS keychain reset, device migration, or app reinstall).
+   */
+  async isKeyAvailable(): Promise<boolean> {
+    try {
+      if (this.dekCache) return true;
+      const stored = await SecureStore.getItemAsync(DEK_KEY);
+      return stored !== null;
+    } catch {
+      return false;
+    }
   }
 
   /**

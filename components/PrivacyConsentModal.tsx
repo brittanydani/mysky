@@ -30,12 +30,12 @@ export default function PrivacyConsentModal({
   }, [visible]);
 
   const handleAccept = () => {
-    Haptics.selectionAsync();
+    Haptics.selectionAsync().catch(() => {});
     onConsent(true);
   };
 
   const handleDecline = () => {
-    Haptics.selectionAsync();
+    Haptics.selectionAsync().catch(() => {});
     onConsent(false);
   };
 

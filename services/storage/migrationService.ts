@@ -44,7 +44,7 @@ export class MigrationService {
       logger.info(`[Migration] Found ${existingCharts.length} charts to migrate`);
       
       for (const chart of existingCharts) {
-        await localDb.saveChart(chart);
+        await secureStorage.saveChart(chart);
       }
 
       // Migrate journal entries
@@ -52,13 +52,13 @@ export class MigrationService {
       logger.info(`[Migration] Found ${existingEntries.length} journal entries to migrate`);
       
       for (const entry of existingEntries) {
-        await localDb.saveJournalEntry(entry);
+        await secureStorage.saveJournalEntry(entry);
       }
 
       // Migrate settings
       const existingSettings = await localDb.getSettings();
       if (existingSettings) {
-        await localDb.saveSettings(existingSettings);
+        await secureStorage.saveSettings(existingSettings);
       }
 
       // Mark migration as completed

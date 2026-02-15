@@ -1,6 +1,7 @@
 import { logger } from '../utils/logger';
 // context/PremiumContext.tsx
-import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode } from 'react';
+import Purchases from 'react-native-purchases';
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 import { revenueCatService } from '../services/premium/revenuecat';
 
@@ -56,7 +57,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
     }
   };
 
-  const purchase = async (packageToPurchase: PurchasesPackage): Promise<PurchaseResult> => {
+  const purchase = useCallback(async (packageToPurchase: PurchasesPackage): Promise<PurchaseResult> => {
     setLoading(true);
     try {
       const result = await revenueCatService.purchasePackage(packageToPurchase);
@@ -68,9 +69,9 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const restore = async (): Promise<RestoreResult> => {
+  const restore = useCallback(async (): Promise<RestoreResult> => {
     setLoading(true);
     try {
       const result = await revenueCatService.restorePurchases();
@@ -82,7 +83,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -107,8 +108,15 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
     };
 
     init();
+
+    // Listen for subscription changes (e.g. renewals, cancellations)
+    const listenerRemove = Purchases.addCustomerInfoUpdateListener((info) => {
+      if (mounted) updateCustomerInfo(info);
+    });
+
     return () => {
       mounted = false;
+      listenerRemove();
     };
   }, []);
 
@@ -123,7 +131,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
       restore,
       refreshCustomerInfo,
     }),
-    [isPremium, isReady, offerings, customerInfo, loading]
+    [isPremium, isReady, offerings, customerInfo, loading, purchase, restore, refreshCustomerInfo]
   );
 
   return <PremiumContext.Provider value={value}>{children}</PremiumContext.Provider>;

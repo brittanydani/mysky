@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -81,6 +81,14 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [shadowResult, setShadowResult] = useState<ShadowQuoteResult | null>(null);
   const [closeQuote, setCloseQuote] = useState<ShadowQuote | null>(null);
   const [showCloseQuote, setShowCloseQuote] = useState(false);
+  const closeQuoteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
+    };
+  }, []);
 
   // Load user chart for premium prompts
   useEffect(() => {
@@ -226,10 +234,11 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       setCloseQuote(shadowResult.closeQuote);
       setShowCloseQuote(true);
       // Auto-hide after 4 seconds
-      setTimeout(() => setShowCloseQuote(false), 4000);
+      if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
+      closeQuoteTimeoutRef.current = setTimeout(() => setShowCloseQuote(false), 4000);
     }
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
   const formatDate = (d: Date) =>

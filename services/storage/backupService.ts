@@ -9,7 +9,7 @@ import * as Crypto from 'expo-crypto';
 import 'expo-standard-web-crypto';
 
 import { localDb } from './localDb';
-import { secureStorage } from './secureStorage';
+import { FieldEncryptionService } from './fieldEncryption';
 import type { AppSettings, SavedChart, JournalEntry } from './models';
 
 /* ============================================================================
@@ -193,6 +193,17 @@ export class BackupService {
       throw new Error('Passphrase must be at least 8 characters long');
     }
 
+    // Guard: refuse to create a backup when the encryption key is missing.
+    // Without the DEK, getCharts()/getJournalEntries() would silently return
+    // placeholder strings instead of real data, producing a poisoned backup.
+    const keyAvailable = await FieldEncryptionService.isKeyAvailable();
+    if (!keyAvailable) {
+      throw new Error(
+        'Cannot create a backup on this device because encrypted data is not accessible. ' +
+        'You can restore a previous backup or delete all data to start fresh.'
+      );
+    }
+
     const [charts, journalEntries, settings] = await Promise.all([
       localDb.getCharts(),
       localDb.getJournalEntries(),
@@ -263,7 +274,12 @@ export class BackupService {
       encoding: FileSystem.EncodingType.UTF8,
     });
 
-    const envelope = JSON.parse(raw) as BackupEnvelope;
+    let envelope: BackupEnvelope;
+    try {
+      envelope = JSON.parse(raw) as BackupEnvelope;
+    } catch {
+      throw new Error('Invalid backup file — could not parse. The file may be corrupted.');
+    }
 
     if (envelope?.schemaVersion !== 1) {
       throw new Error('Unsupported backup format');
@@ -299,8 +315,15 @@ export class BackupService {
       throw new Error('Invalid backup contents');
     }
 
-    await secureStorage.clearContentData();
+    // Validate backup has actual data before clearing existing data
+    const hasData = (payload.charts?.length ?? 0) > 0 || 
+                    (payload.journalEntries?.length ?? 0) > 0 || 
+                    payload.settings !== null;
+    if (!hasData) {
+      throw new Error('Backup file contains no data to restore.');
+    }
 
+    // Restore data into localDb first (writes are INSERT OR REPLACE, so safe)
     for (const chart of payload.charts ?? []) {
       await localDb.saveChart(chart);
     }

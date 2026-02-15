@@ -23,16 +23,20 @@ function redact(value: unknown): unknown {
       }
 
       const SENSITIVE_KEYS = [
-        'birthDate','birthTime','birthPlace','latitude','longitude','content','title',
-        'ciphertext','ciphertextHex','ct','iv','ivHex','payload','masterKey','token','authorization'
+        'birthdate','birthtime','birthplace','latitude','longitude','content','title',
+        'ciphertext','ciphertexthex','ct','iv','ivhex','payload','masterkey','token','authorization'
       ];
 
       if (!Array.isArray(obj)) {
         for (const k of Object.keys(obj)) {
-          if (SENSITIVE_KEYS.includes(k.toLowerCase()) || SENSITIVE_KEYS.includes(k)) {
+          if (SENSITIVE_KEYS.includes(k.toLowerCase())) {
             (obj as Record<string, unknown>)[k] = '[REDACTED]';
+          } else if (typeof (obj as Record<string, unknown>)[k] === 'object' && (obj as Record<string, unknown>)[k] !== null) {
+            (obj as Record<string, unknown>)[k] = redact((obj as Record<string, unknown>)[k]);
           }
         }
+      } else {
+        return obj.map(item => typeof item === 'object' && item !== null ? redact(item) : item);
       }
       return obj;
     } catch {

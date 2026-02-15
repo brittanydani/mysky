@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
@@ -79,9 +80,11 @@ export default function RelationshipsScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingRelationType, setAddingRelationType] = useState<RelationshipType>('partner');
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
 
   const loadData = async () => {
     try {
@@ -176,7 +179,7 @@ export default function RelationshipsScreen() {
     
     setAddingRelationType(type);
     setShowAddModal(true);
-    Haptics.selectionAsync();
+    Haptics.selectionAsync().catch(() => {});
   };
 
   const handleSaveNewRelationship = async (birthData: BirthData, extra?: { chartName?: string }) => {
@@ -226,7 +229,7 @@ export default function RelationshipsScreen() {
       // Automatically open the detail view
       handleSelectRelationship(newRelationship);
       
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (error) {
       logger.error('Failed to save relationship:', error);
       Alert.alert('Error', 'Failed to save relationship. Please try again.');
@@ -236,39 +239,42 @@ export default function RelationshipsScreen() {
   const handleSelectRelationship = async (rel: RelationshipChart) => {
     if (!userChart) return;
     
-    setSelectedRelationship(rel);
-    setViewMode('detail');
-    Haptics.selectionAsync();
+    try {
+      Haptics.selectionAsync().catch(() => {});
     
-    // Generate chart for this relationship
-    const birthData: BirthData = {
-      date: rel.birthDate,
-      time: rel.birthTime,
-      hasUnknownTime: rel.hasUnknownTime,
-      place: rel.birthPlace,
-      latitude: rel.latitude,
-      longitude: rel.longitude,
-      timezone: rel.timezone,
-    };
+      // Generate chart for this relationship
+      const birthData: BirthData = {
+        date: rel.birthDate,
+        time: rel.birthTime,
+        hasUnknownTime: rel.hasUnknownTime,
+        place: rel.birthPlace,
+        latitude: rel.latitude,
+        longitude: rel.longitude,
+        timezone: rel.timezone,
+      };
     
-    const otherChart = AstrologyCalculator.generateNatalChart(birthData);
-    otherChart.name = rel.name;
-    setSelectedChart(otherChart);
+      const otherChart = AstrologyCalculator.generateNatalChart(birthData);
+      otherChart.name = rel.name;
     
-    // Calculate synastry
-    const synastry = SynastryEngine.calculateSynastry(userChart, otherChart);
-    setSynastryReport(synastry);
+      // Calculate synastry
+      const synastry = SynastryEngine.calculateSynastry(userChart, otherChart);
     
-    // Generate relationship insight
-    const insight = RelationshipInsightGenerator.generateRelationshipInsight(
-      userChart,
-      otherChart,
-      rel.relationship === 'child' || rel.relationship === 'parent' ? 'parent-child' : 
-        rel.relationship === 'partner' || rel.relationship === 'ex' ? 'romantic' : 'friendship',
-      userChart.name || 'You',
-      rel.name
-    );
-    setRelationshipInsight(insight);
+      // Generate relationship insight
+      const insight = RelationshipInsightGenerator.generateRelationshipInsight(
+        userChart,
+        otherChart,
+        rel.relationship === 'child' || rel.relationship === 'parent' ? 'parent-child' : 
+          rel.relationship === 'partner' || rel.relationship === 'ex' ? 'romantic' : 'friendship',
+        userChart.name || 'You',
+        rel.name
+      );
+
+      // Set state only after all computations succeed
+      setSelectedRelationship(rel);
+      setSelectedChart(otherChart);
+      setSynastryReport(synastry);
+      setRelationshipInsight(insight);
+      setViewMode('detail');
     
     // Generate premium comparison if applicable
     if (isPremium) {
@@ -280,6 +286,10 @@ export default function RelationshipsScreen() {
         synastry
       );
       setComparison(comp);
+    }
+    } catch (error) {
+      logger.error('Failed to load relationship detail:', error);
+      Alert.alert('Error', 'Failed to load relationship details. Please try again.');
     }
   };
 
@@ -314,7 +324,7 @@ export default function RelationshipsScreen() {
               if (fromDetail) {
                 handleBack();
               }
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
             } catch (error) {
               logger.error('Failed to delete relationship:', error);
             }
@@ -325,7 +335,7 @@ export default function RelationshipsScreen() {
   };
 
   const handleLongPressRelationship = (rel: RelationshipChart) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     Alert.alert(
       rel.name,
       RELATIONSHIP_LABELS[rel.relationship],
@@ -396,7 +406,7 @@ export default function RelationshipsScreen() {
                 style={[styles.tab, activeTab === tab && styles.tabActive]}
                 onPress={() => {
                   setActiveTab(tab);
-                  Haptics.selectionAsync();
+                  Haptics.selectionAsync().catch(() => {});
                 }}
               >
                 <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>

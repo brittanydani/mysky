@@ -161,7 +161,7 @@ export default function TodayScreen() {
             new Date(),
             dailyGuidance.intensity,
             dailyGuidance.dominantDomain,
-            (dailyGuidance as any).retrogradePlanets?.length > 0,
+            retrogradePlanets.length > 0,
           );
           setTodayContent(content);
         } catch (e) {
@@ -219,13 +219,13 @@ export default function TodayScreen() {
   const toggleFavorite = useCallback(async () => {
     if (!savedInsight) return;
     
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
     const newStatus = await InsightHistoryService.toggleFavorite(savedInsight.id);
     setSavedInsight(prev => prev ? { ...prev, isFavorite: newStatus } : null);
   }, [savedInsight]);
 
   const toggleWhyThis = useCallback(async () => {
-    await Haptics.selectionAsync();
+    try { await Haptics.selectionAsync(); } catch {}
     setShowWhyThis(prev => !prev);
   }, []);
 

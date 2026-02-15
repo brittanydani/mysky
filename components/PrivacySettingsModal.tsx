@@ -41,7 +41,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   const handleExportData = async () => {
     try {
       setIsLoading(true);
-      Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
 
       const userData = await secureStorage.exportAllUserData();
       const exportData = JSON.stringify(userData, null, 2);
@@ -72,7 +72,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   const confirmDeleteAllData = async () => {
     try {
       setIsLoading(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
 
       await secureStorage.deleteAllUserData();
 

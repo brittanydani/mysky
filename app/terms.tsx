@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
@@ -21,7 +21,7 @@ export default function TermsOfServiceScreen() {
         <View style={styles.headerBar}>
           <Pressable
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings' as Href)}
           >
             <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
@@ -38,7 +38,7 @@ export default function TermsOfServiceScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-            <Text style={styles.lastUpdated}>Last updated: February 11, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: February 14, 2026</Text>
             
             <Text style={styles.sectionTitle}>Welcome to MySky</Text>
             <Text style={styles.paragraph}>
@@ -53,27 +53,38 @@ export default function TermsOfServiceScreen() {
             <Text style={styles.sectionTitle}>Description of Service</Text>
             <Text style={styles.paragraph}>
               MySky is an astrological companion app that provides:{'\n'}
-              • Personalized astrological insights and interpretations{'\n'}
-              • Birth chart storage and analysis{'\n'}
-              • Journal and mood tracking features{'\n'}
-              • Premium features including encrypted backup and extended content
+              • Natal chart calculation and interactive visualization{'\n'}
+              • Daily astrological guidance and cosmic energy insights{'\n'}
+              • Chakra energy mapping tied to your natal chart{'\n'}
+              • Journal and mood tracking with daily check-ins{'\n'}
+              • Relationship compatibility analysis{'\n'}
+              • Natal story generation and PDF chart export{'\n'}
+              • Encrypted backup and restore (premium)
             </Text>
 
             <Text style={styles.sectionTitle}>Your Data</Text>
             <Text style={styles.paragraph}>
-              MySky does not require an account. All data is stored locally on your device.{' '}
-              You are responsible for maintaining your device&apos;s security and for any backup files you create.
+              MySky does not require an account. All data is stored locally on your device with sensitive fields encrypted at rest using AES-256.{' '}
+              You are responsible for maintaining your device&apos;s security and for any backup or PDF files you create and share.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Free and Premium Features</Text>
+            <Text style={styles.paragraph}>
+              <Text style={styles.bold}>Free features include:</Text> Natal chart with all major aspects, Big Three (Sun, Moon, Rising), basic daily guidance, one relationship chart, journal with mood tracking, energy snapshot, PDF chart export, and privacy controls.
+            </Text>
+            <Text style={styles.paragraph}>
+              <Text style={styles.bold}>&quot;Deeper Sky&quot; premium features include:</Text> Encrypted backup &amp; restore, full natal story (10 chapters), healing &amp; inner work insights, unlimited relationship charts, journal pattern analysis, Chiron &amp; Node depth mapping, full chakra mapping with check-ins, personalized guidance with action steps, and extended pattern analysis.
             </Text>
 
             <Text style={styles.sectionTitle}>Subscriptions and Payments</Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Premium Subscriptions:</Text> MySky offers premium subscriptions with additional features. Subscriptions automatically renew unless cancelled.
+              <Text style={styles.bold}>Premium Subscriptions:</Text> MySky offers monthly, yearly, and lifetime premium subscriptions. Subscriptions automatically renew unless cancelled.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (e.g. the App Store or Google Play). Prices may vary by location.
+              <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (e.g. the App Store). Prices may vary by location.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings. Cancellation takes effect at the end of the current billing period.
+              <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings (Settings &gt; Apple ID &gt; Subscriptions). Cancellation takes effect at the end of the current billing period.
             </Text>
             <Text style={styles.paragraph}>
               <Text style={styles.bold}>Refunds:</Text> Refunds are handled according to your app store&apos;s policies.
@@ -91,14 +102,14 @@ export default function TermsOfServiceScreen() {
             <Text style={styles.sectionTitle}>Content and Intellectual Property</Text>
             <Text style={styles.paragraph}>
               • All app content, including text, graphics, and software, is owned by MySky or our licensors{'\n'}
-              • You retain ownership of your personal data and journal entries{'\n'}
-              • You grant us a license to use your data to provide our services{'\n'}
+              • You retain ownership of your personal data, journal entries, and check-ins{'\n'}
+              • You grant us a license to use your data solely to provide our services on your device{'\n'}
               • You may not copy, modify, or distribute our content without permission
             </Text>
 
             <Text style={styles.sectionTitle}>Disclaimer</Text>
             <Text style={styles.paragraph}>
-              MySky is for entertainment and self-reflection purposes only. Astrological content should not be used as a substitute for professional advice regarding health, finance, relationships, or other important life decisions.
+              MySky is for entertainment and self-reflection purposes only. Astrological content should not be used as a substitute for professional advice regarding health, finance, relationships, or other important life decisions. Planetary calculations are based on established astronomical data (Swiss Ephemeris) but interpretations are generalized.
             </Text>
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
@@ -108,7 +119,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Data and Privacy</Text>
             <Text style={styles.paragraph}>
-              Your privacy is important to us. Please review our Privacy Policy to understand how we collect, use, and protect your information.
+              Your privacy is important to us. All data stays on your device. Please review our Privacy Policy to understand how we handle your information. Your data is never sold, shared, or used for AI training.
             </Text>
 
             <Text style={styles.sectionTitle}>Termination</Text>

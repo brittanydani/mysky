@@ -26,6 +26,7 @@ import { theme } from '../constants/theme';
 import StarField from './ui/StarField';
 import { BirthData, HouseSystem } from '../services/astrology/types';
 import { InputValidator } from '../services/astrology/inputValidator';
+import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 
 type BirthDataModalInitial = Partial<BirthData> & { chartName?: string };
 
@@ -154,6 +155,7 @@ function TimeWheelColumn({ data, selected, onSelect, formatItem }: {
         data={data as any[]}
         keyExtractor={(item) => String(item)}
         renderItem={renderItem}
+        extraData={selected}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
@@ -234,7 +236,16 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
   const [longitude, setLongitude] = useState<number>(initialData?.longitude ?? 0);
   const [timezone, setTimezone] = useState<string>(initialData?.timezone || '');
 
-  const houseSystem: HouseSystem = initialData?.houseSystem || 'whole-sign';
+  const [houseSystem, setHouseSystem] = useState<HouseSystem>(initialData?.houseSystem || 'whole-sign');
+
+  // Load global house system setting for new charts (when no initialData provides one)
+  useEffect(() => {
+    if (!initialData?.houseSystem) {
+      AstrologySettingsService.getHouseSystem()
+        .then(hs => setHouseSystem(hs))
+        .catch(() => { /* keep default whole-sign */ });
+    }
+  }, []);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);

@@ -1,7 +1,7 @@
 // File: app/(tabs)/energy.tsx
 // MySky — Energy Screen (Full 8-Section Build)
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -79,9 +79,9 @@ function formatToday(): string {
 type CheckInStep = 'idle' | 'q1' | 'q2' | 'q3' | 'done';
 
 const CHECK_IN_QUESTIONS = [
-  { key: 'q1' as const, question: 'What is your current energy vibe?', options: ['Calm', 'Focused', 'Restless', 'Inspired', 'Drained'] },
-  { key: 'q2' as const, question: 'Where do you feel energy most in your body?', options: ['Head', 'Heart', 'Gut', 'Limbs', 'Nowhere'] },
-  { key: 'q3' as const, question: 'What do you need most right now?', options: ['Rest', 'Movement', 'Connection', 'Solitude', 'Clarity'] },
+  { key: 'q1' as const, question: 'How is your mood right now?', options: ['Calm', 'Focused', 'Restless', 'Inspired', 'Drained'] },
+  { key: 'q2' as const, question: 'What is your energy level?', options: ['Depleted', 'Low', 'Steady', 'Energized', 'Overflowing'] },
+  { key: 'q3' as const, question: 'How is your stress right now?', options: ['At ease', 'Mild', 'Moderate', 'Tense', 'Overwhelmed'] },
 ];
 
 /* ════════════════════════════════════════════════
@@ -106,6 +106,14 @@ export default function EnergyScreen() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
   const [wheelTooltip, setWheelTooltip] = useState<string | null>(null);
+  const wheelTooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup tooltip timer on unmount
+  useEffect(() => {
+    return () => {
+      if (wheelTooltipTimer.current) clearTimeout(wheelTooltipTimer.current);
+    };
+  }, []);
 
   /* pulse animation for intensity bar */
   const pulse = useSharedValue(0.7);
@@ -216,18 +224,18 @@ export default function EnergyScreen() {
             'Drained': 2,
           };
           const energyMap: Record<string, 'low' | 'medium' | 'high'> = {
-            'Head': 'medium',
-            'Heart': 'high',
-            'Gut': 'medium',
-            'Limbs': 'high',
-            'Nowhere': 'low',
+            'Depleted': 'low',
+            'Low': 'low',
+            'Steady': 'medium',
+            'Energized': 'high',
+            'Overflowing': 'high',
           };
           const stressMap: Record<string, 'low' | 'medium' | 'high'> = {
-            'Rest': 'low',
-            'Movement': 'medium',
-            'Connection': 'medium',
-            'Solitude': 'low',
-            'Clarity': 'high',
+            'At ease': 'low',
+            'Mild': 'low',
+            'Moderate': 'medium',
+            'Tense': 'high',
+            'Overwhelmed': 'high',
           };
           const input: CheckInInput = {
             moodScore: moodMap[moodAnswer] || 5,
@@ -367,7 +375,8 @@ export default function EnergyScreen() {
                   };
                   const tip = `${dc.name} ${stateHint[dc.state] || dc.state}`;
                   setWheelTooltip(tip);
-                  setTimeout(() => setWheelTooltip(null), 2800);
+                  if (wheelTooltipTimer.current) clearTimeout(wheelTooltipTimer.current);
+                  wheelTooltipTimer.current = setTimeout(() => setWheelTooltip(null), 2800);
                 }
               }}
             >

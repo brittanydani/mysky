@@ -17,7 +17,7 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
       transparent={false}
     >
       <View style={styles.container}>
-        <PremiumScreen />
+        <PremiumScreen onClose={onClose} />
       </View>
     </Modal>
   );

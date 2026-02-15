@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -16,12 +16,26 @@ import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/d
 
 type PlanType = 'monthly' | 'yearly' | 'lifetime';
 
-export default function PremiumScreen() {
+interface PremiumScreenProps {
+  onClose?: () => void;
+}
+
+export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium, offerings, loading, purchase, restore } = usePremium();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const [restoring, setRestoring] = useState(false);
+
+  const safeGoBack = useCallback(() => {
+    if (onClose) {
+      onClose();
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/settings' as Href);
+    }
+  }, [router, onClose]);
 
   const handlePurchase = useCallback(async () => {
     if (!offerings) {
@@ -79,7 +93,7 @@ export default function PremiumScreen() {
         <StarField starCount={30} />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}>
-            <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <Pressable onPress={safeGoBack} style={styles.backButton}>
               <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
             </Pressable>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
@@ -123,7 +137,7 @@ export default function PremiumScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Back button */}
-          <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Pressable onPress={safeGoBack} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
 

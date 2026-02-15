@@ -76,7 +76,7 @@ export default function AstrologySettingsModal({
   const handleSave = async () => {
     try {
       setSaving(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
 
       const updated = await AstrologySettingsService.saveSettings({
         houseSystem: selectedHouseSystem,
@@ -94,23 +94,23 @@ export default function AstrologySettingsModal({
       setSettings(updated);
       onSettingsChanged?.(updated);
 
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       onClose();
     } catch (error) {
       logger.error('[AstrologySettingsModal] Failed to save settings:', error);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
     } finally {
       setSaving(false);
     }
   };
 
   const handleHouseSystemSelect = async (value: HouseSystem) => {
-    await Haptics.selectionAsync();
+    try { await Haptics.selectionAsync(); } catch {}
     setSelectedHouseSystem(value);
   };
 
   const handleOrbPresetSelect = async (value: OrbPreset) => {
-    await Haptics.selectionAsync();
+    try { await Haptics.selectionAsync(); } catch {}
     setSelectedOrbPreset(value);
   };
 

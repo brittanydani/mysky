@@ -18,6 +18,7 @@ import { usePremium } from '../../context/PremiumContext';
 import PremiumModal from '../../components/PremiumModal';
 import { localDb } from '../../services/storage/localDb';
 import { BackupService } from '../../services/storage/backupService';
+import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { FullNatalStoryGenerator } from '../../services/premium/fullNatalStory';
@@ -62,12 +63,27 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Where is my data stored?',
     answer:
-      'All your data stays on your device. MySky never sends your birth data, journal entries, or chart information to any server. Premium users can create encrypted backups that only they can decrypt.',
+      'All your data stays on your device. Birth data, journal entries, and chart information are stored in a local database with sensitive fields encrypted using AES-256. Encryption keys are kept in your device\u2019s secure keychain. Nothing is uploaded to any server.',
+  },
+  {
+    question: 'Where does my backup go?',
+    answer:
+      'When you create a backup, an encrypted .msky file is saved to your device\u2019s cache, then your device\u2019s share sheet opens so you choose the destination \u2014 Files, iCloud Drive, AirDrop, email, or any other app. MySky never uploads your backup to any server.',
+  },
+  {
+    question: 'What does the PDF export include?',
+    answer:
+      'The PDF includes a cover page with your birth data, your Big Three (Sun, Moon, Rising), a full planet placements table, house cusps, all aspects grouped by type, and your Cosmic Story chapters. Premium users get all 10 story chapters; free users get 3.',
   },
   {
     question: 'What does Deeper Sky include?',
     answer:
-      'Deeper Sky unlocks encrypted backup & restore, full natal story (10 chapters), detailed pattern analysis (stelliums, conjunction clusters), Chiron & Node depth mapping, personalized daily guidance with key insights, and more.',
+      'Deeper Sky unlocks encrypted backup & restore, the full natal story (10 chapters), healing & inner work (attachment styles, shadow work), unlimited relationship charts, journal pattern analysis, Chiron & Node depth mapping, personalized daily guidance with action steps, extended pattern analysis, and full energy chakra mapping.',
+  },
+  {
+    question: 'What is the Energy tab?',
+    answer:
+      'The Energy tab maps your natal chart to a chakra energy system. Free users see an energy snapshot with select domains. Deeper Sky members get all 7 chakras with body cues, triggers, guidance, and daily check-ins that track your energy patterns over time.',
   },
   {
     question: 'Can I cancel my subscription?',
@@ -77,7 +93,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How do I change my birth data?',
     answer:
-      'Go to the You tab, then tap the edit button next to your birth information. You can update your birth date, time, and location at any time.',
+      'Go to the Home tab, then tap the edit button next to your birth information. You can update your birth date, time, and location at any time. Your chart and all insights will recalculate automatically.',
   },
   {
     question: 'What house system does MySky use?',
@@ -87,26 +103,38 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Is my journal private?',
     answer:
-      'Completely. Journal entries are stored only on your device and protected by your device passcode and biometrics. They are never uploaded, analyzed externally, or shared with anyone.',
+      'Completely. Journal entries are stored only on your device with sensitive fields encrypted at rest. They are never uploaded, analyzed externally, or shared with anyone. Your device passcode and biometrics provide an additional layer of protection.',
   },
 ];
 
-const PRIVACY_POLICY = `Last updated: February 7, 2026
+const PRIVACY_POLICY = `Last updated: February 14, 2026
 
 MySky ("the App") is committed to protecting your privacy. This policy explains how we handle your information.
 
 DATA COLLECTION & STORAGE
-- All personal data (birth information, journal entries, chart data) is stored locally on your device only.
+- All personal data (birth information, journal entries, chart data, energy check-ins) is stored locally on your device only.
+- Sensitive fields are encrypted at rest using AES-256 with keys stored in your device's secure keychain/keystore.
 - We do not collect, transmit, or store your personal data on any external server.
 - We do not use analytics, tracking, or advertising SDKs.
 
 BIRTH DATA
 - Your birth date, time, and location are used solely to calculate your astrological chart on your device.
-- This data never leaves your device unless you choose to create an encrypted backup.
+- This data never leaves your device unless you choose to create an encrypted backup or export a PDF.
 
-JOURNAL ENTRIES
-- Journal content is stored locally and is never shared, uploaded, or analyzed externally.
+JOURNAL ENTRIES & ENERGY CHECK-INS
+- Journal content and energy check-in data are stored locally with sensitive fields encrypted at rest.
+- They are never shared, uploaded, or analyzed externally.
 - Premium encrypted backups use AES-256 encryption with a passphrase only you know.
+
+PDF EXPORT
+- PDF files are generated entirely on your device.
+- The file is saved to your device's temporary cache and presented via the share sheet — you choose where it goes.
+- MySky does not upload or retain the PDF.
+
+BACKUP & RESTORE
+- Encrypted backups are created locally and presented via the share sheet for you to save wherever you choose.
+- Backup files are encrypted with AES-256 using a passphrase only you know.
+- MySky never uploads your backup to any server.
 
 SUBSCRIPTIONS
 - Subscription purchases are handled by Apple through the App Store.
@@ -115,10 +143,13 @@ SUBSCRIPTIONS
 THIRD-PARTY SERVICES
 - RevenueCat: Used for subscription management. Receives only anonymized app user IDs, not personal data.
 - No other third-party services receive your data.
+- Your data is never used for AI training, advertising, or marketing.
 
 YOUR RIGHTS
-- Export: You can export all your data at any time via Privacy Settings.
-- Delete: You can delete all your data at any time via Privacy Settings.
+- Access: View all your stored data at any time.
+- Export: Export your data as a PDF or encrypted backup via Settings.
+- Delete: Permanently delete all your data at any time via Privacy Settings.
+- Portability: Take your data with you via encrypted backup.
 - No account required: MySky works without creating any account.
 
 CHILDREN'S PRIVACY
@@ -130,7 +161,7 @@ CONTACT
 CHANGES
 - We will update this policy as needed. Continued use of the App constitutes acceptance of any changes.`;
 
-const TERMS_OF_SERVICE = `Last updated: February 7, 2026
+const TERMS_OF_SERVICE = `Last updated: February 14, 2026
 
 By using MySky ("the App"), you agree to these Terms of Service.
 
@@ -138,27 +169,38 @@ By using MySky ("the App"), you agree to these Terms of Service.
 By downloading or using MySky, you agree to be bound by these terms. If you do not agree, do not use the App.
 
 2. DESCRIPTION OF SERVICE
-MySky is an astrology and self-reflection app that generates natal charts, daily guidance, and journaling features based on your birth data. All content is generated locally on your device.
+MySky is an astrology and self-reflection app that provides:
+- Natal chart calculation and visualization
+- Daily astrological guidance and energy insights
+- Chakra energy mapping tied to your natal chart
+- Journal and mood tracking with daily check-ins
+- Relationship compatibility analysis
+- Natal story generation
+- PDF chart export
+- Encrypted backup and restore (premium)
+All content is generated locally on your device.
 
 3. ASTROLOGICAL CONTENT
 - MySky provides astrological interpretations for entertainment, self-reflection, and personal growth purposes only.
 - Astrological content is not a substitute for professional medical, psychological, financial, or legal advice.
-- Planetary calculations are based on established astronomical data but interpretations are generalized.
+- Planetary calculations are based on established astronomical data (Swiss Ephemeris) but interpretations are generalized.
 
 4. SUBSCRIPTIONS
-- Free features are available without payment.
+- Free features include: natal chart, Big Three, basic daily guidance, one relationship chart, basic journaling with mood tracking, energy snapshot, PDF export, and privacy controls.
 - "Deeper Sky" premium features require a subscription managed through Apple.
 - Prices are displayed in the App before purchase.
 - Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.
 - Manage or cancel subscriptions in your device Settings > Apple ID > Subscriptions.
 
 5. USER DATA
-- You are responsible for your device security and backup of your data.
+- All data is stored locally on your device with sensitive fields encrypted at rest.
+- You are responsible for your device security and any backup files you create.
 - We are not responsible for data loss due to device failure, deletion, or other causes outside our control.
 - See our Privacy Policy for details on data handling.
 
 6. INTELLECTUAL PROPERTY
 - All content, design, and code in MySky are owned by the developer.
+- You retain ownership of your personal data, journal entries, and check-ins.
 - You may not copy, modify, distribute, or reverse-engineer the App.
 
 7. DISCLAIMER OF WARRANTIES
@@ -168,10 +210,13 @@ MySky is an astrology and self-reflection app that generates natal charts, daily
 8. LIMITATION OF LIABILITY
 - To the maximum extent permitted by law, we are not liable for any indirect, incidental, or consequential damages arising from your use of the App.
 
-9. CHANGES TO TERMS
+9. GOVERNING LAW
+- These terms are governed by the laws of the United States. Any disputes will be resolved in accordance with applicable federal and state laws.
+
+10. CHANGES TO TERMS
 - We may update these terms at any time. Continued use constitutes acceptance.
 
-10. CONTACT
+11. CONTACT
 - For questions about these terms: brittanyapps@outlook.com`;
 
 export default function SettingsScreen() {
@@ -196,6 +241,7 @@ export default function SettingsScreen() {
   const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Placidus');
   const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
   const [exportInProgress, setExportInProgress] = useState(false);
+  const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
 
   const ensureSettings = useCallback(async () => {
     const existing = await localDb.getSettings();
@@ -221,6 +267,10 @@ export default function SettingsScreen() {
       const astroSettings = await AstrologySettingsService.getSettings();
       setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(astroSettings.houseSystem));
       setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(astroSettings.orbPreset));
+
+      // Detect encryption key loss — if the DEK is gone, warn the user
+      const keyOk = await FieldEncryptionService.isKeyAvailable();
+      setEncryptionKeyLost(!keyOk);
     } catch (error) {
       logger.error('Failed to load settings:', error);
     }
@@ -434,6 +484,39 @@ export default function SettingsScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
+          {encryptionKeyLost && (
+            <Animated.View entering={FadeInDown.duration(500)} style={styles.keyLossBanner}>
+              <LinearGradient
+                colors={['rgba(224, 122, 122, 0.15)', 'rgba(224, 122, 122, 0.05)']}
+                style={styles.keyLossBannerGradient}
+              >
+                <View style={styles.keyLossBannerHeader}>
+                  <Ionicons name="warning" size={22} color={theme.error} />
+                  <Text style={styles.keyLossBannerTitle}>Encryption Key Unavailable</Text>
+                </View>
+                <Text style={styles.keyLossBannerText}>
+                  Your encrypted data cannot be read on this device. This can happen after a device migration, OS update, or app reinstall.
+                </Text>
+                <View style={styles.keyLossBannerActions}>
+                  <Pressable
+                    style={styles.keyLossBannerButton}
+                    onPress={handleRestore}
+                  >
+                    <Ionicons name="cloud-download" size={16} color={theme.primary} />
+                    <Text style={styles.keyLossBannerButtonText}>Restore Backup</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.keyLossBannerButton, styles.keyLossBannerButtonDestructive]}
+                    onPress={() => setShowPrivacyModal(true)}
+                  >
+                    <Ionicons name="trash" size={16} color={theme.error} />
+                    <Text style={[styles.keyLossBannerButtonText, { color: theme.error }]}>Delete All Data</Text>
+                  </Pressable>
+                </View>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Encrypted Backup</Text>
 
@@ -780,8 +863,8 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Go deeper with your patterns</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Free:</Text> Natal chart, sun/moon/rising, basic journaling, daily energy, astrology glossary, privacy controls.{"\n"}
-                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Premium:</Text> Encrypted backup, full natal story, advanced pattern analysis, Chiron & Node mapping, personalized daily guidance, and more.
+                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Free:</Text> Natal chart, Big Three, basic daily guidance, one relationship, journaling with mood tracking, energy snapshot, PDF export, privacy controls.{"\n"}
+                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Premium:</Text> Encrypted backup & restore, full natal story (10 chapters), healing & inner work, unlimited relationships, journal patterns, Chiron & Node depth, full chakra mapping, personalized guidance, and more.
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color={theme.primary} />
@@ -956,4 +1039,56 @@ const styles = StyleSheet.create({
   legalText: { fontSize: 12, color: theme.textSecondary, lineHeight: 18, marginTop: theme.spacing.sm, fontFamily: 'monospace' },
 
   versionText: { fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: theme.spacing.sm, fontStyle: 'italic' },
+
+  // Key-loss warning banner
+  keyLossBanner: {
+    marginBottom: theme.spacing.xl,
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(224, 122, 122, 0.4)',
+  },
+  keyLossBannerGradient: {
+    padding: theme.spacing.lg,
+  },
+  keyLossBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  keyLossBannerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.error,
+    fontFamily: 'serif',
+  },
+  keyLossBannerText: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    lineHeight: 20,
+    marginBottom: theme.spacing.md,
+  },
+  keyLossBannerActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  keyLossBannerButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: 'rgba(201, 169, 98, 0.1)',
+    borderRadius: theme.borderRadius.sm,
+  },
+  keyLossBannerButtonDestructive: {
+    backgroundColor: 'rgba(224, 122, 122, 0.1)',
+  },
+  keyLossBannerButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.primary,
+  },
 });

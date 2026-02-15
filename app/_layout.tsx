@@ -45,27 +45,35 @@ export default function RootLayout() {
   }, []);
 
   const handlePrivacyConsent = async (granted: boolean) => {
-    if (granted) {
-      const privacyManager = new PrivacyComplianceManager();
-      await privacyManager.recordConsent({
-        granted: true,
-        policyVersion: await privacyManager.getPolicyVersion(),
-        timestamp: new Date().toISOString(),
-        method: 'explicit',
-        lawfulBasis: 'consent',
-        purpose: 'astrology_personalization',
-      });
-      
-      // After consent is given, perform migration if needed
-      await MigrationService.performMigrationIfNeeded();
-      
-      setNeedsPrivacyConsent(false);
-    } else {
-      const privacyManager = new PrivacyComplianceManager();
-      await privacyManager.withdrawConsent();
-      // User declined - you might want to show a message or exit
-      // For now, we'll just keep showing the consent modal
-      logger.info('User declined privacy consent');
+    try {
+      if (granted) {
+        const privacyManager = new PrivacyComplianceManager();
+        await privacyManager.recordConsent({
+          granted: true,
+          policyVersion: await privacyManager.getPolicyVersion(),
+          timestamp: new Date().toISOString(),
+          method: 'explicit',
+          lawfulBasis: 'consent',
+          purpose: 'astrology_personalization',
+        });
+        
+        // After consent is given, perform migration if needed
+        await MigrationService.performMigrationIfNeeded();
+        
+        setNeedsPrivacyConsent(false);
+      } else {
+        const privacyManager = new PrivacyComplianceManager();
+        await privacyManager.withdrawConsent();
+        // User declined - you might want to show a message or exit
+        // For now, we'll just keep showing the consent modal
+        logger.info('User declined privacy consent');
+      }
+    } catch (error) {
+      logger.error('Privacy consent handling failed:', error);
+      // Don't leave user stuck — allow them through if consent was granted
+      if (granted) {
+        setNeedsPrivacyConsent(false);
+      }
     }
   };
 
