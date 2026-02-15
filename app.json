@@ -6,11 +6,10 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mysky",
-
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
       "supportsTablet": false,
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -23,7 +22,6 @@
         ]
       }
     },
-
     "android": {
       "package": "com.brittany.mysky",
       "versionCode": 1,
@@ -49,13 +47,11 @@
         "ACCESS_BACKGROUND_LOCATION"
       ]
     },
-
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/icon.png"
     },
-
     "plugins": [
       "expo-router",
       [
@@ -63,22 +59,20 @@
         {
           "backgroundColor": "#141222",
           "image": "./assets/images/splash.png",
-          "resizeMode": "cover",
+          "resizeMode": "contain",
           "dark": {
             "backgroundColor": "#141222",
             "image": "./assets/images/splash.png",
-            "resizeMode": "cover"
+            "resizeMode": "contain"
           }
         }
       ],
       "expo-web-browser",
       "expo-secure-store"
     ],
-
     "experiments": {
       "typedRoutes": true
     },
-
     "extra": {
       "privacyMode": true,
       "router": {},
@@ -86,7 +80,6 @@
         "projectId": "c76e6f9f-d7eb-494b-90f5-e1b35d86152a"
       }
     },
-
     "owner": "brittanyhornick"
   }
 }
