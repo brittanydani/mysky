@@ -1,5 +1,6 @@
 // File: services/astrology/transits.ts
 import { NatalChart, HouseSystem, SimpleAspect, AspectTypeName } from './types';
+import { normalize360, extractAbsDegree } from './sharedHelpers';
 
 // circular-natal-horoscope-js
 const { Origin, Horoscope } = require('circular-natal-horoscope-js');
@@ -11,25 +12,6 @@ const ASPECTS: Array<{ type: AspectTypeName; angle: number; orb: number }> = [
   { type: 'trine', angle: 120, orb: 3 },
   { type: 'opposition', angle: 180, orb: 3 },
 ];
-
-function normalize360(deg: number): number {
-  const x = deg % 360;
-  return x < 0 ? x + 360 : x;
-}
-
-function extractAbsDegree(obj: any): number | null {
-  const direct =
-    obj?.ChartPosition?.Ecliptic?.DecimalDegrees ??
-    obj?.chartPosition?.ecliptic?.decimalDegrees ??
-    obj?.Ecliptic?.DecimalDegrees ??
-    obj?.ecliptic?.decimalDegrees ??
-    obj?.absoluteDegrees ??
-    obj?.longitude ??
-    obj?.elon;
-
-  if (typeof direct === 'number' && Number.isFinite(direct)) return normalize360(direct);
-  return null;
-}
 
 export interface TransitInfo {
   longitudes: Record<string, number>;

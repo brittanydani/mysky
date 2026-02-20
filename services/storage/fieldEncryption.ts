@@ -1,24 +1,23 @@
 /**
  * Field-Level Encryption Service
- * 
+ *
  * Encrypts sensitive text fields (journal content, birth data) at rest
- * using AES-256-GCM via WebCrypto (crypto.subtle), with a Data Encryption
- * Key (DEK) stored in Keychain via SecureStore.
- * 
+ * using AES-256-GCM via @noble/ciphers (pure JS — no native WebCrypto needed),
+ * with a Data Encryption Key (DEK) stored in Keychain via SecureStore.
+ *
  * Architecture:
  * - DEK is generated once and stored in SecureStore (Keychain/Keystore)
- * - Each field encrypted with real AES-256-GCM using random IV
- * - Format: ENC:base64(iv):base64(ciphertext+authTag)
- * - WebCrypto polyfill provided by expo-standard-web-crypto
- * 
- * This protects data even if the SQLite DB is extracted.
+ * - Each field encrypted with AES-256-GCM using a random 96-bit IV
+ * - Format: ENC2:base64(iv):base64(ciphertext+authTag)
+ * - @noble/ciphers output is byte-compatible with WebCrypto AES-GCM —
+ *   existing encrypted rows are decryptable without migration
+ *
+ * This protects data even if the SQLite DB is extracted from the device.
  */
 
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-
-// Polyfill WebCrypto (crypto.subtle) for Expo
-import 'expo-standard-web-crypto';
+import { gcm } from '@noble/ciphers/aes';
 
 import { logger } from '../../utils/logger';
 
@@ -38,51 +37,11 @@ const AES_PREFIX = 'ENC2:';
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface EncryptedData {
-  iv: string;        // Base64 encoded IV
-  ciphertext: string; // Base64 encoded ciphertext (includes GCM auth tag)
-}
-
 // Legacy format (XOR-based) for backward compatibility during migration
 interface LegacyEncryptedData {
   iv: string;
   ciphertext: string;
   tag: string;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// WebCrypto helpers (same pattern as backupService.ts)
-// ─────────────────────────────────────────────────────────────────────────────
-
-type SubtleLike = {
-  importKey: (...args: any[]) => Promise<any>;
-  encrypt: (...args: any[]) => Promise<ArrayBuffer>;
-  decrypt: (...args: any[]) => Promise<ArrayBuffer>;
-};
-
-function getSubtle(): SubtleLike {
-  const cryptoObj = (globalThis as any)?.crypto;
-  const subtle = cryptoObj?.subtle as SubtleLike | undefined;
-
-  if (!subtle) {
-    throw new Error(
-      '[FieldEncryption] WebCrypto (crypto.subtle) is not available. Ensure expo-standard-web-crypto is installed and imported.'
-    );
-  }
-  return subtle;
-}
-
-/**
- * Copy bytes into a fresh ArrayBuffer to avoid ArrayBuffer | SharedArrayBuffer TS errors.
- */
-function u8ToArrayBuffer(u8: Uint8Array): ArrayBuffer {
-  const copy = new Uint8Array(u8.byteLength);
-  copy.set(u8);
-  return copy.buffer;
-}
-
-function arrayBufferToU8(buf: ArrayBuffer | SharedArrayBuffer): Uint8Array {
-  return new Uint8Array(buf as ArrayBuffer);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -114,55 +73,26 @@ function generateRandomBytes(size: number): Uint8Array {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AES-256-GCM Encryption / Decryption
+// AES-256-GCM Encryption / Decryption via @noble/ciphers (pure JS, no WebCrypto needed)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Import a raw DEK as a WebCrypto CryptoKey for AES-GCM.
- */
-async function importAesKey(rawKey: Uint8Array): Promise<any> {
-  const subtle = getSubtle();
-  return subtle.importKey(
-    'raw',
-    u8ToArrayBuffer(rawKey),
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
-}
-
-/**
  * Encrypt plaintext using AES-256-GCM.
- * Returns ciphertext with appended 128-bit auth tag (WebCrypto default).
+ * Returns ciphertext with appended 128-bit auth tag (@noble/ciphers default).
  */
-async function aesGcmEncrypt(plaintext: string, rawKey: Uint8Array, iv: Uint8Array): Promise<Uint8Array> {
-  const subtle = getSubtle();
-  const key = await importAesKey(rawKey);
+function aesGcmEncrypt(plaintext: string, rawKey: Uint8Array, iv: Uint8Array): Uint8Array {
+  const cipher = gcm(rawKey, iv);
   const plaintextBytes = new TextEncoder().encode(plaintext);
-  
-  const ciphertext = await subtle.encrypt(
-    { name: 'AES-GCM', iv: u8ToArrayBuffer(iv) },
-    key,
-    u8ToArrayBuffer(plaintextBytes)
-  );
-  
-  return arrayBufferToU8(ciphertext);
+  return cipher.encrypt(plaintextBytes);
 }
 
 /**
  * Decrypt ciphertext (with appended auth tag) using AES-256-GCM.
  */
-async function aesGcmDecrypt(ciphertextWithTag: Uint8Array, rawKey: Uint8Array, iv: Uint8Array): Promise<string> {
-  const subtle = getSubtle();
-  const key = await importAesKey(rawKey);
-  
-  const plaintext = await subtle.decrypt(
-    { name: 'AES-GCM', iv: u8ToArrayBuffer(iv) },
-    key,
-    u8ToArrayBuffer(ciphertextWithTag)
-  );
-  
-  return new TextDecoder().decode(arrayBufferToU8(plaintext));
+function aesGcmDecrypt(ciphertextWithTag: Uint8Array, rawKey: Uint8Array, iv: Uint8Array): string {
+  const cipher = gcm(rawKey, iv);
+  const plaintext = cipher.decrypt(ciphertextWithTag);
+  return new TextDecoder().decode(plaintext);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -170,8 +100,6 @@ async function aesGcmDecrypt(ciphertextWithTag: Uint8Array, rawKey: Uint8Array, 
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function legacyExpandKey(key: Uint8Array, iv: Uint8Array, length: number): Promise<Uint8Array> {
-  // Use expo-crypto for SHA-256 digest (legacy path only)
-  const Crypto = await import('expo-crypto');
   const blocks: Uint8Array[] = [];
   let totalLength = 0;
   let counter = 0;
@@ -209,7 +137,6 @@ async function legacyExpandKey(key: Uint8Array, iv: Uint8Array, length: number):
  * Only used during migration — new data is always AES-256-GCM.
  */
 async function legacyXorDecrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, expectedTag: Uint8Array): Promise<string> {
-  const Crypto = await import('expo-crypto');
   // Verify tag
   const tagInput = new Uint8Array([...iv, ...ciphertext]);
   const tagHash = await Crypto.digestStringAsync(
@@ -303,9 +230,9 @@ class FieldEncryptionServiceClass {
     // persisting unencrypted sensitive data.
     const dek = await this.getDek();
     const iv = generateRandomBytes(IV_SIZE);
-    
-    const ciphertextWithTag = await aesGcmEncrypt(plaintext, dek, iv);
-    
+
+    const ciphertextWithTag = aesGcmEncrypt(plaintext, dek, iv);
+
     return `${AES_PREFIX}${uint8ArrayToBase64(iv)}:${uint8ArrayToBase64(ciphertextWithTag)}`;
   }
 
@@ -334,8 +261,8 @@ class FieldEncryptionServiceClass {
         
         const iv = base64ToUint8Array(parts[0]);
         const ciphertextWithTag = base64ToUint8Array(parts[1]);
-        
-        return await aesGcmDecrypt(ciphertextWithTag, dek, iv);
+
+        return aesGcmDecrypt(ciphertextWithTag, dek, iv);
       } catch (error) {
         // Never return the raw encrypted blob — it would show gibberish in the UI.
         // Return a controlled, user-safe placeholder so the app remains usable.

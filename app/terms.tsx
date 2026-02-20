@@ -38,7 +38,13 @@ export default function TermsOfServiceScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-            <Text style={styles.lastUpdated}>Last updated: February 14, 2026</Text>
+
+            <Text style={styles.lastUpdated}>Last updated: February 18, 2026</Text>
+
+            <Text style={styles.sectionTitle}>Encryption, Storage, and Subscriptions</Text>
+            <Text style={styles.paragraph}>
+              All sensitive data in MySky is encrypted at rest using AES-256. Encryption keys are securely stored using your device's hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup. Subscription status is managed by RevenueCat, which receives only an anonymized app user ID—never your journal, birth data, or other personal information.
+            </Text>
             
             <Text style={styles.sectionTitle}>Welcome to MySky</Text>
             <Text style={styles.paragraph}>
@@ -50,15 +56,20 @@ export default function TermsOfServiceScreen() {
               By downloading, installing, or using MySky, you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree, please do not use the app.
             </Text>
 
+            <Text style={styles.sectionTitle}>Eligibility</Text>
+            <Text style={styles.paragraph}>
+              MySky is intended for users aged 13 and older. By using this app, you confirm that you are at least 13 years of age. If you are under 13, please do not use MySky.
+            </Text>
+
             <Text style={styles.sectionTitle}>Description of Service</Text>
             <Text style={styles.paragraph}>
-              MySky is an astrological companion app that provides:{'\n'}
-              • Natal chart calculation and interactive visualization{'\n'}
-              • Daily astrological guidance and cosmic energy insights{'\n'}
-              • Chakra energy mapping tied to your natal chart{'\n'}
-              • Journal and mood tracking with daily check-ins{'\n'}
-              • Relationship compatibility analysis{'\n'}
-              • Natal story generation and PDF chart export{'\n'}
+              MySky is a personal growth and reflection app that provides:{'\n'}
+              • Journaling and daily emotional check-ins{'\n'}
+              • Trend analysis of mood, energy, and stress over time{'\n'}
+              • A natal chart used as a personalization framework{'\n'}
+              • Daily guidance and reflection prompts{'\n'}
+              • Emotional pattern insights drawn from your chart profile{'\n'}
+              • Relationship reflection tools{'\n'}
               • Encrypted backup and restore (premium)
             </Text>
 
@@ -84,7 +95,7 @@ export default function TermsOfServiceScreen() {
               <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (e.g. the App Store). Prices may vary by location.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings (Settings &gt; Apple ID &gt; Subscriptions). Cancellation takes effect at the end of the current billing period.
+              <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings (Settings &gt; Apple ID &gt; Subscriptions). To avoid being charged for the next billing period, cancel at least 24 hours before the end of the current period. Cancellation takes effect at the end of the current billing period.
             </Text>
             <Text style={styles.paragraph}>
               <Text style={styles.bold}>Refunds:</Text> Refunds are handled according to your app store&apos;s policies.
@@ -107,9 +118,22 @@ export default function TermsOfServiceScreen() {
               • You may not copy, modify, or distribute our content without permission
             </Text>
 
+            <Text style={styles.sectionTitle}>Not Medical or Professional Advice</Text>
+            <Text style={styles.paragraph}>
+              MySky does not provide medical, psychological, therapeutic, financial, or legal advice. Content within the app is for personal reflection and self-exploration purposes only and should not be used as a substitute for professional advice regarding health, mental health, finances, relationships, or other important life decisions.
+            </Text>
+            <Text style={styles.paragraph}>
+              If you are experiencing a mental health crisis, please contact a qualified mental health professional or emergency services.
+            </Text>
+
+            <Text style={styles.sectionTitle}>No Predictions or Guarantees</Text>
+            <Text style={styles.paragraph}>
+              MySky does not predict future events or guarantee any outcomes. Chart calculations are based on established astronomical data and are used as a reflective framework — not as predictions, fortune-telling, or deterministic guidance. All content is intended to support personal reflection and growth.
+            </Text>
+
             <Text style={styles.sectionTitle}>Disclaimer</Text>
             <Text style={styles.paragraph}>
-              MySky is for entertainment and self-reflection purposes only. Astrological content should not be used as a substitute for professional advice regarding health, finance, relationships, or other important life decisions. Planetary calculations are based on established astronomical data (Swiss Ephemeris) but interpretations are generalized.
+              MySky is provided for self-reflection and personal growth purposes. Planetary calculations are based on established astronomical data (Swiss Ephemeris) but all interpretations are generalized and not specific to any individual's circumstances.
             </Text>
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
@@ -124,12 +148,12 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Termination</Text>
             <Text style={styles.paragraph}>
-              We may revoke access to premium features for violation of these terms. You may delete all your data at any time through the Privacy Settings in the app.
+              We may revoke access to premium features for violation of these terms. You may terminate your use of MySky at any time by deleting the app, which permanently removes all locally stored data. You may also delete all your data through the Privacy Settings in the app without uninstalling.
             </Text>
 
             <Text style={styles.sectionTitle}>Changes to Terms</Text>
             <Text style={styles.paragraph}>
-              We may update these Terms of Service from time to time. We will notify you of material changes through the app or by email. Continued use constitutes acceptance of the new terms.
+              We may update these Terms of Service from time to time. We will notify you of material changes by posting the updated terms in the app and updating the &quot;last updated&quot; date. Continued use constitutes acceptance of the new terms.
             </Text>
 
             <Text style={styles.sectionTitle}>Governing Law</Text>

@@ -36,8 +36,10 @@ function PricingCard({
       android_ripple={{ color: 'rgba(255,255,255,0.08)' }}
     >
       {popular && (
-        <View style={styles.popularBadge}>
-          <Text style={styles.popularText}>Most Popular</Text>
+        <View style={styles.popularBadgeContainer}>
+          <View style={styles.popularBadge}>
+            <Text style={styles.popularText}>Most Popular</Text>
+          </View>
         </View>
       )}
 
@@ -88,16 +90,20 @@ const styles = StyleSheet.create({
     opacity: 0.85,
     transform: [{ scale: 0.99 }],
   },
-  popularBadge: {
+  popularBadgeContainer: {
     position: 'absolute',
     top: -1,
-    right: 16,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 2,
+  },
+  popularBadge: {
     backgroundColor: theme.primary,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderBottomLeftRadius: 8,
     borderBottomRightRadius: 8,
-    zIndex: 2,
   },
   popularText: {
     fontSize: 10,

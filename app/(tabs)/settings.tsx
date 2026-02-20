@@ -30,7 +30,7 @@ const GLOSSARY: { term: string; definition: string }[] = [
   { term: 'Moon Sign', definition: 'The zodiac sign the Moon was in at your birth. It governs your emotions, instincts, and inner world.' },
   { term: 'Rising Sign (Ascendant)', definition: 'The zodiac sign rising on the eastern horizon at your birth. It shapes how others perceive you and your outward style.' },
   { term: 'Houses', definition: 'The 12 sections of your chart, each representing a different area of life — like relationships, career, or home.' },
-  { term: 'Transit', definition: 'The current position of a planet in the sky and how it interacts with your natal chart. Transits trigger events and moods.' },
+  { term: 'Transit', definition: 'The current position of a planet in the sky and how it interacts with your natal chart. Transits correlate with moods and life themes — they reflect cycles and timing, not fixed outcomes.' },
   { term: 'Aspect', definition: 'An angle between two planets in your chart. Aspects show how different parts of your personality interact — harmoniously or with tension.' },
   { term: 'Retrograde', definition: 'When a planet appears to move backward in the sky. It often signals a time to slow down and revisit themes related to that planet.' },
   { term: 'Stellium', definition: 'Three or more planets clustered in the same sign or house. It creates an intense focus of energy in that area of your life.' },
@@ -107,7 +107,7 @@ const FAQ: { question: string; answer: string }[] = [
   },
 ];
 
-const PRIVACY_POLICY = `Last updated: February 14, 2026
+const PRIVACY_POLICY = `Last updated: February 18, 2026
 
 MySky ("the App") is committed to protecting your privacy. This policy explains how we handle your information.
 
@@ -161,7 +161,7 @@ CONTACT
 CHANGES
 - We will update this policy as needed. Continued use of the App constitutes acceptance of any changes.`;
 
-const TERMS_OF_SERVICE = `Last updated: February 14, 2026
+const TERMS_OF_SERVICE = `Last updated: February 18, 2026
 
 By using MySky ("the App"), you agree to these Terms of Service.
 

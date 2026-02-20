@@ -5,6 +5,8 @@
 import { NatalChart, SimpleAspect } from '../astrology/types';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { getMoonPhaseName } from '../../utils/moonPhase';
+import { signNameFromLongitude } from '../astrology/sharedHelpers';
 
 // ============================================================================
 // TYPES
@@ -202,15 +204,12 @@ export class AdvancedJournalAnalyzer {
 
     // Get moon sign from transit longitude
     const moonLongitude = transits['Moon'] || 0;
-    const moonSignIndex = Math.floor(moonLongitude / 30);
-    const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 
-                   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-    const moonSign = signs[moonSignIndex] || 'Unknown';
+    const moonSign = signNameFromLongitude(moonLongitude);
 
     return {
       date: toLocalDateString(date),
       moonSign,
-      moonPhase: this.getMoonPhase(date),
+      moonPhase: getMoonPhaseName(date),
       strongestAspects: sorted.slice(0, 3).map(a => ({
         transitingPlanet: a.pointA,
         natalPlanet: a.pointB,
@@ -218,25 +217,6 @@ export class AdvancedJournalAnalyzer {
         orb: a.orb,
       })),
     };
-  }
-
-  /**
-   * Get moon phase name
-   */
-  private static getMoonPhase(date: Date): string {
-    const synodicMonth = 29.53059;
-    const knownNewMoon = new Date('2024-01-11');
-    const daysSinceNew = (date.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
-    const phaseDay = ((daysSinceNew % synodicMonth) + synodicMonth) % synodicMonth;
-
-    if (phaseDay < 1.85) return 'New Moon';
-    if (phaseDay < 7.38) return 'Waxing Crescent';
-    if (phaseDay < 9.23) return 'First Quarter';
-    if (phaseDay < 14.77) return 'Waxing Gibbous';
-    if (phaseDay < 16.61) return 'Full Moon';
-    if (phaseDay < 22.15) return 'Waning Gibbous';
-    if (phaseDay < 23.99) return 'Last Quarter';
-    return 'Waning Crescent';
   }
 
   /**

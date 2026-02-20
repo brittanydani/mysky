@@ -143,6 +143,7 @@ export interface PlanetPosition {
   house?: number; // optional when birth time unknown
   isRetrograde: boolean; // ✅ canonical
   retrograde?: boolean; // ✅ legacy alias
+  speed?: number; // degrees per day (negative when retrograde)
 }
 
 /**

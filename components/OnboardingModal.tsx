@@ -157,52 +157,52 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                   </View>
 
                   <Text style={styles.welcomeTitle}>Welcome to MySky</Text>
-                  <Text style={styles.welcomeSubtitle}>Your personal cosmic story awaits</Text>
+                  <Text style={styles.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
 
                   <Text style={styles.description}>
-                    Discover the unique patterns written in the stars at the moment of your birth. Your natal chart reveals insights about your personality, relationships, and life path.
+                    MySky is a journaling and self-reflection tool. Track your emotions, discover your patterns, and grow — guided by the personalized framework of your birth chart.
                   </Text>
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(400).duration(600)} style={styles.featuresContainer}>
                   <View style={styles.feature}>
                     <View style={styles.featureIcon}>
+                      <Ionicons name="pencil" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Daily guided reflection & journaling</Text>
+                  </View>
+
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
+                      <Ionicons name="pulse" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Emotional tracking & pattern analysis</Text>
+                  </View>
+
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
+                      <Ionicons name="lock-closed" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Private & encrypted — only you can see this</Text>
+                  </View>
+
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
                       <Ionicons name="star" size={20} color={theme.primary} />
                     </View>
-                    <Text style={styles.featureText}>Personalized cosmic insights</Text>
-                  </View>
-
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="book" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Your complete natal story</Text>
-                  </View>
-
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="heart" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Relationship compatibility</Text>
-                  </View>
-
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="calendar" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Daily cosmic guidance</Text>
+                    <Text style={styles.featureText}>Personalized by your birth chart</Text>
                   </View>
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.ctaContainer}>
                   <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handleGetStarted}>
                     <LinearGradient
-                      colors={['#E8D5A8', '#C9A962', '#B8994F']}
+                      colors={[...theme.goldGradient]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.ctaGradient}
                     >
-                      <Text style={styles.ctaText}>Create My Chart</Text>
+                      <Text style={styles.ctaText}>Get Started</Text>
                       <Ionicons name="arrow-forward" size={20} color="#1A1A1A" />
                     </LinearGradient>
                   </Pressable>
@@ -223,8 +223,8 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                   <Ionicons name="sparkles" size={48} color={theme.primary} />
                 </View>
 
-                <Text style={styles.generatingTitle}>Creating Your Chart</Text>
-                <Text style={styles.generatingSubtitle}>Calculating planetary positions and cosmic influences…</Text>
+                <Text style={styles.generatingTitle}>Setting Up Your Profile</Text>
+                <Text style={styles.generatingSubtitle}>Personalizing your reflection framework…</Text>
 
                 <View style={styles.loadingDots}>
                   <View style={[styles.dot, styles.dot1]} />
@@ -257,7 +257,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
 
                 <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handlePassphraseSubmit}>
                   <LinearGradient
-                    colors={['#E8D5A8', '#C9A962', '#B8994F']}
+                    colors={[...theme.goldGradient]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.ctaGradient}

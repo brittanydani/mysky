@@ -10,7 +10,7 @@ import 'expo-standard-web-crypto';
 
 import { localDb } from './localDb';
 import { FieldEncryptionService } from './fieldEncryption';
-import type { AppSettings, SavedChart, JournalEntry } from './models';
+import type { AppSettings, SavedChart, JournalEntry, RelationshipChart } from './models';
 
 /* ============================================================================
  * Types
@@ -22,6 +22,7 @@ type BackupPayload = {
   exportedAt: string;
   charts: SavedChart[];
   journalEntries: JournalEntry[];
+  relationshipCharts: RelationshipChart[];
   settings: AppSettings | null;
 };
 
@@ -210,11 +211,19 @@ export class BackupService {
       localDb.getSettings(),
     ]);
 
+    // Load relationship charts for all user charts
+    const relationshipCharts: RelationshipChart[] = [];
+    for (const chart of charts) {
+      const rels = await localDb.getRelationshipCharts(chart.id);
+      relationshipCharts.push(...rels);
+    }
+
     const payload: BackupPayload = {
       schemaVersion: 1,
       exportedAt: new Date().toISOString(),
       charts,
       journalEntries,
+      relationshipCharts,
       settings,
     };
 
@@ -316,20 +325,24 @@ export class BackupService {
     }
 
     // Validate backup has actual data before clearing existing data
-    const hasData = (payload.charts?.length ?? 0) > 0 || 
-                    (payload.journalEntries?.length ?? 0) > 0 || 
+    const hasData = (payload.charts?.length ?? 0) > 0 ||
+                    (payload.journalEntries?.length ?? 0) > 0 ||
                     payload.settings !== null;
     if (!hasData) {
       throw new Error('Backup file contains no data to restore.');
     }
 
-    // Restore data into localDb first (writes are INSERT OR REPLACE, so safe)
+    // Restore data into localDb (writes are INSERT OR REPLACE, so safe)
     for (const chart of payload.charts ?? []) {
       await localDb.saveChart(chart);
     }
 
     for (const entry of payload.journalEntries ?? []) {
       await localDb.saveJournalEntry(entry);
+    }
+
+    for (const rel of payload.relationshipCharts ?? []) {
+      await localDb.saveRelationshipChart(rel);
     }
 
     if (payload.settings) {

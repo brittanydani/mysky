@@ -2,7 +2,7 @@
 
 export const config = {
   appName: 'MySky',
-  tagline: 'Your story in the stars',
+  tagline: 'Personal Growth, Mapped to You',
   version: '1.0.0',
   
   // Premium pricing tiers (for display only)

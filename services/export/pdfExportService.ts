@@ -7,6 +7,7 @@
 
 import { NatalChart, Aspect } from '../astrology/types';
 import { FullNatalStory, GeneratedChapter } from '../premium/fullNatalStory';
+import { toLocalDateString } from '../../utils/dateUtils';
 
 // ── HTML helpers ──────────────────────────────────────────────
 
@@ -417,7 +418,7 @@ export async function exportChartAsPdf(
   const safeName = (chartName || chart.name || 'MySky-Chart')
     .replace(/[^a-zA-Z0-9_-]/g, '_')
     .substring(0, 50);
-  const dateStr = new Date().toISOString().split('T')[0];
+  const dateStr = toLocalDateString(new Date());
   const fileName = `${safeName}_${dateStr}`;
 
   const { uri } = await Print.printToFileAsync({

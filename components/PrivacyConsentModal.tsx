@@ -124,7 +124,7 @@ export default function PrivacyConsentModal({
                 <Animated.View entering={FadeInUp.delay(500).duration(600)} style={styles.buttonsContainer}>
                   <Pressable style={({ pressed }) => [styles.acceptButton, pressed && styles.buttonPressed]} onPress={handleAccept}>
                     <LinearGradient
-                      colors={['#E8D5A8', '#C9A962', '#B8994F']}
+                      colors={[...theme.goldGradient]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.buttonGradient}
@@ -151,24 +151,28 @@ export default function PrivacyConsentModal({
                 <View style={styles.policyContent}>
                   <Text style={styles.policySection}>
                     <Text style={styles.policySectionTitle}>Data Collection{'\n'}</Text>
-                    MySky collects only the birth information you provide (date, time, location) and journal entries you create.
-                    This data is used solely to generate astrological calculations and personalized insights.
+                    MySky collects only the birth information you provide (date, time, location), journal entries you create, and energy check-in data you submit.
+                    This data is used solely to generate chart calculations and personalized reflection insights.
                   </Text>
 
                   <Text style={styles.policySection}>
-                    <Text style={styles.policySectionTitle}>Data Storage{'\n'}</Text>
-                    Your data is stored locally on your device using encrypted storage. We do not upload your personal information
-                    to external servers unless you explicitly enable encrypted backup.
+                    <Text style={styles.policySectionTitle}>Encryption & Storage{'\n'}</Text>
+                    All sensitive fields (journal content, birth data) are encrypted at rest using AES-256-GCM. Encryption keys are stored in your device's hardware-backed keychain via SecureStore. All data lives on your device — it is never uploaded to external servers unless you explicitly create an encrypted backup.
+                  </Text>
+
+                  <Text style={styles.policySection}>
+                    <Text style={styles.policySectionTitle}>Subscriptions{'\n'}</Text>
+                    Subscription purchases are processed by Apple. MySky uses RevenueCat solely to verify subscription status. RevenueCat receives only an anonymized app user ID — never your journal, birth data, or any personal information.
                   </Text>
 
                   <Text style={styles.policySection}>
                     <Text style={styles.policySectionTitle}>Data Usage{'\n'}</Text>
-                    We do not sell, share, or monetize your personal information. We do not use third-party advertising or tracking SDKs.
+                    We do not sell, share, or monetize your personal information. We do not use advertising SDKs, analytics trackers, or third-party behavioral tracking of any kind.
                   </Text>
 
                   <Text style={styles.policySection}>
                     <Text style={styles.policySectionTitle}>Your Rights{'\n'}</Text>
-                    You can access, export, and delete your data at any time through the app settings.
+                    You can access, export, and permanently delete all your data at any time through Privacy Settings. No account is required. Uninstalling the app removes all data from your device.
                   </Text>
 
                   <Text style={styles.policySection}>

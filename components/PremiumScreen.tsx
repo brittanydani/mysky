@@ -230,6 +230,25 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             </Pressable>
           </Animated.View>
 
+          {/* Legal links — required for App Store subscription compliance */}
+          <Animated.View entering={FadeInDown.delay(420).duration(600)} style={styles.legalSection}>
+            <Text style={styles.legalDisclosure}>
+              Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Settings → Apple ID → Subscriptions.
+            </Text>
+            <Text style={styles.legalDisclosure}>
+              MySky is for self-reflection and personal insight only. It is not medical, psychological, or financial advice.
+            </Text>
+            <View style={styles.legalLinks}>
+              <Pressable onPress={() => router.push('/terms' as Href)} accessibilityRole="link">
+                <Text style={styles.legalLink}>Terms of Use</Text>
+              </Pressable>
+              <Text style={styles.legalSeparator}>·</Text>
+              <Pressable onPress={() => router.push('/privacy' as Href)} accessibilityRole="link">
+                <Text style={styles.legalLink}>Privacy Policy</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+
           {/* Trust line */}
           <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.trustSection}>
             <Text style={styles.trustText}>{DEEPER_SKY_MARKETING.trustLine}</Text>
@@ -410,5 +429,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: theme.spacing.xl,
     fontStyle: 'italic',
+  },
+  legalSection: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+    gap: 8,
+  },
+  legalDisclosure: {
+    fontSize: 11,
+    color: theme.textMuted,
+    textAlign: 'center',
+    lineHeight: 16,
+    opacity: 0.7,
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  legalLink: {
+    fontSize: 12,
+    color: theme.primary,
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    fontSize: 12,
+    color: theme.textMuted,
   },
 });

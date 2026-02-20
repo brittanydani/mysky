@@ -7,7 +7,7 @@ import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 7;
+const CURRENT_DB_VERSION = 10;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -97,6 +97,18 @@ class LocalDatabase {
 
     if (fromVersion < 7) {
       await this.migrateToVersion7();
+    }
+
+    if (fromVersion < 8) {
+      await this.migrateToVersion8();
+    }
+
+    if (fromVersion < 9) {
+      await this.migrateToVersion9();
+    }
+
+    if (fromVersion < 10) {
+      await this.migrateToVersion10();
     }
   }
 
@@ -486,6 +498,96 @@ class LocalDatabase {
     }
   }
 
+  // ═══════════════════════════════════════════════════
+  // Migration v8: Add chart_id + transit_snapshot to journal_entries
+  // Idempotent: checks PRAGMA table_info before ALTER.
+  // ═══════════════════════════════════════════════════
+  private async migrateToVersion8(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 8 (journal transit snapshot)...');
+
+    const tableInfo = await db.getAllAsync('PRAGMA table_info(journal_entries)') as any[];
+    const columns = tableInfo.map((col) => col.name);
+
+    if (!columns.includes('chart_id')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN chart_id TEXT;');
+      logger.info('[LocalDB] Added chart_id column to journal_entries');
+    }
+
+    if (!columns.includes('transit_snapshot')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN transit_snapshot TEXT;');
+      logger.info('[LocalDB] Added transit_snapshot column to journal_entries');
+    }
+
+    logger.info('[LocalDB] Version 8 migration complete');
+  }
+
+  // ═══════════════════════════════════════════════════
+  // Migration v9: Add last_backup_at to app_settings, timezone to saved_charts
+  // Idempotent: checks PRAGMA table_info before ALTER.
+  // ═══════════════════════════════════════════════════
+  private async migrateToVersion9(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 9 (last_backup_at + timezone)...');
+
+    // Add last_backup_at to app_settings
+    const settingsInfo = await db.getAllAsync('PRAGMA table_info(app_settings)') as any[];
+    const settingsColumns = settingsInfo.map((col) => col.name);
+    if (!settingsColumns.includes('last_backup_at')) {
+      await db.execAsync('ALTER TABLE app_settings ADD COLUMN last_backup_at TEXT;');
+      logger.info('[LocalDB] Added last_backup_at column to app_settings');
+    }
+
+    // Add timezone to saved_charts
+    const chartsInfo = await db.getAllAsync('PRAGMA table_info(saved_charts)') as any[];
+    const chartsColumns = chartsInfo.map((col) => col.name);
+    if (!chartsColumns.includes('timezone')) {
+      await db.execAsync('ALTER TABLE saved_charts ADD COLUMN timezone TEXT;');
+      logger.info('[LocalDB] Added timezone column to saved_charts');
+    }
+
+    logger.info('[LocalDB] Version 9 migration complete');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Migration v10: Add journal NLP summary columns
+  // Idempotent: checks PRAGMA table_info before ALTER.
+  // ═══════════════════════════════════════════════════════════════════════════
+  private async migrateToVersion10(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 10 (journal NLP summaries)...');
+
+    const tableInfo = await db.getAllAsync('PRAGMA table_info(journal_entries)') as any[];
+    const columns = tableInfo.map((col) => col.name);
+
+    if (!columns.includes('content_keywords_enc')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN content_keywords_enc TEXT;');
+      logger.info('[LocalDB] Added content_keywords_enc column to journal_entries');
+    }
+
+    if (!columns.includes('content_emotions_enc')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN content_emotions_enc TEXT;');
+      logger.info('[LocalDB] Added content_emotions_enc column to journal_entries');
+    }
+
+    if (!columns.includes('content_sentiment_enc')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN content_sentiment_enc TEXT;');
+      logger.info('[LocalDB] Added content_sentiment_enc column to journal_entries');
+    }
+
+    if (!columns.includes('content_word_count')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN content_word_count INTEGER;');
+      logger.info('[LocalDB] Added content_word_count column to journal_entries');
+    }
+
+    if (!columns.includes('content_reading_minutes')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN content_reading_minutes REAL;');
+      logger.info('[LocalDB] Added content_reading_minutes column to journal_entries');
+    }
+
+    logger.info('[LocalDB] Version 10 migration complete');
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
@@ -497,9 +599,9 @@ class LocalDatabase {
     const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
 
     await db.runAsync(
-      `INSERT OR REPLACE INTO saved_charts 
-       (id, name, birth_date, birth_time, has_unknown_time, birth_place, latitude, longitude, house_system, created_at, updated_at, is_deleted)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO saved_charts
+       (id, name, birth_date, birth_time, has_unknown_time, birth_place, latitude, longitude, timezone, house_system, created_at, updated_at, is_deleted)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         chart.id,
         chart.name || null,
@@ -509,6 +611,7 @@ class LocalDatabase {
         encBirthPlace,
         chart.latitude,
         chart.longitude,
+        chart.timezone || null,
         chart.houseSystem || null,
         chart.createdAt,
         chart.updatedAt,
@@ -534,6 +637,7 @@ class LocalDatabase {
       birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,
       longitude: row.longitude,
+      timezone: row.timezone || undefined,
       houseSystem: row.house_system || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -576,11 +680,17 @@ class LocalDatabase {
     // Encrypt sensitive fields
     const encContent = await FieldEncryptionService.encryptField(entry.content);
     const encTitle = entry.title ? await FieldEncryptionService.encryptField(entry.title) : null;
+    const encKeywords = entry.contentKeywords ? await FieldEncryptionService.encryptField(entry.contentKeywords) : null;
+    const encEmotions = entry.contentEmotions ? await FieldEncryptionService.encryptField(entry.contentEmotions) : null;
+    const encSentiment = entry.contentSentiment ? await FieldEncryptionService.encryptField(entry.contentSentiment) : null;
 
     await db.runAsync(
-      `INSERT INTO journal_entries 
-       (id, date, mood, moon_phase, title, content, created_at, updated_at, is_deleted)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO journal_entries
+       (id, date, mood, moon_phase, title, content, chart_id, transit_snapshot,
+        content_keywords_enc, content_emotions_enc, content_sentiment_enc,
+        content_word_count, content_reading_minutes,
+        created_at, updated_at, is_deleted)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         entry.id,
         entry.date,
@@ -588,6 +698,13 @@ class LocalDatabase {
         entry.moonPhase,
         encTitle,
         encContent,
+        entry.chartId || null,
+        entry.transitSnapshot || null,
+        encKeywords,
+        encEmotions,
+        encSentiment,
+        entry.contentWordCount ?? null,
+        entry.contentReadingMinutes ?? null,
         entry.createdAt,
         entry.updatedAt,
         entry.isDeleted ? 1 : 0,
@@ -602,17 +719,28 @@ class LocalDatabase {
       'SELECT * FROM journal_entries WHERE is_deleted = 0 ORDER BY date DESC, created_at DESC'
     );
 
-    return Promise.all((result as any[]).map(async (row: any) => ({
+    return Promise.all((result as any[]).map(async (row: any) => this.mapJournalRow(row)));
+  }
+
+  private async mapJournalRow(row: any): Promise<JournalEntry> {
+    return {
       id: row.id,
       date: row.date,
       mood: row.mood,
       moonPhase: row.moon_phase,
       title: row.title ? await FieldEncryptionService.decryptField(row.title) : row.title,
       content: await FieldEncryptionService.decryptField(row.content),
+      chartId: row.chart_id || undefined,
+      transitSnapshot: row.transit_snapshot || undefined,
+      contentKeywords: row.content_keywords_enc ? await FieldEncryptionService.decryptField(row.content_keywords_enc) : undefined,
+      contentEmotions: row.content_emotions_enc ? await FieldEncryptionService.decryptField(row.content_emotions_enc) : undefined,
+      contentSentiment: row.content_sentiment_enc ? await FieldEncryptionService.decryptField(row.content_sentiment_enc) : undefined,
+      contentWordCount: row.content_word_count ?? undefined,
+      contentReadingMinutes: row.content_reading_minutes ?? undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       isDeleted: row.is_deleted === 1,
-    })));
+    };
   }
 
   async updateJournalEntry(entry: JournalEntry): Promise<void> {
@@ -620,12 +748,24 @@ class LocalDatabase {
 
     const encContent = await FieldEncryptionService.encryptField(entry.content);
     const encTitle = entry.title ? await FieldEncryptionService.encryptField(entry.title) : null;
+    const encKeywords = entry.contentKeywords ? await FieldEncryptionService.encryptField(entry.contentKeywords) : null;
+    const encEmotions = entry.contentEmotions ? await FieldEncryptionService.encryptField(entry.contentEmotions) : null;
+    const encSentiment = entry.contentSentiment ? await FieldEncryptionService.encryptField(entry.contentSentiment) : null;
 
     await db.runAsync(
-      `UPDATE journal_entries 
-       SET mood = ?, moon_phase = ?, title = ?, content = ?, updated_at = ?
+      `UPDATE journal_entries
+       SET mood = ?, moon_phase = ?, title = ?, content = ?, chart_id = ?, transit_snapshot = ?,
+           content_keywords_enc = ?, content_emotions_enc = ?, content_sentiment_enc = ?,
+           content_word_count = ?, content_reading_minutes = ?,
+           updated_at = ?
        WHERE id = ?`,
-      [entry.mood, entry.moonPhase, encTitle, encContent, entry.updatedAt, entry.id]
+      [
+        entry.mood, entry.moonPhase, encTitle, encContent,
+        entry.chartId || null, entry.transitSnapshot || null,
+        encKeywords, encEmotions, encSentiment,
+        entry.contentWordCount ?? null, entry.contentReadingMinutes ?? null,
+        entry.updatedAt, entry.id,
+      ]
     );
   }
 
@@ -658,6 +798,7 @@ class LocalDatabase {
       id: (result as any).id,
       cloudSyncEnabled: (result as any).cloud_sync_enabled === 1,
       lastSyncAt: (result as any).last_sync_at,
+      lastBackupAt: (result as any).last_backup_at || undefined,
       userId: (result as any).user_id,
       createdAt: (result as any).created_at,
       updatedAt: (result as any).updated_at,
@@ -668,13 +809,14 @@ class LocalDatabase {
     const db = await this.ensureReady();
 
     await db.runAsync(
-      `INSERT OR REPLACE INTO app_settings 
-       (id, cloud_sync_enabled, last_sync_at, user_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT OR REPLACE INTO app_settings
+       (id, cloud_sync_enabled, last_sync_at, last_backup_at, user_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         settings.id,
         settings.cloudSyncEnabled ? 1 : 0,
         settings.lastSyncAt || null,
+        settings.lastBackupAt || null,
         settings.userId || null,
         settings.createdAt,
         settings.updatedAt,
@@ -703,6 +845,7 @@ class LocalDatabase {
       birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,
       longitude: row.longitude,
+      timezone: row.timezone || undefined,
       houseSystem: row.house_system || undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -718,17 +861,7 @@ class LocalDatabase {
       [timestamp]
     );
 
-    return Promise.all((result as any[]).map(async (row: any) => ({
-      id: row.id,
-      date: row.date,
-      mood: row.mood,
-      moonPhase: row.moon_phase,
-      title: row.title ? await FieldEncryptionService.decryptField(row.title) : row.title,
-      content: await FieldEncryptionService.decryptField(row.content),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      isDeleted: row.is_deleted === 1,
-    })));
+    return Promise.all((result as any[]).map(async (row: any) => this.mapJournalRow(row)));
   }
 
   async hardDeleteAllData(): Promise<void> {
@@ -739,6 +872,10 @@ class LocalDatabase {
       DELETE FROM journal_entries;
       DELETE FROM cached_interpretations;
       DELETE FROM app_settings;
+      DELETE FROM daily_check_ins;
+      DELETE FROM insight_history;
+      DELETE FROM relationship_charts;
+      DELETE FROM migration_markers;
       VACUUM;
     `);
   }

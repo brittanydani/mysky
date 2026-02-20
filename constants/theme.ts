@@ -117,6 +117,9 @@ export const theme = {
     },
   },
 
+  // Gold gradient (used for CTAs / premium buttons)
+  goldGradient: ['#E8D5A8', '#C9A962', '#B8994F'] as const,
+
   // Shadows
   shadows: {
     soft: {

@@ -5,6 +5,12 @@
 import { NatalChart, AspectTypeName } from './types';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { getMoonPhaseName } from '../../utils/moonPhase';
+import {
+  normalize360,
+  signNameFromLongitude as getSignFromDegree,
+  extractAbsDegree,
+  ZODIAC_SIGN_NAMES as SIGNS,
+} from './sharedHelpers';
 
 const { Origin, Horoscope } = require('circular-natal-horoscope-js');
 
@@ -876,41 +882,9 @@ const DOMAIN_MANTRAS: Record<LifeDomain, string[]> = {
 };
 
 // ============================================================================
-// MOON PHASE CALCULATION
-// ============================================================================
-
-// getMoonPhase replaced by imported getMoonPhaseName from utils/moonPhase
-function getMoonPhase(date: Date): string {
-  return getMoonPhaseName(date);
-}
-
-// ============================================================================
 // MAIN ENGINE
+// normalize360, getSignFromDegree, SIGNS → imported from sharedHelpers
 // ============================================================================
-
-function normalize360(deg: number): number {
-  const x = deg % 360;
-  return x < 0 ? x + 360 : x;
-}
-
-const SIGNS = [
-  'Aries',
-  'Taurus',
-  'Gemini',
-  'Cancer',
-  'Leo',
-  'Virgo',
-  'Libra',
-  'Scorpio',
-  'Sagittarius',
-  'Capricorn',
-  'Aquarius',
-  'Pisces',
-];
-
-function getSignFromDegree(deg: number): string {
-  return SIGNS[Math.floor(normalize360(deg) / 30)];
-}
 
 function getAspectTone(aspect: AspectTypeName): { adjective: string; guidance: string } {
   switch (aspect) {
@@ -1023,7 +997,7 @@ export class DailyInsightEngine {
     // 7. Get moon info
     const moonLongitude = transits['Moon'] || 0;
     const moonSign = getSignFromDegree(moonLongitude);
-    const moonPhase = getMoonPhase(date);
+    const moonPhase = getMoonPhaseName(date);
 
     // 8. Pick mantra based on dominant domain
     const dominantDomain = cards[0]?.domain || 'mood';
@@ -1180,19 +1154,10 @@ export class DailyInsightEngine {
     const bodies = (horoscope as any).CelestialBodies || {};
     const map: Record<string, number> = {};
 
-    const extractDeg = (obj: any): number | null => {
-      const direct =
-        obj?.ChartPosition?.Ecliptic?.DecimalDegrees ??
-        obj?.chartPosition?.ecliptic?.decimalDegrees ??
-        obj?.longitude;
-      if (typeof direct === 'number' && Number.isFinite(direct)) return normalize360(direct);
-      return null;
-    };
-
     // ✅ Includes slow movers now
     const planets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
     for (const p of planets) {
-      const deg = extractDeg(bodies[p.toLowerCase()]);
+      const deg = extractAbsDegree(bodies[p.toLowerCase()]);
       if (deg != null) map[p] = deg;
     }
 

@@ -6,6 +6,7 @@ import { NatalChart, SimpleAspect, AstrologySign } from '../astrology/types';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
 import { DailyGuidanceGenerator } from '../astrology/dailyGuidance';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { getMoonPhaseName } from '../../utils/moonPhase';
 
 // ============================================================================
 // TYPES
@@ -499,32 +500,23 @@ export class PremiumDailyGuidanceGenerator {
   }
 
   /**
-   * Get moon phase context
+   * Get moon phase context — uses precise astronomy-engine calculation
    */
   private static getMoonPhaseContext(date: Date): string {
-    // Simple moon phase calculation (approximate)
-    const synodicMonth = 29.53059;
-    const knownNewMoon = new Date('2024-01-11'); // Known new moon
-    const daysSinceNew = (date.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
-    const phaseDay = ((daysSinceNew % synodicMonth) + synodicMonth) % synodicMonth;
-
-    if (phaseDay < 1.85) {
-      return "🌑 New Moon energy supports new beginnings, setting intentions, and planting seeds. What do you want to grow?";
-    } else if (phaseDay < 7.38) {
-      return "🌒 Waxing Crescent energy supports taking first steps, building momentum, and nurturing what you've begun.";
-    } else if (phaseDay < 9.23) {
-      return "🌓 First Quarter energy brings a checkpoint. Adjust your course if needed and recommit to your intentions.";
-    } else if (phaseDay < 14.77) {
-      return "🌔 Waxing Gibbous energy supports refinement and preparation. You're building toward fullness.";
-    } else if (phaseDay < 16.61) {
-      return "🌕 Full Moon energy illuminates what's ready to be seen, celebrated, or released. Emotions may run high.";
-    } else if (phaseDay < 22.15) {
-      return "🌖 Waning Gibbous energy supports gratitude, sharing wisdom, and integrating what you've learned.";
-    } else if (phaseDay < 23.99) {
-      return "🌗 Last Quarter energy invites release and letting go. What's ready to be composted?";
-    } else {
-      return "🌘 Waning Crescent energy supports rest, surrender, and preparing for the next cycle. Be gentle with yourself.";
-    }
+    const phaseName = getMoonPhaseName(date);
+    
+    const PHASE_CONTEXTS: Record<string, string> = {
+      'New Moon': "🌑 New Moon energy supports new beginnings, setting intentions, and planting seeds. What do you want to grow?",
+      'Waxing Crescent': "🌒 Waxing Crescent energy supports taking first steps, building momentum, and nurturing what you've begun.",
+      'First Quarter': "🌓 First Quarter energy brings a checkpoint. Adjust your course if needed and recommit to your intentions.",
+      'Waxing Gibbous': "🌔 Waxing Gibbous energy supports refinement and preparation. You're building toward fullness.",
+      'Full Moon': "🌕 Full Moon energy illuminates what's ready to be seen, celebrated, or released. Emotions may run high.",
+      'Waning Gibbous': "🌖 Waning Gibbous energy supports gratitude, sharing wisdom, and integrating what you've learned.",
+      'Last Quarter': "🌗 Last Quarter energy invites release and letting go. What's ready to be composted?",
+      'Waning Crescent': "🌘 Waning Crescent energy supports rest, surrender, and preparing for the next cycle. Be gentle with yourself.",
+    };
+    
+    return PHASE_CONTEXTS[phaseName] || PHASE_CONTEXTS['Waning Crescent'];
   }
 
   /**

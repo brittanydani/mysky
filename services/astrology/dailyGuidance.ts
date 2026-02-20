@@ -16,6 +16,7 @@ import {
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transits';
 import { ZODIAC_SIGNS } from './constants';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { signFromLongitude } from './sharedHelpers';
 
 export class DailyGuidanceGenerator {
   /**
@@ -34,52 +35,12 @@ export class DailyGuidanceGenerator {
 
     // Current Moon sign from real transit data
     const moonAbs = transits['Moon'];
-    const currentMoonSign = moonAbs != null ? this.getSignFromAbsoluteDegree(moonAbs) : natalChart.moonSign;
+    const currentMoonSign = moonAbs != null ? signFromLongitude(moonAbs) : natalChart.moonSign;
 
     // IMPORTANT: computeTransitAspectsToNatal should return SimpleAspect[] (pointA/pointB/type/orb)
     const transitAspects: SimpleAspect[] = computeTransitAspectsToNatal(natalChart, transits);
 
     return this.getPersonalizedGuidance(natalChart, currentMoonSign, date, transitAspects);
-  }
-
-  /**
-   * Convert absolute degree to AstrologySign
-   */
-  private static getSignFromAbsoluteDegree(absDeg: number): AstrologySign {
-    const normalize360 = (deg: number) => {
-      const x = deg % 360;
-      return x < 0 ? x + 360 : x;
-    };
-
-    const idx = Math.floor(normalize360(absDeg) / 30);
-
-    const zodiacSign = ZODIAC_SIGNS[idx];
-    return {
-      name: zodiacSign.name,
-      symbol: zodiacSign.symbol,
-      element: zodiacSign.element,
-      quality: zodiacSign.modality,
-      rulingPlanet: zodiacSign.ruler.name,
-      dates: this.getSignDates(zodiacSign.name),
-    };
-  }
-
-  private static getSignDates(signName: string): string {
-    const dates: Record<string, string> = {
-      Aries: 'March 21 - April 19',
-      Taurus: 'April 20 - May 20',
-      Gemini: 'May 21 - June 20',
-      Cancer: 'June 21 - July 22',
-      Leo: 'July 23 - August 22',
-      Virgo: 'August 23 - September 22',
-      Libra: 'September 23 - October 22',
-      Scorpio: 'October 23 - November 21',
-      Sagittarius: 'November 22 - December 21',
-      Capricorn: 'December 22 - January 19',
-      Aquarius: 'January 20 - February 18',
-      Pisces: 'February 19 - March 20',
-    };
-    return dates[signName] || '';
   }
 
   /**

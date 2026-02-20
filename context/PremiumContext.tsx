@@ -38,7 +38,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const updateCustomerInfo = (info: CustomerInfo | null) => {
+  const updateCustomerInfo = useCallback((info: CustomerInfo | null) => {
     setCustomerInfo(info);
     // Set isPremium based on RevenueCat entitlements
     if (info) {
@@ -46,16 +46,16 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
     } else {
       setIsPremium(false);
     }
-  };
+  }, []);
 
-  const refreshCustomerInfo = async () => {
+  const refreshCustomerInfo = useCallback(async () => {
     try {
       const info = await revenueCatService.getCustomerInfo();
       updateCustomerInfo(info);
     } catch (e) {
       logger.error('[PremiumContext] refreshCustomerInfo failed:', e);
     }
-  };
+  }, [updateCustomerInfo]);
 
   const purchase = useCallback(async (packageToPurchase: PurchasesPackage): Promise<PurchaseResult> => {
     setLoading(true);
@@ -116,7 +116,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
 
     return () => {
       mounted = false;
-      listenerRemove();
+      if (typeof listenerRemove === 'function') listenerRemove();
     };
   }, []);
 

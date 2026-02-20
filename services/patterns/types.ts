@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type ThemeTag =
+  // Legacy emotional tags
   | 'relationships'
   | 'confidence'
   | 'money'
@@ -25,7 +26,40 @@ export type ThemeTag =
   | 'clarity'
   | 'overwhelm'
   | 'loneliness'
-  | 'gratitude';
+  | 'gratitude'
+  // Influence tags (what shaped your day)
+  | 'sleep'
+  | 'work'
+  | 'social'
+  | 'conflict'
+  | 'movement'
+  | 'nature'
+  | 'routine'
+  | 'overstimulated'
+  | 'creative'
+  | 'rest'
+  | 'alone_time'
+  | 'travel'
+  | 'finances'
+  | 'weather'
+  | 'food'
+  | 'hormones'
+  | 'screens'
+  | 'kids'
+  | 'productivity'
+  | 'substances'
+  | 'intimacy'
+  // Emotional quality (premium, single-select)
+  | 'eq_calm'
+  | 'eq_anxious'
+  | 'eq_focused'
+  | 'eq_disconnected'
+  | 'eq_hopeful'
+  | 'eq_irritable'
+  | 'eq_grounded'
+  | 'eq_scattered'
+  | 'eq_heavy'
+  | 'eq_open';
 
 export type EnergyLevel = 'low' | 'medium' | 'high';
 export type StressLevel = 'low' | 'medium' | 'high';

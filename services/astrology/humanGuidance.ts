@@ -4,7 +4,7 @@
 
 import { NatalChart, AstrologySign, ZodiacSign } from './types';
 import { DailyInsightEngine, DailyInsight, LifeDomain } from './dailyInsightEngine';
-import { toLocalDateString } from '../../utils/dateUtils';
+import { toLocalDateString, dayOfYear } from '../../utils/dateUtils';
 
 export interface HumanDailyGuidance {
   date: string;
@@ -1131,17 +1131,17 @@ export class HumanGuidanceGenerator {
                        insight.cards.find(c => c.domain === 'focus');
     
     // Use date for deterministic fallback selection
-    const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
+    const doy = dayOfYear(date);
     
     // Build love guidance - use accurate insight or fall back to pools
     const love: GuidanceMessage = loveCard 
       ? { headline: loveCard.title, message: `${loveCard.observation} ${loveCard.choicePoint}` }
-      : LOVE_GUIDANCE.neutral[dayOfYear % LOVE_GUIDANCE.neutral.length];
+      : LOVE_GUIDANCE.neutral[doy % LOVE_GUIDANCE.neutral.length];
     
     // Build energy guidance
     const energy: GuidanceMessage = energyCard
       ? { headline: energyCard.title, message: `${energyCard.observation} ${energyCard.choicePoint}` }
-      : ENERGY_GUIDANCE.moderate[dayOfYear % ENERGY_GUIDANCE.moderate.length];
+      : ENERGY_GUIDANCE.moderate[doy % ENERGY_GUIDANCE.moderate.length];
     
     // Build growth guidance - use any remaining card or fallback
     const remainingCard = insight.cards.find(c => 
@@ -1152,11 +1152,11 @@ export class HumanGuidanceGenerator {
           headline: (remainingCard || growthCard)!.title, 
           message: `${(remainingCard || growthCard)!.observation} ${(remainingCard || growthCard)!.choicePoint}` 
         }
-      : GROWTH_GUIDANCE.stability[dayOfYear % GROWTH_GUIDANCE.stability.length];
+      : GROWTH_GUIDANCE.stability[doy % GROWTH_GUIDANCE.stability.length];
     
     // Use gentle reminder and journal prompt from pools (they're evergreen)
-    const gentleReminder = GENTLE_REMINDERS[(dayOfYear + 3) % GENTLE_REMINDERS.length];
-    const journalPrompt = JOURNAL_PROMPTS[(dayOfYear + 4) % JOURNAL_PROMPTS.length];
+    const gentleReminder = GENTLE_REMINDERS[(doy + 3) % GENTLE_REMINDERS.length];
+    const journalPrompt = JOURNAL_PROMPTS[(doy + 4) % JOURNAL_PROMPTS.length];
     
     // Create greeting based on time of day
     const hour = date.getHours();
@@ -1231,14 +1231,14 @@ export class HumanGuidanceGenerator {
    * Get guidance for someone without exact birth time
    */
   static generateUnknownTimeGuidance(sunSign: string, date: Date = new Date()): HumanDailyGuidance {
-    const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
+    const doy = dayOfYear(date);
     
     // Use moderate/neutral options for unknown time
-    const love = LOVE_GUIDANCE.neutral[dayOfYear % LOVE_GUIDANCE.neutral.length];
-    const energy = ENERGY_GUIDANCE.moderate[(dayOfYear + 1) % ENERGY_GUIDANCE.moderate.length];
-    const growth = GROWTH_GUIDANCE.reflection[(dayOfYear + 2) % GROWTH_GUIDANCE.reflection.length];
-    const gentleReminder = GENTLE_REMINDERS[(dayOfYear + 3) % GENTLE_REMINDERS.length];
-    const journalPrompt = JOURNAL_PROMPTS[(dayOfYear + 4) % JOURNAL_PROMPTS.length];
+    const love = LOVE_GUIDANCE.neutral[doy % LOVE_GUIDANCE.neutral.length];
+    const energy = ENERGY_GUIDANCE.moderate[(doy + 1) % ENERGY_GUIDANCE.moderate.length];
+    const growth = GROWTH_GUIDANCE.reflection[(doy + 2) % GROWTH_GUIDANCE.reflection.length];
+    const gentleReminder = GENTLE_REMINDERS[(doy + 3) % GENTLE_REMINDERS.length];
+    const journalPrompt = JOURNAL_PROMPTS[(doy + 4) % JOURNAL_PROMPTS.length];
     
     const hour = date.getHours();
     let greeting = hour < 12 
@@ -1256,7 +1256,7 @@ export class HumanGuidanceGenerator {
       growth,
       gentleReminder,
       journalPrompt,
-      mantra: GENTLE_REMINDERS[(dayOfYear + 5) % GENTLE_REMINDERS.length],
+      mantra: GENTLE_REMINDERS[(doy + 5) % GENTLE_REMINDERS.length],
     };
   }
 }

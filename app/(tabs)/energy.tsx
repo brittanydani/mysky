@@ -1,5 +1,5 @@
 // File: app/(tabs)/energy.tsx
-// MySky — Energy Screen (Full 8-Section Build)
+// MySky — Energy Screen (Chakra wheel, domains, guidance)
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -29,7 +29,6 @@ import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
 import {
   EnergyEngine,
@@ -38,12 +37,8 @@ import {
   ChakraReading,
   ChakraState,
 } from '../../services/energy/energyEngine';
-import { CheckInService, CheckInInput } from '../../services/patterns/checkInService';
-import { PatternAnalyzer } from '../../services/patterns/patternAnalyzer';
-import { PatternCard, DailyCheckIn } from '../../services/patterns/types';
 import { logger } from '../../utils/logger';
 import ChakraWheelComponent from '../../components/ui/ChakraWheel';
-import ChakraWheelPlate from '../../components/ui/ChakraWheelPlate';
 
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -75,15 +70,6 @@ function formatToday(): string {
   });
 }
 
-/* ── Check-In types ── */
-type CheckInStep = 'idle' | 'q1' | 'q2' | 'q3' | 'done';
-
-const CHECK_IN_QUESTIONS = [
-  { key: 'q1' as const, question: 'How is your mood right now?', options: ['Calm', 'Focused', 'Restless', 'Inspired', 'Drained'] },
-  { key: 'q2' as const, question: 'What is your energy level?', options: ['Depleted', 'Low', 'Steady', 'Energized', 'Overflowing'] },
-  { key: 'q3' as const, question: 'How is your stress right now?', options: ['At ease', 'Mild', 'Moderate', 'Tense', 'Overwhelmed'] },
-];
-
 /* ════════════════════════════════════════════════
    MAIN SCREEN
    ════════════════════════════════════════════════ */
@@ -96,19 +82,10 @@ export default function EnergyScreen() {
   const [hasChart, setHasChart] = useState(false);
   const [snapshot, setSnapshot] = useState<EnergySnapshot | null>(null);
   const [userName, setUserName] = useState<string>('');
-  const [checkInStep, setCheckInStep] = useState<CheckInStep>('idle');
-  const [checkInAnswers, setCheckInAnswers] = useState<Record<string, string>>({});
   const [expandedDomain, setExpandedDomain] = useState<number | null>(null);
-  const [userChart, setUserChart] = useState<NatalChart | null>(null);
-  const [chartId, setChartId] = useState<string>('');
-  const [patternCards, setPatternCards] = useState<PatternCard[]>([]);
-  const [checkInCount, setCheckInCount] = useState(0);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
   const [wheelTooltip, setWheelTooltip] = useState<string | null>(null);
   const wheelTooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup tooltip timer on unmount
   useEffect(() => {
     return () => {
       if (wheelTooltipTimer.current) clearTimeout(wheelTooltipTimer.current);
@@ -131,7 +108,6 @@ export default function EnergyScreen() {
   /* load chart + generate snapshot */
   useFocusEffect(
     useCallback(() => {
-      // Gentle haptic on tab open
       Haptics.selectionAsync().catch(() => {});
 
       const load = async () => {
@@ -145,8 +121,6 @@ export default function EnergyScreen() {
           setHasChart(true);
           const saved = charts[0];
           setUserName(saved?.name ?? '');
-          const cId = saved?.id ?? '';
-          setChartId(cId);
           const birthData = {
             date: saved.birthDate,
             time: saved.birthTime,
@@ -154,36 +128,12 @@ export default function EnergyScreen() {
             place: saved.birthPlace,
             latitude: saved.latitude,
             longitude: saved.longitude,
+            timezone: saved.timezone,
             houseSystem: saved.houseSystem,
           };
           const natal = AstrologyCalculator.generateNatalChart(birthData);
-          setUserChart(natal);
           const snap = EnergyEngine.generateSnapshot(natal, new Date());
           setSnapshot(snap);
-
-          // Load check-in history and patterns for premium
-          try {
-            const existing = await CheckInService.getTodayCheckIn(cId);
-            setTodayCheckIn(existing);
-            if (existing) {
-              setCheckInStep('done');
-              setCheckInAnswers({
-                q1: existing.note?.split('|')[0] || '',
-                q2: existing.note?.split('|')[1] || '',
-                q3: existing.note?.split('|')[2] || '',
-              });
-            }
-            const allCheckIns = await CheckInService.getAllCheckIns(cId);
-            setCheckInCount(allCheckIns.length);
-            const streak = await CheckInService.getCurrentStreak(cId);
-            setCurrentStreak(streak);
-            if (allCheckIns.length >= 5) {
-              const patterns = PatternAnalyzer.analyzePatterns(allCheckIns);
-              setPatternCards(patterns);
-            }
-          } catch (e) {
-            logger.error('Failed to load check-in patterns:', e);
-          }
         } catch (e) {
           logger.error('Energy load failed:', e);
         } finally {
@@ -194,73 +144,6 @@ export default function EnergyScreen() {
     }, [])
   );
 
-  /* check-in handlers */
-  const handleCheckInStart = useCallback(() => {
-    safeHaptic();
-    setCheckInStep('q1');
-    setCheckInAnswers({});
-  }, []);
-
-  const handleCheckInAnswer = useCallback(async (step: string, answer: string) => {
-    safeHaptic();
-    const updated = { ...checkInAnswers, [step]: answer };
-    setCheckInAnswers(updated);
-    if (step === 'q1') setCheckInStep('q2');
-    else if (step === 'q2') setCheckInStep('q3');
-    else {
-      setCheckInStep('done');
-      // Save check-in via CheckInService
-      if (userChart && chartId) {
-        try {
-          const moodAnswer = updated.q1 || '';
-          const energyAnswer = updated.q2 || '';
-          const stressAnswer = updated.q3 || '';
-          // Updated maps for new check-in questions
-          const moodMap: Record<string, number> = {
-            'Calm': 7,
-            'Focused': 8,
-            'Restless': 4,
-            'Inspired': 9,
-            'Drained': 2,
-          };
-          const energyMap: Record<string, 'low' | 'medium' | 'high'> = {
-            'Depleted': 'low',
-            'Low': 'low',
-            'Steady': 'medium',
-            'Energized': 'high',
-            'Overflowing': 'high',
-          };
-          const stressMap: Record<string, 'low' | 'medium' | 'high'> = {
-            'At ease': 'low',
-            'Mild': 'low',
-            'Moderate': 'medium',
-            'Tense': 'high',
-            'Overwhelmed': 'high',
-          };
-          const input: CheckInInput = {
-            moodScore: moodMap[moodAnswer] || 5,
-            energyLevel: energyMap[energyAnswer] || 'medium',
-            stressLevel: stressMap[stressAnswer] || 'medium',
-            tags: [],
-            note: `${moodAnswer}|${energyAnswer}|${stressAnswer}`,
-          };
-          const saved = await CheckInService.saveCheckIn(input, userChart, chartId);
-          setTodayCheckIn(saved);
-          setCheckInCount(prev => prev + 1);
-          setCurrentStreak(prev => prev + 1);
-          // Refresh patterns if enough data
-          const allCheckIns = await CheckInService.getAllCheckIns(chartId);
-          if (allCheckIns.length >= 5) {
-            const patterns = PatternAnalyzer.analyzePatterns(allCheckIns);
-            setPatternCards(patterns);
-          }
-        } catch (e) {
-          logger.error('Failed to save check-in:', e);
-        }
-      }
-    }
-  }, [checkInAnswers, userChart, chartId]);
-
   /* ── No-chart state ── */
   if (!loading && !hasChart) {
     return (
@@ -268,6 +151,10 @@ export default function EnergyScreen() {
         <StarField starCount={28} />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={20} color={theme.primary} />
+              <Text style={styles.backBtnText}>Mood</Text>
+            </Pressable>
             <Text style={styles.title}>Energy</Text>
             <Text style={styles.subtitle}>Your personal energy weather {'\u2014'} built from your chart.</Text>
           </Animated.View>
@@ -281,9 +168,9 @@ export default function EnergyScreen() {
                 <Ionicons name="sparkles" size={32} color={theme.primary} style={{ marginBottom: 12 }} />
                 <Text style={styles.heroToneText}>Energy needs your chart</Text>
                 <Text style={[styles.body, { marginTop: 8 }]}>
-                  Create your natal chart to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, daily guidance, and patterns.
+                  Create your natal chart to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, and daily guidance.
                 </Text>
-                <Pressable style={styles.primaryBtn} onPress={() => { safeHaptic(); router.push('/(tabs)' as Href); }}>
+                <Pressable style={styles.primaryBtn} onPress={() => { safeHaptic(); router.push('/(tabs)/home' as Href); }}>
                   <Ionicons name="add-circle-outline" size={16} color={theme.primary} />
                   <Text style={styles.primaryBtnText}>Create Chart</Text>
                 </Pressable>
@@ -318,6 +205,10 @@ export default function EnergyScreen() {
       <StarField starCount={80} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={20} color={theme.primary} />
+            <Text style={styles.backBtnText}>Mood</Text>
+          </Pressable>
           <Text style={styles.title}>Energy</Text>
           <Text style={styles.subtitle}>
             {userName ? `${userName}'s energy` : 'Your energy'} {'\u2022'} {formatToday()}
@@ -329,7 +220,7 @@ export default function EnergyScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 32) + 20 }]}
           showsVerticalScrollIndicator={false}
         >
-          {/* ═══ S1 — ENERGY SNAPSHOT (supporting context) — FREE ═══ */}
+          {/* ═══ S1 — ENERGY SNAPSHOT ═══ */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
             <LinearGradient
               colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
@@ -359,7 +250,7 @@ export default function EnergyScreen() {
             </LinearGradient>
           </Animated.View>
 
-          {/* ═══ S2 — ENERGY WHEEL (purely visual) ═══ */}
+          {/* ═══ S2 — ENERGY WHEEL ═══ */}
           <Animated.View entering={FadeInDown.delay(160).duration(600)}>
             <Pressable
               style={styles.wheelContainer}
@@ -397,17 +288,15 @@ export default function EnergyScreen() {
             </Pressable>
           </Animated.View>
 
-          {/* ═══ S3 — CHAKRA FOCUS TODAY (truth anchor) ═══ */}
+          {/* ═══ S3 — CHAKRA FOCUS TODAY ═══ */}
           <SectionHeader icon="body-outline" title="Today's Focus" delay={220} />
           <Animated.View entering={FadeInDown.delay(240).duration(600)}>
             <ChakraCard chakra={snapshot.dominantChakra} highlight />
             {isPremium ? (
               <>
-                {/* Secondary chakras (Sensitive / Grounding Needed) */}
                 {snapshot.chakras
                   .filter(c => c.name !== snapshot.dominantChakra.name && (c.state === 'Sensitive' || c.state === 'Grounding Needed'))
                   .map(c => <ChakraCard key={c.name} chakra={c} role="secondary" />)}
-                {/* Background chakras (compact) */}
                 {snapshot.chakras
                   .filter(c => c.name !== snapshot.dominantChakra.name && c.state !== 'Sensitive' && c.state !== 'Grounding Needed')
                   .length > 0 && (
@@ -510,7 +399,7 @@ export default function EnergyScreen() {
                   <View style={styles.guidanceRitualBlock}>
                     <View style={styles.guidanceHeader}>
                       <Ionicons name="sparkles-outline" size={16} color={theme.calm} />
-                      <Text style={[styles.guidanceLabel, { color: theme.calm }]}>Today’s Micro-Ritual</Text>
+                      <Text style={[styles.guidanceLabel, { color: theme.calm }]}>Today{'\u2019'}s Micro-Ritual</Text>
                     </View>
                     <Text style={styles.guidanceRitualText}>{snapshot.guidance.ritual}</Text>
                   </View>
@@ -527,171 +416,8 @@ export default function EnergyScreen() {
             </LinearGradient>
           </Animated.View>
 
-          {/* ═══ S6 — MOON PHASE INTEGRATION ═══ */}
-          <SectionHeader icon="moon-outline" title="Moon Phase" delay={460} />
-          <Animated.View entering={FadeInDown.delay(480).duration(600)}>
-            <LinearGradient colors={['rgba(30,45,71,0.60)', 'rgba(26,39,64,0.40)']} style={[styles.card, styles.cardPad]}>
-              <View style={styles.moonRow}>
-                <Text style={styles.moonEmoji}>{snapshot.moonPhase.emoji}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.moonPhaseLabel}>{snapshot.moonPhase.phase}</Text>
-                  {isPremium ? (
-                    <Text style={[styles.body, { marginTop: 4 }]}>{snapshot.moonPhase.personalMeaning}</Text>
-                  ) : (
-                    <View style={[styles.lockBanner, { marginTop: 6, marginBottom: 0 }]}>
-                      <Ionicons name="lock-closed" size={12} color={theme.primary} />
-                      <Text style={styles.lockText}>Personal meaning {'\u2014'} Premium</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </LinearGradient>
-          </Animated.View>
-
-          {/* ═══ S7 — ENERGY CHECK-IN ═══ */}
-          <SectionHeader icon="heart-outline" title="Energy Check-In" delay={520} />
-          <Animated.View entering={FadeInDown.delay(540).duration(600)}>
-            <LinearGradient colors={['rgba(30,45,71,0.60)', 'rgba(26,39,64,0.40)']} style={[styles.card, styles.cardPad]}>
-              {checkInStep === 'idle' && (
-                <>
-                  <Text style={styles.body}>A quick body + mind scan grounded in what your chart is activating today.</Text>
-                  <Pressable style={[styles.primaryBtn, { marginTop: 14 }]} onPress={handleCheckInStart}>
-                    <Ionicons name="pulse-outline" size={16} color={theme.primary} />
-                    <Text style={styles.primaryBtnText}>Start Check-In</Text>
-                  </Pressable>
-                </>
-              )}
-              {checkInStep !== 'idle' && checkInStep !== 'done' && (
-                <>
-                  {CHECK_IN_QUESTIONS.filter(q => q.key === checkInStep).map(q => (
-                    <View key={q.key}>
-                      <Text style={styles.checkInQuestion}>{q.question}</Text>
-                      <View style={styles.checkInOptions}>
-                        {q.options.map(opt => (
-                          <Pressable
-                            key={opt}
-                            style={[
-                              styles.checkInOption,
-                              checkInAnswers[q.key] === opt && styles.checkInOptionSelected,
-                            ]}
-                            onPress={() => handleCheckInAnswer(q.key, opt)}
-                          >
-                            <Text style={[
-                              styles.checkInOptionText,
-                              checkInAnswers[q.key] === opt && styles.checkInOptionTextSelected,
-                            ]}>
-                              {opt}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    </View>
-                  ))}
-                </>
-              )}
-              {checkInStep === 'done' && (
-                <>
-                  <View style={styles.checkInDoneHeader}>
-                    <Ionicons name="checkmark-circle" size={24} color={theme.energy} />
-                    <Text style={styles.checkInDoneTitle}>Checked in</Text>
-                  </View>
-                  <Text style={styles.body}>
-                    Mood: {checkInAnswers.q1} {' \u00b7 '} Energy: {checkInAnswers.q2} {' \u00b7 '} Stress: {checkInAnswers.q3}
-                  </Text>
-                  <Text style={[styles.bodyMuted, { marginTop: 8 }]}>
-                    This is a snapshot, not a score. It is a way of noticing, not measuring.
-                  </Text>
-                  {isPremium ? (
-                    <Text style={[styles.bodyMuted, { marginTop: 8, color: theme.primary }]}>
-                      {'\u2713'} Saved to your energy pattern history
-                    </Text>
-                  ) : (
-                    <View style={[styles.lockBanner, { marginTop: 12 }]}>
-                      <Ionicons name="lock-closed" size={14} color={theme.primary} />
-                      <Text style={styles.lockText}>Save check-ins and track patterns {'\u2014'} Premium</Text>
-                    </View>
-                  )}
-                  <Pressable
-                    style={[styles.secondaryBtn, { marginTop: 14 }]}
-                    onPress={() => { safeHaptic(); setCheckInStep('idle'); }}
-                  >
-                    <Text style={styles.secondaryBtnText}>Check in again</Text>
-                  </Pressable>
-                </>
-              )}
-            </LinearGradient>
-          </Animated.View>
-
-          {/* ═══ S8 — ENERGY PATTERNS & MEMORY (Premium Core) ═══ */}
-          <SectionHeader icon="analytics-outline" title="Energy Patterns" delay={580} />
-          <Animated.View entering={FadeInDown.delay(600).duration(600)}>
-            <LinearGradient colors={['rgba(30,45,71,0.60)', 'rgba(26,39,64,0.40)']} style={[styles.card, styles.cardPad]}>
-              {isPremium ? (
-                <>
-                  <Text style={styles.sectionSubhead}>Your energy pattern memory</Text>
-                  <Text style={[styles.body, { marginTop: 6 }]}>
-                    Over time, MySky learns your rhythms {'\u2014'} which Moon signs drain or recharge you, which chakras are consistently activated, and how your domains shift across cycles.
-                  </Text>
-                  <View style={styles.patternGrid}>
-                    <PatternTile
-                      icon="moon-outline"
-                      label="Moon rhythm"
-                      value={patternCards.find(p => p.type === 'moon_house_mood')?.insight || `${snapshot.dominantChakra.name} dominant under ${snapshot.moonPhase.phase}`}
-                      sub={patternCards.find(p => p.type === 'moon_house_mood')?.detail || 'Patterns build as you check in across lunar cycles'}
-                    />
-                    <PatternTile
-                      icon="body-outline"
-                      label="Chakra frequency"
-                      value={patternCards.find(p => p.type === 'energy_cycle')?.insight || `${snapshot.dominantChakra.name} most active today`}
-                      sub={patternCards.find(p => p.type === 'energy_cycle')?.detail || `State: ${snapshot.dominantChakra.state} — ${snapshot.dominantChakra.trigger}`}
-                    />
-                    <PatternTile
-                      icon="pulse-outline"
-                      label="Check-in trends"
-                      value={
-                        checkInCount >= 5
-                          ? patternCards.find(p => p.type === 'best_days')?.insight || `${checkInCount} check-ins tracked`
-                          : checkInCount > 0
-                            ? `${checkInCount} of 5 check-ins to unlock trends`
-                            : 'Complete a check-in to start tracking'
-                      }
-                      sub={
-                        checkInCount >= 5
-                          ? `${currentStreak} day streak · ${checkInCount} total check-ins`
-                          : currentStreak > 0
-                            ? `${currentStreak} day streak — keep going!`
-                            : 'Daily check-ins reveal patterns over time'
-                      }
-                    />
-                    <PatternTile
-                      icon="calendar-outline"
-                      label="Weekly cycle"
-                      value={patternCards.find(p => p.type === 'stress_pattern')?.insight || `Current tone: ${snapshot.tone} (${snapshot.intensity})`}
-                      sub={patternCards.find(p => p.type === 'stress_pattern')?.detail || 'Energy patterns become clearer after 7+ days of use'}
-                    />
-                  </View>
-                </>
-              ) : (
-                <>
-                  <Ionicons name="analytics-outline" size={28} color={theme.primary} style={{ marginBottom: 10 }} />
-                  <Text style={styles.sectionSubhead}>Energy Patterns and Memory</Text>
-                  <Text style={[styles.body, { marginTop: 6 }]}>
-                    Premium tracks your energy over time {'\u2014'} which Moon signs drain you, which chakras are always active, and how your domains shift across cycles.
-                  </Text>
-                  <Pressable
-                    style={[styles.primaryBtn, { marginTop: 14 }]}
-                    onPress={() => { safeHaptic(); router.push('/(tabs)/premium' as Href); }}
-                  >
-                    <Ionicons name="sparkles" size={16} color={theme.primary} />
-                    <Text style={styles.primaryBtnText}>Unlock Patterns</Text>
-                  </Pressable>
-                </>
-              )}
-            </LinearGradient>
-          </Animated.View>
-
           {/* ── Footer ── */}
-          <Animated.View entering={FadeInDown.delay(660).duration(600)} style={styles.footer}>
+          <Animated.View entering={FadeInDown.delay(480).duration(600)} style={styles.footer}>
             <Text style={styles.footerText}>
               Energy is not prediction {'\u2014'} it is a mirror. Your chart creates conditions; you decide what to do with them.
             </Text>
@@ -716,8 +442,6 @@ function SectionHeader({ icon, title, delay }: { icon: keyof typeof Ionicons.gly
 }
 
 type ChakraRole = 'primary' | 'secondary' | 'background';
-
-
 
 function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highlight?: boolean; role?: ChakraRole }) {
   const resolvedRole = highlight ? 'primary' : (role ?? 'background');
@@ -771,7 +495,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
     );
   }
 
-  /* ── Primary: the "truth anchor" card with structured sections ── */
+  /* ── Primary: full structured card ── */
   const cueItems = chakra.bodyCue
     .split(/[,;]|(?<=\.)\s+/)
     .map(s => s.trim().replace(/\.$/, ''))
@@ -782,29 +506,23 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
       colors={['rgba(40,55,85,0.75)', 'rgba(30,45,71,0.55)']}
       style={[styles.card, styles.cardPad, { marginBottom: 10 }]}
     >
-      {/* HEADER — Role + Chakra Name + State */}
       <Text style={styles.focusRoleLabel}>Primary Focus Today</Text>
-
       <View style={styles.focusHeaderBlock}>
         <Text style={styles.focusChakraEmoji}>{chakra.emoji}</Text>
         <Text style={styles.focusChakraName}>{chakra.name}</Text>
       </View>
-
       <View style={styles.focusStateBadge}>
         <View style={[styles.focusStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
         <Text style={[styles.focusStateText, { color: CHAKRA_STATE_COLORS[chakra.state] }]}>{chakra.state}</Text>
       </View>
 
-      {/* SECTION 1 — What you may notice */}
       <View style={styles.focusDivider} />
       <Text style={styles.focusSectionLabel}>What you may notice</Text>
       {cueItems.length > 1 ? (
         cueItems.map((item, i) => (
           <View key={i} style={styles.focusBulletRow}>
             <Text style={styles.focusBulletDot}>{'\u2022'}</Text>
-            <Text style={styles.focusBulletText}>
-              {item.charAt(0).toUpperCase() + item.slice(1)}
-            </Text>
+            <Text style={styles.focusBulletText}>{item.charAt(0).toUpperCase() + item.slice(1)}</Text>
           </View>
         ))
       ) : (
@@ -813,17 +531,14 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
         </Text>
       )}
 
-      {/* SECTION 2 — Why */}
       <View style={styles.focusDivider} />
       <Text style={styles.focusSectionLabel}>Why</Text>
       <Text style={styles.focusWhyText}>{chakra.elementConnection}</Text>
 
-      {/* SECTION 3 — What helps */}
       <View style={styles.focusDivider} />
       <Text style={styles.focusSectionLabel}>What helps</Text>
       <Text style={styles.focusHelpText}>{chakra.healingSuggestion}</Text>
 
-      {/* Affirmation (soft close) */}
       {chakra.affirmation ? (
         <View style={styles.affirmationWrap}>
           <Text style={styles.affirmationText}>{'\u201C'}{chakra.affirmation}{'\u201D'}</Text>
@@ -842,19 +557,6 @@ function GuidanceBlock({ icon, label, text, context, color }: { icon: keyof type
       </View>
       <Text style={styles.guidanceMainText}>{text}</Text>
       {context ? <Text style={styles.guidanceContextText}>{context}</Text> : null}
-    </View>
-  );
-}
-
-function PatternTile({ icon, label, value, sub }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string; sub: string }) {
-  return (
-    <View style={styles.patternTile}>
-      <View style={styles.patternTileHeader}>
-        <Ionicons name={icon} size={16} color={theme.primary} />
-        <Text style={styles.patternTileLabel}>{label}</Text>
-      </View>
-      <Text style={styles.patternTileValue}>{value}</Text>
-      <Text style={styles.patternTileSub}>{sub}</Text>
     </View>
   );
 }
@@ -879,6 +581,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 6,
+  },
+  backBtnText: {
+    color: theme.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
   scroll: {
     flex: 1,
@@ -921,11 +634,6 @@ const styles = StyleSheet.create({
   },
   textLocked: {
     color: theme.textMuted,
-  },
-  sectionSubhead: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.textPrimary,
   },
   toneBadge: {
     flexDirection: 'row',
@@ -977,29 +685,6 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-  driverText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(201,169,98,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(201,169,98,0.20)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  pillText: {
-    color: theme.primary,
-    fontSize: 11,
-    fontWeight: '700',
-  },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1029,22 +714,6 @@ const styles = StyleSheet.create({
     color: theme.primary,
     fontSize: 14,
     fontWeight: '800',
-  },
-  secondaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
-  },
-  secondaryBtnText: {
-    color: theme.textSecondary,
-    fontSize: 14,
-    fontWeight: '700',
   },
   lockBanner: {
     flexDirection: 'row',
@@ -1083,79 +752,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  wheel: {
-    position: 'relative',
-  },
-  wheelNode: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  wheelNodeEmoji: {
-    fontSize: 14,
-  },
-  wheelCenter: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginLeft: -40,
-    marginTop: -30,
-    width: 80,
-    alignItems: 'center',
-  },
-  wheelCenterEmoji: {
-    fontSize: 24,
-  },
-  wheelCenterName: {
-    color: theme.textPrimary,
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  wheelCenterState: {
-    color: theme.textMuted,
-    fontSize: 10,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  legendRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginTop: theme.spacing.md,
-    justifyContent: 'center',
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendLabel: {
-    color: theme.textMuted,
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  chakraRoleBadge: {
-    marginBottom: 6,
-  },
-  chakraRoleText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
   },
   chakraHeader: {
     flexDirection: 'row',
@@ -1254,7 +850,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  /* ── Primary Focus card styles ── */
   focusRoleLabel: {
     fontSize: 11,
     fontWeight: '700',
@@ -1357,7 +952,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
   },
-  /* ── Background chakra section ── */
   bgChakraSection: {
     marginTop: 12,
   },
@@ -1413,99 +1007,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontWeight: '600',
     fontFamily: 'serif',
-  },
-  moonRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 14,
-  },
-  moonEmoji: {
-    fontSize: 38,
-    marginTop: -4,
-  },
-  moonPhaseLabel: {
-    color: theme.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-    fontFamily: 'serif',
-  },
-  checkInQuestion: {
-    color: theme.textPrimary,
-    fontSize: 17,
-    fontWeight: '700',
-    fontFamily: 'serif',
-    marginBottom: 14,
-  },
-  checkInOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  checkInOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  checkInOptionSelected: {
-    backgroundColor: 'rgba(201,169,98,0.18)',
-    borderColor: theme.primary,
-  },
-  checkInOptionText: {
-    color: theme.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  checkInOptionTextSelected: {
-    color: theme.primary,
-  },
-  checkInDoneHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-  },
-  checkInDoneTitle: {
-    color: theme.energy,
-    fontSize: 17,
-    fontWeight: '700',
-    fontFamily: 'serif',
-  },
-  patternGrid: {
-    marginTop: 14,
-    gap: 10,
-  },
-  patternTile: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: theme.borderRadius.md,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  patternTileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  patternTileLabel: {
-    color: theme.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  patternTileValue: {
-    color: theme.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  patternTileSub: {
-    color: theme.textMuted,
-    fontSize: 12,
-    marginTop: 3,
   },
   footer: {
     paddingVertical: theme.spacing.xl,

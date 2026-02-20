@@ -13,36 +13,14 @@ import { generateId } from '../storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { getMoonPhaseKey } from '../../utils/moonPhase';
-
-const { Origin, Horoscope } = require('circular-natal-horoscope-js');
+import {
+  signNameFromLongitude as degreeToSign,
+  computeHouseForLongitude as degreeToHouse,
+} from '../astrology/sharedHelpers';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Zodiac helpers
+// Zodiac helpers — imported from sharedHelpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-const SIGNS = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
-];
-
-function degreeToSign(deg: number): string {
-  const idx = Math.floor((deg % 360) / 30);
-  return SIGNS[idx] || 'Aries';
-}
-
-function degreeToHouse(deg: number, houseCusps: number[]): number {
-  if (!houseCusps || houseCusps.length < 12) return 1;
-  for (let i = 0; i < 12; i++) {
-    const next = (i + 1) % 12;
-    let start = houseCusps[i];
-    let end = houseCusps[next];
-    if (end < start) end += 360;
-    let testDeg = deg;
-    if (testDeg < start) testDeg += 360;
-    if (testDeg >= start && testDeg < end) return i + 1;
-  }
-  return 1;
-}
 
 // Moon phase calculation (precise, via astronomy-engine)
 function getMoonPhase(date: Date): string {
@@ -74,9 +52,15 @@ export interface SkySnapshot {
 
 export function captureSkySnapshot(chart: NatalChart, date: Date = new Date()): SkySnapshot {
   try {
-    // Get transiting planet positions
-    const lat = chart.birthData?.latitude ?? 42.33;
-    const lng = chart.birthData?.longitude ?? -83.05;
+    // Get transiting planet positions — use chart birth coordinates.
+    // Lat/lng affect house cusps only; planetary longitudes are geocentric
+    // and do not depend on observer location, so this is mainly relevant
+    // for accurate moon-house placement in captureSkySnapshot.
+    const lat = chart.birthData?.latitude ?? 0;
+    const lng = chart.birthData?.longitude ?? 0;
+    if (!chart.birthData?.latitude || !chart.birthData?.longitude) {
+      logger.warn('[CheckIn] captureSkySnapshot: chart missing birth coordinates — house placement will be approximate');
+    }
     const transits = getTransitingLongitudes(date, lat, lng);
 
     // Get house cusps from chart

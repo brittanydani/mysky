@@ -33,6 +33,17 @@ export interface JournalEntry {
   title?: string;
   content: string; // consider encrypting at rest
 
+  // v8 — chart linkage + transit context (not encrypted; no PII)
+  chartId?: string;           // references saved_charts.id
+  transitSnapshot?: string;   // JSON-serialized TransitSnapshot
+
+  // v10 — journal NLP summaries (encrypted at rest)
+  contentKeywords?: string;     // encrypted JSON: { keywords, top, tokenCount }
+  contentEmotions?: string;     // encrypted JSON: { counts, rates }
+  contentSentiment?: string;    // encrypted JSON: { sentiment }
+  contentWordCount?: number;    // plaintext word count
+  contentReadingMinutes?: number; // estimated reading time
+
   createdAt: string;
   updatedAt: string;
 

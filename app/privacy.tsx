@@ -1,32 +1,47 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack } from 'expo-router';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import StarField from '../components/ui/StarField';
 
 export default function PrivacyPolicyScreen() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
-      <Stack.Screen 
-        options={{ 
-          title: 'Privacy Policy',
-          headerStyle: { backgroundColor: theme.background },
-          headerTintColor: theme.textPrimary,
-        }} 
-      />
-      
       <StarField starCount={20} />
-      
-      <SafeAreaView edges={['bottom']} style={styles.safeArea}>
+
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.headerBar}>
+          <Pressable
+            style={styles.backButton}
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/settings' as Href)}
+          >
+            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Privacy Policy</Text>
+          <View style={styles.backButton} />
+        </View>
+
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>Privacy Policy</Text>
-          <Text style={styles.lastUpdated}>Last updated: February 14, 2026</Text>
+
+          <Text style={styles.lastUpdated}>Last updated: February 18, 2026</Text>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Encryption, Storage, and Subscriptions</Text>
+            <Text style={styles.paragraph}>
+              All sensitive data in MySky is encrypted at rest using AES-256. Encryption keys are securely stored using your device's hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup. Subscription status is managed by RevenueCat, which receives only an anonymized app user ID—never your journal, birth data, or other personal information.
+            </Text>
+          </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Our Commitment to Your Privacy</Text>
@@ -39,29 +54,32 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Information We Collect</Text>
             <Text style={styles.paragraph}>
-              MySky collects only the information you provide:
+              MySky collects only the information you provide directly:
             </Text>
-            <Text style={styles.bulletPoint}>• Birth date, time, and location for astrological calculations</Text>
+            <Text style={styles.bulletPoint}>• Birth date, time, and location (used to generate your personal chart)</Text>
             <Text style={styles.bulletPoint}>• Journal entries and mood check-ins you create</Text>
             <Text style={styles.bulletPoint}>• Energy check-in data you submit</Text>
             <Text style={styles.bulletPoint}>• App preferences and settings</Text>
             <Text style={styles.paragraph}>
-              We do not collect any other personal information, device identifiers, or tracking data.
+              We do not collect device identifiers, location data beyond what you enter, advertising IDs, behavioral tracking data, or any information beyond what you explicitly provide.
+            </Text>
+            <Text style={styles.paragraph}>
+              We do not use analytics trackers, advertising SDKs, or third-party behavioral tracking of any kind. Your journal entries and personal data never leave your device.
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>How We Use Your Information</Text>
             <Text style={styles.paragraph}>
-              Your birth information is used solely to:
+              Your birth information is used solely to personalize MySky for you:
             </Text>
-            <Text style={styles.bulletPoint}>• Generate accurate astrological charts and calculations</Text>
-            <Text style={styles.bulletPoint}>• Provide personalized cosmic insights and daily guidance</Text>
-            <Text style={styles.bulletPoint}>• Create relationship compatibility analyses</Text>
-            <Text style={styles.bulletPoint}>• Map chakra energy patterns from your natal chart</Text>
-            <Text style={styles.bulletPoint}>• Generate your natal story and PDF export</Text>
+            <Text style={styles.bulletPoint}>• Generate your natal chart for use as a reflection framework</Text>
+            <Text style={styles.bulletPoint}>• Provide personalized daily guidance and growth prompts</Text>
+            <Text style={styles.bulletPoint}>• Offer relationship reflection insights</Text>
+            <Text style={styles.bulletPoint}>• Map emotional patterns from your chart profile</Text>
+            <Text style={styles.bulletPoint}>• Generate your themes narrative and PDF export</Text>
             <Text style={styles.paragraph}>
-              We do not use your data for advertising, marketing, or any other purposes.
+              All processing happens on your device. We do not use your data for advertising, marketing, research, or any other purposes.
             </Text>
           </View>
 
@@ -112,43 +130,47 @@ export default function PrivacyPolicyScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Subscriptions</Text>
+            <Text style={styles.sectionTitle}>Subscriptions & Third Parties</Text>
             <Text style={styles.paragraph}>
-              Subscription purchases are handled by Apple through the App Store. 
-              We use RevenueCat for subscription management, which receives only 
-              anonymized app user IDs — not your personal data or billing information.
+              Subscription purchases are processed by Apple through the App Store. MySky uses RevenueCat solely to manage subscription status. RevenueCat receives only an anonymized app user ID to verify whether a purchase has been made — no journal content, birth data, or personal information is ever shared with RevenueCat or any other third party.
+            </Text>
+            <Text style={styles.paragraph}>
+              No other third-party services, analytics platforms, advertising networks, or data brokers receive any information from MySky.
             </Text>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Rights</Text>
+            <Text style={styles.sectionTitle}>Your Rights & Data Deletion</Text>
             <Text style={styles.paragraph}>
               You have complete control over your data:
             </Text>
             <Text style={styles.bulletPoint}>• Access: View all your stored data anytime</Text>
             <Text style={styles.bulletPoint}>• Export: Download your chart as a PDF or create an encrypted backup</Text>
-            <Text style={styles.bulletPoint}>• Delete: Permanently remove all data from the app</Text>
+            <Text style={styles.bulletPoint}>• Delete: Permanently remove all data at any time using the in-app reset option in Privacy Settings, or by uninstalling the app</Text>
             <Text style={styles.bulletPoint}>• Portability: Take your data with you via encrypted backup</Text>
             <Text style={styles.bulletPoint}>• No account required: MySky works without creating any account</Text>
             <Text style={styles.paragraph}>
-              These rights can be exercised through the Privacy Settings in the app.
+              Because all data is stored locally on your device, uninstalling the app fully removes all data. No data is retained on any server after deletion.
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Children&apos;s Privacy</Text>
             <Text style={styles.paragraph}>
-              MySky is not intended for children under 13. We do not knowingly collect 
-              personal information from children under 13.
+              MySky is intended for users aged 13 and older. We do not knowingly collect
+              personal information from anyone under 13. If you are a parent or guardian
+              and believe your child has provided personal information through this app,
+              please contact us at brittanyapps@outlook.com so we can delete it promptly.
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Changes to This Policy</Text>
             <Text style={styles.paragraph}>
-              We may update this privacy policy from time to time. We will notify you 
-              of any changes by posting the new policy in the app and updating the 
-              &quot;last updated&quot; date.
+              We may update this privacy policy from time to time. We will notify you
+              of any changes by posting the new policy in the app and updating the
+              &quot;last updated&quot; date. Continued use of the app after an update constitutes
+              acceptance of the revised policy.
             </Text>
           </View>
 
@@ -180,19 +202,33 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-    marginBottom: theme.spacing.sm,
+    paddingTop: theme.spacing.lg,
   },
   lastUpdated: {
     fontSize: 14,

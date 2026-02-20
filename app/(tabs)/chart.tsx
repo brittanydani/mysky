@@ -146,6 +146,7 @@ export default function ChartScreen() {
           place: saved.birthPlace,
           latitude: saved.latitude,
           longitude: saved.longitude,
+          timezone: saved.timezone,
           houseSystem: saved.houseSystem,
         };
 
@@ -520,6 +521,11 @@ export default function ChartScreen() {
                 : `${(userChart as any).name || 'Your Chart'}${birthDateStr ? ` · Born ${birthDateStr}` : ''}`
               }
             </Text>
+            {!overlayChart && (
+              <Text style={styles.headerFrame}>
+                Your chart personalizes your reflection and growth prompts throughout MySky.
+              </Text>
+            )}
           </Animated.View>
 
           {/* ── People Bar (Premium Multi-Chart) ── */}
@@ -663,24 +669,6 @@ export default function ChartScreen() {
             />
           </Animated.View>
 
-          {/* ── Multi-Chart Upsell (Free users) ── */}
-          {!isPremium && (
-            <Animated.View entering={FadeInDown.delay(160).duration(600)} style={{ width: '100%' }}>
-              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                <LinearGradient
-                  colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']}
-                  style={styles.overlayUpsell}
-                >
-                  <Ionicons name="layers-outline" size={16} color={theme.primary} />
-                  <Text style={styles.overlayUpsellText}>
-                    Overlay charts with Deeper Sky — compare your planets with anyone
-                  </Text>
-                  <Ionicons name="chevron-forward" size={16} color={theme.primary} />
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
-          )}
-
           {/* ── Big Three Summary ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={{ width: '100%' }}>
             <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.bigThreeCard}>
@@ -777,22 +765,6 @@ export default function ChartScreen() {
                   </View>
                 )}
               </LinearGradient>
-            </Animated.View>
-          )}
-
-          {/* Free user upsell for Chiron & Nodes */}
-          {!isPremium && sensitivePoints.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ width: '100%' }}>
-              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                <LinearGradient
-                  colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']}
-                  style={styles.sensitiveUpsell}
-                >
-                  <Ionicons name="sparkles" size={16} color={theme.primary} />
-                  <Text style={styles.sensitiveUpsellText}>Unlock Chiron & Node insights with Deeper Sky</Text>
-                  <Ionicons name="chevron-forward" size={16} color={theme.primary} />
-                </LinearGradient>
-              </Pressable>
             </Animated.View>
           )}
 
@@ -1181,7 +1153,7 @@ export default function ChartScreen() {
                 <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Ionicons name="sunny-outline" size={20} color={theme.primary} style={{ marginRight: 10 }} />
-                    <Text style={styles.patternTitle}>Part of Fortune</Text>
+                    <Text style={styles.patternTitle}>Point of Flow</Text>
                   </View>
                   <View style={styles.patternHighlight}>
                     <Text style={styles.patternHighlightText}>
@@ -1190,14 +1162,13 @@ export default function ChartScreen() {
                     </Text>
                   </View>
                   <Text style={styles.patternDesc}>
-                    The Part of Fortune marks where you find ease, flow, and natural abundance. Its sign and house
-                    placement show where you can access joy and resilience most easily.
+                    This point (traditionally "Part of Fortune") reflects where you tend to find ease, natural resilience,
+                    and a felt sense of alignment. Its sign and house shape how this feels in daily life.
                   </Text>
                   <View style={styles.tooltipBox}>
                     <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
                     <Text style={styles.tooltipText}>
-                      This point is calculated from your Sun, Moon, and Ascendant. It highlights your most effortless
-                      channel for well-being.
+                      Calculated from your Sun, Moon, and Ascendant. A reflective archetype — not a prediction.
                     </Text>
                   </View>
                 </LinearGradient>
@@ -1383,6 +1354,24 @@ export default function ChartScreen() {
                 )}
             </Animated.View>
           )}
+
+          {/* ── Deeper Sky Upsell (bottom, free users only) ── */}
+          {!isPremium && (
+            <Animated.View entering={FadeInDown.delay(400).duration(600)} style={{ width: '100%' }}>
+              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                <LinearGradient
+                  colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']}
+                  style={styles.overlayUpsell}
+                >
+                  <Ionicons name="sparkles" size={16} color={theme.primary} />
+                  <Text style={styles.overlayUpsellText}>
+                    Unlock Deeper Sky — overlays, Chiron & Node insights, and more
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={theme.primary} />
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          )}
         </ScrollView>
       </SafeAreaView>
 
@@ -1438,6 +1427,14 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
   },
+  headerFrame: {
+    fontSize: 12,
+    color: theme.textMuted,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 17,
+    opacity: 0.8,
+  },
 
   warningBox: {
     flexDirection: 'row',
@@ -1467,7 +1464,7 @@ const styles = StyleSheet.create({
   bigThreeRow: { flexDirection: 'row', justifyContent: 'space-evenly' },
   bigThreeItem: { alignItems: 'center', flex: 1 },
   bigThreeLabel: { color: theme.textMuted, fontSize: 12, letterSpacing: 0.5, textAlign: 'center' },
-  bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 16, marginTop: 4, textAlign: 'center' },
+  bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 11, marginTop: 4, textAlign: 'center' },
   bigThreeDeg: { color: theme.textSecondary, fontSize: 11, marginTop: 2, textAlign: 'center' },
   mcRow: {
     alignItems: 'center',

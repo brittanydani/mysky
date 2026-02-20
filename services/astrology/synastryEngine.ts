@@ -71,6 +71,18 @@ const PLANET_THEMES: Record<string, { self: string; other: string }> = {
     self: 'your discipline, boundaries, and fears', 
     other: 'their structure, limits, and authority' 
   },
+  Uranus: {
+    self: 'your need for freedom, originality, and change',
+    other: 'their unpredictability and unconventional nature'
+  },
+  Neptune: {
+    self: 'your imagination, spirituality, and idealism',
+    other: 'their dreams, illusions, and creative vision'
+  },
+  Pluto: {
+    self: 'your power, transformation, and deepest desires',
+    other: 'their intensity, control, and transformative influence'
+  },
 };
 
 // Interpretations for key synastry aspects
@@ -283,6 +295,126 @@ const SYNASTRY_INTERPRETATIONS: Record<string, Record<string, {
       category: 'challenge',
     },
   },
+
+  // Outer planet synastry aspects (Uranus, Neptune, Pluto)
+  'Sun-Uranus': {
+    Conjunction: {
+      title: 'Electric Awakening',
+      description: 'Uranus person electrifies the Sun person\'s identity. Exciting but unpredictable—this bond resists routine.',
+      category: 'chemistry',
+    },
+    Square: {
+      title: 'Disruptive Freedom',
+      description: 'One person\'s need for freedom clashes with the other\'s sense of self. Growth requires space.',
+      category: 'challenge',
+    },
+    Opposition: {
+      title: 'Freedom vs Identity',
+      description: 'Attraction to what\'s different in each other, but maintaining closeness requires conscious effort.',
+      category: 'growth',
+    },
+  },
+
+  'Sun-Neptune': {
+    Conjunction: {
+      title: 'Spiritual Bond',
+      description: 'A dreamy, idealistic connection. Beautiful but requires grounding—be wary of seeing only what you wish to see.',
+      category: 'connection',
+    },
+    Square: {
+      title: 'Illusion vs Reality',
+      description: 'Idealization and confusion can cloud the connection. Honesty and clarity are essential.',
+      category: 'challenge',
+    },
+  },
+
+  'Sun-Pluto': {
+    Conjunction: {
+      title: 'Transformative Power',
+      description: 'An intense, magnetic bond. Pluto profoundly transforms the Sun person\'s sense of self—for better or deeper.',
+      category: 'chemistry',
+    },
+    Square: {
+      title: 'Power Struggle',
+      description: 'Intense and potentially controlling dynamics. Growth comes from releasing the need to dominate.',
+      category: 'challenge',
+    },
+    Opposition: {
+      title: 'Magnetic Intensity',
+      description: 'Powerful attraction with themes of control and surrender. Transformative when navigated consciously.',
+      category: 'growth',
+    },
+  },
+
+  'Moon-Pluto': {
+    Conjunction: {
+      title: 'Emotional Depth',
+      description: 'Emotions run extremely deep. This bond transforms emotional patterns—intense, healing, and sometimes overwhelming.',
+      category: 'chemistry',
+    },
+    Square: {
+      title: 'Emotional Power Dynamics',
+      description: 'Feelings can become controlling or manipulative. Awareness brings profound emotional growth.',
+      category: 'challenge',
+    },
+  },
+
+  'Venus-Pluto': {
+    Conjunction: {
+      title: 'Obsessive Attraction',
+      description: 'One of the most intense synastry contacts. Love is deep, transformative, and all-consuming.',
+      category: 'chemistry',
+    },
+    Square: {
+      title: 'Possessive Love',
+      description: 'Jealousy and power dynamics in love. Transforming possessiveness into trust is the work.',
+      category: 'challenge',
+    },
+    Trine: {
+      title: 'Deep Love',
+      description: 'Profound romantic and emotional connection that transforms both people\'s experience of love.',
+      category: 'chemistry',
+    },
+  },
+
+  'Venus-Uranus': {
+    Conjunction: {
+      title: 'Exciting Romance',
+      description: 'Love is electric and unconventional. Thrilling but may struggle with consistency.',
+      category: 'chemistry',
+    },
+    Square: {
+      title: 'On-Off Attraction',
+      description: 'Intense but unstable romantic energy. Freedom needs must be balanced with commitment.',
+      category: 'challenge',
+    },
+  },
+
+  'Venus-Neptune': {
+    Conjunction: {
+      title: 'Romantic Idealism',
+      description: 'A fairy-tale quality to the attraction. Beautiful when grounded; confusing when not.',
+      category: 'chemistry',
+    },
+    Square: {
+      title: 'Rose-Colored Glasses',
+      description: 'Idealization meets disappointment. Seeing each other clearly is the path forward.',
+      category: 'challenge',
+    },
+  },
+
+  'Mars-Pluto': {
+    Conjunction: {
+      title: 'Raw Power',
+      description: 'Extremely powerful energy between you. Passion and intensity are off the charts—channel consciously.',
+      category: 'chemistry',
+    },
+    Square: {
+      title: 'Explosive Tension',
+      description: 'Power struggles and intense conflict. This energy can be destructive or deeply transformative.',
+      category: 'challenge',
+    },
+  },
 };
 
 export class SynastryEngine {
@@ -343,6 +475,9 @@ export class SynastryEngine {
     if (chart.mars) planets.push(chart.mars);
     if (chart.jupiter) planets.push(chart.jupiter);
     if (chart.saturn) planets.push(chart.saturn);
+    if (chart.uranus) planets.push(chart.uranus);
+    if (chart.neptune) planets.push(chart.neptune);
+    if (chart.pluto) planets.push(chart.pluto);
     
     return planets;
   }
@@ -424,12 +559,21 @@ export class SynastryEngine {
   }
   
   /**
-   * Get standardized pair key for lookup
+   * Get standardized pair key for lookup.
+   * Uses the canonical order defined by PLANET_ORDER so keys match
+   * the hand-written interpretation table (e.g. "Sun-Moon", "Venus-Mars").
    */
+  private static readonly PLANET_ORDER: Record<string, number> = {
+    Sun: 0, Moon: 1, Mercury: 2, Venus: 3, Mars: 4,
+    Jupiter: 5, Saturn: 6, Uranus: 7, Neptune: 8, Pluto: 9,
+  };
+
   private static getPairKey(planet1: string, planet2: string): string {
-    // Order alphabetically for consistent lookup
-    const ordered = [planet1, planet2].sort();
-    return `${ordered[0]}-${ordered[1]}`;
+    const o1 = this.PLANET_ORDER[planet1] ?? 99;
+    const o2 = this.PLANET_ORDER[planet2] ?? 99;
+    // Sort by astrological order (Sun first) so keys like "Sun-Moon" match the table
+    if (o1 <= o2) return `${planet1}-${planet2}`;
+    return `${planet2}-${planet1}`;
   }
   
   /**

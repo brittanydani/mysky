@@ -36,3 +36,12 @@ export function parseLocalDate(dateStr: string): Date {
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
 }
+
+/**
+ * Returns the day-of-year (1–366) for a given date.
+ * Useful for deterministic daily content selection.
+ */
+export function dayOfYear(d: Date = new Date()): number {
+  const start = new Date(d.getFullYear(), 0, 0);
+  return Math.floor((d.getTime() - start.getTime()) / 86400000);
+}

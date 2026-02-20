@@ -31,7 +31,8 @@ import { ChartTiedPromptsService, ChartTiedPrompt, JournalPromptSet } from '../s
 import { NatalChart } from '../services/astrology/types';
 import { ShadowQuoteEngine, ShadowQuoteResult, ShadowQuote } from '../services/astrology/shadowQuotes';
 import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from '../services/journal/promptEngine';
-import { getChakraInfo } from '../services/journal/chakraSystem';
+
+import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
 
 interface JournalEntryModalProps {
   visible: boolean;
@@ -40,36 +41,22 @@ interface JournalEntryModalProps {
   initialData?: JournalEntry;
 }
 
-const moodOptions = [
-  { key: 'calm', label: 'Calm', icon: 'leaf', color: '#6EBF8B', description: 'Peaceful and centered' },
-  { key: 'soft', label: 'Soft', icon: 'water', color: '#8BC4E8', description: 'Gentle and flowing' },
-  { key: 'okay', label: 'Okay', icon: 'partly-sunny', color: '#C9A962', description: 'Balanced and neutral' },
-  { key: 'heavy', label: 'Heavy', icon: 'cloudy', color: '#E0B07A', description: 'Weighed down' },
-  { key: 'stormy', label: 'Stormy', icon: 'thunderstorm', color: '#E07A7A', description: 'Turbulent and intense' },
-] as const;
-
-const moonPhaseOptions = [
-  { key: 'new', label: 'New Moon', icon: 'moon', description: 'New beginnings' },
-  { key: 'waxing', label: 'Waxing Moon', icon: 'moon', description: 'Growing energy' },
-  { key: 'full', label: 'Full Moon', icon: 'moon', description: 'Peak illumination' },
-  { key: 'waning', label: 'Waning Moon', icon: 'moon', description: 'Releasing energy' },
-] as const;
-
-type MoodKey = (typeof moodOptions)[number]['key'];
-type MoonKey = (typeof moonPhaseOptions)[number]['key'];
+type MoodKey = 'calm' | 'soft' | 'okay' | 'heavy' | 'stormy';
+type EnergyKey = 'low' | 'steady' | 'high';
 
 export default function JournalEntryModal({ visible, onClose, onSave, initialData }: JournalEntryModalProps) {
   const { isPremium } = usePremium();
   
   const [date, setDate] = useState(new Date());
   const [mood, setMood] = useState<MoodKey>('okay');
-  const [moonPhase, setMoonPhase] = useState<MoonKey>('new');
+  const [energyLevel, setEnergyLevel] = useState<EnergyKey>('steady');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   
-  // Premium: Chart-tied prompts (legacy)
+  // Chart state — loaded for all users (used for transit capture + shadow quotes)
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
+  const [chartId, setChartId] = useState<string>('');
   const [promptSet, setPromptSet] = useState<JournalPromptSet | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
 
@@ -90,19 +77,12 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     };
   }, []);
 
-  // Load user chart for premium prompts
+  // Load user chart for all users (transit capture + shadow quotes + premium prompts)
   useEffect(() => {
-    if (isPremium && visible) {
+    if (visible) {
       loadUserChart();
     }
-  }, [isPremium, visible]);
-
-  // Load shadow quote for all users (chart optional — works with lighter context)
-  useEffect(() => {
-    if (visible && !isPremium) {
-      loadShadowQuoteOnly();
-    }
-  }, [visible, isPremium]);
+  }, [visible]);
 
   // Update prompts when mood changes (legacy)
   useEffect(() => {
@@ -135,6 +115,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       const charts = await localDb.getCharts();
       if (charts.length > 0) {
         const savedChart = charts[0];
+        setChartId(savedChart.id);
         const birthData = {
           date: savedChart.birthDate,
           time: savedChart.birthTime,
@@ -142,12 +123,13 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           place: savedChart.birthPlace,
           latitude: savedChart.latitude,
           longitude: savedChart.longitude,
-          houseSystem: savedChart.houseSystem
+          timezone: savedChart.timezone,
+          houseSystem: savedChart.houseSystem,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
         setUserChart(chart);
 
-        // Load shadow quote for journal
+        // Load shadow quote for journal (all users)
         try {
           const shadow = await ShadowQuoteEngine.getJournalPromptQuote(chart);
           setShadowResult(shadow);
@@ -155,31 +137,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           // Continue without shadow quote
         }
       }
-    } catch (e) {
-      // Continue without chart-tied prompts
-    }
-  };
-
-  const loadShadowQuoteOnly = async () => {
-    try {
-      const charts = await localDb.getCharts();
-      if (charts.length > 0) {
-        const savedChart = charts[0];
-        const birthData = {
-          date: savedChart.birthDate,
-          time: savedChart.birthTime,
-          hasUnknownTime: savedChart.hasUnknownTime,
-          place: savedChart.birthPlace,
-          latitude: savedChart.latitude,
-          longitude: savedChart.longitude,
-          houseSystem: savedChart.houseSystem,
-        };
-        const chart = AstrologyCalculator.generateNatalChart(birthData);
-        const shadow = await ShadowQuoteEngine.getJournalPromptQuote(chart);
-        setShadowResult(shadow);
-      }
     } catch {
-      // Shadow quotes are non-critical
+      // Continue without chart-tied features
     }
   };
 
@@ -201,13 +160,18 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     if (initialData) {
       setDate(new Date(initialData.date));
       setMood(initialData.mood);
-      setMoonPhase(initialData.moonPhase);
+      const stored = initialData.moonPhase as string;
+      const moonPhaseToEnergy: Record<string, EnergyKey> = {
+        low: 'low', steady: 'steady', high: 'high',   // legacy direct values
+        waning: 'low', full: 'steady', waxing: 'high', new: 'steady',
+      };
+      setEnergyLevel(moonPhaseToEnergy[stored] ?? 'steady');
       setTitle(initialData.title || '');
       setContent(initialData.content);
     } else {
       setDate(new Date());
       setMood('okay');
-      setMoonPhase('new');
+      setEnergyLevel('steady');
       setTitle('');
       setContent('');
       setShowCloseQuote(false);
@@ -221,12 +185,24 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       return;
     }
 
+    let transitSnapshotJson: string | undefined;
+    if (userChart) {
+      try {
+        const snap = AdvancedJournalAnalyzer.captureTransitSnapshot(userChart, date);
+        transitSnapshotJson = JSON.stringify(snap);
+      } catch {
+        // Non-critical — entry saves fine without it
+      }
+    }
+
     onSave({
       date: toLocalDateString(date),
       mood,
-      moonPhase,
+      moonPhase: ({ low: 'waning', steady: 'full', high: 'waxing' } as Record<EnergyKey, string>)[energyLevel] as any,
       title: title.trim() || undefined,
       content: content.trim(),
+      chartId: chartId || undefined,
+      transitSnapshot: transitSnapshotJson,
     });
 
     // Show close shadow quote after saving
@@ -288,83 +264,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
               </Animated.View>
 
               <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>How are you feeling?</Text>
-                <View style={styles.moodGrid}>
-                  {moodOptions.map((m) => (
-                    <Pressable
-                      key={m.key}
-                      style={[styles.moodOption, mood === m.key && styles.moodOptionSelected]}
-                      onPress={() => {
-                        setMood(m.key);
-                        Haptics.selectionAsync();
-                      }}
-                    >
-                      <LinearGradient
-                        colors={
-                          mood === m.key
-                            ? [`${m.color}40`, `${m.color}20`]
-                            : ['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']
-                        }
-                        style={styles.moodGradient}
-                      >
-                        <View
-                          style={[
-                            styles.moodIcon,
-                            { backgroundColor: mood === m.key ? m.color : 'rgba(255, 255, 255, 0.1)' },
-                          ]}
-                        >
-                          <Ionicons name={m.icon as any} size={20} color={mood === m.key ? 'white' : theme.textMuted} />
-                        </View>
-                        <Text style={[styles.moodLabel, { color: mood === m.key ? theme.textPrimary : theme.textSecondary }]}>
-                          {m.label}
-                        </Text>
-                        <Text style={styles.moodDescription}>{m.description}</Text>
-                      </LinearGradient>
-                    </Pressable>
-                  ))}
-                </View>
-              </Animated.View>
-
-              <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>Moon Phase</Text>
-                <View style={styles.moonPhaseGrid}>
-                  {moonPhaseOptions.map((p) => (
-                    <Pressable
-                      key={p.key}
-                      style={[styles.moonPhaseOption, moonPhase === p.key && styles.moonPhaseOptionSelected]}
-                      onPress={() => {
-                        setMoonPhase(p.key);
-                        Haptics.selectionAsync();
-                      }}
-                    >
-                      <LinearGradient
-                        colors={
-                          moonPhase === p.key
-                            ? ['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.1)']
-                            : ['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']
-                        }
-                        style={styles.moonPhaseGradient}
-                      >
-                        <Ionicons
-                          name={p.icon as any}
-                          size={16}
-                          color={moonPhase === p.key ? theme.primary : theme.textMuted}
-                        />
-                        <Text
-                          style={[
-                            styles.moonPhaseLabel,
-                            { color: moonPhase === p.key ? theme.textPrimary : theme.textSecondary },
-                          ]}
-                        >
-                          {p.label}
-                        </Text>
-                      </LinearGradient>
-                    </Pressable>
-                  ))}
-                </View>
-              </Animated.View>
-
-              <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Title (Optional)</Text>
                 <View style={styles.inputContainer}>
                   <TextInput
@@ -377,7 +276,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 </View>
               </Animated.View>
 
-              <Animated.View entering={FadeInDown.delay(600).duration(600)} style={styles.section}>
+              <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
                 <View style={styles.reflectionHeader}>
                   <Text style={styles.sectionTitle}>Your Reflection</Text>
                   {/* Prompts button — available for all users */}
@@ -506,7 +405,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 </View>
               </Animated.View>
 
-              <Animated.View entering={FadeInUp.delay(700).duration(600)} style={styles.saveContainer}>
+              <Animated.View entering={FadeInUp.delay(500).duration(600)} style={styles.saveContainer}>
                 {/* Close quote — appears briefly after saving */}
                 {showCloseQuote && closeQuote && (
                   <ShadowQuoteCard
@@ -518,7 +417,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 )}
                 <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]} onPress={handleSave}>
                   <LinearGradient
-                    colors={['#E8D5A8', '#C9A962', '#B8994F']}
+                    colors={[...theme.goldGradient]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.saveGradient}
@@ -566,18 +465,6 @@ const styles = StyleSheet.create({
   dateButton: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder },
   dateGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md },
   dateText: { fontSize: 16, color: theme.textPrimary, marginLeft: theme.spacing.md, flex: 1 },
-  moodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md },
-  moodOption: { flex: 1, minWidth: '45%', borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder },
-  moodOptionSelected: { borderColor: theme.primary },
-  moodGradient: { padding: theme.spacing.lg, alignItems: 'center', minHeight: 100 },
-  moodIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: theme.spacing.sm },
-  moodLabel: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  moodDescription: { fontSize: 11, color: theme.textMuted, textAlign: 'center' },
-  moonPhaseGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
-  moonPhaseOption: { flex: 1, minWidth: '45%', borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder },
-  moonPhaseOptionSelected: { borderColor: theme.primary },
-  moonPhaseGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.md },
-  moonPhaseLabel: { fontSize: 13, fontWeight: '500', marginLeft: theme.spacing.sm },
   inputContainer: { backgroundColor: theme.backgroundTertiary, borderRadius: theme.borderRadius.lg, borderWidth: 1, borderColor: theme.cardBorder },
   titleInput: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, fontSize: 16, color: theme.textPrimary },
   contentInput: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, fontSize: 16, color: theme.textPrimary, minHeight: 120 },

@@ -24,7 +24,7 @@ import { TransitSignal } from './dailyInsightEngine';
 import { detectChartPatterns } from './chartPatterns';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transits';
 import { logger } from '../../utils/logger';
-import { toLocalDateString } from '../../utils/dateUtils';
+import { toLocalDateString, dayOfYear } from '../../utils/dateUtils';
 import { getMoonPhaseName } from '../../utils/moonPhase';
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -678,7 +678,7 @@ export class ShadowQuoteEngine {
 
     // Deterministic-ish selection using date
     const today = new Date();
-    const dayHash = today.getFullYear() * 1000 + getDayOfYear(today);
+    const dayHash = today.getFullYear() * 1000 + dayOfYear(today);
     const idx = (dayHash * 7 + 13) % pool.length;
     const quote = pool[idx];
 
@@ -729,7 +729,7 @@ export class ShadowQuoteEngine {
       );
       const aspects = computeTransitAspectsToNatal(chart, transits);
       transitSignals = transitAspectsToActivationSignals(aspects);
-      moonPhase = getMoonPhaseSimple(date);
+      moonPhase = getMoonPhaseName(date);
     } catch (e) {
       logger.error('[ShadowQuotes] Transit computation failed, using defaults:', e);
     }
@@ -764,7 +764,7 @@ export class ShadowQuoteEngine {
     // Take from top 5 with weighted randomness for variety
     const topN = candidates.slice(0, 5);
     const today = new Date();
-    const dayHash = today.getFullYear() * 1000 + getDayOfYear(today);
+    const dayHash = today.getFullYear() * 1000 + dayOfYear(today);
     const selectedIdx = dayHash % topN.length;
     const selected = topN[selectedIdx].quote;
 
@@ -840,18 +840,9 @@ function deriveActivationReason(
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
+// getDayOfYear → imported as dayOfYear from dateUtils
+// getMoonPhaseName → imported from utils/moonPhase
 // ════════════════════════════════════════════════════════════════════════════
-
-function getDayOfYear(date: Date): number {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
-  return Math.floor(diff / 86400000);
-}
-
-// getMoonPhaseSimple replaced by precise getMoonPhaseName from utils/moonPhase
-function getMoonPhaseSimple(date: Date): string {
-  return getMoonPhaseName(date);
-}
 
 /**
  * Convert transit SimpleAspects into lightweight TransitSignal-like objects

@@ -9,6 +9,14 @@ import { NatalChart } from '../astrology/types';
 import { getTransitingLongitudes } from '../astrology/transits';
 import { getMoonPhaseTag as getPreciseMoonPhaseTag } from '../../utils/moonPhase';
 import {
+  signNameFromLongitude as signFromLongitude,
+  extractSignName as getSignName,
+  SIGN_TO_ELEMENT,
+  SIGN_TO_MODALITY,
+  ZODIAC_SIGN_NAMES as ZODIAC_SIGNS,
+} from '../astrology/sharedHelpers';
+import { dayOfYear, toLocalDateString } from '../../utils/dateUtils';
+import {
   TaggedContent,
   TaggedGreeting,
   ContentTag,
@@ -59,6 +67,8 @@ interface ContentSelection {
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS — Chart-to-Tag mapping
+// signFromLongitude, getSignName, SIGN_TO_ELEMENT, SIGN_TO_MODALITY,
+// ZODIAC_SIGNS, dayOfYear → imported from sharedHelpers and dateUtils
 // ═══════════════════════════════════════════════════════════════
 
 const SIGN_ELEMENTS: Record<string, ContentTag> = {
@@ -72,16 +82,6 @@ const SIGN_MODALITIES: Record<string, ContentTag> = {
   Leo: 'fixed', Virgo: 'mutable', Libra: 'cardinal', Scorpio: 'fixed',
   Sagittarius: 'mutable', Capricorn: 'cardinal', Aquarius: 'fixed', Pisces: 'mutable',
 };
-
-const ZODIAC_SIGNS = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
-] as const;
-
-function signFromLongitude(degrees: number): string {
-  const idx = Math.floor(((degrees % 360) + 360) % 360 / 30);
-  return ZODIAC_SIGNS[idx];
-}
 
 function getMoonPhaseTag(date: Date): ContentTag {
   return getPreciseMoonPhaseTag(date) as ContentTag;
@@ -118,14 +118,6 @@ function buildTagProfile(
   hasRetrograde?: boolean,
 ): TagProfile {
   const tags = new Map<ContentTag, number>();
-
-  // Helper: extract sign name string from ZodiacSign object or plain string
-  const getSignName = (s: unknown): string => {
-    if (!s) return '';
-    if (typeof s === 'string') return s;
-    const obj = s as { name?: string };
-    return obj?.name ?? '';
-  };
 
   // Sun element & modality (weight 3)
   const sunSign = getSignName(chart.sun?.sign) || getSignName(chart.planets?.find(p => p.planet === 'Sun')?.sign);
@@ -217,11 +209,9 @@ function scoreContent(content: TaggedContent, profile: TagProfile): number {
 
 function dateHash(date: Date, salt: number = 0): number {
   const year = date.getFullYear();
-  const dayOfYear = Math.floor(
-    (date.getTime() - new Date(year, 0, 0).getTime()) / 86400000
-  );
+  const doy = dayOfYear(date);
   // Simple deterministic hash — produces different value each day
-  return ((dayOfYear * 31 + year * 17 + salt * 7) % 2147483647);
+  return ((doy * 31 + year * 17 + salt * 7) % 2147483647);
 }
 
 function chartHash(chart: NatalChart): number {
@@ -241,7 +231,7 @@ async function getRecentlyShownIds(category: string, days: number = 30): Promise
     const db = await getDb();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    const cutoffStr = toLocalDateString(cutoffDate);
 
     const rows: any[] = await db.getAllAsync(
       `SELECT content_id FROM content_shown_history WHERE category = ? AND shown_date > ?`,
@@ -257,7 +247,7 @@ async function getRecentlyShownIds(category: string, days: number = 30): Promise
 async function recordShown(category: string, contentId: number, date: Date): Promise<void> {
   try {
     const db = await getDb();
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(date);
     
     // Check if already recorded for today
     const existing = await db.getAllAsync(
@@ -277,7 +267,7 @@ async function recordShown(category: string, contentId: number, date: Date): Pro
     cleanupDate.setDate(cleanupDate.getDate() - 60);
     await db.runAsync(
       `DELETE FROM content_shown_history WHERE shown_date < ?`,
-      [cleanupDate.toISOString().split('T')[0]]
+      [toLocalDateString(cleanupDate)]
     );
   } catch {
     // Non-critical

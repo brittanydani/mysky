@@ -14,38 +14,17 @@ import PremiumRequiredScreen from '../../components/PremiumRequiredScreen';
 import { localDb } from '../../services/storage/localDb';
 import { JournalEntry, generateId } from '../../services/storage/models';
 import JournalEntryModal from '../../components/JournalEntryModal';
-import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel } from '../../services/premium/advancedJournal';
+import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../services/premium/advancedJournal';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
 import { CheckInService } from '../../services/patterns/checkInService';
 import { DailyCheckIn } from '../../services/patterns/types';
 import CheckInTrendGraph from '../../components/ui/CheckInTrendGraph';
+import { analyzeJournalContent } from '../../services/journal/nlp';
 
 const { width } = Dimensions.get('window');
 
-const moodColors: Record<string, string> = {
-  calm: '#6EBF8B',
-  soft: '#8BC4E8',
-  okay: '#C9A962',
-  heavy: '#E0B07A',
-  stormy: '#E07A7A',
-};
-
-const moodIcons: Record<string, string> = {
-  calm: 'leaf',
-  soft: 'water',
-  okay: 'partly-sunny',
-  heavy: 'cloudy',
-  stormy: 'thunderstorm',
-};
-
-const moonPhaseIcons: Record<string, string> = {
-  new: 'moon',
-  waxing: 'moon',
-  full: 'moon',
-  waning: 'moon',
-};
 
 export default function JournalScreen() {
   const insets = useSafeAreaInsets();
@@ -61,6 +40,16 @@ export default function JournalScreen() {
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
+  const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (id: string) => {
+    setExpandedEntryIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -105,13 +94,20 @@ export default function JournalScreen() {
 
   const generatePatternInsights = () => {
     try {
-      const entryMetas: JournalEntryMeta[] = entries.map((e) => ({
-        id: e.id,
-        date: e.date,
-        mood: { overall: moodToLevel(e.mood) },
-        tags: [],
-        wordCount: (e.content || '').trim().split(/\s+/).filter(Boolean).length,
-      }));
+      const entryMetas: JournalEntryMeta[] = entries.map((e) => {
+        let transitSnapshot: TransitSnapshot | undefined;
+        if (e.transitSnapshot) {
+          try { transitSnapshot = JSON.parse(e.transitSnapshot); } catch {}
+        }
+        return {
+          id: e.id,
+          date: e.date,
+          mood: { overall: moodToLevel(e.mood) },
+          tags: [],
+          wordCount: (e.content || '').trim().split(/\s+/).filter(Boolean).length,
+          transitSnapshot,
+        };
+      });
 
       const insights = AdvancedJournalAnalyzer.analyzePatterns(entryMetas, isPremium);
       setPatternInsights(insights);
@@ -177,13 +173,28 @@ export default function JournalScreen() {
     try {
       const nowIso = new Date().toISOString();
 
+      // Run NLP analysis on plaintext content before encryption
+      const contentText = data.content ?? editingEntry?.content ?? '';
+      const nlp = analyzeJournalContent(contentText);
+      const nlpFields = {
+        contentKeywords: JSON.stringify(nlp.keywords),
+        contentEmotions: JSON.stringify(nlp.emotions),
+        contentSentiment: JSON.stringify(nlp.sentiment),
+        contentWordCount: nlp.wordCount,
+        contentReadingMinutes: nlp.readingMinutes,
+      };
+
       if (editingEntry?.id) {
         const updated: JournalEntry = {
           ...editingEntry,
           ...data,
+          ...nlpFields,
           id: editingEntry.id,
           createdAt: editingEntry.createdAt ?? nowIso,
+          updatedAt: nowIso,
           date: (data.date ?? editingEntry.date) as string,
+          chartId: data.chartId ?? editingEntry.chartId,
+          transitSnapshot: data.transitSnapshot ?? editingEntry.transitSnapshot,
         } as JournalEntry;
 
         await localDb.updateJournalEntry(updated);
@@ -196,6 +207,11 @@ export default function JournalScreen() {
           moonPhase: (data.moonPhase ?? 'new') as any,
           date: (data.date ?? parseLocalDate(nowIso).toISOString().slice(0, 10)) as any,
           createdAt: nowIso,
+          updatedAt: nowIso,
+          isDeleted: false,
+          chartId: data.chartId,
+          transitSnapshot: data.transitSnapshot,
+          ...nlpFields,
         } as JournalEntry;
 
         await localDb.addJournalEntry(created);
@@ -318,8 +334,8 @@ export default function JournalScreen() {
                   >
                     <Text style={styles.insightTitle}>✨ You have {entries.length} entries</Text>
                     <Text style={styles.insightDescription}>
-                      Deeper Sky can reveal the patterns behind your emotional experiences — like which transits elevate
-                      your mood and which ones challenge you.
+                      Deeper Sky can reveal the patterns behind your emotional experiences — like which energy cycles lift
+                      your mood and which ones tend to challenge you.
                     </Text>
                     <Text style={styles.insightActionable}>See your patterns →</Text>
                   </LinearGradient>
@@ -341,67 +357,53 @@ export default function JournalScreen() {
                 <View style={styles.emptyContainer}>
                   <Ionicons name="book-outline" size={48} color={theme.textMuted} />
                   <Text style={styles.emptyTitle}>Start Your Journey</Text>
-                  <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and cosmic insights</Text>
+                  <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
                 </View>
               ) : (
-                entries.map((entry, index) => (
-                  <Animated.View key={entry.id} entering={FadeInDown.delay(400 + index * 50).duration(600)}>
-                    <Pressable
-                      style={styles.entryCard}
-                      onPress={() => void handleEditEntry(entry)}
-                      onLongPress={() => void handleDeleteEntry(entry)}
-                    >
-                      <LinearGradient
-                        colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                        style={styles.entryGradient}
+                entries.map((entry, index) => {
+                  const isExpanded = expandedEntryIds.has(entry.id);
+                  return (
+                    <Animated.View key={entry.id} entering={FadeInDown.delay(400 + index * 50).duration(600)}>
+                      <Pressable
+                        style={styles.entryCard}
+                        onPress={() => void handleEditEntry(entry)}
+                        onLongPress={() => void handleDeleteEntry(entry)}
                       >
-                        <View style={styles.entryHeader}>
-                          <View style={styles.entryMeta}>
-                            <View
-                              style={[
-                                styles.moodIndicator,
-                                { backgroundColor: moodColors[entry.mood] ?? moodColors.okay },
-                              ]}
-                            >
-                              <Ionicons
-                                name={(moodIcons[entry.mood] ?? moodIcons.okay) as any}
-                                size={16}
-                                color="white"
-                              />
-                            </View>
-
-                            <View style={styles.entryInfo}>
-                              <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
-
-                              <View style={styles.entryTags}>
-                                <View style={styles.tag}>
-                                  <Ionicons
-                                    name={(moonPhaseIcons[entry.moonPhase] ?? 'moon') as any}
-                                    size={12}
-                                    color={theme.textMuted}
-                                  />
-                                  <Text style={styles.tagText}>{String(entry.moonPhase ?? 'moon')}</Text>
-                                </View>
-
-                                <Text style={styles.entryTime}>{formatTime(entry.createdAt)}</Text>
-                              </View>
-                            </View>
+                        <LinearGradient
+                          colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                          style={styles.entryGradient}
+                        >
+                          <View style={styles.entryHeader}>
+                            <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
+                            <Text style={styles.entryTime}>{formatTime(entry.createdAt)}</Text>
                           </View>
-                        </View>
 
-                        {!!entry.title && (
-                          <Text style={styles.entryTitle} numberOfLines={1}>
-                            {entry.title}
+                          {!!entry.title && (
+                            <Text style={styles.entryTitle} numberOfLines={1}>
+                              {entry.title}
+                            </Text>
+                          )}
+
+                          <Text style={styles.entryContent} numberOfLines={isExpanded ? undefined : 3}>
+                            {entry.content}
                           </Text>
-                        )}
 
-                        <Text style={styles.entryContent} numberOfLines={3}>
-                          {entry.content}
-                        </Text>
-                      </LinearGradient>
-                    </Pressable>
-                  </Animated.View>
-                ))
+                          <Pressable
+                            style={styles.expandButton}
+                            onPress={() => toggleExpanded(entry.id)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Ionicons
+                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                              size={16}
+                              color="rgba(255,255,255,0.3)"
+                            />
+                          </Pressable>
+                        </LinearGradient>
+                      </Pressable>
+                    </Animated.View>
+                  );
+                })
               )}
             </Animated.View>
           </ScrollView>
@@ -413,7 +415,7 @@ export default function JournalScreen() {
             style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}
           >
             <Pressable style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]} onPress={() => void handleAddEntry()}>
-              <LinearGradient colors={['#E8D5A8', '#C9A962', '#B8994F']} style={styles.fabGradient}>
+              <LinearGradient colors={[...theme.goldGradient]} style={styles.fabGradient}>
                 <Ionicons name="add" size={24} color="#1A1A1A" />
               </LinearGradient>
             </Pressable>
@@ -513,19 +515,13 @@ const styles = StyleSheet.create({
 
   entryCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, marginBottom: theme.spacing.md },
   entryGradient: { padding: theme.spacing.lg },
-  entryHeader: { marginBottom: theme.spacing.md },
-  entryMeta: { flexDirection: 'row', alignItems: 'center' },
-  moodIndicator: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: theme.spacing.md },
-  entryInfo: { flex: 1 },
-  entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: 2 },
-
-  entryTags: { flexDirection: 'row', alignItems: 'center' },
-  tag: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.1)', paddingHorizontal: theme.spacing.sm, paddingVertical: 2, borderRadius: theme.borderRadius.sm, marginRight: theme.spacing.sm },
-  tagText: { fontSize: 11, color: theme.textMuted, marginLeft: 4, textTransform: 'capitalize' },
+  entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md },
+  entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
   entryTime: { fontSize: 12, color: theme.textMuted },
 
   entryTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: theme.spacing.sm },
   entryContent: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
+  expandButton: { alignItems: 'center', marginTop: theme.spacing.sm },
 
   fabContainer: { position: 'absolute', right: theme.spacing.lg, zIndex: 1000 },
   fab: { width: 56, height: 56, borderRadius: 28, overflow: 'hidden', ...theme.shadows.glow },

@@ -115,7 +115,8 @@ export default function TodayScreen() {
           place: savedChart.birthPlace,
           latitude: savedChart.latitude,
           longitude: savedChart.longitude,
-          houseSystem: savedChart.houseSystem
+          timezone: savedChart.timezone,
+          houseSystem: savedChart.houseSystem,
         };
         
         const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -135,13 +136,15 @@ export default function TodayScreen() {
         setInsight(dailyInsight);
 
         // Detect retrograde transiting planets
+        let currentRetrogrades: string[] = [];
         try {
           const transitInfo = getTransitInfo(
             new Date(),
             chart.birthData.latitude || 0,
             chart.birthData.longitude || 0,
           );
-          setRetrogradePlanets(transitInfo.retrogrades);
+          currentRetrogrades = transitInfo.retrogrades;
+          setRetrogradePlanets(currentRetrogrades);
         } catch (e) {
           logger.error('Failed to detect retrogrades:', e);
         }
@@ -161,7 +164,7 @@ export default function TodayScreen() {
             new Date(),
             dailyGuidance.intensity,
             dailyGuidance.dominantDomain,
-            retrogradePlanets.length > 0,
+            currentRetrogrades.length > 0,
           );
           setTodayContent(content);
         } catch (e) {
@@ -323,7 +326,7 @@ export default function TodayScreen() {
             >
               <View style={styles.cosmicWeatherHeader}>
                 <Ionicons name="partly-sunny" size={20} color={theme.primary} />
-                <Text style={styles.cosmicWeatherLabel}>COSMIC WEATHER</Text>
+                <Text style={styles.cosmicWeatherLabel}>TODAY'S CONTEXT</Text>
               </View>
               <Text style={styles.cosmicWeatherText}>{todayContent?.cosmicWeather || guidance.cosmicWeather}</Text>
 
@@ -724,32 +727,6 @@ export default function TodayScreen() {
                       )}
                     </View>
                   )}
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
-          )}
-
-          {/* ── 14. Gentle premium nudge for free users ── */}
-          {!isPremium && (
-            <Animated.View 
-              entering={FadeInDown.delay(600).duration(600)}
-              style={styles.section}
-            >
-              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                <LinearGradient
-                  colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.06)']}
-                  style={styles.upsellCard}
-                >
-                  <View style={styles.upsellContent}>
-                    <Ionicons name="telescope" size={20} color={theme.primary} />
-                    <View style={styles.upsellTextContainer}>
-                      <Text style={styles.upsellTitle}>See how this evolves over time</Text>
-                      <Text style={styles.upsellDescription}>
-                        Exact transits, timing, and the patterns behind your daily insights
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={theme.primary} />
-                  </View>
                 </LinearGradient>
               </Pressable>
             </Animated.View>
@@ -1323,30 +1300,5 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.sm,
   },
 
-  // ── Free user upsell ──
-  upsellCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.15)',
-  },
-  upsellContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  upsellTextContainer: {
-    flex: 1,
-  },
-  upsellTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    marginBottom: 2,
-  },
-  upsellDescription: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    lineHeight: 18,
-  },
+
 });

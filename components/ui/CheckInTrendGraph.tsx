@@ -66,16 +66,23 @@ const METRICS: MetricConfig[] = [
   },
 ];
 
+/* ── Journal mood → 1-10 scale (lands between check-in values) ── */
+const JOURNAL_MOOD_SCORE: Record<string, number> = {
+  calm: 9, soft: 7, okay: 5, heavy: 3, stormy: 1,
+};
+
 /* ── Component ── */
 
 interface CheckInTrendGraphProps {
   checkIns: DailyCheckIn[];
+  journalEntries?: Array<{ date: string; mood: string }>;
   width?: number;
   height?: number;
 }
 
 export default function CheckInTrendGraph({
   checkIns,
+  journalEntries,
   width = SCREEN_W - 32,
   height = 190,
 }: CheckInTrendGraphProps) {
@@ -110,6 +117,28 @@ export default function CheckInTrendGraph({
       return { x, y, value: val, label, dateLabel, checkIn: ci };
     });
   }, [sorted, metric, chartW, chartH]);
+
+  // Journal entry dots — Mood tab only, interpolated by actual date position
+  const journalPoints = useMemo(() => {
+    if (activeMetric !== 'mood' || !journalEntries || journalEntries.length === 0 || sorted.length < 2) return [];
+    const firstDate = parseLocalDate(sorted[0].date).getTime();
+    const lastDate = parseLocalDate(sorted[sorted.length - 1].date).getTime();
+    const dateRange = lastDate - firstDate;
+    if (dateRange === 0) return [];
+    return journalEntries
+      .filter(je => {
+        const t = parseLocalDate(je.date).getTime();
+        return t >= firstDate && t <= lastDate;
+      })
+      .map(je => {
+        const t = parseLocalDate(je.date).getTime();
+        const fraction = (t - firstDate) / dateRange;
+        const x = padding.left + fraction * chartW;
+        const val = Math.max(yMin, Math.min(yMax, JOURNAL_MOOD_SCORE[je.mood] ?? 5));
+        const y = padding.top + chartH - ((val - yMin) / (yMax - yMin)) * chartH;
+        return { x, y };
+      });
+  }, [activeMetric, journalEntries, sorted, chartW, chartH]);
 
   // Bezier line path
   const linePath = useMemo(() => {
@@ -213,6 +242,20 @@ export default function CheckInTrendGraph({
         <Text style={styles.summaryMuted}>{sorted.length} check-in{sorted.length !== 1 ? 's' : ''}</Text>
       </View>
 
+      {/* Legend — only on Mood tab when journal data is present */}
+      {activeMetric === 'mood' && journalPoints.length > 0 && (
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDotFilled, { backgroundColor: metric.color }]} />
+            <Text style={styles.legendText}>Check-in</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDotOutline, { borderColor: metric.color }]} />
+            <Text style={styles.legendText}>Journal</Text>
+          </View>
+        </View>
+      )}
+
       {/* SVG chart */}
       <View style={styles.chartWrap}>
         <Svg width={width} height={height}>
@@ -301,6 +344,28 @@ export default function CheckInTrendGraph({
               </React.Fragment>
             );
           })}
+
+          {/* Journal mood dots — outlined circles, Mood tab only */}
+          {journalPoints.map((pt, i) => (
+            <React.Fragment key={`j-${i}`}>
+              <Circle
+                cx={pt.x}
+                cy={pt.y}
+                r={4}
+                fill={theme.background}
+                stroke={metric.color}
+                strokeWidth={1.8}
+                strokeDasharray="2 1"
+              />
+              <Circle
+                cx={pt.x}
+                cy={pt.y}
+                r={1.8}
+                fill={metric.color}
+                opacity={0.6}
+              />
+            </React.Fragment>
+          ))}
 
           {/* Date labels — show all (max 7) */}
           {points.map((pt, i) => {
@@ -405,5 +470,34 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: 'rgba(255,255,255,0.25)',
     fontWeight: '500',
+  },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 6,
+    paddingHorizontal: 2,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendText: {
+    fontSize: 10,
+    color: theme.textMuted,
+    fontWeight: '500',
+  },
+  legendDotFilled: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendDotOutline: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    backgroundColor: 'transparent',
   },
 });

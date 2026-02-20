@@ -4,11 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { theme } from '../../constants/theme';
-import { usePremium } from '../../context/PremiumContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { isPremium } = usePremium();
 
   return (
     <Tabs
@@ -41,12 +39,14 @@ export default function TabLayout() {
     >
       {/* Visible tabs (exactly 5) */}
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => <Ionicons name="home" size={22} color={color} />,
         }}
       />
+
+      <Tabs.Screen name="index" options={{ href: null }} />
 
       <Tabs.Screen
         name="today"
@@ -57,10 +57,10 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="energy"
+        name="mood"
         options={{
-          title: 'Energy',
-          tabBarIcon: ({ color }) => <Ionicons name="sparkles" size={22} color={color} />,
+          title: 'Mood',
+          tabBarIcon: ({ color }) => <Ionicons name="happy" size={22} color={color} />, 
         }}
       />
 
@@ -72,7 +72,6 @@ export default function TabLayout() {
         }}
       />
 
-
       <Tabs.Screen
         name="settings"
         options={{
@@ -83,10 +82,12 @@ export default function TabLayout() {
 
 
       {/* Hidden routes (still accessible via navigation) */}
+      <Tabs.Screen name="energy" options={{ href: null }} />
       <Tabs.Screen name="chart" options={{ href: null }} />
       <Tabs.Screen name="story" options={{ href: null }} />
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing" options={{ href: null }} />
+      <Tabs.Screen name="insights" options={{ href: null }} />
       <Tabs.Screen name="premium" options={{ href: null }} />
     </Tabs>
   );

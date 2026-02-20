@@ -7,6 +7,15 @@
 import { NatalChart, PlanetPlacement, ZodiacSign } from '../astrology/types';
 import { getTransitingLongitudes } from '../astrology/transits';
 import { getMoonPhaseInfo } from '../../utils/moonPhase';
+import {
+  extractSignName as signName,
+  extractSignElement as signElement,
+  signNameFromLongitude as signFromLongitude,
+  computeHouseForLongitude as houseForLongitude,
+  SIGN_TO_ELEMENT as SIGN_ELEMENTS,
+  ZODIAC_SIGN_NAMES,
+} from '../astrology/sharedHelpers';
+import { dayOfYear } from '../../utils/dateUtils';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -74,58 +83,9 @@ export interface EnergySnapshot {
 
 // ── Helpers ──────────────────────────────────────────────────
 
-function signName(s: unknown): string {
-  if (!s) return '';
-  if (typeof s === 'string') return s;
-  const obj = s as { name?: string };
-  return obj?.name ?? '';
-}
-
-function signElement(s: unknown): string {
-  if (!s) return '';
-  if (typeof s === 'string') {
-    return SIGN_ELEMENTS[s] ?? '';
-  }
-  const obj = s as { element?: string; name?: string };
-  return obj?.element ?? SIGN_ELEMENTS[obj?.name ?? ''] ?? '';
-}
-
-const SIGN_ELEMENTS: Record<string, string> = {
-  Aries: 'Fire', Taurus: 'Earth', Gemini: 'Air', Cancer: 'Water',
-  Leo: 'Fire', Virgo: 'Earth', Libra: 'Air', Scorpio: 'Water',
-  Sagittarius: 'Fire', Capricorn: 'Earth', Aquarius: 'Air', Pisces: 'Water',
-};
-
-const ZODIAC_SIGN_NAMES = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
-];
-
-function signFromLongitude(absDeg: number): string {
-  const idx = Math.floor(((absDeg % 360) + 360) % 360 / 30);
-  return ZODIAC_SIGN_NAMES[idx] ?? 'Aries';
-}
-
-/** Determine which natal house a transiting longitude falls in. */
-function houseForLongitude(absDeg: number, cuspDegrees: number[]): number | null {
-  if (!Array.isArray(cuspDegrees) || cuspDegrees.length !== 12) return null;
-  const lon = ((absDeg % 360) + 360) % 360;
-  for (let i = 0; i < 12; i++) {
-    const start = ((cuspDegrees[i] % 360) + 360) % 360;
-    const end = ((cuspDegrees[(i + 1) % 12] % 360) + 360) % 360;
-    if (start <= end) {
-      if (lon >= start && lon < end) return i + 1;
-    } else {
-      if (lon >= start || lon < end) return i + 1;
-    }
-  }
-  return null;
-}
-
-function dayOfYear(d: Date = new Date()): number {
-  const start = new Date(d.getFullYear(), 0, 0);
-  return Math.floor((d.getTime() - start.getTime()) / 86400000);
-}
+// signName, signElement, SIGN_ELEMENTS, ZODIAC_SIGN_NAMES,
+// signFromLongitude, houseForLongitude, dayOfYear
+// → imported from sharedHelpers and dateUtils
 
 // ── Tone Mapping ─────────────────────────────────────────────
 

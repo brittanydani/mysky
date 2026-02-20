@@ -43,6 +43,7 @@ export default function HealingScreen() {
           place: savedChart.birthPlace,
           latitude: savedChart.latitude,
           longitude: savedChart.longitude,
+          timezone: savedChart.timezone,
           houseSystem: savedChart.houseSystem,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -91,6 +92,9 @@ export default function HealingScreen() {
             style={styles.header}
           >
             <Text style={styles.title}>Healing Insights</Text>
+            <Text style={styles.headerSub}>
+              Explore emotional patterns, inner needs, and pathways to growth — grounded in your chart's psychological blueprint.
+            </Text>
           </Animated.View>
 
           {/* Empty state — no chart yet */}
@@ -212,6 +216,12 @@ const styles = StyleSheet.create({
     color: theme.textPrimary,
     fontFamily: 'serif',
     letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  headerSub: {
+    fontSize: 13,
+    color: theme.textMuted,
+    lineHeight: 19,
   },
   section: {
     marginTop: theme.spacing.lg,

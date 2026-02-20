@@ -626,7 +626,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                   onPress={handleSave}
                 >
                   <LinearGradient
-                    colors={['#E8D5A8', '#C9A962', '#B8994F']}
+                    colors={[...theme.goldGradient]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.saveGradient}

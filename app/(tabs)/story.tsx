@@ -41,6 +41,7 @@ export default function StoryScreen() {
           place: savedChart.birthPlace,
           latitude: savedChart.latitude,
           longitude: savedChart.longitude,
+          timezone: savedChart.timezone,
           houseSystem: savedChart.houseSystem,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -83,7 +84,10 @@ export default function StoryScreen() {
             entering={FadeInDown.delay(100).duration(600)}
             style={styles.header}
           >
-            <Text style={styles.title}>Your Cosmic Story</Text>
+            <Text style={styles.title}>Your Themes</Text>
+            <Text style={styles.headerSub}>
+              A reflective narrative based on your chart — for journaling and personal growth, not prediction.
+            </Text>
             {chapters.length > 0 && (
               <Text style={styles.subtitle}>
                 {chapters.length} chapters — {unlockedCount} unlocked
@@ -97,7 +101,7 @@ export default function StoryScreen() {
               <Ionicons name="book-outline" size={48} color={theme.textMuted} />
               <Text style={styles.emptyTitle}>Your story awaits</Text>
               <Text style={styles.emptySubtitle}>
-                Create your natal chart to reveal your personalized cosmic narrative.
+                Create your natal chart to begin your personalized growth and reflection journey.
               </Text>
               <Pressable
                 onPress={() => router.push('/(tabs)/chart' as Href)}
@@ -171,6 +175,13 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     fontStyle: 'italic',
     fontSize: 15,
+  },
+  headerSub: {
+    fontSize: 13,
+    color: theme.textMuted,
+    marginTop: 6,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   header: {
     alignItems: 'center',

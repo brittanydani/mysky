@@ -80,17 +80,13 @@ export class TimezoneHandler {
       return info;
     } catch (error) {
       logger.error('Failed to resolve timezone:', error);
-      // Fallback to UTC
-      const normalizedDate = this.normalizeDateTimeString(date);
-      const utcDateTime = DateTime.fromISO(normalizedDate, { zone: 'utc' });
-      return {
-        timezone: 'UTC',
-        offset: 0,
-        isDST: false,
-        abbreviation: 'UTC',
-        utcDateTime,
-        localDateTime: utcDateTime
-      };
+      // Do NOT silently fallback to UTC — that produces completely wrong charts
+      // (e.g. a Tokyo birth would be off by 9 hours, yielding wrong Ascendant/houses).
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Timezone resolution failed for date="${date}", lat=${latitude}, lon=${longitude}: ${errorMsg}. ` +
+        `Please provide a valid IANA timezone (e.g. "America/New_York") in birth data.`
+      );
     }
   }
 
@@ -118,9 +114,11 @@ export class TimezoneHandler {
       return localDateTime.toUTC();
     } catch (error) {
       logger.error('Failed to apply daylight saving:', error);
-      // Fallback to UTC
-      const dateTimeString = `${date}T${localTime}`;
-      return DateTime.fromISO(dateTimeString, { zone: 'utc' });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `DST resolution failed for time="${localTime}", date="${date}", location=(${location.latitude}, ${location.longitude}): ${errorMsg}. ` +
+        `Please provide a valid IANA timezone.`
+      );
     }
   }
 
@@ -146,9 +144,11 @@ export class TimezoneHandler {
       return localDateTime.toUTC();
     } catch (error) {
       logger.error('Failed to convert to UTC:', error);
-      // Fallback to treating as UTC
-      const dateTimeString = `${date}T${time}`;
-      return DateTime.fromISO(dateTimeString, { zone: 'utc' });
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `UTC conversion failed for date="${date}", time="${time}", lat=${latitude}, lon=${longitude}: ${errorMsg}. ` +
+        `Please provide a valid IANA timezone.`
+      );
     }
   }
 

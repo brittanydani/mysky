@@ -36,7 +36,8 @@ const MOON_HOUSE_LABELS: Record<number, string> = {
   12: 'rest & inner world',
 };
 
-const TAG_LABELS: Record<ThemeTag, string> = {
+const TAG_LABELS: Record<string, string> = {
+  // Legacy emotional tags
   relationships: '💞 Relationships',
   confidence: '💪 Confidence',
   money: '💰 Money & Resources',
@@ -52,6 +53,39 @@ const TAG_LABELS: Record<ThemeTag, string> = {
   overwhelm: '🌊 Overwhelm',
   loneliness: '💔 Loneliness',
   gratitude: '🙏 Gratitude',
+  // Influence tags
+  sleep: '😴 Sleep',
+  work: '💼 Work',
+  social: '👥 Social',
+  conflict: '⚡ Conflict',
+  movement: '🏃 Movement',
+  nature: '🌿 Nature',
+  routine: '📋 Routine',
+  overstimulated: '🔊 Overstimulated',
+  creative: '🎨 Creative',
+  rest: '😌 Rest',
+  alone_time: '🧘 Alone time',
+  travel: '✈️ Travel',
+  finances: '💰 Finances',
+  weather: '🌦️ Weather',
+  food: '🍽️ Food',
+  hormones: '🌀 Hormones',
+  screens: '📱 Screens',
+  kids: '👶 Kids',
+  productivity: '✅ Productivity',
+  substances: '🍷 Substances',
+  intimacy: '🔥 Intimacy',
+  // Emotional quality
+  eq_calm: 'Calm',
+  eq_anxious: 'Anxious',
+  eq_focused: 'Focused',
+  eq_disconnected: 'Disconnected',
+  eq_hopeful: 'Hopeful',
+  eq_irritable: 'Irritable',
+  eq_grounded: 'Grounded',
+  eq_scattered: 'Scattered',
+  eq_heavy: 'Heavy',
+  eq_open: 'Open',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

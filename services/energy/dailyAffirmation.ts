@@ -7,6 +7,14 @@
 import { NatalChart } from '../astrology/types';
 import { getTransitingLongitudes } from '../astrology/transits';
 import { getMoonPhaseTag as getPreciseMoonPhaseTag, getMoonPhaseName as getPreciseMoonPhaseName } from '../../utils/moonPhase';
+import {
+  extractSignName as signName,
+  signNameFromLongitude as signFromLongitude,
+  SIGN_TO_ELEMENT as SIGN_ELEMENTS,
+  SIGN_TO_MODALITY as SIGN_MODALITIES,
+  ZODIAC_SIGN_NAMES as ZODIAC_SIGNS,
+} from '../astrology/sharedHelpers';
+import { dayOfYear } from '../../utils/dateUtils';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -30,39 +38,8 @@ export interface DailyAffirmation {
 
 // ── Helpers ──────────────────────────────────────────────────
 
-const SIGN_ELEMENTS: Record<string, string> = {
-  Aries: 'Fire', Taurus: 'Earth', Gemini: 'Air', Cancer: 'Water',
-  Leo: 'Fire', Virgo: 'Earth', Libra: 'Air', Scorpio: 'Water',
-  Sagittarius: 'Fire', Capricorn: 'Earth', Aquarius: 'Air', Pisces: 'Water',
-};
-
-const SIGN_MODALITIES: Record<string, string> = {
-  Aries: 'Cardinal', Taurus: 'Fixed', Gemini: 'Mutable', Cancer: 'Cardinal',
-  Leo: 'Fixed', Virgo: 'Mutable', Libra: 'Cardinal', Scorpio: 'Fixed',
-  Sagittarius: 'Mutable', Capricorn: 'Cardinal', Aquarius: 'Fixed', Pisces: 'Mutable',
-};
-
-const ZODIAC_SIGNS = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
-];
-
-function signFromLongitude(absDeg: number): string {
-  const idx = Math.floor(((absDeg % 360) + 360) % 360 / 30);
-  return ZODIAC_SIGNS[idx] ?? 'Aries';
-}
-
-function signName(s: unknown): string {
-  if (!s) return '';
-  if (typeof s === 'string') return s;
-  const obj = s as { name?: string };
-  return obj?.name ?? '';
-}
-
-function dayOfYear(d: Date): number {
-  const start = new Date(d.getFullYear(), 0, 0);
-  return Math.floor((d.getTime() - start.getTime()) / 86400000);
-}
+// signName, signFromLongitude, SIGN_ELEMENTS, SIGN_MODALITIES,
+// ZODIAC_SIGNS, dayOfYear → imported from sharedHelpers and dateUtils
 
 function getMoonPhaseTag(date: Date): AffirmationTag {
   return getPreciseMoonPhaseTag(date) as AffirmationTag;
