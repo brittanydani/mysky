@@ -384,7 +384,7 @@ export default function RelationshipsScreen() {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           {/* Header */}
           <View style={styles.detailHeader}>
-            <Pressable onPress={handleBack} style={styles.backButton}>
+            <Pressable onPress={handleBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
               <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
             </Pressable>
             <View style={styles.detailHeaderCenter}>
@@ -393,7 +393,7 @@ export default function RelationshipsScreen() {
                 {RELATIONSHIP_LABELS[selectedRelationship.relationship]}
               </Text>
             </View>
-            <Pressable onPress={handleDeleteRelationship} style={styles.deleteButton}>
+            <Pressable onPress={handleDeleteRelationship} style={styles.deleteButton} accessibilityRole="button" accessibilityLabel={`Delete ${selectedRelationship.name}`}>
               <Ionicons name="trash-outline" size={22} color={theme.error} />
             </Pressable>
           </View>
@@ -408,6 +408,9 @@ export default function RelationshipsScreen() {
                   setActiveTab(tab);
                   Haptics.selectionAsync().catch(() => {});
                 }}
+                accessibilityRole="tab"
+                accessibilityLabel={tab.charAt(0).toUpperCase() + tab.slice(1)}
+                accessibilityState={{ selected: activeTab === tab }}
               >
                 <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -476,18 +479,30 @@ export default function RelationshipsScreen() {
 
                 {/* Free user upsell */}
                 {!isPremium && (
-                  <View style={styles.upsellCard}>
-                    <LinearGradient
-                      colors={['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.1)']}
-                      style={styles.upsellGradient}
-                    >
-                      <Ionicons name="sparkles" size={24} color={theme.primary} />
-                      <Text style={styles.upsellTitle}>See the full picture</Text>
-                      <Text style={styles.upsellText}>
-                        Communication dynamics, emotional needs, and healing paths — available with Deeper Sky.
-                      </Text>
-                    </LinearGradient>
-                  </View>
+                  <Pressable
+                    onPress={() => router.push('/(tabs)/premium' as Href)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Unlock full relationship insights"
+                  >
+                    <View style={styles.upsellCard}>
+                      <LinearGradient
+                        colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
+                        style={[styles.upsellGradient, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <Ionicons name="sparkles" size={18} color={theme.primary} />
+                          <Text style={styles.upsellTitle}>There's more between you</Text>
+                        </View>
+                        <Text style={styles.upsellText}>
+                          Communication styles, emotional needs comparison, and healing paths for this relationship — with Deeper Sky.
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '600', color: theme.primary }}>See the full picture</Text>
+                          <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                        </View>
+                      </LinearGradient>
+                    </View>
+                  </Pressable>
                 )}
               </Animated.View>
             )}
@@ -534,19 +549,29 @@ export default function RelationshipsScreen() {
                 ))}
 
                 {!isPremium && synastryReport.aspects.length > 4 && (
-                  <View style={styles.upsellCard}>
-                    <LinearGradient
-                      colors={['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.1)']}
-                      style={styles.upsellGradient}
-                    >
-                      <Text style={styles.upsellTitle}>
-                        +{synastryReport.aspects.length - 4} more aspects
-                      </Text>
-                      <Text style={styles.upsellText}>
-                        All planetary connections are available with Deeper Sky.
-                      </Text>
-                    </LinearGradient>
-                  </View>
+                  <Pressable
+                    onPress={() => router.push('/(tabs)/premium' as Href)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Unlock all aspects"
+                  >
+                    <View style={styles.upsellCard}>
+                      <LinearGradient
+                        colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
+                        style={[styles.upsellGradient, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
+                      >
+                        <Text style={styles.upsellTitle}>
+                          +{synastryReport.aspects.length - 4} more planetary connections
+                        </Text>
+                        <Text style={styles.upsellText}>
+                          Deeper aspects reveal hidden dynamics — the subtle threads that make this relationship unique.
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                          <Text style={{ fontSize: 13, fontWeight: '600', color: theme.primary }}>Unlock all aspects</Text>
+                          <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                        </View>
+                      </LinearGradient>
+                    </View>
+                  </Pressable>
                 )}
               </Animated.View>
             )}
@@ -646,6 +671,8 @@ export default function RelationshipsScreen() {
                     style={styles.relationshipCard}
                     onPress={() => handleSelectRelationship(rel)}
                     onLongPress={() => handleLongPressRelationship(rel)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${rel.name}, ${RELATIONSHIP_LABELS[rel.relationship]}`}
                   >
                     <LinearGradient
                       colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
@@ -717,6 +744,8 @@ export default function RelationshipsScreen() {
                   key={type}
                   style={styles.typeButton}
                   onPress={() => handleAddRelationship(type)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add ${RELATIONSHIP_LABELS[type]}`}
                 >
                   <View style={styles.typeIconContainer}>
                     <Ionicons name={RELATIONSHIP_ICONS[type]} size={24} color={theme.primary} />
@@ -728,13 +757,20 @@ export default function RelationshipsScreen() {
 
             {/* Limit indicator for free users */}
             {!isPremium && (
-              <View style={styles.limitIndicator}>
-                <Text style={styles.limitText}>
-                  {relationships.length === 0
-                    ? 'Free accounts include 1 relationship chart'
-                    : 'Deeper Sky includes unlimited relationship charts'}
-                </Text>
-              </View>
+              <Pressable
+                onPress={() => router.push('/(tabs)/premium' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="Unlock unlimited relationship charts"
+              >
+                <View style={styles.limitIndicator}>
+                  <Ionicons name="sparkles" size={12} color={theme.primary} />
+                  <Text style={styles.limitText}>
+                    {relationships.length === 0
+                      ? 'Free includes 1 relationship chart · Deeper Sky unlocks unlimited'
+                      : 'Deeper Sky unlocks unlimited charts — partner, parent, child, friend'}
+                  </Text>
+                </View>
+              </Pressable>
             )}
           </Animated.View>
 

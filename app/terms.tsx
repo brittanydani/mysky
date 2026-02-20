@@ -39,7 +39,7 @@ export default function TermsOfServiceScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
 
-            <Text style={styles.lastUpdated}>Last updated: February 18, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: February 20, 2026</Text>
 
             <Text style={styles.sectionTitle}>Encryption, Storage, and Subscriptions</Text>
             <Text style={styles.paragraph}>
@@ -81,10 +81,10 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Free and Premium Features</Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Free features include:</Text> Natal chart with all major aspects, Big Three (Sun, Moon, Rising), basic daily guidance, one relationship chart, journal with mood tracking, energy snapshot, PDF chart export, and privacy controls.
+              <Text style={styles.bold}>Free features include:</Text> Natal chart with all major aspects, Big Three (Sun, Moon, Rising), natal story (3 chapters), basic daily guidance, one relationship chart, journal with mood tracking, insights overview and weekly mood, energy snapshot, and privacy controls.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>&quot;Deeper Sky&quot; premium features include:</Text> Encrypted backup &amp; restore, full natal story (10 chapters), healing &amp; inner work insights, unlimited relationship charts, journal pattern analysis, Chiron &amp; Node depth mapping, full chakra mapping with check-ins, personalized guidance with action steps, and extended pattern analysis.
+              <Text style={styles.bold}>&quot;Deeper Sky&quot; premium features include:</Text> Encrypted backup &amp; restore, full natal story (10 chapters), healing &amp; inner work insights, unlimited relationship charts, journal pattern analysis, deep insights &amp; tag intelligence, Chiron &amp; Node depth mapping, full chakra mapping with check-ins, personalized guidance with action steps, extended pattern analysis, and PDF chart export.
             </Text>
 
             <Text style={styles.sectionTitle}>Subscriptions and Payments</Text>
@@ -92,10 +92,10 @@ export default function TermsOfServiceScreen() {
               <Text style={styles.bold}>Premium Subscriptions:</Text> MySky offers monthly, yearly, and lifetime premium subscriptions. Subscriptions automatically renew unless cancelled.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (e.g. the App Store). Prices may vary by location.
+              <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (Apple App Store or Google Play Store). Prices may vary by location.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings (Settings &gt; Apple ID &gt; Subscriptions). To avoid being charged for the next billing period, cancel at least 24 hours before the end of the current period. Cancellation takes effect at the end of the current billing period.
+              <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings (iOS: Settings &gt; Apple ID &gt; Subscriptions; Android: Google Play &gt; Subscriptions). To avoid being charged for the next billing period, cancel at least 24 hours before the end of the current period. Cancellation takes effect at the end of the current billing period. Lifetime purchases do not renew.
             </Text>
             <Text style={styles.paragraph}>
               <Text style={styles.bold}>Refunds:</Text> Refunds are handled according to your app store&apos;s policies.

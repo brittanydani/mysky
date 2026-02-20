@@ -14,6 +14,7 @@ import { DailyAggregate, PipelineInput, PipelineResult, TodayContext } from './t
 import { toDayKey, todayDayKey, daysBetweenKeys } from './dayKey';
 import { deriveChartProfile } from './chartProfile';
 import type { KeywordResult, EmotionResult, SentimentResult } from '../journal/nlp';
+import { mean } from '../../utils/stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Normalization helpers
@@ -36,12 +37,6 @@ function clamp(v: number): number {
 /** Normalize a tag: lowercase, trimmed, no special chars */
 function normalizeTag(tag: string): string {
   return tag.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
-}
-
-/** Mean of a number array */
-function mean(vals: number[]): number {
-  if (vals.length === 0) return 0;
-  return vals.reduce((s, v) => s + v, 0) / vals.length;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

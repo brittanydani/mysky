@@ -7,7 +7,7 @@ import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 10;
+const CURRENT_DB_VERSION = 11;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -109,6 +109,10 @@ class LocalDatabase {
 
     if (fromVersion < 10) {
       await this.migrateToVersion10();
+    }
+
+    if (fromVersion < 11) {
+      await this.migrateToVersion11();
     }
   }
 
@@ -588,6 +592,70 @@ class LocalDatabase {
     logger.info('[LocalDB] Version 10 migration complete');
   }
 
+  /**
+   * Version 11 — Encrypt existing plaintext PII fields.
+   * Encrypts name, birth_date, and birth_time in saved_charts and relationship_charts
+   * for rows that haven't been encrypted yet (i.e., not already prefixed with ENC2: or ENC:).
+   */
+  private async migrateToVersion11(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Starting version 11 migration — encrypting PII fields...');
+
+    // Encrypt saved_charts PII
+    const charts = await db.getAllAsync('SELECT id, name, birth_date, birth_time FROM saved_charts') as any[];
+    for (const row of charts) {
+      const updates: string[] = [];
+      const values: any[] = [];
+
+      if (row.name && !FieldEncryptionService.isEncrypted(row.name)) {
+        updates.push('name = ?');
+        values.push(await FieldEncryptionService.encryptField(row.name));
+      }
+      if (row.birth_date && !FieldEncryptionService.isEncrypted(row.birth_date)) {
+        updates.push('birth_date = ?');
+        values.push(await FieldEncryptionService.encryptField(row.birth_date));
+      }
+      if (row.birth_time && !FieldEncryptionService.isEncrypted(row.birth_time)) {
+        updates.push('birth_time = ?');
+        values.push(await FieldEncryptionService.encryptField(row.birth_time));
+      }
+
+      if (updates.length > 0) {
+        values.push(row.id);
+        await db.runAsync(`UPDATE saved_charts SET ${updates.join(', ')} WHERE id = ?`, values);
+      }
+    }
+    logger.info(`[LocalDB] Encrypted PII for ${charts.length} saved charts`);
+
+    // Encrypt relationship_charts PII
+    const rels = await db.getAllAsync('SELECT id, name, birth_date, birth_time FROM relationship_charts') as any[];
+    for (const row of rels) {
+      const updates: string[] = [];
+      const values: any[] = [];
+
+      if (row.name && !FieldEncryptionService.isEncrypted(row.name)) {
+        updates.push('name = ?');
+        values.push(await FieldEncryptionService.encryptField(row.name));
+      }
+      if (row.birth_date && !FieldEncryptionService.isEncrypted(row.birth_date)) {
+        updates.push('birth_date = ?');
+        values.push(await FieldEncryptionService.encryptField(row.birth_date));
+      }
+      if (row.birth_time && !FieldEncryptionService.isEncrypted(row.birth_time)) {
+        updates.push('birth_time = ?');
+        values.push(await FieldEncryptionService.encryptField(row.birth_time));
+      }
+
+      if (updates.length > 0) {
+        values.push(row.id);
+        await db.runAsync(`UPDATE relationship_charts SET ${updates.join(', ')} WHERE id = ?`, values);
+      }
+    }
+    logger.info(`[LocalDB] Encrypted PII for ${rels.length} relationship charts`);
+
+    logger.info('[LocalDB] Version 11 migration complete');
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
@@ -597,6 +665,9 @@ class LocalDatabase {
 
     // Encrypt sensitive fields before writing to SQLite
     const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
+    const encName = chart.name ? await FieldEncryptionService.encryptField(chart.name) : null;
+    const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
+    const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
 
     await db.runAsync(
       `INSERT OR REPLACE INTO saved_charts
@@ -604,9 +675,9 @@ class LocalDatabase {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         chart.id,
-        chart.name || null,
-        chart.birthDate,
-        chart.birthTime || null,
+        encName,
+        encBirthDate,
+        encBirthTime,
         chart.hasUnknownTime ? 1 : 0,
         encBirthPlace,
         chart.latitude,
@@ -630,9 +701,9 @@ class LocalDatabase {
     // Decrypt sensitive fields after reading from SQLite
     return Promise.all((result as any[]).map(async (row: any) => ({
       id: row.id,
-      name: row.name,
-      birthDate: row.birth_date,
-      birthTime: row.birth_time,
+      name: row.name ? await FieldEncryptionService.decryptField(row.name) : row.name,
+      birthDate: await FieldEncryptionService.decryptField(row.birth_date),
+      birthTime: row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time,
       hasUnknownTime: row.has_unknown_time === 1,
       birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,
@@ -1059,6 +1130,9 @@ class LocalDatabase {
     const db = await this.ensureReady();
 
     const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
+    const encName = await FieldEncryptionService.encryptField(chart.name);
+    const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
+    const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
 
     await db.runAsync(
       `INSERT OR REPLACE INTO relationship_charts 
@@ -1067,10 +1141,10 @@ class LocalDatabase {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         chart.id,
-        chart.name,
+        encName,
         chart.relationship,
-        chart.birthDate,
-        chart.birthTime || null,
+        encBirthDate,
+        encBirthTime,
         chart.hasUnknownTime ? 1 : 0,
         encBirthPlace,
         chart.latitude,
@@ -1141,10 +1215,10 @@ class LocalDatabase {
   private async mapRelationshipRow(row: any): Promise<RelationshipChart> {
     return {
       id: row.id,
-      name: row.name,
+      name: await FieldEncryptionService.decryptField(row.name),
       relationship: row.relationship,
-      birthDate: row.birth_date,
-      birthTime: row.birth_time,
+      birthDate: await FieldEncryptionService.decryptField(row.birth_date),
+      birthTime: row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time,
       hasUnknownTime: row.has_unknown_time === 1,
       birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,

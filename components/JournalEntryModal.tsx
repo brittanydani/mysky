@@ -232,7 +232,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Pressable style={styles.closeButton} onPress={onClose}>
+            <Pressable style={styles.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close journal entry">
               <Ionicons name="close" size={24} color={theme.textPrimary} />
             </Pressable>
             <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Entry'}</Text>
@@ -252,7 +252,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             >
               <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Date</Text>
-                <Pressable style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+                <Pressable style={styles.dateButton} onPress={() => setShowDatePicker(true)} accessibilityRole="button" accessibilityLabel={`Entry date: ${formatDate(date)}. Tap to change`}>
                   <LinearGradient
                     colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
                     style={styles.dateGradient}
@@ -287,6 +287,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         Haptics.selectionAsync();
                         setShowPrompts(!showPrompts);
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={showPrompts ? 'Hide prompts' : 'Show prompts'}
                     >
                       <Ionicons 
                         name={showPrompts ? 'bulb' : 'bulb-outline'} 
@@ -322,6 +324,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         setContent(prev => prev.trim() ? `${prev}\n\n${enginePromptSet.primary.question}` : enginePromptSet.primary.question);
                         setShowPrompts(false);
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Use prompt: ${enginePromptSet.primary.question}`}
                     >
                       <Text style={styles.promptContextLine}>{enginePromptSet.primary.context}</Text>
                       <Text style={styles.promptText}>{enginePromptSet.primary.question}</Text>
@@ -349,6 +353,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                               setContent(prev => prev.trim() ? `${prev}\n\n${alt.question}` : alt.question);
                               setShowPrompts(false);
                             }}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Use alternative prompt: ${alt.question}`}
                           >
                             <Text style={styles.altPromptContext} numberOfLines={1}>{alt.context}</Text>
                             <Text style={styles.altPromptText} numberOfLines={2}>{alt.question}</Text>
@@ -369,6 +375,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         setContent(prev => prev.trim() ? `${prev}\n\n${freePrompt.question}` : freePrompt.question);
                         setShowPrompts(false);
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Use prompt: ${freePrompt.question}`}
                     >
                       <Text style={styles.promptContextLine}>{freePrompt.context}</Text>
                       <Text style={styles.promptText}>{freePrompt.question}</Text>
@@ -385,6 +393,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     <Pressable
                       style={styles.promptCard}
                       onPress={() => usePrompt(promptSet.primary)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Use prompt: ${promptSet.primary.prompt}`}
                     >
                       <Text style={styles.promptText}>{promptSet.primary.prompt}</Text>
                       <Text style={styles.promptContext}>{promptSet.primary.context}</Text>
@@ -415,7 +425,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     animationDelay={0}
                   />
                 )}
-                <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]} onPress={handleSave}>
+                <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]} onPress={handleSave} accessibilityRole="button" accessibilityLabel={initialData ? 'Update entry' : 'Save entry'}>
                   <LinearGradient
                     colors={[...theme.goldGradient]}
                     start={{ x: 0, y: 0 }}

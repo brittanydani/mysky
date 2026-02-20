@@ -280,12 +280,12 @@ export class PremiumRelationshipService {
       ...report.challengeAspects.slice(0, 2).map((a) => ({
         title: a.title,
         description: a.description,
-        healingQuestion: `How can you both work with the ${a.person1Planet.name}–${a.person2Planet.name} tension compassionately?`,
+        healingQuestion: `How can you both work with the ${a.person1Planet.planet.name}–${a.person2Planet.planet.name} tension compassionately?`,
       })),
       ...report.growthAspects.slice(0, 1).map((a) => ({
         title: a.title,
         description: a.description,
-        healingQuestion: `What does the ${a.person1Planet.name}–${a.person2Planet.name} connection teach you about each other?`,
+        healingQuestion: `What does the ${a.person1Planet.planet.name}–${a.person2Planet.planet.name} connection teach you about each other?`,
       })),
     ];
 
@@ -304,8 +304,8 @@ export class PremiumRelationshipService {
     // Find Moon-related synastry aspects for emotional insight
     const moonAspects = report.aspects.filter(
       (a) =>
-        a.person1Planet.name === 'Moon' ||
-        a.person2Planet.name === 'Moon'
+        a.person1Planet.planet.name === 'Moon' ||
+        a.person2Planet.planet.name === 'Moon'
     );
 
     if (moonAspects.length === 0) return base;
@@ -329,8 +329,8 @@ export class PremiumRelationshipService {
   ): CommunicationInsight {
     const mercuryAspects = report.aspects.filter(
       (a) =>
-        a.person1Planet.name === 'Mercury' ||
-        a.person2Planet.name === 'Mercury'
+        a.person1Planet.planet.name === 'Mercury' ||
+        a.person2Planet.planet.name === 'Mercury'
     );
 
     if (mercuryAspects.length === 0) return base;

@@ -250,11 +250,14 @@ export default function JournalScreen() {
       <StarField starCount={25} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
-          <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
-            <PremiumRequiredScreen />
+          <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+            <PremiumRequiredScreen
+              feature="Check-In Trends"
+              teaser="Visualize how your mood, energy, and stress shift over the past week — and discover which days you feel most aligned."
+            />
           </ScrollView>
         ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
               <View style={styles.headerTop}>
                 <View>
@@ -264,7 +267,7 @@ export default function JournalScreen() {
               </View>
 
               <Text style={styles.poeticIntro}>
-                This is a space for your unfiltered truth. No one sees this but you. Let the words come without judgment.
+                This is a space for your unfiltered truth. A private space for honest reflection. Let the words come without judgment.
               </Text>
             </Animated.View>
 
@@ -276,13 +279,19 @@ export default function JournalScreen() {
                   <CheckInTrendGraph checkIns={checkIns} width={width - 32} />
                 </Animated.View>
               ) : (
-                <Pressable onPress={() => setShowPremiumRequired(true)}>
+                <Pressable onPress={() => setShowPremiumRequired(true)} accessibilityRole="button" accessibilityLabel="Unlock 7-day check-in trends">
                   <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
-                    <Text style={styles.chartTitle}>7-Day Check-In Trends</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <Text style={styles.chartTitle}>7-Day Check-In Trends</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                        <Ionicons name="sparkles" size={10} color={theme.primary} />
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
+                      </View>
+                    </View>
                     <View style={styles.lockBox}>
-                      <Ionicons name="lock-closed" size={32} color={theme.primary} />
-                      <Text style={styles.lockTitle}>Premium Feature</Text>
-                      <Text style={styles.lockSubtitle}>Unlock to see your 7-day check-in trends</Text>
+                      <Ionicons name="trending-up" size={32} color={theme.primary} />
+                      <Text style={styles.lockTitle}>Your trends are ready</Text>
+                      <Text style={styles.lockSubtitle}>See how your mood, energy, and stress shift across the week</Text>
                     </View>
                   </Animated.View>
                 </Pressable>
@@ -327,17 +336,26 @@ export default function JournalScreen() {
 
             {!isPremium && entries.length >= 5 && (
               <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
                   <LinearGradient
                     colors={['rgba(201, 169, 98, 0.1)', 'rgba(201, 169, 98, 0.04)']}
-                    style={styles.insightCard}
+                    style={[styles.insightCard, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
                   >
-                    <Text style={styles.insightTitle}>✨ You have {entries.length} entries</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <Ionicons name="analytics" size={16} color={theme.primary} />
+                      <Text style={styles.insightTitle}>Pattern Insights</Text>
+                      <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                        <Ionicons name="sparkles" size={10} color={theme.primary} />
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
+                      </View>
+                    </View>
                     <Text style={styles.insightDescription}>
-                      Deeper Sky can reveal the patterns behind your emotional experiences — like which energy cycles lift
-                      your mood and which ones tend to challenge you.
+                      With {entries.length} entries, Deeper Sky can detect which energy cycles lift your mood, when you tend to journal most, and what emotional themes keep appearing.
                     </Text>
-                    <Text style={styles.insightActionable}>See your patterns →</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                      <Text style={[styles.insightActionable, { marginTop: 0 }]}>Reveal your patterns</Text>
+                      <Ionicons name="arrow-forward" size={13} color={theme.primary} />
+                    </View>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -368,6 +386,8 @@ export default function JournalScreen() {
                         style={styles.entryCard}
                         onPress={() => void handleEditEntry(entry)}
                         onLongPress={() => void handleDeleteEntry(entry)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Journal entry: ${entry.title || formatDate(entry.date)}`}
                       >
                         <LinearGradient
                           colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
@@ -392,6 +412,8 @@ export default function JournalScreen() {
                             style={styles.expandButton}
                             onPress={() => toggleExpanded(entry.id)}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            accessibilityRole="button"
+                            accessibilityLabel={isExpanded ? 'Collapse entry' : 'Expand entry'}
                           >
                             <Ionicons
                               name={isExpanded ? 'chevron-up' : 'chevron-down'}
@@ -414,7 +436,7 @@ export default function JournalScreen() {
             entering={FadeInDown.delay(600).duration(600)}
             style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}
           >
-            <Pressable style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]} onPress={() => void handleAddEntry()}>
+            <Pressable style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]} onPress={() => void handleAddEntry()} accessibilityRole="button" accessibilityLabel="Add new journal entry">
               <LinearGradient colors={[...theme.goldGradient]} style={styles.fabGradient}>
                 <Ionicons name="add" size={24} color="#1A1A1A" />
               </LinearGradient>

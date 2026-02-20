@@ -401,8 +401,28 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
       .slice(0, 20);
   }, [chart.aspects, showAspects]);
 
+  // ── Accessibility summary ──
+  const accessibilitySummary = useMemo(() => {
+    const parts: string[] = ['Natal chart wheel'];
+    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'];
+    for (const label of labels) {
+      const obj = getChartPlanet(chart, label);
+      const sign = (obj as any)?.sign?.name ?? (obj as any)?.Sign?.label;
+      if (sign) parts.push(`${label} in ${sign}`);
+    }
+    if (overlayChart && overlayName) {
+      parts.push(`Synastry overlay with ${overlayName}`);
+    }
+    return parts.join('. ');
+  }, [chart, overlayChart, overlayName]);
+
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="image"
+      accessibilityLabel={accessibilitySummary}
+    >
       <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
         {/* ── Background ── */}
         <Defs>

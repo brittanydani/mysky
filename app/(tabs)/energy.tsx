@@ -36,13 +36,14 @@ import {
   EnergyIntensity,
   ChakraReading,
   ChakraState,
+  BehaviorContext,
 } from '../../services/energy/energyEngine';
 import { logger } from '../../utils/logger';
 import ChakraWheelComponent from '../../components/ui/ChakraWheel';
 
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');
-const WHEEL_SIZE = SCREEN_W * 0.88;
+const WHEEL_SIZE = SCREEN_W * 0.75;
 
 const INTENSITY_BAR: Record<EnergyIntensity, { fill: number; color: string; label: string }> = {
   Low:      { fill: 0.3,  color: theme.calm,  label: 'Low' },
@@ -132,7 +133,37 @@ export default function EnergyScreen() {
             houseSystem: saved.houseSystem,
           };
           const natal = AstrologyCalculator.generateNatalChart(birthData);
-          const snap = EnergyEngine.generateSnapshot(natal, new Date());
+
+          // Load behavioral context for blended calculations
+          let behavior: BehaviorContext | undefined;
+          try {
+            const today = new Date().toISOString().slice(0, 10);
+            const checkIn = await localDb.getCheckInByDate(today, saved.id);
+            const recentCheckIns = await localDb.getCheckIns(saved.id, 7);
+
+            if (checkIn || recentCheckIns.length > 0) {
+              behavior = {};
+              if (checkIn) {
+                behavior.recentMoodScore = checkIn.moodScore;
+                behavior.recentEnergyLevel = checkIn.energyLevel as BehaviorContext['recentEnergyLevel'];
+                behavior.recentStressLevel = checkIn.stressLevel as BehaviorContext['recentStressLevel'];
+                behavior.recentTags = checkIn.tags;
+              }
+              if (recentCheckIns.length > 0) {
+                const moodScores = recentCheckIns
+                  .filter(c => c.moodScore != null)
+                  .map(c => c.moodScore);
+                if (moodScores.length > 0) {
+                  behavior.averageMood7d = moodScores.reduce((a, b) => a + b, 0) / moodScores.length;
+                }
+              }
+            }
+          } catch (e) {
+            // Behavioral context is optional — continue without it
+            logger.error('Behavior context load failed (non-critical):', e);
+          }
+
+          const snap = EnergyEngine.generateSnapshot(natal, new Date(), behavior);
           setSnapshot(snap);
         } catch (e) {
           logger.error('Energy load failed:', e);
@@ -151,7 +182,7 @@ export default function EnergyScreen() {
         <StarField starCount={28} />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
               <Ionicons name="chevron-back" size={20} color={theme.primary} />
               <Text style={styles.backBtnText}>Mood</Text>
             </Pressable>
@@ -160,7 +191,7 @@ export default function EnergyScreen() {
           </Animated.View>
           <ScrollView
             style={styles.scroll}
-            contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 32) }]}
+            contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
             showsVerticalScrollIndicator={false}
           >
             <Animated.View entering={FadeInDown.delay(200).duration(600)}>
@@ -170,7 +201,7 @@ export default function EnergyScreen() {
                 <Text style={[styles.body, { marginTop: 8 }]}>
                   Create your natal chart to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, and daily guidance.
                 </Text>
-                <Pressable style={styles.primaryBtn} onPress={() => { safeHaptic(); router.push('/(tabs)/home' as Href); }}>
+                <Pressable style={styles.primaryBtn} onPress={() => { safeHaptic(); router.push('/(tabs)/home' as Href); }} accessibilityRole="button" accessibilityLabel="Create chart">
                   <Ionicons name="add-circle-outline" size={16} color={theme.primary} />
                   <Text style={styles.primaryBtnText}>Create Chart</Text>
                 </Pressable>
@@ -205,7 +236,7 @@ export default function EnergyScreen() {
       <StarField starCount={80} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="chevron-back" size={20} color={theme.primary} />
             <Text style={styles.backBtnText}>Mood</Text>
           </Pressable>
@@ -217,7 +248,7 @@ export default function EnergyScreen() {
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 32) + 20 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* ═══ S1 — ENERGY SNAPSHOT ═══ */}
@@ -270,6 +301,8 @@ export default function EnergyScreen() {
                   wheelTooltipTimer.current = setTimeout(() => setWheelTooltip(null), 2800);
                 }
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Energy wheel, tap for details"
             >
               <ChakraWheelComponent
                 chakras={snapshot.chakras}
@@ -309,11 +342,14 @@ export default function EnergyScreen() {
                 )}
               </>
             ) : (
-              <LinearGradient colors={['rgba(30,45,71,0.50)', 'rgba(26,39,64,0.30)']} style={[styles.card, styles.cardPad]}>
+              <LinearGradient colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(201,169,98,0.2)' }]}>
                 <View style={styles.lockBanner}>
-                  <Ionicons name="lock-closed" size={14} color={theme.primary} />
-                  <Text style={styles.lockText}>All 7 chakras with body cues and triggers {'\u2014'} Premium</Text>
+                  <Ionicons name="sparkles" size={14} color={theme.primary} />
+                  <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
                 </View>
+                <Text style={{ fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 6 }}>
+                  Your chart activates specific energy centers {'\u2014'} see which ones need attention today
+                </Text>
               </LinearGradient>
             )}
           </Animated.View>
@@ -337,6 +373,9 @@ export default function EnergyScreen() {
                     safeHaptic();
                     setExpandedDomain(isExpanded ? null : idx);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${d.name} energy domain${isLocked ? ', locked' : ''}`}
+                  accessibilityState={{ expanded: isExpanded }}
                 >
                   <LinearGradient
                     colors={isLocked
@@ -407,10 +446,22 @@ export default function EnergyScreen() {
               ) : (
                 <>
                   <Text style={styles.guidanceFree}>{snapshot.freeGuidanceLine}</Text>
-                  <View style={[styles.lockBanner, { marginTop: 12 }]}>
-                    <Ionicons name="lock-closed" size={14} color={theme.primary} />
-                    <Text style={styles.lockText}>Full guidance unlocked with Premium</Text>
-                  </View>
+                  <Pressable
+                    onPress={() => router.push('/(tabs)/premium' as Href)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Unlock full energy guidance"
+                  >
+                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'rgba(201,169,98,0.08)', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
+                      <Ionicons name="sparkles" size={14} color={theme.primary} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.lockText, { fontWeight: '600' }]}>Full guidance includes:</Text>
+                        <Text style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
+                          Lean into · Move gently around · Best use of energy · Today's micro-ritual
+                        </Text>
+                      </View>
+                      <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                    </View>
+                  </Pressable>
                 </>
               )}
             </LinearGradient>
@@ -537,7 +588,16 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 
       <View style={styles.focusDivider} />
       <Text style={styles.focusSectionLabel}>What helps</Text>
-      <Text style={styles.focusHelpText}>{chakra.healingSuggestion}</Text>
+      <View style={styles.focusBulletRow}>
+        <Text style={styles.focusBulletDot}>{'\u2022'}</Text>
+        <Text style={styles.focusHelpText}>{chakra.healingSuggestion}</Text>
+      </View>
+      {chakra.groundingTip ? (
+        <View style={[styles.focusBulletRow, { marginTop: 4 }]}>
+          <Text style={styles.focusBulletDot}>{'\u2022'}</Text>
+          <Text style={styles.focusHelpText}>{chakra.groundingTip}</Text>
+        </View>
+      ) : null}
 
       {chakra.affirmation ? (
         <View style={styles.affirmationWrap}>

@@ -133,7 +133,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Back button */}
@@ -239,11 +239,27 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               MySky is for self-reflection and personal insight only. It is not medical, psychological, or financial advice.
             </Text>
             <View style={styles.legalLinks}>
-              <Pressable onPress={() => router.push('/terms' as Href)} accessibilityRole="link">
+              <Pressable
+                onPress={() => {
+                  if (onClose) onClose();
+                  setTimeout(() => router.push('/terms' as Href), 350);
+                }}
+                accessibilityRole="link"
+                hitSlop={12}
+                style={styles.legalLinkPressable}
+              >
                 <Text style={styles.legalLink}>Terms of Use</Text>
               </Pressable>
               <Text style={styles.legalSeparator}>·</Text>
-              <Pressable onPress={() => router.push('/privacy' as Href)} accessibilityRole="link">
+              <Pressable
+                onPress={() => {
+                  if (onClose) onClose();
+                  setTimeout(() => router.push('/privacy' as Href), 350);
+                }}
+                accessibilityRole="link"
+                hitSlop={12}
+                style={styles.legalLinkPressable}
+              >
                 <Text style={styles.legalLink}>Privacy Policy</Text>
               </Pressable>
             </View>
@@ -252,7 +268,6 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* Trust line */}
           <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.trustSection}>
             <Text style={styles.trustText}>{DEEPER_SKY_MARKETING.trustLine}</Text>
-            <Text style={styles.trustText}>{DEEPER_SKY_MARKETING.guarantee}</Text>
           </Animated.View>
         </ScrollView>
       </SafeAreaView>
@@ -447,8 +462,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  legalLinkPressable: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
   legalLink: {
-    fontSize: 12,
+    fontSize: 13,
     color: theme.primary,
     textDecorationLine: 'underline',
   },

@@ -40,7 +40,13 @@ export class EncryptionManager {
     return key;
   }
 
-  static async encryptSensitiveData(data: any): Promise<EncryptedPayload> {
+  /**
+   * Sign data with HMAC-SHA256 for tamper detection.
+   * NOTE: The payload.data field is plaintext JSON — confidentiality
+   * relies on SecureStore's OS-level Keychain/Keystore encryption.
+   * True field-level AES encryption is handled by fieldEncryption.ts.
+   */
+  static async signSensitiveData(data: any): Promise<EncryptedPayload> {
     const serialized = JSON.stringify(data);
     const hmacKey = await this.getHmacKey();
     // HMAC-SHA256: hash the data with the secret key for tamper detection
@@ -57,14 +63,59 @@ export class EncryptionManager {
     };
   }
 
-  static async decryptSensitiveData<T>(payload: EncryptedPayload): Promise<T> {
+  /**
+   * Verify integrity and parse signed data.
+   * Throws if HMAC validation fails (data may have been tampered with).
+   */
+  static async verifySensitiveData<T>(payload: EncryptedPayload): Promise<T> {
     const isValid = await this.validateEncryptionIntegrity(payload);
     if (!isValid) {
-      logger.warn('[EncryptionManager] Integrity check failed — data may have been tampered with');
-      // Still return the data rather than crashing (data is Keychain-protected anyway)
-      // but log a warning for audit purposes
+      logger.error('[EncryptionManager] Integrity check failed — data may have been tampered with');
+      throw new Error('Data integrity check failed — data may have been tampered with');
     }
     return JSON.parse(payload.data) as T;
+  }
+
+  /**
+   * Attempt to parse the payload data WITHOUT verifying integrity.
+   * Used as a recovery path when the HMAC key has changed (e.g. simulator
+   * reset, app reinstall) so that existing plaintext data is not lost.
+   * Returns null if the data cannot be parsed.
+   */
+  static tryParseSensitiveData<T>(payload: EncryptedPayload): T | null {
+    try {
+      if (!payload?.data) return null;
+      return JSON.parse(payload.data) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Re-sign an existing payload with the current HMAC key.
+   * Returns a new EncryptedPayload with an updated digest.
+   */
+  static async reSignPayload(payload: EncryptedPayload): Promise<EncryptedPayload> {
+    const hmacKey = await this.getHmacKey();
+    const digest = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      hmacKey + ':' + payload.data
+    );
+    return { ...payload, digest };
+  }
+
+  /**
+   * @deprecated Use verifySensitiveData() instead. Kept for migration only.
+   */
+  static async decryptSensitiveData<T>(payload: EncryptedPayload): Promise<T> {
+    return this.verifySensitiveData<T>(payload);
+  }
+
+  /**
+   * @deprecated Use signSensitiveData() instead. Kept for migration only.
+   */
+  static async encryptSensitiveData(data: any): Promise<EncryptedPayload> {
+    return this.signSensitiveData(data);
   }
 
   static async validateEncryptionIntegrity(payload: EncryptedPayload): Promise<boolean> {
@@ -77,12 +128,9 @@ export class EncryptionManager {
       );
       if (expectedDigest === payload.digest) return true;
 
-      // Fallback: check if it was created with the old non-HMAC digest (migration path)
-      const legacyDigest = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        payload.data
-      );
-      return legacyDigest === payload.digest;
+      // Legacy non-HMAC digests are no longer accepted.
+      // All legacy entries should have been re-signed by now.
+      return false;
     } catch {
       return false;
     }

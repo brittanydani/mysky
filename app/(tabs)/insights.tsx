@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { theme } from '../../constants/theme';
+import { usePremium } from '../../context/PremiumContext';
 import StarField from '../../components/ui/StarField';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -82,6 +83,7 @@ import { runNlpBackfill } from '../../services/journal/backfillNlp';
 export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isPremium } = usePremium();
 
   const [loading, setLoading] = useState(true);
   const [bundle, setBundle] = useState<InsightBundle | null>(null);
@@ -218,7 +220,7 @@ export default function InsightsScreen() {
         <StarField starCount={25} />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <ScrollView
-            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 }]}
             showsVerticalScrollIndicator={false}
           >
             <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
@@ -244,7 +246,7 @@ export default function InsightsScreen() {
                   ? 'Check in with your mood for at least 3 days and your first insight cards will appear here.'
                   : `You have ${count} check-in${count === 1 ? '' : 's'} so far. Add ${Math.max(0, 3 - count)} more to unlock trend and pattern cards.`}
               </Text>
-              <Pressable style={styles.emptyButton} onPress={() => router.push('/(tabs)/mood' as Href)}>
+              <Pressable style={styles.emptyButton} onPress={() => router.push('/(tabs)/mood' as Href)} accessibilityRole="button" accessibilityLabel="Check in now">
                 <Text style={styles.emptyButtonText}>Check In Now</Text>
               </Pressable>
             </Animated.View>
@@ -268,7 +270,7 @@ export default function InsightsScreen() {
       <StarField starCount={25} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
@@ -304,6 +306,8 @@ export default function InsightsScreen() {
                 <Pressable
                   style={styles.ctaRow}
                   onPress={() => router.push('/(tabs)/journal' as Href)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Journal from this"
                 >
                   <Text style={styles.ctaText}>Journal from this</Text>
                   <Ionicons name="arrow-forward" size={13} color={theme.primary} />
@@ -360,7 +364,7 @@ export default function InsightsScreen() {
               </LinearGradient>
 
               {/* Stability */}
-              {stability && (
+              {isPremium && stability && (
                 <LinearGradient
                   colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.6)']}
                   style={[styles.card, { marginTop: theme.spacing.sm }]}
@@ -378,8 +382,49 @@ export default function InsightsScreen() {
             </Animated.View>
           )}
 
+          {/* ── Premium Upsell (free users only) ───────────────────── */}
+          {!isPremium && (
+            <Animated.View entering={FadeInDown.delay(240).duration(600)} style={styles.section}>
+              <LinearGradient
+                colors={['rgba(201,169,98,0.18)', 'rgba(26,39,64,0.7)']}
+                style={[styles.card, { borderColor: 'rgba(201,169,98,0.3)' }]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md, gap: theme.spacing.sm }}>
+                  <Ionicons name="sparkles" size={20} color={theme.primary} />
+                  <Text style={[styles.cardTitle, { flex: 1 }]}>Your deeper patterns are ready</Text>
+                </View>
+                <Text style={styles.cardBody}>
+                  Deeper Sky unlocks the insights your data has already revealed:
+                </Text>
+                {[
+                  { icon: 'leaf-outline' as const, text: 'What restores vs drains you' },
+                  { icon: 'analytics-outline' as const, text: 'Mood stability & volatility tracking' },
+                  { icon: 'time-outline' as const, text: 'Best time of day & day of week' },
+                  { icon: 'shield-checkmark-outline' as const, text: 'Tag intelligence & combos' },
+                  { icon: 'create-outline' as const, text: 'Journal deep dive & NLP themes' },
+                  { icon: 'git-merge-outline' as const, text: 'Chart + mood + journal connections' },
+                ].map((item) => (
+                  <View key={item.text} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 }}>
+                    <Ionicons name={item.icon} size={14} color={theme.primary} />
+                    <Text style={{ fontSize: 13, color: theme.textSecondary }}>{item.text}</Text>
+                  </View>
+                ))}
+                <Pressable
+                  style={[styles.ctaRow, { borderTopColor: 'rgba(201,169,98,0.2)' }]}
+                  onPress={() => router.push('/(tabs)/premium' as Href)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Unlock Deeper Sky"
+                >
+                  <Ionicons name="sparkles" size={13} color={theme.primary} />
+                  <Text style={[styles.ctaText, { fontWeight: '700' }]}>Unlock with Deeper Sky</Text>
+                  <Ionicons name="arrow-forward" size={13} color={theme.primary} />
+                </Pressable>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
           {/* ── Section 3: What Your Data Is Revealing ───────────────── */}
-          {(tagInsights || timeOfDay || dayOfWeek) && (
+          {isPremium && (tagInsights || timeOfDay || dayOfWeek) && (
             <Animated.View entering={FadeInDown.delay(240).duration(600)} style={styles.section}>
               <SectionLabel label="What Your Data Is Revealing" />
 
@@ -549,7 +594,7 @@ export default function InsightsScreen() {
           )}
 
           {/* ── Section 3.5: Tag Intelligence (V3) ──────────────── */}
-          {tagAnalytics && tagAnalytics.taggedDays >= 10 && (
+          {isPremium && tagAnalytics && tagAnalytics.taggedDays >= 10 && (
             <Animated.View entering={FadeInDown.delay(270).duration(600)} style={styles.section}>
               <SectionLabel label="Tag Intelligence" />
 
@@ -698,7 +743,7 @@ export default function InsightsScreen() {
           )}
 
           {/* ── Section 4: Journal Deep Dive (V3 Enhanced) ────────── */}
-          {enhanced && enhanced.journalDays >= 3 && (
+          {isPremium && enhanced && enhanced.journalDays >= 3 && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
               <SectionLabel label="Journal Deep Dive" />
 
@@ -859,7 +904,7 @@ export default function InsightsScreen() {
           )}
 
           {/* ── Section 6: Where It Connects ─────────────────────────── */}
-          {((enhanced && enhanced.blended.length > 0) || blended.length > 0) && (
+          {isPremium && ((enhanced && enhanced.blended.length > 0) || blended.length > 0) && (
             <Animated.View entering={FadeInDown.delay(420).duration(600)} style={styles.section}>
               <SectionLabel label="Where It Connects" />
               {/* Prefer V3 blended cards (journal-enhanced) over V2 */}
@@ -1111,7 +1156,7 @@ function BlendedBlock({ card, onJournal }: { card: BlendedCard; onJournal: () =>
       </Row>
       <Text style={styles.cardBody}>{card.body}</Text>
       <Text style={styles.statLine}>{card.stat}</Text>
-      <Pressable style={styles.ctaRow} onPress={onJournal}>
+      <Pressable style={styles.ctaRow} onPress={onJournal} accessibilityRole="button" accessibilityLabel={card.journalPrompt}>
         <Ionicons name="pencil-outline" size={12} color={theme.primary} />
         <Text style={styles.ctaText}>{card.journalPrompt}</Text>
         <Ionicons name="arrow-forward" size={12} color={theme.primary} />
@@ -1141,7 +1186,7 @@ function BlendedV3Block({ card, onJournal }: { card: BlendedInsightCard; onJourn
           ))}
         </View>
       )}
-      <Pressable style={styles.ctaRow} onPress={onJournal}>
+      <Pressable style={styles.ctaRow} onPress={onJournal} accessibilityRole="button" accessibilityLabel={card.journalPrompt}>
         <Ionicons name="pencil-outline" size={12} color={theme.primary} />
         <Text style={styles.ctaText}>{card.journalPrompt}</Text>
         <Ionicons name="arrow-forward" size={12} color={theme.primary} />

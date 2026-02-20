@@ -121,6 +121,27 @@ let _swe: any = null;
 let _sweAvailable: boolean | null = null;
 
 /**
+ * Check whether the Swisseph TurboModule is registered in the native binary
+ * *before* calling require(), which would trigger getEnforcing() and crash
+ * with a fatal Invariant Violation that JS try/catch cannot intercept.
+ */
+function isNativeModuleRegistered(): boolean {
+  try {
+    // react-native exposes TurboModuleRegistry; use the non-enforcing .get()
+    // which returns null instead of throwing a native fatal error.
+    const { TurboModuleRegistry } = require('react-native');
+    if (TurboModuleRegistry?.get) {
+      return TurboModuleRegistry.get('Swisseph') != null;
+    }
+    // Fallback for older bridge-based RN: check NativeModules
+    const { NativeModules } = require('react-native');
+    return NativeModules?.Swisseph != null;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Attempt to load react-native-swisseph. Returns null if not available
  * (e.g. running in Node.js tests, web, or Expo Go).
  */
@@ -129,12 +150,21 @@ function getSwe(): any {
   if (_swe) return _swe;
 
   try {
+    // Guard: verify the native TurboModule is registered before require(),
+    // because require() calls TurboModuleRegistry.getEnforcing() which
+    // triggers RCTFatal — a native crash that JS cannot catch.
+    if (!isNativeModuleRegistered()) {
+      _sweAvailable = false;
+      logger.warn('[SwissEphemeris] Native TurboModule not registered (expected in Expo Go), will use fallback engine');
+      return null;
+    }
+
     // Dynamic require so the module doesn't crash Node.js test runner
     // or web builds where native modules aren't available
     const mod = require('react-native-swisseph');
 
     // Validate the module actually loaded (Metro may return undefined/null
-    // if the native TurboModule registration fails internally)
+    // if the native TurboModule registration fails internally).
     if (!mod || typeof mod.sweCalcUt !== 'function') {
       _sweAvailable = false;
       logger.warn('[SwissEphemeris] Native module returned but is not functional, will use fallback engine');
@@ -145,9 +175,14 @@ function getSwe(): any {
     _sweAvailable = true;
     logger.info('[SwissEphemeris] Native module loaded successfully');
     return _swe;
-  } catch (e) {
+  } catch (e: any) {
     _sweAvailable = false;
-    logger.warn('[SwissEphemeris] Native module not available, will use fallback engine');
+    const msg = e?.message ?? String(e);
+    if (msg.includes('Invariant Violation') || msg.includes('could not be found')) {
+      logger.warn('[SwissEphemeris] Native TurboModule not registered (expected in Expo Go), will use fallback engine');
+    } else {
+      logger.warn('[SwissEphemeris] Native module not available, will use fallback engine:', msg);
+    }
     return null;
   }
 }

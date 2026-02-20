@@ -250,6 +250,8 @@ export default function TodayScreen() {
         <Pressable
           style={styles.createChartButton}
           onPress={() => router.push('/' as Href)}
+          accessibilityRole="button"
+          accessibilityLabel="Get started"
         >
           <Text style={styles.createChartText}>Get Started</Text>
         </Pressable>
@@ -288,7 +290,7 @@ export default function TodayScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: insets.bottom + 80 },
+            { paddingBottom: 32 },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -304,7 +306,7 @@ export default function TodayScreen() {
               </View>
               {/* Favorite button (premium) */}
               {isPremium && savedInsight && (
-                <Pressable onPress={toggleFavorite} hitSlop={12} style={styles.favoriteButton}>
+                <Pressable onPress={toggleFavorite} hitSlop={12} style={styles.favoriteButton} accessibilityRole="button" accessibilityLabel={savedInsight?.isFavorite ? 'Remove from favorites' : 'Add to favorites'}>
                   <Ionicons 
                     name={savedInsight.isFavorite ? 'heart' : 'heart-outline'} 
                     size={24} 
@@ -345,6 +347,8 @@ export default function TodayScreen() {
             <Pressable
               style={styles.section}
               onPress={() => setShowMoonWeek(prev => !prev)}
+              accessibilityRole="button"
+              accessibilityLabel={showMoonWeek ? 'Collapse moon week view' : 'Expand moon week view'}
             >
               <LinearGradient
                 colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
@@ -599,6 +603,8 @@ export default function TodayScreen() {
                 <Pressable
                   style={[styles.journalButton, { marginTop: 16 }]}
                   onPress={() => router.push('/(tabs)/journal' as Href)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Write in journal"
                 >
                   <LinearGradient
                     colors={['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.1)']}
@@ -618,7 +624,7 @@ export default function TodayScreen() {
               entering={FadeInDown.delay(550).duration(600)}
               style={styles.section}
             >
-              <Pressable onPress={isPremium ? toggleWhyThis : () => router.push('/(tabs)/premium' as Href)}>
+              <Pressable onPress={isPremium ? toggleWhyThis : () => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Why this insight">
                 <LinearGradient
                   colors={['rgba(201, 169, 98, 0.1)', 'rgba(201, 169, 98, 0.05)']}
                   style={styles.whyThisCard}

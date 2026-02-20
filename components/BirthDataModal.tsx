@@ -462,7 +462,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
 
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Pressable style={styles.closeButton} onPress={onClose}>
+            <Pressable style={styles.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close birth data modal">
               <Ionicons name="close" size={24} color={theme.textPrimary} />
             </Pressable>
             <Text style={styles.headerTitle}>Birth Information</Text>
@@ -497,7 +497,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
               {/* Date */}
               <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Birth Date</Text>
-                <Pressable style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)}>
+                <Pressable style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)} accessibilityRole="button" accessibilityLabel={`Birth date: ${formatDate(date)}. Tap to change`}>
                   <LinearGradient
                     colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
                     style={styles.dateTimeGradient}
@@ -518,6 +518,9 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                       setHasUnknownTime((v) => !v);
                       Haptics.selectionAsync();
                     }}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel="Unknown birth time"
+                    accessibilityState={{ checked: hasUnknownTime }}
                   >
                     <Ionicons
                       name={hasUnknownTime ? 'checkbox' : 'square-outline'}
@@ -536,7 +539,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                     setPickerMinute(time.getMinutes());
                     setPickerPeriod(t12.period);
                     setShowTimePicker(true);
-                  }}>
+                  }} accessibilityRole="button" accessibilityLabel={`Birth time: ${formatTime(time)}. Tap to change`}>
                     <LinearGradient
                       colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
                       style={styles.dateTimeGradient}
@@ -580,6 +583,8 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                           key={String(s.place_id ?? idx)}
                           style={styles.suggestionItem}
                           onPress={() => selectLocation(s)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Select location: ${s.display_name}`}
                         >
                           <Ionicons name="location-outline" size={16} color={theme.textMuted} />
                           <Text style={styles.suggestionText} numberOfLines={2}>
@@ -624,6 +629,8 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                 <Pressable
                   style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]}
                   onPress={handleSave}
+                  accessibilityRole="button"
+                  accessibilityLabel="Save birth data"
                 >
                   <LinearGradient
                     colors={[...theme.goldGradient]}
@@ -661,10 +668,10 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
 
         {/* iOS Date Picker Overlay - outside KeyboardAvoidingView */}
         {showDatePicker && Platform.OS === 'ios' && (
-          <Pressable style={styles.pickerOverlay} onPress={() => setShowDatePicker(false)}>
-            <Pressable style={styles.pickerContainer} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={styles.pickerOverlay} onPress={() => setShowDatePicker(false)} accessibilityRole="button" accessibilityLabel="Dismiss date picker">
+            <Pressable style={styles.pickerContainer} onPress={(e) => e.stopPropagation()} accessibilityRole="none">
               <View style={styles.pickerHeader}>
-                <Pressable onPress={() => setShowDatePicker(false)} hitSlop={20}>
+                <Pressable onPress={() => setShowDatePicker(false)} hitSlop={20} accessibilityRole="button" accessibilityLabel="Done selecting date">
                   <Text style={styles.pickerDone}>Done</Text>
                 </Pressable>
               </View>
@@ -685,13 +692,13 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
         {/* iOS Time Picker Overlay - Custom scroll wheels */}
         {showTimePicker && Platform.OS === 'ios' && (
           <View style={styles.pickerOverlay}>
-            <Pressable style={{ flex: 1 }} onPress={() => setShowTimePicker(false)} />
+            <Pressable style={{ flex: 1 }} onPress={() => setShowTimePicker(false)} accessibilityRole="button" accessibilityLabel="Dismiss time picker" />
             <View style={styles.pickerContainer}>
               <View style={styles.pickerHeader}>
-                <Pressable onPress={() => setShowTimePicker(false)} hitSlop={20}>
+                <Pressable onPress={() => setShowTimePicker(false)} hitSlop={20} accessibilityRole="button" accessibilityLabel="Cancel time selection">
                   <Text style={[styles.pickerDone, { color: theme.textSecondary }]}>Cancel</Text>
                 </Pressable>
-                <Pressable onPress={handleTimePickerDone} hitSlop={20}>
+                <Pressable onPress={handleTimePickerDone} hitSlop={20} accessibilityRole="button" accessibilityLabel="Done selecting time">
                   <Text style={styles.pickerDone}>Done</Text>
                 </Pressable>
               </View>

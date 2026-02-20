@@ -9,6 +9,12 @@ import { logger } from '../../utils/logger';
  * SecureStore is meant for small secrets. Storing full journals/charts can hit size limits.
  * Strongly recommended: store charts/journal in SQLite; keep only keys + consent + settings here.
  */
+
+/** iOS Keychain items can technically hold ~16 KB, but expo-secure-store
+ *  documentation recommends ≤ 2 048 bytes.  We use a conservative limit
+ *  and progressively trim array values that exceed it.                       */
+const SECURE_STORE_SOFT_LIMIT = 2048;
+
 class SecureStorageService {
   private static readonly KEYS = {
     CHARTS: 'secure_charts',
@@ -316,7 +322,27 @@ class SecureStorageService {
   private async setEncryptedItem(key: string, value: any): Promise<void> {
     const payload = await EncryptionManager.encryptSensitiveData(value);
     const envelope: EncryptedEnvelope = { encrypted: true, payload };
-    await SecureStore.setItemAsync(key, JSON.stringify(envelope));
+    let serialised = JSON.stringify(envelope);
+
+    // If the serialised blob exceeds the soft limit and the value is an array,
+    // progressively trim oldest entries until it fits (or the array is empty).
+    if (serialised.length > SECURE_STORE_SOFT_LIMIT && Array.isArray(value)) {
+      let trimmed = value;
+      while (trimmed.length > 0 && serialised.length > SECURE_STORE_SOFT_LIMIT) {
+        trimmed = trimmed.slice(-Math.max(1, Math.floor(trimmed.length * 0.75)));
+        const p = await EncryptionManager.encryptSensitiveData(trimmed);
+        serialised = JSON.stringify({ encrypted: true, payload: p });
+      }
+      logger.warn(
+        `[SecureStorage] Trimmed array for key "${key}" from ${value.length} → ${trimmed.length} to stay ≤ ${SECURE_STORE_SOFT_LIMIT} bytes`,
+      );
+    } else if (serialised.length > SECURE_STORE_SOFT_LIMIT) {
+      logger.warn(
+        `[SecureStorage] Value for key "${key}" is ${serialised.length} bytes (limit ${SECURE_STORE_SOFT_LIMIT}). Write may fail on some devices.`,
+      );
+    }
+
+    await SecureStore.setItemAsync(key, serialised);
   }
 
   private async getEncryptedItem<T>(key: string): Promise<T | null> {
@@ -327,7 +353,22 @@ class SecureStorageService {
     if (!parsed) return null;
 
     if (this.isEncryptedEnvelope(parsed)) {
-      return await EncryptionManager.decryptSensitiveData<T>(parsed.payload);
+      try {
+        return await EncryptionManager.decryptSensitiveData<T>(parsed.payload);
+      } catch {
+        // HMAC key likely changed (simulator reset, app reinstall, etc.).
+        // The data field is plaintext JSON — recover it and re-sign with
+        // the current key so future reads pass integrity checks.
+        const recovered = EncryptionManager.tryParseSensitiveData<T>(parsed.payload);
+        if (recovered !== null) {
+          logger.warn(`[SecureStorage] Integrity mismatch for "${key}" — re-signing with current key`);
+          await this.setEncryptedItem(key, recovered);
+          return recovered;
+        }
+        // Truly unrecoverable
+        logger.error(`[SecureStorage] Unable to recover data for "${key}"`);
+        return null;
+      }
     }
 
     // Legacy plaintext storage detected; upgrade

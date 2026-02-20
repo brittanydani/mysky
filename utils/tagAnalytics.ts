@@ -18,21 +18,11 @@
 import { DailyAggregate, ChartProfile, Element } from '../services/insights/types';
 import { regulationStyle } from '../services/insights/chartProfile';
 import type { ConfidenceLevel } from './insightsEngine';
+import { mean, confidence } from './stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-function mean(vals: number[]): number {
-  if (vals.length === 0) return 0;
-  return vals.reduce((s, v) => s + v, 0) / vals.length;
-}
-
-function confidence(count: number): ConfidenceLevel {
-  if (count < 14) return 'low';
-  if (count < 30) return 'medium';
-  return 'high';
-}
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);

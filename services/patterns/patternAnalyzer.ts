@@ -11,6 +11,7 @@
 
 import { DailyCheckIn, PatternCard, PatternSummary, ThemeTag } from './types';
 import { logger } from '../../utils/logger';
+import { computeTrend } from '../../utils/stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Configuration
@@ -128,7 +129,24 @@ export class PatternAnalyzer {
     const strengthOrder = { strong: 0, moderate: 1, emerging: 2 };
     cards.sort((a, b) => strengthOrder[a.strength] - strengthOrder[b.strength]);
 
-    return cards;
+    // Suppress cards with fewer than MIN_DATA_POINTS observations
+    const gated = cards.filter(c => c.dataPoints >= MIN_DATA_POINTS);
+
+    // Annotate cards with sample size for transparency
+    for (const card of gated) {
+      const sampleNote = `Based on ${card.dataPoints} observation${card.dataPoints !== 1 ? 's' : ''}`;
+      if (card.dataPoints < 10) {
+        card.detail = card.detail
+          ? `Preliminary · ${sampleNote}\n${card.detail}`
+          : `Preliminary · ${sampleNote}`;
+      } else {
+        card.detail = card.detail
+          ? `${sampleNote}\n${card.detail}`
+          : sampleNote;
+      }
+    }
+
+    return gated;
   }
 
   /**
@@ -140,6 +158,8 @@ export class PatternAnalyzer {
     const houseData: Record<number, { moods: number[]; count: number }> = {};
 
     for (const c of checkIns) {
+      // Skip sentinel moonHouse=0 from failed sky snapshots
+      if (c.moonHouse === 0) continue;
       if (!houseData[c.moonHouse]) houseData[c.moonHouse] = { moods: [], count: 0 };
       houseData[c.moonHouse].moods.push(c.moodScore);
       houseData[c.moonHouse].count++;
@@ -147,7 +167,7 @@ export class PatternAnalyzer {
 
     // Find best and worst moon houses
     const averages = Object.entries(houseData)
-      .filter(([_, d]) => d.count >= 2)
+      .filter(([_, d]) => d.count >= 5)
       .map(([house, d]) => ({
         house: parseInt(house),
         avg: d.moods.reduce((a, b) => a + b, 0) / d.moods.length,
@@ -255,13 +275,13 @@ export class PatternAnalyzer {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     for (const c of checkIns) {
-      const day = dayNames[new Date(c.date).getDay()];
+      const day = dayNames[new Date(c.date + 'T12:00:00').getDay()];
       if (!dayData[day]) dayData[day] = [];
       dayData[day].push(c.moodScore);
     }
 
     const dayAverages = Object.entries(dayData)
-      .filter(([_, moods]) => moods.length >= 2)
+      .filter(([_, moods]) => moods.length >= 5)
       .map(([day, moods]) => ({
         day,
         avg: moods.reduce((s, m) => s + m, 0) / moods.length,
@@ -544,21 +564,17 @@ export class PatternAnalyzer {
     // Average mood
     const averageMood = checkIns.reduce((s, c) => s + c.moodScore, 0) / checkIns.length;
 
-    // Mood trend (compare first half vs second half)
-    const mid = Math.floor(checkIns.length / 2);
-    const firstHalf = checkIns.slice(0, mid);
-    const secondHalf = checkIns.slice(mid);
-    const firstAvg = firstHalf.reduce((s, c) => s + c.moodScore, 0) / (firstHalf.length || 1);
-    const secondAvg = secondHalf.reduce((s, c) => s + c.moodScore, 0) / (secondHalf.length || 1);
-    const moodTrend = secondAvg - firstAvg > 0.5 ? 'improving' 
-                    : secondAvg - firstAvg < -0.5 ? 'declining' 
+    // Mood trend — use unified trend computation
+    const trend = computeTrend(checkIns.map(c => c.moodScore));
+    const moodTrend = trend.direction === 'up' ? 'improving'
+                    : trend.direction === 'down' ? 'declining'
                     : 'stable';
 
     // Best days
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayData: Record<string, number[]> = {};
     for (const c of checkIns) {
-      const day = dayNames[new Date(c.date).getDay()];
+      const day = dayNames[new Date(c.date + 'T12:00:00').getDay()];
       if (!dayData[day]) dayData[day] = [];
       dayData[day].push(c.moodScore);
     }

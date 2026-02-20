@@ -284,6 +284,7 @@ export class AdvancedJournalAnalyzer {
 
       const avgMood = moods.reduce((a, b) => a + b, 0) / moods.length;
       const overallAvg = this.calculateOverallAverageMood(entries);
+      if (overallAvg === null) continue;
 
       const diff = avgMood - overallAvg;
       const knownCorrelation = KNOWN_TRANSIT_CORRELATIONS.find(
@@ -331,10 +332,11 @@ export class AdvancedJournalAnalyzer {
     }
 
     for (const [phase, moods] of phaseMoodMap.entries()) {
-      if (moods.length < 2) continue;
+      if (moods.length < 5) continue; // Need at least 5 entries for reliable moon phase patterns
 
       const avgMood = moods.reduce((a, b) => a + b, 0) / moods.length;
       const overallAvg = this.calculateOverallAverageMood(entries);
+      if (overallAvg === null) continue;
       const diff = avgMood - overallAvg;
 
       if (Math.abs(diff) > 0.4) {
@@ -368,7 +370,7 @@ export class AdvancedJournalAnalyzer {
     // Analyze day-of-week patterns
     const dayMap: Map<number, number> = new Map();
     for (const entry of entries) {
-      const day = new Date(entry.date).getDay();
+      const day = new Date(entry.date + 'T12:00:00').getDay();
       dayMap.set(day, (dayMap.get(day) || 0) + 1);
     }
 
@@ -407,7 +409,7 @@ export class AdvancedJournalAnalyzer {
     }
 
     for (const [tag, moods] of tagMoodMap.entries()) {
-      if (moods.length < 2) continue;
+      if (moods.length < 5) continue; // Need at least 5 entries for reliable tag patterns
 
       const avgMood = moods.reduce((a, b) => a + b, 0) / moods.length;
 
@@ -436,11 +438,12 @@ export class AdvancedJournalAnalyzer {
   }
 
   /**
-   * Calculate overall average mood
+   * Calculate overall average mood.
+   * Returns null when there are no entries with mood data.
    */
-  private static calculateOverallAverageMood(entries: JournalEntryMeta[]): number {
+  private static calculateOverallAverageMood(entries: JournalEntryMeta[]): number | null {
     const entriesWithMood = entries.filter(e => e.mood);
-    if (entriesWithMood.length === 0) return 3;
+    if (entriesWithMood.length === 0) return null;
     
     const sum = entriesWithMood.reduce((acc, e) => acc + (e.mood?.overall || 3), 0);
     return sum / entriesWithMood.length;
@@ -534,7 +537,7 @@ export class AdvancedJournalAnalyzer {
       totalEntries: entries.length,
       streakDays: currentStreak,
       longestStreak,
-      averageMood: avgMood,
+      averageMood: avgMood ?? 3,
       moodTrend,
       topTags,
       writingPatterns: [],

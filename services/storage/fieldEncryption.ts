@@ -17,7 +17,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import { gcm } from '@noble/ciphers/aes';
+import { gcm } from '@noble/ciphers/aes.js';
 
 import { logger } from '../../utils/logger';
 
@@ -32,6 +32,18 @@ const ENCRYPTED_PREFIX = 'ENC:';
 
 // Prefix to distinguish new AES-GCM encrypted data from legacy XOR data
 const AES_PREFIX = 'ENC2:';
+
+/**
+ * Sentinel returned when decryption fails (e.g. DEK unavailable after device
+ * migration).  Callers can check `isDecryptionFailure()` to distinguish
+ * this from real content.
+ */
+export const DECRYPTION_FAILED_PLACEHOLDER = '[Unable to access encrypted data on this device]';
+
+/** Returns true if the value is the decryption-failure placeholder. */
+export function isDecryptionFailure(value: string | undefined | null): boolean {
+  return value === DECRYPTION_FAILED_PLACEHOLDER;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -267,7 +279,7 @@ class FieldEncryptionServiceClass {
         // Never return the raw encrypted blob — it would show gibberish in the UI.
         // Return a controlled, user-safe placeholder so the app remains usable.
         logger.error('[FieldEncryption] AES-GCM decryption failed (encryption key may be unavailable)');
-        return '[Unable to access encrypted data on this device]';
+        return DECRYPTION_FAILED_PLACEHOLDER;
       }
     }
     
@@ -296,12 +308,64 @@ class FieldEncryptionServiceClass {
       } catch (error) {
         // Never return the raw encrypted blob — it would show gibberish in the UI.
         logger.error('[FieldEncryption] Legacy decryption failed (encryption key may be unavailable)');
-        return '[Unable to access encrypted data on this device]';
+        return DECRYPTION_FAILED_PLACEHOLDER;
       }
     }
 
     // Already plaintext
     return encrypted;
+  }
+
+  /**
+   * Typed decryption: returns a discriminated union so callers (e.g. exports,
+   * backups) can distinguish real content from decryption failures without
+   * comparing to a magic string.
+   */
+  async tryDecryptField(encrypted: string): Promise<
+    { ok: true; value: string } | { ok: false; error: 'key_missing' | 'auth_failed' | 'invalid_format' }
+  > {
+    if (!encrypted || encrypted.length === 0) {
+      return { ok: true, value: encrypted };
+    }
+
+    // Plaintext pass-through
+    if (!encrypted.startsWith(AES_PREFIX) && !encrypted.startsWith(ENCRYPTED_PREFIX)) {
+      return { ok: true, value: encrypted };
+    }
+
+    const keyAvailable = await this.isKeyAvailable();
+    if (!keyAvailable) {
+      return { ok: false, error: 'key_missing' };
+    }
+
+    try {
+      const dek = await this.getDek();
+
+      if (encrypted.startsWith(AES_PREFIX)) {
+        const payload = encrypted.slice(AES_PREFIX.length);
+        const parts = payload.split(':');
+        if (parts.length !== 2) return { ok: false, error: 'invalid_format' };
+        const iv = base64ToUint8Array(parts[0]);
+        const ciphertextWithTag = base64ToUint8Array(parts[1]);
+        const value = aesGcmDecrypt(ciphertextWithTag, dek, iv);
+        return { ok: true, value };
+      }
+
+      if (encrypted.startsWith(ENCRYPTED_PREFIX)) {
+        const payload = encrypted.slice(ENCRYPTED_PREFIX.length);
+        const parts = payload.split(':');
+        if (parts.length !== 3) return { ok: false, error: 'invalid_format' };
+        const iv = base64ToUint8Array(parts[0]);
+        const ciphertext = base64ToUint8Array(parts[1]);
+        const tag = base64ToUint8Array(parts[2]);
+        const value = await legacyXorDecrypt(ciphertext, dek, iv, tag);
+        return { ok: true, value };
+      }
+
+      return { ok: false, error: 'invalid_format' };
+    } catch {
+      return { ok: false, error: 'auth_failed' };
+    }
   }
 
   /**
@@ -351,8 +415,13 @@ class FieldEncryptionServiceClass {
   }
 
   /**
-   * Re-encrypt all data with a new DEK
-   * DANGER: Only call this during key rotation
+   * Prepare a new DEK for key rotation.
+   *
+   * Safety: The new DEK is staged in a separate SecureStore key
+   * (`field_encryption_dek_next`) so the old DEK is NOT overwritten
+   * until the caller has re-encrypted every row and calls
+   * `commitRotatedKey()`.  If the app crashes before commit, the
+   * old DEK remains active and no data is lost.
    */
   async rotateKey(): Promise<{ oldDek: string; newDek: string }> {
     const oldDek = await SecureStore.getItemAsync(DEK_KEY);
@@ -361,15 +430,13 @@ class FieldEncryptionServiceClass {
       throw new Error('No existing DEK to rotate');
     }
     
-    // Generate new DEK
+    // Generate new DEK and stage it — do NOT overwrite the active key yet
     const newDekBytes = generateRandomBytes(DEK_SIZE);
     const newDekBase64 = uint8ArrayToBase64(newDekBytes);
     
-    // Store new DEK
-    await SecureStore.setItemAsync(DEK_KEY, newDekBase64);
-    this.dekCache = newDekBytes;
+    await SecureStore.setItemAsync(`${DEK_KEY}_next`, newDekBase64);
     
-    logger.warn('[FieldEncryption] DEK rotated - data re-encryption required');
+    logger.warn('[FieldEncryption] New DEK staged — call commitRotatedKey() after re-encrypting all rows');
     
     return { 
       oldDek: oldDek, 
@@ -378,11 +445,41 @@ class FieldEncryptionServiceClass {
   }
 
   /**
-   * Export DEK for backup purposes
-   * Should be encrypted before storing outside Keychain
+   * Commit a staged key rotation after ALL rows have been re-encrypted.
+   * Moves the staged DEK to the active slot and deletes the staging key.
+   * Only call this once every row has been successfully re-encrypted.
    */
-  async exportDek(): Promise<string | null> {
-    return SecureStore.getItemAsync(DEK_KEY);
+  async commitRotatedKey(): Promise<void> {
+    const staged = await SecureStore.getItemAsync(`${DEK_KEY}_next`);
+    if (!staged) {
+      throw new Error('No staged DEK found — call rotateKey() first');
+    }
+
+    await SecureStore.setItemAsync(DEK_KEY, staged);
+    await SecureStore.deleteItemAsync(`${DEK_KEY}_next`);
+    this.dekCache = base64ToUint8Array(staged);
+    logger.info('[FieldEncryption] Rotated DEK committed successfully');
+  }
+
+  /**
+   * Export DEK for backup purposes, wrapped with a caller-provided key.
+   * The raw DEK is never returned — it is encrypted with wrappingKeyBase64
+   * using AES-256-GCM before being returned as a ciphertext string.
+   * @param wrappingKeyBase64  A 32-byte (256-bit) AES key, base64-encoded.
+   * @returns Encrypted DEK in format "iv:ciphertext" (both base64), or null if no DEK exists.
+   */
+  async exportDek(wrappingKeyBase64: string): Promise<string | null> {
+    const raw = await SecureStore.getItemAsync(DEK_KEY);
+    if (!raw) return null;
+
+    const wrappingKey = base64ToUint8Array(wrappingKeyBase64);
+    if (wrappingKey.length !== DEK_SIZE) {
+      throw new Error(`Wrapping key must be ${DEK_SIZE} bytes`);
+    }
+
+    const iv = generateRandomBytes(IV_SIZE);
+    const ciphertext = aesGcmEncrypt(raw, wrappingKey, iv);
+    return `${uint8ArrayToBase64(iv)}:${uint8ArrayToBase64(ciphertext)}`;
   }
 
   /**

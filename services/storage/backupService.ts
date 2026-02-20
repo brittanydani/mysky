@@ -9,7 +9,7 @@ import * as Crypto from 'expo-crypto';
 import 'expo-standard-web-crypto';
 
 import { localDb } from './localDb';
-import { FieldEncryptionService } from './fieldEncryption';
+import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart } from './models';
 
 /* ============================================================================
@@ -47,7 +47,7 @@ type BackupEnvelope = {
  * ============================================================================
  */
 
-const KDF_ITERATIONS = 100_000;
+const KDF_ITERATIONS = 600_000;
 const KEY_LEN = 32; // bytes (AES-256)
 const SALT_LEN = 16;
 const IV_LEN = 12;
@@ -218,6 +218,20 @@ export class BackupService {
       relationshipCharts.push(...rels);
     }
 
+    // Refuse to proceed if any decrypted field returned the failure placeholder.
+    // This prevents exporting a backup with corrupted/placeholder content.
+    const allEntities = [
+      ...charts.map(c => [c.name, c.birthPlace, c.birthDate, c.birthTime]),
+      ...journalEntries.map(e => [e.content, e.title]),
+      ...relationshipCharts.map(r => [r.name, r.birthPlace, r.birthDate, r.birthTime]),
+    ].flat();
+    if (allEntities.some(v => isDecryptionFailure(v))) {
+      throw new Error(
+        'Some encrypted data could not be decrypted. Cannot create a safe backup. ' +
+        'This may happen after a device migration or keychain reset.'
+      );
+    }
+
     const payload: BackupPayload = {
       schemaVersion: 1,
       exportedAt: new Date().toISOString(),
@@ -358,6 +372,16 @@ export class BackupService {
       throw new Error('Sharing is not available on this device');
     }
     await Sharing.shareAsync(uri);
+
+    // Clean up temporary backup file after sharing dialog closes
+    try {
+      const info = await FileSystem.getInfoAsync(uri);
+      if (info.exists) {
+        await FileSystem.deleteAsync(uri, { idempotent: true });
+      }
+    } catch {
+      // Best-effort cleanup — don't fail the share operation
+    }
   }
 
   static async pickBackupFile(): Promise<string | null> {

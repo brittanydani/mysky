@@ -131,7 +131,7 @@ export default function ChartScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadChart();
-    }, [])
+    }, [isPremium])
   );
 
   const loadChart = async () => {
@@ -481,7 +481,7 @@ export default function ChartScreen() {
       <View style={[styles.container, styles.center]}>
         <StarField starCount={30} />
         <Text style={styles.loadingText}>No chart found. Create your chart from Home.</Text>
-        <Pressable style={styles.goHomeBtn} onPress={() => router.push('/' as Href)}>
+        <Pressable style={styles.goHomeBtn} onPress={() => router.push('/' as Href)} accessibilityRole="button" accessibilityLabel="Go to Home">
           <Text style={styles.goHomeText}>Go to Home</Text>
         </Pressable>
       </View>
@@ -507,7 +507,7 @@ export default function ChartScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header ── */}
@@ -547,6 +547,9 @@ export default function ChartScreen() {
                     setOverlayChart(null);
                     Haptics.selectionAsync().catch(() => {});
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Your chart"
+                  accessibilityState={{ selected: !overlayPerson }}
                 >
                   <Ionicons
                     name="person"
@@ -573,6 +576,10 @@ export default function ChartScreen() {
                     ]}
                     onPress={() => handleSelectOverlay(person)}
                     onLongPress={() => handleDeletePerson(person)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${person.name} overlay chart`}
+                    accessibilityHint="Long press to remove"
+                    accessibilityState={{ selected: overlayPerson?.id === person.id }}
                   >
                     <Ionicons
                       name="layers-outline"
@@ -598,6 +605,8 @@ export default function ChartScreen() {
                 <Pressable
                   style={styles.addPersonChip}
                   onPress={() => setShowRelTypePicker(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add person"
                 >
                   <Ionicons name="add" size={16} color={theme.primary} />
                   <Text style={styles.addPersonText}>Add</Text>
@@ -637,6 +646,8 @@ export default function ChartScreen() {
                     key={type}
                     style={styles.relTypeOption}
                     onPress={() => handleAddPerson(type)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Add ${RELATIONSHIP_LABELS[type]}`}
                   >
                     <Text style={styles.relTypeOptionText}>{RELATIONSHIP_LABELS[type]}</Text>
                   </Pressable>
@@ -644,6 +655,8 @@ export default function ChartScreen() {
                 <Pressable
                   style={styles.relTypeCancelBtn}
                   onPress={() => setShowRelTypePicker(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel"
                 >
                   <Text style={styles.relTypeCancelText}>Cancel</Text>
                 </Pressable>
@@ -775,6 +788,9 @@ export default function ChartScreen() {
                 key={tab}
                 style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
                 onPress={() => setActiveTab(tab)}
+                accessibilityRole="tab"
+                accessibilityLabel={`${tab.charAt(0).toUpperCase() + tab.slice(1)} tab`}
+                accessibilityState={{ selected: activeTab === tab }}
               >
                 <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
                   {tab === 'planets'
@@ -1098,7 +1114,7 @@ export default function ChartScreen() {
                   </View>
 
                   {!isPremium && hiddenAspectCount > 0 && (
-                    <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                    <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock more aspects">
                       <LinearGradient
                         colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']}
                         style={styles.aspectUpsell}
@@ -1358,16 +1374,23 @@ export default function ChartScreen() {
           {/* ── Deeper Sky Upsell (bottom, free users only) ── */}
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(400).duration(600)} style={{ width: '100%' }}>
-              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock Deeper Sky premium features">
                 <LinearGradient
-                  colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']}
-                  style={styles.overlayUpsell}
+                  colors={['rgba(201,169,98,0.12)', 'rgba(201,169,98,0.04)']}
+                  style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(201,169,98,0.2)' }]}
                 >
-                  <Ionicons name="sparkles" size={16} color={theme.primary} />
-                  <Text style={styles.overlayUpsellText}>
-                    Unlock Deeper Sky — overlays, Chiron & Node insights, and more
-                  </Text>
-                  <Ionicons name="chevron-forward" size={16} color={theme.primary} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="sparkles" size={16} color={theme.primary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.overlayUpsellText, { fontWeight: '600' }]}>
+                        Your chart has more to say
+                      </Text>
+                      <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
+                        Chiron sensitivity, Node axis depth, chart overlays, and minor aspects
+                      </Text>
+                    </View>
+                    <Ionicons name="arrow-forward" size={16} color={theme.primary} />
+                  </View>
                 </LinearGradient>
               </Pressable>
             </Animated.View>
@@ -1785,7 +1808,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
     gap: 8,
-    marginBottom: theme.spacing.sm,
+    marginTop: 48,
+    marginBottom: theme.spacing.xl,
   },
   overlayUpsellText: {
     flex: 1,

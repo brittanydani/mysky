@@ -11,6 +11,7 @@ interface InsightCardProps {
   onPress?: () => void;
   locked?: boolean;
   lockedText?: string;
+  lockedHint?: string;
   variant?: 'default' | 'featured';
 }
 
@@ -20,7 +21,8 @@ function InsightCard({
   icon,
   onPress,
   locked = false,
-  lockedText = 'Locked for Premium',
+  lockedText = 'Deeper Sky',
+  lockedHint,
   variant = 'default',
 }: InsightCardProps) {
   const isFeatured = variant === 'featured';
@@ -32,13 +34,16 @@ function InsightCard({
       style={({ pressed }) => [
         styles.container,
         isFeatured && styles.featuredContainer,
+        locked && styles.lockedContainer,
         pressed && styles.pressed,
       ]}
       android_ripple={{ color: 'rgba(255,255,255,0.08)' }}
     >
       <LinearGradient
         colors={
-          isFeatured
+          locked
+            ? ['rgba(201, 169, 98, 0.1)', 'rgba(201, 169, 98, 0.03)']
+            : isFeatured
             ? ['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.08)']
             : ['rgba(30, 45, 71, 0.8)', 'rgba(26, 39, 64, 0.6)']
         }
@@ -62,18 +67,24 @@ function InsightCard({
 
             {locked && (
               <View style={styles.lockedBadge}>
-                <Ionicons name="lock-closed" size={12} color={theme.textMuted} />
+                <Ionicons name="sparkles" size={11} color={theme.primary} />
                 <Text style={styles.lockedText}>{lockedText}</Text>
               </View>
             )}
           </View>
 
-          {locked && <Ionicons name="lock-closed" size={16} color={theme.textMuted} />}
+          {locked && <Ionicons name="chevron-forward" size={16} color={theme.primary} />}
         </View>
 
         <Text style={[styles.content, locked && styles.lockedContent]} numberOfLines={locked ? 2 : undefined}>
           {content}
         </Text>
+
+        {locked && (
+          <Text style={styles.lockedHintText}>
+            {lockedHint || 'Tap to see what your chart reveals →'}
+          </Text>
+        )}
       </LinearGradient>
     </Pressable>
   );
@@ -145,5 +156,14 @@ const styles = StyleSheet.create({
   },
   lockedContent: {
     color: theme.textMuted,
+  },
+  lockedContainer: {
+    borderColor: 'rgba(201, 169, 98, 0.15)',
+  },
+  lockedHintText: {
+    fontSize: 12,
+    color: theme.primary,
+    fontWeight: '600',
+    marginTop: 8,
   },
 });

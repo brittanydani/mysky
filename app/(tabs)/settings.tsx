@@ -18,6 +18,7 @@ import { usePremium } from '../../context/PremiumContext';
 import PremiumModal from '../../components/PremiumModal';
 import { localDb } from '../../services/storage/localDb';
 import { BackupService } from '../../services/storage/backupService';
+import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -73,7 +74,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What does the PDF export include?',
     answer:
-      'The PDF includes a cover page with your birth data, your Big Three (Sun, Moon, Rising), a full planet placements table, house cusps, all aspects grouped by type, and your Cosmic Story chapters. Premium users get all 10 story chapters; free users get 3.',
+      'PDF export is a Deeper Sky (premium) feature. The PDF includes a cover page with your birth data, your Big Three (Sun, Moon, Rising), a full planet placements table, house cusps, all aspects grouped by type, and your Cosmic Story chapters (all 10 chapters).',
   },
   {
     question: 'What does Deeper Sky include?',
@@ -88,7 +89,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Can I cancel my subscription?',
     answer:
-      'Yes. Subscriptions are managed through Apple. Go to Settings > Apple ID > Subscriptions on your device to manage or cancel. You keep access through the end of your billing period.',
+      'Yes. Subscriptions are managed through your device\u2019s app store. On iOS, go to Settings > Apple ID > Subscriptions. On Android, go to Google Play > Subscriptions. You keep access through the end of your billing period.',
   },
   {
     question: 'How do I change my birth data?',
@@ -98,7 +99,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What house system does MySky use?',
     answer:
-      'MySky defaults to Placidus, but you can change this in Chart Calculations above. We support Placidus, Koch, Whole Sign, Equal House, Campanus, and Regiomontanus.',
+      'MySky defaults to Placidus, but you can change this in Chart Calculations above. We support Placidus, Koch, Whole Sign, Equal House, Campanus, Regiomontanus, and Topocentric.',
   },
   {
     question: 'Is my journal private?',
@@ -107,7 +108,7 @@ const FAQ: { question: string; answer: string }[] = [
   },
 ];
 
-const PRIVACY_POLICY = `Last updated: February 18, 2026
+const PRIVACY_POLICY = `Last updated: February 20, 2026
 
 MySky ("the App") is committed to protecting your privacy. This policy explains how we handle your information.
 
@@ -137,7 +138,7 @@ BACKUP & RESTORE
 - MySky never uploads your backup to any server.
 
 SUBSCRIPTIONS
-- Subscription purchases are handled by Apple through the App Store.
+- Subscription purchases are handled by Apple (App Store) or Google (Google Play).
 - We receive anonymized transaction confirmations but no personal billing information.
 
 THIRD-PARTY SERVICES
@@ -161,7 +162,7 @@ CONTACT
 CHANGES
 - We will update this policy as needed. Continued use of the App constitutes acceptance of any changes.`;
 
-const TERMS_OF_SERVICE = `Last updated: February 18, 2026
+const TERMS_OF_SERVICE = `Last updated: February 20, 2026
 
 By using MySky ("the App"), you agree to these Terms of Service.
 
@@ -177,6 +178,7 @@ MySky is an astrology and self-reflection app that provides:
 - Relationship compatibility analysis
 - Natal story generation
 - PDF chart export
+- PDF chart export
 - Encrypted backup and restore (premium)
 All content is generated locally on your device.
 
@@ -186,11 +188,11 @@ All content is generated locally on your device.
 - Planetary calculations are based on established astronomical data (Swiss Ephemeris) but interpretations are generalized.
 
 4. SUBSCRIPTIONS
-- Free features include: natal chart, Big Three, basic daily guidance, one relationship chart, basic journaling with mood tracking, energy snapshot, PDF export, and privacy controls.
-- "Deeper Sky" premium features require a subscription managed through Apple.
+- Free features include: natal chart, Big Three, natal story (3 chapters), basic daily guidance, one relationship chart, basic journaling with mood tracking, insights overview & weekly mood, energy snapshot, and privacy controls.
+- "Deeper Sky" premium features require a subscription managed through Apple (App Store) or Google (Google Play).
 - Prices are displayed in the App before purchase.
 - Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.
-- Manage or cancel subscriptions in your device Settings > Apple ID > Subscriptions.
+- Manage or cancel subscriptions in your device Settings > Apple ID > Subscriptions (iOS) or Google Play > Subscriptions (Android).
 
 5. USER DATA
 - All data is stored locally on your device with sensitive fields encrypted at rest.
@@ -390,6 +392,19 @@ export default function SettingsScreen() {
       await Haptics.selectionAsync();
     } catch {}
 
+    // Premium-only feature
+    if (!isPremium) {
+      Alert.alert(
+        'Deeper Sky Feature',
+        'PDF export with your full natal chart and cosmic story is available with Deeper Sky.',
+        [
+          { text: 'Not Now', style: 'cancel' },
+          { text: 'See Plans', onPress: () => router.push('/(tabs)/premium' as Href) },
+        ]
+      );
+      return;
+    }
+
     // Check if expo-print native module is available before attempting import
     // (expo-print crashes on import if the native module isn't linked)
     try {
@@ -501,6 +516,8 @@ export default function SettingsScreen() {
                   <Pressable
                     style={styles.keyLossBannerButton}
                     onPress={handleRestore}
+                    accessibilityRole="button"
+                    accessibilityLabel="Restore backup"
                   >
                     <Ionicons name="cloud-download" size={16} color={theme.primary} />
                     <Text style={styles.keyLossBannerButtonText}>Restore Backup</Text>
@@ -508,6 +525,8 @@ export default function SettingsScreen() {
                   <Pressable
                     style={[styles.keyLossBannerButton, styles.keyLossBannerButtonDestructive]}
                     onPress={() => setShowPrivacyModal(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete all data"
                   >
                     <Ionicons name="trash" size={16} color={theme.error} />
                     <Text style={[styles.keyLossBannerButtonText, { color: theme.error }]}>Delete All Data</Text>
@@ -552,6 +571,8 @@ export default function SettingsScreen() {
                     style={[styles.syncButton, disableActions && styles.syncButtonDisabled]}
                     onPress={handleBackup}
                     disabled={disableActions}
+                    accessibilityRole="button"
+                    accessibilityLabel="Backup now"
                   >
                     <Ionicons name="cloud-upload" size={16} color={theme.primary} />
                     <Text style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</Text>
@@ -561,6 +582,8 @@ export default function SettingsScreen() {
                     style={[styles.syncButton, disableActions && styles.syncButtonDisabled]}
                     onPress={handleRestore}
                     disabled={disableActions}
+                    accessibilityRole="button"
+                    accessibilityLabel="Restore backup"
                   >
                     <Ionicons name="cloud-download" size={16} color={theme.primary} />
                     <Text style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</Text>
@@ -573,7 +596,7 @@ export default function SettingsScreen() {
           <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Chart Calculations</Text>
 
-            <Pressable style={styles.settingCard} onPress={() => setShowAstrologyModal(true)}>
+            <Pressable style={styles.settingCard} onPress={() => setShowAstrologyModal(true)} accessibilityRole="button" accessibilityLabel="Chart settings">
               <LinearGradient
                 colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
                 style={styles.cardGradient}
@@ -609,6 +632,8 @@ export default function SettingsScreen() {
               style={[styles.settingCard, exportInProgress && { opacity: 0.6 }]}
               onPress={handleExportPdf}
               disabled={exportInProgress}
+              accessibilityRole="button"
+              accessibilityLabel="Export as PDF"
             >
               <LinearGradient
                 colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
@@ -619,12 +644,18 @@ export default function SettingsScreen() {
                     <View style={styles.settingHeader}>
                       <Ionicons name="document-text" size={20} color={theme.primary} />
                       <Text style={styles.settingTitle}>{exportInProgress ? 'Creating PDF…' : 'Export as PDF'}</Text>
+                      {!isPremium && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201,169,98,0.15)', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6, gap: 3 }}>
+                          <Ionicons name="sparkles" size={10} color={theme.primary} />
+                          <Text style={{ fontSize: 9, color: theme.primary, fontWeight: '700' }}>DEEPER SKY</Text>
+                        </View>
+                      )}
                     </View>
                     <Text style={styles.settingDescription}>
                       Save your natal chart and cosmic story as a PDF
                     </Text>
                   </View>
-                  <Ionicons name="download-outline" size={20} color={theme.textMuted} />
+                  <Ionicons name={isPremium ? 'download-outline' : 'lock-closed'} size={20} color={theme.textMuted} />
                 </View>
               </LinearGradient>
             </Pressable>
@@ -637,6 +668,8 @@ export default function SettingsScreen() {
                 try { await Haptics.selectionAsync(); } catch {}
                 setShowGlossary(prev => !prev);
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle astrology glossary"
             >
               <Text style={styles.sectionTitle}>Astrology Glossary</Text>
               <Ionicons
@@ -662,6 +695,8 @@ export default function SettingsScreen() {
                         setExpandedTerm(expandedTerm === item.term ? null : item.term);
                       }}
                       style={[styles.glossaryRow, index < GLOSSARY.length - 1 && styles.glossaryRowBorder]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.term}, glossary term`}
                     >
                       <View style={styles.glossaryHeader}>
                         <Text style={styles.glossaryTerm}>{item.term}</Text>
@@ -682,7 +717,7 @@ export default function SettingsScreen() {
           <Animated.View entering={FadeInDown.delay(375).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Privacy & Data</Text>
 
-            <Pressable style={styles.settingCard} onPress={() => setShowPrivacyModal(true)}>
+            <Pressable style={styles.settingCard} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
               <LinearGradient
                 colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
                 style={styles.cardGradient}
@@ -725,6 +760,8 @@ export default function SettingsScreen() {
                 try { await Haptics.selectionAsync(); } catch {}
                 setShowFaq(prev => !prev);
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle FAQ"
             >
               <Text style={styles.sectionTitle}>FAQ</Text>
               <Ionicons
@@ -750,6 +787,8 @@ export default function SettingsScreen() {
                         setExpandedFaq(expandedFaq === item.question ? null : item.question);
                       }}
                       style={[styles.glossaryRow, index < FAQ.length - 1 && styles.glossaryRowBorder]}
+                      accessibilityRole="button"
+                      accessibilityLabel={item.question}
                     >
                       <View style={styles.glossaryHeader}>
                         <Text style={styles.glossaryTerm}>{item.question}</Text>
@@ -783,6 +822,8 @@ export default function SettingsScreen() {
                     setExpandedLegal(expandedLegal === 'privacy' ? null : 'privacy');
                   }}
                   style={[styles.glossaryRow, styles.glossaryRowBorder]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Privacy Policy"
                 >
                   <View style={styles.glossaryHeader}>
                     <View style={styles.legalHeader}>
@@ -806,6 +847,8 @@ export default function SettingsScreen() {
                     setExpandedLegal(expandedLegal === 'terms' ? null : 'terms');
                   }}
                   style={styles.glossaryRow}
+                  accessibilityRole="button"
+                  accessibilityLabel="Terms of Service"
                 >
                   <View style={styles.glossaryHeader}>
                     <View style={styles.legalHeader}>
@@ -827,7 +870,7 @@ export default function SettingsScreen() {
           <Animated.View entering={FadeInDown.delay(525).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Support</Text>
 
-            <Pressable style={styles.settingCard} onPress={openSupportEmail}>
+            <Pressable style={styles.settingCard} onPress={openSupportEmail} accessibilityRole="link" accessibilityLabel="Contact us via email">
               <LinearGradient
                 colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
                 style={styles.cardGradient}
@@ -851,27 +894,26 @@ export default function SettingsScreen() {
 
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(575).duration(600)} style={styles.section}>
-              <Pressable style={styles.settingCard} onPress={() => setShowPremiumModal(true)}>
+              <Pressable style={styles.settingCard} onPress={() => setShowPremiumModal(true)} accessibilityRole="button" accessibilityLabel="Learn about premium features">
                 <LinearGradient
-                  colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                  style={styles.cardGradient}
+                  colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
                 >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="star" size={20} color={theme.primary} />
-                        <Text style={styles.settingTitle}>Go deeper with your patterns</Text>
+                        <Ionicons name="sparkles" size={20} color={theme.primary} />
+                        <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Free:</Text> Natal chart, Big Three, basic daily guidance, one relationship, journaling with mood tracking, energy snapshot, PDF export, privacy controls.{"\n"}
-                        <Text style={{fontWeight: 'bold', color: theme.primary}}>Premium:</Text> Encrypted backup & restore, full natal story (10 chapters), healing & inner work, unlimited relationships, journal patterns, Chiron & Node depth, full chakra mapping, personalized guidance, and more.
+                        Full natal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — from $4.99/mo.
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.primary} />
+                    <Ionicons name="arrow-forward" size={20} color={theme.primary} />
                   </View>
                 </LinearGradient>
               </Pressable>
-              <Text style={styles.versionText}>MySky v1.0.0</Text>
+              <Text style={styles.versionText}>MySky v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
             </Animated.View>
           )}
 

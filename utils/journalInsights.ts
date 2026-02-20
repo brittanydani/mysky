@@ -22,31 +22,17 @@
 import { DailyAggregate, ChartProfile, Element, Modality } from '../services/insights/types';
 import type { ConfidenceLevel, TrendDirection } from './insightsEngine';
 import { regulationStyle } from '../services/insights/chartProfile';
+import {
+  mean,
+  stdDev,
+  clamp,
+  confidence,
+  linearRegression,
+} from './stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-function mean(vals: number[]): number {
-  if (vals.length === 0) return 0;
-  return vals.reduce((s, v) => s + v, 0) / vals.length;
-}
-
-function stdDev(vals: number[]): number {
-  if (vals.length < 2) return 0;
-  const m = mean(vals);
-  return Math.sqrt(vals.reduce((s, v) => s + (v - m) ** 2, 0) / vals.length);
-}
-
-function clamp(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
-}
-
-function confidence(count: number): ConfidenceLevel {
-  if (count < 14) return 'low';
-  if (count < 30) return 'medium';
-  return 'high';
-}
 
 function journalConfidence(
   totalDays: number,
@@ -69,16 +55,8 @@ export interface MetricTrend {
   displayChange: string;
 }
 
-function linearRegression(ys: number[]): number {
-  const n = ys.length;
-  if (n < 2) return 0;
-  const sumX = (n * (n - 1)) / 2;
-  const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
-  const sumY = ys.reduce((s, v) => s + v, 0);
-  const sumXY = ys.reduce((s, v, i) => s + i * v, 0);
-  const denom = n * sumX2 - sumX * sumX;
-  if (denom === 0) return 0;
-  return (n * sumXY - sumX * sumY) / denom;
+function localLinearRegression(ys: number[]): number {
+  return linearRegression(ys).slope;
 }
 
 /**
@@ -109,7 +87,7 @@ export function computeMetricTrend(
   let method: 'regression' | 'split_delta';
 
   if (n >= 10) {
-    slopeVal = linearRegression(values);
+    slopeVal = localLinearRegression(values);
     method = 'regression';
     direction =
       slopeVal > 0.03 ? 'up' : slopeVal < -0.03 ? 'down' : 'stable';

@@ -108,13 +108,13 @@ export default function PrivacyConsentModal({
                     </View>
                   </View>
 
-                  <Pressable style={styles.policyLink} onPress={() => setShowFullPolicy(true)}>
+                  <Pressable style={styles.policyLink} onPress={() => setShowFullPolicy(true)} accessibilityRole="button" accessibilityLabel="View full privacy policy">
                     <Text style={styles.policyLinkText}>View Full Privacy Policy</Text>
                     <Ionicons name="chevron-forward" size={16} color={theme.primary} />
                   </Pressable>
 
                   {!!privacyPolicyUrl && (
-                    <Pressable style={styles.policyLink} onPress={openPrivacyPolicyLink}>
+                    <Pressable style={styles.policyLink} onPress={openPrivacyPolicyLink} accessibilityRole="button" accessibilityLabel="Open privacy policy in browser">
                       <Text style={styles.policyLinkText}>Open policy in browser</Text>
                       <Ionicons name="open-outline" size={16} color={theme.primary} />
                     </Pressable>
@@ -122,7 +122,7 @@ export default function PrivacyConsentModal({
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(500).duration(600)} style={styles.buttonsContainer}>
-                  <Pressable style={({ pressed }) => [styles.acceptButton, pressed && styles.buttonPressed]} onPress={handleAccept}>
+                  <Pressable style={({ pressed }) => [styles.acceptButton, pressed && styles.buttonPressed]} onPress={handleAccept} accessibilityRole="button" accessibilityLabel="I agree to privacy policy">
                     <LinearGradient
                       colors={[...theme.goldGradient]}
                       start={{ x: 0, y: 0 }}
@@ -134,7 +134,7 @@ export default function PrivacyConsentModal({
                     </LinearGradient>
                   </Pressable>
 
-                  <Pressable style={({ pressed }) => [styles.declineButton, pressed && styles.buttonPressed]} onPress={handleDecline}>
+                  <Pressable style={({ pressed }) => [styles.declineButton, pressed && styles.buttonPressed]} onPress={handleDecline} accessibilityRole="button" accessibilityLabel="Decline privacy policy">
                     <Text style={styles.declineButtonText}>Not Now</Text>
                   </Pressable>
                 </Animated.View>
@@ -142,7 +142,7 @@ export default function PrivacyConsentModal({
             ) : (
               <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.policyContainer}>
                 <View style={styles.policyHeader}>
-                  <Pressable style={styles.backButton} onPress={() => setShowFullPolicy(false)}>
+                  <Pressable style={styles.backButton} onPress={() => setShowFullPolicy(false)} accessibilityRole="button" accessibilityLabel="Go back to privacy overview">
                     <Ionicons name="arrow-back" size={24} color={theme.primary} />
                   </Pressable>
                   <Text style={styles.policyTitle}>Privacy Policy</Text>
@@ -151,37 +151,36 @@ export default function PrivacyConsentModal({
                 <View style={styles.policyContent}>
                   <Text style={styles.policySection}>
                     <Text style={styles.policySectionTitle}>Data Collection{'\n'}</Text>
-                    MySky collects only the birth information you provide (date, time, location), journal entries you create, and energy check-in data you submit.
-                    This data is used solely to generate chart calculations and personalized reflection insights.
+                    MySky collects only the information you explicitly provide: birth data (date, time, location), journal entries and mood selections, daily check-ins (mood, energy, stress, theme tags, notes), and relationship chart data you enter for others. We do not collect device identifiers, advertising IDs, or any data beyond what you provide.
                   </Text>
 
                   <Text style={styles.policySection}>
-                    <Text style={styles.policySectionTitle}>Encryption & Storage{'\n'}</Text>
-                    All sensitive fields (journal content, birth data) are encrypted at rest using AES-256-GCM. Encryption keys are stored in your device's hardware-backed keychain via SecureStore. All data lives on your device — it is never uploaded to external servers unless you explicitly create an encrypted backup.
+                    <Text style={styles.policySectionTitle}>Encryption &amp; Storage{'\n'}</Text>
+                    All sensitive fields (journal content, birth data, relationship names, check-in notes) are encrypted at rest using AES-256-GCM. Encryption keys are stored in your device's hardware-backed keychain via SecureStore. All data lives on your device — it is never uploaded to external servers unless you explicitly create an encrypted backup.
                   </Text>
 
                   <Text style={styles.policySection}>
                     <Text style={styles.policySectionTitle}>Subscriptions{'\n'}</Text>
-                    Subscription purchases are processed by Apple. MySky uses RevenueCat solely to verify subscription status. RevenueCat receives only an anonymized app user ID — never your journal, birth data, or any personal information.
+                    Subscription purchases are processed by Apple or Google. MySky uses RevenueCat solely to verify subscription status. RevenueCat receives only an anonymous app user ID — never your journal, birth data, or any personal information.
                   </Text>
 
                   <Text style={styles.policySection}>
                     <Text style={styles.policySectionTitle}>Data Usage{'\n'}</Text>
-                    We do not sell, share, or monetize your personal information. We do not use advertising SDKs, analytics trackers, or third-party behavioral tracking of any kind.
+                    We do not sell, share, or monetize your personal information. We do not use advertising SDKs, analytics trackers, or third-party behavioral tracking of any kind. Your data is used only to provide app features on your device.
                   </Text>
 
                   <Text style={styles.policySection}>
-                    <Text style={styles.policySectionTitle}>Your Rights{'\n'}</Text>
-                    You can access, export, and permanently delete all your data at any time through Privacy Settings. No account is required. Uninstalling the app removes all data from your device.
+                    <Text style={styles.policySectionTitle}>Your Rights (GDPR &amp; CCPA){'\n'}</Text>
+                    You can access, export, correct, and permanently delete all your data at any time through Privacy Settings. No account is required. Consent can be withdrawn at any time. Uninstalling the app removes all data from your device.
                   </Text>
 
                   <Text style={styles.policySection}>
                     <Text style={styles.policySectionTitle}>Contact{'\n'}</Text>
-                    {contactEmail ? `For privacy questions, contact us at ${contactEmail}` : 'For privacy questions, contact us via the support email listed in the app.'}
+                    {contactEmail ? `For privacy questions, contact us at ${contactEmail}` : 'For privacy questions, contact us at brittanyapps@outlook.com'}
                   </Text>
                 </View>
 
-                <Pressable style={styles.policyCloseButton} onPress={() => setShowFullPolicy(false)}>
+                <Pressable style={styles.policyCloseButton} onPress={() => setShowFullPolicy(false)} accessibilityRole="button" accessibilityLabel="Close privacy policy">
                   <Text style={styles.policyCloseText}>Close</Text>
                 </Pressable>
               </Animated.View>

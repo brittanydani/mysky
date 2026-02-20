@@ -122,6 +122,34 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
       'Conjunction cluster details',
     ],
   },
+  {
+    id: 'deep-insights',
+    name: 'Deep Insights',
+    icon: 'sparkles',
+    description: 'Tag intelligence, journal deep dive, and cross-data connections',
+    freeVersion: 'Weekly mood overview, today\'s mantra, and chart themes',
+    premiumVersion: 'Full analytics: what restores vs drains you, tag combos, journal NLP themes, mood stability, and chart-mood-journal connections',
+    isPremium: true,
+    bullets: [
+      'What restores vs drains you',
+      'Tag intelligence & combo analysis',
+      'Journal deep dive with NLP themes',
+    ],
+  },
+  {
+    id: 'pdf-export',
+    name: 'PDF Chart Export',
+    icon: 'document-text',
+    description: 'Export your natal chart and cosmic story as a keepsake',
+    freeVersion: 'Not available',
+    premiumVersion: 'Full PDF with natal chart wheel, all aspects, and your complete cosmic story',
+    isPremium: true,
+    bullets: [
+      'Beautiful natal chart wheel',
+      'Complete cosmic story included',
+      'Share or print your chart',
+    ],
+  },
 ];
 
 // Premium theme options
@@ -275,11 +303,21 @@ export const DEEPER_SKY_MARKETING = {
       title: 'Pattern Depth',
       brief: 'Full stellium narratives and conjunction clusters',
     },
+    {
+      emoji: '✨',
+      title: 'Deep Insights',
+      brief: 'Tag intelligence, journal deep dive, and cross-data connections',
+    },
+    {
+      emoji: '📄',
+      title: 'PDF Chart Export',
+      brief: 'Export your natal chart and cosmic story as a keepsake',
+    },
   ],
   
-  socialProof: '"Finally, an astrology app that feels like therapy." — User review',
+  socialProof: '"Finally, an app that helps me understand my patterns." — User review',
   
   guarantee: 'Cancel anytime. No questions asked.',
   
-  trustLine: 'Your birth chart, daily weather, and journaling are always free.',
+  trustLine: 'Your birth chart, daily guidance, journaling, and insights overview are always free.',
 };

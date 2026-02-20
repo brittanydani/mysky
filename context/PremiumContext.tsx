@@ -38,10 +38,15 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // ⏰ TEMPORARY: Force premium for testing — REMOVE BEFORE RELEASE
+  const FORCE_PREMIUM = true;
+
   const updateCustomerInfo = useCallback((info: CustomerInfo | null) => {
     setCustomerInfo(info);
     // Set isPremium based on RevenueCat entitlements
-    if (info) {
+    if (FORCE_PREMIUM) {
+      setIsPremium(true);
+    } else if (info) {
       setIsPremium(revenueCatService.isPremium(info));
     } else {
       setIsPremium(false);
@@ -110,9 +115,11 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
     init();
 
     // Listen for subscription changes (e.g. renewals, cancellations)
+    // addCustomerInfoUpdateListener is typed as void but returns a removal
+    // function at runtime — cast to keep both TS and the runtime happy.
     const listenerRemove = Purchases.addCustomerInfoUpdateListener((info) => {
       if (mounted) updateCustomerInfo(info);
-    });
+    }) as unknown as (() => void) | void;
 
     return () => {
       mounted = false;

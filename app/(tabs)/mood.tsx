@@ -71,21 +71,21 @@ const QUALITY_OPTIONS: ThemeTag[] = [
 ];
 
 const QUALITY_LABELS: Record<string, string> = {
-  eq_calm: 'Calm', eq_anxious: 'Anxious', eq_focused: 'Focused',
-  eq_disconnected: 'Disconnected', eq_hopeful: 'Hopeful',
-  eq_irritable: 'Irritable', eq_grounded: 'Grounded',
-  eq_scattered: 'Scattered', eq_heavy: 'Heavy', eq_open: 'Open',
+  eq_calm: '😌 Calm', eq_anxious: '😰 Anxious', eq_focused: '🎯 Focused',
+  eq_disconnected: '🌫️ Disconnected', eq_hopeful: '🌅 Hopeful',
+  eq_irritable: '😤 Irritable', eq_grounded: '🌳 Grounded',
+  eq_scattered: '🌀 Scattered', eq_heavy: '🪨 Heavy', eq_open: '🌸 Open',
 };
 
 // Backward-compat label lookup for top-tags display
 const ALL_TAG_LABELS: Record<string, string> = {
   ...INFLUENCE_LABELS,
   ...QUALITY_LABELS,
-  relationships: 'Relationships', confidence: 'Confidence', money: 'Money',
-  family: 'Family', creativity: 'Creativity', health: 'Health',
-  boundaries: 'Boundaries', career: 'Career', anxiety: 'Anxiety',
-  joy: 'Joy', grief: 'Grief', clarity: 'Clarity',
-  overwhelm: 'Overwhelm', loneliness: 'Loneliness', gratitude: 'Gratitude',
+  confidence: '💪 Confidence', money: '💰 Money',
+  family: '👨‍👩‍👧 Family', creativity: '🎨 Creativity',
+  boundaries: '🛡️ Boundaries', career: '📈 Career', anxiety: '😰 Anxiety',
+  joy: '😊 Joy', grief: '🥀 Grief', clarity: '💎 Clarity',
+  overwhelm: '😵 Overwhelm', loneliness: '🌑 Loneliness', gratitude: '🙏 Gratitude',
 };
 
 const COLORS = {
@@ -218,7 +218,26 @@ function MetricSlider({ question, value, onChange, color, anchors, min = 1, max 
   const thumbLeft = trackWidth > 0 ? fillPct * trackWidth - THUMB / 2 : 0;
 
   return (
-    <View style={sS.container}>
+    <View
+      style={sS.container}
+      accessible={true}
+      accessibilityRole="adjustable"
+      accessibilityLabel={question}
+      accessibilityValue={{ min, max, now: value, text: `${value} out of ${max}` }}
+      accessibilityActions={[
+        { name: 'increment', label: 'Increase' },
+        { name: 'decrement', label: 'Decrease' },
+      ]}
+      onAccessibilityAction={(event) => {
+        if (event.nativeEvent.actionName === 'increment') {
+          const next = Math.min(max, value + 1);
+          onChange(next);
+        } else if (event.nativeEvent.actionName === 'decrement') {
+          const next = Math.max(min, value - 1);
+          onChange(next);
+        }
+      }}
+    >
       <Text style={sS.question}>{question}</Text>
       <View style={sS.labelRow}>
         <Text style={[sS.val, { color }]}>
@@ -304,8 +323,8 @@ interface GraphProps {
   gradId: string;
 }
 
-function LineGraph({ data, minY, maxY, color, width, height, gradId }: GraphProps) {
-  const PAD = { top: 8, bottom: 8, left: 4, right: 4 };
+function LineGraph({ data, minY: absMin, maxY: absMax, color, width, height, gradId }: GraphProps) {
+  const PAD = { top: 10, bottom: 10, left: 4, right: 4 };
   const gW = width - PAD.left - PAD.right;
   const gH = height - PAD.top - PAD.bottom;
 
@@ -317,7 +336,16 @@ function LineGraph({ data, minY, maxY, color, width, height, gradId }: GraphProp
     );
   }
 
+  // Auto-scale to actual data range with padding so trends are prominent
+  const dataMin = Math.min(...data);
+  const dataMax = Math.max(...data);
+  const dataSpan = dataMax - dataMin;
+  // Add 20% buffer above/below, but clamp to absolute bounds
+  const buf = Math.max(dataSpan * 0.25, 0.5);
+  const minY = Math.max(absMin, Math.floor(dataMin - buf));
+  const maxY = Math.min(absMax, Math.ceil(dataMax + buf));
   const range = maxY - minY || 1;
+
   const pts = data.map((v, i) => ({
     x: PAD.left + (i / (data.length - 1)) * gW,
     y: PAD.top + gH - ((v - minY) / range) * gH,
@@ -341,12 +369,12 @@ function LineGraph({ data, minY, maxY, color, width, height, gradId }: GraphProp
     <Svg width={width} height={height}>
       <Defs>
         <SvgGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0%" stopColor={color} stopOpacity={0.35} />
-          <Stop offset="100%" stopColor={color} stopOpacity={0.02} />
+          <Stop offset="0%" stopColor={color} stopOpacity={0.45} />
+          <Stop offset="100%" stopColor={color} stopOpacity={0.03} />
         </SvgGradient>
       </Defs>
       <Path d={areaPath} fill={`url(#${gradId})`} />
-      <Path d={linePath} stroke={color} strokeWidth={2} fill="none" strokeLinejoin="round" />
+      <Path d={linePath} stroke={color} strokeWidth={2.5} fill="none" strokeLinejoin="round" />
       <Circle cx={last.x} cy={last.y} r={4} fill={color} />
     </Svg>
   );
@@ -532,7 +560,7 @@ export default function MoodScreen() {
           </Animated.View>
           <ScrollView
             style={styles.flex}
-            contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 32) }]}
+            contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
             showsVerticalScrollIndicator={false}
           >
             <Animated.View entering={FadeInDown.delay(180).duration(600)}>
@@ -545,6 +573,8 @@ export default function MoodScreen() {
                 <Pressable
                   style={[styles.primaryBtn, { marginTop: 16 }]}
                   onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/home' as Href); }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Create Chart"
                 >
                   <Ionicons name="add-circle-outline" size={16} color={theme.primary} />
                   <Text style={styles.primaryBtnTxt}>Create Chart</Text>
@@ -590,7 +620,7 @@ export default function MoodScreen() {
 
         <ScrollView
           style={styles.flex}
-          contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 32) + 20 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
           showsVerticalScrollIndicator={false}
         >
 
@@ -663,6 +693,9 @@ export default function MoodScreen() {
                           : prev.length >= 3 ? prev : [...prev, tag]
                       );
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel={INFLUENCE_LABELS[tag]}
+                    accessibilityState={{ selected: selectedTags.includes(tag) }}
                   >
                     <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
                       {INFLUENCE_LABELS[tag]}
@@ -686,6 +719,9 @@ export default function MoodScreen() {
                           Haptics.selectionAsync().catch(() => {});
                           setSelectedQuality(prev => prev === q ? null : q);
                         }}
+                        accessibilityRole="button"
+                        accessibilityLabel={QUALITY_LABELS[q]}
+                        accessibilityState={{ selected: selectedQuality === q }}
                       >
                         <Text style={[styles.qualityTxt, selectedQuality === q && styles.qualityTxtOn]}>
                           {QUALITY_LABELS[q]}
@@ -701,6 +737,9 @@ export default function MoodScreen() {
                 style={[styles.saveBtn, saving && { opacity: 0.6 }]}
                 onPress={handleSave}
                 disabled={saving}
+                accessibilityRole="button"
+                accessibilityLabel={saving ? 'Saving check-in' : todayCheckIn ? 'Update Check-In' : 'Save Check-In'}
+                accessibilityState={{ disabled: saving }}
               >
                 <LinearGradient
                   colors={['rgba(201,169,98,0.22)', 'rgba(201,169,98,0.12)']}
@@ -725,6 +764,8 @@ export default function MoodScreen() {
           <Animated.View entering={FadeInDown.delay(180).duration(600)}>
             <Pressable
               onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/energy' as Href); }}
+              accessibilityRole="button"
+              accessibilityLabel="Energy Reading"
             >
               <LinearGradient
                 colors={['rgba(25,38,60,0.50)', 'rgba(20,32,50,0.35)']}
@@ -763,6 +804,9 @@ export default function MoodScreen() {
                         Haptics.selectionAsync().catch(() => {});
                         setTimeRange(r);
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Show ${r === 'all' ? 'all' : r === '7d' ? '7 day' : r === '30d' ? '30 day' : '90 day'} trends`}
+                      accessibilityState={{ selected: timeRange === r }}
                     >
                       <Text style={[styles.rangeTxt, timeRange === r && styles.rangeTxtOn]}>
                         {r === 'all' ? 'All' : r.toUpperCase()}
@@ -805,7 +849,7 @@ export default function MoodScreen() {
                       maxY={10}
                       color={COLORS.mood}
                       width={GRAPH_W}
-                      height={90}
+                      height={60}
                       gradId="grad_mood"
                     />
 
@@ -817,7 +861,7 @@ export default function MoodScreen() {
                       maxY={10}
                       color={COLORS.energy}
                       width={GRAPH_W}
-                      height={90}
+                      height={60}
                       gradId="grad_energy"
                     />
 
@@ -829,14 +873,14 @@ export default function MoodScreen() {
                       maxY={10}
                       color={COLORS.stress}
                       width={GRAPH_W}
-                      height={90}
+                      height={60}
                       gradId="grad_stress"
                     />
 
                     {/* Top themes */}
                     {topTags.length > 0 && (
                       <>
-                        <Text style={[styles.graphLabelTxt, { marginTop: 20, marginBottom: 10, color: theme.textSecondary }]}>
+                        <Text style={[styles.graphLabelTxt, { marginTop: 12, marginBottom: 6, color: theme.textSecondary }]}>
                           Most Common Themes
                         </Text>
                         {topTags.map(({ tag, count }) => (
@@ -861,24 +905,57 @@ export default function MoodScreen() {
             </Animated.View>
           ) : (
             <Animated.View entering={FadeInDown.delay(220).duration(600)}>
-              <LinearGradient
-                colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
-                style={styles.card}
+              <Pressable
+                onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/premium' as Href); }}
+                accessibilityRole="button"
+                accessibilityLabel="Unlock Patterns"
               >
-                <Ionicons name="analytics-outline" size={28} color={theme.primary} style={{ marginBottom: 10 }} />
-                <Text style={styles.heroText}>Track your patterns</Text>
-                <Text style={[styles.body, { marginTop: 8 }]}>
-                  See mood, energy, and stress trends over time. Discover which days you feel
-                  best and which themes come up most.
-                </Text>
-                <Pressable
-                  style={[styles.primaryBtn, { marginTop: 16 }]}
-                  onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/premium' as Href); }}
+                <LinearGradient
+                  colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']}
+                  style={[styles.card, { borderColor: 'rgba(201,169,98,0.2)' }]}
                 >
-                  <Ionicons name="sparkles" size={16} color={theme.primary} />
-                  <Text style={styles.primaryBtnTxt}>Unlock Patterns</Text>
-                </Pressable>
-              </LinearGradient>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                      <Ionicons name="sparkles" size={10} color={theme.primary} />
+                      <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
+                    </View>
+                  </View>
+
+                  {/* Preview of what pattern analysis looks like */}
+                  <View style={{ marginBottom: 14 }}>
+                    {allCheckIns.length > 0 ? (
+                      <>
+                        <Text style={[styles.body, { marginBottom: 8 }]}>
+                          You have {allCheckIns.length} check-in{allCheckIns.length !== 1 ? 's' : ''} — enough data to start revealing your emotional rhythms.
+                        </Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
+                          <View style={{ alignItems: 'center' }}>
+                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
+                            <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Mood</Text>
+                          </View>
+                          <View style={{ alignItems: 'center' }}>
+                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
+                            <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Energy</Text>
+                          </View>
+                          <View style={{ alignItems: 'center' }}>
+                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
+                            <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Stress</Text>
+                          </View>
+                        </View>
+                      </>
+                    ) : (
+                      <Text style={styles.body}>
+                        See mood, energy, and stress trends over time. Discover which days you feel best and which themes come up most.
+                      </Text>
+                    )}
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: theme.primary }}>Unlock your patterns</Text>
+                    <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
             </Animated.View>
           )}
 
@@ -1045,7 +1122,7 @@ const styles = StyleSheet.create({
   primaryBtnTxt: { color: theme.primary, fontSize: 14, fontWeight: '800' },
 
   // Graphs
-  rangeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  rangeRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
   rangeBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1061,7 +1138,7 @@ const styles = StyleSheet.create({
   rangeTxt: { color: theme.textMuted, fontSize: 12, fontWeight: '700' },
   rangeTxtOn: { color: theme.primary },
 
-  emptyState: { alignItems: 'center', paddingVertical: 32 },
+  emptyState: { alignItems: 'center', paddingVertical: 20 },
 
   dateRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   dateTxt: { color: theme.textMuted, fontSize: 11 },
@@ -1069,22 +1146,22 @@ const styles = StyleSheet.create({
   avgsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
-    paddingVertical: 12,
+    marginBottom: 12,
+    paddingVertical: 8,
     borderRadius: theme.borderRadius.sm,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
   avgBadge: { alignItems: 'center' },
-  avgValue: { fontSize: 18, fontWeight: '800' },
+  avgValue: { fontSize: 16, fontWeight: '800' },
   avgLabel: { color: theme.textMuted, fontSize: 11, marginTop: 2 },
 
-  graphLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4, marginTop: 14 },
+  graphLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2, marginTop: 8 },
   graphDot: { width: 8, height: 8, borderRadius: 4 },
   graphLabelTxt: { color: theme.textSecondary, fontSize: 13, fontWeight: '700' },
 
-  tagStatRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  tagStatRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 5 },
   tagStatLabel: { color: theme.textSecondary, fontSize: 13, width: 130 },
   tagStatBar: {
     flex: 1,

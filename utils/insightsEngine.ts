@@ -40,13 +40,20 @@ import {
   computeTagAnalytics,
   TagAnalyticsBundle,
 } from './tagAnalytics';
+import {
+  mean as _mean,
+  stdDev as _stdDev,
+  linearRegression as _linearRegression,
+  computeTrend as _computeTrend,
+  confidence as _confidence,
+} from './stats';
+import type { ConfidenceLevel, TrendDirection } from './stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Public types
+// Public types  (re-exported from stats for backward compat)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type ConfidenceLevel = 'low' | 'medium' | 'high';
-export type TrendDirection = 'up' | 'down' | 'stable';
+export type { ConfidenceLevel, TrendDirection } from './stats';
 
 export interface TrendResult {
   direction: TrendDirection;
@@ -213,62 +220,12 @@ const STRESS_MAP: Record<StressLevel, number> = { low: 2, medium: 5, high: 9 };
 function energyToNum(e: EnergyLevel): number { return ENERGY_MAP[e] ?? 5; }
 function stressToNum(s: StressLevel): number { return STRESS_MAP[s] ?? 5; }
 
-function mean(vals: number[]): number {
-  return vals.length === 0 ? 0 : vals.reduce((s, v) => s + v, 0) / vals.length;
-}
-
-function stdDev(vals: number[]): number {
-  if (vals.length < 2) return 0;
-  const m = mean(vals);
-  return Math.sqrt(vals.reduce((s, v) => s + (v - m) ** 2, 0) / vals.length);
-}
-
-function linearRegression(ys: number[]): { slope: number } {
-  const n = ys.length;
-  if (n < 2) return { slope: 0 };
-  // x = 0, 1, 2, … (n−1)
-  const sumX = (n * (n - 1)) / 2;
-  const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
-  const sumY = ys.reduce((s, v) => s + v, 0);
-  const sumXY = ys.reduce((s, v, i) => s + i * v, 0);
-  const denom = n * sumX2 - sumX * sumX;
-  if (denom === 0) return { slope: 0 };
-  return { slope: (n * sumXY - sumX * sumY) / denom };
-}
-
-function computeTrend(vals: number[]): TrendResult {
-  const n = vals.length;
-  if (n < 2) return { direction: 'stable', change: 0, method: 'delta', displayChange: '0' };
-
-  let change: number;
-  let method: TrendResult['method'];
-
-  if (n >= 10) {
-    const { slope } = linearRegression(vals);
-    change = slope * (n - 1); // total change over window
-    method = 'regression';
-  } else {
-    const mid = Math.floor(n / 2);
-    change = mean(vals.slice(mid)) - mean(vals.slice(0, mid));
-    method = 'delta';
-  }
-
-  const direction: TrendDirection =
-    change > 0.6 ? 'up' : change < -0.6 ? 'down' : 'stable';  // ≈ slope ±0.02/day over 30 days
-
-  return {
-    direction,
-    change: parseFloat(change.toFixed(1)),
-    method,
-    displayChange: change >= 0 ? `+${change.toFixed(1)}` : change.toFixed(1),
-  };
-}
-
-function confidence(count: number): ConfidenceLevel {
-  if (count < 14) return 'low';
-  if (count < 30) return 'medium';
-  return 'high';
-}
+// ── Use shared implementations from utils/stats ──
+const mean = _mean;
+const stdDev = _stdDev;
+const linearRegression = _linearRegression;
+const computeTrend = _computeTrend;
+const confidence = _confidence;
 
 function isoDateDaysAgo(n: number): string {
   const d = new Date();
@@ -442,7 +399,7 @@ function buildDayOfWeek(checkIns: DailyCheckIn[]): DayOfWeekCard | null {
   const overallStress = mean(checkIns.map(c => stressToNum(c.stressLevel)));
 
   const dayStats = Object.entries(dayData)
-    .filter(([, d]) => d.moods.length >= 2)
+    .filter(([, d]) => d.moods.length >= 5)
     .map(([idx, d]) => ({
       day: DAY_NAMES[Number(idx)],
       avgMood: mean(d.moods),
@@ -501,19 +458,13 @@ function buildTagInsights(checkIns: DailyCheckIn[]): RestoreDrainCard | null {
     return { restores: [], drains: [], hasTagData: false, confidence: 'low', fallbackInsight: fallback };
   }
 
-  // Best = top 20% by mood score
-  // Hard = top 20% by stress OR bottom 20% by mood (union, deduplicated)
+  // Symmetric buckets: top 20% by mood = "best", bottom 20% by mood = "hard".
+  // Using mood-only for both sides keeps bucket sizes equal and avoids
+  // inflating hard-day tag frequency (which biased lift calculations).
   const sortedByMood = [...checkIns].sort((a, b) => a.moodScore - b.moodScore);
   const topN = Math.max(1, Math.ceil(n * 0.2));
   const bestDays = sortedByMood.slice(n - topN);
-  const hardByMood = new Set(sortedByMood.slice(0, topN).map(c => c.id));
-  const sortedByStress = [...checkIns].sort((a, b) => b.moodScore - a.moodScore); // reuse moodScore sort
-  // For stress, sort descending by stress level
-  const stressNumeric = checkIns.map(c => ({ ...c, _stress: stressToNum(c.stressLevel) }));
-  const sortedByStressNum = [...stressNumeric].sort((a, b) => b._stress - a._stress);
-  const hardByStress = new Set(sortedByStressNum.slice(0, topN).map(c => c.id));
-  const hardDayIds = new Set([...hardByMood, ...hardByStress]);
-  const hardDays = checkIns.filter(c => hardDayIds.has(c.id));
+  const hardDays = sortedByMood.slice(0, topN);
 
   const allTags = new Set(checkIns.flatMap(c => c.tags));
   const items: TagLiftItem[] = [];
@@ -523,7 +474,7 @@ function buildTagInsights(checkIns: DailyCheckIn[]): RestoreDrainCard | null {
     const freqHard = hardDays.filter(c => c.tags.includes(tag)).length / hardDays.length;
     const lift = freqBest - freqHard;
     const count = checkIns.filter(c => c.tags.includes(tag)).length;
-    if (count >= 2) {
+    if (count >= 5) {
       items.push({ tag: tag as ThemeTag, label: TAG_LABELS[tag as ThemeTag] ?? tag, lift, freqBest, freqHard, count });
     }
   }

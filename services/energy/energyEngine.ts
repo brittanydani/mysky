@@ -30,6 +30,7 @@ export interface ChakraReading {
   trigger: string;           // astrological trigger
   bodyCue: string;           // how it may show up physically
   healingSuggestion: string; // grounding practice for this chakra today
+  groundingTip: string;      // additional micro-action (e.g., slow walking, deep breathing)
   elementConnection: string; // how the current element interacts with this chakra
   affirmation: string;       // a short affirmation aligned to the chakra state
   color: string;             // for UI
@@ -107,18 +108,18 @@ const MOON_TONES: Record<string, { tone: string; intensity: EnergyIntensity }> =
 // ── Quick Meanings ───────────────────────────────────────────
 
 const QUICK_MEANINGS: Record<string, string> = {
-  Aries:       'Impulse energy is high; instincts lead before logic catches up.',
-  Taurus:      'The body wants stillness and sensory comfort; slow decisions land better.',
-  Gemini:      'Mental activity is elevated; ideas move fast but focus may scatter.',
-  Cancer:      'Emotional sensitivity is higher; inner needs come forward.',
-  Leo:         'Creative self-expression wants a stage; visibility feels magnetic.',
-  Virgo:       'A desire to refine and improve surfaces; small corrections matter.',
-  Libra:       'Relationship awareness sharpens; balance between self and other is the theme.',
-  Scorpio:     'Emotional depth intensifies; honesty with yourself is the invitation.',
-  Sagittarius: 'Your energy is seeking expansion; movement feels urgent but patience serves better.',
-  Capricorn:   'Structure and responsibility feel stabilizing; do the next right thing.',
-  Aquarius:    'Mental detachment offers perspective; innovation over repetition.',
-  Pisces:      'Boundaries soften; intuition rises but overwhelm is possible without grounding.',
+  Aries:       'You may feel more reactive or driven today. Pause before acting and check in with your body.',
+  Taurus:      'Your body may crave stillness and comfort today. Slower decisions tend to land better.',
+  Gemini:      'Your mind may feel busy today. Ideas come quickly, but focus might scatter — pick one thread.',
+  Cancer:      'You may feel more emotionally open today. Give yourself space for what arises.',
+  Leo:         'You may feel a pull toward self-expression today. Share what feels true to you.',
+  Virgo:       'You may notice a desire to organize or refine today. Channel it into one thing that matters.',
+  Libra:       'You may be more aware of relationship dynamics today. Balance giving with your own needs.',
+  Scorpio:     'Emotions may run deeper today. Being honest with yourself about what you feel creates relief.',
+  Sagittarius: 'You may feel restless or eager for change today. Movement helps, but patience serves you better.',
+  Capricorn:   'Structure may feel steadying today. Focus on one meaningful step rather than the whole list.',
+  Aquarius:    'You may feel more mentally detached today. Use that clarity for fresh perspective, not avoidance.',
+  Pisces:      'Your boundaries may feel softer today. Trust your intuition, but ground yourself to avoid overwhelm.',
 };
 
 // ── Chakra System ────────────────────────────────────────────
@@ -262,6 +263,53 @@ const CHAKRA_HEALING: Record<number, Record<ChakraState, string>> = {
   },
 };
 
+// ── Chakra Grounding Tips (additional micro-actions) ─────────
+
+const CHAKRA_GROUNDING_TIPS: Record<number, Record<ChakraState, string>> = {
+  0: {
+    'Flowing':          'Slow walking for 5 minutes, feeling each step.',
+    'Sensitive':        'Deep belly breathing — in for 4, hold for 4, out for 6.',
+    'Grounding Needed': 'Cold water on your wrists for 30 seconds to reset.',
+    'Quiet':            'A brief standing stretch to reconnect with your body.',
+  },
+  1: {
+    'Flowing':          'Gentle hip circles or stretching while breathing slowly.',
+    'Sensitive':        'Place both hands on your lower belly and breathe.',
+    'Grounding Needed': 'Slow walking while paying attention to each foot landing.',
+    'Quiet':            'A warm cup of tea, held slowly, sipped with attention.',
+  },
+  2: {
+    'Flowing':          'Deep belly breathing to sustain steady energy.',
+    'Sensitive':        'Cold water on your face or wrists to interrupt tension.',
+    'Grounding Needed': 'Slow walking outdoors for grounding and perspective.',
+    'Quiet':            'Gentle stretching to invite energy without forcing it.',
+  },
+  3: {
+    'Flowing':          'Place one hand on your heart and breathe slowly.',
+    'Sensitive':        'Slow walking in a calm environment to settle the chest.',
+    'Grounding Needed': 'Deep belly breathing with a long exhale.',
+    'Quiet':            'Cold water on wrists to gently awaken the body.',
+  },
+  4: {
+    'Flowing':          'A few minutes of humming or gentle vocalization.',
+    'Sensitive':        'Deep belly breathing focused on releasing jaw tension.',
+    'Grounding Needed': 'Slow walking while silently noting what you observe.',
+    'Quiet':            'A quiet stretch with attention to the neck and shoulders.',
+  },
+  5: {
+    'Flowing':          'Close your eyes and take 10 slow breaths.',
+    'Sensitive':        'Cold water on your wrists to reset mental overload.',
+    'Grounding Needed': 'Slow walking without a destination — let your eyes soften.',
+    'Quiet':            'Deep belly breathing to invite gentle awareness.',
+  },
+  6: {
+    'Flowing':          'Slow walking in silence to stay connected to your body.',
+    'Sensitive':        'Deep belly breathing with your eyes closed.',
+    'Grounding Needed': 'Cold water on your wrists and face to return to the present.',
+    'Quiet':            'A brief body scan — notice where you feel weight and warmth.',
+  },
+};
+
 // ── Chakra Affirmations ──────────────────────────────────────
 
 const CHAKRA_AFFIRMATIONS: Record<number, Record<ChakraState, string>> = {
@@ -313,40 +361,40 @@ const CHAKRA_AFFIRMATIONS: Record<number, Record<ChakraState, string>> = {
 
 const ELEMENT_CHAKRA_CONNECTION: Record<string, Record<number, string>> = {
   Fire: {
-    0: 'Fire can destabilize the root — ground through physical action, not avoidance.',
-    1: 'Fire heats emotions quickly; passion may override patience.',
-    2: 'Fire feeds solar plexus naturally — confidence and drive are amplified.',
-    3: 'Fire in the heart brings bold love but can burn through gentleness.',
-    4: 'Fire sharpens speech — words carry more force than usual.',
-    5: 'Fire brightens intuition but can create impatient urgency around knowing.',
-    6: 'Fire connects crown to action — spiritual insight wants to DO something.',
+    0: 'When intensity rises, grounding helps regulate the nervous system. Physical movement can restore balance.',
+    1: 'Heightened energy can accelerate emotional responses. Slowing down creates space between feeling and reacting.',
+    2: 'Confidence and motivation may feel more available today. Channel that drive with intention.',
+    3: 'Emotional warmth is present but may feel urgent. Let connection happen at its own pace.',
+    4: 'Your words may carry more weight today. Pause before speaking to match tone with intention.',
+    5: 'Clarity may come in flashes. Let insight arrive without forcing it into immediate action.',
+    6: 'A sense of purpose or meaning may feel stronger. Stay grounded while exploring bigger questions.',
   },
   Earth: {
-    0: 'Earth stabilizes the root — you feel more anchored and physically present.',
-    1: 'Earth slows emotional processing — feelings arrive fully formed.',
-    2: 'Earth steadies willpower but can make it rigid — flexibility is medicine.',
-    3: 'Earth in the heart deepens loyalty but can resist vulnerability.',
-    4: 'Earth makes words deliberate — say less, mean more.',
-    5: 'Earth grounds intuition in the practical — trust what you can verify.',
-    6: 'Earth connects spirit to the tangible — meaning through craft and labor.',
+    0: 'You may feel more physically grounded and anchored today. Use that steadiness as a foundation.',
+    1: 'Emotional processing may be slower but deeper. Feelings arrive more fully formed.',
+    2: 'Determination is steady but may lean toward rigidity. Flexibility is a useful counterbalance.',
+    3: 'Loyalty and care feel strong. Allow vulnerability alongside that strength.',
+    4: 'Your communication may be more deliberate today. Say less, mean more.',
+    5: 'Practical instincts are reliable. Trust what you can observe and verify.',
+    6: 'Meaning may come through tangible work — craft, building, or hands-on activity.',
   },
   Air: {
-    0: 'Air can unsettle the root — thoughts may create anxiety where there is none.',
-    1: 'Air intellectualizes emotion — naming feelings helps more than analyzing them.',
-    2: 'Air scatters willpower across many options — choose one and commit.',
-    3: 'Air opens the heart through conversation — connection through understanding.',
-    4: 'Air activates the throat naturally — communication flows freely.',
-    5: 'Air feeds the third eye with data — be careful not to overthink insight.',
-    6: 'Air connects crown to ideas — meaning arrives through perspective, not practice.',
+    0: 'Mental activity may feel unsettling in the body. Thoughts can create tension where none exists — breathe through it.',
+    1: 'You may notice a tendency to analyze feelings rather than feel them. Naming emotions helps more than explaining them.',
+    2: 'Focus may scatter across too many options. Choosing one thing and committing creates relief.',
+    3: 'Connection through conversation feels natural today. Understanding deepens through listening.',
+    4: 'Communication flows more easily. Use that clarity to express what matters.',
+    5: 'Mental sharpness is high, but overthinking can block intuition. Trust your first instinct.',
+    6: 'Fresh perspectives are available. Meaning may arrive through new ideas rather than familiar habits.',
   },
   Water: {
-    0: 'Water softens the root — safety comes from feeling, not controlling.',
-    1: 'Water amplifies the sacral — emotions are vivid and close to the surface.',
-    2: 'Water can dissolve willpower — decisions may feel harder but deeper.',
-    3: 'Water opens the heart wide — compassion flows but boundaries may thin.',
-    4: 'Water softens the throat — what you feel may be hard to articulate.',
-    5: 'Water deepens the third eye — intuition is strong but may feel overwhelming.',
-    6: 'Water connects crown to the unseen — spiritual sensitivity is heightened.',
+    0: 'Safety may feel more emotional than logical today. Let yourself feel secure without needing to control the outcome.',
+    1: 'Emotions may be vivid and close to the surface. Acknowledge them without trying to fix them.',
+    2: 'Decision-making may feel harder today. Trust that slower, deeper choices often serve you better.',
+    3: 'Compassion flows naturally, but boundaries may soften. Caring for yourself is part of caring for others.',
+    4: 'Expressing what you feel may be harder than usual. Writing can help bridge the gap between feeling and words.',
+    5: 'Your intuition is strong today but may feel intense. Ground yourself before acting on gut feelings.',
+    6: 'Sensitivity to meaning and connection is heightened. Stay present in your body while exploring inner depths.',
   },
 };
 
@@ -585,20 +633,48 @@ const FREE_GUIDANCE_LINES: Record<string, string> = {
   Pisces:      'Less input, more inner listening.',
 };
 
+// ── Behavior Context (mood, journal, patterns) ──────────────
+
+export interface BehaviorContext {
+  recentMoodScore?: number;          // 1-10 from most recent check-in
+  recentEnergyLevel?: 'low' | 'medium' | 'high';
+  recentStressLevel?: 'low' | 'medium' | 'high';
+  recentTags?: string[];             // theme tags from check-in
+  journalEntryCount7d?: number;      // journal entries in last 7 days
+  averageMood7d?: number;            // average mood over last 7 days
+}
+
 // ── Main Engine ──────────────────────────────────────────────
 
 export class EnergyEngine {
   /**
    * Generate the complete daily energy snapshot from a natal chart.
+   * Optionally blends behavioral signals (mood, journal, check-in data)
+   * to create a pattern-aware experience rather than purely astrology-driven.
    */
-  static generateSnapshot(chart: NatalChart, date: Date = new Date()): EnergySnapshot {
+  static generateSnapshot(chart: NatalChart, date: Date = new Date(), behavior?: BehaviorContext): EnergySnapshot {
     const moonSign = this.getCurrentMoonSign(chart, date);
     const moonElement = signElement(moonSign) || 'Water';
     const moonHouse = this.getMoonHouse(chart, date);
 
     // 1. Energy Snapshot (hero)
     const toneData = MOON_TONES[moonSign] ?? { tone: 'Shifting', intensity: 'Moderate' as EnergyIntensity };
-    const driver = `Moon in ${moonSign}${moonHouse ? ` activating your ${moonHouse}${this.ordinalSuffix(moonHouse)} house` : ''}`;
+
+    // Blend intensity with check-in data when available
+    let adjustedIntensity = toneData.intensity;
+    if (behavior) {
+      adjustedIntensity = this.blendIntensity(toneData.intensity, behavior);
+    }
+
+    // Build driver description — blend behavioral signals when present
+    let driver = `Moon in ${moonSign}${moonHouse ? ` activating your ${moonHouse}${this.ordinalSuffix(moonHouse)} house` : ''}`;
+    if (behavior?.recentMoodScore !== undefined) {
+      const moodHint = behavior.recentMoodScore <= 3 ? ' · Your recent check-in suggests lower energy'
+                     : behavior.recentMoodScore >= 8 ? ' · Your recent check-in reflects high energy'
+                     : '';
+      driver += moodHint;
+    }
+
     const quickMeaning = QUICK_MEANINGS[moonSign] ?? 'Your energy is in flux — tune inward for clarity.';
 
     // 2. Chakras
@@ -621,7 +697,7 @@ export class EnergyEngine {
     return {
       date: date.toISOString().slice(0, 10),
       tone: toneData.tone,
-      intensity: toneData.intensity,
+      intensity: adjustedIntensity,
       primaryDriver: driver,
       quickMeaning,
 
@@ -737,6 +813,7 @@ export class EnergyEngine {
       const triggerText = trigger || this.getDefaultTrigger(idx, moonSign);
       const bodyCue = CHAKRA_BODY_CUES[idx]?.[state] ?? 'Notice sensations in this area.';
       const healingSuggestion = CHAKRA_HEALING[idx]?.[state] ?? 'Bring gentle awareness to this area of your body.';
+      const groundingTip = CHAKRA_GROUNDING_TIPS[idx]?.[state] ?? 'Deep belly breathing for one minute.';
       const affirmation = CHAKRA_AFFIRMATIONS[idx]?.[state] ?? 'I am present with what is.';
       const elementConnection = ELEMENT_CHAKRA_CONNECTION[moonElement]?.[idx] ?? `${moonElement} energy is present in your ${def.name} center.`;
 
@@ -747,6 +824,7 @@ export class EnergyEngine {
         trigger: triggerText,
         bodyCue,
         healingSuggestion,
+        groundingTip,
         elementConnection,
         affirmation,
         color: def.color,
@@ -794,5 +872,49 @@ export class EnergyEngine {
       feeling: states[name].feeling,
       suggestion: states[name].suggestion,
     }));
+  }
+
+  /**
+   * Blend astrology-derived intensity with behavioral check-in data.
+   * This ensures the energy reading reflects the user's actual state,
+   * not just planetary positions — making it a pattern engine, not a horoscope.
+   */
+  private static blendIntensity(
+    astroIntensity: EnergyIntensity,
+    behavior: BehaviorContext,
+  ): EnergyIntensity {
+    // Convert to numeric scale: Low=1, Moderate=2, High=3
+    const intensityMap: Record<EnergyIntensity, number> = { Low: 1, Moderate: 2, High: 3 };
+    const reverseMap: Record<number, EnergyIntensity> = { 1: 'Low', 2: 'Moderate', 3: 'High' };
+
+    let score = intensityMap[astroIntensity];
+
+    // Factor in mood check-in (weight: 40% behavioral, 60% chart-based)
+    if (behavior.recentMoodScore !== undefined) {
+      // Mood 1-3 → suggests lower energy, 4-7 → moderate, 8-10 → high
+      const moodSignal = behavior.recentMoodScore <= 3 ? 1
+                       : behavior.recentMoodScore <= 7 ? 2
+                       : 3;
+      score = Math.round(score * 0.6 + moodSignal * 0.4);
+    }
+
+    // Factor in self-reported energy level
+    if (behavior.recentEnergyLevel) {
+      const energySignal = behavior.recentEnergyLevel === 'low' ? 1
+                         : behavior.recentEnergyLevel === 'medium' ? 2
+                         : 3;
+      score = Math.round(score * 0.7 + energySignal * 0.3);
+    }
+
+    // Factor in stress level (high stress → higher intensity)
+    if (behavior.recentStressLevel) {
+      const stressSignal = behavior.recentStressLevel === 'low' ? 1
+                         : behavior.recentStressLevel === 'medium' ? 2
+                         : 3;
+      // Stress raises intensity slightly
+      if (stressSignal === 3 && score < 3) score = Math.min(3, score + 1);
+    }
+
+    return reverseMap[Math.max(1, Math.min(3, score))] ?? 'Moderate';
   }
 }

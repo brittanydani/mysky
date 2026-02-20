@@ -103,8 +103,8 @@ export function captureSkySnapshot(chart: NatalChart, date: Date = new Date()): 
     logger.error('[CheckIn] Failed to capture sky snapshot:', error);
     return {
       moonSign: 'Unknown',
-      moonHouse: 1,
-      sunHouse: 1,
+      moonHouse: 0,
+      sunHouse: 0,
       transitEvents: [],
       lunarPhase: 'unknown',
       retrogrades: [],

@@ -82,7 +82,7 @@ export default function HealingScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: insets.bottom + 80 },
+            { paddingBottom: 32 },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -108,6 +108,8 @@ export default function HealingScreen() {
               <Pressable
                 onPress={() => router.push('/(tabs)/chart' as Href)}
                 style={styles.emptyButton}
+                accessibilityRole="button"
+                accessibilityLabel="Create chart"
               >
                 <Text style={styles.emptyButtonText}>Create Chart</Text>
               </Pressable>
@@ -147,31 +149,43 @@ export default function HealingScreen() {
 
               <InsightCard
                 title="Fear Patterns"
-                content={isPremium ? healingData.fears.coreFear : 'Identifying the root of your anxiety...'}
+                content={isPremium
+                  ? healingData.fears.coreFear
+                  : `Your chart suggests a core pattern around ${healingData.fears.coreFear.split(' ').slice(0, 6).join(' ')}...`
+                }
                 icon="shield"
                 locked={!isPremium}
+                lockedHint="See what drives your deepest fears →"
                 onPress={!isPremium ? goToPremium : undefined}
               />
 
               <InsightCard
                 title="Attachment Themes"
-                content={isPremium ? healingData.attachment.headline : 'Exploring how you connect with others...'}
+                content={isPremium
+                  ? healingData.attachment.headline
+                  : `Your attachment style leans ${healingData.attachment.style} — there's a reason for that.`
+                }
                 icon="link"
                 locked={!isPremium}
+                lockedHint="Understand how you learned to love →"
                 onPress={!isPremium ? goToPremium : undefined}
               />
 
               <InsightCard
                 title="Safety & Regulation"
-                content={isPremium ? healingData.safety.whatFeelsSafe : 'Understanding what your nervous system needs...'}
+                content={isPremium
+                  ? healingData.safety.whatFeelsSafe
+                  : `Your nervous system has a specific definition of safety — your chart reveals what it is.`
+                }
                 icon="moon"
                 locked={!isPremium}
+                lockedHint="Discover what your body needs to feel safe →"
                 onPress={!isPremium ? goToPremium : undefined}
               />
             </Animated.View>
           )}
 
-          {/* Daily healing prompt — premium */}
+          {/* Daily healing prompt — premium (with teaser for free) */}
           {healingData && isPremium && (
             <Animated.View
               entering={FadeInDown.delay(400).duration(600)}
@@ -182,6 +196,23 @@ export default function HealingScreen() {
                 title="Journal Prompt"
                 content={healingData.dailyJournalPrompt}
                 icon="book"
+              />
+            </Animated.View>
+          )}
+
+          {healingData && !isPremium && (
+            <Animated.View
+              entering={FadeInDown.delay(400).duration(600)}
+              style={styles.section}
+            >
+              <Text style={styles.sectionTitle}>Today's Healing Prompt</Text>
+              <InsightCard
+                title="Journal Prompt"
+                content="A personalized prompt based on your Moon and Chiron — designed to help you process what's coming up today."
+                icon="book"
+                locked
+                lockedHint="Unlock daily prompts tailored to your chart →"
+                onPress={goToPremium}
               />
             </Animated.View>
           )}

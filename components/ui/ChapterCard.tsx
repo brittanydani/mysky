@@ -61,8 +61,8 @@ function ChapterCard({
           <Text style={styles.chapter}>{chapter}</Text>
           {isLocked && (
             <View style={styles.lockBadge}>
-              <Ionicons name="lock-closed" size={12} color={theme.textMuted} />
-              <Text style={styles.lockText}>Locked for Premium</Text>
+              <Ionicons name="sparkles" size={11} color={theme.primary} />
+              <Text style={styles.lockText}>Deeper Sky</Text>
             </View>
           )}
         </View>
@@ -75,6 +75,14 @@ function ChapterCard({
         >
           {displayText}
         </Text>
+
+        {/* Locked CTA */}
+        {isLocked && (
+          <View style={styles.lockedCta}>
+            <Text style={styles.lockedCtaText}>Continue reading with Deeper Sky</Text>
+            <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+          </View>
+        )}
 
         {/* Reflection + Affirmation when expanded */}
         {expanded && reflection ? (
@@ -135,15 +143,16 @@ const styles = StyleSheet.create({
   lockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(201, 169, 98, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   lockText: {
     fontSize: 10,
-    color: theme.textMuted,
+    color: theme.primary,
     marginLeft: 4,
+    fontWeight: '600',
   },
   title: {
     fontSize: 20,

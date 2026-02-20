@@ -195,7 +195,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.ctaContainer}>
-                  <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handleGetStarted}>
+                  <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handleGetStarted} accessibilityRole="button" accessibilityLabel="Get started">
                     <LinearGradient
                       colors={[...theme.goldGradient]}
                       start={{ x: 0, y: 0 }}
@@ -207,7 +207,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                     </LinearGradient>
                   </Pressable>
 
-                  <Pressable style={styles.restoreButton} onPress={handleRestoreBackup}>
+                  <Pressable style={styles.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button" accessibilityLabel="Restore from backup">
                     <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
                     <Text style={styles.restoreText}>Restore from Backup</Text>
                   </Pressable>
@@ -255,7 +255,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                   onSubmitEditing={handlePassphraseSubmit}
                 />
 
-                <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handlePassphraseSubmit}>
+                <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handlePassphraseSubmit} accessibilityRole="button" accessibilityLabel="Restore backup">
                   <LinearGradient
                     colors={[...theme.goldGradient]}
                     start={{ x: 0, y: 0 }}
@@ -267,7 +267,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                   </LinearGradient>
                 </Pressable>
 
-                <Pressable style={styles.restoreButton} onPress={() => setStep('welcome')}>
+                <Pressable style={styles.restoreButton} onPress={() => setStep('welcome')} accessibilityRole="button" accessibilityLabel="Cancel restore">
                   <Text style={styles.restoreText}>Cancel</Text>
                 </Pressable>
               </Animated.View>

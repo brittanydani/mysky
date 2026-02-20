@@ -16,15 +16,63 @@ import { NatalChart, BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { config } from '../../constants/config';
-import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
+import { usePremium } from '../../context/PremiumContext';
 
+
+/** Rotating daily previews of what premium unlocks — personalized to chart */
+const PREMIUM_PREVIEWS = [
+  {
+    icon: 'heart-half' as const,
+    color: '#E07A98',
+    label: 'Healing',
+    title: 'Your attachment style is shaped by your Moon placement',
+    sub: 'Understand your fear patterns, what safety looks like for you, and how to start healing.',
+    cta: 'Explore your healing map',
+    route: '/(tabs)/healing',
+  },
+  {
+    icon: 'analytics' as const,
+    color: '#6EBF8B',
+    label: 'Patterns',
+    title: 'Your mood data is ready to reveal patterns',
+    sub: 'See trends over time, discover which days you feel best, and correlate with cosmic weather.',
+    cta: 'See your patterns',
+    route: '/(tabs)/mood',
+  },
+  {
+    icon: 'people' as const,
+    color: '#8BC4E8',
+    label: 'Relationships',
+    title: 'Deeper Sky includes unlimited relationship charts',
+    sub: 'Partner, parent, child, friend — understand how you truly connect with the people who matter.',
+    cta: 'Compare charts',
+    route: '/(tabs)/relationships',
+  },
+  {
+    icon: 'compass' as const,
+    color: '#E0B07A',
+    label: 'Chiron & Nodes',
+    title: 'Your chart holds a sensitivity map only you can see',
+    sub: 'Chiron reveals your tender spots. Your Nodes show where you\'ve been and where you\'re growing.',
+    cta: 'Explore sensitive points',
+    route: '/(tabs)/chart',
+  },
+];
+
+function getDailyPreviewIndex(): number {
+  const now = new Date();
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  return dayOfYear % PREMIUM_PREVIEWS.length;
+}
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  usePremium();
+  const { isPremium } = usePremium();
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -161,7 +209,7 @@ export default function HomeScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
@@ -235,6 +283,8 @@ export default function HomeScreen() {
                   <Pressable
                     style={styles.viewChartButton}
                     onPress={() => router.push('/(tabs)/chart' as Href)}
+                    accessibilityRole="button"
+                    accessibilityLabel="See chart details"
                   >
                     <Text style={styles.viewChartText}>See Chart Details</Text>
                     <Ionicons name="arrow-forward" size={16} color={theme.primary} />
@@ -243,6 +293,8 @@ export default function HomeScreen() {
                   <Pressable
                     style={styles.editBirthButton}
                     onPress={() => setShowEditBirth(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Edit birth data"
                   >
                     <Ionicons name="create-outline" size={16} color={theme.textSecondary} />
                     <Text style={styles.editBirthText}>Edit Birth Data</Text>
@@ -264,7 +316,7 @@ export default function HomeScreen() {
                   <Text style={styles.chartDate}>Add birth details to personalize your prompts</Text>
                 </View>
 
-                <Pressable style={styles.createChartButton} onPress={() => setShowOnboarding(true)}>
+                <Pressable style={styles.createChartButton} onPress={() => setShowOnboarding(true)} accessibilityRole="button" accessibilityLabel="Create your chart">
                   <Ionicons name="add-circle-outline" size={20} color={theme.primary} />
                   <Text style={styles.createChartText}>Create Your Chart</Text>
                 </Pressable>
@@ -303,11 +355,47 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
+          {/* Premium Preview Card — rotates daily, free users only */}
+          {!isPremium && userChart && (() => {
+            const preview = PREMIUM_PREVIEWS[getDailyPreviewIndex()];
+            return (
+              <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.sectionBlock}>
+                <Pressable
+                  onPress={() => router.push(preview.route as Href)}
+                  accessibilityRole="button"
+                  accessibilityLabel={preview.cta}
+                >
+                  <LinearGradient
+                    colors={['rgba(201,169,98,0.12)', 'rgba(201,169,98,0.04)']}
+                    style={styles.premiumPreviewCard}
+                  >
+                    <View style={styles.premiumPreviewHeader}>
+                      <View style={[styles.premiumPreviewIcon, { backgroundColor: `${preview.color}20` }]}>
+                        <Ionicons name={preview.icon} size={18} color={preview.color} />
+                      </View>
+                      <Text style={styles.premiumPreviewLabel}>{preview.label}</Text>
+                      <View style={styles.premiumPreviewBadge}>
+                        <Ionicons name="sparkles" size={10} color={theme.primary} />
+                        <Text style={styles.premiumPreviewBadgeText}>Deeper Sky</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.premiumPreviewTitle}>{preview.title}</Text>
+                    <Text style={styles.premiumPreviewSub}>{preview.sub}</Text>
+                    <View style={styles.premiumPreviewCta}>
+                      <Text style={styles.premiumPreviewCtaText}>{preview.cta}</Text>
+                      <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                    </View>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
+            );
+          })()}
+
           {/* Quick Links */}
           <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.sectionBlock}>
             <Text style={styles.sectionTitle}>Explore</Text>
             <View style={styles.quickLinksRow}>
-              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/story' as Href)}>
+              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/story' as Href)} accessibilityRole="button" accessibilityLabel="Story, your narrative">
                 <LinearGradient colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.7)']} style={styles.quickLinkGradient}>
                   <Ionicons name="book-outline" size={24} color={theme.primary} />
                   <Text style={styles.quickLinkTitle}>Story</Text>
@@ -315,7 +403,7 @@ export default function HomeScreen() {
                 </LinearGradient>
               </Pressable>
 
-              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/journal' as Href)}>
+              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/journal' as Href)} accessibilityRole="button" accessibilityLabel="Journal, reflect and grow">
                 <LinearGradient colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.7)']} style={styles.quickLinkGradient}>
                   <Ionicons name="pencil-outline" size={24} color={theme.love} />
                   <Text style={styles.quickLinkTitle}>Journal</Text>
@@ -323,7 +411,7 @@ export default function HomeScreen() {
                 </LinearGradient>
               </Pressable>
 
-              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/insights' as Href)}>
+              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/insights' as Href)} accessibilityRole="button" accessibilityLabel="Insights, your patterns">
                 <LinearGradient colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.7)']} style={styles.quickLinkGradient}>
                   <Ionicons name="sparkles-outline" size={24} color={theme.energy} />
                   <Text style={styles.quickLinkTitle}>Insights</Text>
@@ -431,6 +519,73 @@ const styles = StyleSheet.create({
   quickLinkGradient: { padding: theme.spacing.md, alignItems: 'center', height: 110, justifyContent: 'center' },
   quickLinkTitle: { color: theme.textPrimary, fontWeight: '700', fontSize: 14, marginTop: 8 },
   quickLinkSub: { color: theme.textMuted, fontSize: 11, textAlign: 'center', marginTop: 2 },
+
+  // Premium Preview Card
+  premiumPreviewCard: {
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 169, 98, 0.2)',
+  },
+  premiumPreviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  premiumPreviewIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  premiumPreviewLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    flex: 1,
+  },
+  premiumPreviewBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(201, 169, 98, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  premiumPreviewBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.primary,
+  },
+  premiumPreviewTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+    lineHeight: 22,
+    marginBottom: 6,
+  },
+  premiumPreviewSub: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 19,
+    marginBottom: 12,
+  },
+  premiumPreviewCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  premiumPreviewCtaText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.primary,
+  },
 
   reflectionCard: { marginBottom: theme.spacing.lg },
   reflectionCardInner: {

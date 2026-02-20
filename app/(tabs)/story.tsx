@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -75,7 +76,7 @@ export default function StoryScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: 100 },
+            { paddingBottom: 32 },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -106,6 +107,8 @@ export default function StoryScreen() {
               <Pressable
                 onPress={() => router.push('/(tabs)/chart' as Href)}
                 style={styles.emptyButton}
+                accessibilityRole="button"
+                accessibilityLabel="Create chart"
               >
                 <Text style={styles.emptyButtonText}>Create Chart</Text>
               </Pressable>
@@ -136,17 +139,34 @@ export default function StoryScreen() {
           )}
 
           {/* Unlock prompt for free users */}
-          {!isPremium && (
+          {!isPremium && chapters.length > 0 && (
             <Animated.View
               entering={FadeInDown.delay(200 + chapters.length * 80).duration(500)}
               style={styles.unlockPrompt}
             >
               <Pressable
                 onPress={() => router.push('/(tabs)/premium' as Href)}
-                style={styles.unlockButton}
+                accessibilityRole="button"
+                accessibilityLabel="Unlock all chapters with Deeper Sky"
               >
-                <Ionicons name="sparkles" size={16} color={theme.primary} />
-                <Text style={styles.unlockText}>Unlock all chapters with Deeper Sky</Text>
+                <LinearGradient
+                  colors={['rgba(201,169,98,0.12)', 'rgba(201,169,98,0.04)']}
+                  style={styles.unlockButton}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <Ionicons name="sparkles" size={16} color={theme.primary} />
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif' }}>
+                      7 more chapters await
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 19, marginBottom: 10 }}>
+                    How You Love · How You Fight · Your Inner Child · Your Shadow Work · Your Soul's Purpose — and more.
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.unlockText}>Continue your story</Text>
+                    <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                  </View>
+                </LinearGradient>
               </Pressable>
             </Animated.View>
           )}
@@ -203,23 +223,20 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   unlockPrompt: {
-    alignItems: 'center',
     marginTop: theme.spacing.md,
   },
   unlockButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.borderRadius.full,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    padding: 16,
+    borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.3)',
+    borderColor: 'rgba(201, 169, 98, 0.2)',
   },
   unlockText: {
     fontSize: 14,
     color: theme.primary,
     fontWeight: '500',
-    marginLeft: theme.spacing.sm,
   },
   emptyState: {
     alignItems: 'center',
