@@ -35,3 +35,4 @@ android/app/build/
 scripts/
 *.log
 .github/
+claude-test.js
