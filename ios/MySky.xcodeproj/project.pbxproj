@@ -284,6 +284,19 @@
 				"${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage/SDWebImage.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-launcher/EXDevLauncher.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-menu/EXDevMenu.bundle",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/s136108s.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/s136199s.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/s136472s.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/se00010s.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/se00016s.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/se00433s.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/seasm18.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/seas_12.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/seas_18.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/semom18.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/semo_18.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/seplm18.se1",
+				"${PODS_ROOT}/../../node_modules/react-native-swisseph/assets/sepl_18.se1",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -299,6 +312,19 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SDWebImage.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevLauncher.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevMenu.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/s136108s.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/s136199s.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/s136472s.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/se00010s.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/se00016s.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/se00433s.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/seasm18.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/seas_12.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/seas_18.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/semom18.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/semo_18.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/seplm18.se1",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/sepl_18.se1",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
