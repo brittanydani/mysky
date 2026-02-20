@@ -11,7 +11,7 @@ import {
   PanResponder,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,9 +32,10 @@ import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
-import { CheckInService, CheckInInput } from '../../services/patterns/checkInService';
-import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel } from '../../services/patterns/types';
+import { CheckInService, CheckInInput, TIME_OF_DAY_LABELS, TIME_OF_DAY_ORDER } from '../../services/patterns/checkInService';
+import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../../services/patterns/types';
 import { logger } from '../../utils/logger';
+import type { TimeOfDayMetricInsight, TimeOfDayBucket } from '../../utils/insightsEngine';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 // card padding (16) × 2 + scroll horizontal padding (16) × 2 = 64
@@ -416,7 +417,6 @@ function GraphLabel({ label, color }: { label: string; color: string }) {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function MoodScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
 
@@ -435,6 +435,9 @@ export default function MoodScreen() {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [selectedQuality, setSelectedQuality] = useState<ThemeTag | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeOfDay>(CheckInService.getCurrentTimeSlot());
+  const [completedSlots, setCompletedSlots] = useState<TimeOfDay[]>([]);
+  const [todayCheckIns, setTodayCheckIns] = useState<DailyCheckIn[]>([]);
 
   // History
   const [allCheckIns, setAllCheckIns] = useState<DailyCheckIn[]>([]);
@@ -468,7 +471,7 @@ export default function MoodScreen() {
           });
           setUserChart(natal);
 
-          const existing = await CheckInService.getTodayCheckIn(cId);
+          const existing = await CheckInService.getTodayCheckInForSlot(cId, CheckInService.getCurrentTimeSlot());
           setTodayCheckIn(existing);
           if (existing) {
             setMoodSlider(existing.moodScore);
@@ -479,6 +482,13 @@ export default function MoodScreen() {
             setSelectedQuality(eqTag ?? null);
             setSelectedTags(restoredTags.filter((t: string) => !t.startsWith('eq_')));
           }
+
+          // Load all today's check-ins and completed slots
+          const todayAll = await CheckInService.getTodayCheckIns(cId);
+          setTodayCheckIns(todayAll);
+          const slots = todayAll.map(c => c.timeOfDay);
+          setCompletedSlots(slots);
+          setSelectedTimeSlot(CheckInService.getCurrentTimeSlot());
 
           const all = await CheckInService.getAllCheckIns(cId);
           setAllCheckIns(all);
@@ -507,10 +517,16 @@ export default function MoodScreen() {
         energyLevel: sliderToLevel(energySlider) as EnergyLevel,
         stressLevel: sliderToLevel(stressSlider) as StressLevel,
         tags: allTags,
+        timeOfDay: selectedTimeSlot,
       };
       const result = await CheckInService.saveCheckIn(input, userChart, chartId);
       setTodayCheckIn(result);
       setSavedAt(new Date());
+
+      // Refresh today's check-ins and completed slots
+      const todayAll = await CheckInService.getTodayCheckIns(chartId);
+      setTodayCheckIns(todayAll);
+      setCompletedSlots(todayAll.map(c => c.timeOfDay));
 
       const all = await CheckInService.getAllCheckIns(chartId);
       setAllCheckIns(all);
@@ -524,7 +540,7 @@ export default function MoodScreen() {
     } finally {
       setSaving(false);
     }
-  }, [userChart, chartId, moodSlider, energySlider, stressSlider, selectedTags, saving]);
+  }, [userChart, chartId, moodSlider, energySlider, stressSlider, selectedTags, selectedQuality, selectedTimeSlot, saving]);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -538,6 +554,83 @@ export default function MoodScreen() {
   const stressData = useMemo(() => filteredCheckIns.map(c => levelToNum(c.stressLevel)), [filteredCheckIns]);
   const avgs       = useMemo(() => computeAverages(filteredCheckIns), [filteredCheckIns]);
   const topTags    = useMemo(() => computeTopTags(filteredCheckIns), [filteredCheckIns]);
+
+  /** Time-of-day breakdown from check-in data */
+  const todInsights = useMemo(() => {
+    if (filteredCheckIns.length < 4) return null;
+
+    const data: Record<string, { moods: number[]; energies: number[]; stresses: number[] }> = {
+      Morning: { moods: [], energies: [], stresses: [] },
+      Afternoon: { moods: [], energies: [], stresses: [] },
+      Evening: { moods: [], energies: [], stresses: [] },
+      Night: { moods: [], energies: [], stresses: [] },
+    };
+    const todMap: Record<string, string> = {
+      morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', night: 'Night',
+    };
+
+    for (const c of filteredCheckIns) {
+      const bucket = c.timeOfDay ? (todMap[c.timeOfDay] ?? 'Morning') : 'Morning';
+      data[bucket].moods.push(c.moodScore);
+      data[bucket].energies.push(levelToNum(c.energyLevel));
+      data[bucket].stresses.push(levelToNum(c.stressLevel));
+    }
+
+    const buckets: TimeOfDayBucket[] = (['Morning', 'Afternoon', 'Evening', 'Night'] as const)
+      .filter(l => data[l].moods.length >= 1)
+      .map(l => ({
+        label: l,
+        count: data[l].moods.length,
+        avgMood: parseFloat((data[l].moods.reduce((a, b) => a + b, 0) / data[l].moods.length).toFixed(1)),
+        avgEnergy: parseFloat((data[l].energies.reduce((a, b) => a + b, 0) / data[l].energies.length).toFixed(1)),
+        avgStress: parseFloat((data[l].stresses.reduce((a, b) => a + b, 0) / data[l].stresses.length).toFixed(1)),
+      }));
+
+    if (buckets.length < 2) return null;
+
+    // Build per-metric insights
+    const metrics: Array<{ key: 'mood' | 'energy' | 'stress'; emoji: string; label: string; extract: (b: TimeOfDayBucket) => number }> = [
+      { key: 'mood', emoji: '💛', label: 'Mood', extract: b => b.avgMood },
+      { key: 'energy', emoji: '⚡', label: 'Energy', extract: b => b.avgEnergy },
+      { key: 'stress', emoji: '🔥', label: 'Stress', extract: b => b.avgStress },
+    ];
+
+    const metricInsights: TimeOfDayMetricInsight[] = [];
+    for (const m of metrics) {
+      const sorted = [...buckets].sort((a, b) => m.extract(b) - m.extract(a));
+      const high = sorted[0];
+      const low = sorted[sorted.length - 1];
+      const spread = m.extract(high) - m.extract(low);
+      if (spread < 0.3) continue;
+
+      const hl = high.label.toLowerCase();
+      const ll = low.label.toLowerCase();
+      let text: string;
+
+      if (m.key === 'mood') {
+        text = spread >= 1.0
+          ? `Your mood peaks in the ${hl} (${m.extract(high).toFixed(1)}) and is lowest at ${ll} (${m.extract(low).toFixed(1)}).`
+          : `You tend to feel best in the ${hl} and lowest at ${ll}.`;
+      } else if (m.key === 'energy') {
+        text = spread >= 1.0
+          ? `Your energy is highest in the ${hl} (${m.extract(high).toFixed(1)}) and lowest in the ${ll} (${m.extract(low).toFixed(1)}).`
+          : `You tend to have the most energy in the ${hl} and least in the ${ll}.`;
+      } else {
+        text = spread >= 1.0
+          ? `Stress peaks in the ${hl} (${m.extract(high).toFixed(1)}) and is lowest in the ${ll} (${m.extract(low).toFixed(1)}).`
+          : `Stress tends to be higher in the ${hl} and lower in the ${ll}.`;
+      }
+
+      metricInsights.push({
+        metric: m.key, emoji: m.emoji, label: m.label, insight: text,
+        highBucket: high.label, lowBucket: low.label,
+        highValue: m.extract(high), lowValue: m.extract(low), spread,
+      });
+    }
+
+    metricInsights.sort((a, b) => b.spread - a.spread);
+    return { buckets, metricInsights };
+  }, [filteredCheckIns]);
 
   const dateLabels = useMemo((): [string, string] | undefined => {
     if (filteredCheckIns.length < 2) return undefined;
@@ -653,11 +746,80 @@ export default function MoodScreen() {
                 </View>
               )}
 
-              {/* Already checked in notice */}
-              {todayCheckIn && !savedAt && (
+              {/* Time-of-day selector */}
+              <Text style={[styles.tagsLabel, { marginBottom: 8 }]}>
+                When are you checking in?
+              </Text>
+              <View style={styles.timeSlotRow}>
+                {TIME_OF_DAY_ORDER.map(slot => {
+                  const info = TIME_OF_DAY_LABELS[slot];
+                  const isSelected = selectedTimeSlot === slot;
+                  const isCompleted = completedSlots.includes(slot);
+                  const isCurrent = CheckInService.getCurrentTimeSlot() === slot;
+                  return (
+                    <Pressable
+                      key={slot}
+                      style={[
+                        styles.timeSlotChip,
+                        isSelected && styles.timeSlotChipOn,
+                        isCompleted && !isSelected && styles.timeSlotChipDone,
+                      ]}
+                      onPress={() => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setSelectedTimeSlot(slot);
+                        // Load existing data for this slot if it exists
+                        const existing = todayCheckIns.find(c => c.timeOfDay === slot);
+                        if (existing) {
+                          setMoodSlider(existing.moodScore);
+                          setEnergySlider(levelToNum(existing.energyLevel));
+                          setStressSlider(levelToNum(existing.stressLevel));
+                          const restoredTags = existing.tags ?? [];
+                          const eqTag = restoredTags.find((t: string) => t.startsWith('eq_')) as ThemeTag | undefined;
+                          setSelectedQuality(eqTag ?? null);
+                          setSelectedTags(restoredTags.filter((t: string) => !t.startsWith('eq_')));
+                          setTodayCheckIn(existing);
+                        } else {
+                          // Reset form for new time slot
+                          setMoodSlider(5);
+                          setEnergySlider(5);
+                          setStressSlider(5);
+                          setSelectedTags([]);
+                          setSelectedQuality(null);
+                          setTodayCheckIn(null);
+                        }
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${info.label} check-in${isCompleted ? ' (completed)' : ''}`}
+                      accessibilityState={{ selected: isSelected }}
+                    >
+                      <Text style={styles.timeSlotEmoji}>{info.emoji}</Text>
+                      <Text style={[
+                        styles.timeSlotLabel,
+                        isSelected && styles.timeSlotLabelOn,
+                        isCompleted && !isSelected && styles.timeSlotLabelDone,
+                      ]}>
+                        {info.label}
+                      </Text>
+                      {isCompleted && (
+                        <Ionicons name="checkmark-circle" size={12} color={isSelected ? theme.primary : theme.energy} style={{ marginTop: 2 }} />
+                      )}
+                      {isCurrent && !isCompleted && (
+                        <View style={styles.currentDot} />
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {/* Today's check-in summary */}
+              {todayCheckIns.length > 0 && !savedAt && (
                 <View style={styles.todayNotice}>
                   <Ionicons name="time-outline" size={13} color={theme.textMuted} />
-                  <Text style={styles.todayNoticeTxt}>Checked in today — update below</Text>
+                  <Text style={styles.todayNoticeTxt}>
+                    {completedSlots.includes(selectedTimeSlot)
+                      ? `${TIME_OF_DAY_LABELS[selectedTimeSlot].label} check-in logged — update below`
+                      : `${todayCheckIns.length}/4 check-in${todayCheckIns.length !== 1 ? 's' : ''} today`}
+                  </Text>
                 </View>
               )}
 
@@ -738,7 +900,7 @@ export default function MoodScreen() {
                 onPress={handleSave}
                 disabled={saving}
                 accessibilityRole="button"
-                accessibilityLabel={saving ? 'Saving check-in' : todayCheckIn ? 'Update Check-In' : 'Save Check-In'}
+                accessibilityLabel={saving ? 'Saving check-in' : completedSlots.includes(selectedTimeSlot) ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In` : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`}
                 accessibilityState={{ disabled: saving }}
               >
                 <LinearGradient
@@ -751,12 +913,16 @@ export default function MoodScreen() {
                     color={theme.primary}
                   />
                   <Text style={styles.saveBtnTxt}>
-                    {saving ? 'Saving…' : todayCheckIn ? 'Update Check-In' : 'Save Check-In'}
+                    {saving
+                      ? 'Saving…'
+                      : completedSlots.includes(selectedTimeSlot)
+                        ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
+                        : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`}
                   </Text>
                 </LinearGradient>
               </Pressable>
 
-              <Text style={styles.hint}>Takes 15 seconds. No judgments.</Text>
+              <Text style={styles.hint}>Check in up to 4× daily — morning, afternoon, evening, night.</Text>
             </LinearGradient>
           </Animated.View>
 
@@ -897,6 +1063,64 @@ export default function MoodScreen() {
                             <Text style={styles.tagStatCount}>{count}×</Text>
                           </View>
                         ))}
+                      </>
+                    )}
+
+                    {/* Time-of-Day Insights */}
+                    {todInsights && todInsights.buckets.length >= 2 && (
+                      <>
+                        <Text style={[styles.graphLabelTxt, { marginTop: 16, marginBottom: 8, color: theme.textSecondary }]}>
+                          🕐 Time of Day Patterns
+                        </Text>
+
+                        {/* Bucket overview */}
+                        <View style={styles.todBucketRow}>
+                          {todInsights.buckets.map(b => {
+                            const emoji: Record<string, string> = {
+                              Morning: '🌅', Afternoon: '☀️', Evening: '🌆', Night: '🌙',
+                            };
+                            return (
+                              <View key={b.label} style={styles.todBucket}>
+                                <Text style={{ fontSize: 16 }}>{emoji[b.label]}</Text>
+                                <Text style={styles.todBucketLabel}>{b.label}</Text>
+                                <View style={{ gap: 1, alignItems: 'center' }}>
+                                  <Text style={[styles.todBucketVal, { color: COLORS.mood }]}>{b.avgMood.toFixed(1)}</Text>
+                                  <Text style={[styles.todBucketVal, { color: COLORS.energy }]}>{b.avgEnergy.toFixed(1)}</Text>
+                                  <Text style={[styles.todBucketVal, { color: COLORS.stress }]}>{b.avgStress.toFixed(1)}</Text>
+                                </View>
+                                <Text style={styles.todBucketCount}>{b.count}×</Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+
+                        {/* Legend */}
+                        <View style={styles.todLegend}>
+                          <View style={styles.todLegendItem}>
+                            <View style={[styles.todLegendDot, { backgroundColor: COLORS.mood }]} />
+                            <Text style={styles.todLegendTxt}>Mood</Text>
+                          </View>
+                          <View style={styles.todLegendItem}>
+                            <View style={[styles.todLegendDot, { backgroundColor: COLORS.energy }]} />
+                            <Text style={styles.todLegendTxt}>Energy</Text>
+                          </View>
+                          <View style={styles.todLegendItem}>
+                            <View style={[styles.todLegendDot, { backgroundColor: COLORS.stress }]} />
+                            <Text style={styles.todLegendTxt}>Stress</Text>
+                          </View>
+                        </View>
+
+                        {/* Per-metric insights */}
+                        {todInsights.metricInsights.length > 0 && (
+                          <View style={styles.todInsightList}>
+                            {todInsights.metricInsights.map(mi => (
+                              <View key={mi.metric} style={styles.todInsightRow}>
+                                <Text style={styles.todInsightEmoji}>{mi.emoji}</Text>
+                                <Text style={styles.todInsightText}>{mi.insight}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
                       </>
                     )}
                   </>
@@ -1060,6 +1284,53 @@ const styles = StyleSheet.create({
   },
   tagsMuted: { color: theme.textMuted, fontWeight: '400', fontSize: 13 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
+
+  // Time-of-day slots
+  timeSlotRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  timeSlotChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+  },
+  timeSlotChipOn: {
+    backgroundColor: 'rgba(201,169,98,0.18)',
+    borderColor: theme.primary,
+  },
+  timeSlotChipDone: {
+    backgroundColor: 'rgba(100,200,120,0.08)',
+    borderColor: 'rgba(100,200,120,0.25)',
+  },
+  timeSlotEmoji: {
+    fontSize: 18,
+    marginBottom: 2,
+  },
+  timeSlotLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.textMuted,
+  },
+  timeSlotLabelOn: {
+    color: theme.primary,
+  },
+  timeSlotLabelDone: {
+    color: theme.energy,
+  },
+  currentDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: theme.primary,
+    marginTop: 3,
+  },
   tagChip: {
     paddingHorizontal: 13,
     paddingVertical: 8,
@@ -1172,6 +1443,39 @@ const styles = StyleSheet.create({
   },
   tagStatFill: { height: '100%', borderRadius: 2, backgroundColor: theme.primary },
   tagStatCount: { color: theme.textMuted, fontSize: 12, width: 28, textAlign: 'right' },
+
+  // Time-of-day insights
+  todBucketRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 6,
+    marginBottom: 8,
+  },
+  todBucket: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    gap: 3,
+  },
+  todBucketLabel: { color: theme.textSecondary, fontSize: 10, fontWeight: '600' },
+  todBucketVal: { fontSize: 12, fontWeight: '700' },
+  todBucketCount: { color: theme.textMuted, fontSize: 9 },
+  todLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 14,
+    marginBottom: 8,
+  },
+  todLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  todLegendDot: { width: 8, height: 8, borderRadius: 4 },
+  todLegendTxt: { color: theme.textMuted, fontSize: 10 },
+  todInsightList: { gap: 6, marginTop: 4 },
+  todInsightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  todInsightEmoji: { fontSize: 14, marginTop: 1 },
+  todInsightText: { color: theme.textSecondary, fontSize: 13, flex: 1, lineHeight: 18 },
 
   // Energy link
   linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

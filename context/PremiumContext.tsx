@@ -38,8 +38,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ⏰ TEMPORARY: Force premium for testing — REMOVE BEFORE RELEASE
-  const FORCE_PREMIUM = true;
+  const FORCE_PREMIUM = false;
 
   const updateCustomerInfo = useCallback((info: CustomerInfo | null) => {
     setCustomerInfo(info);

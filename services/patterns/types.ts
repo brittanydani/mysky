@@ -63,11 +63,13 @@ export type ThemeTag =
 
 export type EnergyLevel = 'low' | 'medium' | 'high';
 export type StressLevel = 'low' | 'medium' | 'high';
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 
 export interface DailyCheckIn {
   id: string;
   date: string;               // YYYY-MM-DD
   chartId: string;             // reference to user's chart
+  timeOfDay: TimeOfDay;        // morning | afternoon | evening | night — up to 4 check-ins per day
 
   // User signals (30-60 seconds)
   moodScore: number;           // 1-10

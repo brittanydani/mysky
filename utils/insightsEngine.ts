@@ -21,7 +21,7 @@
  *  - Chiron is in chart.planets (PlanetPosition[], planet === 'Chiron')
  */
 
-import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel } from '../services/patterns/types';
+import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../services/patterns/types';
 import { JournalEntry } from '../services/storage/models';
 import { NatalChart } from '../services/astrology/types';
 import {
@@ -81,7 +81,7 @@ export interface StabilityCard {
 }
 
 export interface TimeOfDayBucket {
-  label: 'Morning' | 'Afternoon' | 'Evening' | 'Late night';
+  label: 'Morning' | 'Afternoon' | 'Evening' | 'Night';
   count: number;
   avgMood: number;
   avgStress: number;
@@ -94,6 +94,20 @@ export interface TimeOfDayCard {
   worstStressBucket: string;
   insight: string;
   stat: string;
+  /** Per-metric natural-language insights for display */
+  metricInsights: TimeOfDayMetricInsight[];
+}
+
+export interface TimeOfDayMetricInsight {
+  metric: 'mood' | 'energy' | 'stress';
+  emoji: string;
+  label: string;
+  insight: string;
+  highBucket: string;
+  lowBucket: string;
+  highValue: number;
+  lowValue: number;
+  spread: number;  // difference between high and low
 }
 
 export interface DayOfWeekCard {
@@ -152,6 +166,10 @@ export interface TodaySupportCard {
   trendSentence: string;
   chartSuggestion: string;
   journalPrompt: string;
+  /** Sky context: shown when user is retrograde-sensitive and retrogrades are active */
+  retrogradeNote?: string;
+  /** Sky context: current lunar phase note if user has measurable phase sensitivity */
+  lunarNote?: string;
 }
 
 export interface JournalThemesCard {
@@ -185,6 +203,85 @@ export interface ModalityCard {
   counts: Record<string, number>;
 }
 
+export interface LunarPhasePhaseItem {
+  phase: string;
+  displayName: string;
+  emoji: string;
+  count: number;
+  avgMood: number;
+  avgEnergy: number;
+  avgStress: number;
+}
+
+export interface LunarPhaseCard {
+  phases: LunarPhasePhaseItem[];
+  bestPhase: LunarPhasePhaseItem;
+  lowestPhase: LunarPhasePhaseItem;
+  sensitivity: 'high' | 'moderate' | 'low';
+  insight: string;
+  stat: string;
+  confidence: ConfidenceLevel;
+}
+
+export interface RetrogradeCard {
+  moodWithRetrograde: number;
+  moodWithoutRetrograde: number;
+  stressWithRetrograde: number;
+  stressWithoutRetrograde: number;
+  daysWithRetrograde: number;
+  daysWithout: number;
+  planets: string[];
+  sensitive: boolean;
+  insight: string;
+  stat: string;
+  confidence: ConfidenceLevel;
+}
+
+export interface MoonSignItem {
+  sign: string;
+  count: number;
+  avgMood: number;
+  avgEnergy: number;
+}
+
+export interface MoonSignCard {
+  signs: MoonSignItem[];
+  bestSign: MoonSignItem;
+  hardestSign: MoonSignItem;
+  insight: string;
+  stat: string;
+  confidence: ConfidenceLevel;
+}
+
+export interface NoteKeywordLiftItem {
+  word: string;
+  lift: number;       // positive = appears more on best days
+  bestRate: number;   // fraction of best-day check-ins containing this word
+  hardRate: number;   // fraction of hard-day check-ins containing this word
+  count: number;      // total check-ins containing this word
+  isEmotion: boolean;
+}
+
+export interface NoteTimeOfDayTheme {
+  bucket: 'Morning' | 'Afternoon' | 'Evening' | 'Night';
+  topWords: string[];
+  avgMood: number;
+  noteCount: number;
+}
+
+export interface NoteThemesCard {
+  /** Words appearing more often on best-mood days */
+  restoreWords: NoteKeywordLiftItem[];
+  /** Words appearing more often on hard-mood days */
+  drainWords: NoteKeywordLiftItem[];
+  /** Per-bucket note themes, only buckets with ≥3 noted check-ins */
+  timeOfDayThemes: NoteTimeOfDayTheme[];
+  totalNotedDays: number;
+  insight: string;
+  stat: string;
+  confidence: ConfidenceLevel;
+}
+
 export interface InsightBundle {
   generatedAt: string;
   cacheKey: string;
@@ -204,6 +301,14 @@ export interface InsightBundle {
   blended: BlendedCard[];
   journalFrequency: JournalFrequencyCard | null;
   modality: ModalityCard | null;
+  /** Lunar phase mood correlation — requires ≥10 check-ins across ≥3 phases */
+  lunarPhase: LunarPhaseCard | null;
+  /** Retrograde sensitivity — compares mood/stress during vs. outside retrograde periods */
+  retrograde: RetrogradeCard | null;
+  /** Moon sign mood patterns — which transiting moon signs lift vs. challenge the user */
+  moonSign: MoonSignCard | null;
+  /** Free-text keyword lift analysis from check-in note/wins/challenges fields */
+  noteThemes: NoteThemesCard | null;
   /** V3 journal-enhanced insights (null until pipeline is used) */
   enhanced: EnhancedInsightBundle | null;
   /** V3 tag analytics: lift, impact, pairs, classification, cross-system agreements */
@@ -267,6 +372,25 @@ const TAG_LABELS: Record<string, string> = {
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+/** Metadata for the 8 lunar phases stored in check-ins (lunarPhase field) */
+const PHASE_META: Record<string, { name: string; emoji: string; energy: string }> = {
+  new:              { name: 'New Moon',         emoji: '🌑', energy: 'quiet beginnings' },
+  waxing_crescent:  { name: 'Waxing Crescent',  emoji: '🌒', energy: 'building momentum' },
+  first_quarter:    { name: 'First Quarter',     emoji: '🌓', energy: 'push through' },
+  waxing_gibbous:   { name: 'Waxing Gibbous',   emoji: '🌔', energy: 'refinement' },
+  full:             { name: 'Full Moon',         emoji: '🌕', energy: 'peak intensity' },
+  waning_gibbous:   { name: 'Waning Gibbous',   emoji: '🌖', energy: 'gratitude & release' },
+  last_quarter:     { name: 'Last Quarter',      emoji: '🌗', energy: 'clearing' },
+  waning_crescent:  { name: 'Waning Crescent',  emoji: '🌘', energy: 'rest & surrender' },
+};
+
+/** Zodiac sign → element (used for moon sign context notes) */
+const SIGN_ELEMENT: Record<string, string> = {
+  Aries: 'Fire', Taurus: 'Earth', Gemini: 'Air', Cancer: 'Water',
+  Leo: 'Fire', Virgo: 'Earth', Libra: 'Air', Scorpio: 'Water',
+  Sagittarius: 'Fire', Capricorn: 'Earth', Aquarius: 'Air', Pisces: 'Water',
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Trend card (per-metric)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -317,14 +441,33 @@ function buildStabilityCard(checkIns: DailyCheckIn[]): StabilityCard {
 // Time of day
 // ─────────────────────────────────────────────────────────────────────────────
 
-type TODBucketLabel = 'Morning' | 'Afternoon' | 'Evening' | 'Late night';
-const TOD_LABELS: TODBucketLabel[] = ['Morning', 'Afternoon', 'Evening', 'Late night'];
+type TODBucketLabel = 'Morning' | 'Afternoon' | 'Evening' | 'Night';
+const TOD_LABELS: TODBucketLabel[] = ['Morning', 'Afternoon', 'Evening', 'Night'];
 
+/** Map TimeOfDay field value to display label */
+const TOD_FIELD_TO_LABEL: Record<string, TODBucketLabel> = {
+  morning: 'Morning',
+  afternoon: 'Afternoon',
+  evening: 'Evening',
+  night: 'Night',
+};
+
+/** Fallback: infer time-of-day from createdAt hour (for legacy data) */
 function bucketHour(h: number): TODBucketLabel {
   if (h >= 5 && h < 12) return 'Morning';
-  if (h >= 12 && h < 18) return 'Afternoon';
-  if (h >= 18 && h < 23) return 'Evening';
-  return 'Late night';
+  if (h >= 12 && h < 17) return 'Afternoon';
+  if (h >= 17 && h < 21) return 'Evening';
+  return 'Night';
+}
+
+/** Get the time-of-day bucket for a check-in, using explicit field or fallback to hour */
+function getCheckInBucket(c: DailyCheckIn): TODBucketLabel {
+  if (c.timeOfDay && TOD_FIELD_TO_LABEL[c.timeOfDay]) {
+    return TOD_FIELD_TO_LABEL[c.timeOfDay];
+  }
+  // Fallback for legacy check-ins without timeOfDay field
+  const h = new Date(c.createdAt).getHours();
+  return bucketHour(h);
 }
 
 function buildTimeOfDay(checkIns: DailyCheckIn[]): TimeOfDayCard | null {
@@ -332,19 +475,18 @@ function buildTimeOfDay(checkIns: DailyCheckIn[]): TimeOfDayCard | null {
     Morning: { moods: [], stresses: [], energies: [] },
     Afternoon: { moods: [], stresses: [], energies: [] },
     Evening: { moods: [], stresses: [], energies: [] },
-    'Late night': { moods: [], stresses: [], energies: [] },
+    Night: { moods: [], stresses: [], energies: [] },
   };
 
   for (const c of checkIns) {
-    const h = new Date(c.createdAt).getHours(); // local time
-    const bucket = bucketHour(h);
+    const bucket = getCheckInBucket(c);
     data[bucket].moods.push(c.moodScore);
     data[bucket].stresses.push(stressToNum(c.stressLevel));
     data[bucket].energies.push(energyToNum(c.energyLevel));
   }
 
   const buckets: TimeOfDayBucket[] = TOD_LABELS
-    .filter(label => data[label].moods.length >= 3)
+    .filter(label => data[label].moods.length >= 2)
     .map(label => ({
       label,
       count: data[label].moods.length,
@@ -360,6 +502,7 @@ function buildTimeOfDay(checkIns: DailyCheckIn[]): TimeOfDayCard | null {
 
   const best = [...buckets].sort((a, b) => b.avgMood - a.avgMood)[0];
   const worstStress = [...buckets].sort((a, b) => b.avgStress - a.avgStress)[0];
+  const lowestMood = [...buckets].sort((a, b) => a.avgMood - b.avgMood)[0];
 
   const stressDiff = worstStress.avgStress - overallStress;
   const moodDiff = best.avgMood - overallMood;
@@ -368,17 +511,96 @@ function buildTimeOfDay(checkIns: DailyCheckIn[]): TimeOfDayCard | null {
   let stat: string;
 
   if (stressDiff >= 1.0) {
-    insight = `${worstStress.label} check-ins tend to have higher stress.`;
+    insight = `${worstStress.label} check-ins tend to have higher stress. Consider what happens in your ${worstStress.label.toLowerCase()} routine.`;
     stat = `${worstStress.label} stress avg ${worstStress.avgStress.toFixed(1)} vs overall ${overallStress.toFixed(1)}`;
   } else if (moodDiff >= 0.8) {
-    insight = `Your ${best.label.toLowerCase()} entries show the highest mood on average.`;
+    insight = `Your ${best.label.toLowerCase()} entries show the highest mood on average. Notice what supports you during this time.`;
     stat = `${best.label} mood avg ${best.avgMood.toFixed(1)} vs overall ${overallMood.toFixed(1)}`;
+  } else if (best.label !== lowestMood.label && best.avgMood - lowestMood.avgMood >= 0.5) {
+    insight = `Your mood tends to be higher in the ${best.label.toLowerCase()} and dip in the ${lowestMood.label.toLowerCase()}. Time of day shapes how you feel.`;
+    stat = `${best.label} mood ${best.avgMood.toFixed(1)} vs ${lowestMood.label} ${lowestMood.avgMood.toFixed(1)}`;
   } else {
-    insight = 'Your mood is fairly consistent across times of day.';
+    insight = 'Your mood is fairly consistent across times of day — that\'s a sign of emotional stability.';
     stat = `${buckets.length} time periods tracked`;
   }
 
-  return { buckets, bestBucket: best.label, worstStressBucket: worstStress.label, insight, stat };
+  return { buckets, bestBucket: best.label, worstStressBucket: worstStress.label, insight, stat, metricInsights: buildMetricInsights(buckets) };
+}
+
+/** Generate natural-language per-metric insights like "Your energy is lowest in the afternoon" */
+function buildMetricInsights(buckets: TimeOfDayBucket[]): TimeOfDayMetricInsight[] {
+  if (buckets.length < 2) return [];
+
+  const metrics: Array<{
+    key: 'mood' | 'energy' | 'stress';
+    emoji: string;
+    label: string;
+    extract: (b: TimeOfDayBucket) => number;
+    higherIsBetter: boolean;
+  }> = [
+    { key: 'mood', emoji: '💛', label: 'Mood', extract: b => b.avgMood, higherIsBetter: true },
+    { key: 'energy', emoji: '⚡', label: 'Energy', extract: b => b.avgEnergy, higherIsBetter: true },
+    { key: 'stress', emoji: '🔥', label: 'Stress', extract: b => b.avgStress, higherIsBetter: false },
+  ];
+
+  const insights: TimeOfDayMetricInsight[] = [];
+
+  for (const m of metrics) {
+    const sorted = [...buckets].sort((a, b) => m.extract(b) - m.extract(a));
+    const high = sorted[0];
+    const low = sorted[sorted.length - 1];
+    const spread = m.extract(high) - m.extract(low);
+
+    // Only generate insight if there's a meaningful difference (> 0.3)
+    if (spread < 0.3) continue;
+
+    let insightText: string;
+    const highLabel = high.label.toLowerCase();
+    const lowLabel = low.label.toLowerCase();
+
+    if (m.key === 'mood') {
+      if (spread >= 1.5) {
+        insightText = `Your mood tends to be highest in the ${highLabel} (${m.extract(high).toFixed(1)}) and drops significantly in the ${lowLabel} (${m.extract(low).toFixed(1)}). That's a ${spread.toFixed(1)}-point swing.`;
+      } else if (spread >= 0.8) {
+        insightText = `You tend to feel best in the ${highLabel} and your lowest mood is in the ${lowLabel}. Notice what shifts between those times.`;
+      } else {
+        insightText = `Your mood is slightly higher in the ${highLabel} compared to the ${lowLabel}.`;
+      }
+    } else if (m.key === 'energy') {
+      if (spread >= 1.5) {
+        insightText = `Your energy peaks in the ${highLabel} (${m.extract(high).toFixed(1)}) and is lowest in the ${lowLabel} (${m.extract(low).toFixed(1)}). Plan important tasks around your high-energy window.`;
+      } else if (spread >= 0.8) {
+        insightText = `You tend to have the most energy in the ${highLabel} and the least in the ${lowLabel}. Protect your ${highLabel} time for what matters most.`;
+      } else {
+        insightText = `Your energy is slightly higher in the ${highLabel} than the ${lowLabel}.`;
+      }
+    } else {
+      // stress — for stress, high is bad
+      if (spread >= 1.5) {
+        insightText = `Your stress spikes in the ${highLabel} (${m.extract(high).toFixed(1)}) and is lowest in the ${lowLabel} (${m.extract(low).toFixed(1)}). Consider what in your ${highLabel} routine triggers tension.`;
+      } else if (spread >= 0.8) {
+        insightText = `Stress tends to build in the ${highLabel} and ease in the ${lowLabel}. A mindful transition between these times could help.`;
+      } else {
+        insightText = `Your stress is slightly higher in the ${highLabel} compared to the ${lowLabel}.`;
+      }
+    }
+
+    insights.push({
+      metric: m.key,
+      emoji: m.emoji,
+      label: m.label,
+      insight: insightText,
+      highBucket: high.label,
+      lowBucket: low.label,
+      highValue: parseFloat(m.extract(high).toFixed(1)),
+      lowValue: parseFloat(m.extract(low).toFixed(1)),
+      spread: parseFloat(spread.toFixed(1)),
+    });
+  }
+
+  // Sort by spread descending — most significant insight first
+  insights.sort((a, b) => b.spread - a.spread);
+  return insights;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -645,6 +867,13 @@ function buildBlendedCards(
   stability: StabilityCard,
   chart: NatalChart,
   entryCount: number,
+  opts?: {
+    currentRetrogrades?: string[];
+    currentLunarPhase?: string;
+    retrogradeCard?: RetrogradeCard | null;
+    lunarPhaseCard?: LunarPhaseCard | null;
+    tagInsights?: RestoreDrainCard | null;
+  },
 ): BlendedCard[] {
   const cards: BlendedCard[] = [];
   const conf = confidence(entryCount);
@@ -768,6 +997,44 @@ function buildBlendedCards(
     });
   }
 
+  // Rule 8: Top restore tag + chart element synthesis
+  if (opts?.tagInsights?.restores.length) {
+    const topRestore = opts.tagInsights.restores[0];
+    const liftPct = Math.round(topRestore.lift * 100);
+    if (liftPct >= 20 && topRestore.count >= 5) {
+      const elementContext: Record<string, string> = {
+        Earth: `fits your ${dominantEl} need for grounding and tangible nourishment`,
+        Water: `speaks directly to your ${dominantEl} emotional processing`,
+        Fire: `matches your ${dominantEl} drive for aliveness and expression`,
+        Air: `engages your ${dominantEl} mind and connection needs`,
+      };
+      const context = elementContext[dominantEl] ?? `aligns with your ${dominantEl} chart nature`;
+      cards.push({
+        title: 'Your Reliable Reset',
+        body: `"${topRestore.label}" shows up ${liftPct}% more often on your best days — and it ${context}. When in doubt, this is your most data-backed lever. Use it deliberately.`,
+        stat: `${topRestore.count} check-ins · ${liftPct}% more frequent on best days · ${dominantEl} dominant`,
+        confidence: conf,
+        journalPrompt: `How can I build more "${topRestore.label.toLowerCase()}" into my week — specifically and practically?`,
+      });
+    }
+  }
+
+  // Rule 9: Retrograde-sensitive user + currently in retrograde
+  if (
+    opts?.retrogradeCard?.sensitive &&
+    opts?.currentRetrogrades &&
+    opts.currentRetrogrades.length > 0
+  ) {
+    const retros = opts.currentRetrogrades.slice(0, 3).join(', ');
+    cards.push({
+      title: 'The Sky Is in Your Data',
+      body: `Your patterns confirm retrograde sensitivity — mood and stress shift when planets reverse. With ${retros} currently retrograde, any heightened tension or internal noise has a measurable sky context. Gentle and patient is the strategy right now.`,
+      stat: `Retrograde sensitivity confirmed · ${retros} retrograde · ${baseStat}`,
+      confidence: conf,
+      journalPrompt: 'What feels harder or slower than usual right now — and what would help me move through it with less resistance?',
+    });
+  }
+
   // Default card if no rules triggered
   if (cards.length === 0) {
     cards.push({
@@ -791,6 +1058,12 @@ function buildTodaySupport(
   todayTheme: string | null,
   weekSummary: WeekSummary | null,
   chart: NatalChart | null,
+  opts?: {
+    currentRetrogrades?: string[];
+    currentLunarPhase?: string;
+    retrogradeCard?: RetrogradeCard | null;
+    lunarPhaseCard?: LunarPhaseCard | null;
+  },
 ): TodaySupportCard | null {
   if (!mantra) return null;
 
@@ -823,12 +1096,42 @@ function buildTodaySupport(
     chartSuggestion = suggestions[el] ?? '';
   }
 
+  // Sky context: retrograde note
+  let retrogradeNote: string | undefined;
+  if (
+    opts?.retrogradeCard?.sensitive &&
+    opts.currentRetrogrades &&
+    opts.currentRetrogrades.length > 0
+  ) {
+    const list = opts.currentRetrogrades.slice(0, 3).join(', ');
+    const s = opts.currentRetrogrades.length === 1 ? 'is' : 'are';
+    retrogradeNote = `${list} ${s} currently retrograde — your patterns suggest this stirs extra complexity. Soften your expectations today.`;
+  }
+
+  // Sky context: lunar phase note
+  let lunarNote: string | undefined;
+  if (opts?.lunarPhaseCard && opts.currentLunarPhase && opts.lunarPhaseCard.sensitivity !== 'low') {
+    const meta = PHASE_META[opts.currentLunarPhase];
+    if (meta) {
+      const isBest = opts.lunarPhaseCard.bestPhase.phase === opts.currentLunarPhase;
+      const isHard = opts.lunarPhaseCard.lowestPhase.phase === opts.currentLunarPhase;
+      const context = isBest
+        ? ' This tends to be one of your stronger phases.'
+        : isHard
+          ? ' This tends to be a quieter or more internal phase for you.'
+          : '';
+      lunarNote = `${meta.name} ${meta.emoji} — ${meta.energy}.${context}`;
+    }
+  }
+
   return {
     theme: todayTheme,
     mantra,
     trendSentence,
     chartSuggestion,
     journalPrompt: `Sitting with today's mantra — what does this bring up for me right now?`,
+    retrogradeNote,
+    lunarNote,
   };
 }
 
@@ -1029,6 +1332,366 @@ function buildModalityCard(chart: NatalChart): ModalityCard | null {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Lunar phase mood correlation
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildLunarPhaseCard(checkIns: DailyCheckIn[]): LunarPhaseCard | null {
+  const withPhase = checkIns.filter(c => c.lunarPhase && c.lunarPhase.length > 0);
+  if (withPhase.length < 10) return null;
+
+  const phaseData: Record<string, { moods: number[]; energies: number[]; stresses: number[] }> = {};
+  for (const c of withPhase) {
+    const ph = c.lunarPhase;
+    if (!phaseData[ph]) phaseData[ph] = { moods: [], energies: [], stresses: [] };
+    phaseData[ph].moods.push(c.moodScore);
+    phaseData[ph].energies.push(energyToNum(c.energyLevel));
+    phaseData[ph].stresses.push(stressToNum(c.stressLevel));
+  }
+
+  const phases: LunarPhasePhaseItem[] = Object.entries(phaseData)
+    .filter(([, d]) => d.moods.length >= 2)
+    .map(([phase, d]) => {
+      const meta = PHASE_META[phase] ?? { name: phase, emoji: '🌙', energy: '' };
+      return {
+        phase,
+        displayName: meta.name,
+        emoji: meta.emoji,
+        count: d.moods.length,
+        avgMood: parseFloat(mean(d.moods).toFixed(1)),
+        avgEnergy: parseFloat(mean(d.energies).toFixed(1)),
+        avgStress: parseFloat(mean(d.stresses).toFixed(1)),
+      };
+    });
+
+  if (phases.length < 3) return null;
+
+  const sorted = [...phases].sort((a, b) => b.avgMood - a.avgMood);
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  const spread = parseFloat((best.avgMood - worst.avgMood).toFixed(1));
+
+  const WAXING = new Set(['new', 'waxing_crescent', 'first_quarter', 'waxing_gibbous']);
+  const waxingMoods = phases.filter(p => WAXING.has(p.phase)).map(p => p.avgMood);
+  const waningMoods = phases.filter(p => !WAXING.has(p.phase)).map(p => p.avgMood);
+  const waxingAvg = waxingMoods.length > 0 ? mean(waxingMoods) : 0;
+  const waningAvg = waningMoods.length > 0 ? mean(waningMoods) : 0;
+
+  let sensitivity: 'high' | 'moderate' | 'low';
+  let insight: string;
+
+  if (spread >= 1.5) {
+    sensitivity = 'high';
+    insight = `Your mood shifts noticeably with the lunar cycle. You tend to feel your best during the ${best.displayName} (avg ${best.avgMood}/10) and lowest around the ${worst.displayName} (${worst.avgMood}/10) — a ${spread}-point swing tied to the moon's rhythm.`;
+  } else if (spread >= 0.7) {
+    sensitivity = 'moderate';
+    if (waxingMoods.length > 0 && waningMoods.length > 0 && waxingAvg > waningAvg + 0.3) {
+      insight = `Your energy builds with the moon — you tend to feel more alive as it grows toward full. ${best.displayName} is your stronger phase, averaging ${best.avgMood}/10.`;
+    } else if (waningMoods.length > 0 && waxingMoods.length > 0 && waningAvg > waxingAvg + 0.3) {
+      insight = `You actually thrive as the moon wanes — going inward suits you. Your mood is notably higher during the releasing phases. ${best.displayName} is your strongest.`;
+    } else {
+      insight = `The lunar cycle has a subtle but real effect on your mood. Your ${best.displayName} tends to be your most grounded phase, with more sensitivity around ${worst.displayName}.`;
+    }
+  } else {
+    sensitivity = 'low';
+    insight = `Your mood stays fairly consistent across lunar phases — you're not easily swept up in the collective lunar tide. That's a form of emotional steadiness.`;
+  }
+
+  return {
+    phases,
+    bestPhase: best,
+    lowestPhase: worst,
+    sensitivity,
+    insight,
+    stat: `${phases.length} phases tracked · ${withPhase.length} check-ins · ${spread}-pt spread`,
+    confidence: confidence(withPhase.length),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Retrograde sensitivity
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildRetrogradeCard(checkIns: DailyCheckIn[]): RetrogradeCard | null {
+  const withRetro = checkIns.filter(c => c.retrogrades && c.retrogrades.length > 0);
+  const withoutRetro = checkIns.filter(c => !c.retrogrades || c.retrogrades.length === 0);
+  if (withRetro.length < 5 || withoutRetro.length < 5) return null;
+
+  const moodWith = parseFloat(mean(withRetro.map(c => c.moodScore)).toFixed(1));
+  const moodWithout = parseFloat(mean(withoutRetro.map(c => c.moodScore)).toFixed(1));
+  const stressWith = parseFloat(mean(withRetro.map(c => stressToNum(c.stressLevel))).toFixed(1));
+  const stressWithout = parseFloat(mean(withoutRetro.map(c => stressToNum(c.stressLevel))).toFixed(1));
+
+  const planetFreq: Record<string, number> = {};
+  for (const c of withRetro) {
+    for (const p of c.retrogrades) {
+      planetFreq[p] = (planetFreq[p] ?? 0) + 1;
+    }
+  }
+  const planets = Object.entries(planetFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([p]) => p);
+
+  const moodDiff = moodWith - moodWithout;
+  const stressDiff = stressWith - stressWithout;
+  const sensitive = moodDiff <= -0.8 || stressDiff >= 1.0;
+  const mildEffect = !sensitive && (moodDiff <= -0.4 || stressDiff >= 0.5);
+
+  let insight: string;
+  if (sensitive) {
+    const stressNote = stressDiff >= 1.0 ? ` Stress also runs ${stressDiff.toFixed(1)} points higher.` : '';
+    insight = `Your patterns show clear retrograde sensitivity. Mood averages ${moodWith}/10 during retrograde periods vs ${moodWithout}/10 when planets are direct — a ${Math.abs(moodDiff).toFixed(1)}-point difference.${stressNote} This is data, not astrology myth.`;
+  } else if (mildEffect) {
+    const planetNote = planets.length > 0 ? `${planets.join(' & ')} retrograde periods` : 'Retrograde periods';
+    insight = `There's a mild retrograde pattern in your check-ins. ${planetNote} tend to show slightly more internal friction — not dramatic, but worth knowing.`;
+  } else {
+    insight = `Retrogrades don't significantly shift your baseline. Your mood holds steady whether planets are direct or retrograde — a sign of resilience in your emotional patterns.`;
+  }
+
+  return {
+    moodWithRetrograde: moodWith,
+    moodWithoutRetrograde: moodWithout,
+    stressWithRetrograde: stressWith,
+    stressWithoutRetrograde: stressWithout,
+    daysWithRetrograde: withRetro.length,
+    daysWithout: withoutRetro.length,
+    planets,
+    sensitive,
+    insight,
+    stat: `${withRetro.length} days retrograde · ${withoutRetro.length} days direct`,
+    confidence: confidence(checkIns.length),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Moon sign mood patterns
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildMoonSignCard(checkIns: DailyCheckIn[], chart?: NatalChart | null): MoonSignCard | null {
+  const withSign = checkIns.filter(c => c.moonSign && c.moonSign.length > 0);
+  if (withSign.length < 10) return null;
+
+  const signData: Record<string, { moods: number[]; energies: number[] }> = {};
+  for (const c of withSign) {
+    const s = c.moonSign;
+    if (!signData[s]) signData[s] = { moods: [], energies: [] };
+    signData[s].moods.push(c.moodScore);
+    signData[s].energies.push(energyToNum(c.energyLevel));
+  }
+
+  const signs: MoonSignItem[] = Object.entries(signData)
+    .filter(([, d]) => d.moods.length >= 2)
+    .map(([sign, d]) => ({
+      sign,
+      count: d.moods.length,
+      avgMood: parseFloat(mean(d.moods).toFixed(1)),
+      avgEnergy: parseFloat(mean(d.energies).toFixed(1)),
+    }));
+
+  if (signs.length < 3) return null;
+
+  const sorted = [...signs].sort((a, b) => b.avgMood - a.avgMood);
+  const best = sorted[0];
+  const hardest = sorted[sorted.length - 1];
+  const spread = parseFloat((best.avgMood - hardest.avgMood).toFixed(1));
+
+  if (spread < 0.5) return null;
+
+  const natMoonSign = chart?.moon?.sign?.name;
+  let contextNote = '';
+  if (natMoonSign && best.sign === natMoonSign) {
+    contextNote = ` That's your natal Moon sign — when the sky's Moon returns to ${best.sign}, it's coming home.`;
+  } else {
+    const el = SIGN_ELEMENT[best.sign];
+    if (el) contextNote = ` ${best.sign} is a ${el} sign — its energy may simply harmonize with your nature.`;
+  }
+
+  let insight: string;
+  if (spread >= 1.0) {
+    insight = `When the Moon transits ${best.sign}, you consistently feel your best (avg ${best.avgMood}/10).${contextNote} Your more challenged days tend to cluster when it passes through ${hardest.sign} (avg ${hardest.avgMood}/10).`;
+  } else {
+    insight = `The transiting Moon sign has a subtle effect on your mood. You tend to feel stronger under a ${best.sign} Moon and more challenged under ${hardest.sign}.${contextNote}`;
+  }
+
+  return {
+    signs,
+    bestSign: best,
+    hardestSign: hardest,
+    insight,
+    stat: `${signs.length} moon signs tracked · ${withSign.length} check-ins · ${spread}-pt spread`,
+    confidence: confidence(withSign.length),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Note keyword lift (free-text check-in analysis)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Extract meaningful words from a single check-in's free text fields */
+function extractNoteWords(c: DailyCheckIn): string[] {
+  const texts = [c.note, c.wins, c.challenges]
+    .filter((s): s is string => !!s && s.length > 0 && !s.startsWith('ENC2:') && !s.startsWith('ENC1:'));
+  if (texts.length === 0) return [];
+  const combined = texts.join(' ').toLowerCase().replace(/[^a-z\s'-]/g, ' ');
+  return combined.split(/\s+/).filter(w => w.length >= 3 && !STOPWORDS.has(w));
+}
+
+function buildNoteThemesCard(checkIns: DailyCheckIn[]): NoteThemesCard | null {
+  // Filter to check-ins that have at least one non-encrypted free-text field
+  const noted = checkIns.filter(c =>
+    [c.note, c.wins, c.challenges].some(
+      s => s && s.length > 0 && !s.startsWith('ENC2:') && !s.startsWith('ENC1:')
+    )
+  );
+
+  if (noted.length < 8) return null;
+
+  // ── Lift analysis ──────────────────────────────────────────────────────────
+  const n = noted.length;
+  const topN = Math.max(1, Math.ceil(n * 0.2));
+  const sortedByMood = [...noted].sort((a, b) => a.moodScore - b.moodScore);
+  const bestDays = sortedByMood.slice(n - topN);
+  const hardDays = sortedByMood.slice(0, topN);
+
+  // Document-frequency: count each word once per check-in
+  const wordBest: Record<string, number> = {};
+  const wordHard: Record<string, number> = {};
+  const wordTotal: Record<string, number> = {};
+
+  for (const c of noted) {
+    const words = new Set(extractNoteWords(c));
+    for (const w of words) wordTotal[w] = (wordTotal[w] ?? 0) + 1;
+  }
+  for (const c of bestDays) {
+    const words = new Set(extractNoteWords(c));
+    for (const w of words) wordBest[w] = (wordBest[w] ?? 0) + 1;
+  }
+  for (const c of hardDays) {
+    const words = new Set(extractNoteWords(c));
+    for (const w of words) wordHard[w] = (wordHard[w] ?? 0) + 1;
+  }
+
+  // Only analyze words that appear in ≥3 check-ins total
+  const candidates = Object.keys(wordTotal).filter(w => wordTotal[w] >= 3);
+
+  const liftItems: NoteKeywordLiftItem[] = candidates.map(w => {
+    const bestRate = (wordBest[w] ?? 0) / bestDays.length;
+    const hardRate = (wordHard[w] ?? 0) / hardDays.length;
+    return {
+      word: w,
+      lift: parseFloat((bestRate - hardRate).toFixed(3)),
+      bestRate: parseFloat(bestRate.toFixed(3)),
+      hardRate: parseFloat(hardRate.toFixed(3)),
+      count: wordTotal[w],
+      isEmotion: EMOTION_WORDS.has(w),
+    };
+  });
+
+  const restoreWords = liftItems
+    .filter(i => i.lift > 0.1)
+    .sort((a, b) => {
+      const scoreA = a.lift * (a.isEmotion ? 1.5 : 1.0);
+      const scoreB = b.lift * (b.isEmotion ? 1.5 : 1.0);
+      return scoreB - scoreA;
+    })
+    .slice(0, 6);
+
+  const drainWords = liftItems
+    .filter(i => i.lift < -0.1)
+    .sort((a, b) => {
+      const scoreA = a.lift * (a.isEmotion ? 1.5 : 1.0);
+      const scoreB = b.lift * (b.isEmotion ? 1.5 : 1.0);
+      return scoreA - scoreB; // most negative first
+    })
+    .slice(0, 6);
+
+  // ── Time-of-day themes ─────────────────────────────────────────────────────
+  const bucketNotes: Record<TODBucketLabel, { words: string[]; moods: number[] }> = {
+    Morning: { words: [], moods: [] },
+    Afternoon: { words: [], moods: [] },
+    Evening: { words: [], moods: [] },
+    Night: { words: [], moods: [] },
+  };
+
+  for (const c of noted) {
+    const bucket = getCheckInBucket(c);
+    bucketNotes[bucket].words.push(...extractNoteWords(c));
+    bucketNotes[bucket].moods.push(c.moodScore);
+  }
+
+  const timeOfDayThemes: NoteTimeOfDayTheme[] = TOD_LABELS
+    .filter(label => bucketNotes[label].moods.length >= 3)
+    .map(label => {
+      const { words, moods } = bucketNotes[label];
+      // Word frequency within this bucket
+      const wf: Record<string, number> = {};
+      for (const w of words) wf[w] = (wf[w] ?? 0) + 1;
+      const sorted = Object.entries(wf)
+        .filter(([, cnt]) => cnt >= 2)
+        .sort((a, b) => {
+          const scoreA = a[1] * (EMOTION_WORDS.has(a[0]) ? 1.5 : 1.0);
+          const scoreB = b[1] * (EMOTION_WORDS.has(b[0]) ? 1.5 : 1.0);
+          return scoreB - scoreA;
+        });
+      return {
+        bucket: label,
+        topWords: sorted.slice(0, 4).map(([w]) => w),
+        avgMood: parseFloat(mean(moods).toFixed(1)),
+        noteCount: moods.length,
+      };
+    })
+    .filter(t => t.topWords.length >= 1);
+
+  // Need at least some signal to return a card
+  const hasLiftData = restoreWords.length + drainWords.length >= 2;
+  const hasTimeData = timeOfDayThemes.length >= 2;
+  if (!hasLiftData && !hasTimeData) return null;
+
+  // ── Synthesize insight ─────────────────────────────────────────────────────
+  let insight: string;
+  const todSorted = [...timeOfDayThemes].sort((a, b) => a.avgMood - b.avgMood);
+  const lowestTOD = todSorted[0];
+  const highestTOD = todSorted[todSorted.length - 1];
+  const todSpread = lowestTOD && highestTOD
+    ? parseFloat((highestTOD.avgMood - lowestTOD.avgMood).toFixed(1))
+    : 0;
+
+  if (hasTimeData && lowestTOD && highestTOD && lowestTOD.bucket !== highestTOD.bucket) {
+    const drainEx = drainWords[0]?.word;
+    const restoreEx = restoreWords[0]?.word;
+    if (todSpread >= 1.5 && drainEx && lowestTOD.topWords.includes(drainEx)) {
+      insight = `Your mood tends to be lowest in the ${lowestTOD.bucket.toLowerCase()} — and words like "${drainEx}" show up in your ${lowestTOD.bucket.toLowerCase()} notes more than any other time. ${highestTOD.bucket} is when you most often describe feeling "${restoreEx ?? 'better'}".`;
+    } else if (todSpread >= 1.0) {
+      insight = `Your ${highestTOD.bucket.toLowerCase()} check-ins average ${highestTOD.avgMood}/10, compared to ${lowestTOD.avgMood}/10 in the ${lowestTOD.bucket.toLowerCase()}. Your written notes follow the same pattern.`;
+    } else if (restoreEx) {
+      insight = `"${restoreEx}" appears more in your best-day notes. Your ${highestTOD.bucket.toLowerCase()} check-ins have the most positive tone overall.`;
+    } else {
+      insight = `Your notes reveal patterns across times of day — ${highestTOD.bucket} tends to have the most grounded language, ${lowestTOD.bucket} the most challenging.`;
+    }
+  } else if (hasLiftData && restoreWords.length > 0) {
+    const top = restoreWords[0];
+    const drain = drainWords[0];
+    if (drain) {
+      insight = `Your notes pattern clearly: "${top.word}" appears far more often on your best days, while "${drain.word}" clusters on harder ones. These aren't random — they're signals worth watching.`;
+    } else {
+      insight = `"${top.word}" shows up ${(top.bestRate * 100).toFixed(0)}% of the time on your best days vs ${(top.hardRate * 100).toFixed(0)}% on your hardest. Your language tracks your inner state.`;
+    }
+  } else {
+    insight = 'Your check-in notes are starting to show patterns. Keep noting and the picture will sharpen.';
+  }
+
+  return {
+    restoreWords,
+    drainWords,
+    timeOfDayThemes,
+    totalNotedDays: noted.length,
+    insight,
+    stat: `${noted.length} noted check-ins · ${restoreWords.length + drainWords.length} signal words`,
+    confidence: confidence(noted.length),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Interpretation dictionaries
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1152,6 +1815,10 @@ export function computeInsightBundle(
       blended: [],
       journalFrequency: null,
       modality: null,
+      lunarPhase: null,
+      retrograde: null,
+      moonSign: null,
+      noteThemes: null,
       enhanced: null,
       tagAnalytics: null,
     };
@@ -1176,9 +1843,33 @@ export function computeInsightBundle(
   const journalThemes = buildJournalThemes(windowJournals);
   const journalFrequency = buildJournalFrequency(window, windowJournals);
 
+  // Sky data from most recent check-in — used for today's context
+  const mostRecent = window[window.length - 1];
+  const currentRetrogrades = mostRecent?.retrogrades ?? [];
+  const currentLunarPhase = mostRecent?.lunarPhase ?? '';
+
+  // Sky pattern cards (activate stored lunarPhase, retrogrades, moonSign fields)
+  const lunarPhaseCard = buildLunarPhaseCard(window);
+  const retrogradeCard = buildRetrogradeCard(window);
+  const moonSignCard = buildMoonSignCard(window, chart);
+
+  // Note keyword lift: analyze free-text from note/wins/challenges fields
+  const noteThemesCard = buildNoteThemesCard(window);
+
   const chartThemes = chart ? buildChartThemes(chart) : [];
-  const blended = chart ? buildBlendedCards(weekSummary, stability, chart, window.length) : [];
-  const todaySupport = buildTodaySupport(todayMantra ?? null, todayTheme ?? null, weekSummary, chart);
+  const blended = chart ? buildBlendedCards(weekSummary, stability, chart, window.length, {
+    currentRetrogrades,
+    currentLunarPhase,
+    retrogradeCard,
+    lunarPhaseCard,
+    tagInsights,
+  }) : [];
+  const todaySupport = buildTodaySupport(todayMantra ?? null, todayTheme ?? null, weekSummary, chart, {
+    currentRetrogrades,
+    currentLunarPhase,
+    retrogradeCard,
+    lunarPhaseCard,
+  });
   const modality = chart ? buildModalityCard(chart) : null;
 
   return {
@@ -1200,6 +1891,10 @@ export function computeInsightBundle(
     blended,
     journalFrequency,
     modality,
+    lunarPhase: lunarPhaseCard,
+    retrograde: retrogradeCard,
+    moonSign: moonSignCard,
+    noteThemes: noteThemesCard,
     enhanced: null,
     tagAnalytics: null,
   };

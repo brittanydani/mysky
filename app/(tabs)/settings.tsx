@@ -21,8 +21,6 @@ import { BackupService } from '../../services/storage/backupService';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
-import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { FullNatalStoryGenerator } from '../../services/premium/fullNatalStory';
 import { logger } from '../../utils/logger';
 
 const GLOSSARY: { term: string; definition: string }[] = [
@@ -242,7 +240,6 @@ export default function SettingsScreen() {
   const [showFaq, setShowFaq] = useState(false);
   const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Placidus');
   const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
-  const [exportInProgress, setExportInProgress] = useState(false);
   const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
 
   const ensureSettings = useCallback(async () => {
@@ -386,84 +383,6 @@ export default function SettingsScreen() {
       hour: '2-digit',
       minute: '2-digit',
     });
-
-  const handleExportPdf = async () => {
-    try {
-      await Haptics.selectionAsync();
-    } catch {}
-
-    // Premium-only feature
-    if (!isPremium) {
-      Alert.alert(
-        'Deeper Sky Feature',
-        'PDF export with your full natal chart and cosmic story is available with Deeper Sky.',
-        [
-          { text: 'Not Now', style: 'cancel' },
-          { text: 'See Plans', onPress: () => router.push('/(tabs)/premium' as Href) },
-        ]
-      );
-      return;
-    }
-
-    // Check if expo-print native module is available before attempting import
-    // (expo-print crashes on import if the native module isn't linked)
-    try {
-      const { NativeModules } = require('react-native');
-      if (!NativeModules.ExponentPrint && !NativeModules.ExpoPrint) {
-        Alert.alert(
-          'PDF Export Unavailable',
-          'PDF export requires a production build. It is not available in Expo Go. Please rebuild with: npx expo prebuild && npx expo run:ios'
-        );
-        return;
-      }
-    } catch {
-      // If we can't check, try anyway
-    }
-
-    try {
-      setExportInProgress(true);
-
-      const charts = await localDb.getCharts();
-      if (charts.length === 0) {
-        Alert.alert('No Chart', 'Create your natal chart first before exporting.');
-        setExportInProgress(false);
-        return;
-      }
-
-      const saved = charts[0];
-      const birthData = {
-        date: saved.birthDate,
-        time: saved.birthTime,
-        hasUnknownTime: saved.hasUnknownTime,
-        place: saved.birthPlace,
-        latitude: saved.latitude,
-        longitude: saved.longitude,
-        houseSystem: saved.houseSystem,
-      };
-
-      const chart = AstrologyCalculator.generateNatalChart(birthData);
-      const story = FullNatalStoryGenerator.generateFullStory(chart, isPremium);
-
-      const { exportChartAsPdf } = await import('../../services/export/pdfExportService');
-      await exportChartAsPdf(chart, story, isPremium, saved.name);
-    } catch (error: any) {
-      logger.error('PDF export failed:', error);
-
-      const msg = String(error?.message || '');
-      if (msg.includes('ExpoPrint') || msg.includes('expo-print') || msg.includes('not available')) {
-        Alert.alert(
-          'PDF Export Unavailable',
-          'PDF export requires a production build or a custom dev client with expo-print installed. Please rebuild the app with: npx expo prebuild && npx expo run:ios'
-        );
-      } else if (msg.includes('share') || msg.includes('Sharing')) {
-        Alert.alert('Share Failed', 'The PDF was created but could not be shared. Please try again.');
-      } else {
-        Alert.alert('Export Failed', msg || 'Something went wrong while creating your PDF. Please try again.');
-      }
-    } finally {
-      setExportInProgress(false);
-    }
-  };
 
   const disableActions = backupInProgress || restoreInProgress || backupModalVisible || restoreModalVisible;
 
@@ -626,42 +545,6 @@ export default function SettingsScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Export</Text>
-
-            <Pressable
-              style={[styles.settingCard, exportInProgress && { opacity: 0.6 }]}
-              onPress={handleExportPdf}
-              disabled={exportInProgress}
-              accessibilityRole="button"
-              accessibilityLabel="Export as PDF"
-            >
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
-              >
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <Ionicons name="document-text" size={20} color={theme.primary} />
-                      <Text style={styles.settingTitle}>{exportInProgress ? 'Creating PDF…' : 'Export as PDF'}</Text>
-                      {!isPremium && (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201,169,98,0.15)', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6, gap: 3 }}>
-                          <Ionicons name="sparkles" size={10} color={theme.primary} />
-                          <Text style={{ fontSize: 9, color: theme.primary, fontWeight: '700' }}>DEEPER SKY</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.settingDescription}>
-                      Save your natal chart and cosmic story as a PDF
-                    </Text>
-                  </View>
-                  <Ionicons name={isPremium ? 'download-outline' : 'lock-closed'} size={20} color={theme.textMuted} />
-                </View>
-              </LinearGradient>
-            </Pressable>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(325).duration(600)} style={styles.section}>
             <Pressable
               style={styles.sectionTitleRow}
               onPress={async () => {

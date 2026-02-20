@@ -133,7 +133,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Back button */}
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   },
   trustSection: {
     alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
     gap: 4,
   },
   trustText: {
@@ -447,8 +447,8 @@ const styles = StyleSheet.create({
   },
   legalSection: {
     alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    gap: 8,
+    paddingVertical: theme.spacing.xs,
+    gap: 6,
   },
   legalDisclosure: {
     fontSize: 11,

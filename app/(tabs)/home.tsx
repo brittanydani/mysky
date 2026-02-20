@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, FlatList } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
@@ -70,7 +70,6 @@ function getDailyPreviewIndex(): number {
 }
 
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
 

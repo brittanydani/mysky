@@ -245,6 +245,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
         .then(hs => setHouseSystem(hs))
         .catch(() => { /* keep default whole-sign */ });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only load global house system on mount; initialData is a prop that won't change
   }, []);
 
   const [showDatePicker, setShowDatePicker] = useState(false);

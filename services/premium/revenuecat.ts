@@ -30,8 +30,8 @@ class RevenueCatService {
       logger.info('[RevenueCat] Using key prefix:', apiKey?.slice(0, 5));
 
       // Fail fast if wrong key format
-      if (!apiKey || !(apiKey.startsWith("appl_") || apiKey.startsWith("goog_") || apiKey.startsWith("test_"))) {
-        throw new Error(`[RevenueCat] Invalid API key: ${apiKey}`);
+      if (!apiKey || !(apiKey.startsWith("appl_") || apiKey.startsWith("goog_"))) {
+        throw new Error(`[RevenueCat] Invalid API key format (prefix: ${apiKey?.slice(0, 5) ?? 'none'})`);
       }
 
       try {

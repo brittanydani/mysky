@@ -13,7 +13,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -29,18 +29,22 @@ import { DailyInsightEngine } from '../../services/astrology/dailyInsightEngine'
 import { logger } from '../../utils/logger';
 import {
   computeInsightBundleFromPipeline,
-  computeInsightBundle,
   InsightBundle,
   ConfidenceLevel,
-  TrendDirection,
   TrendResult,
   TimeOfDayBucket,
+  TimeOfDayMetricInsight,
   TagLiftItem,
   ChartThemeCard,
   BlendedCard,
-  JournalThemesCard,
-  JournalFrequencyCard,
-  ModalityCard,
+  LunarPhaseCard,
+  LunarPhasePhaseItem,
+  RetrogradeCard,
+  MoonSignCard,
+  MoonSignItem,
+  NoteThemesCard,
+  NoteKeywordLiftItem,
+  NoteTimeOfDayTheme,
   confidenceLabel,
   trendArrow,
   moodLabel,
@@ -49,23 +53,14 @@ import {
   stressTrendArrow,
 } from '../../utils/insightsEngine';
 import type {
-  EnhancedInsightBundle,
   JournalImpactCard,
-  EmotionLiftItem,
   LiftItem,
   BlendedInsightCard,
-  KeywordThemesCard,
-  EmotionToneShiftCard,
-  ChartBaselineCard,
 } from '../../utils/journalInsights';
 import type {
-  TagAnalyticsBundle,
-  TagLiftResult,
   TagImpactItem,
   TagPairResult,
   ClassifiedTag,
-  TagJournalAgreement,
-  TagChartAgreement,
 } from '../../utils/tagAnalytics';
 import { NatalChart } from '../../services/astrology/types';
 import {
@@ -81,13 +76,11 @@ import { runNlpBackfill } from '../../services/journal/backfillNlp';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function InsightsScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
 
   const [loading, setLoading] = useState(true);
   const [bundle, setBundle] = useState<InsightBundle | null>(null);
-  const [chart, setChart] = useState<NatalChart | null>(null);
   const loadingRef = useRef(false);
 
   const loadData = useCallback(async () => {
@@ -134,7 +127,6 @@ export default function InsightsScreen() {
       // Check cache (memory + disk)
       const cached = await getCachedBundle(cacheKey);
       if (cached) {
-        setChart(natalChart);
         setBundle(cached);
         setLoading(false);
         loadingRef.current = false;
@@ -183,7 +175,6 @@ export default function InsightsScreen() {
       // Store in cache (memory + disk)
       await setCachedBundle(cacheKey, computed);
 
-      setChart(natalChart);
       setBundle(computed);
     } catch (e) {
       logger.error('[Insights] Failed to load data:', e);
@@ -261,6 +252,8 @@ export default function InsightsScreen() {
     tagInsights, journalLinkage, journalThemes, chartThemes, blended,
     todaySupport, confidence: conf, entryCount, windowDays,
     journalFrequency, modality, enhanced, tagAnalytics,
+    lunarPhase: lunarPhaseCard, retrograde: retrogradeCard, moonSign: moonSignCard,
+    noteThemes: noteThemesCard,
   } = bundle;
 
   // ─── Full screen ──────────────────────────────────────────────────────────
@@ -302,6 +295,16 @@ export default function InsightsScreen() {
                 ) : null}
                 {todaySupport.chartSuggestion ? (
                   <Text style={styles.chartSuggestion}>{todaySupport.chartSuggestion}</Text>
+                ) : null}
+                {todaySupport.lunarNote ? (
+                  <View style={styles.skyNoteRow}>
+                    <Text style={styles.skyNoteText}>{todaySupport.lunarNote}</Text>
+                  </View>
+                ) : null}
+                {todaySupport.retrogradeNote ? (
+                  <View style={[styles.skyNoteRow, { borderColor: 'rgba(224,122,122,0.2)' }]}>
+                    <Text style={[styles.skyNoteText, { color: theme.stormy }]}>{todaySupport.retrogradeNote}</Text>
+                  </View>
                 ) : null}
                 <Pressable
                   style={styles.ctaRow}
@@ -400,6 +403,8 @@ export default function InsightsScreen() {
                   { icon: 'leaf-outline' as const, text: 'What restores vs drains you' },
                   { icon: 'analytics-outline' as const, text: 'Mood stability & volatility tracking' },
                   { icon: 'time-outline' as const, text: 'Best time of day & day of week' },
+                  { icon: 'moon-outline' as const, text: 'Lunar cycle & moon phase patterns' },
+                  { icon: 'planet-outline' as const, text: 'Retrograde sensitivity tracking' },
                   { icon: 'shield-checkmark-outline' as const, text: 'Tag intelligence & combos' },
                   { icon: 'create-outline' as const, text: 'Journal deep dive & NLP themes' },
                   { icon: 'git-merge-outline' as const, text: 'Chart + mood + journal connections' },
@@ -483,6 +488,17 @@ export default function InsightsScreen() {
                       <TODBucketChip key={b.label} bucket={b} />
                     ))}
                   </View>
+                  {/* Per-metric insights */}
+                  {timeOfDay.metricInsights && timeOfDay.metricInsights.length > 0 && (
+                    <View style={styles.todMetricInsights}>
+                      {timeOfDay.metricInsights.map(mi => (
+                        <View key={mi.metric} style={styles.todMetricRow}>
+                          <Text style={styles.todMetricEmoji}>{mi.emoji}</Text>
+                          <Text style={styles.todMetricText}>{mi.insight}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
                   <Text style={styles.statLine}>{timeOfDay.stat}</Text>
                 </LinearGradient>
               )}
@@ -589,6 +605,26 @@ export default function InsightsScreen() {
                   </View>
                   <Text style={styles.statLine}>{journalFrequency.stat}</Text>
                 </LinearGradient>
+              )}
+
+              {/* Lunar phase mood correlation */}
+              {lunarPhaseCard && (
+                <LunarPhaseBlock card={lunarPhaseCard} />
+              )}
+
+              {/* Retrograde sensitivity */}
+              {retrogradeCard && (
+                <RetrogradeBlock card={retrogradeCard} />
+              )}
+
+              {/* Moon sign patterns */}
+              {moonSignCard && (
+                <MoonSignBlock card={moonSignCard} />
+              )}
+
+              {/* Free-text note keyword patterns */}
+              {noteThemesCard && (
+                <NoteThemesBlock card={noteThemesCard} />
               )}
             </Animated.View>
           )}
@@ -1112,11 +1148,28 @@ function TagPairRow({ pair, positive }: { pair: TagPairResult; positive: boolean
 }
 
 function TODBucketChip({ bucket }: { bucket: TimeOfDayBucket }) {
+  const TOD_EMOJI: Record<string, string> = {
+    Morning: '🌅', Afternoon: '☀️', Evening: '🌆', Night: '🌙',
+  };
   return (
     <View style={styles.todChip}>
+      <Text style={styles.todEmoji}>{TOD_EMOJI[bucket.label] ?? '🕐'}</Text>
       <Text style={styles.todLabel}>{bucket.label}</Text>
-      <Text style={styles.todMood}>{bucket.avgMood}/10</Text>
-      <Text style={styles.todCount}>{bucket.count} entries</Text>
+      <View style={styles.todMetricGrid}>
+        <View style={styles.todMetricCell}>
+          <Text style={[styles.todMetricVal, { color: '#C9A962' }]}>{bucket.avgMood.toFixed(1)}</Text>
+          <Text style={styles.todMetricKey}>Mood</Text>
+        </View>
+        <View style={styles.todMetricCell}>
+          <Text style={[styles.todMetricVal, { color: '#6EBF8B' }]}>{bucket.avgEnergy.toFixed(1)}</Text>
+          <Text style={styles.todMetricKey}>Energy</Text>
+        </View>
+        <View style={styles.todMetricCell}>
+          <Text style={[styles.todMetricVal, { color: '#E07A7A' }]}>{bucket.avgStress.toFixed(1)}</Text>
+          <Text style={styles.todMetricKey}>Stress</Text>
+        </View>
+      </View>
+      <Text style={styles.todCount}>{bucket.count} check-in{bucket.count !== 1 ? 's' : ''}</Text>
     </View>
   );
 }
@@ -1241,6 +1294,201 @@ function JournalImpactBlock({ card, marginTop }: { card: JournalImpactCard; marg
         <ConfBadge level={card.confidence} />
       </Row>
       <Text style={styles.cardBody}>{card.insight}</Text>
+      <Text style={styles.statLine}>{card.stat}</Text>
+    </LinearGradient>
+  );
+}
+
+function LunarPhaseBlock({ card }: { card: LunarPhaseCard }) {
+  const sensitivityColor = card.sensitivity === 'high' ? theme.love : card.sensitivity === 'moderate' ? theme.primary : theme.textMuted;
+  const sensitivityLabel = card.sensitivity === 'high' ? 'High lunar sensitivity' : card.sensitivity === 'moderate' ? 'Moderate sensitivity' : 'Low sensitivity';
+  const topPhases = [...card.phases].sort((a, b) => b.avgMood - a.avgMood).slice(0, 4);
+  return (
+    <LinearGradient
+      colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.6)']}
+      style={[styles.card, { marginTop: theme.spacing.sm }]}
+    >
+      <Row icon="moon-outline" iconColor={theme.primary}>
+        <Text style={styles.cardTitle}>Lunar Cycle Patterns</Text>
+        <ConfBadge level={card.confidence} />
+      </Row>
+      <View style={[styles.badge, { borderColor: sensitivityColor, alignSelf: 'flex-start', marginBottom: theme.spacing.sm }]}>
+        <Text style={[styles.badgeText, { color: sensitivityColor }]}>{sensitivityLabel}</Text>
+      </View>
+      <Text style={styles.cardBody}>{card.insight}</Text>
+      <View style={styles.todBuckets}>
+        {topPhases.map(p => (
+          <View key={p.phase} style={[styles.todChip, p.phase === card.bestPhase.phase && { borderColor: 'rgba(201,169,98,0.4)', borderWidth: 1 }]}>
+            <Text style={styles.todEmoji}>{p.emoji}</Text>
+            <Text style={styles.todLabel}>{p.displayName.replace(' Moon', '').replace('Waxing ', '').replace('Waning ', '')}</Text>
+            <Text style={[styles.todMetricVal, { color: theme.love, fontSize: 14 }]}>{p.avgMood.toFixed(1)}</Text>
+            <Text style={styles.todMetricKey}>mood avg</Text>
+            <Text style={styles.todCount}>{p.count}x</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={styles.statLine}>{card.stat}</Text>
+    </LinearGradient>
+  );
+}
+
+function RetrogradeBlock({ card }: { card: RetrogradeCard }) {
+  const moodDiff = card.moodWithRetrograde - card.moodWithoutRetrograde;
+  const stressDiff = card.stressWithRetrograde - card.stressWithoutRetrograde;
+  return (
+    <LinearGradient
+      colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.6)']}
+      style={[styles.card, { marginTop: theme.spacing.sm }]}
+    >
+      <Row icon="planet-outline" iconColor={card.sensitive ? theme.warning : theme.textMuted}>
+        <Text style={styles.cardTitle}>Retrograde Sensitivity</Text>
+        <ConfBadge level={card.confidence} />
+      </Row>
+      <Text style={styles.cardBody}>{card.insight}</Text>
+      <View style={styles.twoColRow}>
+        <View style={styles.twoColItem}>
+          <Text style={[styles.twoColNum, { color: moodDiff < -0.4 ? theme.stormy : theme.textPrimary }]}>
+            {card.moodWithRetrograde}/10
+          </Text>
+          <Text style={styles.twoColLabel}>Mood retrograde</Text>
+        </View>
+        <View style={styles.twoColItem}>
+          <Text style={styles.twoColNum}>{card.moodWithoutRetrograde}/10</Text>
+          <Text style={styles.twoColLabel}>Mood direct sky</Text>
+        </View>
+        <View style={styles.twoColItem}>
+          <Text style={[styles.twoColNum, { color: stressDiff > 0.4 ? theme.stormy : theme.textPrimary }]}>
+            {stressDiff > 0 ? '+' : ''}{stressDiff.toFixed(1)}
+          </Text>
+          <Text style={styles.twoColLabel}>Stress shift</Text>
+        </View>
+      </View>
+      {card.planets.length > 0 && (
+        <View style={styles.dayRow}>
+          <Text style={styles.dayLabel}>Most active retrogrades:</Text>
+          <Text style={[styles.dayValue, { color: theme.textSecondary }]}>{card.planets.join(', ')}</Text>
+        </View>
+      )}
+      <Text style={styles.statLine}>{card.stat}</Text>
+    </LinearGradient>
+  );
+}
+
+function MoonSignBlock({ card }: { card: MoonSignCard }) {
+  const topSigns = [...card.signs].sort((a, b) => b.avgMood - a.avgMood).slice(0, 5);
+  return (
+    <LinearGradient
+      colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.6)']}
+      style={[styles.card, { marginTop: theme.spacing.sm }]}
+    >
+      <Row icon="sparkles-outline" iconColor={theme.primary}>
+        <Text style={styles.cardTitle}>Moon Sign Patterns</Text>
+        <ConfBadge level={card.confidence} />
+      </Row>
+      <Text style={styles.cardBody}>{card.insight}</Text>
+      <View style={{ marginTop: theme.spacing.sm, gap: 4 }}>
+        {topSigns.map((s, i) => {
+          const isBest = s.sign === card.bestSign.sign;
+          const isHard = s.sign === card.hardestSign.sign;
+          return (
+            <View key={s.sign} style={[styles.moonSignRow, isBest && { backgroundColor: 'rgba(201,169,98,0.08)' }]}>
+              <Text style={[styles.moonSignRank, { color: i === 0 ? theme.primary : theme.textMuted }]}>
+                {i === 0 ? '↑' : i === topSigns.length - 1 ? '↓' : '·'}
+              </Text>
+              <Text style={[styles.moonSignName, isBest && { color: theme.textPrimary }]}>{s.sign}</Text>
+              <View style={styles.moonSignBar}>
+                <View style={[styles.moonSignFill, { width: `${(s.avgMood / 10) * 100}%` as any, backgroundColor: isBest ? theme.primary : isHard ? theme.stormy : 'rgba(255,255,255,0.15)' }]} />
+              </View>
+              <Text style={[styles.moonSignVal, { color: isBest ? theme.primary : isHard ? theme.stormy : theme.textMuted }]}>
+                {s.avgMood.toFixed(1)}
+              </Text>
+              <Text style={styles.moonSignCount}>{s.count}x</Text>
+            </View>
+          );
+        })}
+      </View>
+      <Text style={styles.statLine}>{card.stat}</Text>
+    </LinearGradient>
+  );
+}
+
+const TOD_EMOJI: Record<string, string> = {
+  Morning: '🌅', Afternoon: '☀️', Evening: '🌆', Night: '🌙',
+};
+
+function NoteThemesBlock({ card }: { card: NoteThemesCard }) {
+  const hasWords = card.restoreWords.length > 0 || card.drainWords.length > 0;
+  const hasTOD = card.timeOfDayThemes.length >= 2;
+  const todSorted = [...card.timeOfDayThemes].sort((a, b) => a.avgMood - b.avgMood);
+  const lowestBucket = todSorted[0]?.bucket;
+
+  return (
+    <LinearGradient
+      colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.6)']}
+      style={[styles.card, { marginTop: theme.spacing.sm }]}
+    >
+      <Row icon="document-text-outline" iconColor="#a78bfa">
+        <Text style={styles.cardTitle}>What You Write</Text>
+        <ConfBadge level={card.confidence} />
+      </Row>
+      <Text style={styles.cardBody}>{card.insight}</Text>
+
+      {/* Time-of-day mood breakdown from notes */}
+      {hasTOD && (
+        <View style={styles.noteTODList}>
+          {card.timeOfDayThemes.map(t => (
+            <View key={t.bucket} style={[
+              styles.noteTODRow,
+              t.bucket === lowestBucket && { backgroundColor: 'rgba(255,100,100,0.06)' },
+            ]}>
+              <Text style={styles.noteTODEmoji}>{TOD_EMOJI[t.bucket] ?? '🕐'}</Text>
+              <Text style={styles.noteTODBucket}>{t.bucket}</Text>
+              <Text style={[
+                styles.noteTODMood,
+                { color: t.avgMood >= 7 ? theme.energy : t.avgMood >= 5 ? theme.textPrimary : theme.stormy },
+              ]}>
+                {t.avgMood.toFixed(1)}
+              </Text>
+              {t.topWords.length > 0 && (
+                <Text style={styles.noteTODWords} numberOfLines={1}>
+                  {t.topWords.slice(0, 3).join(', ')}
+                </Text>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Keyword lift chips */}
+      {hasWords && (
+        <View style={{ marginTop: theme.spacing.sm, gap: 6 }}>
+          {card.restoreWords.length > 0 && (
+            <View>
+              <Text style={styles.noteWordLabel}>Words on your best days</Text>
+              <View style={styles.noteWordRow}>
+                {card.restoreWords.slice(0, 5).map(w => (
+                  <View key={w.word} style={[styles.noteWordChip, styles.noteWordRestore]}>
+                    <Text style={styles.noteWordText}>{w.word}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+          {card.drainWords.length > 0 && (
+            <View>
+              <Text style={styles.noteWordLabel}>Words on harder days</Text>
+              <View style={styles.noteWordRow}>
+                {card.drainWords.slice(0, 5).map(w => (
+                  <View key={w.word} style={[styles.noteWordChip, styles.noteWordDrain]}>
+                    <Text style={styles.noteWordText}>{w.word}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
       <Text style={styles.statLine}>{card.stat}</Text>
     </LinearGradient>
   );
@@ -1416,11 +1664,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.sm,
-    alignItems: 'center', minWidth: 70,
+    alignItems: 'center', minWidth: 76, flex: 1,
   },
-  todLabel: { fontSize: 11, color: theme.textMuted, marginBottom: 2 },
+  todEmoji: { fontSize: 18, marginBottom: 2 },
+  todLabel: { fontSize: 11, color: theme.textMuted, marginBottom: 4, fontWeight: '600' },
+  todMetricGrid: { gap: 2, alignItems: 'center', marginBottom: 4 },
+  todMetricCell: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  todMetricVal: { fontSize: 13, fontWeight: '700' },
+  todMetricKey: { fontSize: 9, color: theme.textMuted, fontWeight: '500' },
   todMood: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
   todCount: { fontSize: 10, color: theme.textMuted },
+  todMetricInsights: {
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.sm,
+  },
+  todMetricRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    paddingVertical: 4,
+  },
+  todMetricEmoji: { fontSize: 14, marginTop: 1 },
+  todMetricText: { flex: 1, fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
 
   // Day of week
   dayRow: {
@@ -1470,4 +1736,73 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.full,
   },
   emptyButtonText: { color: theme.background, fontWeight: '600', fontSize: 15 },
+
+  // Sky context notes in Today's Support
+  skyNoteRow: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(201,169,98,0.18)',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
+  },
+  skyNoteText: {
+    fontSize: 12, color: theme.textMuted, lineHeight: 18, fontStyle: 'italic',
+  },
+
+  // Moon sign bar chart rows
+  moonSignRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 5, paddingHorizontal: 6,
+    borderRadius: theme.borderRadius.sm,
+  },
+  moonSignRank: { fontSize: 12, fontWeight: '700', width: 12, textAlign: 'center' },
+  moonSignName: { fontSize: 13, color: theme.textSecondary, width: 68 },
+  moonSignBar: {
+    flex: 1, height: 5, backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 3, overflow: 'hidden',
+  },
+  moonSignFill: { height: '100%', borderRadius: 3 },
+  moonSignVal: { fontSize: 12, fontWeight: '700', width: 30, textAlign: 'right' },
+  moonSignCount: { fontSize: 10, color: theme.textMuted, width: 24, textAlign: 'right' },
+
+  // Note themes (free-text keyword lift)
+  noteTODList: {
+    marginTop: theme.spacing.sm,
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.sm,
+  },
+  noteTODRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 4, paddingHorizontal: 4,
+    borderRadius: theme.borderRadius.sm,
+  },
+  noteTODEmoji: { fontSize: 14, width: 20, textAlign: 'center' },
+  noteTODBucket: { fontSize: 12, color: theme.textMuted, width: 68 },
+  noteTODMood: { fontSize: 13, fontWeight: '700', width: 32, textAlign: 'right' },
+  noteTODWords: {
+    flex: 1, fontSize: 11, color: theme.textMuted,
+    marginLeft: 6, fontStyle: 'italic',
+  },
+  noteWordLabel: {
+    fontSize: 10, color: theme.textMuted, fontWeight: '600',
+    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4,
+  },
+  noteWordRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+  noteWordChip: {
+    paddingHorizontal: 9, paddingVertical: 3,
+    borderRadius: theme.borderRadius.full, borderWidth: 1,
+  },
+  noteWordRestore: {
+    backgroundColor: 'rgba(201,169,98,0.1)',
+    borderColor: 'rgba(201,169,98,0.3)',
+  },
+  noteWordDrain: {
+    backgroundColor: 'rgba(180,80,80,0.1)',
+    borderColor: 'rgba(180,80,80,0.3)',
+  },
+  noteWordText: { fontSize: 12, color: theme.textSecondary },
 });

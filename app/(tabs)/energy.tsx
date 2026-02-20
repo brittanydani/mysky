@@ -10,7 +10,7 @@ import {
   Pressable,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeInDown,
@@ -75,7 +75,6 @@ function formatToday(): string {
    MAIN SCREEN
    ════════════════════════════════════════════════ */
 export default function EnergyScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
 
@@ -101,6 +100,7 @@ export default function EnergyScreen() {
       -1,
       true,
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pulse is a Reanimated SharedValue (stable ref), only needs to run once
   }, []);
   const pulseStyle = useAnimatedStyle(() => ({
     opacity: pulse.value,

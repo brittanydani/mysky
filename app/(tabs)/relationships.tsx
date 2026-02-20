@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -20,14 +20,13 @@ import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import BirthDataModal from '../../components/BirthDataModal';
 import { localDb } from '../../services/storage/localDb';
-import { SavedChart, RelationshipChart } from '../../services/storage/models';
+import { SavedChart, RelationshipChart, generateId } from '../../services/storage/models';
 import { BirthData, NatalChart } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { SynastryEngine, SynastryReport, SynastryAspect } from '../../services/astrology/synastryEngine';
 import { RelationshipInsightGenerator, RelationshipInsight } from '../../services/astrology/relationshipInsights';
 import { PremiumRelationshipService, RelationshipComparison } from '../../services/premium/relationshipCharts';
 import { usePremium } from '../../context/PremiumContext';
-import { generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
 import NeedsComparison from '../../components/ui/NeedsComparison';
 import AspectRow from '../../components/ui/AspectRow';
@@ -223,7 +222,7 @@ export default function RelationshipsScreen() {
             ...prev,
             [newRelationship.id]: { aspects: topAspects, connection: report.primaryConnection },
           }));
-        } catch (_e) {}
+        } catch {}
       }
 
       // Automatically open the detail view

@@ -12,15 +12,18 @@ import Svg, {
   Circle,
   Text as SvgText,
   Line,
-  Rect,
 } from 'react-native-svg';
 import { theme } from '../../constants/theme';
-import { DailyCheckIn } from '../../services/patterns/types';
+import { DailyCheckIn, TimeOfDay } from '../../services/patterns/types';
 import { parseLocalDate } from '../../utils/dateUtils';
 
 /* ── Config ── */
 
 const { width: SCREEN_W } = Dimensions.get('window');
+
+const TIME_OF_DAY_ORDER: Record<string, number> = {
+  morning: 0, afternoon: 1, evening: 2, night: 3,
+};
 
 type MetricKey = 'mood' | 'energy' | 'stress';
 
@@ -71,11 +74,13 @@ const JOURNAL_MOOD_SCORE: Record<string, number> = {
   calm: 9, soft: 7, okay: 5, heavy: 3, stormy: 1,
 };
 
+const padding = { top: 18, right: 16, bottom: 30, left: 16 };
+
 /* ── Component ── */
 
 interface CheckInTrendGraphProps {
   checkIns: DailyCheckIn[];
-  journalEntries?: Array<{ date: string; mood: string }>;
+  journalEntries?: { date: string; mood: string }[];
   width?: number;
   height?: number;
 }
@@ -89,22 +94,29 @@ export default function CheckInTrendGraph({
   const [activeMetric, setActiveMetric] = useState<MetricKey>('mood');
   const metric = METRICS.find(m => m.key === activeMetric) ?? METRICS[0];
 
-  const padding = { top: 18, right: 16, bottom: 30, left: 16 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
   const yMin = 1;
   const yMax = 10;
 
-  // Sort chronologically and take last 7 max
+  // Sort chronologically (date + time of day) and take last 14 max
   const sorted = useMemo(() => {
     return [...checkIns]
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-7);
+      .sort((a, b) => {
+        const dateCompare = a.date.localeCompare(b.date);
+        if (dateCompare !== 0) return dateCompare;
+        // Same day: sort by time-of-day slot
+        return (TIME_OF_DAY_ORDER[a.timeOfDay] ?? 0) - (TIME_OF_DAY_ORDER[b.timeOfDay] ?? 0);
+      })
+      .slice(-14);
   }, [checkIns]);
 
   // Build data points from real check-in data
   const points = useMemo(() => {
     if (sorted.length === 0) return [];
+    const TIME_ABBREV: Record<string, string> = {
+      morning: 'AM', afternoon: 'PM', evening: 'Eve', night: 'Nt',
+    };
     return sorted.map((ci, i) => {
       const x = padding.left + (sorted.length === 1
         ? chartW / 2
@@ -112,7 +124,9 @@ export default function CheckInTrendGraph({
       const val = Math.max(yMin, Math.min(yMax, metric.extract(ci)));
       const y = padding.top + chartH - ((val - yMin) / (yMax - yMin)) * chartH;
       const d = parseLocalDate(ci.date);
-      const label = d.toLocaleDateString('en-US', { weekday: 'narrow' });
+      const dayLabel = d.toLocaleDateString('en-US', { weekday: 'narrow' });
+      const timeAbbrev = ci.timeOfDay ? TIME_ABBREV[ci.timeOfDay] ?? '' : '';
+      const label = sorted.length > 7 ? timeAbbrev : dayLabel;
       const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return { x, y, value: val, label, dateLabel, checkIn: ci };
     });

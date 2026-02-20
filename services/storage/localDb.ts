@@ -7,7 +7,7 @@ import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 11;
+const CURRENT_DB_VERSION = 13;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -113,6 +113,14 @@ class LocalDatabase {
 
     if (fromVersion < 11) {
       await this.migrateToVersion11();
+    }
+
+    if (fromVersion < 12) {
+      await this.migrateToVersion12();
+    }
+
+    if (fromVersion < 13) {
+      await this.migrateToVersion13();
     }
   }
 
@@ -654,6 +662,154 @@ class LocalDatabase {
     logger.info(`[LocalDB] Encrypted PII for ${rels.length} relationship charts`);
 
     logger.info('[LocalDB] Version 11 migration complete');
+  }
+
+  /**
+   * Version 12 — Add time_of_day column for multi-check-ins per day.
+   * Users can now check in up to 4 times per day: morning, afternoon, evening, night.
+   * Changes UNIQUE constraint from (date, chart_id) to (date, chart_id, time_of_day).
+   */
+  private async migrateToVersion12(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Starting version 12 migration — adding time_of_day for multi check-ins...');
+
+    // Add time_of_day column with default 'morning' for existing rows
+    try {
+      await db.execAsync(`ALTER TABLE daily_check_ins ADD COLUMN time_of_day TEXT NOT NULL DEFAULT 'morning'`);
+    } catch (e: any) {
+      // Column may already exist if migration ran partially
+      if (!e.message?.includes('duplicate column')) throw e;
+    }
+
+    // Backfill existing check-ins with the correct time_of_day based on created_at hour
+    const existing = await db.getAllAsync('SELECT id, created_at FROM daily_check_ins') as any[];
+    for (const row of existing) {
+      let tod = 'morning';
+      if (row.created_at) {
+        const h = new Date(row.created_at).getHours();
+        if (h >= 5 && h < 12) tod = 'morning';
+        else if (h >= 12 && h < 17) tod = 'afternoon';
+        else if (h >= 17 && h < 21) tod = 'evening';
+        else tod = 'night';
+      }
+      await db.runAsync('UPDATE daily_check_ins SET time_of_day = ? WHERE id = ?', [tod, row.id]);
+    }
+
+    // The original table has UNIQUE(date, chart_id) as a table-level constraint.
+    // SQLite cannot DROP CONSTRAINT, so we must rebuild the table without it,
+    // replacing it with UNIQUE(date, chart_id, time_of_day).
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS daily_check_ins_v12 (
+        id TEXT PRIMARY KEY NOT NULL,
+        date TEXT NOT NULL,
+        chart_id TEXT NOT NULL,
+        time_of_day TEXT NOT NULL DEFAULT 'morning',
+        mood_score REAL NOT NULL,
+        energy_level TEXT NOT NULL,
+        stress_level TEXT NOT NULL,
+        tags TEXT,
+        note TEXT,
+        wins TEXT,
+        challenges TEXT,
+        moon_sign TEXT,
+        moon_house INTEGER,
+        sun_house INTEGER,
+        transit_events TEXT,
+        lunar_phase TEXT,
+        retrogrades TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(date, chart_id, time_of_day)
+      );
+
+      INSERT OR IGNORE INTO daily_check_ins_v12
+        SELECT id, date, chart_id, time_of_day, mood_score, energy_level, stress_level,
+               tags, note, wins, challenges, moon_sign, moon_house, sun_house,
+               transit_events, lunar_phase, retrogrades, created_at, updated_at
+        FROM daily_check_ins;
+
+      DROP TABLE daily_check_ins;
+
+      ALTER TABLE daily_check_ins_v12 RENAME TO daily_check_ins;
+
+      CREATE INDEX IF NOT EXISTS idx_check_ins_date ON daily_check_ins(date);
+      CREATE INDEX IF NOT EXISTS idx_check_ins_chart ON daily_check_ins(chart_id);
+      CREATE INDEX IF NOT EXISTS idx_check_ins_mood ON daily_check_ins(mood_score);
+    `);
+
+    logger.info(`[LocalDB] Backfilled ${existing.length} check-ins with time_of_day`);
+    logger.info('[LocalDB] Version 12 migration complete — table rebuilt with UNIQUE(date, chart_id, time_of_day)');
+  }
+
+  /**
+   * Version 13 — Ensure the old UNIQUE(date, chart_id) table-level constraint
+   * is removed for users who already ran v12 but still have the old table shape.
+   * Re-creates the table if the old constraint is detected.
+   */
+  private async migrateToVersion13(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Starting version 13 migration — ensuring correct UNIQUE constraint...');
+
+    // Check if old table still has the UNIQUE(date, chart_id) constraint
+    // by inspecting the CREATE TABLE SQL from sqlite_master.
+    const tableSql = await db.getFirstAsync(
+      `SELECT sql FROM sqlite_master WHERE type='table' AND name='daily_check_ins'`
+    ) as any;
+
+    const sql: string = tableSql?.sql ?? '';
+    const hasOldConstraint = sql.includes('UNIQUE(date, chart_id)') && !sql.includes('UNIQUE(date, chart_id, time_of_day)');
+
+    if (!hasOldConstraint) {
+      logger.info('[LocalDB] Version 13 — table already has correct constraint, skipping rebuild');
+      return;
+    }
+
+    // Ensure time_of_day column exists (may have been added by partial v12)
+    try {
+      await db.execAsync(`ALTER TABLE daily_check_ins ADD COLUMN time_of_day TEXT NOT NULL DEFAULT 'morning'`);
+    } catch (_) { /* already exists */ }
+
+    // Rebuild table with correct UNIQUE constraint
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS daily_check_ins_v13 (
+        id TEXT PRIMARY KEY NOT NULL,
+        date TEXT NOT NULL,
+        chart_id TEXT NOT NULL,
+        time_of_day TEXT NOT NULL DEFAULT 'morning',
+        mood_score REAL NOT NULL,
+        energy_level TEXT NOT NULL,
+        stress_level TEXT NOT NULL,
+        tags TEXT,
+        note TEXT,
+        wins TEXT,
+        challenges TEXT,
+        moon_sign TEXT,
+        moon_house INTEGER,
+        sun_house INTEGER,
+        transit_events TEXT,
+        lunar_phase TEXT,
+        retrogrades TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(date, chart_id, time_of_day)
+      );
+
+      INSERT OR IGNORE INTO daily_check_ins_v13
+        SELECT id, date, chart_id, time_of_day, mood_score, energy_level, stress_level,
+               tags, note, wins, challenges, moon_sign, moon_house, sun_house,
+               transit_events, lunar_phase, retrogrades, created_at, updated_at
+        FROM daily_check_ins;
+
+      DROP TABLE daily_check_ins;
+
+      ALTER TABLE daily_check_ins_v13 RENAME TO daily_check_ins;
+
+      CREATE INDEX IF NOT EXISTS idx_check_ins_date ON daily_check_ins(date);
+      CREATE INDEX IF NOT EXISTS idx_check_ins_chart ON daily_check_ins(chart_id);
+      CREATE INDEX IF NOT EXISTS idx_check_ins_mood ON daily_check_ins(mood_score);
+    `);
+
+    logger.info('[LocalDB] Version 13 migration complete — table rebuilt with correct UNIQUE constraint');
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1244,38 +1400,73 @@ class LocalDatabase {
     const encWins = checkIn.wins ? await FieldEncryptionService.encryptField(checkIn.wins) : null;
     const encChallenges = checkIn.challenges ? await FieldEncryptionService.encryptField(checkIn.challenges) : null;
 
-    await db.runAsync(
-      `INSERT OR REPLACE INTO daily_check_ins
-       (id, date, chart_id, mood_score, energy_level, stress_level, tags, note, wins, challenges,
-        moon_sign, moon_house, sun_house, transit_events, lunar_phase, retrogrades, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        checkIn.id,
-        checkIn.date,
-        checkIn.chartId,
-        checkIn.moodScore,
-        checkIn.energyLevel,
-        checkIn.stressLevel,
-        JSON.stringify(checkIn.tags),
-        encNote,
-        encWins,
-        encChallenges,
-        checkIn.moonSign,
-        checkIn.moonHouse,
-        checkIn.sunHouse,
-        JSON.stringify(checkIn.transitEvents),
-        checkIn.lunarPhase,
-        JSON.stringify(checkIn.retrogrades),
-        checkIn.createdAt,
-        checkIn.updatedAt,
-      ]
-    );
+    // Check if there's already a check-in for this date + chart + time_of_day
+    const existing = await db.getFirstAsync(
+      'SELECT id FROM daily_check_ins WHERE date = ? AND chart_id = ? AND time_of_day = ?',
+      [checkIn.date, checkIn.chartId, checkIn.timeOfDay]
+    ) as any;
+
+    if (existing) {
+      // Update the existing check-in for this time slot
+      await db.runAsync(
+        `UPDATE daily_check_ins SET
+         mood_score = ?, energy_level = ?, stress_level = ?, tags = ?, note = ?, wins = ?, challenges = ?,
+         moon_sign = ?, moon_house = ?, sun_house = ?, transit_events = ?, lunar_phase = ?, retrogrades = ?,
+         updated_at = ?
+         WHERE id = ?`,
+        [
+          checkIn.moodScore,
+          checkIn.energyLevel,
+          checkIn.stressLevel,
+          JSON.stringify(checkIn.tags),
+          encNote,
+          encWins,
+          encChallenges,
+          checkIn.moonSign,
+          checkIn.moonHouse,
+          checkIn.sunHouse,
+          JSON.stringify(checkIn.transitEvents),
+          checkIn.lunarPhase,
+          JSON.stringify(checkIn.retrogrades),
+          checkIn.updatedAt,
+          existing.id,
+        ]
+      );
+    } else {
+      await db.runAsync(
+        `INSERT INTO daily_check_ins
+         (id, date, chart_id, time_of_day, mood_score, energy_level, stress_level, tags, note, wins, challenges,
+          moon_sign, moon_house, sun_house, transit_events, lunar_phase, retrogrades, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          checkIn.id,
+          checkIn.date,
+          checkIn.chartId,
+          checkIn.timeOfDay,
+          checkIn.moodScore,
+          checkIn.energyLevel,
+          checkIn.stressLevel,
+          JSON.stringify(checkIn.tags),
+          encNote,
+          encWins,
+          encChallenges,
+          checkIn.moonSign,
+          checkIn.moonHouse,
+          checkIn.sunHouse,
+          JSON.stringify(checkIn.transitEvents),
+          checkIn.lunarPhase,
+          JSON.stringify(checkIn.retrogrades),
+          checkIn.createdAt,
+          checkIn.updatedAt,
+        ]
+      );
+    }
   }
 
   async getCheckInByDate(date: string, chartId: string): Promise<DailyCheckIn | null> {
     const db = await this.ensureReady();
 
-    const row = await db.getFirstAsync('SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ?', [
+    const row = await db.getFirstAsync('SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ? ORDER BY created_at DESC LIMIT 1', [
       date,
       chartId,
     ]);
@@ -1284,10 +1475,33 @@ class LocalDatabase {
     return this.mapCheckInRow(row);
   }
 
+  async getCheckInsByDate(date: string, chartId: string): Promise<DailyCheckIn[]> {
+    const db = await this.ensureReady();
+
+    const rows = await db.getAllAsync(
+      'SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ? ORDER BY created_at ASC',
+      [date, chartId]
+    );
+
+    return Promise.all((rows as any[]).map((row: any) => this.mapCheckInRow(row)));
+  }
+
+  async getCheckInByDateAndTime(date: string, chartId: string, timeOfDay: string): Promise<DailyCheckIn | null> {
+    const db = await this.ensureReady();
+
+    const row = await db.getFirstAsync(
+      'SELECT * FROM daily_check_ins WHERE date = ? AND chart_id = ? AND time_of_day = ?',
+      [date, chartId, timeOfDay]
+    );
+
+    if (!row) return null;
+    return this.mapCheckInRow(row);
+  }
+
   async getCheckIns(chartId: string, limit?: number): Promise<DailyCheckIn[]> {
     const db = await this.ensureReady();
 
-    let query = 'SELECT * FROM daily_check_ins WHERE chart_id = ? ORDER BY date DESC';
+    let query = 'SELECT * FROM daily_check_ins WHERE chart_id = ? ORDER BY date DESC, created_at DESC';
     const params: any[] = [chartId];
 
     if (limit) {
@@ -1304,6 +1518,7 @@ class LocalDatabase {
       id: row.id,
       date: row.date,
       chartId: row.chart_id,
+      timeOfDay: row.time_of_day || 'morning',
       moodScore: row.mood_score,
       energyLevel: row.energy_level,
       stressLevel: row.stress_level,

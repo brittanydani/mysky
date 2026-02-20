@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
@@ -64,7 +64,6 @@ const RETROGRADE_CONTEXT: Record<string, { icon: string; label: string; note: st
 };
 
 export default function TodayScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
   
@@ -100,6 +99,7 @@ export default function TodayScreen() {
   useFocusEffect(
     useCallback(() => {
       loadTodayData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- loadTodayData is defined below; adding it would create a circular dependency
     }, [isPremium])
   );
 

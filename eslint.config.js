@@ -7,4 +7,10 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    rules: {
+      // React Native <Text> handles quotes/apostrophes natively — no HTML escaping needed
+      'react/no-unescaped-entities': 'off',
+    },
+  },
 ]);

@@ -21,8 +21,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import StarField from './ui/StarField';
-import { ShadowQuoteInline } from './ui/ShadowQuoteCard';
-import ShadowQuoteCard from './ui/ShadowQuoteCard';
+import ShadowQuoteCard, { ShadowQuoteInline } from './ui/ShadowQuoteCard';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
 import { localDb } from '../services/storage/localDb';
@@ -142,7 +141,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     }
   };
 
-  const usePrompt = useCallback((prompt: ChartTiedPrompt) => {
+  const applyPrompt = useCallback((prompt: ChartTiedPrompt) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Append prompt to content with attribution
     setContent(prev => {
@@ -392,7 +391,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   <Animated.View entering={FadeInDown.duration(300)} style={styles.promptsContainer}>
                     <Pressable
                       style={styles.promptCard}
-                      onPress={() => usePrompt(promptSet.primary)}
+                      onPress={() => applyPrompt(promptSet.primary)}
                       accessibilityRole="button"
                       accessibilityLabel={`Use prompt: ${promptSet.primary.prompt}`}
                     >

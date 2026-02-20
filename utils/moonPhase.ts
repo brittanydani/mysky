@@ -64,7 +64,7 @@ export function getMoonPhaseInfo(date: Date = new Date()): MoonPhaseInfo {
       return { name: entry.name, emoji: entry.emoji, tag: entry.tag, message: entry.message, angle };
     }
   }
-  // > 337.5° wraps to New Moon
+  // > 354° wraps to New Moon
   const nm = PHASE_TABLE[0];
   return { name: nm.name, emoji: nm.emoji, tag: nm.tag, message: nm.message, angle };
 }

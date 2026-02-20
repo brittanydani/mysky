@@ -441,7 +441,9 @@ function ordinal(n: number): string {
 // 2. CHART RULER
 // ══════════════════════════════════════════════════
 
-// Traditional + modern rulerships
+// Modern rulerships (consistent with contemporary astrological practice)
+// Note: constants.ts uses traditional rulers for sign definitions;
+// chart ruler detection intentionally uses modern rulers.
 const SIGN_RULERS: Record<string, string> = {
   Aries: 'Mars',
   Taurus: 'Venus',

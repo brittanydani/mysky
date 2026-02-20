@@ -131,6 +131,7 @@ export default function ChartScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadChart();
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- loadChart is defined below; adding it would create a circular dependency
     }, [isPremium])
   );
 
@@ -350,8 +351,8 @@ export default function ChartScreen() {
   }, [activeChart, isPremium]);
 
   // ── Sorted aspects (tightest first), gated by premium ──
-  const FREE_ASPECT_TYPES = new Set(['conjunction', 'opposition', 'trine', 'square']);
   const sortedAspects = useMemo(() => {
+    const FREE_ASPECT_TYPES = new Set(['conjunction', 'opposition', 'trine', 'square']);
     if (!activeChart) return [];
     const all = [...(activeChart.aspects ?? [])].sort((a, b) => (a.orb ?? 99) - (b.orb ?? 99));
     if (isPremium) return all;

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -18,7 +18,6 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 export default function HealingScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
   const [healingQuote, setHealingQuote] = useState<ShadowQuote | null>(null);

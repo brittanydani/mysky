@@ -5,7 +5,7 @@
  * Every check-in becomes: User signals + Astrology context.
  */
 
-import { DailyCheckIn, TransitEvent, ThemeTag, EnergyLevel, StressLevel } from './types';
+import { DailyCheckIn, TransitEvent, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from './types';
 import { localDb } from '../storage/localDb';
 import { NatalChart } from '../astrology/types';
 import { getTransitInfo, getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
@@ -124,12 +124,34 @@ export interface CheckInInput {
   note?: string;
   wins?: string;
   challenges?: string;
+  timeOfDay?: TimeOfDay;  // If not provided, auto-detected from current time
 }
+
+/**
+ * Determine time-of-day from current hour
+ */
+function detectTimeOfDay(date: Date = new Date()): TimeOfDay {
+  const h = date.getHours();
+  if (h >= 5 && h < 12) return 'morning';
+  if (h >= 12 && h < 17) return 'afternoon';
+  if (h >= 17 && h < 21) return 'evening';
+  return 'night';
+}
+
+export const TIME_OF_DAY_LABELS: Record<TimeOfDay, { label: string; emoji: string; hours: string }> = {
+  morning:   { label: 'Morning',   emoji: '🌅', hours: '5am–12pm' },
+  afternoon: { label: 'Afternoon', emoji: '☀️', hours: '12pm–5pm' },
+  evening:   { label: 'Evening',   emoji: '🌆', hours: '5pm–9pm' },
+  night:     { label: 'Night',     emoji: '🌙', hours: '9pm–5am' },
+};
+
+export const TIME_OF_DAY_ORDER: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'night'];
 
 export class CheckInService {
 
   /**
-   * Save a daily check-in with auto sky snapshot
+   * Save a daily check-in with auto sky snapshot.
+   * Supports up to 4 check-ins per day (one per time slot).
    */
   static async saveCheckIn(
     input: CheckInInput,
@@ -138,12 +160,14 @@ export class CheckInService {
   ): Promise<DailyCheckIn> {
     const now = new Date();
     const date = toLocalDateString(now);
+    const timeOfDay = input.timeOfDay ?? detectTimeOfDay(now);
     const sky = captureSkySnapshot(chart, now);
 
     const checkIn: DailyCheckIn = {
       id: generateId(),
       date,
       chartId,
+      timeOfDay,
       moodScore: input.moodScore,
       energyLevel: input.energyLevel,
       stressLevel: input.stressLevel,
@@ -162,16 +186,47 @@ export class CheckInService {
     };
 
     await localDb.saveCheckIn(checkIn);
-    logger.info(`[CheckIn] Saved check-in for ${date}, mood: ${input.moodScore}, tags: ${input.tags.join(',')}`);
+    logger.info(`[CheckIn] Saved check-in for ${date} (${timeOfDay}), mood: ${input.moodScore}, tags: ${input.tags.join(',')}`);
     return checkIn;
   }
 
   /**
-   * Get today's check-in (if it exists)
+   * Get today's check-in for a specific time slot (if it exists)
+   */
+  static async getTodayCheckInForSlot(chartId: string, timeOfDay: TimeOfDay): Promise<DailyCheckIn | null> {
+    const today = toLocalDateString(new Date());
+    return localDb.getCheckInByDateAndTime(today, chartId, timeOfDay);
+  }
+
+  /**
+   * Get today's most recent check-in (backward compat)
    */
   static async getTodayCheckIn(chartId: string): Promise<DailyCheckIn | null> {
     const today = toLocalDateString(new Date());
     return localDb.getCheckInByDate(today, chartId);
+  }
+
+  /**
+   * Get all of today's check-ins (up to 4)
+   */
+  static async getTodayCheckIns(chartId: string): Promise<DailyCheckIn[]> {
+    const today = toLocalDateString(new Date());
+    return localDb.getCheckInsByDate(today, chartId);
+  }
+
+  /**
+   * Get which time slots have been filled today
+   */
+  static async getCompletedTimeSlots(chartId: string): Promise<TimeOfDay[]> {
+    const todayCheckIns = await this.getTodayCheckIns(chartId);
+    return todayCheckIns.map(c => c.timeOfDay);
+  }
+
+  /**
+   * Get the current auto-detected time slot
+   */
+  static getCurrentTimeSlot(): TimeOfDay {
+    return detectTimeOfDay(new Date());
   }
 
   /**

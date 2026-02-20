@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
@@ -11,14 +11,12 @@ import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import ChapterCard from '../../components/ui/ChapterCard';
 import { localDb } from '../../services/storage/localDb';
-import { NatalChart } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { FullNatalStoryGenerator, GeneratedChapter } from '../../services/premium/fullNatalStory';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 export default function StoryScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
   const [chapters, setChapters] = useState<GeneratedChapter[]>([]);
@@ -27,6 +25,7 @@ export default function StoryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadStoryData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- loadStoryData is defined below; adding it would create a circular dependency
     }, [isPremium])
   );
 

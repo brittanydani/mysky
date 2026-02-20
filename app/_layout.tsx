@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AlertProvider } from '../template/ui';
 import { PremiumProvider } from '../context/PremiumContext';
 import { useEffect, useState } from 'react';
 import { MigrationService } from '../services/storage/migrationService';
@@ -84,7 +83,6 @@ export default function RootLayout() {
 
   return (
     <PremiumProvider>
-      <AlertProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <SafeAreaProvider>
             <StatusBar style="light" />
@@ -104,7 +102,6 @@ export default function RootLayout() {
             />
           </SafeAreaProvider>
         </GestureHandlerRootView>
-      </AlertProvider>
     </PremiumProvider>
   );
 }
