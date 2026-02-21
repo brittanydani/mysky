@@ -27,14 +27,14 @@ import {
   GREETING_LIBRARY,
 } from './todayContentLibrary';
 import { logger } from '../../utils/logger';
+import { localDb } from '../storage/localDb';
 
 // ═══════════════════════════════════════════════════════════════
 // DATABASE HELPER
 // ═══════════════════════════════════════════════════════════════
 
 async function getDb() {
-  const SQLite = require('expo-sqlite');
-  const db = await SQLite.openDatabaseAsync('mysky.db');
+  const db = await localDb.getDb();
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS content_shown_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

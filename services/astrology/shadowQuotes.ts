@@ -26,6 +26,7 @@ import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transit
 import { logger } from '../../utils/logger';
 import { toLocalDateString, dayOfYear } from '../../utils/dateUtils';
 import { getMoonPhaseName } from '../../utils/moonPhase';
+import { localDb } from '../storage/localDb';
 
 // ════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -625,9 +626,7 @@ async function markQuoteShown(quoteId: string): Promise<void> {
 }
 
 async function getDb() {
-  const SQLite = require('expo-sqlite');
-  const db = await SQLite.openDatabaseAsync('mysky.db');
-  // Ensure table exists
+  const db = await localDb.getDb();
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS shadow_quotes_shown (
       quote_id TEXT PRIMARY KEY,

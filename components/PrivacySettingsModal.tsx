@@ -27,11 +27,15 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 
   const loadPrivacyInfo = async () => {
     try {
-      const [userData, consent] = await Promise.all([
+      // Check both SQLite (primary storage) and SecureStore for user data
+      await localDb.initialize();
+      const [secureData, dbCharts, dbEntries, consent] = await Promise.all([
         secureStorage.hasUserData(),
+        localDb.getCharts(),
+        localDb.getJournalEntries(),
         secureStorage.getConsentRecord(),
       ]);
-      setHasData(!!userData);
+      setHasData(!!secureData || dbCharts.length > 0 || dbEntries.length > 0);
       setConsentRecord(consent ?? null);
     } catch (error) {
       logger.error('Error loading privacy info:', error);
@@ -98,14 +102,17 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
     }
   };
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatDate = (dateString: string) => {
+    const d = new Date(dateString);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${mm}/${dd}/${yyyy} ${hours}:${minutes} ${ampm}`;
+  };
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
