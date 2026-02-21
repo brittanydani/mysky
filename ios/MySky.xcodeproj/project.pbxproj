@@ -383,7 +383,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = MySky/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "MySky: Personal Insights";
+				INFOPLIST_KEY_CFBundleDisplayName = "MySky";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -417,7 +417,7 @@
 				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = RFZSMR6K78;
 				INFOPLIST_FILE = MySky/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "MySky: Personal Insights";
+				INFOPLIST_KEY_CFBundleDisplayName = "MySky";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
