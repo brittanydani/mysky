@@ -92,7 +92,8 @@ export default function PrivacyPolicyScreen() {
             </Text>
 
             <Text style={styles.subSectionTitle}>Saved Insights</Text>
-            <Text style={styles.bulletPoint}>• Insights you choose to save or favorite within the app</Text>
+            <Text style={styles.bulletPoint}>• Personalized daily guidance automatically saved on your device (greetings, reflection messages, journal prompts, growth themes)</Text>
+            <Text style={styles.bulletPoint}>• Insights you mark as favorites</Text>
 
             <Text style={styles.subSectionTitle}>App Settings</Text>
             <Text style={styles.bulletPoint}>• Display preferences and configuration choices</Text>
@@ -142,7 +143,7 @@ export default function PrivacyPolicyScreen() {
               Your data is stored locally on your device using multiple layers of protection:
             </Text>
             <Text style={styles.bulletPoint}>• All data is stored in a local SQLite database on your device — never on external servers</Text>
-            <Text style={styles.bulletPoint}>• Sensitive fields (birth data, journal content, journal titles, relationship names, check-in notes) are encrypted at rest using AES-256-GCM</Text>
+            <Text style={styles.bulletPoint}>• Sensitive fields are encrypted at rest using AES-256-GCM: birth data (name, date, time, location), journal content and titles, relationship chart data, check-in notes, wins and challenges, and personalized daily insight text (guidance messages, reflection prompts)</Text>
             <Text style={styles.bulletPoint}>• A unique Data Encryption Key (DEK) is generated on your device and stored in the hardware-backed keychain (iOS) or keystore (Android) via SecureStore</Text>
             <Text style={styles.bulletPoint}>• Each encrypted field uses a unique random 96-bit initialization vector (IV)</Text>
             <Text style={styles.bulletPoint}>• HMAC-SHA256 integrity verification detects any tampering with stored data</Text>
@@ -205,6 +206,7 @@ export default function PrivacyPolicyScreen() {
               If you choose to create an encrypted backup:
             </Text>
             <Text style={styles.bulletPoint}>• Your data is encrypted with AES-256-GCM using a passphrase you create</Text>
+            <Text style={styles.bulletPoint}>• The backup includes: your charts, journal entries, relationship charts, saved daily insights and favorites, and app settings</Text>
             <Text style={styles.bulletPoint}>• A .msky backup file is generated on your device</Text>
             <Text style={styles.bulletPoint}>• The system share sheet opens for you to choose a destination (Files, iCloud Drive, AirDrop, email, etc.)</Text>
             <Text style={styles.bulletPoint}>• MySky never uploads your backup to any server</Text>

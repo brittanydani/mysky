@@ -1,6 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import { logger } from '../../utils/logger';
 
 export interface EncryptedPayload {
   version: 1;
@@ -70,7 +69,8 @@ export class EncryptionManager {
   static async verifySensitiveData<T>(payload: EncryptedPayload): Promise<T> {
     const isValid = await this.validateEncryptionIntegrity(payload);
     if (!isValid) {
-      logger.error('[EncryptionManager] Integrity check failed — data may have been tampered with');
+      // Don't log here — callers (e.g. getEncryptedItem) handle HMAC mismatches
+      // gracefully by recovering plaintext data and re-signing with the current key.
       throw new Error('Data integrity check failed — data may have been tampered with');
     }
     return JSON.parse(payload.data) as T;

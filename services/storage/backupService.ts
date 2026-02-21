@@ -11,6 +11,7 @@ import 'expo-standard-web-crypto';
 import { localDb } from './localDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart } from './models';
+import type { SavedInsight } from './insightHistory';
 
 /* ============================================================================
  * Types
@@ -23,6 +24,7 @@ type BackupPayload = {
   charts: SavedChart[];
   journalEntries: JournalEntry[];
   relationshipCharts: RelationshipChart[];
+  insightHistory: SavedInsight[];
   settings: AppSettings | null;
 };
 
@@ -190,7 +192,7 @@ export class BackupService {
   static async createEncryptedBackupFile(
     passphrase: string
   ): Promise<{ uri: string; filename: string }> {
-    if (!passphrase || passphrase.trim().length < 8) {
+    if (!passphrase || passphrase.length < 8) {
       throw new Error('Passphrase must be at least 8 characters long');
     }
 
@@ -211,11 +213,14 @@ export class BackupService {
       localDb.getSettings(),
     ]);
 
-    // Load relationship charts for all user charts
+    // Load relationship charts and insight history for all user charts
     const relationshipCharts: RelationshipChart[] = [];
+    const insightHistory: SavedInsight[] = [];
     for (const chart of charts) {
       const rels = await localDb.getRelationshipCharts(chart.id);
       relationshipCharts.push(...rels);
+      const insights = await localDb.getInsightHistory(chart.id);
+      insightHistory.push(...insights);
     }
 
     // Refuse to proceed if any decrypted field returned the failure placeholder.
@@ -224,6 +229,7 @@ export class BackupService {
       ...charts.map(c => [c.name, c.birthPlace, c.birthDate, c.birthTime]),
       ...journalEntries.map(e => [e.content, e.title]),
       ...relationshipCharts.map(r => [r.name, r.birthPlace, r.birthDate, r.birthTime]),
+      ...insightHistory.map(i => [i.greeting, i.loveMessage, i.energyMessage]),
     ].flat();
     if (allEntities.some(v => isDecryptionFailure(v))) {
       throw new Error(
@@ -238,6 +244,7 @@ export class BackupService {
       charts,
       journalEntries,
       relationshipCharts,
+      insightHistory,
       settings,
     };
 
@@ -289,7 +296,7 @@ export class BackupService {
     uri: string,
     passphrase: string
   ): Promise<void> {
-    if (!passphrase || passphrase.trim().length < 8) {
+    if (!passphrase || passphrase.length < 8) {
       throw new Error('Passphrase must be at least 8 characters long');
     }
 
@@ -357,6 +364,10 @@ export class BackupService {
 
     for (const rel of payload.relationshipCharts ?? []) {
       await localDb.saveRelationshipChart(rel);
+    }
+
+    for (const insight of payload.insightHistory ?? []) {
+      await localDb.saveInsight(insight);
     }
 
     if (payload.settings) {

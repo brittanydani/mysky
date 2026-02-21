@@ -7,7 +7,7 @@ import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 13;
+const CURRENT_DB_VERSION = 14;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -121,6 +121,10 @@ class LocalDatabase {
 
     if (fromVersion < 13) {
       await this.migrateToVersion13();
+    }
+
+    if (fromVersion < 14) {
+      await this.migrateToVersion14();
     }
   }
 
@@ -812,6 +816,68 @@ class LocalDatabase {
     logger.info('[LocalDB] Version 13 migration complete — table rebuilt with correct UNIQUE constraint');
   }
 
+  /**
+   * Version 14 — Encrypt existing plaintext insight_history text fields.
+   * Idempotent: skips any row whose greeting already starts with ENC2: or ENC:.
+   */
+  private async migrateToVersion14(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Starting version 14 migration — encrypting insight_history fields...');
+
+    const rows = await db.getAllAsync(
+      `SELECT id, greeting, love_headline, love_message, energy_headline, energy_message,
+              growth_headline, growth_message, gentle_reminder, journal_prompt, signals
+       FROM insight_history`
+    ) as any[];
+
+    let encrypted = 0;
+    let failures = 0;
+
+    for (const row of rows) {
+      // Skip rows already encrypted (idempotent)
+      if (FieldEncryptionService.isEncrypted(row.greeting)) continue;
+
+      try {
+        const encGreeting       = await FieldEncryptionService.encryptField(row.greeting);
+        const encLoveHeadline   = await FieldEncryptionService.encryptField(row.love_headline);
+        const encLoveMessage    = await FieldEncryptionService.encryptField(row.love_message);
+        const encEnergyHeadline = await FieldEncryptionService.encryptField(row.energy_headline);
+        const encEnergyMessage  = await FieldEncryptionService.encryptField(row.energy_message);
+        const encGrowthHeadline = await FieldEncryptionService.encryptField(row.growth_headline);
+        const encGrowthMessage  = await FieldEncryptionService.encryptField(row.growth_message);
+        const encGentleReminder = await FieldEncryptionService.encryptField(row.gentle_reminder);
+        const encJournalPrompt  = await FieldEncryptionService.encryptField(row.journal_prompt);
+        const encSignals        = row.signals ? await FieldEncryptionService.encryptField(row.signals) : null;
+
+        await db.runAsync(
+          `UPDATE insight_history SET
+             greeting = ?, love_headline = ?, love_message = ?,
+             energy_headline = ?, energy_message = ?,
+             growth_headline = ?, growth_message = ?,
+             gentle_reminder = ?, journal_prompt = ?, signals = ?
+           WHERE id = ?`,
+          [
+            encGreeting, encLoveHeadline, encLoveMessage,
+            encEnergyHeadline, encEnergyMessage,
+            encGrowthHeadline, encGrowthMessage,
+            encGentleReminder, encJournalPrompt, encSignals,
+            row.id,
+          ]
+        );
+        encrypted++;
+      } catch {
+        failures++;
+        logger.error(`[LocalDB] v14: failed to encrypt insight_history row ${row.id}`);
+      }
+    }
+
+    if (failures > 0) {
+      logger.warn(`[LocalDB] Version 14 migration completed with ${failures} failures — encrypted ${encrypted} rows`);
+    } else {
+      logger.info(`[LocalDB] Version 14 migration complete — encrypted ${encrypted} insight rows`);
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1065,9 +1131,9 @@ class LocalDatabase {
 
     return Promise.all((result as any[]).map(async (row: any) => ({
       id: row.id,
-      name: row.name,
-      birthDate: row.birth_date,
-      birthTime: row.birth_time,
+      name: row.name ? await FieldEncryptionService.decryptField(row.name) : row.name,
+      birthDate: await FieldEncryptionService.decryptField(row.birth_date),
+      birthTime: row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time,
       hasUnknownTime: row.has_unknown_time === 1,
       birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
       latitude: row.latitude,
@@ -1153,9 +1219,21 @@ class LocalDatabase {
   async saveInsight(insight: SavedInsight): Promise<void> {
     const db = await this.ensureReady();
 
+    // Encrypt personalized text fields at rest
+    const encGreeting       = await FieldEncryptionService.encryptField(insight.greeting);
+    const encLoveHeadline   = await FieldEncryptionService.encryptField(insight.loveHeadline);
+    const encLoveMessage    = await FieldEncryptionService.encryptField(insight.loveMessage);
+    const encEnergyHeadline = await FieldEncryptionService.encryptField(insight.energyHeadline);
+    const encEnergyMessage  = await FieldEncryptionService.encryptField(insight.energyMessage);
+    const encGrowthHeadline = await FieldEncryptionService.encryptField(insight.growthHeadline);
+    const encGrowthMessage  = await FieldEncryptionService.encryptField(insight.growthMessage);
+    const encGentleReminder = await FieldEncryptionService.encryptField(insight.gentleReminder);
+    const encJournalPrompt  = await FieldEncryptionService.encryptField(insight.journalPrompt);
+    const encSignals        = insight.signals ? await FieldEncryptionService.encryptField(insight.signals) : null;
+
     await db.runAsync(
-      `INSERT OR REPLACE INTO insight_history 
-       (id, date, chart_id, greeting, love_headline, love_message, energy_headline, 
+      `INSERT OR REPLACE INTO insight_history
+       (id, date, chart_id, greeting, love_headline, love_message, energy_headline,
         energy_message, growth_headline, growth_message, gentle_reminder, journal_prompt,
         moon_sign, moon_phase, signals, is_favorite, viewed_at, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1163,18 +1241,18 @@ class LocalDatabase {
         insight.id,
         insight.date,
         insight.chartId,
-        insight.greeting,
-        insight.loveHeadline,
-        insight.loveMessage,
-        insight.energyHeadline,
-        insight.energyMessage,
-        insight.growthHeadline,
-        insight.growthMessage,
-        insight.gentleReminder,
-        insight.journalPrompt,
+        encGreeting,
+        encLoveHeadline,
+        encLoveMessage,
+        encEnergyHeadline,
+        encEnergyMessage,
+        encGrowthHeadline,
+        encGrowthMessage,
+        encGentleReminder,
+        encJournalPrompt,
         insight.moonSign || null,
         insight.moonPhase || null,
-        insight.signals || null,
+        encSignals,
         insight.isFavorite ? 1 : 0,
         insight.viewedAt || null,
         insight.createdAt,
@@ -1192,7 +1270,7 @@ class LocalDatabase {
     ]);
 
     if (!result) return null;
-    return this.mapInsightRow(result);
+    return await this.mapInsightRow(result);
   }
 
   async getInsightById(id: string): Promise<SavedInsight | null> {
@@ -1201,7 +1279,7 @@ class LocalDatabase {
     const result = await db.getFirstAsync('SELECT * FROM insight_history WHERE id = ?', [id]);
 
     if (!result) return null;
-    return this.mapInsightRow(result);
+    return await this.mapInsightRow(result);
   }
 
   async getInsightHistory(
@@ -1235,7 +1313,7 @@ class LocalDatabase {
     }
 
     const result = await db.getAllAsync(query, params);
-    return (result as any[]).map((row: any) => this.mapInsightRow(row));
+    return Promise.all((result as any[]).map((row: any) => this.mapInsightRow(row)));
   }
 
   async updateInsightFavorite(id: string, isFavorite: boolean): Promise<void> {
@@ -1254,23 +1332,23 @@ class LocalDatabase {
     await db.runAsync('UPDATE insight_history SET viewed_at = ? WHERE id = ?', [viewedAt, id]);
   }
 
-  private mapInsightRow(row: any): SavedInsight {
+  private async mapInsightRow(row: any): Promise<SavedInsight> {
     return {
       id: row.id,
       date: row.date,
       chartId: row.chart_id,
-      greeting: row.greeting,
-      loveHeadline: row.love_headline,
-      loveMessage: row.love_message,
-      energyHeadline: row.energy_headline,
-      energyMessage: row.energy_message,
-      growthHeadline: row.growth_headline,
-      growthMessage: row.growth_message,
-      gentleReminder: row.gentle_reminder,
-      journalPrompt: row.journal_prompt,
+      greeting:       await FieldEncryptionService.decryptField(row.greeting),
+      loveHeadline:   await FieldEncryptionService.decryptField(row.love_headline),
+      loveMessage:    await FieldEncryptionService.decryptField(row.love_message),
+      energyHeadline: await FieldEncryptionService.decryptField(row.energy_headline),
+      energyMessage:  await FieldEncryptionService.decryptField(row.energy_message),
+      growthHeadline: await FieldEncryptionService.decryptField(row.growth_headline),
+      growthMessage:  await FieldEncryptionService.decryptField(row.growth_message),
+      gentleReminder: await FieldEncryptionService.decryptField(row.gentle_reminder),
+      journalPrompt:  await FieldEncryptionService.decryptField(row.journal_prompt),
       moonSign: row.moon_sign,
       moonPhase: row.moon_phase,
-      signals: row.signals,
+      signals: row.signals ? await FieldEncryptionService.decryptField(row.signals) : row.signals,
       isFavorite: row.is_favorite === 1,
       viewedAt: row.viewed_at,
       createdAt: row.created_at,
