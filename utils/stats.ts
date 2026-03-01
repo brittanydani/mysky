@@ -30,11 +30,11 @@ export function mean(vals: number[]): number {
   return vals.reduce((s, v) => s + v, 0) / vals.length;
 }
 
-/** Population standard deviation.  Returns 0 for < 2 values. */
+/** Sample standard deviation (Bessel-corrected).  Returns 0 for < 2 values. */
 export function stdDev(vals: number[]): number {
   if (vals.length < 2) return 0;
   const m = mean(vals);
-  return Math.sqrt(vals.reduce((s, v) => s + (v - m) ** 2, 0) / vals.length);
+  return Math.sqrt(vals.reduce((s, v) => s + (v - m) ** 2, 0) / (vals.length - 1));
 }
 
 /** Clamp a number to [lo, hi]. */

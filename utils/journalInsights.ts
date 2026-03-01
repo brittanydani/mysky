@@ -4,28 +4,16 @@
  * Adds journal NLP-powered insight cards on top of the existing
  * insightsEngine.ts. All functions are pure — no I/O, no side effects.
  *
- * New capabilities:
- *  - Keyword themes across time windows
- *  - Emotion tone shifts (bucket delta tracking)
- *  - Journaling days vs non-journaling days comparison
- *  - Writing intensity effect on mood/stress
- *  - Weekly journal consistency impact
- *  - Keyword lift (best days vs hard days)
- *  - Emotion bucket lift
- *  - Blended cards using chart + stress trend + journal fatigue/anxiety
- *  - Per-insight confidence scoring with journal penalty
- *
  * Relies on DailyAggregate rows produced by the pipeline (which now
  * include keywordsUnion, emotionCountsTotal, sentimentAvg).
  */
 
-import { DailyAggregate, ChartProfile, Element, Modality } from '../services/insights/types';
+import { DailyAggregate, ChartProfile, Element } from '../services/insights/types';
 import type { ConfidenceLevel, TrendDirection } from './insightsEngine';
 import { regulationStyle } from '../services/insights/chartProfile';
 import {
   mean,
   stdDev,
-  clamp,
   confidence,
   linearRegression,
 } from './stats';
@@ -41,6 +29,14 @@ function journalConfidence(
   const base = confidence(totalDays);
   if (journalDays < 6) return 'low';
   return base;
+}
+
+function sortByDayKey(aggregates: DailyAggregate[]): DailyAggregate[] {
+  return [...aggregates].sort((a, b) => a.dayKey.localeCompare(b.dayKey));
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -87,19 +83,22 @@ export function computeMetricTrend(
   let method: 'regression' | 'split_delta';
 
   if (n >= 10) {
-    slopeVal = localLinearRegression(values);
+    slopeVal = localLinearRegression(values); // per-day slope
     method = 'regression';
     direction =
       slopeVal > 0.03 ? 'up' : slopeVal < -0.03 ? 'down' : 'stable';
   } else {
     const mid = Math.floor(n / 2);
-    const delta = mean(values.slice(mid)) - mean(values.slice(0, mid));
+    const delta = mean(values.slice(mid)) - mean(values.slice(0, mid)); // half-to-half delta
     slopeVal = delta;
     method = 'split_delta';
     direction = delta >= 0.6 ? 'up' : delta <= -0.6 ? 'down' : 'stable';
   }
 
-  const change = slopeVal * (n - 1);
+  // IMPORTANT:
+  // - regression slopeVal is per-day => total change approx slopeVal*(n-1)
+  // - split_delta slopeVal is already a total delta => do NOT multiply by (n-1)
+  const change = method === 'regression' ? slopeVal * (n - 1) : slopeVal;
   const display = change >= 0 ? `+${change.toFixed(1)}` : change.toFixed(1);
 
   return {
@@ -117,16 +116,14 @@ export function computeMetricTrend(
 export function computeAllTrends(
   aggregates: DailyAggregate[],
 ): MetricTrend[] {
-  const sorted = [...aggregates].sort((a, b) =>
-    a.dayKey.localeCompare(b.dayKey),
-  );
+  const sorted = sortByDayKey(aggregates);
 
   return [
     computeMetricTrend(sorted.map(d => d.moodAvg), 'moodAvg'),
     computeMetricTrend(sorted.map(d => d.stressAvg), 'stressAvg'),
     computeMetricTrend(sorted.map(d => d.energyAvg), 'energyAvg'),
     computeMetricTrend(sorted.map(d => d.journalCount), 'journalCount'),
-    computeMetricTrend(sorted.map(d => d.journalWordCount), 'wordCountTotal'),
+    computeMetricTrend(sorted.map(d => d.journalWordCount), 'journalWordCount'),
   ];
 }
 
@@ -145,12 +142,18 @@ export function computeVolatility(
   metricName: string,
   thresholds: { low: number; high: number } = { low: 1.2, high: 2.2 },
 ): VolatilityResult {
+  if (values.length < 2) {
+    return { metric: metricName, stddev: 0, level: 'low' };
+  }
+
   const sd = stdDev(values);
+  const safe = Number.isFinite(sd) ? sd : 0;
   const level =
-    sd <= thresholds.low ? 'low' : sd <= thresholds.high ? 'moderate' : 'high';
+    safe <= thresholds.low ? 'low' : safe <= thresholds.high ? 'moderate' : 'high';
+
   return {
     metric: metricName,
-    stddev: parseFloat(sd.toFixed(2)),
+    stddev: parseFloat(safe.toFixed(2)),
     level,
   };
 }
@@ -166,6 +169,7 @@ export function computeAllVolatility(
   const sentiments = aggregates
     .filter(d => d.sentimentAvg !== null)
     .map(d => d.sentimentAvg!);
+
   if (sentiments.length >= 5) {
     results.push(
       computeVolatility(sentiments, 'sentiment', { low: 0.3, high: 0.6 }),
@@ -188,9 +192,7 @@ export interface LiftItem {
 }
 
 export interface RestoreDrainResult {
-  /** Items that lift mood (positive lift) */
   restores: LiftItem[];
-  /** Items that drain mood (negative lift) */
   drains: LiftItem[];
   hasData: boolean;
   confidence: ConfidenceLevel;
@@ -233,7 +235,6 @@ export function computeKeywordLift(
 
   const { bestDays, hardDays } = split;
 
-  // Collect all keywords with day counts
   const keywordDayCounts: Record<string, number> = {};
   for (const d of aggregates) {
     for (const kw of d.keywordsUnion) {
@@ -243,7 +244,7 @@ export function computeKeywordLift(
 
   const items: LiftItem[] = [];
   for (const [kw, totalDays] of Object.entries(keywordDayCounts)) {
-    if (totalDays < 4) continue; // minimum appearances
+    if (totalDays < 4) continue;
 
     const bestRate =
       bestDays.filter(d => d.keywordsUnion.includes(kw)).length / bestDays.length;
@@ -260,6 +261,7 @@ export function computeKeywordLift(
     .filter(i => i.lift > 0)
     .sort((a, b) => b.lift - a.lift)
     .slice(0, 3);
+
   const drains = items
     .filter(i => i.lift < 0)
     .sort((a, b) => a.lift - b.lift)
@@ -293,9 +295,7 @@ export function computeEmotionBucketLift(
 
   const { bestDays, hardDays } = split;
 
-  // Define "presence" as having >= 2 emotion words in that category
   const categories = ['anxiety', 'sadness', 'anger', 'calm', 'joy', 'fatigue', 'stress'];
-
   const results: EmotionLiftItem[] = [];
 
   for (const cat of categories) {
@@ -320,10 +320,6 @@ export function computeEmotionBucketLift(
   }
 
   return results.sort((a, b) => Math.abs(b.lift) - Math.abs(a.lift));
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -363,8 +359,7 @@ export function computeJournalingImpact(
   if (diffMood >= 0.5) {
     insight = 'Days you journal tend to be calmer.';
   } else if (diffMood <= -0.5) {
-    insight =
-      'You tend to journal on harder days — that\'s the practice working.';
+    insight = 'You tend to journal on harder days — that\'s the practice working.';
   } else if (diffStress <= -0.5) {
     insight = 'Journaling days show lower stress on average.';
   } else {
@@ -414,23 +409,18 @@ export function computeWritingIntensityEffect(
   if (moodHigh - moodLow >= 0.5) {
     insight = 'Longer reflections correlate with steadier mood.';
   } else if (moodLow - moodHigh >= 0.5) {
-    insight =
-      'Shorter entries tend to come on calmer days — longer ones signal deeper processing.';
+    insight = 'Shorter entries tend to come on calmer days — longer ones signal deeper processing.';
   } else if (volLow - volHigh >= 0.3) {
     insight = 'Writing more tends to stabilize your emotional range.';
   } else {
-    insight =
-      'Writing length varies, but its presence matters more than its depth.';
+    insight = 'Writing length varies, but its presence matters more than its depth.';
   }
 
   return {
     type: 'writing_intensity',
     insight,
     stat: `Mood: short ${moodLow.toFixed(1)} · medium ${moodMed.toFixed(1)} · long ${moodHigh.toFixed(1)}`,
-    confidence: journalConfidence(
-      aggregates.length,
-      withJournal.length,
-    ),
+    confidence: journalConfidence(aggregates.length, withJournal.length),
     data: {
       moodLow: parseFloat(moodLow.toFixed(1)),
       moodMed: parseFloat(moodMed.toFixed(1)),
@@ -448,7 +438,6 @@ export function computeWritingIntensityEffect(
 export function computeWeeklyConsistency(
   aggregates: DailyAggregate[],
 ): JournalImpactCard | null {
-  // Group by ISO week
   const weekMap = new Map<string, DailyAggregate[]>();
   for (const d of aggregates) {
     const wk = isoWeekKey(d.dayKey);
@@ -458,7 +447,7 @@ export function computeWeeklyConsistency(
 
   if (weekMap.size < 3) return null;
 
-  const consistentWeeks: { moods: number[]; vol: number } [] = [];
+  const consistentWeeks: { moods: number[]; vol: number }[] = [];
   const inconsistentWeeks: { moods: number[]; vol: number }[] = [];
 
   for (const [, days] of weekMap) {
@@ -477,12 +466,8 @@ export function computeWeeklyConsistency(
 
   const volConsistent = mean(consistentWeeks.map(w => w.vol));
   const volInconsistent = mean(inconsistentWeeks.map(w => w.vol));
-  const moodConsistent = mean(
-    consistentWeeks.flatMap(w => w.moods),
-  );
-  const moodInconsistent = mean(
-    inconsistentWeeks.flatMap(w => w.moods),
-  );
+  const moodConsistent = mean(consistentWeeks.flatMap(w => w.moods));
+  const moodInconsistent = mean(inconsistentWeeks.flatMap(w => w.moods));
 
   const volDiff = volInconsistent - volConsistent;
 
@@ -492,8 +477,7 @@ export function computeWeeklyConsistency(
   } else if (moodConsistent - moodInconsistent > 0.4) {
     insight = 'Consistent journaling weeks have a higher average mood.';
   } else {
-    insight =
-      'Journaling consistency varies — more data will reveal clearer patterns.';
+    insight = 'Journaling consistency varies — more data will reveal clearer patterns.';
   }
 
   return {
@@ -549,30 +533,29 @@ export interface TimePatternCard {
 
 type TODLabel = 'Morning' | 'Afternoon' | 'Evening' | 'Late night';
 
-function bucketHour(h: number): TODLabel {
-  if (h >= 5 && h < 12) return 'Morning';
-  if (h >= 12 && h < 18) return 'Afternoon';
-  if (h >= 18 && h < 23) return 'Evening';
-  return 'Late night';
+function timeOfDayToLabel(tod: string): TODLabel {
+  if (tod === 'morning') return 'Morning';
+  if (tod === 'afternoon') return 'Afternoon';
+  if (tod === 'evening') return 'Evening';
+  return 'Late night'; // 'night' and any unknown value
 }
 
 /**
- * 9A. Time of day patterns from check-in timestamps.
+ * 9A. Time of day patterns using the check-in timeOfDay field (not creation timestamp).
  */
 export function computeTimeOfDayPatterns(
   aggregates: DailyAggregate[],
 ): TimePatternCard | null {
   const buckets: Record<TODLabel, { moods: number[]; stresses: number[]; energies: number[] }> = {
-    'Morning': { moods: [], stresses: [], energies: [] },
-    'Afternoon': { moods: [], stresses: [], energies: [] },
-    'Evening': { moods: [], stresses: [], energies: [] },
+    Morning: { moods: [], stresses: [], energies: [] },
+    Afternoon: { moods: [], stresses: [], energies: [] },
+    Evening: { moods: [], stresses: [], energies: [] },
     'Late night': { moods: [], stresses: [], energies: [] },
   };
 
   for (const d of aggregates) {
-    for (const ts of d.checkInTimestamps) {
-      const h = new Date(ts).getHours();
-      const label = bucketHour(h);
+    for (const tod of d.timeOfDayLabels) {
+      const label = timeOfDayToLabel(tod);
       buckets[label].moods.push(d.moodAvg);
       buckets[label].stresses.push(d.stressAvg);
       buckets[label].energies.push(d.energyAvg);
@@ -702,7 +685,6 @@ export function computeChartBaselines(
 
   const cards: ChartBaselineCard[] = [];
 
-  // Dominant element → regulation style
   const regStyles: Record<Element, { label: string; body: string }> = {
     Earth: {
       label: 'Regulation through routine',
@@ -721,6 +703,7 @@ export function computeChartBaselines(
       body: 'Your Fire-dominant chart resets through action, change of scene, and creative expression. Stillness can intensify what movement would release.',
     },
   };
+
   const reg = regStyles[profile.dominantElement];
   cards.push({
     type: 'regulation_style',
@@ -729,7 +712,6 @@ export function computeChartBaselines(
     confidence: 'high',
   });
 
-  // Moon house → emotional need
   if (profile.moonHouse > 0) {
     const moonNeeds: Record<number, { label: string; body: string }> = {
       1: { label: 'Emotional need: being seen', body: 'Your 1st house Moon needs visible self-expression. Suppressing emotions shows quickly — on your face and in your body.' },
@@ -757,7 +739,6 @@ export function computeChartBaselines(
     }
   }
 
-  // Saturn → pressure pattern
   const saturnPatterns: Record<string, string> = {
     Capricorn: 'discipline and authentic achievement over obligation',
     Virgo: 'discernment without perfectionism',
@@ -772,6 +753,7 @@ export function computeChartBaselines(
     Aquarius: 'expressing originality within community',
     Pisces: 'boundaries and spiritual discipline',
   };
+
   const saturnBody = saturnPatterns[profile.saturnSign];
   if (saturnBody) {
     cards.push({
@@ -782,7 +764,6 @@ export function computeChartBaselines(
     });
   }
 
-  // Chiron → healing theme
   if (profile.chironSign) {
     const chironThemes: Record<string, string> = {
       Aries: 'reclaiming boldness and identity',
@@ -798,6 +779,7 @@ export function computeChartBaselines(
       Aquarius: 'your difference is your contribution',
       Pisces: 'knowing your own ground and returning to it',
     };
+
     const chironBody = chironThemes[profile.chironSign];
     if (chironBody) {
       cards.push({
@@ -825,10 +807,6 @@ export interface BlendedInsightCard {
   sources: string[];
 }
 
-/**
- * Generate blended insight cards that connect recent data signals,
- * journal NLP signals, and chart baseline recommendations.
- */
 export function computeBlendedInsights(
   aggregates: DailyAggregate[],
   trends: MetricTrend[],
@@ -839,6 +817,10 @@ export function computeBlendedInsights(
   const n = aggregates.length;
   if (n < 7 || !profile) return cards;
 
+  // Ensure "recent 7 days" actually means recent
+  const sorted = sortByDayKey(aggregates);
+  const recentDays = sorted.slice(-7);
+
   const conf = confidence(n);
   const baseStat = `Based on ${n} days`;
 
@@ -846,32 +828,22 @@ export function computeBlendedInsights(
   const moodTrend = trends.find(t => t.metric === 'moodAvg');
   const moodVol = volatility.find(v => v.metric === 'mood');
 
-  // Recent (last 7 days) emotion/keyword signals
-  const recentDays = aggregates.slice(-7);
   const recentEmotions: Record<string, number> = {};
   for (const d of recentDays) {
     for (const [cat, count] of Object.entries(d.emotionCountsTotal || {})) {
       recentEmotions[cat] = (recentEmotions[cat] ?? 0) + (count ?? 0);
     }
   }
-  const hasFatigue = (recentEmotions['fatigue'] ?? 0) >= 3;
-  const hasAnxiety = (recentEmotions['anxiety'] ?? 0) >= 3;
-  const hasJoy = (recentEmotions['joy'] ?? 0) >= 3;
-  const hasCalm = (recentEmotions['calm'] ?? 0) >= 3;
+
+  const hasFatigue = (recentEmotions.fatigue ?? 0) >= 3;
+  const hasAnxiety = (recentEmotions.anxiety ?? 0) >= 3;
+  const hasJoy = (recentEmotions.joy ?? 0) >= 3;
+  const hasCalm = (recentEmotions.calm ?? 0) >= 3;
 
   const regStyle = regulationStyle(profile.dominantElement);
 
-  // Collect recent keywords
-  const recentKeywords = new Set<string>();
-  for (const d of recentDays) {
-    for (const kw of d.keywordsUnion) recentKeywords.add(kw);
-  }
-
   // Rule 1: Stress up + fatigue/anxiety in journal
-  if (
-    stressTrend?.direction === 'up' &&
-    (hasFatigue || hasAnxiety)
-  ) {
+  if (stressTrend?.direction === 'up' && (hasFatigue || hasAnxiety)) {
     const emotionWord = hasFatigue ? 'fatigue' : 'anxiety';
     const suggestions: Record<Element, string> = {
       Earth: 'Try one small routine reset today — simplify your schedule, not add to it.',
@@ -892,10 +864,7 @@ export function computeBlendedInsights(
 
   // Rule 2: Mood down + no journaling recently
   const recentJournalDays = recentDays.filter(d => d.journalCount >= 1).length;
-  if (
-    moodTrend?.direction === 'down' &&
-    recentJournalDays <= 1
-  ) {
+  if (moodTrend?.direction === 'down' && recentJournalDays <= 1) {
     cards.push({
       title: 'A Small Practice',
       body: `Your mood has been dipping and journaling has been sparse this week. Even a short nightly reflection — 3 sentences about what you noticed — can interrupt the drift. Your ${profile.dominantElement} nature processes best through ${regStyle}.`,
@@ -907,12 +876,8 @@ export function computeBlendedInsights(
   }
 
   // Rule 3: High volatility + frequent emotion words
-  if (
-    moodVol?.level === 'high' &&
-    Object.values(recentEmotions).some(v => v >= 4)
-  ) {
-    const topEmotion = Object.entries(recentEmotions)
-      .sort((a, b) => b[1] - a[1])[0];
+  if (moodVol?.level === 'high' && Object.values(recentEmotions).some(v => v >= 4)) {
+    const topEmotion = Object.entries(recentEmotions).sort((a, b) => b[1] - a[1])[0];
 
     cards.push({
       title: 'The Emotional Weather',
@@ -925,11 +890,7 @@ export function computeBlendedInsights(
   }
 
   // Rule 4: Mood up + joy/calm in journal → affirm
-  if (
-    moodTrend?.direction === 'up' &&
-    stressTrend?.direction !== 'up' &&
-    (hasJoy || hasCalm)
-  ) {
+  if (moodTrend?.direction === 'up' && stressTrend?.direction !== 'up' && (hasJoy || hasCalm)) {
     const positiveWord = hasJoy ? 'joy' : 'calm';
     cards.push({
       title: 'What\'s Working',
@@ -942,11 +903,7 @@ export function computeBlendedInsights(
   }
 
   // Rule 5: Stress stable + consistent journaling → encouragement
-  if (
-    stressTrend?.direction === 'stable' &&
-    moodTrend?.direction !== 'down' &&
-    recentJournalDays >= 3
-  ) {
+  if (stressTrend?.direction === 'stable' && moodTrend?.direction !== 'down' && recentJournalDays >= 3) {
     cards.push({
       title: 'Steady Ground',
       body: `Your patterns have been stable and you've been journaling consistently this week. This is a good moment to notice what sustains you — so you remember it when things get heavier.`,
@@ -957,7 +914,6 @@ export function computeBlendedInsights(
     });
   }
 
-  // Default if no rules triggered
   if (cards.length === 0) {
     cards.push({
       title: 'Baseline Reflection',
@@ -977,24 +933,16 @@ export function computeBlendedInsights(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface EmotionToneShiftCard {
-  /** Categories that increased */
   rising: { category: string; delta: number }[];
-  /** Categories that decreased */
   falling: { category: string; delta: number }[];
   insight: string;
   stat: string;
 }
 
-/**
- * Compare emotion bucket rates between first half and second half
- * of the provided aggregates (split by time).
- */
 export function computeEmotionToneShift(
   aggregates: DailyAggregate[],
 ): EmotionToneShiftCard | null {
-  const sorted = [...aggregates].sort((a, b) =>
-    a.dayKey.localeCompare(b.dayKey),
-  );
+  const sorted = sortByDayKey(aggregates);
   const n = sorted.length;
   if (n < 10) return null;
 
@@ -1002,15 +950,14 @@ export function computeEmotionToneShift(
   const firstHalf = sorted.slice(0, mid);
   const secondHalf = sorted.slice(mid);
 
-  function bucketRates(
-    days: DailyAggregate[],
-  ): Record<string, number> {
+  function bucketRates(days: DailyAggregate[]): Record<string, number> {
     const sums: Record<string, number> = {};
     let total = 0;
     for (const d of days) {
       for (const [cat, count] of Object.entries(d.emotionCountsTotal || {})) {
-        sums[cat] = (sums[cat] ?? 0) + (count ?? 0);
-        total += count ?? 0;
+        const c = count ?? 0;
+        sums[cat] = (sums[cat] ?? 0) + c;
+        total += c;
       }
     }
     if (total === 0) return {};
@@ -1028,11 +975,7 @@ export function computeEmotionToneShift(
     return null;
   }
 
-  const allCats = new Set([
-    ...Object.keys(firstRates),
-    ...Object.keys(secondRates),
-  ]);
-
+  const allCats = new Set([...Object.keys(firstRates), ...Object.keys(secondRates)]);
   const rising: { category: string; delta: number }[] = [];
   const falling: { category: string; delta: number }[] = [];
 
@@ -1047,14 +990,8 @@ export function computeEmotionToneShift(
 
   if (rising.length === 0 && falling.length === 0) return null;
 
-  const risingSummary = rising
-    .slice(0, 2)
-    .map(r => capitalize(r.category))
-    .join(', ');
-  const fallingSummary = falling
-    .slice(0, 2)
-    .map(f => capitalize(f.category))
-    .join(', ');
+  const risingSummary = rising.slice(0, 2).map(r => capitalize(r.category)).join(', ');
+  const fallingSummary = falling.slice(0, 2).map(f => capitalize(f.category)).join(', ');
 
   let insight: string;
   if (rising.length > 0 && falling.length > 0) {
@@ -1078,7 +1015,6 @@ export function computeEmotionToneShift(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface KeywordThemesCard {
-  /** Top keywords by frequency across the window */
   topKeywords: { word: string; dayCount: number }[];
   insight: string;
   sampleSize: number;
@@ -1119,31 +1055,18 @@ export function computeKeywordThemes(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface EnhancedInsightBundle {
-  /** All metric trends */
   trends: MetricTrend[];
-  /** Volatility results */
   volatility: VolatilityResult[];
-  /** Keyword lift (best vs hard days) */
   keywordLift: RestoreDrainResult;
-  /** Emotion bucket lift */
   emotionBucketLift: EmotionLiftItem[];
-  /** Emotion tone shift over time */
   emotionToneShift: EmotionToneShiftCard | null;
-  /** Keyword themes */
   keywordThemes: KeywordThemesCard | null;
-  /** Journal impact cards */
   journalImpact: JournalImpactCard[];
-  /** Time pattern cards */
   timePatterns: TimePatternCard[];
-  /** Chart baseline cards */
   chartBaselines: ChartBaselineCard[];
-  /** Blended insight cards */
   blended: BlendedInsightCard[];
-  /** Global confidence */
   confidence: ConfidenceLevel;
-  /** Sample size */
   sampleSize: number;
-  /** Journal days in window */
   journalDays: number;
 }
 
@@ -1155,37 +1078,34 @@ export function computeEnhancedInsights(
   aggregates: DailyAggregate[],
   profile: ChartProfile | null,
 ): EnhancedInsightBundle {
-  const n = aggregates.length;
-  const journalDays = aggregates.filter(d => d.journalCount >= 1).length;
+  const sorted = sortByDayKey(aggregates);
 
-  const trends = computeAllTrends(aggregates);
-  const volatility = computeAllVolatility(aggregates);
-  const keywordLift = computeKeywordLift(aggregates);
-  const emotionBucketLift = computeEmotionBucketLift(aggregates);
-  const emotionToneShift = computeEmotionToneShift(aggregates);
-  const keywordThemes = computeKeywordThemes(aggregates);
+  const n = sorted.length;
+  const journalDays = sorted.filter(d => d.journalCount >= 1).length;
+
+  const trends = computeAllTrends(sorted);
+  const volatility = computeAllVolatility(sorted);
+  const keywordLift = computeKeywordLift(sorted);
+  const emotionBucketLift = computeEmotionBucketLift(sorted);
+  const emotionToneShift = computeEmotionToneShift(sorted);
+  const keywordThemes = computeKeywordThemes(sorted);
 
   const journalImpact: JournalImpactCard[] = [];
-  const ji = computeJournalingImpact(aggregates);
+  const ji = computeJournalingImpact(sorted);
   if (ji) journalImpact.push(ji);
-  const wi = computeWritingIntensityEffect(aggregates);
+  const wi = computeWritingIntensityEffect(sorted);
   if (wi) journalImpact.push(wi);
-  const wc = computeWeeklyConsistency(aggregates);
+  const wc = computeWeeklyConsistency(sorted);
   if (wc) journalImpact.push(wc);
 
   const timePatterns: TimePatternCard[] = [];
-  const tod = computeTimeOfDayPatterns(aggregates);
+  const tod = computeTimeOfDayPatterns(sorted);
   if (tod) timePatterns.push(tod);
-  const dow = computeDayOfWeekPatterns(aggregates);
+  const dow = computeDayOfWeekPatterns(sorted);
   if (dow) timePatterns.push(dow);
 
   const chartBaselines = computeChartBaselines(profile);
-  const blended = computeBlendedInsights(
-    aggregates,
-    trends,
-    volatility,
-    profile,
-  );
+  const blended = computeBlendedInsights(sorted, trends, volatility, profile);
 
   return {
     trends,
