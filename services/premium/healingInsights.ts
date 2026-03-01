@@ -2,7 +2,7 @@
  * Healing & Inner Work - Premium Feature
  * 
  * This is the most differentiated part of Deeper Sky.
- * Trauma-informed astrology interpretations that feel like therapy.
+ * Trauma-informed interpretations that feel like therapy.
  * 
  * Features:
  * - Attachment style themes from chart

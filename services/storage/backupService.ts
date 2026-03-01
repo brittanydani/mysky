@@ -10,7 +10,7 @@ import 'expo-standard-web-crypto';
 
 import { localDb } from './localDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
-import type { AppSettings, SavedChart, JournalEntry, RelationshipChart } from './models';
+import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEntry } from './models';
 import type { SavedInsight } from './insightHistory';
 
 /* ============================================================================
@@ -25,6 +25,7 @@ type BackupPayload = {
   journalEntries: JournalEntry[];
   relationshipCharts: RelationshipChart[];
   insightHistory: SavedInsight[];
+  sleepEntries: SleepEntry[];
   settings: AppSettings | null;
 };
 
@@ -213,14 +214,17 @@ export class BackupService {
       localDb.getSettings(),
     ]);
 
-    // Load relationship charts and insight history for all user charts
+    // Load relationship charts, insight history, and sleep entries for all user charts
     const relationshipCharts: RelationshipChart[] = [];
     const insightHistory: SavedInsight[] = [];
+    const sleepEntries: SleepEntry[] = [];
     for (const chart of charts) {
       const rels = await localDb.getRelationshipCharts(chart.id);
       relationshipCharts.push(...rels);
       const insights = await localDb.getInsightHistory(chart.id);
       insightHistory.push(...insights);
+      const sleep = await localDb.getSleepEntries(chart.id, 10000);
+      sleepEntries.push(...sleep);
     }
 
     // Refuse to proceed if any decrypted field returned the failure placeholder.
@@ -245,6 +249,7 @@ export class BackupService {
       journalEntries,
       relationshipCharts,
       insightHistory,
+      sleepEntries,
       settings,
     };
 
@@ -368,6 +373,10 @@ export class BackupService {
 
     for (const insight of payload.insightHistory ?? []) {
       await localDb.saveInsight(insight);
+    }
+
+    for (const entry of payload.sleepEntries ?? []) {
+      await localDb.saveSleepEntry(entry);
     }
 
     if (payload.settings) {

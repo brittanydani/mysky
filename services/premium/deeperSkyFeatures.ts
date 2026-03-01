@@ -25,6 +25,49 @@ export interface DeeperSkyFeature {
 
 export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
+    id: 'sleep-dream',
+    name: 'Sleep & Dream Reflection',
+    icon: 'moon',
+    description: 'Encrypted dream journal, symbolic dream reflections, and sleep trend analysis',
+    freeVersion: 'Sleep logging — quality rating and duration',
+    premiumVersion: 'Encrypted dream journal with symbolic dream reflections drawn from your sleep, mood, journal, and check-in data, plus sleep quality trends and what affects your rest over time',
+    isPremium: true,
+    bullets: [
+      'Encrypted dream journal tied to each sleep entry',
+      'Symbolic dream reflections drawn from your data',
+      'Sleep quality trends over time',
+      'See what affects your rest most',
+    ],
+  },
+  {
+    id: 'deep-insights',
+    name: 'Behavioral Patterns',
+    icon: 'sparkles',
+    description: 'Sleep & mood trends, what restores vs drains you, and emotion shifts',
+    freeVersion: 'Basic weekly averages: avg mood, avg sleep quality, and check-in count',
+    premiumVersion: 'Full trend charts: sleep & mood patterns over time, what restores vs drains you from your journal, and emotion tone shifts',
+    isPremium: true,
+    bullets: [
+      'Sleep & mood trend charts over time',
+      'What restores vs drains you — from your writing',
+      'Emotion tone shifts across your journal history',
+    ],
+  },
+  {
+    id: 'journal',
+    name: 'Journal Patterns',
+    icon: 'journal',
+    description: 'Behavioral trends, keyword lift, and writing insights from your entries',
+    freeVersion: 'One daily prompt and a shadow quote at the top of each entry',
+    premiumVersion: 'Behavioral trend analysis: keyword lift, emotion tone shifts, writing pattern insights, and transit-mood correlations',
+    isPremium: true,
+    bullets: [
+      'Keyword lift — what words appear on your best vs hardest days',
+      'Emotion tone shifts across your history',
+      'Writing pattern insights over time',
+    ],
+  },
+  {
     id: 'healing',
     name: 'Healing & Inner Work',
     icon: 'heart-half',
@@ -53,36 +96,8 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
     ],
   },
   {
-    id: 'journal',
-    name: 'Journal Patterns',
-    icon: 'journal',
-    description: 'Mood trends, transit correlations, and writing insights',
-    freeVersion: 'One daily prompt, weekly mood pattern, and a shadow quote at the top of each entry',
-    premiumVersion: 'Mood trends, transit-mood correlations, and writing pattern analysis',
-    isPremium: true,
-    bullets: [
-      'Mood trends over time',
-      'Transit-mood correlations',
-      'Writing pattern insights',
-    ],
-  },
-  {
-    id: 'chiron-nodes',
-    name: 'Chiron & Node Depth',
-    icon: 'compass',
-    description: 'Sensitivity mapping with body awareness cues',
-    freeVersion: 'Awareness cards showing your Node axis and Chiron sensitivity theme',
-    premiumVersion: 'Chiron sensitivity mapping with body awareness, integration themes, and Node axis depth',
-    isPremium: true,
-    bullets: [
-      'Chiron sensitivity: your tender spots',
-      'Body awareness cues',
-      'Integration themes for growth',
-    ],
-  },
-  {
     id: 'natal-story',
-    name: 'Full Natal Story',
+    name: 'Full Personal Story',
     icon: 'book',
     description: '10 emotional chapters — how you love, protect, and grow',
     freeVersion: '3 chapters: Core Self, Emotional World, First Impression',
@@ -109,6 +124,20 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
     ],
   },
   {
+    id: 'chiron-nodes',
+    name: 'Chiron & Node Depth',
+    icon: 'compass',
+    description: 'Sensitivity mapping with body awareness cues',
+    freeVersion: 'Awareness cards showing your Node axis and Chiron sensitivity theme',
+    premiumVersion: 'Chiron sensitivity mapping with body awareness, integration themes, and Node axis depth',
+    isPremium: true,
+    bullets: [
+      'Chiron sensitivity: your tender spots',
+      'Body awareness cues',
+      'Integration themes for growth',
+    ],
+  },
+  {
     id: 'pattern-depth',
     name: 'Pattern Depth',
     icon: 'analytics',
@@ -123,31 +152,17 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
     ],
   },
   {
-    id: 'deep-insights',
-    name: 'Deep Insights',
-    icon: 'sparkles',
-    description: 'Tag intelligence, journal deep dive, and cross-data connections',
-    freeVersion: 'Weekly mood overview, today\'s mantra, and chart themes',
-    premiumVersion: 'Full analytics: what restores vs drains you, tag combos, journal NLP themes, mood stability, and chart-mood-journal connections',
-    isPremium: true,
-    bullets: [
-      'What restores vs drains you',
-      'Tag intelligence & combo analysis',
-      'Journal deep dive with NLP themes',
-    ],
-  },
-  {
     id: 'pdf-export',
     name: 'PDF Chart Export',
     icon: 'document-text',
-    description: 'Export your natal chart and cosmic story as a keepsake',
+    description: 'Export your natal chart and personal story as a shareable PDF keepsake',
     freeVersion: 'Not available',
-    premiumVersion: 'Full PDF with natal chart wheel, all aspects, and your complete cosmic story',
+    premiumVersion: 'Full PDF — cover page, Big Three, all planet placements, house cusps, aspects, and all 10 Personal Story chapters',
     isPremium: true,
     bullets: [
-      'Beautiful natal chart wheel',
-      'Complete cosmic story included',
-      'Share or print your chart',
+      'Planet placements, house cusps & aspects',
+      'All 10 Personal Story chapters included',
+      'Share or save to Files',
     ],
   },
 ];
@@ -265,9 +280,24 @@ export class DeeperSkyGate {
 export const DEEPER_SKY_MARKETING = {
   tagline: 'Go deeper with your patterns',
   headline: 'Deeper Sky',
-  subheadline: 'From awareness to integration — your chart, fully alive',
+  subheadline: 'From awareness to integration — your patterns, your story, fully understood',
   
   valueProps: [
+    {
+      emoji: '📊',
+      title: 'Sleep & Mood Patterns',
+      brief: 'Sleep quality, mood trends, and what restores vs drains you',
+    },
+    {
+      emoji: '🌙',
+      title: 'Symbolic Dream Reflections',
+      brief: 'Personalized dream reflections drawn from your sleep, mood, and journal data — all on-device',
+    },
+    {
+      emoji: '✍️',
+      title: 'Journal Patterns',
+      brief: 'Behavioral trends, keyword lift, and emotion tone shifts over time',
+    },
     {
       emoji: '🌿',
       title: 'Healing & Inner Work',
@@ -279,18 +309,13 @@ export const DEEPER_SKY_MARKETING = {
       brief: 'Partner, ex, child, friend — full emotional breakdowns',
     },
     {
-      emoji: '📖',
-      title: 'Journal Patterns',
-      brief: 'Mood trends and transit-mood correlations over time',
-    },
-    {
       emoji: '🧭',
       title: 'Chiron & Node Depth',
       brief: 'Sensitivity mapping with body awareness cues',
     },
     {
       emoji: '🪐',
-      title: 'Full Natal Story',
+      title: 'Full Personal Story',
       brief: '10 emotional chapters — how you love, protect, and grow',
     },
     {
@@ -299,19 +324,14 @@ export const DEEPER_SKY_MARKETING = {
       brief: 'Key insights, action steps, and evening reflections',
     },
     {
-      emoji: '✦',
-      title: 'Pattern Depth',
-      brief: 'Full stellium narratives and conjunction clusters',
-    },
-    {
       emoji: '✨',
       title: 'Deep Insights',
-      brief: 'Tag intelligence, journal deep dive, and cross-data connections',
+      brief: 'What restores vs drains you, emotion tone shifts, transit correlations',
     },
     {
       emoji: '📄',
       title: 'PDF Chart Export',
-      brief: 'Export your natal chart and cosmic story as a keepsake',
+      brief: 'Export your natal chart and personal story as a shareable PDF',
     },
   ],
   
@@ -319,5 +339,5 @@ export const DEEPER_SKY_MARKETING = {
   
   guarantee: 'Cancel anytime. No questions asked.',
   
-  trustLine: 'Your birth chart, daily guidance, journaling, and insights overview are always free.',
+  trustLine: 'Mood tracking, sleep logging, daily journaling, and basic weekly averages are always free.',
 };

@@ -50,6 +50,7 @@ interface NormalizedCheckIn {
   stress: number;     // 1–10
   tags: string[];
   createdAt: string;  // original ISO timestamp
+  timeOfDay: string;  // 'morning' | 'afternoon' | 'evening' | 'night'
 }
 
 function normalizeCheckIn(ci: DailyCheckIn): NormalizedCheckIn {
@@ -60,6 +61,7 @@ function normalizeCheckIn(ci: DailyCheckIn): NormalizedCheckIn {
     stress: clamp(stressToNum(ci.stressLevel)),
     tags: ci.tags.map(normalizeTag).filter(t => t.length > 0),
     createdAt: ci.createdAt,
+    timeOfDay: ci.timeOfDay,
   };
 }
 
@@ -208,6 +210,7 @@ function aggregateByDay(
       emotionCountsTotal: Object.keys(emotionCountsSum).length > 0 ? emotionCountsSum : {},
       sentimentAvg,
       checkInTimestamps: dayCheckIns.map(c => c.createdAt),
+      timeOfDayLabels: dayCheckIns.map(c => c.timeOfDay),
       dayOfWeek: dow,
     });
   }

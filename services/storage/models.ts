@@ -105,6 +105,28 @@ export interface RelationshipChart {
 }
 
 /**
+ * Sleep entry — tracks nightly rest quality, duration, and dream journal.
+ * dream_text and notes are encrypted at rest.
+ */
+export interface SleepEntry {
+  id: string;
+  chartId: string;
+
+  date: string;              // YYYY-MM-DD (the night being logged)
+  durationHours?: number;    // e.g. 7.5
+  quality?: number;          // 1–5 (moons)
+  dreamText?: string;        // encrypted — dream journal
+  dreamMood?: string;        // how the dream felt (legacy — kept for migration compat)
+  dreamFeelings?: string;    // JSON: SelectedFeeling[] — encrypted at rest
+  dreamMetadata?: string;    // JSON: DreamMetadata — encrypted at rest
+  notes?: string;            // encrypted — legacy general sleep notes (no longer shown in UI)
+
+  createdAt: string;
+  updatedAt: string;
+  isDeleted: boolean;
+}
+
+/**
  * ✅ Cryptographically strong UUID (Expo)
  */
 export function generateId(): string {

@@ -10,7 +10,7 @@
 // Daily Check-In (user input)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type ThemeTag =
+type KnownThemeTag =
   // Legacy emotional tags
   | 'relationships'
   | 'confidence'
@@ -60,6 +60,9 @@ export type ThemeTag =
   | 'eq_scattered'
   | 'eq_heavy'
   | 'eq_open';
+
+// Allows known values (with IDE autocomplete) plus any user-typed custom string
+export type ThemeTag = KnownThemeTag | (string & {});
 
 export type EnergyLevel = 'low' | 'medium' | 'high';
 export type StressLevel = 'low' | 'medium' | 'high';

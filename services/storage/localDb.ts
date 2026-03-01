@@ -1,13 +1,13 @@
 // File: services/storage/localDb.ts
 
 import * as SQLite from 'expo-sqlite';
-import { SavedChart, JournalEntry, AppSettings, RelationshipChart } from './models';
+import { SavedChart, JournalEntry, AppSettings, RelationshipChart, SleepEntry } from './models';
 import { SavedInsight } from './insightHistory';
 import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 14;
+const CURRENT_DB_VERSION = 17;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -167,6 +167,18 @@ class LocalDatabase {
 
     if (fromVersion < 14) {
       await this.migrateToVersion14();
+    }
+
+    if (fromVersion < 15) {
+      await this.migrateToVersion15();
+    }
+
+    if (fromVersion < 16) {
+      await this.migrateToVersion16();
+    }
+
+    if (fromVersion < 17) {
+      await this.migrateToVersion17();
     }
   }
 
@@ -933,6 +945,70 @@ class LocalDatabase {
     }
   }
 
+  /**
+   * Version 15 — Add sleep_entries table for sleep tracking and dream journaling.
+   * dream_text and notes are encrypted at rest (like journal_entries.content).
+   */
+  private async migrateToVersion15(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 15 (sleep entries)...');
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS sleep_entries (
+        id TEXT PRIMARY KEY,
+        chart_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        duration_hours REAL,
+        quality INTEGER,
+        dream_text TEXT,
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        is_deleted INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (chart_id) REFERENCES saved_charts(id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_sleep_entries_date ON sleep_entries(date);
+      CREATE INDEX IF NOT EXISTS idx_sleep_entries_chart ON sleep_entries(chart_id);
+    `);
+
+    logger.info('[LocalDB] Version 15 migration complete');
+  }
+
+  /**
+   * Version 16 — Add dream_mood column to sleep_entries.
+   * Stores the user's feeling during the dream (e.g. peaceful, anxious, surreal).
+   */
+  private async migrateToVersion16(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 16 (dream mood)...');
+
+    await db.execAsync(`
+      ALTER TABLE sleep_entries ADD COLUMN dream_mood TEXT;
+    `);
+
+    logger.info('[LocalDB] Version 16 migration complete');
+  }
+
+  /**
+   * Version 17 — Add dream_feelings and dream_metadata columns to sleep_entries.
+   * dream_feelings: JSON string of SelectedFeeling[] (encrypted at rest)
+   * dream_metadata: JSON string of DreamMetadata (encrypted at rest)
+   */
+  private async migrateToVersion17(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 17 (dream feelings & metadata)...');
+
+    await db.execAsync(`
+      ALTER TABLE sleep_entries ADD COLUMN dream_feelings TEXT;
+    `);
+    await db.execAsync(`
+      ALTER TABLE sleep_entries ADD COLUMN dream_metadata TEXT;
+    `);
+
+    logger.info('[LocalDB] Version 17 migration complete');
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1237,6 +1313,7 @@ class LocalDatabase {
       DELETE FROM daily_check_ins;
       DELETE FROM insight_history;
       DELETE FROM relationship_charts;
+      DELETE FROM sleep_entries;
       DELETE FROM migration_markers;
       VACUUM;
     `);
@@ -1261,6 +1338,92 @@ class LocalDatabase {
 
   async saveSettings(settings: AppSettings): Promise<void> {
     return this.updateSettings(settings);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Sleep Entry operations
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  async saveSleepEntry(entry: SleepEntry): Promise<void> {
+    const db = await this.ensureReady();
+
+    const encDreamText = entry.dreamText
+      ? await FieldEncryptionService.encryptField(entry.dreamText)
+      : null;
+    const encNotes = entry.notes
+      ? await FieldEncryptionService.encryptField(entry.notes)
+      : null;
+    const encDreamFeelings = entry.dreamFeelings
+      ? await FieldEncryptionService.encryptField(entry.dreamFeelings)
+      : null;
+    const encDreamMetadata = entry.dreamMetadata
+      ? await FieldEncryptionService.encryptField(entry.dreamMetadata)
+      : null;
+
+    await db.runAsync(
+      `INSERT OR REPLACE INTO sleep_entries
+       (id, chart_id, date, duration_hours, quality, dream_text, dream_mood, dream_feelings, dream_metadata, notes, created_at, updated_at, is_deleted)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        entry.id,
+        entry.chartId,
+        entry.date,
+        entry.durationHours ?? null,
+        entry.quality ?? null,
+        encDreamText,
+        entry.dreamMood ?? null,
+        encDreamFeelings,
+        encDreamMetadata,
+        encNotes,
+        entry.createdAt,
+        entry.updatedAt,
+        entry.isDeleted ? 1 : 0,
+      ]
+    );
+  }
+
+  async getSleepEntries(chartId: string, limit = 30): Promise<SleepEntry[]> {
+    const db = await this.ensureReady();
+
+    const rows = (await db.getAllAsync(
+      'SELECT * FROM sleep_entries WHERE chart_id = ? AND is_deleted = 0 ORDER BY date DESC LIMIT ?',
+      [chartId, limit]
+    )) as any[];
+
+    return Promise.all(
+      rows.map(async (row) => ({
+        id: row.id,
+        chartId: row.chart_id,
+        date: row.date,
+        durationHours: row.duration_hours ?? undefined,
+        quality: row.quality ?? undefined,
+        dreamText: row.dream_text
+          ? await FieldEncryptionService.decryptField(row.dream_text)
+          : undefined,
+        dreamMood: row.dream_mood ?? undefined,
+        dreamFeelings: row.dream_feelings
+          ? await FieldEncryptionService.decryptField(row.dream_feelings)
+          : undefined,
+        dreamMetadata: row.dream_metadata
+          ? await FieldEncryptionService.decryptField(row.dream_metadata)
+          : undefined,
+        notes: row.notes
+          ? await FieldEncryptionService.decryptField(row.notes)
+          : undefined,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        isDeleted: row.is_deleted === 1,
+      }))
+    );
+  }
+
+  async deleteSleepEntry(id: string): Promise<void> {
+    const db = await this.ensureReady();
+    const now = new Date().toISOString();
+    await db.runAsync(
+      'UPDATE sleep_entries SET is_deleted = 1, updated_at = ? WHERE id = ?',
+      [now, id]
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────────

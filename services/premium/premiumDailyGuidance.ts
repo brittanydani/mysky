@@ -475,7 +475,7 @@ export class PremiumDailyGuidanceGenerator {
    */
   private static generateTransitExplanation(aspect: SimpleAspect | undefined, chart: NatalChart): string {
     if (!aspect) {
-      return "Today's sky is relatively quiet in relation to your natal chart. This can be a time to consolidate, rest, or follow your own rhythm without external cosmic pressure.";
+      return "Today's influences are relatively quiet in relation to your chart. This can be a time to consolidate, rest, or follow your own rhythm without external pressure.";
     }
 
     const planet = aspect.pointB;

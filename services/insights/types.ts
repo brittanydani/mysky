@@ -97,8 +97,11 @@ export interface DailyAggregate {
   /** Average sentiment across entries for this day (if present) */
   sentimentAvg: number | null;
 
-  /** Check-in timestamps (for time-of-day analysis, preserved from raw data) */
+  /** Check-in creation timestamps (preserved from raw data) */
   checkInTimestamps: string[];
+
+  /** Per-check-in timeOfDay labels ('morning'|'afternoon'|'evening'|'night') for time-of-day analysis */
+  timeOfDayLabels: string[];
 
   /** Day of week 0–6 (Sunday = 0) */
   dayOfWeek: number;

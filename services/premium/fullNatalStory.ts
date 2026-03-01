@@ -1043,7 +1043,7 @@ Your Venus also shapes how you receive love. You need someone who notices your c
     affirmation: 'I deserve to be nurtured as deeply as I nurture others. My heart is worth protecting.',
   },
   Leo: {
-    content: `With Venus in Leo, you love like the sun loves the earth — generously, magnificently, and with total commitment. When you love someone, they become the center of your universe, showered with attention, affection, and unwavering loyalty.
+    content: `With Venus in Leo, you love like starlight — generously, magnificently, and with total commitment. When you love someone, they become the center of your universe, showered with attention, affection, and unwavering loyalty.
 
 You need to be adored in return. Not as a narcissistic demand, but as a genuine need for your love to be recognized and celebrated. Romance is not optional for you — it's essential. You want the grand love story, and you're willing to create it.
 

@@ -959,9 +959,12 @@ function getNatalHouseForTarget(natalChart: NatalChart, target: string): number 
  */
 function buildGenericTemplate(signal: TransitSignal): TransitTemplate {
   const tone = getAspectTone(signal.aspectType);
+  const isSelfAspect = signal.transitingPlanet === signal.natalTarget;
 
   const title = `${signal.transitingPlanet} feels ${tone.adjective}`;
-  const observation = `${signal.transitingPlanet} is ${signal.aspectType} your ${signal.natalTarget}, which can make this theme feel more noticeable than usual. You may spot clearer patterns around choices, timing, and what matters today.`;
+  const observation = isSelfAspect
+    ? `Your ${signal.transitingPlanet} is in a return cycle, amplifying this theme and making it feel more noticeable than usual. You may spot clearer patterns around choices, timing, and what matters today.`
+    : `${signal.transitingPlanet} is ${signal.aspectType} your ${signal.natalTarget}, which can make this theme feel more noticeable than usual. You may spot clearer patterns around choices, timing, and what matters today.`;
   const choicePoint = `${tone.guidance} Pick one action that supports your ${signal.domain} domain without overdoing it.`;
 
   return { title, observation, choicePoint };
@@ -1006,7 +1009,9 @@ export class DailyInsightEngine {
 
     // 9. Build "Why this?" section
     const signalDescriptions = topSignals.map(s => ({
-      description: `${s.transitingPlanet} ${s.aspectType} natal ${s.natalTarget}`,
+      description: s.transitingPlanet === s.natalTarget
+        ? `${s.transitingPlanet} return cycle — this area is being renewed`
+        : `${s.transitingPlanet} ${s.aspectType} natal ${s.natalTarget}`,
       orb: `${s.orb.toFixed(1)}°`,
     }));
 
@@ -1425,16 +1430,19 @@ export class DailyInsightEngine {
 
     const template = this.getTemplate(signal);
     if (template) {
+      const isSelfAspect = signal.transitingPlanet === signal.natalTarget;
       return {
         main: template.title,
-        subtext: `${signal.transitingPlanet} ${signal.aspectType} your ${signal.natalTarget} (${signal.orb.toFixed(
-          1
-        )}° orb)`,
+        subtext: isSelfAspect
+          ? `${signal.transitingPlanet} return cycle (${signal.orb.toFixed(1)}° orb)`
+          : `${signal.transitingPlanet} ${signal.aspectType} your ${signal.natalTarget} (${signal.orb.toFixed(1)}° orb)`,
       };
     }
 
     return {
-      main: `${signal.transitingPlanet} activates your ${signal.natalTarget}`,
+      main: signal.transitingPlanet === signal.natalTarget
+        ? `Your ${signal.transitingPlanet} is in a return cycle`
+        : `${signal.transitingPlanet} activates your ${signal.natalTarget}`,
       subtext: `${signal.aspectType} aspect, ${signal.orb.toFixed(1)}° orb`,
     };
   }

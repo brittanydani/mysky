@@ -491,7 +491,7 @@ export class PremiumRelationshipService {
   
   private static getRelationshipReminder(): string {
     const reminders = [
-      'Astrology doesn\'t predict whether you\'ll "work" — it helps you understand how to work together.',
+      'Your chart doesn\'t predict whether you\'ll "work" — it helps you understand how to work together.',
       'Understanding differences doesn\'t mean accepting everything. It means knowing what you\'re working with.',
       'The goal isn\'t compatibility — it\'s compassionate understanding.',
       'Every relationship is a mirror. What triggers you teaches you about yourself.',
