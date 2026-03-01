@@ -51,7 +51,7 @@ const METRICS: MetricConfig[] = [
     color: '#6EBF8B',
     glowColor: 'rgba(110,191,139,0.25)',
     extract: (c) => {
-      const map: Record<string, number> = { low: 3, medium: 6, high: 9 };
+      const map: Record<string, number> = { low: 2, medium: 5, high: 9 };
       return map[c.energyLevel] ?? 5;
     },
     yLabels: ['Low', '', 'Steady', '', 'Elevated'],
@@ -62,7 +62,7 @@ const METRICS: MetricConfig[] = [
     color: '#E07A7A',
     glowColor: 'rgba(224,122,122,0.25)',
     extract: (c) => {
-      const map: Record<string, number> = { low: 3, medium: 6, high: 9 };
+      const map: Record<string, number> = { low: 2, medium: 5, high: 9 };
       return map[c.stressLevel] ?? 5;
     },
     yLabels: ['Low', '', 'Moderate', '', 'High'],

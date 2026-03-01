@@ -34,13 +34,13 @@ export default function PrivacyPolicyScreen() {
           showsVerticalScrollIndicator={false}
         >
 
-          <Text style={styles.lastUpdated}>Last updated: February 20, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: February 27, 2026</Text>
 
           {/* ── 1. Introduction ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Our Commitment to Your Privacy</Text>
             <Text style={styles.paragraph}>
-              MySky (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is a personal growth and astrology reflection app. This Privacy Policy explains what information MySky collects, how it is used and protected, and your rights regarding that information. MySky is designed with privacy by design and by default, in accordance with the EU General Data Protection Regulation (GDPR), the California Consumer Privacy Act as amended by the California Privacy Rights Act (CCPA/CPRA), the Apple App Store Guidelines, and the Google Play Developer Policies.
+              MySky (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is a personal growth and wellness app for mood tracking, sleep tracking, journaling, and self-reflection. This Privacy Policy explains what information MySky collects, how it is used and protected, and your rights regarding that information. MySky is designed with privacy by design and by default, in accordance with the EU General Data Protection Regulation (GDPR), the California Consumer Privacy Act as amended by the California Privacy Rights Act (CCPA/CPRA), the Apple App Store Guidelines, and the Google Play Developer Policies.
             </Text>
             <Text style={styles.paragraph}>
               By using MySky, you acknowledge that you have read and understood this Privacy Policy. If you do not agree with it, please do not use the app.
@@ -84,6 +84,12 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletPoint}>• Optional notes, wins, and challenges</Text>
             <Text style={styles.bulletPoint}>• Astronomical snapshot at time of check-in (moon sign, transits, retrogrades) — computed on-device</Text>
 
+            <Text style={styles.subSectionTitle}>Sleep Tracking</Text>
+            <Text style={styles.bulletPoint}>• Nightly sleep quality rating (1–5) and duration</Text>
+            <Text style={styles.bulletPoint}>• Wake feeling, dream quality, and optional dream journal note (encrypted)</Text>
+            <Text style={styles.bulletPoint}>• On-device symbolic dream reflections derived from your sleep journal, mood, check-ins, and journal entries — processed entirely on your device, never transmitted</Text>
+            <Text style={styles.bulletPoint}>• One entry per night — you can edit the same day</Text>
+
             <Text style={styles.subSectionTitle}>Relationship Charts</Text>
             <Text style={styles.bulletPoint}>• Name, birth date, birth time, and birth location of another person (e.g., partner, friend, family member)</Text>
             <Text style={styles.bulletPoint}>• Relationship type (partner, ex, child, parent, friend, sibling, other)</Text>
@@ -110,14 +116,16 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.paragraph}>
               All data processing occurs entirely on your device. Your data is used exclusively to provide and personalize the app&apos;s features:
             </Text>
-            <Text style={styles.bulletPoint}>• Calculate and display your natal chart as a reflection framework</Text>
+            <Text style={styles.bulletPoint}>• Track mood, energy, stress, and sleep patterns over time</Text>
+            <Text style={styles.bulletPoint}>• Analyze behavioral trends and what restores vs drains you</Text>
+            <Text style={styles.bulletPoint}>• Derive on-device keyword and sentiment summaries from your journal</Text>
+            <Text style={styles.bulletPoint}>• Calculate and display your chart as a personalization framework</Text>
             <Text style={styles.bulletPoint}>• Generate personalized daily guidance and growth prompts</Text>
             <Text style={styles.bulletPoint}>• Provide relationship compatibility reflections</Text>
-            <Text style={styles.bulletPoint}>• Track mood, energy, and stress patterns over time</Text>
             <Text style={styles.bulletPoint}>• Correlate your check-in themes with planetary transits</Text>
-            <Text style={styles.bulletPoint}>• Derive on-device keyword and sentiment summaries from your journal</Text>
-            <Text style={styles.bulletPoint}>• Generate your natal story narrative and PDF export</Text>
+            <Text style={styles.bulletPoint}>• Generate your personal story narrative and PDF export</Text>
             <Text style={styles.bulletPoint}>• Map chakra and healing insights from your chart profile</Text>
+            <Text style={styles.bulletPoint}>• Generate symbolic dream reflections from your sleep journal, mood, check-ins, and journal entries — entirely on-device</Text>
             <Text style={styles.paragraph}>
               We do not use your data for advertising, marketing, profiling, research, AI/ML model training, or any purpose other than providing the app&apos;s features to you on your device.
             </Text>
@@ -143,7 +151,7 @@ export default function PrivacyPolicyScreen() {
               Your data is stored locally on your device using multiple layers of protection:
             </Text>
             <Text style={styles.bulletPoint}>• All data is stored in a local SQLite database on your device — never on external servers</Text>
-            <Text style={styles.bulletPoint}>• Sensitive fields are encrypted at rest using AES-256-GCM: birth data (name, date, time, location), journal content and titles, relationship chart data, check-in notes, wins and challenges, and personalized daily insight text (guidance messages, reflection prompts)</Text>
+            <Text style={styles.bulletPoint}>• Sensitive fields are encrypted at rest using AES-256-GCM: birth data (name, date, time, location), journal content and titles, relationship chart data, check-in notes, wins and challenges, dream journal text, and personalized daily insight text (guidance messages, reflection prompts)</Text>
             <Text style={styles.bulletPoint}>• A unique Data Encryption Key (DEK) is generated on your device and stored in the hardware-backed keychain (iOS) or keystore (Android) via SecureStore</Text>
             <Text style={styles.bulletPoint}>• Each encrypted field uses a unique random 96-bit initialization vector (IV)</Text>
             <Text style={styles.bulletPoint}>• HMAC-SHA256 integrity verification detects any tampering with stored data</Text>
@@ -206,7 +214,7 @@ export default function PrivacyPolicyScreen() {
               If you choose to create an encrypted backup:
             </Text>
             <Text style={styles.bulletPoint}>• Your data is encrypted with AES-256-GCM using a passphrase you create</Text>
-            <Text style={styles.bulletPoint}>• The backup includes: your charts, journal entries, relationship charts, saved daily insights and favorites, and app settings</Text>
+            <Text style={styles.bulletPoint}>• The backup includes: your charts, journal entries, mood &amp; energy check-ins, sleep entries, relationship charts, saved daily insights and favorites, and app settings</Text>
             <Text style={styles.bulletPoint}>• A .msky backup file is generated on your device</Text>
             <Text style={styles.bulletPoint}>• The system share sheet opens for you to choose a destination (Files, iCloud Drive, AirDrop, email, etc.)</Text>
             <Text style={styles.bulletPoint}>• MySky never uploads your backup to any server</Text>
@@ -263,7 +271,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Automated Processing</Text>
             <Text style={styles.paragraph}>
-              MySky performs automated calculations on your device, including natal chart computation, transit tracking, pattern correlation, and keyword extraction from journal entries. These calculations are used solely to display personalized reflections and insights within the app.
+              MySky performs automated calculations on your device, including chart computation, transit tracking, pattern correlation, keyword extraction from journal entries, and symbolic dream reflections. These calculations are used solely to display personalized reflections and insights within the app.
             </Text>
             <Text style={styles.paragraph}>
               No automated decisions are made that produce legal effects or similarly significant effects concerning you. All chart interpretations and insights are generalized reflection prompts — not predictions, diagnoses, or consequential decisions.

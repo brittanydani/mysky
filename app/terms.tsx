@@ -39,13 +39,8 @@ export default function TermsOfServiceScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
 
-            <Text style={styles.lastUpdated}>Last updated: February 20, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: February 28, 2026</Text>
 
-            <Text style={styles.sectionTitle}>Encryption, Storage, and Subscriptions</Text>
-            <Text style={styles.paragraph}>
-              All sensitive data in MySky is encrypted at rest using AES-256. Encryption keys are securely stored using your device's hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup. Subscription status is managed by RevenueCat, which receives only an anonymized app user ID—never your journal, birth data, or other personal information.
-            </Text>
-            
             <Text style={styles.sectionTitle}>Welcome to MySky</Text>
             <Text style={styles.paragraph}>
               These Terms of Service govern your use of the MySky mobile application and related services. By using MySky, you agree to these terms.
@@ -63,13 +58,15 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Description of Service</Text>
             <Text style={styles.paragraph}>
-              MySky is a personal growth and reflection app that provides:{'\n'}
-              • Journaling and daily emotional check-ins{'\n'}
-              • Trend analysis of mood, energy, and stress over time{'\n'}
+              MySky is a personal growth and wellness app that provides:{'\n'}
+              • Daily mood, energy, and stress check-ins{'\n'}
+              • Sleep logging — quality and duration (dream journal requires premium){'\n'}
+              • Journaling with guided prompts and on-device behavioral insights{'\n'}
+              • Basic weekly averages for mood and sleep (free); full trend analysis (premium){'\n'}
               • A natal chart used as a personalization framework{'\n'}
               • Daily guidance and reflection prompts{'\n'}
-              • Emotional pattern insights drawn from your chart profile{'\n'}
               • Relationship reflection tools{'\n'}
+              • PDF chart export (premium){'\n'}
               • Encrypted backup and restore (premium)
             </Text>
 
@@ -79,12 +76,17 @@ export default function TermsOfServiceScreen() {
               You are responsible for maintaining your device&apos;s security and for any backup or PDF files you create and share.
             </Text>
 
+            <Text style={styles.sectionTitle}>Data Security</Text>
+            <Text style={styles.paragraph}>
+              All sensitive data in MySky is encrypted at rest using AES-256. Encryption keys are securely stored using your device's hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup. Subscription status is managed by RevenueCat, which receives only an anonymized app user ID—never your journal, birth data, or other personal information.
+            </Text>
+
             <Text style={styles.sectionTitle}>Free and Premium Features</Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Free features include:</Text> Natal chart with all major aspects, Big Three (Sun, Moon, Rising), natal story (3 chapters), basic daily guidance, one relationship chart, journal with mood tracking, insights overview and weekly mood, energy snapshot, and privacy controls.
+              <Text style={styles.bold}>Free features include:</Text> Daily mood, energy &amp; stress check-ins, sleep logging (quality &amp; duration), journal with guided prompts, basic weekly averages, natal chart &amp; Big Three, basic daily guidance, one relationship chart, and privacy controls.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>&quot;Deeper Sky&quot; premium features include:</Text> Encrypted backup &amp; restore, full natal story (10 chapters), healing &amp; inner work insights, unlimited relationship charts, journal pattern analysis, deep insights &amp; tag intelligence, Chiron &amp; Node depth mapping, full chakra mapping with check-ins, personalized guidance with action steps, extended pattern analysis, and PDF chart export.
+              <Text style={styles.bold}>&quot;Deeper Sky&quot; premium features include:</Text> Dream journal with sleep entries (encrypted), symbolic dream reflections, sleep &amp; mood trend analysis, behavioral insights &amp; trend charts, healing &amp; inner work (attachment styles, shadow work), unlimited relationship charts, mood &amp; journal pattern analysis, deep insights &amp; tag intelligence, full natal story (10 chapters), personalized guidance with action steps, Chiron &amp; Node depth mapping, PDF chart export, and encrypted backup &amp; restore.
             </Text>
 
             <Text style={styles.sectionTitle}>Subscriptions and Payments</Text>

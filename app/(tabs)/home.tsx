@@ -27,7 +27,7 @@ const PREMIUM_PREVIEWS = [
     icon: 'heart-half' as const,
     color: '#E07A98',
     label: 'Healing',
-    title: 'Your attachment style is shaped by your Moon placement',
+    title: 'Your attachment style is shaped by your emotional blueprint',
     sub: 'Understand your fear patterns, what safety looks like for you, and how to start healing.',
     cta: 'Explore your healing map',
     route: '/(tabs)/healing',
@@ -37,7 +37,7 @@ const PREMIUM_PREVIEWS = [
     color: '#6EBF8B',
     label: 'Patterns',
     title: 'Your mood data is ready to reveal patterns',
-    sub: 'See trends over time, discover which days you feel best, and correlate with cosmic weather.',
+    sub: 'See trends over time, discover which days you feel best, and correlate with daily influences.',
     cta: 'See your patterns',
     route: '/(tabs)/mood',
   },
@@ -45,9 +45,9 @@ const PREMIUM_PREVIEWS = [
     icon: 'people' as const,
     color: '#8BC4E8',
     label: 'Relationships',
-    title: 'Deeper Sky includes unlimited relationship charts',
+    title: 'Deeper Sky includes unlimited relationship profiles',
     sub: 'Partner, parent, child, friend — understand how you truly connect with the people who matter.',
-    cta: 'Compare charts',
+    cta: 'Compare profiles',
     route: '/(tabs)/relationships',
   },
   {
@@ -157,6 +157,7 @@ export default function HomeScreen() {
         birthPlace: chart.birthData.place,
         latitude: chart.birthData.latitude,
         longitude: chart.birthData.longitude,
+        timezone: chart.birthData.timezone,
         houseSystem: chart.birthData.houseSystem,
         createdAt: charts.length > 0 ? charts[0].createdAt : chart.createdAt,
         updatedAt: new Date().toISOString(),
@@ -410,11 +411,11 @@ export default function HomeScreen() {
                 </LinearGradient>
               </Pressable>
 
-              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/insights' as Href)} accessibilityRole="button" accessibilityLabel="Insights, your patterns">
+              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/growth' as Href)} accessibilityRole="button" accessibilityLabel="Reflect, check in with yourself">
                 <LinearGradient colors={['rgba(30,45,71,0.9)', 'rgba(26,39,64,0.7)']} style={styles.quickLinkGradient}>
-                  <Ionicons name="sparkles-outline" size={24} color={theme.energy} />
-                  <Text style={styles.quickLinkTitle}>Insights</Text>
-                  <Text style={styles.quickLinkSub}>Your patterns</Text>
+                  <Ionicons name="leaf-outline" size={24} color={theme.energy} />
+                  <Text style={styles.quickLinkTitle}>Reflect</Text>
+                  <Text style={styles.quickLinkSub}>Check in</Text>
                 </LinearGradient>
               </Pressable>
             </View>

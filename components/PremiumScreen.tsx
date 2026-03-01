@@ -78,9 +78,11 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     const result = await restore();
     setRestoring(false);
 
-    if (result.success) {
+    if (result.success && result.hasPremium) {
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       Alert.alert('Restored', 'Your purchases have been restored successfully.');
+    } else if (result.success && !result.hasPremium) {
+      Alert.alert('No Purchases Found', 'No active purchases were found for this account.');
     } else {
       Alert.alert('Restore Failed', result.error || 'Could not restore purchases. Please try again.');
     }

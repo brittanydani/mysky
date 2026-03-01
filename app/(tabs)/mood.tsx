@@ -10,6 +10,7 @@ import {
   Pressable,
   PanResponder,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -104,7 +105,7 @@ function sliderToLevel(v: number): 'low' | 'medium' | 'high' {
 }
 
 function levelToNum(level: 'low' | 'medium' | 'high'): number {
-  return level === 'low' ? 2 : level === 'medium' ? 5 : 8;
+  return level === 'low' ? 2 : level === 'medium' ? 5 : 9;
 }
 
 function numToLevelLabel(n: number): string {
@@ -432,6 +433,8 @@ export default function MoodScreen() {
   const [energySlider, setEnergySlider] = useState(5);
   const [stressSlider, setStressSlider] = useState(5);
   const [selectedTags, setSelectedTags] = useState<ThemeTag[]>([]);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customInputText, setCustomInputText] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [selectedQuality, setSelectedQuality] = useState<ThemeTag | null>(null);
@@ -481,6 +484,8 @@ export default function MoodScreen() {
             const eqTag = restoredTags.find((t: string) => t.startsWith('eq_')) as ThemeTag | undefined;
             setSelectedQuality(eqTag ?? null);
             setSelectedTags(restoredTags.filter((t: string) => !t.startsWith('eq_')));
+            setShowCustomInput(false);
+            setCustomInputText('');
           }
 
           // Load all today's check-ins and completed slots
@@ -541,6 +546,16 @@ export default function MoodScreen() {
       setSaving(false);
     }
   }, [userChart, chartId, moodSlider, energySlider, stressSlider, selectedTags, selectedQuality, selectedTimeSlot, saving]);
+
+  const handleAddCustomTag = useCallback(() => {
+    const raw = customInputText.trim().slice(0, 20);
+    const trimmed = raw.charAt(0).toUpperCase() + raw.slice(1);
+    if (trimmed && !selectedTags.includes(trimmed as ThemeTag) && selectedTags.length < 3) {
+      setSelectedTags(prev => [...prev, trimmed as ThemeTag]);
+    }
+    setCustomInputText('');
+    setShowCustomInput(false);
+  }, [customInputText, selectedTags]);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -777,6 +792,8 @@ export default function MoodScreen() {
                           const eqTag = restoredTags.find((t: string) => t.startsWith('eq_')) as ThemeTag | undefined;
                           setSelectedQuality(eqTag ?? null);
                           setSelectedTags(restoredTags.filter((t: string) => !t.startsWith('eq_')));
+                          setShowCustomInput(false);
+                          setCustomInputText('');
                           setTodayCheckIn(existing);
                         } else {
                           // Reset form for new time slot
@@ -785,6 +802,8 @@ export default function MoodScreen() {
                           setStressSlider(5);
                           setSelectedTags([]);
                           setSelectedQuality(null);
+                          setShowCustomInput(false);
+                          setCustomInputText('');
                           setTodayCheckIn(null);
                         }
                       }}
@@ -864,6 +883,61 @@ export default function MoodScreen() {
                     </Text>
                   </Pressable>
                 ))}
+
+                {/* Custom tag chip — shown when user has typed one; hold to remove */}
+                {(() => {
+                  const customTag = selectedTags.find(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'));
+                  if (!customTag) return null;
+                  return (
+                    <Pressable
+                      style={[styles.tagChip, styles.tagChipOn]}
+                      onLongPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                        setSelectedTags(prev => prev.filter(t => t !== customTag));
+                      }}
+                      delayLongPress={600}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${customTag}, hold to remove`}
+                    >
+                      <Text style={[styles.tagTxt, styles.tagTxtOn]}>✏️ {customTag}</Text>
+                    </Pressable>
+                  );
+                })()}
+
+                {/* "+ other" chip or inline input */}
+                {(() => {
+                  const customTag = selectedTags.find(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'));
+                  if (customTag) return null;
+                  if (showCustomInput) {
+                    return (
+                      <View style={styles.customTagInputRow}>
+                        <TextInput
+                          style={styles.customTagInput}
+                          value={customInputText}
+                          onChangeText={t => setCustomInputText(t.slice(0, 20))}
+                          placeholder="e.g. travel"
+                          placeholderTextColor={theme.textSecondary}
+                          autoFocus
+                          returnKeyType="done"
+                          onSubmitEditing={handleAddCustomTag}
+                          onBlur={() => { if (!customInputText.trim()) setShowCustomInput(false); }}
+                          maxLength={20}
+                        />
+                      </View>
+                    );
+                  }
+                  if (selectedTags.length >= 3) return null;
+                  return (
+                    <Pressable
+                      style={styles.tagChipOther}
+                      onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowCustomInput(true); }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Add your own influence"
+                    >
+                      <Text style={styles.tagTxtOther}>+ other</Text>
+                    </Pressable>
+                  );
+                })()}
               </View>
 
               {/* Premium: Emotional Quality */}
@@ -1345,7 +1419,34 @@ const styles = StyleSheet.create({
   },
   tagTxt: { color: theme.textSecondary, fontSize: 13, fontWeight: '600' },
   tagTxtOn: { color: theme.primary },
-
+  tagChipOther: {
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderStyle: 'dashed',
+  },
+  tagTxtOther: { color: theme.textMuted, fontSize: 13, fontWeight: '600' },
+  customTagInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.20)',
+  },
+  customTagInput: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    minWidth: 90,
+    maxWidth: 140,
+    height: 20,
+  },
   qualityChip: {
     paddingHorizontal: 12,
     paddingVertical: 7,

@@ -6,7 +6,7 @@ import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-na
 import { revenueCatService } from '../services/premium/revenuecat';
 
 type PurchaseResult = { success: boolean; error?: string; userCancelled?: boolean };
-type RestoreResult = { success: boolean; error?: string };
+type RestoreResult = { success: boolean; hasPremium?: boolean; error?: string };
 
 interface PremiumContextType {
   isPremium: boolean;
@@ -38,7 +38,7 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const FORCE_PREMIUM = false;
+  const FORCE_PREMIUM = true;
 
   const updateCustomerInfo = useCallback((info: CustomerInfo | null) => {
     setCustomerInfo(info);
@@ -79,8 +79,9 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
     setLoading(true);
     try {
       const result = await revenueCatService.restorePurchases();
+      const hasPremium = result.customerInfo ? revenueCatService.isPremium(result.customerInfo) : false;
       if (result.success && result.customerInfo) updateCustomerInfo(result.customerInfo);
-      return { success: result.success, error: result.error };
+      return { success: result.success, hasPremium, error: result.error };
     } catch (e: any) {
       logger.error('[PremiumContext] restore failed:', e);
       return { success: false, error: e?.message ?? 'Restore failed' };

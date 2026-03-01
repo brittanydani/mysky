@@ -37,30 +37,12 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* Visible tabs (exactly 5) */}
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <Ionicons name="home" size={22} color={color} />,
-        }}
-      />
-
-      <Tabs.Screen name="index" options={{ href: null }} />
-
-      <Tabs.Screen
-        name="today"
-        options={{
-          title: 'Today',
-          tabBarIcon: ({ color }) => <Ionicons name="partly-sunny" size={22} color={color} />,
-        }}
-      />
-
+      {/* ── Visible tabs (exactly 5) ── */}
       <Tabs.Screen
         name="mood"
         options={{
           title: 'Mood',
-          tabBarIcon: ({ color }) => <Ionicons name="happy" size={22} color={color} />, 
+          tabBarIcon: ({ color }) => <Ionicons name="happy" size={22} color={color} />,
         }}
       />
 
@@ -73,6 +55,22 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="growth"
+        options={{
+          title: 'Reflect',
+          tabBarIcon: ({ color }) => <Ionicons name="leaf" size={22} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="sleep"
+        options={{
+          title: 'Sleep',
+          tabBarIcon: ({ color }) => <Ionicons name="moon" size={22} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
@@ -80,15 +78,17 @@ export default function TabLayout() {
         }}
       />
 
-
-      {/* Hidden routes (still accessible via navigation) */}
+      {/* ── Hidden routes — still accessible via router.push ── */}
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="home" options={{ href: null }} />
+      <Tabs.Screen name="today" options={{ href: null }} />
       <Tabs.Screen name="energy" options={{ href: null }} />
       <Tabs.Screen name="chart" options={{ href: null }} />
       <Tabs.Screen name="story" options={{ href: null }} />
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing" options={{ href: null }} />
-      <Tabs.Screen name="insights" options={{ href: null }} />
       <Tabs.Screen name="premium" options={{ href: null }} />
+      <Tabs.Screen name="insights" options={{ href: null }} />
     </Tabs>
   );
 }

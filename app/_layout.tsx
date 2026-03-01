@@ -3,12 +3,51 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PremiumProvider } from '../context/PremiumContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Component, type ReactNode } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
 import { logger } from '../utils/logger';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: { componentStack: string }) {
+    logger.error('Unhandled render error:', error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Something went wrong</Text>
+          <Text style={styles.errorBody}>Please close and reopen the app.</Text>
+          <TouchableOpacity style={styles.errorButton} onPress={() => this.setState({ hasError: false })}>
+            <Text style={styles.errorButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const styles = StyleSheet.create({
+  errorContainer: { flex: 1, backgroundColor: '#0D1421', alignItems: 'center', justifyContent: 'center', padding: 32 },
+  errorTitle: { color: '#FFFFFF', fontSize: 20, fontWeight: '600', marginBottom: 12 },
+  errorBody: { color: '#8899AA', fontSize: 15, textAlign: 'center', marginBottom: 32 },
+  errorButton: { backgroundColor: '#1E3A5F', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 12 },
+  errorButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '500' },
+});
 
 export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
@@ -82,26 +121,28 @@ export default function RootLayout() {
   }
 
   return (
-    <PremiumProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <SafeAreaProvider>
-            <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: '#0D1421' },
-                animation: 'fade',
-              }}
-            />
-            
-            {/* Privacy Consent Modal - shown before user can use the app */}
-            <PrivacyConsentModal
-              visible={needsPrivacyConsent}
-              onConsent={handlePrivacyConsent}
-              contactEmail="brittanyapps@outlook.com"
-            />
-          </SafeAreaProvider>
-        </GestureHandlerRootView>
-    </PremiumProvider>
+    <ErrorBoundary>
+      <PremiumProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaProvider>
+              <StatusBar style="light" />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: '#0D1421' },
+                  animation: 'fade',
+                }}
+              />
+
+              {/* Privacy Consent Modal - shown before user can use the app */}
+              <PrivacyConsentModal
+                visible={needsPrivacyConsent}
+                onConsent={handlePrivacyConsent}
+                contactEmail="brittanyapps@outlook.com"
+              />
+            </SafeAreaProvider>
+          </GestureHandlerRootView>
+      </PremiumProvider>
+    </ErrorBoundary>
   );
 }

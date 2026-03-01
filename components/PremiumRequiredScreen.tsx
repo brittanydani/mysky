@@ -14,10 +14,10 @@ interface PremiumRequiredScreenProps {
 }
 
 const PREVIEW_PERKS = [
-  { icon: 'heart-half' as const, text: 'Healing insights from your chart' },
-  { icon: 'analytics' as const, text: 'Mood & journal pattern analysis' },
-  { icon: 'people' as const, text: 'Unlimited relationship charts' },
-  { icon: 'book' as const, text: '10-chapter natal story' },
+  { icon: 'moon' as const, text: 'Encrypted dream journal with sleep entries' },
+  { icon: 'analytics' as const, text: 'Sleep & mood trend charts over time' },
+  { icon: 'journal' as const, text: 'Behavioral patterns from your writing' },
+  { icon: 'people' as const, text: 'Unlimited relationship profiles' },
 ];
 
 export default function PremiumRequiredScreen({
@@ -46,7 +46,7 @@ export default function PremiumRequiredScreen({
         </Text>
         <Text style={styles.description}>
           {teaser ||
-            'This is where your chart comes alive — with patterns, healing insights, and guidance designed just for you.'}
+            'Go deeper with your data — encrypted dream journal, sleep & mood trends, behavioral patterns, and healing insights designed just for you.'}
         </Text>
       </Animated.View>
 

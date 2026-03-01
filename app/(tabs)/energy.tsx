@@ -26,6 +26,7 @@ import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
+import { applyEnergyLabels } from '../../constants/storyLabels';
 import StarField from '../../components/ui/StarField';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -187,7 +188,7 @@ export default function EnergyScreen() {
               <Text style={styles.backBtnText}>Mood</Text>
             </Pressable>
             <Text style={styles.title}>Energy</Text>
-            <Text style={styles.subtitle}>Your personal energy weather {'\u2014'} built from your chart.</Text>
+            <Text style={styles.subtitle}>Your personal energy weather {'\u2014'} built from your profile.</Text>
           </Animated.View>
           <ScrollView
             style={styles.scroll}
@@ -197,9 +198,9 @@ export default function EnergyScreen() {
             <Animated.View entering={FadeInDown.delay(200).duration(600)}>
               <LinearGradient colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']} style={[styles.card, styles.cardPad]}>
                 <Ionicons name="sparkles" size={32} color={theme.primary} style={{ marginBottom: 12 }} />
-                <Text style={styles.heroToneText}>Energy needs your chart</Text>
+                <Text style={styles.heroToneText}>Energy needs your birth info</Text>
                 <Text style={[styles.body, { marginTop: 8 }]}>
-                  Create your natal chart to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, and daily guidance.
+                  Add your birth info to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, and daily guidance.
                 </Text>
                 <Pressable style={styles.primaryBtn} onPress={() => { safeHaptic(); router.push('/(tabs)/home' as Href); }} accessibilityRole="button" accessibilityLabel="Create chart">
                   <Ionicons name="add-circle-outline" size={16} color={theme.primary} />
@@ -348,7 +349,7 @@ export default function EnergyScreen() {
                   <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
                 </View>
                 <Text style={{ fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 6 }}>
-                  Your chart activates specific energy centers {'\u2014'} see which ones need attention today
+                  Your birth data activates specific energy centers {'\u2014'} see which ones need attention today
                 </Text>
               </LinearGradient>
             )}
@@ -409,7 +410,7 @@ export default function EnergyScreen() {
                         <Text style={styles.body}>{d.feeling}</Text>
                         <View style={styles.domainWhyRow}>
                           <Ionicons name="information-circle-outline" size={14} color={theme.primary} />
-                          <Text style={styles.domainWhyText}>{d.why}</Text>
+                          <Text style={styles.domainWhyText}>{applyEnergyLabels(d.why)}</Text>
                         </View>
                         <View style={styles.domainSuggestionRow}>
                           <Ionicons name="bulb-outline" size={14} color={theme.energy} />
@@ -470,7 +471,7 @@ export default function EnergyScreen() {
           {/* ── Footer ── */}
           <Animated.View entering={FadeInDown.delay(480).duration(600)} style={styles.footer}>
             <Text style={styles.footerText}>
-              Energy is not prediction {'\u2014'} it is a mirror. Your chart creates conditions; you decide what to do with them.
+              Energy is not a forecast {'\u2014'} it is a mirror. Your personal framework creates conditions; you decide what to do with them.
             </Text>
           </Animated.View>
         </ScrollView>

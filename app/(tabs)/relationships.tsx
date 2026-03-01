@@ -367,9 +367,9 @@ export default function RelationshipsScreen() {
       <View style={[styles.container, styles.centered]}>
         <StarField starCount={30} />
         <Ionicons name="people" size={48} color={theme.textMuted} />
-        <Text style={styles.emptyTitle}>Create Your Chart First</Text>
+        <Text style={styles.emptyTitle}>Create Your Profile First</Text>
         <Text style={styles.emptySubtitle}>
-          Set up your birth chart on the Home screen to explore relationship dynamics
+          Set up your birth data on the Home screen to explore relationship dynamics
         </Text>
       </View>
     );

@@ -160,7 +160,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                   <Text style={styles.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
 
                   <Text style={styles.description}>
-                    MySky is a journaling and self-reflection tool. Track your emotions, discover your patterns, and grow — guided by the personalized framework of your birth chart.
+                    MySky is a personal growth and wellness app. Track your mood, sleep, and energy — journal your thoughts — and discover your patterns over time, guided by a framework built uniquely for you.
                   </Text>
                 </Animated.View>
 
@@ -169,28 +169,28 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                     <View style={styles.featureIcon}>
                       <Ionicons name="pencil" size={20} color={theme.primary} />
                     </View>
-                    <Text style={styles.featureText}>Daily guided reflection & journaling</Text>
+                    <Text style={styles.featureText}>Daily journaling & guided reflection</Text>
                   </View>
 
                   <View style={styles.feature}>
                     <View style={styles.featureIcon}>
                       <Ionicons name="pulse" size={20} color={theme.primary} />
                     </View>
-                    <Text style={styles.featureText}>Emotional tracking & pattern analysis</Text>
+                    <Text style={styles.featureText}>Mood, sleep & energy tracking</Text>
+                  </View>
+
+                  <View style={styles.feature}>
+                    <View style={styles.featureIcon}>
+                      <Ionicons name="analytics" size={20} color={theme.primary} />
+                    </View>
+                    <Text style={styles.featureText}>Pattern insights drawn from your own data</Text>
                   </View>
 
                   <View style={styles.feature}>
                     <View style={styles.featureIcon}>
                       <Ionicons name="lock-closed" size={20} color={theme.primary} />
                     </View>
-                    <Text style={styles.featureText}>Private & encrypted — only you can see this</Text>
-                  </View>
-
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="star" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Personalized by your birth chart</Text>
+                    <Text style={styles.featureText}>Private & encrypted — only on your device</Text>
                   </View>
                 </Animated.View>
 
@@ -212,7 +212,6 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                     <Text style={styles.restoreText}>Restore from Backup</Text>
                   </Pressable>
 
-                  <Text style={styles.privacyText}>Your birth data is stored securely on your device</Text>
                 </Animated.View>
               </>
             )}

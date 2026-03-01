@@ -15,7 +15,9 @@ import StarField from '../../components/ui/StarField';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
 import BirthDataModal from '../../components/BirthDataModal';
+import AstrologySettingsModal from '../../components/AstrologySettingsModal';
 import { localDb } from '../../services/storage/localDb';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { NatalChart, PlanetPlacement, Aspect, HouseCusp as HouseCuspType, BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
@@ -98,6 +100,31 @@ function safeAspectTypeName(a: any): string {
   return safeString(a?.type?.name).toLowerCase();
 }
 
+const GLOSSARY: { term: string; definition: string }[] = [
+  { term: 'Natal Chart', definition: 'A map of where all the planets were at the exact moment you were born. Think of it as your unique personal blueprint.' },
+  { term: 'Sun Sign', definition: 'The zodiac sign the Sun was in when you were born. It represents your core identity and ego.' },
+  { term: 'Moon Sign', definition: 'The zodiac sign the Moon was in at your birth. It governs your emotions, instincts, and inner world.' },
+  { term: 'Rising Sign (Ascendant)', definition: 'The zodiac sign rising on the eastern horizon at your birth. It shapes how others perceive you and your outward style.' },
+  { term: 'Houses', definition: 'The 12 sections of your chart, each representing a different area of life — like relationships, career, or home.' },
+  { term: 'Transit', definition: 'The current position of a planet in the sky and how it interacts with your natal chart. Transits correlate with moods and life themes — they reflect cycles and timing, not fixed outcomes.' },
+  { term: 'Aspect', definition: 'An angle between two planets in your chart. Aspects show how different parts of your personality interact — harmoniously or with tension.' },
+  { term: 'Retrograde', definition: 'When a planet appears to move backward in the sky. It often signals a time to slow down and revisit themes related to that planet.' },
+  { term: 'Stellium', definition: 'Three or more planets clustered in the same sign or house. It creates an intense focus of energy in that area of your life.' },
+  { term: 'Chiron', definition: 'Known as the "wounded healer." Its placement shows where you carry deep wounds — and where you have the greatest power to heal others.' },
+  { term: 'Nodes (North & South)', definition: "The North Node points to your soul's growth direction. The South Node shows past-life patterns and comfort zones to move beyond." },
+  { term: 'Conjunction', definition: 'When two planets sit very close together (within a few degrees). Their energies merge and amplify each other.' },
+  { term: 'Opposition', definition: 'When two planets are directly across the chart from each other (180°). It creates tension that pushes you toward balance.' },
+  { term: 'Trine', definition: 'A flowing, harmonious angle (120°) between two planets. Trines represent natural talents and ease.' },
+  { term: 'Square', definition: 'A challenging 90° angle between two planets. Squares create friction that drives growth and action.' },
+  { term: 'Cardinal Signs', definition: 'Aries, Cancer, Libra, Capricorn. Cardinal energy initiates — these signs start new seasons and are natural leaders and self-starters.' },
+  { term: 'Fixed Signs', definition: 'Taurus, Leo, Scorpio, Aquarius. Fixed energy sustains — these signs are deeply determined, persistent, and resistant to change.' },
+  { term: 'Mutable Signs', definition: 'Gemini, Virgo, Sagittarius, Pisces. Mutable energy adapts — these signs are flexible, versatile, and comfortable with change.' },
+  { term: 'Fire Element', definition: 'Aries, Leo, Sagittarius. Fire signs are passionate, energetic, and action-oriented. They lead with enthusiasm and courage.' },
+  { term: 'Earth Element', definition: 'Taurus, Virgo, Capricorn. Earth signs are grounded, practical, and reliable. They build things that last.' },
+  { term: 'Air Element', definition: 'Gemini, Libra, Aquarius. Air signs are intellectual, communicative, and social. They process the world through ideas and connection.' },
+  { term: 'Water Element', definition: 'Cancer, Scorpio, Pisces. Water signs are intuitive, emotional, and deeply feeling. They navigate life through empathy and instinct.' },
+];
+
 type RelationshipType = 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other';
 
 const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
@@ -126,6 +153,11 @@ export default function ChartScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRelTypePicker, setShowRelTypePicker] = useState(false);
   const [addingRelationType, setAddingRelationType] = useState<RelationshipType>('friend');
+  const [showGlossary, setShowGlossary] = useState(false);
+  const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
+  const [showAstrologyModal, setShowAstrologyModal] = useState(false);
+  const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Placidus');
+  const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
 
   // Reload chart every time this screen is focused (fixes "No chart found" after creating from Home)
   useFocusEffect(
@@ -180,6 +212,14 @@ export default function ChartScreen() {
       setUserChart(null);
     } finally {
       setLoading(false);
+    }
+
+    try {
+      const astroSettings = await AstrologySettingsService.getSettings();
+      setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(astroSettings.houseSystem));
+      setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(astroSettings.orbPreset));
+    } catch (e) {
+      logger.error('Failed to load astrology settings:', e);
     }
   };
 
@@ -514,7 +554,7 @@ export default function ChartScreen() {
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <Text style={styles.title}>
-              {overlayChart ? 'Synastry Chart' : 'Natal Chart'}
+              {overlayChart ? 'Relationship Chart' : 'Your Chart'}
             </Text>
             <Text style={styles.subtitle}>
               {overlayChart
@@ -1165,8 +1205,8 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Part of Fortune (free) */}
-              {partOfFortune && (
+              {/* Part of Fortune (premium) */}
+              {isPremium && partOfFortune && (
                 <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Ionicons name="sunny-outline" size={20} color={theme.primary} style={{ marginRight: 10 }} />
@@ -1218,8 +1258,31 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Stelliums */}
-              {chartPatterns.stelliums.map((stellium, idx) => (
+              {/* Pattern Depth Upsell (free users only) */}
+              {!isPremium && (
+                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock pattern depth">
+                  <LinearGradient
+                    colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']}
+                    style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(201,169,98,0.18)' }]}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Ionicons name="lock-closed" size={16} color={theme.primary} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.primary }}>
+                          More patterns in your chart
+                        </Text>
+                        <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
+                          Stelliums, conjunction clusters, element & modality balance, retrograde emphasis, and Point of Flow
+                        </Text>
+                      </View>
+                      <Ionicons name="arrow-forward" size={16} color={theme.primary} />
+                    </View>
+                  </LinearGradient>
+                </Pressable>
+              )}
+
+              {/* Stelliums (premium) */}
+              {isPremium && chartPatterns.stelliums.map((stellium, idx) => (
                 <LinearGradient
                   key={`stellium-${idx}`}
                   colors={['rgba(201,169,98,0.12)', 'rgba(30,45,71,0.7)']}
@@ -1254,7 +1317,7 @@ export default function ChartScreen() {
                   )}
                 </LinearGradient>
               ))}
-              {chartPatterns.stelliumOverflow && (
+              {isPremium && chartPatterns.stelliumOverflow && (
                 <View style={styles.tooltipBox}>
                   <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
                   <Text style={styles.tooltipText}>
@@ -1263,8 +1326,8 @@ export default function ChartScreen() {
                 </View>
               )}
 
-              {/* Conjunction Clusters */}
-              {chartPatterns.conjunctionClusters.map((cluster, idx) => (
+              {/* Conjunction Clusters (premium) */}
+              {isPremium && chartPatterns.conjunctionClusters.map((cluster, idx) => (
                 <LinearGradient
                   key={`cluster-${idx}`}
                   colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
@@ -1289,8 +1352,8 @@ export default function ChartScreen() {
                 </LinearGradient>
               ))}
 
-              {/* Retrograde Emphasis */}
-              {chartPatterns.retrogradeEmphasis.count >= 3 && (
+              {/* Retrograde Emphasis (premium) */}
+              {isPremium && chartPatterns.retrogradeEmphasis.count >= 3 && (
                 <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>℞</Text>
@@ -1305,8 +1368,8 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Element Balance */}
-              {chartPatterns.elementBalance && (
+              {/* Element Balance (premium) */}
+              {isPremium && chartPatterns.elementBalance && (
                 <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>🜂</Text>
@@ -1334,8 +1397,8 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Modality Balance */}
-              {chartPatterns.modalityBalance && (
+              {/* Modality Balance (premium) */}
+              {isPremium && chartPatterns.modalityBalance && (
                 <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>⚖</Text>
@@ -1355,8 +1418,9 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Fallback */}
-              {chartPatterns.stelliums.length === 0 &&
+              {/* Fallback (premium users only — free users see upsell card instead) */}
+              {isPremium &&
+                chartPatterns.stelliums.length === 0 &&
                 chartPatterns.conjunctionClusters.length === 0 &&
                 !chartPatterns.chartRuler &&
                 chartPatterns.retrogradeEmphasis.count === 0 &&
@@ -1396,8 +1460,108 @@ export default function ChartScreen() {
               </Pressable>
             </Animated.View>
           )}
+
+          {/* ── Chart Settings ── */}
+          <Animated.View entering={FadeInDown.duration(600)} style={styles.glossarySection}>
+            <Pressable
+              style={styles.chartSettingsCard}
+              onPress={() => setShowAstrologyModal(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Chart settings"
+            >
+              <LinearGradient
+                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                style={styles.chartSettingsGradient}
+              >
+                <View style={styles.chartSettingsRow}>
+                  <View style={{ flex: 1, marginRight: theme.spacing.md }}>
+                    <View style={styles.chartSettingsHeader}>
+                      <Ionicons name="planet" size={20} color={theme.primary} />
+                      <Text style={styles.chartSettingsTitle}>Chart Settings</Text>
+                    </View>
+                    <Text style={styles.chartSettingsDescription}>
+                      House system, aspect orbs, and calculation preferences
+                    </Text>
+                    <View style={styles.chartSettingsTags}>
+                      <View style={styles.settingTag}>
+                        <Text style={styles.settingTagText}>{houseSystemLabel}</Text>
+                      </View>
+                      <View style={styles.settingTag}>
+                        <Text style={styles.settingTagText}>{orbPresetLabel} Orbs</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                </View>
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+
+          {/* ── Chart Glossary ── */}
+          <Animated.View entering={FadeInDown.duration(600)} style={styles.glossarySection}>
+            <Pressable
+              style={styles.glossarySectionTitleRow}
+              onPress={async () => {
+                try { await Haptics.selectionAsync(); } catch {}
+                setShowGlossary(prev => !prev);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle chart glossary"
+            >
+              <Text style={styles.glossarySectionTitle}>Chart Glossary</Text>
+              <Ionicons
+                name={showGlossary ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={theme.textMuted}
+              />
+            </Pressable>
+
+            {showGlossary && (
+              <View style={styles.glossaryCard}>
+                <LinearGradient
+                  colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                  style={styles.glossaryGradient}
+                >
+                  {GLOSSARY.map((item, index) => (
+                    <Pressable
+                      key={item.term}
+                      onPress={async () => {
+                        try { await Haptics.selectionAsync(); } catch {}
+                        setExpandedTerm(expandedTerm === item.term ? null : item.term);
+                      }}
+                      style={[styles.glossaryRow, index < GLOSSARY.length - 1 && styles.glossaryRowBorder]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.term}, glossary term`}
+                    >
+                      <View style={styles.glossaryHeader}>
+                        <Text style={styles.glossaryTerm}>{item.term}</Text>
+                        <Ionicons
+                          name={expandedTerm === item.term ? 'chevron-up' : 'chevron-down'}
+                          size={16}
+                          color={theme.textMuted}
+                        />
+                      </View>
+                      {expandedTerm === item.term && (
+                        <Text style={styles.glossaryDefinition}>{item.definition}</Text>
+                      )}
+                    </Pressable>
+                  ))}
+                </LinearGradient>
+              </View>
+            )}
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* ── Chart Settings Modal ── */}
+      <AstrologySettingsModal
+        visible={showAstrologyModal}
+        onClose={() => setShowAstrologyModal(false)}
+        onSettingsChanged={(updated) => {
+          setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(updated.houseSystem));
+          setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(updated.orbPreset));
+        }}
+      />
 
       {/* ── Add Person Modal ── */}
       <BirthDataModal
@@ -1819,5 +1983,79 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     lineHeight: 18,
     textAlign: 'center',
+  },
+
+  // ── Chart Settings card ──
+  chartSettingsCard: {
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    marginBottom: theme.spacing.md,
+  },
+  chartSettingsGradient: { padding: theme.spacing.lg },
+  chartSettingsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  chartSettingsHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs },
+  chartSettingsTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm },
+  chartSettingsDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
+  chartSettingsTags: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
+  settingTag: {
+    backgroundColor: 'rgba(201, 169, 98, 0.15)',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.sm,
+  },
+  settingTagText: { fontSize: 11, color: theme.primary, fontWeight: '500' },
+
+  // ── Chart Glossary ──
+  glossarySection: {
+    alignSelf: 'stretch',
+    marginHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.xl,
+  },
+  glossarySectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.md,
+  },
+  glossarySectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+  },
+  glossaryCard: {
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+  },
+  glossaryGradient: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+  },
+  glossaryRow: { paddingVertical: theme.spacing.md },
+  glossaryRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  glossaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  glossaryTerm: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+    flex: 1,
+  },
+  glossaryDefinition: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    lineHeight: 20,
+    marginTop: theme.spacing.xs,
   },
 });

@@ -481,6 +481,14 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
+              {/* Context — why we ask for birth data */}
+              <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.contextBanner}>
+                <Ionicons name="information-circle-outline" size={15} color={theme.textMuted} style={styles.contextIcon} />
+                <Text style={styles.contextText}>
+                  Your birth details create a personalization framework for your reflections — like a personality profile, but uniquely yours. This data never leaves your device.
+                </Text>
+              </Animated.View>
+
               {/* Name Field (local only) */}
               <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Name (Optional)</Text>
@@ -551,7 +559,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                   </Pressable>
                 ) : (
                   <Text style={styles.warningText}>
-                    Rising sign and house-based insights require an exact birth time.
+                    An exact birth time unlocks your Rising sign and house-based insights.
                   </Text>
                 )}
               </Animated.View>
@@ -642,6 +650,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                     <Text style={styles.saveButtonText}>Save Birth Data</Text>
                   </LinearGradient>
                 </Pressable>
+                <Text style={styles.privacyNote}>Your birth data is stored securely on your device</Text>
               </Animated.View>
             </ScrollView>
 
@@ -734,6 +743,24 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif' },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xl },
+  contextBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+  },
+  contextIcon: { marginRight: theme.spacing.sm, marginTop: 1, flexShrink: 0 },
+  contextText: {
+    flex: 1,
+    fontSize: 13,
+    color: theme.textMuted,
+    lineHeight: 19,
+  },
   section: { marginTop: theme.spacing.xl },
   sectionTitle: {
     fontSize: 16,
@@ -807,6 +834,7 @@ const styles = StyleSheet.create({
   saveButtonPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   saveGradient: { paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl, alignItems: 'center' },
   saveButtonText: { fontSize: 18, fontWeight: '700', color: '#0D1421', fontFamily: 'serif' },
+  privacyNote: { fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: theme.spacing.md },
   pickerOverlay: {
     position: 'absolute',
     bottom: 0,

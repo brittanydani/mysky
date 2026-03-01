@@ -78,11 +78,15 @@ const SIGN_LABELS: Record<string, string> = {
   Pisces: 'Transcendence',
 };
 
-// ── Aspects / Timing / Compound phrases ──────────────────────────────────────
+// ── Compound phrases ──────────────────────────────────────────────────────────
 
-// IMPORTANT: Runs BEFORE single-word planet/sign replacement in applyStoryLabels.
+// IMPORTANT: Runs BEFORE single-word planet/sign replacement.
 // Ordered longest-first so multi-word phrases are caught before their fragments.
-const PHRASE_REPLACEMENTS: [RegExp, string][] = [
+
+// Safe phrases: work in both narrative essay text AND guidance sentences.
+// (Moon phases, nodes, chart terminology, retrograde — none appear as verbs
+//  in the way that trine/sextile/square do.)
+const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
   // Moon-compound phrases (must precede Moon → Emotional body single-word replacement)
   [/\bMoon phase\b/gi, 'Emotional cycle'],
   [/\bFull Moon\b/g, 'Heightened awareness phase'],
@@ -121,9 +125,23 @@ const PHRASE_REPLACEMENTS: [RegExp, string][] = [
   [/\bDaily horoscope\b/gi, 'Daily context'],
   [/\bTransit activation\b/gi, 'Active phase'],
 
-  // Aspects and timing (single-word)
+  // Timing / broad terms
   [/\bRetrograde\b/g, 'Review cycle'],
   [/\bretrograde\b/g, 'review cycle'],
+  [/\bHoroscope\b/g, 'Reflection'],
+  [/\bhoroscope\b/g, 'reflection'],
+  [/\bPrediction\b/g, 'Insight'],
+  [/\bprediction\b/g, 'insight'],
+  [/\bDestiny\b/g, 'Direction'],
+  [/\bdestiny\b/g, 'direction'],
+  [/\bFate\b/g, 'Pattern'],
+  [/\bfate\b/g, 'pattern'],
+];
+
+// Aspect terms: safe as nouns in essay text ("a trine between…") but break as
+// verbs in guidance sentences ("Jupiter sextile your Jupiter" → "Expansion force
+// cooperative influence your Expansion force"). Used ONLY in applyStoryLabels.
+const ASPECT_PHRASE_REPLACEMENTS: [RegExp, string][] = [
   [/\bConjunction\b/g, 'Alignment'],
   [/\bconjunction\b/g, 'alignment'],
   [/\bOpposition\b/g, 'Tension dynamic'],
@@ -136,14 +154,12 @@ const PHRASE_REPLACEMENTS: [RegExp, string][] = [
   [/\bsextile\b/g, 'cooperative influence'],
   [/\bTransit\b/g, 'Current timing'],
   [/\btransit\b/g, 'current timing'],
-  [/\bHoroscope\b/g, 'Reflection'],
-  [/\bhoroscope\b/g, 'reflection'],
-  [/\bPrediction\b/g, 'Insight'],
-  [/\bprediction\b/g, 'insight'],
-  [/\bDestiny\b/g, 'Direction'],
-  [/\bdestiny\b/g, 'direction'],
-  [/\bFate\b/g, 'Pattern'],
-  [/\bfate\b/g, 'pattern'],
+];
+
+// Full set for applyStoryLabels (narrative essay text)
+const PHRASE_REPLACEMENTS: [RegExp, string][] = [
+  ...SAFE_PHRASE_REPLACEMENTS,
+  ...ASPECT_PHRASE_REPLACEMENTS,
 ];
 
 // ── Energy-screen extras ──────────────────────────────────────────────────────
@@ -196,6 +212,54 @@ export function applyStoryLabels(text: string): string {
 
   // 5. Rename section sub-headers embedded in chapter content (case-insensitive)
   result = result.replace(/\bHouse Insight\b/gi, 'Life Domain Insight');
+
+  return result;
+}
+
+/**
+ * Lighter transform for guidance card text (Love, Energy, Growth, Emotional
+ * Weather, cosmic weather, evening reflection, etc.). Replaces planet/sign/
+ * house names and safe compound phrases, but deliberately skips aspect terms
+ * (trine, sextile, square, etc.) that appear as verbs in guidance sentences
+ * and would produce ungrammatical output when noun-replaced.
+ */
+export function applyGuidanceLabels(text: string): string {
+  if (!text) return text;
+  let result = text;
+
+  // 1. House ordinals → life domain labels
+  for (const [ord, num] of HOUSE_ORDINALS) {
+    const label = HOUSE_THEMES[num];
+    result = result.replace(new RegExp(`\\b${ord}\\s+[Hh]ouse\\b`, 'g'), label);
+  }
+
+  // 2. Safe compound phrases (Moon phases, nodes, chart terms — no aspect verbs)
+  for (const [pattern, replacement] of SAFE_PHRASE_REPLACEMENTS) {
+    result = result.replace(pattern, replacement);
+  }
+
+  // 3. Aspect terms as natural connectors — runs BEFORE planet/sign replacement
+  //    so surrounding context is still legible when the verb is swapped.
+  //    Compound forms handled before single-word forms to avoid partial matches.
+  result = result.replace(/\bin\s+conjunction\s+with\b/gi, 'aligned with');
+  result = result.replace(/\bin\s+opposition\s+to\b/gi, 'in polarity with');
+  result = result.replace(/\bconjunct\b/gi, 'aligned with');
+  result = result.replace(/\bconjunction\b/gi, 'alignment');
+  result = result.replace(/\bopposite\b/gi, 'in polarity with');
+  result = result.replace(/\bopposition\b/gi, 'in polarity with');
+  result = result.replace(/\bsextile\b/gi, 'in harmony with');
+  result = result.replace(/\btrine\b/gi, 'in flow with');
+  result = result.replace(/\bsquare\b/gi, 'in tension with');
+
+  // 4. Planet / luminary names
+  for (const [planet, label] of Object.entries(PLANET_LABELS)) {
+    result = result.replace(new RegExp(`\\b${planet}\\b`, 'gi'), label);
+  }
+
+  // 5. Zodiac sign names
+  for (const [sign, label] of Object.entries(SIGN_LABELS)) {
+    result = result.replace(new RegExp(`\\b${sign}\\b`, 'gi'), label);
+  }
 
   return result;
 }

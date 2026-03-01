@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../constants/theme';
+import { applyStoryLabels, applyGuidanceLabels } from '../constants/storyLabels';
 import StarField from '../components/ui/StarField';
 import ShadowQuoteCard from '../components/ui/ShadowQuoteCard';
 import { localDb } from '../services/storage/localDb';
@@ -66,11 +67,11 @@ const DOMAIN_HIGHLIGHT: Record<string, string> = {
 
 // ── Retrograde context messages ──
 const RETROGRADE_CONTEXT: Record<string, { icon: string; label: string; note: string }> = {
-  Mercury: { icon: '☿', label: 'Mercury Retrograde', note: 'Communication, tech, and plans may need extra patience. Double-check details.' },
-  Venus: { icon: '♀', label: 'Venus Retrograde', note: 'Relationships and values are under review. Old feelings may resurface.' },
-  Mars: { icon: '♂', label: 'Mars Retrograde', note: 'Energy turns inward. Strategy over action. Avoid forcing outcomes.' },
-  Jupiter: { icon: '♃', label: 'Jupiter Retrograde', note: 'Growth becomes internal. Revisit beliefs and what expansion means to you.' },
-  Saturn: { icon: '♄', label: 'Saturn Retrograde', note: 'Review your structures and commitments. Rebuild what needs a stronger foundation.' },
+  Mercury: { icon: '↺', label: 'Communication Review Cycle', note: 'Communication, tech, and plans may need extra patience. Double-check details.' },
+  Venus: { icon: '↺', label: 'Relationship Review Cycle', note: 'Relationships and values are under reflection. Old feelings may resurface.' },
+  Mars: { icon: '↺', label: 'Drive Review Cycle', note: 'Energy turns inward. Strategy over action. Avoid forcing outcomes.' },
+  Jupiter: { icon: '↺', label: 'Expansion Review Cycle', note: 'Growth becomes internal. Revisit beliefs and what expansion means to you.' },
+  Saturn: { icon: '↺', label: 'Structure Review Cycle', note: 'Review your structures and commitments. Rebuild what needs a stronger foundation.' },
 };
 
 // ── Shared nav bar shown in all render states ──
@@ -363,7 +364,7 @@ export default function AstrologyContextScreen() {
                 <Ionicons name="partly-sunny" size={20} color={theme.primary} />
                 <Text style={styles.cosmicWeatherLabel}>TODAY'S CONTEXT</Text>
               </View>
-              <Text style={styles.cosmicWeatherText}>{todayContent?.cosmicWeather || guidance.cosmicWeather}</Text>
+              <Text style={styles.cosmicWeatherText}>{applyGuidanceLabels(todayContent?.cosmicWeather || guidance.cosmicWeather)}</Text>
               <View style={styles.intensityRow}>
                 <View style={[styles.intensityDot, { backgroundColor: intensity === 'calm' ? theme.growth : intensity === 'moderate' ? theme.primary : theme.love }]} />
                 <Text style={styles.intensityText}>
@@ -395,8 +396,8 @@ export default function AstrologyContextScreen() {
                 </View>
                 {guidance.moonSign && (
                   <View style={styles.moonSignRow}>
-                    <Text style={styles.moonSignLabel}>Moon in</Text>
-                    <Text style={styles.moonSignValue}>{guidance.moonSign}</Text>
+                    <Text style={styles.moonSignLabel}>Today's quality</Text>
+                    <Text style={styles.moonSignValue}>{applyStoryLabels(guidance.moonSign)}</Text>
                   </View>
                 )}
                 {showMoonWeek && (
@@ -428,7 +429,7 @@ export default function AstrologyContextScreen() {
                       <Text style={styles.retrogradeIcon}>{ctx.icon}</Text>
                       <Text style={styles.retrogradeLabel}>{ctx.label}</Text>
                       <View style={styles.retrogradeBadge}>
-                        <Text style={styles.retrogradeBadgeText}>℞</Text>
+                        <Text style={styles.retrogradeBadgeText}>↺</Text>
                       </View>
                     </View>
                     <Text style={styles.retrogradeNote}>{ctx.note}</Text>
@@ -450,7 +451,7 @@ export default function AstrologyContextScreen() {
                   <Text style={styles.yesterdayLabel}>Building on yesterday</Text>
                 </View>
                 <Text style={styles.yesterdayText}>
-                  Yesterday&apos;s theme was <Text style={styles.yesterdayHighlight}>{yesterdayInsight.loveHeadline?.toLowerCase() || 'reflection'}</Text> — today builds on that energy.
+                  Yesterday&apos;s theme was <Text style={styles.yesterdayHighlight}>{applyStoryLabels(yesterdayInsight.loveHeadline || 'reflection').toLowerCase()}</Text> — today builds on that energy.
                 </Text>
               </LinearGradient>
             </Animated.View>
@@ -473,12 +474,12 @@ export default function AstrologyContextScreen() {
                   <View style={styles.strongestBadge}><Text style={styles.strongestBadgeText}>strongest today</Text></View>
                 )}
               </View>
-              <Text style={styles.cardHeadline}>{guidance.love.headline}</Text>
-              <Text style={styles.cardMessage}>{guidance.love.message}</Text>
+              <Text style={styles.cardHeadline}>{applyGuidanceLabels(guidance.love.headline)}</Text>
+              <Text style={styles.cardMessage}>{applyGuidanceLabels(guidance.love.message)}</Text>
               {premiumLove && (
                 <View style={styles.premiumExtra}>
-                  <Text style={styles.premiumKeyInsight}>{premiumLove.keyInsight}</Text>
-                  <Text style={styles.premiumAction}>{premiumLove.actionSuggestion}</Text>
+                  <Text style={styles.premiumKeyInsight}>{applyGuidanceLabels(premiumLove.keyInsight)}</Text>
+                  <Text style={styles.premiumAction}>{applyGuidanceLabels(premiumLove.actionSuggestion)}</Text>
                 </View>
               )}
             </LinearGradient>
@@ -501,12 +502,12 @@ export default function AstrologyContextScreen() {
                   <View style={styles.strongestBadge}><Text style={styles.strongestBadgeText}>strongest today</Text></View>
                 )}
               </View>
-              <Text style={styles.cardHeadline}>{guidance.energy.headline}</Text>
-              <Text style={styles.cardMessage}>{guidance.energy.message}</Text>
+              <Text style={styles.cardHeadline}>{applyGuidanceLabels(guidance.energy.headline)}</Text>
+              <Text style={styles.cardMessage}>{applyGuidanceLabels(guidance.energy.message)}</Text>
               {premiumEnergy && (
                 <View style={styles.premiumExtra}>
-                  <Text style={styles.premiumKeyInsight}>{premiumEnergy.keyInsight}</Text>
-                  <Text style={styles.premiumAction}>{premiumEnergy.actionSuggestion}</Text>
+                  <Text style={styles.premiumKeyInsight}>{applyGuidanceLabels(premiumEnergy.keyInsight)}</Text>
+                  <Text style={styles.premiumAction}>{applyGuidanceLabels(premiumEnergy.actionSuggestion)}</Text>
                 </View>
               )}
             </LinearGradient>
@@ -529,12 +530,12 @@ export default function AstrologyContextScreen() {
                   <View style={styles.strongestBadge}><Text style={styles.strongestBadgeText}>strongest today</Text></View>
                 )}
               </View>
-              <Text style={styles.cardHeadline}>{guidance.growth.headline}</Text>
-              <Text style={styles.cardMessage}>{guidance.growth.message}</Text>
+              <Text style={styles.cardHeadline}>{applyGuidanceLabels(guidance.growth.headline)}</Text>
+              <Text style={styles.cardMessage}>{applyGuidanceLabels(guidance.growth.message)}</Text>
               {premiumWork && (
                 <View style={styles.premiumExtra}>
-                  <Text style={styles.premiumKeyInsight}>{premiumWork.keyInsight}</Text>
-                  <Text style={styles.premiumAction}>{premiumWork.actionSuggestion}</Text>
+                  <Text style={styles.premiumKeyInsight}>{applyGuidanceLabels(premiumWork.keyInsight)}</Text>
+                  <Text style={styles.premiumAction}>{applyGuidanceLabels(premiumWork.actionSuggestion)}</Text>
                 </View>
               )}
             </LinearGradient>
@@ -558,10 +559,10 @@ export default function AstrologyContextScreen() {
                     <View style={styles.strongestBadge}><Text style={styles.strongestBadgeText}>strongest today</Text></View>
                   )}
                 </View>
-                <Text style={styles.cardHeadline}>{premiumEmotional.keyInsight}</Text>
-                <Text style={styles.cardMessage}>{premiumEmotional.guidance}</Text>
+                <Text style={styles.cardHeadline}>{applyGuidanceLabels(premiumEmotional.keyInsight)}</Text>
+                <Text style={styles.cardMessage}>{applyGuidanceLabels(premiumEmotional.guidance)}</Text>
                 <View style={styles.premiumExtra}>
-                  <Text style={styles.premiumAction}>{premiumEmotional.actionSuggestion}</Text>
+                  <Text style={styles.premiumAction}>{applyGuidanceLabels(premiumEmotional.actionSuggestion)}</Text>
                 </View>
               </LinearGradient>
             </Animated.View>
@@ -587,7 +588,7 @@ export default function AstrologyContextScreen() {
                 style={styles.reminderCard}
               >
                 <Text style={styles.promptLabel}>Evening reflection</Text>
-                <Text style={styles.reminderText}>{premiumGuidance.eveningReflection}</Text>
+                <Text style={styles.reminderText}>{applyGuidanceLabels(premiumGuidance.eveningReflection)}</Text>
                 <Pressable
                   style={[styles.journalButton, { marginTop: 16 }]}
                   onPress={() => router.push('/(tabs)/journal' as Href)}
@@ -640,7 +641,7 @@ export default function AstrologyContextScreen() {
                       </View>
                       {insight.signals.length > 1 && (
                         <Text style={styles.teaserMore}>
-                          + {insight.signals.length - 1} more transit{insight.signals.length > 2 ? 's' : ''} shaping your day
+                          + {insight.signals.length - 1} more pattern{insight.signals.length > 2 ? 's' : ''} shaping your day
                         </Text>
                       )}
                     </View>
@@ -660,17 +661,17 @@ export default function AstrologyContextScreen() {
                             <Text style={styles.timelineValue}>{insight.timeline.easesBy}</Text>
                           </View>
                           {insight.timeline.isPartOfLongerCycle && insight.timeline.longerCycleNote && (
-                            <Text style={styles.cycleNote}>{insight.timeline.longerCycleNote}</Text>
+                            <Text style={styles.cycleNote}>{applyStoryLabels(insight.timeline.longerCycleNote)}</Text>
                           )}
                         </View>
                       )}
 
                       <View style={styles.signalsSection}>
-                        <Text style={styles.signalsSectionTitle}>Active transits:</Text>
+                        <Text style={styles.signalsSectionTitle}>Active patterns:</Text>
                         {insight.signals.map((signal, index) => (
                           <View key={index} style={styles.signalRow}>
                             <View style={styles.signalDot} />
-                            <Text style={styles.signalText}>{signal.description}</Text>
+                            <Text style={styles.signalText}>{applyGuidanceLabels(signal.description)}</Text>
                             <Text style={styles.signalOrb}>{signal.orb}</Text>
                           </View>
                         ))}
@@ -686,16 +687,16 @@ export default function AstrologyContextScreen() {
                         <View style={styles.resonanceSection}>
                           <Text style={styles.resonanceLabel}>Why this might feel familiar</Text>
                           <Text style={styles.resonanceText}>
-                            You have a concentration in {chartPatterns.stelliums[0].label} — themes in this area tend to hit with extra weight.
+                            You have a concentration in {applyStoryLabels(chartPatterns.stelliums[0].label)} — themes in this area tend to hit with extra weight.
                           </Text>
                         </View>
                       )}
 
                       {chironInsight && (
                         <View style={styles.resonanceSection}>
-                          <Text style={styles.resonanceLabel}>🪐 Sensitivity note</Text>
+                          <Text style={styles.resonanceLabel}>✦ Sensitivity note</Text>
                           <Text style={styles.resonanceText}>
-                            {chironInsight.theme} This may add an extra layer of feeling today.
+                            {applyStoryLabels(chironInsight.theme)} This may add an extra layer of feeling today.
                           </Text>
                         </View>
                       )}
@@ -703,7 +704,7 @@ export default function AstrologyContextScreen() {
                       {nodeInsight && (
                         <View style={styles.resonanceSection}>
                           <Text style={styles.resonanceLabel}>🧭 Growth frame</Text>
-                          <Text style={styles.resonanceText}>{nodeInsight.fusionLine}</Text>
+                          <Text style={styles.resonanceText}>{applyStoryLabels(nodeInsight.fusionLine)}</Text>
                         </View>
                       )}
                     </View>

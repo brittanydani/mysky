@@ -13,40 +13,13 @@ import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import BackupPassphraseModal from '../../components/BackupPassphraseModal';
 import PrivacySettingsModal from '../../components/PrivacySettingsModal';
-import AstrologySettingsModal from '../../components/AstrologySettingsModal';
 import { usePremium } from '../../context/PremiumContext';
 import PremiumModal from '../../components/PremiumModal';
 import { localDb } from '../../services/storage/localDb';
 import { BackupService } from '../../services/storage/backupService';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
-import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { logger } from '../../utils/logger';
-
-const GLOSSARY: { term: string; definition: string }[] = [
-  { term: 'Natal Chart', definition: 'A map of where all the planets were at the exact moment you were born. Think of it as your cosmic fingerprint.' },
-  { term: 'Sun Sign', definition: 'The zodiac sign the Sun was in when you were born. It represents your core identity and ego.' },
-  { term: 'Moon Sign', definition: 'The zodiac sign the Moon was in at your birth. It governs your emotions, instincts, and inner world.' },
-  { term: 'Rising Sign (Ascendant)', definition: 'The zodiac sign rising on the eastern horizon at your birth. It shapes how others perceive you and your outward style.' },
-  { term: 'Houses', definition: 'The 12 sections of your chart, each representing a different area of life — like relationships, career, or home.' },
-  { term: 'Transit', definition: 'The current position of a planet in the sky and how it interacts with your natal chart. Transits correlate with moods and life themes — they reflect cycles and timing, not fixed outcomes.' },
-  { term: 'Aspect', definition: 'An angle between two planets in your chart. Aspects show how different parts of your personality interact — harmoniously or with tension.' },
-  { term: 'Retrograde', definition: 'When a planet appears to move backward in the sky. It often signals a time to slow down and revisit themes related to that planet.' },
-  { term: 'Stellium', definition: 'Three or more planets clustered in the same sign or house. It creates an intense focus of energy in that area of your life.' },
-  { term: 'Chiron', definition: 'Known as the "wounded healer." Its placement shows where you carry deep wounds — and where you have the greatest power to heal others.' },
-  { term: 'Nodes (North & South)', definition: "The North Node points to your soul's growth direction. The South Node shows past-life patterns and comfort zones to move beyond." },
-  { term: 'Conjunction', definition: 'When two planets sit very close together (within a few degrees). Their energies merge and amplify each other.' },
-  { term: 'Opposition', definition: 'When two planets are directly across the chart from each other (180°). It creates tension that pushes you toward balance.' },
-  { term: 'Trine', definition: 'A flowing, harmonious angle (120°) between two planets. Trines represent natural talents and ease.' },
-  { term: 'Square', definition: 'A challenging 90° angle between two planets. Squares create friction that drives growth and action.' },
-  { term: 'Cardinal Signs', definition: 'Aries, Cancer, Libra, Capricorn. Cardinal energy initiates — these signs start new seasons and are natural leaders and self-starters.' },
-  { term: 'Fixed Signs', definition: 'Taurus, Leo, Scorpio, Aquarius. Fixed energy sustains — these signs are deeply determined, persistent, and resistant to change.' },
-  { term: 'Mutable Signs', definition: 'Gemini, Virgo, Sagittarius, Pisces. Mutable energy adapts — these signs are flexible, versatile, and comfortable with change.' },
-  { term: 'Fire Element', definition: 'Aries, Leo, Sagittarius. Fire signs are passionate, energetic, and action-oriented. They lead with enthusiasm and courage.' },
-  { term: 'Earth Element', definition: 'Taurus, Virgo, Capricorn. Earth signs are grounded, practical, and reliable. They build things that last.' },
-  { term: 'Air Element', definition: 'Gemini, Libra, Aquarius. Air signs are intellectual, communicative, and social. They process the world through ideas and connection.' },
-  { term: 'Water Element', definition: 'Cancer, Scorpio, Pisces. Water signs are intuitive, emotional, and deeply feeling. They navigate life through empathy and instinct.' },
-];
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -72,17 +45,32 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What does the PDF export include?',
     answer:
-      'PDF export is a Deeper Sky (premium) feature. The PDF includes a cover page with your birth data, your Big Three (Sun, Moon, Rising), a full planet placements table, house cusps, all aspects grouped by type, and your Cosmic Story chapters (all 10 chapters).',
+      'PDF export is a Deeper Sky (premium) feature. Tap "Export PDF" on the Your Themes screen to generate and share a PDF that includes a cover page with your birth data, your Big Three (Sun, Moon, Rising), a full planet placements table, house cusps (if birth time is known), all aspects grouped by type, and all 10 Personal Story chapters.',
   },
   {
     question: 'What does Deeper Sky include?',
     answer:
-      'Deeper Sky unlocks encrypted backup & restore, the full natal story (10 chapters), healing & inner work (attachment styles, shadow work), unlimited relationship charts, journal pattern analysis, Chiron & Node depth mapping, personalized daily guidance with action steps, extended pattern analysis, and full energy chakra mapping.',
+      'Deeper Sky unlocks encrypted backup & restore, the full personal story (10 chapters), healing & inner work (attachment styles, shadow work), unlimited relationship charts, journal pattern analysis, deep insights & tag intelligence, Chiron & Node depth mapping, personalized daily guidance with action steps, extended pattern analysis, full energy chakra mapping, and symbolic dream reflections.',
   },
   {
-    question: 'What is the Energy tab?',
+    question: 'How does mood and energy tracking work?',
     answer:
-      'The Energy tab maps your natal chart to a chakra energy system. Free users see an energy snapshot with select domains. Deeper Sky members get all 7 chakras with body cues, triggers, guidance, and daily check-ins that track your energy patterns over time.',
+      'Tap the check-in button from the Today screen to log your mood (1–10), energy level, stress level, and optional tags like sleep, relationships, or creativity. You can also add notes, wins, and challenges. Your check-ins build a personal dataset over time — MySky analyzes trends, shows your best days by energy, and reveals what patterns correlate with how you feel.',
+  },
+  {
+    question: 'How does sleep tracking work?',
+    answer:
+      'Open the Sleep tab to log your nightly sleep. Rate quality (1\u20135 moons) and log duration \u2014 both are free. The encrypted dream journal and symbolic dream reflections are Deeper Sky (premium) features. When you log a dream, MySky generates a personalized reflection drawn from your sleep, mood, check-in, and journal data \u2014 entirely on your device, with no AI or network calls. You can log one entry per night and edit it any time that day. Free users see basic weekly averages; Deeper Sky members get full trend analysis over time.',
+  },
+  {
+    question: 'What behavioral patterns does MySky track?',
+    answer:
+      'MySky tracks mood trends, energy highs and lows, stress patterns, sleep quality over time, journal keyword frequency, and emotional tone shifts in your writing — all on your device. The Insights tab shows weekly averages, what your best energy days look like, and what consistently restores or drains you based on your own data.',
+  },
+  {
+    question: 'What is the Energy section?',
+    answer:
+      'The Energy section maps your chart to a chakra energy system. Free users see an energy snapshot with select domains. Deeper Sky members get all 7 chakras with body cues, triggers, guidance, and daily check-ins that track your energy patterns over time.',
   },
   {
     question: 'Can I cancel my subscription?',
@@ -92,37 +80,43 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How do I change my birth data?',
     answer:
-      'Go to the Home tab, then tap the edit button next to your birth information. You can update your birth date, time, and location at any time. Your chart and all insights will recalculate automatically.',
+      'Open your chart profile, then tap the edit icon next to your birth information. You can update your birth date, time, and location at any time. Your chart and all insights will recalculate automatically.',
   },
   {
     question: 'What house system does MySky use?',
     answer:
-      'MySky defaults to Placidus, but you can change this in Chart Calculations above. We support Placidus, Koch, Whole Sign, Equal House, Campanus, Regiomontanus, and Topocentric.',
+      'MySky defaults to Placidus. You can change the house system in the chart view settings. We support Placidus, Koch, Whole Sign, Equal House, Campanus, Regiomontanus, and Topocentric.',
   },
   {
     question: 'Is my journal private?',
     answer:
       'Completely. Journal entries are stored only on your device with sensitive fields encrypted at rest. They are never uploaded, analyzed externally, or shared with anyone. Your device passcode and biometrics provide an additional layer of protection.',
   },
+  {
+    question: 'How do symbolic dream reflections work?',
+    answer:
+      'When you log a dream as a Deeper Sky member, MySky scans your dream text for recurring symbols (water, falling, doors, etc.) and maps them to Jungian archetypes. It then weaves in context from your mood check-ins, sleep patterns, and journal entries to shape the reflection. The result is a personalized reflection generated entirely on your device with no AI, no network calls, and no data leaving your phone.',
+  },
 ];
 
-const PRIVACY_POLICY = `Last updated: February 20, 2026
+const PRIVACY_POLICY = `Last updated: February 27, 2026
 
 MySky ("the App") is committed to protecting your privacy. This policy explains how we handle your information.
 
 DATA COLLECTION & STORAGE
-- All personal data (birth information, journal entries, chart data, energy check-ins) is stored locally on your device only.
+- All personal data (birth information, journal entries, mood & energy check-ins, sleep entries, chart data) is stored locally on your device only.
 - Sensitive fields are encrypted at rest using AES-256 with keys stored in your device's secure keychain/keystore.
 - We do not collect, transmit, or store your personal data on any external server.
 - We do not use analytics, tracking, or advertising SDKs.
 
 BIRTH DATA
-- Your birth date, time, and location are used solely to calculate your astrological chart on your device.
+- Your birth date, time, and location are used solely to calculate your personalization framework on your device.
 - This data never leaves your device unless you choose to create an encrypted backup or export a PDF.
 
-JOURNAL ENTRIES & ENERGY CHECK-INS
-- Journal content and energy check-in data are stored locally with sensitive fields encrypted at rest.
-- They are never shared, uploaded, or analyzed externally.
+JOURNAL ENTRIES, MOOD CHECK-INS & SLEEP TRACKING
+- Journal content, mood & energy check-in data, and sleep entries are stored locally with sensitive fields encrypted at rest.
+- On-device pattern analysis (mood trends, keyword frequency, emotion tone) is computed entirely on your device.
+- None of this data is ever shared, uploaded, or analyzed externally.
 - Premium encrypted backups use AES-256 encryption with a passphrase only you know.
 
 PDF EXPORT
@@ -160,7 +154,7 @@ CONTACT
 CHANGES
 - We will update this policy as needed. Continued use of the App constitutes acceptance of any changes.`;
 
-const TERMS_OF_SERVICE = `Last updated: February 20, 2026
+const TERMS_OF_SERVICE = `Last updated: February 27, 2026
 
 By using MySky ("the App"), you agree to these Terms of Service.
 
@@ -168,25 +162,26 @@ By using MySky ("the App"), you agree to these Terms of Service.
 By downloading or using MySky, you agree to be bound by these terms. If you do not agree, do not use the App.
 
 2. DESCRIPTION OF SERVICE
-MySky is an astrology and self-reflection app that provides:
-- Natal chart calculation and visualization
-- Daily astrological guidance and energy insights
-- Chakra energy mapping tied to your natal chart
-- Journal and mood tracking with daily check-ins
+MySky is a personal growth and wellness app that provides:
+- Daily mood, energy & stress check-ins with pattern analysis
+- Sleep logging (quality & duration; dream journal requires Deeper Sky)
+- Journaling with guided prompts and behavioral insights
+- Natal chart used as a personalization framework
+- Daily personalized guidance and reflection prompts
+- Chakra energy mapping tied to your chart
 - Relationship compatibility analysis
-- Natal story generation
-- PDF chart export
-- PDF chart export
+- Personal story generation
+- PDF chart export (premium)
 - Encrypted backup and restore (premium)
-All content is generated locally on your device.
+All content is generated and stored locally on your device.
 
 3. ASTROLOGICAL CONTENT
-- MySky provides astrological interpretations for entertainment, self-reflection, and personal growth purposes only.
-- Astrological content is not a substitute for professional medical, psychological, financial, or legal advice.
+- MySky provides personalized interpretations for self-reflection and personal growth purposes only.
+- Interpretive content is not a substitute for professional medical, psychological, financial, or legal advice.
 - Planetary calculations are based on established astronomical data (Swiss Ephemeris) but interpretations are generalized.
 
 4. SUBSCRIPTIONS
-- Free features include: natal chart, Big Three, natal story (3 chapters), basic daily guidance, one relationship chart, basic journaling with mood tracking, insights overview & weekly mood, energy snapshot, and privacy controls.
+- Free features include: daily mood & energy check-ins, sleep logging (quality & duration), journal with guided prompts, basic weekly averages, natal chart & Big Three, basic daily guidance, one relationship chart, and privacy controls. Dream journal, sleep & mood trend analysis, and behavioral pattern charts require Deeper Sky.
 - "Deeper Sky" premium features require a subscription managed through Apple (App Store) or Google (Google Play).
 - Prices are displayed in the App before purchase.
 - Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.
@@ -226,20 +221,15 @@ export default function SettingsScreen() {
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
   const [backupInProgress, setBackupInProgress] = useState(false);
   const [restoreInProgress, setRestoreInProgress] = useState(false);
   const [backupModalVisible, setBackupModalVisible] = useState(false);
   const [restoreModalVisible, setRestoreModalVisible] = useState(false);
   const [restoreUri, setRestoreUri] = useState<string | null>(null);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  const [showAstrologyModal, setShowAstrologyModal] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [expandedLegal, setExpandedLegal] = useState<string | null>(null);
-  const [showGlossary, setShowGlossary] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
-  const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Placidus');
-  const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
   const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
 
   const ensureSettings = useCallback(async () => {
@@ -262,10 +252,6 @@ export default function SettingsScreen() {
     try {
       const settings = await ensureSettings();
       setLastBackupAt(settings.lastBackupAt || null);
-
-      const astroSettings = await AstrologySettingsService.getSettings();
-      setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(astroSettings.houseSystem));
-      setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(astroSettings.orbPreset));
 
       // Detect encryption key loss — if the DEK is gone, warn the user
       const keyOk = await FieldEncryptionService.isKeyAvailable();
@@ -512,91 +498,6 @@ export default function SettingsScreen() {
             </View>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Chart Calculations</Text>
-
-            <Pressable style={styles.settingCard} onPress={() => setShowAstrologyModal(true)} accessibilityRole="button" accessibilityLabel="Chart settings">
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
-              >
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <Ionicons name="planet" size={20} color={theme.primary} />
-                      <Text style={styles.settingTitle}>Chart Settings</Text>
-                    </View>
-                    <Text style={styles.settingDescription}>
-                      House system, aspect orbs, and calculation preferences
-                    </Text>
-                    <View style={styles.chartSettingsSummary}>
-                      <View style={styles.settingTag}>
-                        <Text style={styles.settingTagText}>{houseSystemLabel}</Text>
-                      </View>
-                      <View style={styles.settingTag}>
-                        <Text style={styles.settingTagText}>{orbPresetLabel} Orbs</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
-                </View>
-              </LinearGradient>
-            </Pressable>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
-            <Pressable
-              style={styles.sectionTitleRow}
-              onPress={async () => {
-                try { await Haptics.selectionAsync(); } catch {}
-                setShowGlossary(prev => !prev);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Toggle astrology glossary"
-            >
-              <Text style={styles.sectionTitle}>Astrology Glossary</Text>
-              <Ionicons
-                name={showGlossary ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={theme.textMuted}
-              />
-            </Pressable>
-
-            {showGlossary && (
-              <View style={styles.settingCard}>
-                <LinearGradient
-                  colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                  style={styles.glossaryGradient}
-                >
-                  {GLOSSARY.map((item, index) => (
-                    <Pressable
-                      key={item.term}
-                      onPress={async () => {
-                        try {
-                          await Haptics.selectionAsync();
-                        } catch {}
-                        setExpandedTerm(expandedTerm === item.term ? null : item.term);
-                      }}
-                      style={[styles.glossaryRow, index < GLOSSARY.length - 1 && styles.glossaryRowBorder]}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${item.term}, glossary term`}
-                    >
-                      <View style={styles.glossaryHeader}>
-                        <Text style={styles.glossaryTerm}>{item.term}</Text>
-                        <Ionicons
-                          name={expandedTerm === item.term ? 'chevron-up' : 'chevron-down'}
-                          size={16}
-                          color={theme.textMuted}
-                        />
-                      </View>
-                      {expandedTerm === item.term && <Text style={styles.glossaryDefinition}>{item.definition}</Text>}
-                    </Pressable>
-                  ))}
-                </LinearGradient>
-              </View>
-            )}
-          </Animated.View>
-
           <Animated.View entering={FadeInDown.delay(375).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Privacy & Data</Text>
 
@@ -789,7 +690,7 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        Full natal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — from $4.99/mo.
+                        Full personal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — from $4.99/mo.
                       </Text>
                     </View>
                     <Ionicons name="arrow-forward" size={20} color={theme.primary} />
@@ -806,18 +707,6 @@ export default function SettingsScreen() {
       </SafeAreaView>
 
       <PrivacySettingsModal visible={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
-
-      <AstrologySettingsModal
-        visible={showAstrologyModal}
-        onClose={() => {
-          setShowAstrologyModal(false);
-          loadSettings();
-        }}
-        onSettingsChanged={(updated) => {
-          setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(updated.houseSystem));
-          setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(updated.orbPreset));
-        }}
-      />
 
       <BackupPassphraseModal
         visible={backupModalVisible}

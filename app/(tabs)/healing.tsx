@@ -92,7 +92,7 @@ export default function HealingScreen() {
           >
             <Text style={styles.title}>Healing Insights</Text>
             <Text style={styles.headerSub}>
-              Explore emotional patterns, inner needs, and pathways to growth — grounded in your chart's psychological blueprint.
+              Explore emotional patterns, inner needs, and pathways to growth — grounded in your psychological blueprint.
             </Text>
           </Animated.View>
 
@@ -102,7 +102,7 @@ export default function HealingScreen() {
               <Ionicons name="heart-outline" size={48} color={theme.textMuted} />
               <Text style={styles.emptyTitle}>No chart yet</Text>
               <Text style={styles.emptySubtitle}>
-                Create your natal chart to unlock personalized healing insights.
+                Create your chart to unlock personalized healing insights.
               </Text>
               <Pressable
                 onPress={() => router.push('/(tabs)/chart' as Href)}
