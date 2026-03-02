@@ -751,14 +751,14 @@ export class ShadowQuoteEngine {
       .filter(q => !recentIds.has(q.id))
       .map(q => ({ quote: q, score: scoreQuote(q, ctx) }))
       .filter(s => s.score > 0)
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score || a.quote.id.localeCompare(b.quote.id));
 
     // If all filtered out, reset and use all quotes
     const candidates = scored.length > 0
       ? scored
       : allQuotes
           .map(q => ({ quote: q, score: scoreQuote(q, ctx) }))
-          .sort((a, b) => b.score - a.score);
+          .sort((a, b) => b.score - a.score || a.quote.id.localeCompare(b.quote.id));
 
     // Take from top 5 with weighted randomness for variety
     const topN = candidates.slice(0, 5);

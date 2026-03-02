@@ -158,6 +158,13 @@ export class CheckInService {
     chart: NatalChart,
     chartId: string,
   ): Promise<DailyCheckIn> {
+    // Input validation — clamp moodScore to valid 1-10 range
+    const rawMood = Number(input.moodScore);
+    if (!Number.isFinite(rawMood)) {
+      throw new Error('Invalid moodScore: value is not a finite number');
+    }
+    const clampedMood = Math.max(1, Math.min(10, Math.round(rawMood)));
+
     const now = new Date();
     const date = toLocalDateString(now);
     const timeOfDay = input.timeOfDay ?? detectTimeOfDay(now);
@@ -168,7 +175,7 @@ export class CheckInService {
       date,
       chartId,
       timeOfDay,
-      moodScore: input.moodScore,
+      moodScore: clampedMood,
       energyLevel: input.energyLevel,
       stressLevel: input.stressLevel,
       tags: input.tags,
@@ -186,7 +193,7 @@ export class CheckInService {
     };
 
     await localDb.saveCheckIn(checkIn);
-    logger.info(`[CheckIn] Saved check-in for ${date} (${timeOfDay}), mood: ${input.moodScore}, tags: ${input.tags.join(',')}`);
+    logger.info(`[CheckIn] Saved check-in for ${date} (${timeOfDay})`);
     return checkIn;
   }
 
@@ -237,31 +244,32 @@ export class CheckInService {
   }
 
   /**
-   * Get check-in count for streak tracking
+   * Get check-in count for streak tracking.
+   * Uses COUNT(*) query — does NOT decrypt any rows.
    */
   static async getCheckInCount(chartId: string): Promise<number> {
-    const all = await localDb.getCheckIns(chartId);
-    return all.length;
+    return localDb.getCheckInCount(chartId);
   }
 
   /**
-   * Get current streak (consecutive days)
+   * Get current streak (consecutive days).
+   * O(n) via Set lookup instead of O(n²) via Array.find().
    */
   static async getCurrentStreak(chartId: string): Promise<number> {
     const all = await localDb.getCheckIns(chartId, 90); // last 90 days max
     if (all.length === 0) return 0;
 
-    // Sort by date descending
-    const sorted = all.sort((a, b) => b.date.localeCompare(a.date));
+    // Build a Set of unique dates for O(1) lookups
+    const dateSet = new Set(all.map(c => c.date));
     let streak = 0;
     const today = new Date();
 
-    for (let i = 0; i < sorted.length; i++) {
+    for (let i = 0; i < 90; i++) {
       const expected = new Date(today);
       expected.setDate(expected.getDate() - i);
       const expectedDate = toLocalDateString(expected);
-      
-      if (sorted.find(c => c.date === expectedDate)) {
+
+      if (dateSet.has(expectedDate)) {
         streak++;
       } else {
         break;
@@ -272,14 +280,14 @@ export class CheckInService {
   }
 
   /**
-   * Get check-ins for a date range (for pattern reports)
+   * Get check-ins for a date range (for pattern reports).
+   * Uses SQL-level WHERE instead of loading all rows.
    */
   static async getCheckInsInRange(
     chartId: string,
     startDate: string,
     endDate: string,
   ): Promise<DailyCheckIn[]> {
-    const all = await localDb.getCheckIns(chartId);
-    return all.filter(c => c.date >= startDate && c.date <= endDate);
+    return localDb.getCheckInsInRange(chartId, startDate, endDate);
   }
 }

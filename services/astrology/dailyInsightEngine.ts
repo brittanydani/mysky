@@ -251,7 +251,7 @@ const TRANSIT_TEMPLATES: Record<string, Record<string, Record<string, TransitTem
         title: 'Self-perception under pressure',
         observation:
           "How you see yourself versus how you feel don't align. Minor social friction is possible.",
-        choicePoint: "Don't take reactions personally today. It's cosmic weather.",
+        choicePoint: "Don't take reactions personally today. It's today's weather.",
       },
       Midheaven: {
         title: 'Career vs. comfort',
@@ -1288,7 +1288,7 @@ export class DailyInsightEngine {
     }
 
     // Sort by score descending
-    signals.sort((a, b) => b.score - a.score);
+    signals.sort((a, b) => b.score - a.score || a.transitingPlanet.localeCompare(b.transitingPlanet) || a.natalTarget.localeCompare(b.natalTarget));
     return signals;
   }
 
@@ -1424,7 +1424,7 @@ export class DailyInsightEngine {
       const moonSign = getSignFromDegree(moonDeg);
       return {
         main: `Moon in ${moonSign}`,
-        subtext: 'A quieter cosmic day—follow your own rhythm.',
+        subtext: 'A quieter day—follow your own rhythm.',
       };
     }
 

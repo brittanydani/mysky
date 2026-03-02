@@ -500,9 +500,9 @@ function buildTimeOfDay(checkIns: DailyCheckIn[]): TimeOfDayCard | null {
   const overallMood = mean(checkIns.map(c => c.moodScore));
   const overallStress = mean(checkIns.map(c => stressToNum(c.stressLevel)));
 
-  const best = [...buckets].sort((a, b) => b.avgMood - a.avgMood)[0];
-  const worstStress = [...buckets].sort((a, b) => b.avgStress - a.avgStress)[0];
-  const lowestMood = [...buckets].sort((a, b) => a.avgMood - b.avgMood)[0];
+  const best = [...buckets].sort((a, b) => b.avgMood - a.avgMood || a.label.localeCompare(b.label))[0];
+  const worstStress = [...buckets].sort((a, b) => b.avgStress - a.avgStress || a.label.localeCompare(b.label))[0];
+  const lowestMood = [...buckets].sort((a, b) => a.avgMood - b.avgMood || a.label.localeCompare(b.label))[0];
 
   const stressDiff = worstStress.avgStress - overallStress;
   const moodDiff = best.avgMood - overallMood;
@@ -599,7 +599,7 @@ function buildMetricInsights(buckets: TimeOfDayBucket[]): TimeOfDayMetricInsight
   }
 
   // Sort by spread descending — most significant insight first
-  insights.sort((a, b) => b.spread - a.spread);
+  insights.sort((a, b) => b.spread - a.spread || a.label.localeCompare(b.label));
   return insights;
 }
 
@@ -633,13 +633,13 @@ function buildDayOfWeek(checkIns: DailyCheckIn[]): DayOfWeekCard | null {
 
   const highStressDays = dayStats
     .filter(d => d.avgStress - overallStress >= 0.8 || d.avgStress >= overallStress * 1.2)
-    .sort((a, b) => b.avgStress - a.avgStress)
+    .sort((a, b) => b.avgStress - a.avgStress || a.day.localeCompare(b.day))
     .slice(0, 2)
     .map(d => d.day);
 
   const highMoodDays = dayStats
     .filter(d => d.avgMood - overallMood >= 0.8 || d.avgMood >= overallMood * 1.1)
-    .sort((a, b) => b.avgMood - a.avgMood)
+    .sort((a, b) => b.avgMood - a.avgMood || a.day.localeCompare(b.day))
     .slice(0, 2)
     .map(d => d.day);
 
@@ -683,7 +683,7 @@ function buildTagInsights(checkIns: DailyCheckIn[]): RestoreDrainCard | null {
   // Symmetric buckets: top 20% by mood = "best", bottom 20% by mood = "hard".
   // Using mood-only for both sides keeps bucket sizes equal and avoids
   // inflating hard-day tag frequency (which biased lift calculations).
-  const sortedByMood = [...checkIns].sort((a, b) => a.moodScore - b.moodScore);
+  const sortedByMood = [...checkIns].sort((a, b) => a.moodScore - b.moodScore || a.date.localeCompare(b.date));
   const topN = Math.max(1, Math.ceil(n * 0.2));
   const bestDays = sortedByMood.slice(n - topN);
   const hardDays = sortedByMood.slice(0, topN);
@@ -701,8 +701,8 @@ function buildTagInsights(checkIns: DailyCheckIn[]): RestoreDrainCard | null {
     }
   }
 
-  const restores = items.filter(t => t.lift > 0).sort((a, b) => b.lift - a.lift).slice(0, 3);
-  const drains = items.filter(t => t.lift < 0).sort((a, b) => a.lift - b.lift).slice(0, 3);
+  const restores = items.filter(t => t.lift > 0).sort((a, b) => b.lift - a.lift || a.tag.localeCompare(b.tag)).slice(0, 3);
+  const drains = items.filter(t => t.lift < 0).sort((a, b) => a.lift - b.lift || a.tag.localeCompare(b.tag)).slice(0, 3);
 
   return {
     restores,
@@ -807,7 +807,7 @@ function buildChartThemes(chart: NatalChart): ChartThemeCard[] {
     const el = p.sign.element;
     elCounts[el] = (elCounts[el] ?? 0) + 1;
   }
-  const dominantEl = Object.entries(elCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const dominantEl = Object.entries(elCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
   if (dominantEl) {
     themes.push({
       label: `Dominant Element: ${dominantEl}`,
@@ -822,7 +822,7 @@ function buildChartThemes(chart: NatalChart): ChartThemeCard[] {
     const mod = p.sign.modality;
     modCounts[mod] = (modCounts[mod] ?? 0) + 1;
   }
-  const dominantMod = Object.entries(modCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const dominantMod = Object.entries(modCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
   if (dominantMod && modCounts[dominantMod] >= 2) {
     const modBodies: Record<string, string> = {
       Cardinal: 'You initiate naturally — momentum and fresh starts energize you. Stagnation drains faster than struggle.',
@@ -885,7 +885,7 @@ function buildBlendedCards(
     const el = p.sign.element;
     elCounts[el] = (elCounts[el] ?? 0) + 1;
   }
-  const dominantEl = Object.entries(elCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Earth';
+  const dominantEl = Object.entries(elCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? 'Earth';
 
   const stressTrend = weekSummary.stressTrend.direction;
   const moodTrend = weekSummary.moodTrend.direction;
@@ -986,7 +986,7 @@ function buildBlendedCards(
     const mod = p.sign.modality;
     modCounts[mod] = (modCounts[mod] ?? 0) + 1;
   }
-  const dominantMod = Object.entries(modCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Fixed';
+  const dominantMod = Object.entries(modCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? 'Fixed';
   if (stressTrend === 'up' && dominantMod === 'Fixed') {
     cards.push({
       title: 'Permission to Shift',
@@ -1086,7 +1086,7 @@ function buildTodaySupport(
       const el = p.sign.element;
       elCounts[el] = (elCounts[el] ?? 0) + 1;
     }
-    const el = Object.entries(elCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Earth';
+    const el = Object.entries(elCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? 'Earth';
     const suggestions: Record<string, string> = {
       Fire: `Your ${moonSign} Moon tends to process through action — even a brief walk or creative outlet can unlock how you feel.`,
       Earth: `Your ${moonSign} Moon settles through the senses and small rituals — ground yourself before the day accelerates.`,
@@ -1193,11 +1193,11 @@ function buildJournalThemes(journalEntries: JournalEntry[]): JournalThemesCard |
   const emotionHits = Object.entries(wordCounts)
     .filter(([w]) => EMOTION_WORDS.has(w))
     .filter(([, c]) => c >= 2)
-    .sort((a, b) => b[1] - a[1]);
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
   const generalHits = Object.entries(wordCounts)
     .filter(([, c]) => c >= 2)
-    .sort((a, b) => b[1] - a[1]);
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
   // Take up to 5: prioritize emotion words, fill with general
   const topEmotion = emotionHits.slice(0, 5).map(([w]) => w);
@@ -1314,7 +1314,7 @@ function buildModalityCard(chart: NatalChart): ModalityCard | null {
     if (mod in counts) counts[mod]++;
   }
 
-  const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
   if (!dominant || dominant[1] < 2) return null;
 
   const bodies: Record<string, string> = {
@@ -1365,7 +1365,7 @@ function buildLunarPhaseCard(checkIns: DailyCheckIn[]): LunarPhaseCard | null {
 
   if (phases.length < 3) return null;
 
-  const sorted = [...phases].sort((a, b) => b.avgMood - a.avgMood);
+  const sorted = [...phases].sort((a, b) => b.avgMood - a.avgMood || a.phase.localeCompare(b.phase));
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
   const spread = parseFloat((best.avgMood - worst.avgMood).toFixed(1));
@@ -1428,7 +1428,7 @@ function buildRetrogradeCard(checkIns: DailyCheckIn[]): RetrogradeCard | null {
     }
   }
   const planets = Object.entries(planetFreq)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 3)
     .map(([p]) => p);
 
@@ -1490,7 +1490,7 @@ function buildMoonSignCard(checkIns: DailyCheckIn[], chart?: NatalChart | null):
 
   if (signs.length < 3) return null;
 
-  const sorted = [...signs].sort((a, b) => b.avgMood - a.avgMood);
+  const sorted = [...signs].sort((a, b) => b.avgMood - a.avgMood || a.sign.localeCompare(b.sign));
   const best = sorted[0];
   const hardest = sorted[sorted.length - 1];
   const spread = parseFloat((best.avgMood - hardest.avgMood).toFixed(1));
@@ -1549,7 +1549,7 @@ function buildNoteThemesCard(checkIns: DailyCheckIn[]): NoteThemesCard | null {
   // ── Lift analysis ──────────────────────────────────────────────────────────
   const n = noted.length;
   const topN = Math.max(1, Math.ceil(n * 0.2));
-  const sortedByMood = [...noted].sort((a, b) => a.moodScore - b.moodScore);
+  const sortedByMood = [...noted].sort((a, b) => a.moodScore - b.moodScore || a.date.localeCompare(b.date));
   const bestDays = sortedByMood.slice(n - topN);
   const hardDays = sortedByMood.slice(0, topN);
 
@@ -1649,7 +1649,7 @@ function buildNoteThemesCard(checkIns: DailyCheckIn[]): NoteThemesCard | null {
 
   // ── Synthesize insight ─────────────────────────────────────────────────────
   let insight: string;
-  const todSorted = [...timeOfDayThemes].sort((a, b) => a.avgMood - b.avgMood);
+  const todSorted = [...timeOfDayThemes].sort((a, b) => a.avgMood - b.avgMood || a.bucket.localeCompare(b.bucket));
   const lowestTOD = todSorted[0];
   const highestTOD = todSorted[todSorted.length - 1];
   const todSpread = lowestTOD && highestTOD

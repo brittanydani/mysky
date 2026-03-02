@@ -276,15 +276,15 @@ const AFFIRMATION_POOL: TaggedAffirmation[] = [
   // UNIVERSAL — Chart-Wide Truths (60)
   // ═══════════════════════════════════════════════════════════
   { text: 'I was born with a specific design. Today I trust it.', tags: ['universal'] },
-  { text: 'The tension in my chart is where my growth lives. I stop avoiding it.', tags: ['universal'] },
-  { text: 'I am not one thing. I am all of my placements working together.', tags: ['universal'] },
-  { text: 'No part of my chart is a mistake. Every placement has purpose.', tags: ['universal'] },
+  { text: 'The tension in me is where my growth lives. I stop avoiding it.', tags: ['universal'] },
+  { text: 'I am not one thing. I am all of my parts working together.', tags: ['universal'] },
+  { text: 'No part of me is a mistake. Every quality has purpose.', tags: ['universal'] },
   { text: 'I was not born to be simple. Complexity is my nature.', tags: ['universal'] },
   { text: 'I honor the contradiction between what I want and what I need. Both are true.', tags: ['universal'] },
   { text: 'The part of me I judge the most is the part that needs my attention today.', tags: ['universal'] },
   { text: 'I do not need to fix every imbalance. Some are by design.', tags: ['universal'] },
-  { text: 'My chart is not my destiny. It is my toolkit.', tags: ['universal'] },
-  { text: 'I am the only person alive with this exact cosmic blueprint. I honor it.', tags: ['universal'] },
+  { text: 'My nature is not my destiny. It is my toolkit.', tags: ['universal'] },
+  { text: 'I am the only person alive with this exact inner blueprint. I honor it.', tags: ['universal'] },
   { text: 'What feels like conflict inside me is actually range.', tags: ['universal'] },
   { text: 'I stop comparing my path to anyone else\u2019s. Mine was never meant to look like theirs.', tags: ['universal'] },
   { text: 'I am already becoming who I was designed to be. I do not need to force it.', tags: ['universal'] },
@@ -293,11 +293,11 @@ const AFFIRMATION_POOL: TaggedAffirmation[] = [
   { text: 'The things that come easily to me are not lesser. They are my gifts.', tags: ['universal'] },
   { text: 'My shadows are not flaws. They are invitations to look deeper.', tags: ['universal'] },
   { text: 'I am allowed to change my mind without changing my worth.', tags: ['universal'] },
-  { text: 'Every hard transit ends. I survive this one too.', tags: ['universal'] },
-  { text: 'I am not behind. My chart has its own seasons.', tags: ['universal'] },
+  { text: 'Every hard season ends. I survive this one too.', tags: ['universal'] },
+  { text: 'I am not behind. My life has its own seasons.', tags: ['universal'] },
   { text: 'My sensitivity and my strength come from the same place.', tags: ['universal'] },
   { text: 'I do not owe anyone consistency when I am actively growing.', tags: ['universal'] },
-  { text: 'The universe did not make me this way by accident.', tags: ['universal'] },
+  { text: 'I was not made this way by accident.', tags: ['universal'] },
   { text: 'I choose presence over perfection today.', tags: ['universal'] },
   { text: 'My energy is finite and sacred. I choose where to spend it.', tags: ['universal'] },
   { text: 'I am allowed to outgrow versions of myself that no longer fit.', tags: ['universal'] },
@@ -498,8 +498,8 @@ export class DailyAffirmationEngine {
       return `${mod.charAt(0).toUpperCase() + mod.slice(1)} energy`;
     }
     if (tag === 'retrograde-personal') {
-      return 'Retrograde emphasis';
+      return 'Review phase emphasis';
     }
-    return 'Your cosmic blueprint';
+    return 'Your personal blueprint';
   }
 }

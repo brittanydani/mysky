@@ -24,7 +24,13 @@ function redact(value: unknown): unknown {
 
       const SENSITIVE_KEYS = [
         'birthdate','birthtime','birthplace','latitude','longitude','content','title',
-        'ciphertext','ciphertexthex','ct','iv','ivhex','payload','masterkey','token','authorization'
+        'ciphertext','ciphertexthex','ct','iv','ivhex','payload','masterkey','token','authorization',
+        'dreamtext','dream_text','note','passphrase','password','secret',
+        'moodscore','mood_score','energylevel','energy_level','stresslevel','stress_level',
+        'dreammood','dream_mood','dreamfeelings','dream_feelings','dreammetadata','dream_metadata',
+        'tags','wins','challenges','evidence','snippet','evidence_snippets',
+        'api_key','apikey','supabase_key','anon_key',
+        'stack','componentstack','message',
       ];
 
       if (!Array.isArray(obj)) {

@@ -413,7 +413,7 @@ const ENERGY_GUIDANCE = {
     { headline: 'Swift decision-making', message: 'Decisions come easier today because your energy supports clarity. Trust the quick insights—they\'re good ones.' },
     { headline: 'The power of follow-through', message: 'Starting is one thing. Today you have the rarer gift: energy for follow-through. Finish. Complete. Close the loop.' },
     { headline: 'Ignite inspiration', message: 'Your enthusiasm today can ignite inspiration in others. Share your excitement. Let it ripple outward.' },
-    { headline: 'Bold moves welcome', message: 'The universe is backing your bold moves today. Not reckless ones—bold ones. There\'s a difference, and you know it.' },
+    { headline: 'Bold moves welcome', message: 'Today is backing your bold moves. Not reckless ones—bold ones. There\'s a difference, and you know it.' },
     { headline: 'Strength in reserve', message: 'Even after a full day of effort, you\'ll still have reserves today. Plan an evening that uses this bonus energy well.' },
     { headline: 'Action-oriented clarity', message: 'You can see the path and you have the energy to walk it. Don\'t overthink—just move forward with purpose.' },
     { headline: 'Catalytic energy', message: 'Small actions create outsized results today. One conversation, one decision, one step could change everything.' },
@@ -991,7 +991,7 @@ const GENTLE_REMINDERS = [
   'Comparison is the fastest way to forget your own magic.',
   'You\'re allowed to change your mind. You\'re allowed to change your life.',
   'Not every problem needs solving today. Some just need witnessing.',
-  'The stars remind us: even in darkness, there is light.',
+  'Even in darkness, there is light.',
   'Your body remembers how to heal. Your job is to not get in the way.',
   'Saying no to something you don\'t want is saying yes to something you do.',
   'You don\'t have to understand your journey to be on the right one.',
@@ -1004,7 +1004,7 @@ const GENTLE_REMINDERS = [
   'Trust that the seeds you\'ve planted are growing, even underground.',
   'You don\'t owe anyone an explanation for taking care of yourself.',
   'Your nervous system doesn\'t read your to-do list. Listen to your body first.',
-  'The universe isn\'t punishing you. It\'s redirecting you.',
+  'You\'re not being punished. You\'re being redirected.',
   'You are the only you that has ever existed. That alone is extraordinary.',
   'Healing and hurting can happen at the same time. Both are real.',
   'Your future self will thank you for the rest you take today.',
@@ -1217,9 +1217,9 @@ export class HumanGuidanceGenerator {
     const hour = date.getHours();
     let greeting = '';
     if (hour < 12) {
-      greeting = `Good morning. Here's what the sky is saying today.`;
+      greeting = `Good morning. Here's what today is bringing.`;
     } else if (hour < 17) {
-      greeting = `Here's your cosmic weather for today.`;
+      greeting = `Here's your energy weather for today.`;
     } else {
       greeting = `Settling into evening. Here's what's been in the air.`;
     }
@@ -1230,7 +1230,7 @@ export class HumanGuidanceGenerator {
     if (topSignal) {
       cosmicWeather = `${topSignal.description} — ${insight.headlineSubtext || 'a day to pay attention to the details.'}`;
     } else {
-      cosmicWeather = `Moon in ${insight.moonSign}. A quieter cosmic day — follow your own rhythm.`;
+      cosmicWeather = `A quieter day — follow your own rhythm.`;
     }
 
     // Moon phase emoji mapping

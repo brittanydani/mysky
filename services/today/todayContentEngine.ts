@@ -283,7 +283,7 @@ function selectFromCandidates(
   if (scoredItems.length === 0) return null;
 
   // Sort by score descending
-  scoredItems.sort((a, b) => b.score - a.score);
+  scoredItems.sort((a, b) => b.score - a.score || a.id - b.id);
 
   // Take top tier (score >= 60% of best)
   const bestScore = scoredItems[0].score;
@@ -408,9 +408,9 @@ export class TodayContentEngine {
     );
 
     let greeting = timeOfDay === 'morning'
-      ? 'Good morning. Here\u2019s what the sky is saying today.'
+      ? 'Good morning. Here\u2019s what today is bringing.'
       : timeOfDay === 'afternoon'
-        ? 'Here\u2019s your cosmic weather for today.'
+        ? 'Here\u2019s your energy weather for today.'
         : 'Settling into evening. Here\u2019s what\u2019s been in the air.';
     if (selectedGreeting) {
       const item = GREETING_LIBRARY.find(g => g.id === selectedGreeting.id);
@@ -446,7 +446,7 @@ function buildSourceDescription(contentTags: ContentTag[], profile: TagProfile):
     }
   }
 
-  if (parts.length === 0) return 'Your cosmic blueprint';
+  if (parts.length === 0) return 'Your personal blueprint';
   if (parts.length === 1) return parts[0];
   if (parts.length === 2) return `${parts[0]} × ${parts[1]}`;
   return `${parts[0]} × ${parts[1]} + more`;
@@ -469,24 +469,24 @@ function formatTagForDisplay(tag: ContentTag): string {
     'phase-waning-gibbous': 'Waning Gibbous',
     'phase-last-quarter': 'Last Quarter Moon',
     'phase-waning-crescent': 'Waning Crescent',
-    'transit-aries': 'Moon in Aries',
-    'transit-taurus': 'Moon in Taurus',
-    'transit-gemini': 'Moon in Gemini',
-    'transit-cancer': 'Moon in Cancer',
-    'transit-leo': 'Moon in Leo',
-    'transit-virgo': 'Moon in Virgo',
-    'transit-libra': 'Moon in Libra',
-    'transit-scorpio': 'Moon in Scorpio',
-    'transit-sagittarius': 'Moon in Sagittarius',
-    'transit-capricorn': 'Moon in Capricorn',
-    'transit-aquarius': 'Moon in Aquarius',
-    'transit-pisces': 'Moon in Pisces',
-    'love-active': 'Love transit',
-    'energy-active': 'Energy transit',
-    'growth-active': 'Growth transit',
-    'focus-active': 'Focus transit',
-    'mood-active': 'Mood transit',
-    'retrograde-active': 'Retrograde',
+    'transit-aries': 'Active energy',
+    'transit-taurus': 'Grounding energy',
+    'transit-gemini': 'Curious energy',
+    'transit-cancer': 'Nurturing energy',
+    'transit-leo': 'Expressive energy',
+    'transit-virgo': 'Refining energy',
+    'transit-libra': 'Balancing energy',
+    'transit-scorpio': 'Transformative energy',
+    'transit-sagittarius': 'Expansive energy',
+    'transit-capricorn': 'Structured energy',
+    'transit-aquarius': 'Innovative energy',
+    'transit-pisces': 'Intuitive energy',
+    'love-active': 'Love influence',
+    'energy-active': 'Energy influence',
+    'growth-active': 'Growth influence',
+    'focus-active': 'Focus influence',
+    'mood-active': 'Mood influence',
+    'retrograde-active': 'Review phase',
     'intensity-calm': 'Calm energy',
     'intensity-moderate': 'Moderate energy',
     'intensity-intense': 'Intense energy',

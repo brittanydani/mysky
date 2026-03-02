@@ -185,7 +185,7 @@ function aggregateByDay(
 
     // Top keywords by frequency across entries for this day
     const keywordsUnion = Object.entries(keywordFreq)
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .slice(0, 12)
       .map(([word]) => word);
 

@@ -32,7 +32,7 @@ export function deriveChartProfile(chart: NatalChart): ChartProfile {
     }
   }
   const dominantElement = (Object.entries(elementCounts) as [Element, number][])
-    .sort((a, b) => b[1] - a[1])[0][0];
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
 
   // ── Modality counts ──────────────────────────────────────────────────────
   const modalityCounts: Record<Modality, number> = { Cardinal: 0, Fixed: 0, Mutable: 0 };
@@ -43,7 +43,7 @@ export function deriveChartProfile(chart: NatalChart): ChartProfile {
     }
   }
   const dominantModality = (Object.entries(modalityCounts) as [Modality, number][])
-    .sort((a, b) => b[1] - a[1])[0][0];
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
 
   // ── Moon ─────────────────────────────────────────────────────────────────
   const moonSign = chart.moon.sign.name;
@@ -71,7 +71,7 @@ export function deriveChartProfile(chart: NatalChart): ChartProfile {
   const stelliums = Object.entries(signCounts)
     .filter(([, count]) => count >= 3)
     .map(([sign, count]) => ({ sign, count }))
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => b.count - a.count || a.sign.localeCompare(b.sign));
 
   // ── Version hash for cache invalidation ──────────────────────────────────
   const hashInput = [

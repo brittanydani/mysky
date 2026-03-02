@@ -207,11 +207,11 @@ function splitBestHard(
   const topN = Math.max(1, Math.ceil(n * 0.2));
 
   // Best = top 20% by mood
-  const byMood = [...aggregates].sort((a, b) => b.moodAvg - a.moodAvg);
+  const byMood = [...aggregates].sort((a, b) => b.moodAvg - a.moodAvg || a.dayKey.localeCompare(b.dayKey));
   const bestDays = byMood.slice(0, topN);
 
   // Hard = top 20% by stress OR bottom 20% by mood (union)
-  const byStress = [...aggregates].sort((a, b) => b.stressAvg - a.stressAvg);
+  const byStress = [...aggregates].sort((a, b) => b.stressAvg - a.stressAvg || a.dayKey.localeCompare(b.dayKey));
   const hardByStress = new Set(byStress.slice(0, topN).map(d => d.dayKey));
   const hardByMood = new Set(byMood.slice(-topN).map(d => d.dayKey));
   const hardIds = new Set([...hardByStress, ...hardByMood]);
@@ -259,12 +259,12 @@ export function computeKeywordLift(
 
   const restores = items
     .filter(i => i.lift > 0)
-    .sort((a, b) => b.lift - a.lift)
+    .sort((a, b) => b.lift - a.lift || a.label.localeCompare(b.label))
     .slice(0, 3);
 
   const drains = items
     .filter(i => i.lift < 0)
-    .sort((a, b) => a.lift - b.lift)
+    .sort((a, b) => a.lift - b.lift || a.label.localeCompare(b.label))
     .slice(0, 3);
 
   const jDays = aggregates.filter(d => d.journalCount > 0).length;
@@ -579,8 +579,8 @@ export function computeTimeOfDayPatterns(
 
   if (validBuckets.length < 2) return null;
 
-  const worst = [...validBuckets].sort((a, b) => a.avgMood - b.avgMood)[0];
-  const best = [...validBuckets].sort((a, b) => b.avgMood - a.avgMood)[0];
+  const worst = [...validBuckets].sort((a, b) => a.avgMood - b.avgMood || a.label.localeCompare(b.label))[0];
+  const best = [...validBuckets].sort((a, b) => b.avgMood - a.avgMood || a.label.localeCompare(b.label))[0];
 
   const diff = best.avgMood - worst.avgMood;
   const insight =
@@ -636,12 +636,12 @@ export function computeDayOfWeekPatterns(
 
   const highStressDays = validDays
     .filter(d => d.avgStress - overallStress >= 0.8)
-    .sort((a, b) => b.avgStress - a.avgStress)
+    .sort((a, b) => b.avgStress - a.avgStress || a.day.localeCompare(b.day))
     .slice(0, 2);
 
   const highMoodDays = validDays
     .filter(d => d.avgMood - overallMood >= 0.8)
-    .sort((a, b) => b.avgMood - a.avgMood)
+    .sort((a, b) => b.avgMood - a.avgMood || a.day.localeCompare(b.day))
     .slice(0, 2);
 
   let insight: string;
@@ -877,7 +877,7 @@ export function computeBlendedInsights(
 
   // Rule 3: High volatility + frequent emotion words
   if (moodVol?.level === 'high' && Object.values(recentEmotions).some(v => v >= 4)) {
-    const topEmotion = Object.entries(recentEmotions).sort((a, b) => b[1] - a[1])[0];
+    const topEmotion = Object.entries(recentEmotions).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
 
     cards.push({
       title: 'The Emotional Weather',
@@ -985,8 +985,8 @@ export function computeEmotionToneShift(
     if (delta <= -0.1) falling.push({ category: cat, delta: parseFloat(delta.toFixed(2)) });
   }
 
-  rising.sort((a, b) => b.delta - a.delta);
-  falling.sort((a, b) => a.delta - b.delta);
+  rising.sort((a, b) => b.delta - a.delta || a.category.localeCompare(b.category));
+  falling.sort((a, b) => a.delta - b.delta || a.category.localeCompare(b.category));
 
   if (rising.length === 0 && falling.length === 0) return null;
 
@@ -1035,7 +1035,7 @@ export function computeKeywordThemes(
 
   const top = Object.entries(keywordDayCounts)
     .filter(([, c]) => c >= 2)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 8)
     .map(([word, dayCount]) => ({ word, dayCount }));
 

@@ -658,7 +658,7 @@ function analyzeElementBalance(chart: NatalChart): ElementBalance {
     if (p.sign?.element) counts[p.sign.element]++;
   }
 
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const dominant = sorted[0][0];
   const missing = sorted.find(([_, c]) => c === 0)?.[0];
 
@@ -702,7 +702,7 @@ function analyzeModalityBalance(chart: NatalChart): ModalityBalance {
     if (p.sign?.modality) counts[p.sign.modality]++;
   }
 
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   const dominant = sorted[0][0];
 
   const descriptions: Record<string, string> = {

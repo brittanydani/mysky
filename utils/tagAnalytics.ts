@@ -85,10 +85,10 @@ function splitBestHard(
 
   const topN = Math.max(1, Math.ceil(n * 0.2));
 
-  const byMood = [...aggregates].sort((a, b) => b.moodAvg - a.moodAvg);
+  const byMood = [...aggregates].sort((a, b) => b.moodAvg - a.moodAvg || a.dayKey.localeCompare(b.dayKey));
   const bestDays = byMood.slice(0, topN);
 
-  const byStress = [...aggregates].sort((a, b) => b.stressAvg - a.stressAvg);
+  const byStress = [...aggregates].sort((a, b) => b.stressAvg - a.stressAvg || a.dayKey.localeCompare(b.dayKey));
   const hardByStress = new Set(byStress.slice(0, topN).map(d => d.dayKey));
   const hardByMood = new Set(byMood.slice(-topN).map(d => d.dayKey));
   const hardKeys = new Set([...hardByStress, ...hardByMood]);
@@ -130,8 +130,8 @@ export function computeTagLift(aggregates: DailyAggregate[]): TagLiftCard {
     items.push({ tag, label: tagLabel(tag), lift, bestRate, hardRate, totalDays });
   }
 
-  const restores = items.filter(i => i.lift > 0).sort((a, b) => b.lift - a.lift).slice(0, 5);
-  const drains = items.filter(i => i.lift < 0).sort((a, b) => a.lift - b.lift).slice(0, 5);
+  const restores = items.filter(i => i.lift > 0).sort((a, b) => b.lift - a.lift || a.tag.localeCompare(b.tag)).slice(0, 5);
+  const drains = items.filter(i => i.lift < 0).sort((a, b) => a.lift - b.lift || a.tag.localeCompare(b.tag)).slice(0, 5);
 
   const taggedDays = aggregates.filter(d => d.tagsUnion.length > 0).length;
 
@@ -499,9 +499,9 @@ export function classifyTags(
   }
 
   // Sort by impact magnitude
-  restorers.sort((a, b) => (b.moodDiff - b.stressDiff) - (a.moodDiff - a.stressDiff));
-  drainers.sort((a, b) => (b.stressDiff - b.moodDiff) - (a.stressDiff - a.moodDiff));
-  neutral.sort((a, b) => b.totalDays - a.totalDays);
+  restorers.sort((a, b) => (b.moodDiff - b.stressDiff) - (a.moodDiff - a.stressDiff) || a.tag.localeCompare(b.tag));
+  drainers.sort((a, b) => (b.stressDiff - b.moodDiff) - (a.stressDiff - a.moodDiff) || a.tag.localeCompare(b.tag));
+  neutral.sort((a, b) => b.totalDays - a.totalDays || a.tag.localeCompare(b.tag));
 
   const taggedDays = aggregates.filter(d => d.tagsUnion.length > 0).length;
 
@@ -612,7 +612,7 @@ export function computeTagJournalAgreement(
     });
   }
 
-  return results.sort((a, b) => b.agreementDays - a.agreementDays).slice(0, 5);
+  return results.sort((a, b) => b.agreementDays - a.agreementDays || a.tag.localeCompare(b.tag)).slice(0, 5);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
