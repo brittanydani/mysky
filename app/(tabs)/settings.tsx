@@ -35,7 +35,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Where is my data stored?',
     answer:
-      'All your data stays on your device. Birth data, journal entries, and chart information are stored in a local database with sensitive fields encrypted using AES-256. Encryption keys are kept in your device\u2019s secure keychain. Nothing is uploaded to any server.',
+      'All your data stays on your device. Birth data, journal entries, and chart information are stored in a local database with sensitive fields encrypted using AES-256-GCM. Encryption keys are kept in your device’s secure keychain. Nothing is uploaded to any server.',
   },
   {
     question: 'Where does my backup go?',
@@ -75,7 +75,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Can I cancel my subscription?',
     answer:
-      'Yes. Subscriptions are managed through your device\u2019s app store. On iOS, go to Settings > Apple ID > Subscriptions. On Android, go to Google Play > Subscriptions. You keep access through the end of your billing period.',
+      'Yes. Monthly and yearly subscriptions are managed through your device\u2019s app store. On iOS, go to Settings > Apple ID > Subscriptions. On Android, go to Google Play > Subscriptions. You keep access through the end of your billing period. Lifetime purchases do not renew and do not have a cancellation setting (refunds follow the app store\u2019s policy).',
   },
   {
     question: 'How do I change my birth data?',
@@ -99,125 +99,13 @@ const FAQ: { question: string; answer: string }[] = [
   },
 ];
 
-const PRIVACY_POLICY = `Last updated: February 27, 2026
-
-MySky ("the App") is committed to protecting your privacy. This policy explains how we handle your information.
-
-DATA COLLECTION & STORAGE
-- All personal data (birth information, journal entries, mood & energy check-ins, sleep entries, chart data) is stored locally on your device only.
-- Sensitive fields are encrypted at rest using AES-256 with keys stored in your device's secure keychain/keystore.
-- We do not collect, transmit, or store your personal data on any external server.
-- We do not use analytics, tracking, or advertising SDKs.
-
-BIRTH DATA
-- Your birth date, time, and location are used solely to calculate your personalization framework on your device.
-- This data never leaves your device unless you choose to create an encrypted backup or export a PDF.
-
-JOURNAL ENTRIES, MOOD CHECK-INS & SLEEP TRACKING
-- Journal content, mood & energy check-in data, and sleep entries are stored locally with sensitive fields encrypted at rest.
-- On-device pattern analysis (mood trends, keyword frequency, emotion tone) is computed entirely on your device.
-- None of this data is ever shared, uploaded, or analyzed externally.
-- Premium encrypted backups use AES-256 encryption with a passphrase only you know.
-
-PDF EXPORT
-- PDF files are generated entirely on your device.
-- The file is saved to your device's temporary cache and presented via the share sheet — you choose where it goes.
-- MySky does not upload or retain the PDF.
-
-BACKUP & RESTORE
-- Encrypted backups are created locally and presented via the share sheet for you to save wherever you choose.
-- Backup files are encrypted with AES-256 using a passphrase only you know.
-- MySky never uploads your backup to any server.
-
-SUBSCRIPTIONS
-- Subscription purchases are handled by Apple (App Store) or Google (Google Play).
-- We receive anonymized transaction confirmations but no personal billing information.
-
-THIRD-PARTY SERVICES
-- RevenueCat: Used for subscription management. Receives only anonymized app user IDs, not personal data.
-- No other third-party services receive your data.
-- Your data is never used for AI training, advertising, or marketing.
-
-YOUR RIGHTS
-- Access: View all your stored data at any time.
-- Export: Export your data as a PDF or encrypted backup via Settings.
-- Delete: Permanently delete all your data at any time via Privacy Settings.
-- Portability: Take your data with you via encrypted backup.
-- No account required: MySky works without creating any account.
-
-CHILDREN'S PRIVACY
-- MySky is not directed at children under 13. We do not knowingly collect data from children.
-
-CONTACT
-- For privacy questions: brittanyapps@outlook.com
-
-CHANGES
-- We will update this policy as needed. Continued use of the App constitutes acceptance of any changes.`;
-
-const TERMS_OF_SERVICE = `Last updated: February 27, 2026
-
-By using MySky ("the App"), you agree to these Terms of Service.
-
-1. ACCEPTANCE
-By downloading or using MySky, you agree to be bound by these terms. If you do not agree, do not use the App.
-
-2. DESCRIPTION OF SERVICE
-MySky is a personal growth and wellness app that provides:
-- Daily mood, energy & stress check-ins with pattern analysis
-- Sleep logging (quality & duration; dream journal requires Deeper Sky)
-- Journaling with guided prompts and behavioral insights
-- Natal chart used as a personalization framework
-- Daily personalized guidance and reflection prompts
-- Chakra energy mapping tied to your chart
-- Relationship compatibility analysis
-- Personal story generation
-- PDF chart export (premium)
-- Encrypted backup and restore (premium)
-All content is generated and stored locally on your device.
-
-3. ASTROLOGICAL CONTENT
-- MySky provides personalized interpretations for self-reflection and personal growth purposes only.
-- Interpretive content is not a substitute for professional medical, psychological, financial, or legal advice.
-- Planetary calculations are based on established astronomical data (Swiss Ephemeris) but interpretations are generalized.
-
-4. SUBSCRIPTIONS
-- Free features include: daily mood & energy check-ins, sleep logging (quality & duration), journal with guided prompts, basic weekly averages, natal chart & Big Three, basic daily guidance, one relationship chart, and privacy controls. Dream journal, sleep & mood trend analysis, and behavioral pattern charts require Deeper Sky.
-- "Deeper Sky" premium features require a subscription managed through Apple (App Store) or Google (Google Play).
-- Prices are displayed in the App before purchase.
-- Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.
-- Manage or cancel subscriptions in your device Settings > Apple ID > Subscriptions (iOS) or Google Play > Subscriptions (Android).
-
-5. USER DATA
-- All data is stored locally on your device with sensitive fields encrypted at rest.
-- You are responsible for your device security and any backup files you create.
-- We are not responsible for data loss due to device failure, deletion, or other causes outside our control.
-- See our Privacy Policy for details on data handling.
-
-6. INTELLECTUAL PROPERTY
-- All content, design, and code in MySky are owned by the developer.
-- You retain ownership of your personal data, journal entries, and check-ins.
-- You may not copy, modify, distribute, or reverse-engineer the App.
-
-7. DISCLAIMER OF WARRANTIES
-- MySky is provided "as is" without warranties of any kind.
-- We do not guarantee uninterrupted or error-free operation.
-
-8. LIMITATION OF LIABILITY
-- To the maximum extent permitted by law, we are not liable for any indirect, incidental, or consequential damages arising from your use of the App.
-
-9. GOVERNING LAW
-- These terms are governed by the laws of the United States. Any disputes will be resolved in accordance with applicable federal and state laws.
-
-10. CHANGES TO TERMS
-- We may update these terms at any time. Continued use constitutes acceptance.
-
-11. CONTACT
-- For questions about these terms: brittanyapps@outlook.com`;
-
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
+
+  const successColor = (theme as any).success ?? theme.primary;
+  const errorColor = (theme as any).error ?? '#E07A7A';
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -228,7 +116,6 @@ export default function SettingsScreen() {
   const [restoreUri, setRestoreUri] = useState<string | null>(null);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
-  const [expandedLegal, setExpandedLegal] = useState<string | null>(null);
   const [showFaq, setShowFaq] = useState(false);
   const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
 
@@ -272,7 +159,7 @@ export default function SettingsScreen() {
     } catch {}
     Alert.alert(
       'Deeper Sky Feature',
-      'Encrypted backup & restore keeps your data safe. Available with Deeper Sky.',
+      'Encrypted backup & restore keeps your data safe. Available with Deeper Sky (subscription or lifetime).',
       [
         { text: 'Not now', style: 'cancel' },
         { text: 'Learn more', onPress: () => router.push('/(tabs)/premium' as Href) },
@@ -386,6 +273,20 @@ export default function SettingsScreen() {
     }
   };
 
+  const openPrivacyPolicy = async () => {
+    try {
+      await Haptics.selectionAsync();
+    } catch {}
+    router.push('/privacy' as Href);
+  };
+
+  const openTerms = async () => {
+    try {
+      await Haptics.selectionAsync();
+    } catch {}
+    router.push('/terms' as Href);
+  };
+
   return (
     <View style={styles.container}>
       <StarField starCount={25} />
@@ -411,8 +312,8 @@ export default function SettingsScreen() {
                 style={styles.keyLossBannerGradient}
               >
                 <View style={styles.keyLossBannerHeader}>
-                  <Ionicons name="warning" size={22} color={theme.error} />
-                  <Text style={styles.keyLossBannerTitle}>Encryption Key Unavailable</Text>
+                  <Ionicons name="warning" size={22} color={errorColor} />
+                  <Text style={[styles.keyLossBannerTitle, { color: errorColor }]}>Encryption Key Unavailable</Text>
                 </View>
                 <Text style={styles.keyLossBannerText}>
                   Your encrypted data cannot be read on this device. This can happen after a device migration, OS update, or app reinstall.
@@ -433,8 +334,8 @@ export default function SettingsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Delete all data"
                   >
-                    <Ionicons name="trash" size={16} color={theme.error} />
-                    <Text style={[styles.keyLossBannerButtonText, { color: theme.error }]}>Delete All Data</Text>
+                    <Ionicons name="trash" size={16} color={errorColor} />
+                    <Text style={[styles.keyLossBannerButtonText, { color: errorColor }]}>Delete All Data</Text>
                   </Pressable>
                 </View>
               </LinearGradient>
@@ -498,7 +399,60 @@ export default function SettingsScreen() {
             </View>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(375).duration(600)} style={styles.section}>
+          <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Security & Data Protection</Text>
+
+            <View style={styles.settingCard}>
+              <LinearGradient
+                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                style={styles.cardGradient}
+              >
+                <View style={styles.securityGrid}>
+                  <View style={styles.securityRow}>
+                    <View style={styles.securityBullet}>
+                      <Ionicons name="lock-closed" size={16} color={successColor} />
+                    </View>
+                    <View style={styles.securityContent}>
+                      <Text style={styles.securityLabel}>Local Encryption</Text>
+                      <Text style={styles.securityDetail}>AES-256-GCM with a per-device key stored in your hardware keychain</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.securityRow}>
+                    <View style={styles.securityBullet}>
+                      <Ionicons name="airplane" size={16} color={successColor} />
+                    </View>
+                    <View style={styles.securityContent}>
+                      <Text style={styles.securityLabel}>No Content Transmitted</Text>
+                      <Text style={styles.securityDetail}>Journal entries, dreams, and check-ins never leave your device. Birth-city text is sent to Nominatim for geocoding.</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.securityRow}>
+                    <View style={styles.securityBullet}>
+                      <Ionicons name="analytics" size={16} color={successColor} />
+                    </View>
+                    <View style={styles.securityContent}>
+                      <Text style={styles.securityLabel}>Zero Third-Party Analytics</Text>
+                      <Text style={styles.securityDetail}>No tracking SDKs, no advertising IDs, no third-party profiling</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.securityRow}>
+                    <View style={styles.securityBullet}>
+                      <Ionicons name="document-text" size={16} color={successColor} />
+                    </View>
+                    <View style={styles.securityContent}>
+                      <Text style={styles.securityLabel}>Minimal Event Logging</Text>
+                      <Text style={styles.securityDetail}>Only the 20 most recent security events are kept — no sensitive content is ever logged</Text>
+                    </View>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Privacy & Data</Text>
 
             <Pressable style={styles.settingCard} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
@@ -523,21 +477,21 @@ export default function SettingsScreen() {
 
             <View style={styles.privacyInfo}>
               <View style={styles.privacyItem}>
-                <Ionicons name="phone-portrait" size={16} color={theme.success} />
+                <Ionicons name="phone-portrait" size={16} color={successColor} />
                 <Text style={styles.privacyText}>Data stored locally on your device</Text>
               </View>
               <View style={styles.privacyItem}>
-                <Ionicons name="shield" size={16} color={theme.success} />
+                <Ionicons name="shield" size={16} color={successColor} />
                 <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
               </View>
               <View style={styles.privacyItem}>
-                <Ionicons name="ban" size={16} color={theme.success} />
+                <Ionicons name="ban" size={16} color={successColor} />
                 <Text style={styles.privacyText}>Never sold or shared</Text>
               </View>
             </View>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(425).duration(600)} style={styles.section}>
+          <Animated.View entering={FadeInDown.delay(475).duration(600)} style={styles.section}>
             <Pressable
               style={styles.sectionTitleRow}
               onPress={async () => {
@@ -590,71 +544,73 @@ export default function SettingsScreen() {
             )}
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(475).duration(600)} style={styles.section}>
+          <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Legal</Text>
 
-            <View style={styles.settingCard}>
+            <Pressable
+              style={styles.settingCard}
+              onPress={openPrivacyPolicy}
+              accessibilityRole="button"
+              accessibilityLabel="Privacy Policy"
+            >
               <LinearGradient
                 colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.glossaryGradient}
+                style={styles.cardGradient}
               >
-                <Pressable
-                  onPress={async () => {
-                    try {
-                      await Haptics.selectionAsync();
-                    } catch {}
-                    setExpandedLegal(expandedLegal === 'privacy' ? null : 'privacy');
-                  }}
-                  style={[styles.glossaryRow, styles.glossaryRowBorder]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Privacy Policy"
-                >
-                  <View style={styles.glossaryHeader}>
-                    <View style={styles.legalHeader}>
-                      <Ionicons name="document-text-outline" size={16} color={theme.primary} />
-                      <Text style={styles.glossaryTerm}>Privacy Policy</Text>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <Ionicons name="document-text-outline" size={20} color={theme.primary} />
+                      <Text style={styles.settingTitle}>Privacy Policy</Text>
                     </View>
-                    <Ionicons
-                      name={expandedLegal === 'privacy' ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={theme.textMuted}
-                    />
+                    <Text style={styles.settingDescription}>
+                      How MySky handles your data and protects your privacy
+                    </Text>
                   </View>
-                  {expandedLegal === 'privacy' && <Text style={styles.legalText}>{PRIVACY_POLICY}</Text>}
-                </Pressable>
-
-                <Pressable
-                  onPress={async () => {
-                    try {
-                      await Haptics.selectionAsync();
-                    } catch {}
-                    setExpandedLegal(expandedLegal === 'terms' ? null : 'terms');
-                  }}
-                  style={styles.glossaryRow}
-                  accessibilityRole="button"
-                  accessibilityLabel="Terms of Service"
-                >
-                  <View style={styles.glossaryHeader}>
-                    <View style={styles.legalHeader}>
-                      <Ionicons name="reader-outline" size={16} color={theme.primary} />
-                      <Text style={styles.glossaryTerm}>Terms of Service</Text>
-                    </View>
-                    <Ionicons
-                      name={expandedLegal === 'terms' ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={theme.textMuted}
-                    />
-                  </View>
-                  {expandedLegal === 'terms' && <Text style={styles.legalText}>{TERMS_OF_SERVICE}</Text>}
-                </Pressable>
+                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                </View>
               </LinearGradient>
-            </View>
+            </Pressable>
+
+            <Pressable
+              style={styles.settingCard}
+              onPress={openTerms}
+              accessibilityRole="button"
+              accessibilityLabel="Terms of Service"
+            >
+              <LinearGradient
+                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                style={styles.cardGradient}
+              >
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <Ionicons name="reader-outline" size={20} color={theme.primary} />
+                      <Text style={styles.settingTitle}>Terms of Service</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>
+                      App terms, subscription details, and disclaimers
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                </View>
+              </LinearGradient>
+            </Pressable>
+
+            <Text style={styles.versionText}>
+              MySky v{Constants.expoConfig?.version ?? '1.0.0'}
+            </Text>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(525).duration(600)} style={styles.section}>
+          <Animated.View entering={FadeInDown.delay(625).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Support</Text>
 
-            <Pressable style={styles.settingCard} onPress={openSupportEmail} accessibilityRole="link" accessibilityLabel="Contact us via email">
+            <Pressable
+              style={styles.settingCard}
+              onPress={openSupportEmail}
+              accessibilityRole="link"
+              accessibilityLabel="Contact us via email"
+            >
               <LinearGradient
                 colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
                 style={styles.cardGradient}
@@ -671,14 +627,16 @@ export default function SettingsScreen() {
                 </View>
               </LinearGradient>
             </Pressable>
-
-            {/* Version text moved below premium card only */}
           </Animated.View>
 
-
           {!isPremium && (
-            <Animated.View entering={FadeInDown.delay(575).duration(600)} style={styles.section}>
-              <Pressable style={styles.settingCard} onPress={() => setShowPremiumModal(true)} accessibilityRole="button" accessibilityLabel="Learn about premium features">
+            <Animated.View entering={FadeInDown.delay(700).duration(600)} style={styles.section}>
+              <Pressable
+                style={styles.settingCard}
+                onPress={() => setShowPremiumModal(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Learn about premium features"
+              >
                 <LinearGradient
                   colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
                   style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
@@ -690,20 +648,55 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        Full personal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — from $4.99/mo.
+                        Full personal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — $4.99/mo • $29.99/yr • $49.99 lifetime.
                       </Text>
                     </View>
                     <Ionicons name="arrow-forward" size={20} color={theme.primary} />
                   </View>
                 </LinearGradient>
               </Pressable>
-              <Text style={styles.versionText}>MySky v{Constants.expoConfig?.version ?? '1.0.0'}</Text>
             </Animated.View>
           )}
 
-      <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
-        </ScrollView>
+          {isPremium && (
+            <Animated.View entering={FadeInDown.delay(700).duration(600)} style={styles.section}>
+              <Text style={styles.sectionTitle}>Subscription</Text>
+              <Pressable
+                style={styles.settingCard}
+                onPress={async () => {
+                  try { await Haptics.selectionAsync(); } catch {}
+                  try {
+                    await Linking.openURL('https://apps.apple.com/account/subscriptions');
+                  } catch {
+                    Alert.alert('Unable to Open', 'Go to Settings → Apple ID → Subscriptions to manage your plan.');
+                  }
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Manage your subscription"
+              >
+                <LinearGradient
+                  colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
+                >
+                  <View style={styles.settingRow}>
+                    <View style={styles.settingInfo}>
+                      <View style={styles.settingHeader}>
+                        <Ionicons name="sparkles" size={20} color={theme.primary} />
+                        <Text style={styles.settingTitle}>Deeper Sky Active</Text>
+                      </View>
+                      <Text style={styles.settingDescription}>
+                        Manage, upgrade, or cancel your subscription
+                      </Text>
+                    </View>
+                    <Ionicons name="open-outline" size={18} color={theme.primary} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          )}
 
+          <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
+        </ScrollView>
       </SafeAreaView>
 
       <PrivacySettingsModal visible={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
@@ -833,6 +826,13 @@ const styles = StyleSheet.create({
   privacyItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   privacyText: { fontSize: 12, color: theme.textSecondary, flex: 1 },
 
+  securityGrid: { gap: theme.spacing.md },
+  securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
+  securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(72, 187, 120, 0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  securityContent: { flex: 1 },
+  securityLabel: { fontSize: 14, fontWeight: '600', color: theme.textPrimary, marginBottom: 2 },
+  securityDetail: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },
+
   chartSettingsSummary: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
   settingTag: {
     backgroundColor: 'rgba(201, 169, 98, 0.15)',
@@ -848,9 +848,6 @@ const styles = StyleSheet.create({
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
   glossaryDefinition: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs },
-
-  legalHeader: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flex: 1 },
-  legalText: { fontSize: 12, color: theme.textSecondary, lineHeight: 18, marginTop: theme.spacing.sm, fontFamily: 'monospace' },
 
   versionText: { fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: theme.spacing.sm, fontStyle: 'italic' },
 
@@ -874,7 +871,7 @@ const styles = StyleSheet.create({
   keyLossBannerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.error,
+    color: '#E07A7A',
     fontFamily: 'serif',
   },
   keyLossBannerText: {

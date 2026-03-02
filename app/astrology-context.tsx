@@ -631,12 +631,12 @@ export default function AstrologyContextScreen() {
                     )}
                   </View>
 
-                  {/* Free users: show teaser */}
+                  {/* Free users: show teaser — apply label transform to hide raw astrology terms */}
                   {!isPremium && insight.signals.length > 0 && (
                     <View style={styles.whyThisTeaser}>
                       <View style={styles.signalRow}>
                         <View style={styles.signalDot} />
-                        <Text style={styles.signalText}>{insight.signals[0].description}</Text>
+                        <Text style={styles.signalText}>{applyGuidanceLabels(insight.signals[0].description)}</Text>
                         <Text style={styles.signalOrb}>{insight.signals[0].orb}</Text>
                       </View>
                       {insight.signals.length > 1 && (

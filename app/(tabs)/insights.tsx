@@ -114,7 +114,9 @@ export default function InsightsScreen() {
             };
             const natalChart = AstrologyCalculator.generateNatalChart(birthData);
             const extCheckIns = await localDb.getCheckIns(chartId, 90);
-            const journalEntries = await localDb.getJournalEntries();
+            // Load only recent journal entries (90 days) — sufficient for pipeline
+            // and avoids decrypting 10k+ entries on every tab focus.
+            const journalEntries = await localDb.getJournalEntriesPaginated(90);
             const pipelineResult = runPipeline({ checkIns: extCheckIns, journalEntries, chart: natalChart, todayContext: null });
             setEnhanced(computeEnhancedInsights(pipelineResult.dailyAggregates, pipelineResult.chartProfile));
           } catch (e) {

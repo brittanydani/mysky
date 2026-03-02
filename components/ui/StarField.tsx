@@ -18,15 +18,36 @@ interface Star {
   duration: number;
 }
 
+/**
+ * Seeded PRNG (splitmix32) — deterministic star layout for a given index.
+ * Returns a function that yields successive [0,1) values.
+ */
+function splitmix32(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s |= 0;
+    s = (s + 0x9e3779b9) | 0;
+    let t = s ^ (s >>> 16);
+    t = Math.imul(t, 0x21f0aaad);
+    t = t ^ (t >>> 15);
+    t = Math.imul(t, 0x735a2d97);
+    t = t ^ (t >>> 15);
+    return (t >>> 0) / 4294967296;
+  };
+}
+
 const generateStars = (count: number, w: number, h: number): Star[] =>
-  Array.from({ length: count }, (_, i) => ({
-    id: i,
-    x: Math.random() * w,
-    y: Math.random() * h,
-    size: Math.random() * 2 + 1,
-    delay: Math.random() * 3000,
-    duration: Math.random() * 2000 + 2000,
-  }));
+  Array.from({ length: count }, (_, i) => {
+    const rand = splitmix32(i * 2654435761); // unique seed per star
+    return {
+      id: i,
+      x: rand() * w,
+      y: rand() * h,
+      size: rand() * 2 + 1,
+      delay: rand() * 3000,
+      duration: rand() * 2000 + 2000,
+    };
+  });
 
 const AnimatedStar = memo(function AnimatedStar({
   star,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
@@ -10,6 +10,14 @@ import StarField from '../components/ui/StarField';
 export default function PrivacyPolicyScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  const openLink = async (url: string) => {
+    try {
+      const can = await Linking.canOpenURL(url);
+      if (!can) return;
+      await Linking.openURL(url);
+    } catch {}
+  };
 
   return (
     <View style={styles.container}>
@@ -34,13 +42,13 @@ export default function PrivacyPolicyScreen() {
           showsVerticalScrollIndicator={false}
         >
 
-          <Text style={styles.lastUpdated}>Last updated: February 27, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 1, 2026</Text>
 
           {/* ── 1. Introduction ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Our Commitment to Your Privacy</Text>
             <Text style={styles.paragraph}>
-              MySky (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is a personal growth and wellness app for mood tracking, sleep tracking, journaling, and self-reflection. This Privacy Policy explains what information MySky collects, how it is used and protected, and your rights regarding that information. MySky is designed with privacy by design and by default, in accordance with the EU General Data Protection Regulation (GDPR), the California Consumer Privacy Act as amended by the California Privacy Rights Act (CCPA/CPRA), the Apple App Store Guidelines, and the Google Play Developer Policies.
+              MySky (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is a personal growth and wellness app for mood tracking, sleep tracking, journaling, and self-reflection. This Privacy Policy explains what information MySky processes, how it is used and protected, and your rights regarding that information. MySky is designed with privacy by design and by default, and we aim to meet applicable privacy requirements (including GDPR and CCPA/CPRA where relevant).
             </Text>
             <Text style={styles.paragraph}>
               By using MySky, you acknowledge that you have read and understood this Privacy Policy. If you do not agree with it, please do not use the app.
@@ -106,7 +114,7 @@ export default function PrivacyPolicyScreen() {
 
             <Text style={styles.subSectionTitle}>What We Do Not Collect</Text>
             <Text style={styles.paragraph}>
-              We do not collect device identifiers, advertising IDs, IP addresses, precise location data (beyond the birth location you enter), browsing history, contacts, photos, audio, usage analytics, crash reports sent to us, or any data beyond what you explicitly provide. We do not use analytics SDKs, advertising SDKs, or third-party behavioral tracking of any kind.
+              We do not collect advertising identifiers (such as IDFA) and we do not collect device identifiers for tracking. We do use an anonymous identifier for subscription verification through RevenueCat (see Third-Party Services). We do not collect IP addresses (beyond what is incidentally transmitted during geocoding lookups — see Third-Party Services), precise location data (beyond the birth location you enter), browsing history, contacts, photos, audio, usage analytics, crash reports sent to us, or any data beyond what you explicitly provide. We do not use analytics SDKs, advertising SDKs, or third-party behavioral tracking of any kind.
             </Text>
           </View>
 
@@ -127,7 +135,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletPoint}>• Map chakra and healing insights from your chart profile</Text>
             <Text style={styles.bulletPoint}>• Generate symbolic dream reflections from your sleep journal, mood, check-ins, and journal entries — entirely on-device</Text>
             <Text style={styles.paragraph}>
-              We do not use your data for advertising, marketing, profiling, research, AI/ML model training, or any purpose other than providing the app&apos;s features to you on your device.
+              We do not use your data for advertising, marketing, third-party profiling, research, AI/ML model training, or any purpose other than providing the app&apos;s features to you on your device.
             </Text>
           </View>
 
@@ -156,9 +164,9 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletPoint}>• Each encrypted field uses a unique random 96-bit initialization vector (IV)</Text>
             <Text style={styles.bulletPoint}>• HMAC-SHA256 integrity verification detects any tampering with stored data</Text>
             <Text style={styles.bulletPoint}>• Your device passcode, Face ID, or fingerprint provide an additional layer of protection</Text>
-            <Text style={styles.bulletPoint}>• Consent records and audit trails are encrypted and stored in the device keychain</Text>
+            <Text style={styles.bulletPoint}>• Consent records and recent security events are encrypted and stored in the device keychain</Text>
             <Text style={styles.paragraph}>
-              No personal data is transmitted to, or stored on, any server controlled by us or any third party.
+              Your journal entries, check-ins, sleep logs, and birth details are never uploaded to or stored on any external server. Limited data is transmitted only to the service providers listed in Third-Party Services (RevenueCat for subscription verification; Nominatim for birth-city geocoding).
             </Text>
           </View>
 
@@ -166,7 +174,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Sharing</Text>
             <Text style={styles.paragraph}>
-              We do not sell, rent, share, or otherwise disclose your personal information to any third party. Specifically:
+              We do not sell, rent, or share your personal information for advertising, marketing, or analytics. We disclose limited data only to the service providers listed below for app functionality (RevenueCat for subscription verification; Nominatim for geocoding). Specifically:
             </Text>
             <Text style={styles.bulletPoint}>• No third-party advertising networks receive any data</Text>
             <Text style={styles.bulletPoint}>• No analytics or tracking services receive any data</Text>
@@ -186,12 +194,23 @@ export default function PrivacyPolicyScreen() {
 
             <Text style={styles.subSectionTitle}>RevenueCat</Text>
             <Text style={styles.paragraph}>
-              MySky uses RevenueCat solely to verify your subscription status. RevenueCat receives only an anonymous, randomly generated app user ID — it does not receive your name, email, birth data, journal content, or any personal information. RevenueCat&apos;s privacy policy is available at https://www.revenuecat.com/privacy.
+              MySky uses RevenueCat solely to verify your subscription status and unlock premium features. RevenueCat receives an anonymous app user identifier and subscription/entitlement information needed to verify premium access. It does not receive your journal content, birth data, check-ins, or sleep logs. RevenueCat&apos;s privacy policy is available here.
             </Text>
+            <Pressable onPress={() => openLink('https://www.revenuecat.com/privacy')}>
+              <Text style={styles.link}>https://www.revenuecat.com/privacy</Text>
+            </Pressable>
+
+            <Text style={styles.subSectionTitle}>Geocoding (OpenStreetMap Nominatim)</Text>
+            <Text style={styles.paragraph}>
+              When you enter a birth city or location, the app uses OpenStreetMap&apos;s Nominatim geocoding service to convert that location into geographic coordinates. This request includes the location text you type and standard network metadata (such as your IP address). No birth date, birth time, journal content, or other personal data is transmitted as part of this request. Nominatim&apos;s privacy policy is available here.
+            </Text>
+            <Pressable onPress={() => openLink('https://osmfoundation.org/wiki/Privacy_Policy')}>
+              <Text style={styles.link}>https://osmfoundation.org/wiki/Privacy_Policy</Text>
+            </Pressable>
 
             <Text style={styles.subSectionTitle}>No Other Third Parties</Text>
             <Text style={styles.paragraph}>
-              No other third-party services, SDKs, APIs, analytics platforms, or external servers receive any information from MySky. The app does not make network requests to any server other than RevenueCat (for subscription verification) and the respective app store (for purchases).
+              No other third-party services, SDKs, APIs, analytics platforms, or external servers receive any information from MySky. Beyond the services listed above, the app does not make network requests to any external server.
             </Text>
           </View>
 
@@ -267,14 +286,14 @@ export default function PrivacyPolicyScreen() {
             </Text>
           </View>
 
-          {/* ── 13. Automated Processing ── */}
+          {/* ── 13. Automated Processing & Profiling ── */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Automated Processing</Text>
+            <Text style={styles.sectionTitle}>Automated Processing & Profiling</Text>
             <Text style={styles.paragraph}>
               MySky performs automated calculations on your device, including chart computation, transit tracking, pattern correlation, keyword extraction from journal entries, and symbolic dream reflections. These calculations are used solely to display personalized reflections and insights within the app.
             </Text>
             <Text style={styles.paragraph}>
-              No automated decisions are made that produce legal effects or similarly significant effects concerning you. All chart interpretations and insights are generalized reflection prompts — not predictions, diagnoses, or consequential decisions.
+              The app generates personalized reflections by blending information you provide (birth data, mood check-ins, journal entries, and sleep logs). Under GDPR, this constitutes automated profiling. However, these insights are intended solely for personal self-reflection and do not produce legal effects or similarly significant effects concerning you. No automated decisions are made about your creditworthiness, employment, health treatment, or any other consequential outcome. All interpretations are generalized reflection prompts — not predictions, diagnoses, or consequential decisions.
             </Text>
           </View>
 
@@ -282,7 +301,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>International Data Transfers</Text>
             <Text style={styles.paragraph}>
-              MySky does not transfer your personal data internationally. All personal data remains on your device. The only cross-border data flow is the anonymized app user ID sent to RevenueCat for subscription verification, which is not personal data.
+              MySky does not transfer your personal data internationally. All personal data remains on your device. The only cross-border data flow is the anonymized app user ID sent to RevenueCat for subscription verification, which is not intended to identify you directly.
             </Text>
           </View>
 
@@ -311,24 +330,28 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.paragraph}>
               In accordance with Apple App Store and Google Play requirements:
             </Text>
-            <Text style={styles.bulletPoint}>• Data Collected: Birth data and journal/check-in content, used solely for app functionality. Per Apple&apos;s definition, this data is &quot;not collected&quot; because it never leaves your device or is made accessible to us.</Text>
-            <Text style={styles.bulletPoint}>• Data Linked to You: None — we have no way to identify you or link any data to your identity</Text>
-            <Text style={styles.bulletPoint}>• Data Used to Track You: None — no tracking occurs</Text>
-            <Text style={styles.bulletPoint}>• Tracking: NSPrivacyTracking is set to false in our iOS Privacy Manifest</Text>
-            <Text style={styles.bulletPoint}>• Required Reason APIs: MySky declares use of UserDefaults, file timestamps, disk space, and system boot time APIs with documented reasons in our Privacy Manifest, as required by Apple</Text>
+            <Text style={styles.bulletPoint}>• Data Stored Locally: Birth data, journal and check-in content, and sleep logs are entered by you and stored exclusively on your device with AES-256-GCM encryption. This data never leaves your device and is never accessible to us.</Text>
+            <Text style={styles.bulletPoint}>• Coarse Location (Declared): When you enter a birth city, that text is sent to OpenStreetMap Nominatim for geocoding. We treat location search queries as coarse location for disclosure purposes. We declare this as &quot;Coarse Location — Not Linked to Your Identity — App Functionality&quot; in our App Store privacy label.</Text>
+            <Text style={styles.bulletPoint}>• User ID (Declared): RevenueCat uses an anonymous app user identifier on your device for purchase verification. We declare this as &quot;User ID — Not Linked to Your Identity — App Functionality&quot; in our App Store privacy label. This identifier is not used for tracking.</Text>
+            <Text style={styles.bulletPoint}>• Purchases (Declared): Subscription purchases are processed by Apple (App Store) or Google (Google Play) and verified via RevenueCat. We declare this as &quot;Purchases — Not Linked to Your Identity — App Functionality&quot; in our App Store privacy label. We never receive your payment details, credit card number, or billing address.</Text>
+            <Text style={styles.bulletPoint}>• Data Linked to You: None. MySky does not require an account, email address, or login. None of the declared data types are linked to your identity.</Text>
+            <Text style={styles.bulletPoint}>• Data Used to Track You: None — no tracking occurs. NSPrivacyTracking is set to false in our iOS Privacy Manifest.</Text>
+            <Text style={styles.bulletPoint}>• Diagnostics: MySky does not use crash reporting services (no Sentry, Crashlytics, or similar). No diagnostic data is collected or transmitted.</Text>
+            <Text style={styles.bulletPoint}>• Required Reason APIs: MySky declares use of UserDefaults, file timestamps, disk space, and system boot time APIs with documented reasons in our Privacy Manifest, as required by Apple.</Text>
           </View>
 
           {/* ── 18. Subscriptions ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Subscriptions</Text>
             <Text style={styles.paragraph}>
-              MySky offers optional premium subscriptions (&quot;Deeper Sky&quot;) via the Apple App Store and Google Play Store:
+              MySky offers optional premium access (&quot;Deeper Sky&quot;) via the Apple App Store and Google Play Store:
             </Text>
-            <Text style={styles.bulletPoint}>• Subscriptions are billed through your Apple ID or Google account</Text>
-            <Text style={styles.bulletPoint}>• Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current billing period</Text>
-            <Text style={styles.bulletPoint}>• You can manage or cancel your subscription in your device&apos;s subscription settings</Text>
+            <Text style={styles.bulletPoint}>• Premium access may be purchased as an auto-renewing subscription (monthly or yearly) or as a one-time lifetime purchase</Text>
+            <Text style={styles.bulletPoint}>• Subscriptions are billed through your Apple ID or Google account and renew automatically unless cancelled at least 24 hours before the end of the current billing period</Text>
+            <Text style={styles.bulletPoint}>• Lifetime purchases are a one-time payment and do not renew</Text>
+            <Text style={styles.bulletPoint}>• You can manage or cancel subscriptions in your device&apos;s subscription settings</Text>
             <Text style={styles.bulletPoint}>• Refunds are handled according to the applicable app store&apos;s refund policy</Text>
-            <Text style={styles.bulletPoint}>• No personal data is required or collected to process your subscription — only subscription status is verified via an anonymous ID</Text>
+            <Text style={styles.bulletPoint}>• No personal data is required or collected to process purchases — only premium status is verified via an anonymous identifier</Text>
           </View>
 
           {/* ── 19. Changes to This Policy ── */}
@@ -341,7 +364,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletPoint}>• Present a new consent prompt in the app if the changes affect data collection or processing</Text>
             <Text style={styles.bulletPoint}>• Make the updated policy available within the app</Text>
             <Text style={styles.paragraph}>
-              Continued use of MySky after a policy update constitutes acceptance of the revised policy. If you do not agree with the updated policy, you may delete your data and uninstall the app.
+              If you do not agree with the updated policy, you may withdraw consent in Privacy Settings, delete your data, and uninstall the app.
             </Text>
           </View>
 
@@ -457,5 +480,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.textMuted,
     fontStyle: 'italic',
+  },
+  link: {
+    fontSize: 14,
+    color: theme.primary,
+    fontWeight: '600',
+    marginTop: 6,
+    marginBottom: theme.spacing.md,
   },
 });

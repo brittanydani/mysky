@@ -184,25 +184,30 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       return;
     }
 
-    let transitSnapshotJson: string | undefined;
-    if (userChart) {
-      try {
-        const snap = AdvancedJournalAnalyzer.captureTransitSnapshot(userChart, date);
-        transitSnapshotJson = JSON.stringify(snap);
-      } catch {
-        // Non-critical — entry saves fine without it
+    try {
+      let transitSnapshotJson: string | undefined;
+      if (userChart) {
+        try {
+          const snap = AdvancedJournalAnalyzer.captureTransitSnapshot(userChart, date);
+          transitSnapshotJson = JSON.stringify(snap);
+        } catch {
+          // Non-critical — entry saves fine without it
+        }
       }
-    }
 
-    onSave({
-      date: toLocalDateString(date),
-      mood,
-      moonPhase: ({ low: 'waning', steady: 'full', high: 'waxing' } as Record<EnergyKey, string>)[energyLevel] as any,
-      title: title.trim() || undefined,
-      content: content.trim(),
-      chartId: chartId || undefined,
-      transitSnapshot: transitSnapshotJson,
-    });
+      onSave({
+        date: toLocalDateString(date),
+        mood,
+        moonPhase: ({ low: 'waning', steady: 'full', high: 'waxing' } as Record<EnergyKey, string>)[energyLevel] as any,
+        title: title.trim() || undefined,
+        content: content.trim(),
+        chartId: chartId || undefined,
+        transitSnapshot: transitSnapshotJson,
+      });
+    } catch (e) {
+      Alert.alert('Save Error', 'Could not save your journal entry. Please try again.');
+      return;
+    }
 
     // Show close shadow quote after saving
     if (shadowResult?.closeQuote) {
@@ -271,6 +276,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     onChangeText={setTitle}
                     placeholder="Give your entry a title..."
                     placeholderTextColor={theme.textMuted}
+                    accessibilityLabel="Journal entry title"
+                    accessibilityHint="Optional title for this journal entry"
                   />
                 </View>
               </Animated.View>
@@ -410,6 +417,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     placeholderTextColor={theme.textMuted}
                     multiline
                     textAlignVertical="top"
+                    accessibilityLabel="Journal entry content"
+                    accessibilityHint="Write your thoughts, feelings, and reflections"
                   />
                 </View>
               </Animated.View>

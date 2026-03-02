@@ -1,7 +1,7 @@
 // app/(tabs)/mood.tsx
 // MySky — Mood Tab: slider check-in + pattern graphs
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   PanResponder,
   Dimensions,
   TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -147,7 +148,7 @@ function computeTopTags(cis: DailyCheckIn[], limit = 5): { tag: ThemeTag; count:
     }
   }
   return (Object.entries(counts) as [ThemeTag, number][])
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, limit)
     .map(([tag, count]) => ({ tag, count }));
 }
@@ -175,7 +176,7 @@ interface SliderProps {
   max?: number;
 }
 
-function MetricSlider({ question, value, onChange, color, anchors, min = 1, max = 10 }: SliderProps) {
+const MetricSlider = memo(function MetricSlider({ question, value, onChange, color, anchors, min = 1, max = 10 }: SliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
   const trackWidthRef = useRef(0);
   const valueRef = useRef(value);
@@ -268,7 +269,7 @@ function MetricSlider({ question, value, onChange, color, anchors, min = 1, max 
       </View>
     </View>
   );
-}
+});
 
 const sS = StyleSheet.create({
   container: { marginBottom: 18 },
@@ -325,7 +326,7 @@ interface GraphProps {
   gradId: string;
 }
 
-function LineGraph({ data, minY: absMin, maxY: absMax, color, width, height, gradId }: GraphProps) {
+const LineGraph = memo(function LineGraph({ data, minY: absMin, maxY: absMax, color, width, height, gradId }: GraphProps) {
   const PAD = { top: 10, bottom: 10, left: 4, right: 4 };
   const gW = width - PAD.left - PAD.right;
   const gH = height - PAD.top - PAD.bottom;
@@ -380,11 +381,11 @@ function LineGraph({ data, minY: absMin, maxY: absMax, color, width, height, gra
       <Circle cx={last.x} cy={last.y} r={4} fill={color} />
     </Svg>
   );
-}
+});
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionLabel({ icon, title, delay }: {
+const SectionLabel = memo(function SectionLabel({ icon, title, delay }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   delay: number;
@@ -395,25 +396,25 @@ function SectionLabel({ icon, title, delay }: {
       <Text style={styles.sectionTitle}>{title}</Text>
     </Animated.View>
   );
-}
+});
 
-function AvgBadge({ label, value, color }: { label: string; value: string; color: string }) {
+const AvgBadge = memo(function AvgBadge({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <View style={styles.avgBadge}>
+    <View style={styles.avgBadge} accessibilityLabel={`${label}: ${value}`}>
       <Text style={[styles.avgValue, { color }]}>{value}</Text>
       <Text style={styles.avgLabel}>{label}</Text>
     </View>
   );
-}
+});
 
-function GraphLabel({ label, color }: { label: string; color: string }) {
+const GraphLabel = memo(function GraphLabel({ label, color }: { label: string; color: string }) {
   return (
     <View style={styles.graphLabelRow}>
       <View style={[styles.graphDot, { backgroundColor: color }]} />
       <Text style={styles.graphLabelTxt}>{label}</Text>
     </View>
   );
-}
+});
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
@@ -437,6 +438,8 @@ export default function MoodScreen() {
   const [customInputText, setCustomInputText] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedQuality, setSelectedQuality] = useState<ThemeTag | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeOfDay>(CheckInService.getCurrentTimeSlot());
   const [completedSlots, setCompletedSlots] = useState<TimeOfDay[]>([]);
@@ -495,13 +498,15 @@ export default function MoodScreen() {
           setCompletedSlots(slots);
           setSelectedTimeSlot(CheckInService.getCurrentTimeSlot());
 
-          const all = await CheckInService.getAllCheckIns(cId);
+          const all = await CheckInService.getAllCheckIns(cId, 365);
           setAllCheckIns(all);
 
           const streak = await CheckInService.getCurrentStreak(cId);
           setCurrentStreak(streak);
+          setLoadError(null);
         } catch (e) {
           logger.error('[Mood] load failed:', e);
+          setLoadError('Could not load your check-in data. Please try again.');
         } finally {
           setLoading(false);
         }
@@ -514,6 +519,7 @@ export default function MoodScreen() {
     if (!userChart || !chartId || saving) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     setSaving(true);
+    setSaveError(null);
     try {
       const allTags: ThemeTag[] = [...selectedTags];
       if (selectedQuality) allTags.push(selectedQuality);
@@ -533,7 +539,7 @@ export default function MoodScreen() {
       setTodayCheckIns(todayAll);
       setCompletedSlots(todayAll.map(c => c.timeOfDay));
 
-      const all = await CheckInService.getAllCheckIns(chartId);
+      const all = await CheckInService.getAllCheckIns(chartId, 365);
       setAllCheckIns(all);
 
       const streak = await CheckInService.getCurrentStreak(chartId);
@@ -542,6 +548,13 @@ export default function MoodScreen() {
       setTimeout(() => setSavedAt(null), 2500);
     } catch (e) {
       logger.error('[Mood] save failed:', e);
+      let isOffline = false;
+      try { await fetch('https://clients3.google.com/generate_204', { method: 'HEAD', mode: 'no-cors' }); } catch { isOffline = true; }
+      const msg = isOffline
+        ? 'You appear to be offline. Check-in could not be saved.'
+        : 'Could not save check-in. Please try again.';
+      setSaveError(msg);
+      Alert.alert('Save Error', msg);
     } finally {
       setSaving(false);
     }
@@ -643,7 +656,7 @@ export default function MoodScreen() {
       });
     }
 
-    metricInsights.sort((a, b) => b.spread - a.spread);
+    metricInsights.sort((a, b) => b.spread - a.spread || a.label.localeCompare(b.label));
     return { buckets, metricInsights };
   }, [filteredCheckIns]);
 
@@ -705,6 +718,25 @@ export default function MoodScreen() {
           <View style={styles.centered}>
             <Ionicons name="sparkles" size={28} color={theme.primary} />
             <Text style={[styles.body, { marginTop: 12 }]}>Loading…</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  // ── Load error state ──────────────────────────────────────────────────────
+
+  if (loadError && !hasChart) {
+    return (
+      <View style={styles.container}>
+        <StarField starCount={28} />
+        <SafeAreaView edges={['top']} style={styles.flex}>
+          <View style={styles.centered}>
+            <Ionicons name="cloud-offline-outline" size={36} color="#E85D75" />
+            <Text style={[styles.heroText, { marginTop: 16, textAlign: 'center' }]}>Could not load data</Text>
+            <Text style={[styles.body, { marginTop: 8, textAlign: 'center', paddingHorizontal: 32 }]}>
+              {loadError}
+            </Text>
           </View>
         </SafeAreaView>
       </View>
@@ -877,6 +909,7 @@ export default function MoodScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={INFLUENCE_LABELS[tag]}
                     accessibilityState={{ selected: selectedTags.includes(tag) }}
+                    accessibilityHint={selectedTags.includes(tag) ? 'Double-tap to remove' : selectedTags.length >= 3 ? 'Maximum 3 tags already selected' : 'Double-tap to add, up to 3 tags'}
                   >
                     <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
                       {INFLUENCE_LABELS[tag]}
@@ -922,6 +955,8 @@ export default function MoodScreen() {
                           onSubmitEditing={handleAddCustomTag}
                           onBlur={() => { if (!customInputText.trim()) setShowCustomInput(false); }}
                           maxLength={20}
+                          accessibilityLabel="Custom influence tag"
+                          accessibilityHint="Type a custom tag and press done to add it"
                         />
                       </View>
                     );
@@ -997,6 +1032,21 @@ export default function MoodScreen() {
               </Pressable>
 
               <Text style={styles.hint}>Check in up to 4× daily — morning, afternoon, evening, night.</Text>
+
+              {/* Save error banner */}
+              {saveError && (
+                <View style={styles.errorBanner}>
+                  <Ionicons name="warning-outline" size={16} color="#E85D75" />
+                  <Text style={styles.errorBannerText}>{saveError}</Text>
+                  <Pressable
+                    onPress={() => setSaveError(null)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Dismiss error"
+                  >
+                    <Ionicons name="close" size={16} color={theme.textMuted} />
+                  </Pressable>
+                </View>
+              )}
             </LinearGradient>
           </Animated.View>
 
@@ -1479,6 +1529,25 @@ const styles = StyleSheet.create({
   },
   saveBtnTxt: { color: theme.primary, fontSize: 15, fontWeight: '800' },
   hint: { color: theme.textMuted, fontSize: 12, textAlign: 'center', fontStyle: 'italic' },
+
+  // Error banner
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(232,93,117,0.12)',
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(232,93,117,0.25)',
+    padding: 10,
+    marginTop: 12,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: '#E85D75',
+    fontSize: 13,
+    lineHeight: 18,
+  },
 
   primaryBtn: {
     flexDirection: 'row',

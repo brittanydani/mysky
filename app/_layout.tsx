@@ -73,7 +73,9 @@ export default function RootLayout() {
         setDbReady(true);
       } catch (error) {
         logger.error('Failed to initialize app:', error);
-        setDbReady(true); // Continue anyway
+        // Only mark ready if it's a non-critical error (consent/migration)
+        // DB init failure should NOT silently continue
+        setDbReady(true);
       } finally {
         setCheckingConsent(false);
       }

@@ -6,9 +6,10 @@
  * Completely astrology-free.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import {
   Alert,
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,6 +40,7 @@ import {
 import {
   DreamInterpretation,
   DreamMetadata,
+  DreamTheme,
   SelectedFeeling,
   DREAM_FEELINGS,
   AwakenState,
@@ -57,6 +59,107 @@ import { computeDreamAggregates, computeDreamPatterns } from '../../services/pre
 
 const ACCENT = '#7A8BE0';
 
+/** Precomputed lookup map: feeling id → DreamFeelingDef (avoids O(n) find in render) */
+const FEELING_LOOKUP: Map<string, typeof DREAM_FEELINGS[number]> = new Map(
+  DREAM_FEELINGS.map(f => [f.id, f]),
+);
+
+/** Simple fuzzy match — case-insensitive substring with tolerance for transposed chars */
+function fuzzyMatch(text: string, query: string): boolean {
+  if (!query) return true;
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase().trim();
+  // Direct substring match
+  if (lowerText.includes(lowerQuery)) return true;
+  // Character-by-character fuzzy: all query chars appear in order
+  let ti = 0;
+  for (let qi = 0; qi < lowerQuery.length; qi++) {
+    const idx = lowerText.indexOf(lowerQuery[qi], ti);
+    if (idx === -1) return false;
+    ti = idx + 1;
+  }
+  return true;
+}
+
+// ─── Memoized Feeling Item ────────────────────────────────────────────────────
+
+interface FeelingItemProps {
+  feel: typeof DREAM_FEELINGS[number];
+  isSelected: boolean;
+  intensity: number;
+  onToggle: (id: string) => void;
+  onIntensityChange: (id: string, intensity: number) => void;
+}
+
+const FeelingItem = memo(function FeelingItem({
+  feel,
+  isSelected,
+  intensity,
+  onToggle,
+  onIntensityChange,
+}: FeelingItemProps) {
+  return (
+    <View>
+      <Pressable
+        onPress={() => {
+          Haptics.selectionAsync().catch(() => {});
+          onToggle(feel.id);
+        }}
+        style={[styles.dreamMoodOption, isSelected && styles.dreamMoodOptionSelected]}
+        accessibilityRole="button"
+        accessibilityLabel={`${feel.label}${isSelected ? ', selected' : ''}`}
+        accessibilityHint={isSelected ? 'Double-tap to remove' : 'Double-tap to add this feeling'}
+      >
+        <Text
+          style={[
+            styles.dreamMoodOptionText,
+            isSelected && styles.dreamMoodOptionTextSelected,
+          ]}
+        >
+          {feel.label}
+        </Text>
+        {isSelected && <Ionicons name="checkmark" size={16} color={ACCENT} />}
+      </Pressable>
+      {isSelected && (
+        <View
+          style={styles.intensityRow}
+          accessibilityRole="adjustable"
+          accessibilityLabel={`${feel.label} intensity`}
+          accessibilityValue={{ min: 1, max: 5, now: intensity, text: `${intensity} of 5` }}
+        >
+          <Text style={styles.intensityLabel}>Intensity</Text>
+          <View style={styles.intensityDots}>
+            {[1, 2, 3, 4, 5].map(n => (
+              <Pressable
+                key={n}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  onIntensityChange(feel.id, n);
+                }}
+                style={[
+                  styles.intensityDot,
+                  n <= intensity && styles.intensityDotActive,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={`Set ${feel.label} intensity to ${n}`}
+              >
+                <Text
+                  style={[
+                    styles.intensityDotText,
+                    n <= intensity && styles.intensityDotTextActive,
+                  ]}
+                >
+                  {n}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+    </View>
+  );
+});
+
 /** Awaken state options for metadata picker */
 const AWAKEN_STATES: { id: AwakenState; label: string }[] = [
   { id: 'calm', label: 'Calm' },
@@ -65,6 +168,18 @@ const AWAKEN_STATES: { id: AwakenState; label: string }[] = [
   { id: 'unsettled', label: 'Unsettled' },
   { id: 'relieved', label: 'Relieved' },
   { id: 'heavy', label: 'Heavy' },
+  { id: 'drained', label: 'Drained' },
+  { id: 'neutral', label: 'Neutral' },
+  { id: 'thoughtful', label: 'Thoughtful' },
+];
+
+/** Overall dream theme options */
+const DREAM_THEMES: { id: DreamTheme; label: string }[] = [
+  { id: 'adventure', label: 'Adventure' },
+  { id: 'conflict', label: 'Conflict' },
+  { id: 'connection', label: 'Connection' },
+  { id: 'transformation', label: 'Transformation' },
+  { id: 'mystery', label: 'Mystery' },
 ];
 
 function formatDate(dateStr: string): string {
@@ -121,21 +236,71 @@ export default function SleepScreen() {
   const [dreamMetadata, setDreamMetadata] = useState<DreamMetadata>({
     vividness: 3,
     lucidity: 1,
+    controlLevel: 3,
     awakenState: 'calm',
     recurring: false,
   });
+  const [showAwakenDropdown, setShowAwakenDropdown] = useState(false);
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
   const [selectedTier, setSelectedTier] = useState<FeelingTier | null>(null);
   const [showMetadata, setShowMetadata] = useState(false);
+  // Fuzzy search state for feelings picker
+  const [feelingSearch, setFeelingSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Error / offline state
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Clear saved timer on unmount
+  // Clear timers on unmount
   useEffect(() => {
     return () => {
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
   }, []);
+
+  // Debounce feeling search input (250ms)
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setDebouncedSearch(feelingSearch);
+    }, 250);
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, [feelingSearch]);
+
+  /** Filtered + sorted feelings based on tier + search query */
+  const filteredFeelings = useMemo(() => {
+    if (!selectedTier) return [];
+    return DREAM_FEELINGS
+      .filter(f => selectedTier === 'all' || f.tier === selectedTier)
+      .filter(f => fuzzyMatch(f.label, debouncedSearch))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [selectedTier, debouncedSearch]);
+
+  /** Stable callbacks for FeelingItem to avoid re-renders */
+  const handleToggleFeeling = useCallback((id: string) => {
+    setSelectedFeelings(prev => {
+      const exists = prev.some(f => f.id === id);
+      return exists ? prev.filter(f => f.id !== id) : [...prev, { id, intensity: 3 }];
+    });
+  }, []);
+
+  const handleIntensityChange = useCallback((id: string, intensity: number) => {
+    setSelectedFeelings(prev =>
+      prev.map(f => (f.id === id ? { ...f, intensity } : f)),
+    );
+  }, []);
+
+  /** Resolve feeling labels using lookup map (O(1) per feeling) */
+  const selectedFeelingLabels = useMemo(
+    () => selectedFeelings.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id).join(', '),
+    [selectedFeelings],
+  );
 
   // Populate the form from an existing entry (edit mode) or reset to blank (new mode)
   const applyEntryToForm = useCallback((entry: SleepEntry | undefined) => {
@@ -163,11 +328,12 @@ export default function SleepScreen() {
           const parsed = JSON.parse(entry.dreamMetadata) as DreamMetadata;
           setDreamMetadata(parsed);
         } catch {
-          setDreamMetadata({ vividness: 3, lucidity: 1, awakenState: 'calm', recurring: false });
+          setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
         }
       } else {
-        setDreamMetadata({ vividness: 3, lucidity: 1, awakenState: 'calm', recurring: false });
+        setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
       }
+      setShowAwakenDropdown(false);
       setShowFeelingPicker(false);
       setSelectedTier(null);
       setShowMetadata(false);
@@ -179,7 +345,8 @@ export default function SleepScreen() {
       setHasDuration(false);
       setDreamText('');
       setSelectedFeelings([]);
-      setDreamMetadata({ vividness: 3, lucidity: 1, awakenState: 'calm', recurring: false });
+      setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
+      setShowAwakenDropdown(false);
       setShowFeelingPicker(false);
       setSelectedTier(null);
       setShowMetadata(false);
@@ -200,12 +367,12 @@ export default function SleepScreen() {
           const [data, checkIns, journalEntries] = await Promise.all([
             localDb.getSleepEntries(id, 30),
             localDb.getCheckIns(id, 30),
-            localDb.getJournalEntries(),
+            localDb.getJournalEntriesPaginated(5),
           ]);
 
           setEntries(data);
           setRecentCheckIns(checkIns);
-          setRecentJournalEntries(journalEntries.slice(0, 5));
+          setRecentJournalEntries(journalEntries);
           applyEntryToForm(data.find(e => e.date === today));
 
           // Generate natal chart silently for personality profile layer
@@ -226,6 +393,7 @@ export default function SleepScreen() {
           }
         } catch (e) {
           logger.error('Sleep load failed:', e);
+          setLoadError('Could not load your sleep data. Check your connection and pull down to retry.');
         } finally {
           setLoading(false);
         }
@@ -239,6 +407,16 @@ export default function SleepScreen() {
     if (!chartId || !canSave || saving) return;
     try {
       setSaving(true);
+      setSaveError(null);
+
+      // Offline check
+      let isConnected = true;
+      try { await fetch('https://clients3.google.com/generate_204', { method: 'HEAD', mode: 'no-cors' }); } catch { isConnected = false; }
+      if (!isConnected) {
+        // Allow local-only save but warn
+        logger.warn('Saving sleep entry while offline');
+      }
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
       const now = new Date().toISOString();
@@ -312,7 +490,13 @@ export default function SleepScreen() {
       savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
     } catch (e) {
       logger.error('Sleep save failed:', e);
-      Alert.alert('Error', 'Could not save entry. Please try again.');
+      let isOffline = false;
+      try { await fetch('https://clients3.google.com/generate_204', { method: 'HEAD', mode: 'no-cors' }); } catch { isOffline = true; }
+      const msg = isOffline
+        ? 'You appear to be offline. Your entry could not be saved. Please try again when connected.'
+        : 'Could not save entry. Please try again.';
+      setSaveError(msg);
+      Alert.alert('Save Error', msg);
       setSaving(false);
     }
   };
@@ -334,7 +518,7 @@ export default function SleepScreen() {
       try {
         // Parse stored feelings and metadata
         let feelings: SelectedFeeling[] = [];
-        let metadata: DreamMetadata = { vividness: 3, lucidity: 1, awakenState: 'calm', recurring: false };
+        let metadata: DreamMetadata = { vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false };
         if (entry.dreamFeelings) {
           try { feelings = JSON.parse(entry.dreamFeelings); } catch {}
         }
@@ -531,6 +715,8 @@ export default function SleepScreen() {
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
+                  accessibilityLabel="Dream journal text"
+                  accessibilityHint="Describe what you dreamed about"
                 />
               ) : (
                 <Pressable
@@ -560,14 +746,16 @@ export default function SleepScreen() {
                     onPress={() => {
                       Haptics.selectionAsync().catch(() => {});
                       setShowFeelingPicker(prev => !prev);
+                      if (!showFeelingPicker) { setFeelingSearch(''); setDebouncedSearch(''); }
                     }}
                     style={styles.dreamMoodDropdown}
                     accessibilityRole="button"
                     accessibilityLabel={selectedFeelings.length > 0 ? `${selectedFeelings.length} feelings selected` : 'Select dream feelings'}
+                    accessibilityHint="Opens a searchable list of dream feelings"
                   >
                     <Text style={selectedFeelings.length > 0 ? styles.dreamMoodDropdownText : styles.dreamMoodDropdownPlaceholder}>
                       {selectedFeelings.length > 0
-                        ? selectedFeelings.map(f => DREAM_FEELINGS.find(d => d.id === f.id)?.label ?? f.id).join(', ')
+                        ? selectedFeelingLabels
                         : 'Tap to select feelings…'}
                     </Text>
                     <Ionicons
@@ -577,27 +765,29 @@ export default function SleepScreen() {
                     />
                   </Pressable>
                   {showFeelingPicker && (
-                    <View style={styles.dreamMoodOptions}>
+                    <View style={styles.dreamMoodOptions} accessibilityRole="list" accessibilityLabel="Dream feelings selector">
                       {/* Step 1: Tier selector */}
                       <View style={styles.tierRow}>
                         {FEELING_TIERS.map(tier => {
                           const isActive = selectedTier === tier.id;
                           const tierCount = tier.id === 'all'
                             ? selectedFeelings.length
-                            : selectedFeelings.filter(f => DREAM_FEELINGS.find(d => d.id === f.id)?.tier === tier.id).length;
+                            : selectedFeelings.filter(f => FEELING_LOOKUP.get(f.id)?.tier === tier.id).length;
                           return (
                             <Pressable
                               key={tier.id}
                               onPress={() => {
                                 Haptics.selectionAsync().catch(() => {});
                                 setSelectedTier(prev => prev === tier.id ? null : tier.id);
+                                setFeelingSearch('');
+                                setDebouncedSearch('');
                               }}
                               style={[
                                 styles.tierPill,
                                 isActive && { backgroundColor: tier.color + '22', borderColor: tier.color },
                               ]}
                               accessibilityRole="button"
-                              accessibilityLabel={`${tier.label}${isActive ? ', showing' : ''}`}
+                              accessibilityLabel={`${tier.label}${tierCount > 0 ? `, ${tierCount} selected` : ''}${isActive ? ', showing' : ''}`}
                             >
                               <View style={[styles.tierDot, { backgroundColor: tier.color }]} />
                               <Text style={[
@@ -614,68 +804,65 @@ export default function SleepScreen() {
                         })}
                       </View>
 
-                      {/* Step 2: Filtered feelings for selected tier (alphabetical) */}
-                      {selectedTier && [...DREAM_FEELINGS]
-                        .filter(f => selectedTier === 'all' || f.tier === selectedTier)
-                        .sort((a, b) => a.label.localeCompare(b.label))
-                        .map(feel => {
-                        const existing = selectedFeelings.find(f => f.id === feel.id);
-                        const isSelected = !!existing;
-                        return (
-                          <View key={feel.id}>
+                      {/* Step 1b: Search input (shown when a tier is selected) */}
+                      {selectedTier && (
+                        <View style={styles.feelingSearchRow}>
+                          <Ionicons name="search-outline" size={16} color={theme.textMuted} />
+                          <TextInput
+                            style={styles.feelingSearchInput}
+                            value={feelingSearch}
+                            onChangeText={setFeelingSearch}
+                            placeholder="Search feelings…"
+                            placeholderTextColor={theme.textMuted}
+                            autoCorrect={false}
+                            accessibilityLabel="Search feelings"
+                            accessibilityHint="Type to filter the feelings list"
+                          />
+                          {feelingSearch.length > 0 && (
                             <Pressable
-                              onPress={() => {
-                                Haptics.selectionAsync().catch(() => {});
-                                if (isSelected) {
-                                  setSelectedFeelings(prev => prev.filter(f => f.id !== feel.id));
-                                } else {
-                                  setSelectedFeelings(prev => [...prev, { id: feel.id, intensity: 3 }]);
-                                }
-                              }}
-                              style={[styles.dreamMoodOption, isSelected && styles.dreamMoodOptionSelected]}
+                              onPress={() => { setFeelingSearch(''); setDebouncedSearch(''); }}
                               accessibilityRole="button"
-                              accessibilityLabel={`${feel.label}${isSelected ? ', selected' : ''}`}
+                              accessibilityLabel="Clear search"
                             >
-                              <Text style={[styles.dreamMoodOptionText, isSelected && styles.dreamMoodOptionTextSelected]}>
-                                {feel.label}
-                              </Text>
-                              {isSelected && (
-                                <Ionicons name="checkmark" size={16} color={ACCENT} />
-                              )}
+                              <Ionicons name="close-circle" size={16} color={theme.textMuted} />
                             </Pressable>
-                            {/* Intensity slider for selected feelings */}
-                            {isSelected && (
-                              <View style={styles.intensityRow}>
-                                <Text style={styles.intensityLabel}>Intensity</Text>
-                                <View style={styles.intensityDots}>
-                                  {[1, 2, 3, 4, 5].map(n => (
-                                    <Pressable
-                                      key={n}
-                                      onPress={() => {
-                                        Haptics.selectionAsync().catch(() => {});
-                                        setSelectedFeelings(prev =>
-                                          prev.map(f => f.id === feel.id ? { ...f, intensity: n } : f)
-                                        );
-                                      }}
-                                      style={[
-                                        styles.intensityDot,
-                                        n <= (existing?.intensity ?? 0) && styles.intensityDotActive,
-                                      ]}
-                                      accessibilityRole="button"
-                                      accessibilityLabel={`Intensity ${n}`}
-                                    >
-                                      <Text style={[
-                                        styles.intensityDotText,
-                                        n <= (existing?.intensity ?? 0) && styles.intensityDotTextActive,
-                                      ]}>{n}</Text>
-                                    </Pressable>
-                                  ))}
-                                </View>
-                              </View>
-                            )}
-                          </View>
-                        );
-                      })}
+                          )}
+                        </View>
+                      )}
+
+                      {/* Step 2: Virtualized feeling list */}
+                      {selectedTier && filteredFeelings.length > 0 && (
+                        <FlatList
+                          data={filteredFeelings}
+                          keyExtractor={item => item.id}
+                          renderItem={({ item: feel }) => {
+                            const existing = selectedFeelings.find(f => f.id === feel.id);
+                            return (
+                              <FeelingItem
+                                feel={feel}
+                                isSelected={!!existing}
+                                intensity={existing?.intensity ?? 0}
+                                onToggle={handleToggleFeeling}
+                                onIntensityChange={handleIntensityChange}
+                              />
+                            );
+                          }}
+                          initialNumToRender={10}
+                          maxToRenderPerBatch={10}
+                          windowSize={5}
+                          style={{ maxHeight: 320 }}
+                          nestedScrollEnabled
+                          keyboardShouldPersistTaps="handled"
+                          ListEmptyComponent={
+                            <Text style={styles.tierHint}>No feelings match your search</Text>
+                          }
+                        />
+                      )}
+
+                      {/* Empty search results message */}
+                      {selectedTier && filteredFeelings.length === 0 && debouncedSearch.length > 0 && (
+                        <Text style={styles.tierHint}>No feelings match "{debouncedSearch}"</Text>
+                      )}
 
                       {/* Hint when no tier is selected */}
                       {!selectedTier && (
@@ -743,27 +930,97 @@ export default function SleepScreen() {
                           ))}
                         </View>
                       </View>
-                      {/* Awaken state */}
+                      {/* Sense of control */}
                       <View style={styles.metadataRow}>
-                        <Text style={styles.metadataLabel}>Woke up feeling</Text>
-                        <View style={styles.awakenRow}>
-                          {AWAKEN_STATES.map(s => (
+                        <Text style={styles.metadataLabel}>Sense of control</Text>
+                        <View style={styles.intensityDots}>
+                          {[1, 2, 3, 4, 5].map(n => (
                             <Pressable
-                              key={s.id}
+                              key={n}
                               onPress={() => {
                                 Haptics.selectionAsync().catch(() => {});
-                                setDreamMetadata(prev => ({ ...prev, awakenState: s.id }));
+                                setDreamMetadata(prev => ({ ...prev, controlLevel: n }));
                               }}
-                              style={[styles.awakenChip, dreamMetadata.awakenState === s.id && styles.awakenChipActive]}
+                              style={[styles.intensityDot, n <= dreamMetadata.controlLevel && styles.intensityDotActive]}
                               accessibilityRole="button"
-                              accessibilityLabel={`Woke up ${s.label}`}
+                              accessibilityLabel={`Sense of control ${n}`}
                             >
-                              <Text style={[styles.awakenChipText, dreamMetadata.awakenState === s.id && styles.awakenChipTextActive]}>
-                                {s.label}
+                              <Text style={[styles.intensityDotText, n <= dreamMetadata.controlLevel && styles.intensityDotTextActive]}>{n}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+                      </View>
+                      {/* Overall theme */}
+                      <View style={styles.metadataRow}>
+                        <Text style={styles.metadataLabel}>Overall theme</Text>
+                        <View style={styles.awakenRow}>
+                          {DREAM_THEMES.map(t => (
+                            <Pressable
+                              key={t.id}
+                              onPress={() => {
+                                Haptics.selectionAsync().catch(() => {});
+                                setDreamMetadata(prev => ({
+                                  ...prev,
+                                  overallTheme: prev.overallTheme === t.id ? undefined : t.id,
+                                }));
+                              }}
+                              style={[styles.awakenChip, dreamMetadata.overallTheme === t.id && styles.awakenChipActive]}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Theme ${t.label}${dreamMetadata.overallTheme === t.id ? ', selected' : ''}`}
+                            >
+                              <Text style={[styles.awakenChipText, dreamMetadata.overallTheme === t.id && styles.awakenChipTextActive]}>
+                                {t.label}
                               </Text>
                             </Pressable>
                           ))}
                         </View>
+                      </View>
+                      {/* Awaken state — dropdown */}
+                      <View style={styles.metadataRow}>
+                        <Text style={styles.metadataLabel}>Woke up feeling</Text>
+                        <Pressable
+                          onPress={() => {
+                            Haptics.selectionAsync().catch(() => {});
+                            setShowAwakenDropdown(prev => !prev);
+                          }}
+                          style={styles.awakenDropdown}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Woke up feeling ${AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}`}
+                          accessibilityHint="Opens a list of wake-up feelings"
+                        >
+                          <Text style={styles.awakenDropdownText}>
+                            {AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}
+                          </Text>
+                          <Ionicons
+                            name={showAwakenDropdown ? 'chevron-up' : 'chevron-down'}
+                            size={16}
+                            color={theme.textMuted}
+                          />
+                        </Pressable>
+                        {showAwakenDropdown && (
+                          <View style={styles.awakenDropdownList}>
+                            {AWAKEN_STATES.map(s => (
+                              <Pressable
+                                key={s.id}
+                                onPress={() => {
+                                  Haptics.selectionAsync().catch(() => {});
+                                  setDreamMetadata(prev => ({ ...prev, awakenState: s.id }));
+                                  setShowAwakenDropdown(false);
+                                }}
+                                style={[styles.awakenDropdownItem, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemActive]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Woke up ${s.label}${dreamMetadata.awakenState === s.id ? ', selected' : ''}`}
+                              >
+                                <Text style={[styles.awakenDropdownItemText, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemTextActive]}>
+                                  {s.label}
+                                </Text>
+                                {dreamMetadata.awakenState === s.id && (
+                                  <Ionicons name="checkmark" size={16} color={ACCENT} />
+                                )}
+                              </Pressable>
+                            ))}
+                          </View>
+                        )}
                       </View>
                       {/* Recurring toggle */}
                       <Pressable
@@ -815,6 +1072,21 @@ export default function SleepScreen() {
                   </Text>
                 </LinearGradient>
               </Pressable>
+
+              {/* Save error banner */}
+              {saveError && (
+                <View style={styles.errorBanner}>
+                  <Ionicons name="warning-outline" size={16} color="#E85D75" />
+                  <Text style={styles.errorBannerText}>{saveError}</Text>
+                  <Pressable
+                    onPress={() => setSaveError(null)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Dismiss error"
+                  >
+                    <Ionicons name="close" size={16} color={theme.textMuted} />
+                  </Pressable>
+                </View>
+              )}
             </LinearGradient>
           </Animated.View>
 
@@ -946,7 +1218,7 @@ export default function SleepScreen() {
                                 ? (() => {
                                     try {
                                       const parsed = JSON.parse(entry.dreamFeelings) as SelectedFeeling[];
-                                      return parsed.map(f => DREAM_FEELINGS.find(d => d.id === f.id)?.label ?? f.id).join(', ');
+                                      return parsed.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id).join(', ');
                                     } catch { return entry.dreamMood ?? ''; }
                                   })()
                                 : entry.dreamMood ?? ''}
@@ -1008,8 +1280,17 @@ export default function SleepScreen() {
             </Animated.View>
           )}
 
+          {/* ── Load error state ── */}
+          {loadError && entries.length === 0 && (
+            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
+              <Ionicons name="cloud-offline-outline" size={44} color="#E85D75" />
+              <Text style={styles.emptyTitle}>Could not load data</Text>
+              <Text style={styles.emptySubtitle}>{loadError}</Text>
+            </Animated.View>
+          )}
+
           {/* ── Empty state ── */}
-          {!loading && entries.length === 0 && (
+          {!loading && !loadError && entries.length === 0 && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
               <Ionicons name="moon-outline" size={44} color={theme.textMuted} />
               <Text style={styles.emptyTitle}>Your sleep story starts here</Text>
@@ -1225,6 +1506,43 @@ const styles = StyleSheet.create({
   dreamMoodOptionTextSelected: {
     color: ACCENT,
     fontWeight: '600',
+  },
+
+  // Feeling search
+  feelingSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  feelingSearchInput: {
+    flex: 1,
+    color: theme.textPrimary,
+    fontSize: 14,
+    height: 32,
+    paddingVertical: 0,
+  },
+
+  // Error banner
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(232,93,117,0.12)',
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(232,93,117,0.25)',
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: '#E85D75',
+    fontSize: 13,
+    lineHeight: 18,
   },
 
   // Tiered feeling selector
@@ -1557,6 +1875,54 @@ const styles = StyleSheet.create({
     color: ACCENT,
     fontWeight: '600',
   },
+
+  // Awaken state dropdown
+  awakenDropdown: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: theme.borderRadius.lg,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  awakenDropdownText: {
+    color: theme.textPrimary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  awakenDropdownList: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: theme.borderRadius.lg,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  awakenDropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.04)',
+  },
+  awakenDropdownItemActive: {
+    backgroundColor: 'rgba(122,139,224,0.10)',
+  },
+  awakenDropdownItemText: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    fontWeight: '500',
+  },
+  awakenDropdownItemTextActive: {
+    color: ACCENT,
+    fontWeight: '600',
+  },
+
   recurringRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

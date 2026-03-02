@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Dimensions } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +25,69 @@ import { analyzeJournalContent } from '../../services/journal/nlp';
 
 const { width } = Dimensions.get('window');
 
+const PAGE_SIZE = 30;
+
+// ─── Memoized entry card ───────────────────────────────────────────────────────
+
+interface EntryCardProps {
+  entry: JournalEntry;
+  isExpanded: boolean;
+  onToggle: (id: string) => void;
+  onEdit: (entry: JournalEntry) => void;
+  onDelete: (entry: JournalEntry) => void;
+  formatDate: (s: string) => string;
+  formatTime: (s: string) => string;
+}
+
+const EntryCard = memo(function EntryCard({
+  entry, isExpanded, onToggle, onEdit, onDelete, formatDate, formatTime,
+}: EntryCardProps) {
+  return (
+    <Pressable
+      style={styles.entryCard}
+      onPress={() => void onEdit(entry)}
+      onLongPress={() => void onDelete(entry)}
+      accessibilityRole="button"
+      accessibilityLabel={`Journal entry: ${entry.title || formatDate(entry.date)}`}
+    >
+      <LinearGradient
+        colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+        style={styles.entryGradient}
+      >
+        <View style={styles.entryHeader}>
+          <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
+          <Text style={styles.entryTime}>{formatTime(entry.createdAt)}</Text>
+        </View>
+
+        {!!entry.title && (
+          <Text style={styles.entryTitle} numberOfLines={1}>
+            {entry.title}
+          </Text>
+        )}
+
+        <Text style={styles.entryContent} numberOfLines={isExpanded ? undefined : 3}>
+          {entry.content}
+        </Text>
+
+        <Pressable
+          style={styles.expandButton}
+          onPress={() => onToggle(entry.id)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={isExpanded ? 'Collapse entry' : 'Expand entry'}
+        >
+          <Ionicons
+            name={isExpanded ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color="rgba(255,255,255,0.3)"
+          />
+        </Pressable>
+      </LinearGradient>
+    </Pressable>
+  );
+});
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function JournalScreen() {
   const insets = useSafeAreaInsets();
@@ -33,7 +96,10 @@ export default function JournalScreen() {
 
   const [showPremiumRequired, setShowPremiumRequired] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
@@ -42,18 +108,18 @@ export default function JournalScreen() {
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
 
-  const toggleExpanded = (id: string) => {
+  const toggleExpanded = useCallback((id: string) => {
     setExpandedEntryIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      void loadEntries();
+      void loadEntries(true);
       void loadCheckIns();
     }, [])
   );
@@ -61,7 +127,7 @@ export default function JournalScreen() {
   useEffect(() => {
     if (entries.length >= 3) generatePatternInsights();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, isPremium]);
+  }, [entries.length, isPremium]);
 
   const formatDate = (dateString: string) => {
     const date = parseLocalDate(dateString);
@@ -94,7 +160,10 @@ export default function JournalScreen() {
 
   const generatePatternInsights = () => {
     try {
-      const entryMetas: JournalEntryMeta[] = entries.map((e) => {
+      // Use at most 90 entries for pattern analysis — sufficient sample and avoids
+      // re-mapping 10k+ entries into JournalEntryMeta on every render cycle.
+      const sample = entries.slice(0, 90);
+      const entryMetas: JournalEntryMeta[] = sample.map((e) => {
         let transitSnapshot: TransitSnapshot | undefined;
         if (e.transitSnapshot) {
           try { transitSnapshot = JSON.parse(e.transitSnapshot); } catch {}
@@ -104,7 +173,7 @@ export default function JournalScreen() {
           date: e.date,
           mood: { overall: moodToLevel(e.mood) },
           tags: [],
-          wordCount: (e.content || '').trim().split(/\s+/).filter(Boolean).length,
+          wordCount: e.contentWordCount ?? (e.content || '').trim().split(/\s+/).filter(Boolean).length,
           transitSnapshot,
         };
       });
@@ -116,20 +185,44 @@ export default function JournalScreen() {
     }
   };
 
-  const loadEntries = async () => {
+  /**
+   * Load entries with keyset pagination.
+   * @param reset — true on initial load / refresh, false for next-page.
+   */
+  const loadEntries = async (reset = false) => {
     try {
-      setLoading(true);
-      const journalEntries = await localDb.getJournalEntries();
-      const sorted = [...journalEntries].sort((a, b) => {
-        if (a.date === b.date) return b.createdAt.localeCompare(a.createdAt);
-        return b.date.localeCompare(a.date);
-      });
-      setEntries(sorted);
+      if (reset) {
+        setLoading(true);
+        setHasMore(true);
+        const [page, count] = await Promise.all([
+          localDb.getJournalEntriesPaginated(PAGE_SIZE),
+          localDb.getJournalEntryCount(),
+        ]);
+        setEntries(page);
+        setTotalCount(count);
+        setHasMore(page.length >= PAGE_SIZE);
+      } else {
+        if (loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        const last = entries[entries.length - 1];
+        const page = await localDb.getJournalEntriesPaginated(
+          PAGE_SIZE,
+          last?.date,
+          last?.createdAt,
+        );
+        if (page.length < PAGE_SIZE) setHasMore(false);
+        setEntries(prev => {
+          const existingIds = new Set(prev.map(e => e.id));
+          const newEntries = page.filter(e => !existingIds.has(e.id));
+          return [...prev, ...newEntries];
+        });
+      }
     } catch (error) {
       logger.error('Failed to load journal entries:', error);
       Alert.alert('Error', 'Failed to load journal entries');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -161,13 +254,209 @@ export default function JournalScreen() {
     setShowEntryModal(true);
   };
 
-  const handleEditEntry = async (entry: JournalEntry) => {
+  // ── Stable callbacks for EntryCard ──────────────────────────────────────────
+
+  const handleEditEntry = useCallback(async (entry: JournalEntry) => {
     try {
       await Haptics.selectionAsync();
     } catch {}
     setEditingEntry(entry);
     setShowEntryModal(true);
-  };
+  }, []);
+
+  const handleDeleteEntry = useCallback(async (entry: JournalEntry) => {
+    Alert.alert('Delete entry?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await localDb.deleteJournalEntry(entry.id);
+            await loadEntries(true);
+          } catch (error) {
+            logger.error('Failed to delete journal entry:', error);
+            Alert.alert('Error', 'Failed to delete entry');
+          }
+        },
+      },
+    ]);
+  }, []);
+
+  const stableFormatDate = useCallback(formatDate, []);
+  const stableFormatTime = useCallback(formatTime, []);
+
+  // ── FlatList renderItem + keyExtractor ─────────────────────────────────────
+
+  const keyExtractor = useCallback((item: JournalEntry) => item.id, []);
+
+  const renderEntry = useCallback(({ item }: ListRenderItemInfo<JournalEntry>) => {
+    return (
+      <EntryCard
+        entry={item}
+        isExpanded={expandedEntryIds.has(item.id)}
+        onToggle={toggleExpanded}
+        onEdit={handleEditEntry}
+        onDelete={handleDeleteEntry}
+        formatDate={stableFormatDate}
+        formatTime={stableFormatTime}
+      />
+    );
+  }, [expandedEntryIds, toggleExpanded, handleEditEntry, handleDeleteEntry, stableFormatDate, stableFormatTime]);
+
+  const handleEndReached = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      void loadEntries(false);
+    }
+  }, [loadingMore, hasMore]);
+
+  // ── List header (check-in trends + pattern insights + header) ──────────────
+
+  const ListHeader = useMemo(() => (
+    <>
+      <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.title}>Journal</Text>
+            <Text style={styles.subtitle}>Your inner landscape</Text>
+          </View>
+        </View>
+
+        <Text style={styles.poeticIntro}>
+          This is a space for your unfiltered truth. A private space for honest reflection. Let the words come without judgment.
+        </Text>
+      </Animated.View>
+
+      {checkIns.length >= 2 && (
+        isPremium ? (
+          <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
+            <Text style={styles.chartTitle}>7-Day Check-In Trends</Text>
+            <Text style={styles.checkInTrendSubtitle}>From your energy check-ins</Text>
+            <CheckInTrendGraph checkIns={checkIns} width={width - 32} />
+          </Animated.View>
+        ) : (
+          <Pressable onPress={() => setShowPremiumRequired(true)} accessibilityRole="button" accessibilityLabel="Unlock 7-day check-in trends">
+            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <Text style={styles.chartTitle}>7-Day Check-In Trends</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                  <Ionicons name="sparkles" size={10} color={theme.primary} />
+                  <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
+                </View>
+              </View>
+              <View style={styles.lockBox}>
+                <Ionicons name="trending-up" size={32} color={theme.primary} />
+                <Text style={styles.lockTitle}>Your trends are ready</Text>
+                <Text style={styles.lockSubtitle}>See how your mood, energy, and stress shift across the week</Text>
+              </View>
+            </Animated.View>
+          </Pressable>
+        )
+      )}
+
+      {isPremium && patternInsights.length > 0 && (
+        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
+          <Text style={styles.insightsTitle}>Pattern Insights</Text>
+          <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
+
+          {patternInsights.map((insight, idx) => (
+            <LinearGradient
+              key={`${insight.title}-${idx}`}
+              colors={
+                insight.type === 'transit_correlation'
+                  ? ['rgba(61, 41, 82, 0.18)', 'rgba(61, 41, 82, 0.06)']
+                  : ['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.05)']
+              }
+              style={styles.insightCard}
+            >
+              <View style={styles.insightHeader}>
+                <Text style={styles.insightTitle}>{insight.title}</Text>
+                <View
+                  style={[
+                    styles.confidenceBadge,
+                    insight.confidence === 'strong' && styles.confidenceStrong,
+                    insight.confidence === 'suggested' && styles.confidenceSuggested,
+                  ]}
+                >
+                  <Text style={styles.confidenceText}>{insight.confidence}</Text>
+                </View>
+              </View>
+
+              <Text style={styles.insightDescription}>{insight.description}</Text>
+              {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
+              {!!insight.actionable && <Text style={styles.insightActionable}>{insight.actionable}</Text>}
+            </LinearGradient>
+          ))}
+        </Animated.View>
+      )}
+
+      {!isPremium && totalCount >= 5 && (
+        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
+          <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
+            <LinearGradient
+              colors={['rgba(201, 169, 98, 0.1)', 'rgba(201, 169, 98, 0.04)']}
+              style={[styles.insightCard, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <Ionicons name="analytics" size={16} color={theme.primary} />
+                <Text style={styles.insightTitle}>Pattern Insights</Text>
+                <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                  <Ionicons name="sparkles" size={10} color={theme.primary} />
+                  <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
+                </View>
+              </View>
+              <Text style={styles.insightDescription}>
+                With {totalCount} entries, Deeper Sky can detect which energy cycles lift your mood, when you tend to journal most, and what emotional themes keep appearing.
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                <Text style={[styles.insightActionable, { marginTop: 0 }]}>Reveal your patterns</Text>
+                <Ionicons name="arrow-forward" size={13} color={theme.primary} />
+              </View>
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
+      )}
+
+      <View style={styles.entriesSection}>
+        <View style={styles.entriesHeader}>
+          <Text style={styles.sectionTitle}>Recent Entries</Text>
+          <Text style={styles.entriesCount}>{totalCount} entries</Text>
+        </View>
+      </View>
+    </>
+  ), [checkIns, isPremium, patternInsights, totalCount, router]);
+
+  // ── List footer (loading-more indicator) ───────────────────────────────────
+
+  const ListFooter = useMemo(() => {
+    if (loadingMore) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading more...</Text>
+        </View>
+      );
+    }
+    return null;
+  }, [loadingMore]);
+
+  // ── List empty ─────────────────────────────────────────────────────────────
+
+  const ListEmpty = useMemo(() => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading entries...</Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.emptyContainer}>
+        <Ionicons name="book-outline" size={48} color={theme.textMuted} />
+        <Text style={styles.emptyTitle}>Start Your Journey</Text>
+        <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
+      </View>
+    );
+  }, [loading]);
 
   const handleSaveEntry = async (data: Partial<JournalEntry>) => {
     try {
@@ -219,30 +508,11 @@ export default function JournalScreen() {
 
       setShowEntryModal(false);
       setEditingEntry(undefined);
-      await loadEntries();
+      await loadEntries(true);
     } catch (error) {
       logger.error('Failed to save journal entry:', error);
       Alert.alert('Error', 'Failed to save entry');
     }
-  };
-
-  const handleDeleteEntry = async (entry: JournalEntry) => {
-    Alert.alert('Delete entry?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await localDb.deleteJournalEntry(entry.id);
-            await loadEntries();
-          } catch (error) {
-            logger.error('Failed to delete journal entry:', error);
-            Alert.alert('Error', 'Failed to delete entry');
-          }
-        },
-      },
-    ]);
   };
 
   return (
@@ -250,185 +520,34 @@ export default function JournalScreen() {
       <StarField starCount={25} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
-          <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-            <PremiumRequiredScreen
-              feature="Check-In Trends"
-              teaser="Visualize how your mood, energy, and stress shift over the past week — and discover which days you feel most aligned."
-            />
-          </ScrollView>
+          <FlatList
+            data={[]}
+            renderItem={null}
+            contentContainerStyle={{ paddingBottom: 32 }}
+            ListHeaderComponent={
+              <PremiumRequiredScreen
+                feature="Check-In Trends"
+                teaser="Visualize how your mood, energy, and stress shift over the past week — and discover which days you feel most aligned."
+              />
+            }
+          />
         ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-            <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-              <View style={styles.headerTop}>
-                <View>
-                  <Text style={styles.title}>Journal</Text>
-                  <Text style={styles.subtitle}>Your inner landscape</Text>
-                </View>
-              </View>
-
-              <Text style={styles.poeticIntro}>
-                This is a space for your unfiltered truth. A private space for honest reflection. Let the words come without judgment.
-              </Text>
-            </Animated.View>
-
-            {checkIns.length >= 2 && (
-              isPremium ? (
-                <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
-                  <Text style={styles.chartTitle}>7-Day Check-In Trends</Text>
-                  <Text style={styles.checkInTrendSubtitle}>From your energy check-ins</Text>
-                  <CheckInTrendGraph checkIns={checkIns} width={width - 32} />
-                </Animated.View>
-              ) : (
-                <Pressable onPress={() => setShowPremiumRequired(true)} accessibilityRole="button" accessibilityLabel="Unlock 7-day check-in trends">
-                  <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <Text style={styles.chartTitle}>7-Day Check-In Trends</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-                        <Ionicons name="sparkles" size={10} color={theme.primary} />
-                        <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
-                      </View>
-                    </View>
-                    <View style={styles.lockBox}>
-                      <Ionicons name="trending-up" size={32} color={theme.primary} />
-                      <Text style={styles.lockTitle}>Your trends are ready</Text>
-                      <Text style={styles.lockSubtitle}>See how your mood, energy, and stress shift across the week</Text>
-                    </View>
-                  </Animated.View>
-                </Pressable>
-              )
-            )}
-
-            {isPremium && patternInsights.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-                <Text style={styles.insightsTitle}>Pattern Insights</Text>
-                <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
-
-                {patternInsights.map((insight, idx) => (
-                  <LinearGradient
-                    key={`${insight.title}-${idx}`}
-                    colors={
-                      insight.type === 'transit_correlation'
-                        ? ['rgba(61, 41, 82, 0.18)', 'rgba(61, 41, 82, 0.06)']
-                        : ['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.05)']
-                    }
-                    style={styles.insightCard}
-                  >
-                    <View style={styles.insightHeader}>
-                      <Text style={styles.insightTitle}>{insight.title}</Text>
-                      <View
-                        style={[
-                          styles.confidenceBadge,
-                          insight.confidence === 'strong' && styles.confidenceStrong,
-                          insight.confidence === 'suggested' && styles.confidenceSuggested,
-                        ]}
-                      >
-                        <Text style={styles.confidenceText}>{insight.confidence}</Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.insightDescription}>{insight.description}</Text>
-                    {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
-                    {!!insight.actionable && <Text style={styles.insightActionable}>{insight.actionable}</Text>}
-                  </LinearGradient>
-                ))}
-              </Animated.View>
-            )}
-
-            {!isPremium && entries.length >= 5 && (
-              <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-                  <LinearGradient
-                    colors={['rgba(201, 169, 98, 0.1)', 'rgba(201, 169, 98, 0.04)']}
-                    style={[styles.insightCard, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <Ionicons name="analytics" size={16} color={theme.primary} />
-                      <Text style={styles.insightTitle}>Pattern Insights</Text>
-                      <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-                        <Ionicons name="sparkles" size={10} color={theme.primary} />
-                        <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.insightDescription}>
-                      With {entries.length} entries, Deeper Sky can detect which energy cycles lift your mood, when you tend to journal most, and what emotional themes keep appearing.
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                      <Text style={[styles.insightActionable, { marginTop: 0 }]}>Reveal your patterns</Text>
-                      <Ionicons name="arrow-forward" size={13} color={theme.primary} />
-                    </View>
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
-            )}
-
-            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.entriesSection}>
-              <View style={styles.entriesHeader}>
-                <Text style={styles.sectionTitle}>Recent Entries</Text>
-                <Text style={styles.entriesCount}>{entries.length} entries</Text>
-              </View>
-
-              {loading ? (
-                <View style={styles.loadingContainer}>
-                  <Text style={styles.loadingText}>Loading entries...</Text>
-                </View>
-              ) : entries.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                  <Ionicons name="book-outline" size={48} color={theme.textMuted} />
-                  <Text style={styles.emptyTitle}>Start Your Journey</Text>
-                  <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
-                </View>
-              ) : (
-                entries.map((entry, index) => {
-                  const isExpanded = expandedEntryIds.has(entry.id);
-                  return (
-                    <Animated.View key={entry.id} entering={FadeInDown.delay(400 + index * 50).duration(600)}>
-                      <Pressable
-                        style={styles.entryCard}
-                        onPress={() => void handleEditEntry(entry)}
-                        onLongPress={() => void handleDeleteEntry(entry)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Journal entry: ${entry.title || formatDate(entry.date)}`}
-                      >
-                        <LinearGradient
-                          colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                          style={styles.entryGradient}
-                        >
-                          <View style={styles.entryHeader}>
-                            <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
-                            <Text style={styles.entryTime}>{formatTime(entry.createdAt)}</Text>
-                          </View>
-
-                          {!!entry.title && (
-                            <Text style={styles.entryTitle} numberOfLines={1}>
-                              {entry.title}
-                            </Text>
-                          )}
-
-                          <Text style={styles.entryContent} numberOfLines={isExpanded ? undefined : 3}>
-                            {entry.content}
-                          </Text>
-
-                          <Pressable
-                            style={styles.expandButton}
-                            onPress={() => toggleExpanded(entry.id)}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            accessibilityRole="button"
-                            accessibilityLabel={isExpanded ? 'Collapse entry' : 'Expand entry'}
-                          >
-                            <Ionicons
-                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                              size={16}
-                              color="rgba(255,255,255,0.3)"
-                            />
-                          </Pressable>
-                        </LinearGradient>
-                      </Pressable>
-                    </Animated.View>
-                  );
-                })
-              )}
-            </Animated.View>
-          </ScrollView>
+          <FlatList
+            data={entries}
+            renderItem={renderEntry}
+            keyExtractor={keyExtractor}
+            ListHeaderComponent={ListHeader}
+            ListFooterComponent={ListFooter}
+            ListEmptyComponent={ListEmpty}
+            contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: theme.spacing.lg }}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            removeClippedSubviews={true}
+            showsVerticalScrollIndicator={false}
+          />
         )}
 
         {!showPremiumRequired && (

@@ -39,7 +39,7 @@ export default function TermsOfServiceScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
 
-            <Text style={styles.lastUpdated}>Last updated: February 28, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: March 1, 2026</Text>
 
             <Text style={styles.sectionTitle}>Welcome to MySky</Text>
             <Text style={styles.paragraph}>
@@ -72,13 +72,13 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Your Data</Text>
             <Text style={styles.paragraph}>
-              MySky does not require an account. All data is stored locally on your device with sensitive fields encrypted at rest using AES-256.{' '}
+              MySky does not require an account. All data is stored locally on your device with sensitive fields encrypted at rest using AES-256-GCM.{' '}
               You are responsible for maintaining your device&apos;s security and for any backup or PDF files you create and share.
             </Text>
 
             <Text style={styles.sectionTitle}>Data Security</Text>
             <Text style={styles.paragraph}>
-              All sensitive data in MySky is encrypted at rest using AES-256. Encryption keys are securely stored using your device's hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup. Subscription status is managed by RevenueCat, which receives only an anonymized app user ID—never your journal, birth data, or other personal information.
+              All sensitive data in MySky is encrypted at rest using AES-256-GCM. Encryption keys are stored using your device&apos;s hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup, export a PDF, or you perform a birth-location lookup (which sends only the location text you type to a geocoding provider). Subscription status is managed by RevenueCat, which receives only an anonymous app user identifier for purchase verification—never your journal, birth data, or other personal information.
             </Text>
 
             <Text style={styles.sectionTitle}>Free and Premium Features</Text>
@@ -91,13 +91,16 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Subscriptions and Payments</Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Premium Subscriptions:</Text> MySky offers monthly, yearly, and lifetime premium subscriptions. Subscriptions automatically renew unless cancelled.
+              <Text style={styles.bold}>Premium Access Options:</Text> MySky offers auto-renewing subscriptions (monthly and yearly) and a one-time lifetime purchase. Monthly and yearly subscriptions automatically renew unless cancelled. Lifetime purchases do not renew.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (Apple App Store or Google Play Store). Prices may vary by location.
+              <Text style={styles.bold}>Current Prices (USD):</Text> $4.99/month, $29.99/year, $49.99 lifetime. Prices may vary by region and may change at any time; the app store will always show the final price before purchase.
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Cancellation:</Text> You may cancel your subscription at any time through your device&apos;s subscription settings (iOS: Settings &gt; Apple ID &gt; Subscriptions; Android: Google Play &gt; Subscriptions). To avoid being charged for the next billing period, cancel at least 24 hours before the end of the current period. Cancellation takes effect at the end of the current billing period. Lifetime purchases do not renew.
+              <Text style={styles.bold}>Billing:</Text> You will be charged through your device&apos;s app store (Apple App Store or Google Play Store).
+            </Text>
+            <Text style={styles.paragraph}>
+              <Text style={styles.bold}>Cancellation (Subscriptions Only):</Text> You may cancel your subscription at any time through your device&apos;s subscription settings (iOS: Settings &gt; Apple ID &gt; Subscriptions; Android: Google Play &gt; Subscriptions). To avoid being charged for the next billing period, cancel at least 24 hours before the end of the current period. Cancellation takes effect at the end of the current billing period. Lifetime purchases do not renew and do not have a cancellation setting (refunds are handled by the app store).
             </Text>
             <Text style={styles.paragraph}>
               <Text style={styles.bold}>Refunds:</Text> Refunds are handled according to your app store&apos;s policies.
@@ -116,7 +119,7 @@ export default function TermsOfServiceScreen() {
             <Text style={styles.paragraph}>
               • All app content, including text, graphics, and software, is owned by MySky or our licensors{'\n'}
               • You retain ownership of your personal data, journal entries, and check-ins{'\n'}
-              • You grant us a license to use your data solely to provide our services on your device{'\n'}
+              • Your data is processed locally on your device to provide app features{'\n'}
               • You may not copy, modify, or distribute our content without permission
             </Text>
 
@@ -140,7 +143,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
             <Text style={styles.paragraph}>
-              MySky and its creators are not liable for any indirect, incidental, special, or consequential damages arising from your use of the app. Our total liability is limited to the amount you paid for the service.
+              MySky and its creators are not liable for any indirect, incidental, special, or consequential damages arising from your use of the app. To the maximum extent permitted by law, our total liability is limited to the amount you paid to access premium features during the twelve (12) months immediately preceding the event giving rise to the claim.
             </Text>
 
             <Text style={styles.sectionTitle}>Data and Privacy</Text>
@@ -160,7 +163,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Governing Law</Text>
             <Text style={styles.paragraph}>
-              These terms are governed by the laws of the United States. Any disputes will be resolved in accordance with applicable federal and state laws.
+              These terms are governed by applicable laws where you reside and where the app is offered. Any disputes will be resolved in accordance with applicable law.
             </Text>
 
             <Text style={styles.sectionTitle}>Contact Information</Text>
