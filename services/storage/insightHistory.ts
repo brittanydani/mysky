@@ -277,7 +277,7 @@ class InsightHistoryServiceClass {
       }
     }
     const mostCommonMood = Object.entries(moonCounts)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || null;
     
     return {
       totalInsights: all.length,

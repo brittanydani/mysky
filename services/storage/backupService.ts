@@ -305,6 +305,16 @@ export class BackupService {
       throw new Error('Passphrase must be at least 8 characters long');
     }
 
+    // File size guard — reject backups > 50 MB to prevent OOM
+    const fileInfo = await FileSystem.getInfoAsync(uri, { size: true });
+    if (!fileInfo.exists) {
+      throw new Error('Backup file does not exist');
+    }
+    const MAX_BACKUP_SIZE = 50 * 1024 * 1024; // 50 MB
+    if ((fileInfo as any).size > MAX_BACKUP_SIZE) {
+      throw new Error('Backup file is too large (max 50 MB)');
+    }
+
     const raw = await FileSystem.readAsStringAsync(uri, {
       encoding: FileSystem.EncodingType.UTF8,
     });

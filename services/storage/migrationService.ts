@@ -39,23 +39,13 @@ export class MigrationService {
       // Initialize SQLite database to read existing data
       await localDb.initialize();
 
-      // Migrate charts
-      const existingCharts = await localDb.getCharts();
-      logger.info(`[Migration] Found ${existingCharts.length} charts to migrate`);
-      
-      for (const chart of existingCharts) {
-        await secureStorage.saveChart(chart);
-      }
+      // NOTE: We no longer copy charts/journal entries into SecureStore.
+      // Sensitive data should live only in SQLite (field-encrypted via AES-256-GCM).
+      // SecureStore is reserved for small secrets (DEK, consent, settings).
+      // See: data-minimisation audit — duplicating dream/journal text into a
+      //      second store doubles the attack surface without adding protection.
 
-      // Migrate journal entries
-      const existingEntries = await localDb.getJournalEntries();
-      logger.info(`[Migration] Found ${existingEntries.length} journal entries to migrate`);
-      
-      for (const entry of existingEntries) {
-        await secureStorage.saveJournalEntry(entry);
-      }
-
-      // Migrate settings
+      // Migrate settings only (small, non-sensitive config blob)
       const existingSettings = await localDb.getSettings();
       if (existingSettings) {
         await secureStorage.saveSettings(existingSettings);

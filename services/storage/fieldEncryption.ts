@@ -1,9 +1,10 @@
 /**
  * Field-Level Encryption Service
  *
- * Encrypts sensitive text fields (journal content, birth data) at rest
- * using AES-256-GCM via @noble/ciphers (pure JS — no native WebCrypto needed),
- * with a Data Encryption Key (DEK) stored in Keychain via SecureStore.
+ * Encrypts sensitive text fields (journal content, birth data, dream text,
+ * mood/stress/energy scores, emotional tags) at rest using AES-256-GCM via
+ * @noble/ciphers (pure JS — no native WebCrypto needed), with a Data
+ * Encryption Key (DEK) stored in Keychain via SecureStore.
  *
  * Architecture:
  * - DEK is generated once and stored in SecureStore (Keychain/Keystore)
@@ -13,6 +14,35 @@
  *   existing encrypted rows are decryptable without migration
  *
  * This protects data even if the SQLite DB is extracted from the device.
+ *
+ * ── U.S. Export Compliance (EAR / Apple App Store) ─────────────────────────
+ *
+ * Encryption Use Statement:
+ *   "MySky encrypts user content locally using AES-256-GCM for privacy and
+ *    device protection. No custom cryptography is distributed as a service.
+ *    No encryption is used for third-party message routing beyond standard
+ *    platform transport (TLS)."
+ *
+ * Classification:
+ *   This encryption qualifies for the EARCCN 5D992 "mass market" exemption
+ *   and/or the TSU exception (Technology & Software Unrestricted) under EAR
+ *   §740.13(e), because:
+ *     1. It is used solely to protect locally-stored personal data.
+ *     2. Key material never leaves the device's hardware-backed keychain.
+ *     3. No key escrow, key recovery, or government access mechanism exists.
+ *     4. The app does not provide encryption as a stand-alone service.
+ *
+ *   Consequently, ITSAppUsesNonExemptEncryption is set to false in app.json
+ *   (i.e., "the app does NOT use non-exempt encryption"). In App Store
+ *   Connect's export compliance dialog, answer:
+ *     Q: "Does your app use encryption?"          → Yes
+ *     Q: "Is it exempt?"                          → Yes
+ *     Q: "Which exemption?"                       → Encryption for user data
+ *                                                    protection on device
+ *
+ *   If distribution is ever expanded to embargoed countries or government
+ *   buyers, revisit this determination with export-compliance counsel.
+ * ───────────────────────────────────────────────────────────────────────────
  */
 
 import * as SecureStore from 'expo-secure-store';
@@ -256,6 +286,9 @@ class FieldEncryptionServiceClass {
    *   - Plaintext — returned as-is
    */
   async decryptField(encrypted: string): Promise<string> {
+    if (typeof encrypted !== 'string') {
+      return encrypted == null ? '' : String(encrypted);
+    }
     if (!encrypted || encrypted.length === 0) {
       return encrypted;
     }
@@ -324,6 +357,9 @@ class FieldEncryptionServiceClass {
   async tryDecryptField(encrypted: string): Promise<
     { ok: true; value: string } | { ok: false; error: 'key_missing' | 'auth_failed' | 'invalid_format' }
   > {
+    if (typeof encrypted !== 'string') {
+      return { ok: true, value: encrypted == null ? '' : String(encrypted) };
+    }
     if (!encrypted || encrypted.length === 0) {
       return { ok: true, value: encrypted };
     }
@@ -423,7 +459,7 @@ class FieldEncryptionServiceClass {
    * `commitRotatedKey()`.  If the app crashes before commit, the
    * old DEK remains active and no data is lost.
    */
-  async rotateKey(): Promise<{ oldDek: string; newDek: string }> {
+  async rotateKey(): Promise<{ staged: true }> {
     const oldDek = await SecureStore.getItemAsync(DEK_KEY);
     
     if (!oldDek) {
@@ -438,10 +474,9 @@ class FieldEncryptionServiceClass {
     
     logger.warn('[FieldEncryption] New DEK staged — call commitRotatedKey() after re-encrypting all rows');
     
-    return { 
-      oldDek: oldDek, 
-      newDek: newDekBase64 
-    };
+    // Do NOT return raw key material — callers should re-encrypt via
+    // encrypt/decrypt methods which internally load the staged key.
+    return { staged: true };
   }
 
   /**

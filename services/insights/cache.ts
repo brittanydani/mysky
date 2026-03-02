@@ -15,6 +15,7 @@ import { File, Paths } from 'expo-file-system';
 import { InsightBundle } from '../../utils/insightsEngine';
 import { CacheKey, CachedInsightBundle } from './types';
 import { logger } from '../../utils/logger';
+import { FieldEncryptionService, isDecryptionFailure } from '../storage/fieldEncryption';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Module-level state
@@ -66,10 +67,17 @@ export async function getCachedBundle(key: CacheKey): Promise<InsightBundle | nu
   try {
     if (_cacheFile.exists) {
       const raw = await _cacheFile.text();
-      const parsed = JSON.parse(raw) as CachedInsightBundle;
-      if (parsed?.key === keyStr && parsed?.bundle) {
-        _memoryCache = parsed;
-        return parsed.bundle;
+      // Decrypt the on-disk blob (health-sensitive derivative data)
+      const decrypted = await FieldEncryptionService.decryptField(raw);
+      if (isDecryptionFailure(decrypted)) {
+        // Cache is unreadable (key rotated, corrupted, etc.) — treat as miss
+        logger.info('[InsightsCache] Disk cache decryption failed, treating as miss');
+      } else {
+        const parsed = JSON.parse(decrypted) as CachedInsightBundle;
+        if (parsed?.key === keyStr && parsed?.bundle) {
+          _memoryCache = parsed;
+          return parsed.bundle;
+        }
       }
     }
   } catch (e) {
@@ -93,9 +101,11 @@ export async function setCachedBundle(key: CacheKey, bundle: InsightBundle): Pro
   // Memory
   _memoryCache = cached;
 
-  // Disk (best-effort)
+  // Disk (best-effort, encrypted at rest)
   try {
-    _cacheFile.write(JSON.stringify(cached));
+    const plaintext = JSON.stringify(cached);
+    const encrypted = await FieldEncryptionService.encryptField(plaintext);
+    _cacheFile.write(encrypted);
   } catch (e) {
     logger.warn('[InsightsCache] Failed to write disk cache', e);
   }

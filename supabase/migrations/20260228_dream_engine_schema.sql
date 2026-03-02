@@ -20,7 +20,9 @@ create table if not exists public.dream_entries (
 
   occurred_at timestamptz not null default now(),
   title text,
-  dream_text text not null,
+  -- Raw dream text is NEVER stored in plaintext on the server.
+  -- The client must encrypt dream_text with a user-held key before upload.
+  encrypted_dream_text text not null,
 
   -- optional quick user inputs
   lucidity_level smallint, -- 0..5
@@ -47,14 +49,15 @@ create table if not exists public.dream_selected_feelings (
 
 create index if not exists dream_selected_feelings_dream_id_idx on public.dream_selected_feelings(dream_id);
 
--- Deterministic text extraction output (store raw for audit/UX)
+-- Deterministic text extraction output (derived scores only — no raw text)
 create table if not exists public.dream_text_signals (
   dream_id uuid primary key references public.dream_entries(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
 
   coverage real not null check (coverage between 0 and 1),
   triggers jsonb not null default '{}'::jsonb,   -- { trigger: score 0..1 }
-  evidence jsonb not null default '{}'::jsonb,   -- { trigger: EvidenceHit[] }
+  -- NOTE: evidence field removed. Raw text snippets must not be stored server-side.
+  -- Re-derive evidence client-side from encrypted_dream_text when needed.
   meta jsonb not null default '{}'::jsonb,       -- { charCount, sentenceCount, ... }
 
   created_at timestamptz not null default now(),
@@ -92,8 +95,9 @@ create table if not exists public.dream_rendered_cards (
   reflection_question text not null,
   integration_prompt text,
 
-  -- Evidence snippets shown to user
-  evidence_snippets text[] not null default '{}',
+  -- Evidence snippets are raw dream text — do NOT store server-side.
+  -- Clients re-derive them from encrypted_dream_text locally.
+  -- evidence_snippets column removed for data minimisation.
 
   -- Matched triggers used for this card
   matched_triggers jsonb not null default '[]'::jsonb, -- Array<{trigger, score}>
@@ -188,7 +192,10 @@ create index if not exists user_dream_model_updates_user_id_idx on public.user_d
 -- 4) Timestamps
 -- -------------------------------
 create or replace function public.set_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql
+security invoker
+set search_path = ''
+as $$
 begin
   new.updated_at = now();
   return new;
@@ -264,7 +271,7 @@ create or replace function public.ensure_user_dream_model()
 returns public.user_dream_model
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare m public.user_dream_model;
 begin

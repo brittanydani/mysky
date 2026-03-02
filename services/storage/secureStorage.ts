@@ -201,7 +201,10 @@ class SecureStorageService {
     await this.bestEffortDeleteKey(SecureStorageService.KEYS.LAWFUL_BASIS_RECORDS);
   }
 
-  // Audit trail - kept minimal to avoid SecureStore 2KB limit
+  // Recent security events — a rolling window of the last 20 key operations.
+  // This is NOT a full audit log. It is a user-transparency feature showing
+  // recent activity (consent changes, exports, key rotation, deletions).
+  // Scope is intentionally limited for data-minimisation (SecureStore ≤ 2 KB).
   async auditDataAccess(operation: string, metadata?: Record<string, any>): Promise<void> {
     try {
       const entry = {
@@ -216,16 +219,22 @@ class SecureStorageService {
       const updated = [entry, ...existing].slice(0, 20);
       await this.setEncryptedItem(SecureStorageService.KEYS.AUDIT_TRAIL, updated);
     } catch (error) {
-      logger.error('[SecureStorage] Error recording audit trail:', error);
+      logger.error('[SecureStorage] Error recording recent security events:', error);
     }
   }
 
-  async getAuditTrail(): Promise<any[]> {
+  /** Returns the most recent security events (up to 20). */
+  async getRecentSecurityEvents(): Promise<any[]> {
     try {
       return (await this.getEncryptedItem<any[]>(SecureStorageService.KEYS.AUDIT_TRAIL)) ?? [];
     } catch {
       return [];
     }
+  }
+
+  /** @deprecated Use getRecentSecurityEvents() instead. */
+  async getAuditTrail(): Promise<any[]> {
+    return this.getRecentSecurityEvents();
   }
 
   async getConsentHistory(): Promise<any[]> {
@@ -356,17 +365,10 @@ class SecureStorageService {
       try {
         return await EncryptionManager.decryptSensitiveData<T>(parsed.payload);
       } catch {
-        // HMAC key likely changed (simulator reset, app reinstall, etc.).
-        // The data field is plaintext JSON — recover it and re-sign with
-        // the current key so future reads pass integrity checks.
-        const recovered = EncryptionManager.tryParseSensitiveData<T>(parsed.payload);
-        if (recovered !== null) {
-          logger.warn(`[SecureStorage] Integrity mismatch for "${key}" — re-signing with current key`);
-          await this.setEncryptedItem(key, recovered);
-          return recovered;
-        }
-        // Truly unrecoverable
-        logger.error(`[SecureStorage] Unable to recover data for "${key}"`);
+        // HMAC integrity check failed. Do NOT silently re-sign — that would
+        // accept potentially tampered data. Log and return null to surface
+        // the integrity mismatch to the caller.
+        logger.error(`[SecureStorage] HMAC integrity check failed for "${key}" — rejecting data`);
         return null;
       }
     }

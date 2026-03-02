@@ -5,9 +5,9 @@ import { SavedChart, JournalEntry, AppSettings, RelationshipChart, SleepEntry } 
 import { SavedInsight } from './insightHistory';
 import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
-import { FieldEncryptionService } from './fieldEncryption';
+import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 17;
+const CURRENT_DB_VERSION = 18;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -180,6 +180,10 @@ class LocalDatabase {
     if (fromVersion < 17) {
       await this.migrateToVersion17();
     }
+
+    if (fromVersion < 18) {
+      await this.migrateToVersion18();
+    }
   }
 
   private async createInitialSchema(): Promise<void> {
@@ -239,17 +243,9 @@ class LocalDatabase {
       );
     `);
 
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS cached_interpretations (
-        id TEXT PRIMARY KEY,
-        chart_id TEXT NOT NULL,
-        type TEXT NOT NULL,
-        content TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        FOREIGN KEY (chart_id) REFERENCES saved_charts (id)
-      );
-    `);
+    // cached_interpretations table removed — it stored derived personal data
+    // (interpretation text) in plaintext. If reintroduced, content MUST be
+    // encrypted via FieldEncryptionService before writing.
 
     await db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_saved_charts_updated_at ON saved_charts(updated_at);
@@ -257,7 +253,6 @@ class LocalDatabase {
       CREATE INDEX IF NOT EXISTS idx_journal_entries_date ON journal_entries(date);
       CREATE INDEX IF NOT EXISTS idx_journal_entries_updated_at ON journal_entries(updated_at);
       CREATE INDEX IF NOT EXISTS idx_journal_entries_is_deleted ON journal_entries(is_deleted);
-      CREATE INDEX IF NOT EXISTS idx_cached_interpretations_chart_id ON cached_interpretations(chart_id);
     `);
 
     const settings = await this.getSettings();
@@ -792,14 +787,18 @@ class LocalDatabase {
                tags, note, wins, challenges, moon_sign, moon_house, sun_house,
                transit_events, lunar_phase, retrogrades, created_at, updated_at
         FROM daily_check_ins;
+    `);
 
+    // Atomic swap: wrap DROP + RENAME + INDEX in a transaction to prevent
+    // data loss if the app crashes between DROP and RENAME.
+    await db.execAsync(`
+      BEGIN TRANSACTION;
       DROP TABLE daily_check_ins;
-
       ALTER TABLE daily_check_ins_v12 RENAME TO daily_check_ins;
-
       CREATE INDEX IF NOT EXISTS idx_check_ins_date ON daily_check_ins(date);
       CREATE INDEX IF NOT EXISTS idx_check_ins_chart ON daily_check_ins(chart_id);
       CREATE INDEX IF NOT EXISTS idx_check_ins_mood ON daily_check_ins(mood_score);
+      COMMIT;
     `);
 
     logger.info(`[LocalDB] Backfilled ${existing.length} check-ins with time_of_day`);
@@ -863,14 +862,17 @@ class LocalDatabase {
                tags, note, wins, challenges, moon_sign, moon_house, sun_house,
                transit_events, lunar_phase, retrogrades, created_at, updated_at
         FROM daily_check_ins;
+    `);
 
+    // Atomic swap: wrap DROP + RENAME + INDEX in a transaction
+    await db.execAsync(`
+      BEGIN TRANSACTION;
       DROP TABLE daily_check_ins;
-
       ALTER TABLE daily_check_ins_v13 RENAME TO daily_check_ins;
-
       CREATE INDEX IF NOT EXISTS idx_check_ins_date ON daily_check_ins(date);
       CREATE INDEX IF NOT EXISTS idx_check_ins_chart ON daily_check_ins(chart_id);
       CREATE INDEX IF NOT EXISTS idx_check_ins_mood ON daily_check_ins(mood_score);
+      COMMIT;
     `);
 
     logger.info('[LocalDB] Version 13 migration complete — table rebuilt with correct UNIQUE constraint');
@@ -983,9 +985,12 @@ class LocalDatabase {
     const db = await this.ensureReady();
     logger.info('[LocalDB] Migrating to version 16 (dream mood)...');
 
-    await db.execAsync(`
-      ALTER TABLE sleep_entries ADD COLUMN dream_mood TEXT;
-    `);
+    // Idempotent: check if column already exists before adding
+    const info16 = (await db.getAllAsync('PRAGMA table_info(sleep_entries)')) as any[];
+    const cols16 = info16.map((col) => col.name);
+    if (!cols16.includes('dream_mood')) {
+      await db.execAsync(`ALTER TABLE sleep_entries ADD COLUMN dream_mood TEXT;`);
+    }
 
     logger.info('[LocalDB] Version 16 migration complete');
   }
@@ -999,14 +1004,39 @@ class LocalDatabase {
     const db = await this.ensureReady();
     logger.info('[LocalDB] Migrating to version 17 (dream feelings & metadata)...');
 
-    await db.execAsync(`
-      ALTER TABLE sleep_entries ADD COLUMN dream_feelings TEXT;
-    `);
-    await db.execAsync(`
-      ALTER TABLE sleep_entries ADD COLUMN dream_metadata TEXT;
-    `);
+    // Idempotent: check existing columns before adding
+    const info17 = (await db.getAllAsync('PRAGMA table_info(sleep_entries)')) as any[];
+    const cols17 = info17.map((col) => col.name);
+    if (!cols17.includes('dream_feelings')) {
+      await db.execAsync(`ALTER TABLE sleep_entries ADD COLUMN dream_feelings TEXT;`);
+    }
+    if (!cols17.includes('dream_metadata')) {
+      await db.execAsync(`ALTER TABLE sleep_entries ADD COLUMN dream_metadata TEXT;`);
+    }
 
     logger.info('[LocalDB] Version 17 migration complete');
+  }
+
+  /**
+   * Version 18 — Add compound indexes for common query patterns.
+   * Dramatically speeds up filtered + sorted queries at 10k+ rows.
+   */
+  private async migrateToVersion18(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 18 (compound indexes)...');
+
+    await db.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_journal_entries_active_date
+        ON journal_entries(is_deleted, date DESC, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_check_ins_chart_date
+        ON daily_check_ins(chart_id, date DESC, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_insight_history_chart_date
+        ON insight_history(chart_id, date DESC);
+      CREATE INDEX IF NOT EXISTS idx_sleep_entries_chart_date
+        ON sleep_entries(chart_id, date DESC);
+    `);
+
+    logger.info('[LocalDB] Version 18 migration complete');
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1143,6 +1173,52 @@ class LocalDatabase {
     );
 
     return Promise.all((result as any[]).map(async (row: any) => this.mapJournalRow(row)));
+  }
+
+  /**
+   * Paginated journal entries — uses compound index.
+   * Returns `pageSize` entries starting after `afterDate`/`afterCreatedAt`.
+   * First page: omit cursor args.
+   */
+  async getJournalEntriesPaginated(
+    pageSize = 30,
+    afterDate?: string,
+    afterCreatedAt?: string,
+  ): Promise<JournalEntry[]> {
+    const db = await this.ensureReady();
+
+    let query: string;
+    let params: any[];
+
+    if (afterDate && afterCreatedAt) {
+      // Keyset pagination: fetch next page after the cursor
+      query = `SELECT * FROM journal_entries
+               WHERE is_deleted = 0
+                 AND (date < ? OR (date = ? AND created_at < ?))
+               ORDER BY date DESC, created_at DESC
+               LIMIT ?`;
+      params = [afterDate, afterDate, afterCreatedAt, pageSize];
+    } else {
+      query = `SELECT * FROM journal_entries
+               WHERE is_deleted = 0
+               ORDER BY date DESC, created_at DESC
+               LIMIT ?`;
+      params = [pageSize];
+    }
+
+    const result = await db.getAllAsync(query, params);
+    return Promise.all((result as any[]).map(async (row: any) => this.mapJournalRow(row)));
+  }
+
+  /**
+   * Count non-deleted journal entries without decrypting any rows.
+   */
+  async getJournalEntryCount(): Promise<number> {
+    const db = await this.ensureReady();
+    const row = await db.getFirstAsync(
+      'SELECT COUNT(*) as cnt FROM journal_entries WHERE is_deleted = 0'
+    );
+    return (row as any)?.cnt ?? 0;
   }
 
   private async mapJournalRow(row: any): Promise<JournalEntry> {
@@ -1305,18 +1381,21 @@ class LocalDatabase {
   async hardDeleteAllData(): Promise<void> {
     const db = await this.ensureReady();
 
+    // Wrap all DELETEs in a single transaction so deletion is atomic.
+    // Either all tables are cleared, or none are (on crash / error).
     await db.execAsync(`
+      BEGIN TRANSACTION;
       DELETE FROM saved_charts;
       DELETE FROM journal_entries;
-      DELETE FROM cached_interpretations;
       DELETE FROM app_settings;
       DELETE FROM daily_check_ins;
       DELETE FROM insight_history;
       DELETE FROM relationship_charts;
       DELETE FROM sleep_entries;
       DELETE FROM migration_markers;
-      VACUUM;
+      COMMIT;
     `);
+    await db.execAsync('VACUUM;');
   }
 
   // Aliases
@@ -1371,7 +1450,7 @@ class LocalDatabase {
         entry.durationHours ?? null,
         entry.quality ?? null,
         encDreamText,
-        entry.dreamMood ?? null,
+        entry.dreamMood ? await FieldEncryptionService.encryptField(entry.dreamMood) : null,
         encDreamFeelings,
         encDreamMetadata,
         encNotes,
@@ -1400,7 +1479,9 @@ class LocalDatabase {
         dreamText: row.dream_text
           ? await FieldEncryptionService.decryptField(row.dream_text)
           : undefined,
-        dreamMood: row.dream_mood ?? undefined,
+        dreamMood: row.dream_mood
+          ? await FieldEncryptionService.decryptField(row.dream_mood)
+          : undefined,
         dreamFeelings: row.dream_feelings
           ? await FieldEncryptionService.decryptField(row.dream_feelings)
           : undefined,
@@ -1707,66 +1788,57 @@ class LocalDatabase {
     const encNote = checkIn.note ? await FieldEncryptionService.encryptField(checkIn.note) : null;
     const encWins = checkIn.wins ? await FieldEncryptionService.encryptField(checkIn.wins) : null;
     const encChallenges = checkIn.challenges ? await FieldEncryptionService.encryptField(checkIn.challenges) : null;
+    // Encrypt mental-health indicators — these are sensitive health data
+    const encMoodScore = await FieldEncryptionService.encryptField(String(checkIn.moodScore));
+    const encEnergyLevel = await FieldEncryptionService.encryptField(checkIn.energyLevel);
+    const encStressLevel = await FieldEncryptionService.encryptField(checkIn.stressLevel);
+    const encTags = await FieldEncryptionService.encryptField(JSON.stringify(checkIn.tags));
 
-    const existing = (await db.getFirstAsync(
-      'SELECT id FROM daily_check_ins WHERE date = ? AND chart_id = ? AND time_of_day = ?',
-      [checkIn.date, checkIn.chartId, checkIn.timeOfDay]
-    )) as any;
-
-    if (existing) {
-      await db.runAsync(
-        `UPDATE daily_check_ins SET
-         mood_score = ?, energy_level = ?, stress_level = ?, tags = ?, note = ?, wins = ?, challenges = ?,
-         moon_sign = ?, moon_house = ?, sun_house = ?, transit_events = ?, lunar_phase = ?, retrogrades = ?,
-         updated_at = ?
-         WHERE id = ?`,
-        [
-          checkIn.moodScore,
-          checkIn.energyLevel,
-          checkIn.stressLevel,
-          JSON.stringify(checkIn.tags),
-          encNote,
-          encWins,
-          encChallenges,
-          checkIn.moonSign,
-          checkIn.moonHouse,
-          checkIn.sunHouse,
-          JSON.stringify(checkIn.transitEvents),
-          checkIn.lunarPhase,
-          JSON.stringify(checkIn.retrogrades),
-          checkIn.updatedAt,
-          existing.id,
-        ]
-      );
-    } else {
-      await db.runAsync(
-        `INSERT INTO daily_check_ins
+    // Atomic UPSERT — eliminates the check-then-act race condition.
+    // Requires a UNIQUE index on (date, chart_id, time_of_day); the v12/v13
+    // migration already rebuilt the table with these columns.
+    await db.runAsync(
+      `INSERT INTO daily_check_ins
          (id, date, chart_id, time_of_day, mood_score, energy_level, stress_level, tags, note, wins, challenges,
           moon_sign, moon_house, sun_house, transit_events, lunar_phase, retrogrades, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          checkIn.id,
-          checkIn.date,
-          checkIn.chartId,
-          checkIn.timeOfDay,
-          checkIn.moodScore,
-          checkIn.energyLevel,
-          checkIn.stressLevel,
-          JSON.stringify(checkIn.tags),
-          encNote,
-          encWins,
-          encChallenges,
-          checkIn.moonSign,
-          checkIn.moonHouse,
-          checkIn.sunHouse,
-          JSON.stringify(checkIn.transitEvents),
-          checkIn.lunarPhase,
-          JSON.stringify(checkIn.retrogrades),
-          checkIn.createdAt,
-          checkIn.updatedAt,
-        ]
-      );
-    }
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(date, chart_id, time_of_day) DO UPDATE SET
+         mood_score = excluded.mood_score,
+         energy_level = excluded.energy_level,
+         stress_level = excluded.stress_level,
+         tags = excluded.tags,
+         note = excluded.note,
+         wins = excluded.wins,
+         challenges = excluded.challenges,
+         moon_sign = excluded.moon_sign,
+         moon_house = excluded.moon_house,
+         sun_house = excluded.sun_house,
+         transit_events = excluded.transit_events,
+         lunar_phase = excluded.lunar_phase,
+         retrogrades = excluded.retrogrades,
+         updated_at = excluded.updated_at`,
+      [
+        checkIn.id,
+        checkIn.date,
+        checkIn.chartId,
+        checkIn.timeOfDay,
+        encMoodScore,
+        encEnergyLevel,
+        encStressLevel,
+        encTags,
+        encNote,
+        encWins,
+        encChallenges,
+        checkIn.moonSign,
+        checkIn.moonHouse,
+        checkIn.sunHouse,
+        JSON.stringify(checkIn.transitEvents),
+        checkIn.lunarPhase,
+        JSON.stringify(checkIn.retrogrades),
+        checkIn.createdAt,
+        checkIn.updatedAt,
+      ]
+    );
   }
 
   async getCheckInByDate(date: string, chartId: string): Promise<DailyCheckIn | null> {
@@ -1819,19 +1891,70 @@ class LocalDatabase {
     return Promise.all((rows as any[]).map((row: any) => this.mapCheckInRow(row)));
   }
 
+  /**
+   * SQL-level date-range filter — avoids loading + decrypting all rows.
+   */
+  async getCheckInsInRange(
+    chartId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<DailyCheckIn[]> {
+    const db = await this.ensureReady();
+    const rows = await db.getAllAsync(
+      `SELECT * FROM daily_check_ins
+       WHERE chart_id = ? AND date >= ? AND date <= ?
+       ORDER BY date DESC, created_at DESC`,
+      [chartId, startDate, endDate],
+    );
+    return Promise.all((rows as any[]).map((row: any) => this.mapCheckInRow(row)));
+  }
+
+  /**
+   * Count check-ins without decrypting any rows.
+   */
+  async getCheckInCount(chartId: string): Promise<number> {
+    const db = await this.ensureReady();
+    const row = await db.getFirstAsync(
+      'SELECT COUNT(*) as cnt FROM daily_check_ins WHERE chart_id = ?',
+      [chartId],
+    );
+    return (row as any)?.cnt ?? 0;
+  }
+
   private async mapCheckInRow(row: any): Promise<DailyCheckIn> {
+    // Safely decrypt each field, guarding against DECRYPTION_FAILED_PLACEHOLDER
+    // which would crash Number() / JSON.parse() calls.
+    const decMoodScore = row.mood_score ? await FieldEncryptionService.decryptField(row.mood_score) : null;
+    const decEnergyLevel = row.energy_level ? await FieldEncryptionService.decryptField(row.energy_level) : null;
+    const decStressLevel = row.stress_level ? await FieldEncryptionService.decryptField(row.stress_level) : null;
+    const decTags = row.tags ? await FieldEncryptionService.decryptField(row.tags) : null;
+    const decNote = row.note ? await FieldEncryptionService.decryptField(row.note) : null;
+    const decWins = row.wins ? await FieldEncryptionService.decryptField(row.wins) : null;
+    const decChallenges = row.challenges ? await FieldEncryptionService.decryptField(row.challenges) : null;
+
+    const safeParseMood = (val: string | null): number => {
+      if (!val || isDecryptionFailure(val)) return 0;
+      const n = Number(val);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const safeParseArray = (val: string | null): any[] => {
+      if (!val || isDecryptionFailure(val)) return [];
+      try { return JSON.parse(val); } catch { return []; }
+    };
+
     return {
       id: row.id,
       date: row.date,
       chartId: row.chart_id,
       timeOfDay: row.time_of_day || 'morning',
-      moodScore: row.mood_score,
-      energyLevel: row.energy_level,
-      stressLevel: row.stress_level,
-      tags: JSON.parse(row.tags || '[]'),
-      note: row.note ? await FieldEncryptionService.decryptField(row.note) : row.note,
-      wins: row.wins ? await FieldEncryptionService.decryptField(row.wins) : row.wins,
-      challenges: row.challenges ? await FieldEncryptionService.decryptField(row.challenges) : row.challenges,
+      moodScore: safeParseMood(decMoodScore),
+      energyLevel: isDecryptionFailure(decEnergyLevel) ? '' : (decEnergyLevel ?? row.energy_level),
+      stressLevel: isDecryptionFailure(decStressLevel) ? '' : (decStressLevel ?? row.stress_level),
+      tags: safeParseArray(decTags),
+      note: isDecryptionFailure(decNote) ? '' : (decNote ?? row.note),
+      wins: isDecryptionFailure(decWins) ? '' : (decWins ?? row.wins),
+      challenges: isDecryptionFailure(decChallenges) ? '' : (decChallenges ?? row.challenges),
       moonSign: row.moon_sign,
       moonHouse: row.moon_house,
       sunHouse: row.sun_house,
