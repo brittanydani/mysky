@@ -967,6 +967,40 @@ export const DREAM_FEELINGS: DreamFeelingDef[] = [
     activation: 0.5,
     tier: 'negative',
   },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ✨ BALANCED / POSITIVE GAP FILLERS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'playful',
+    label: 'Playful',
+    primaryBranch: 'ventral_safety',
+    shadowTriggers: ['identity', 'transformation'],
+    attachmentSignal: 'secure',
+    valence: 1,
+    activation: 1,
+    tier: 'positive',
+  },
+  {
+    id: 'thoughtful',
+    label: 'Thoughtful',
+    primaryBranch: 'ventral_safety',
+    shadowTriggers: ['identity', 'responsibility'],
+    attachmentSignal: 'secure',
+    valence: 1,
+    activation: 0.5,
+    tier: 'positive',
+  },
+  {
+    id: 'neutral',
+    label: 'Neutral',
+    primaryBranch: 'mixed',
+    shadowTriggers: [],
+    attachmentSignal: 'secure',
+    valence: 0,
+    activation: 0,
+    tier: 'mixed',
+  },
 ];
 
 /** Quick lookup map: feeling id → DreamFeelingDef */
@@ -978,16 +1012,29 @@ for (const f of DREAM_FEELINGS) {
 // ─── Dream Metadata ───────────────────────────────────────────────────────────
 
 export type AwakenState =
-  | 'calm'       // woke up peaceful
-  | 'startled'   // jolted awake
-  | 'confused'   // disoriented upon waking
-  | 'unsettled'  // anxious, uneasy
-  | 'relieved'   // glad to be awake
-  | 'heavy';     // weighted, tired
+  | 'calm'        // woke up peaceful
+  | 'startled'    // jolted awake
+  | 'confused'    // disoriented upon waking
+  | 'unsettled'   // anxious, uneasy
+  | 'relieved'    // glad to be awake
+  | 'heavy'       // weighted, tired
+  | 'drained'     // exhausted, depleted
+  | 'neutral'     // neither good nor bad
+  | 'thoughtful'; // reflective, contemplative
+
+/** Overall theme tag for a dream */
+export type DreamTheme =
+  | 'adventure'
+  | 'conflict'
+  | 'connection'
+  | 'transformation'
+  | 'mystery';
 
 export interface DreamMetadata {
-  vividness: number;     // 1–5
-  lucidity: number;      // 1–5
+  vividness: number;        // 1–5
+  lucidity: number;         // 1–5
+  controlLevel: number;     // 1–5 — sense of control / empowerment
+  overallTheme?: DreamTheme; // optional overall theme tag
   awakenState: AwakenState;
   recurring: boolean;
 }
@@ -1042,6 +1089,17 @@ export interface DreamInterpretation {
   question: string;
   /** ISO timestamp */
   generatedAt: string;
+  /**
+   * Explicit imagery labels extracted from the dream text (Phase A).
+   * Only includes symbols whose keywords literally appear in the text.
+   * Never includes inferred or symbolically expanded labels.
+   */
+  explicitImagery: string[];
+  /**
+   * Interpretive themes derived from trigger analysis (Phase B).
+   * Clearly labeled as interpretation, not factual imagery claims.
+   */
+  interpretiveThemes: string[];
 }
 
 // ─── Engine Input ─────────────────────────────────────────────────────────────

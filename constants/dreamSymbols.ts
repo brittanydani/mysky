@@ -370,10 +370,10 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   stranger: 'stranger', figure: 'stranger', shadowy: 'stranger',
   unknown: 'stranger', presence: 'stranger',
 
-  // Death / endings
+  // Death / endings (only explicit death words — never infer from adjacent themes)
   death: 'death', dead: 'death', dying: 'death', died: 'death',
   funeral: 'death', grave: 'death', burial: 'death', killed: 'death',
-  murder: 'death', disappear: 'death', vanish: 'death',
+  murder: 'death',
 
   // Snakes
   snake: 'snake', snakes: 'snake', serpent: 'snake', serpents: 'snake',

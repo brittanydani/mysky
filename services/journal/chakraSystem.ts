@@ -240,6 +240,6 @@ export function getActiveChakras(houses: number[]): ChakraTag[] {
     if (c) counts[c] = (counts[c] ?? 0) + 1;
   }
   return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([tag]) => tag as ChakraTag);
 }

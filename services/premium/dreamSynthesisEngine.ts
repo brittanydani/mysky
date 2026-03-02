@@ -231,17 +231,18 @@ function blendTriggerScores(
   personality: PersonalityProcessingProfile | undefined,
   weights: typeof DEFAULT_WEIGHTS,
 ): TopTheme[] {
-  const textReliability = textSignals?.coverage ?? 0;
-  const checkInReliability = checkIn?.completeness ?? 0;
-  const historyReliability = history?.completeness ?? 0;
+  // Clamp reliability inputs to documented 0..1 range
+  const textReliability = clamp(textSignals?.coverage ?? 0, 0, 1);
+  const checkInReliability = clamp(checkIn?.completeness ?? 0, 0, 1);
+  const historyReliability = clamp(history?.completeness ?? 0, 0, 1);
 
   const themes: TopTheme[] = [];
 
   for (const trigger of ALL_TRIGGERS) {
-    const fScore = feelingTriggers[trigger] ?? 0;
-    const tScore = (textSignals?.triggers?.[trigger] ?? 0) * textReliability;
-    const cScore = (checkIn?.triggers?.[trigger] ?? 0) * checkInReliability;
-    const hScore = (history?.triggers?.[trigger] ?? 0) * historyReliability;
+    const fScore = clamp(feelingTriggers[trigger] ?? 0, 0, 1);
+    const tScore = clamp(textSignals?.triggers?.[trigger] ?? 0, 0, 1) * textReliability;
+    const cScore = clamp(checkIn?.triggers?.[trigger] ?? 0, 0, 1) * checkInReliability;
+    const hScore = clamp(history?.triggers?.[trigger] ?? 0, 0, 1) * historyReliability;
     const pScore = 0; // personality doesn't map directly to triggers
 
     const blended =
@@ -266,17 +267,20 @@ function blendTriggerScores(
     }
   }
 
-  // Boost recurring triggers
+  // Boost recurring triggers — attribute boost to history source
   if (history?.recurring) {
+    const recStr = clamp(history.recurrenceStrength, 0, 1);
     for (const t of themes) {
-      const histTrigger = history?.triggers?.[t.trigger] ?? 0;
+      const histTrigger = clamp(history?.triggers?.[t.trigger] ?? 0, 0, 1);
       if (histTrigger > 0.3) {
-        t.score = clamp(t.score + 0.05 * history.recurrenceStrength, 0, 1);
+        const boost = 0.05 * recStr;
+        t.score = clamp(t.score + boost, 0, 1);
+        t.sources.history += boost;
       }
     }
   }
 
-  return themes.sort((a, b) => b.score - a.score);
+  return themes.sort((a, b) => b.score - a.score || a.trigger.localeCompare(b.trigger));
 }
 
 // ─── Dominant Profile Builder ─────────────────────────────────────────────────
@@ -319,12 +323,13 @@ function buildDominantProfiles(
 function computeConfidence(
   feelings: SelectedFeeling[],
   textSignals: TextSignalsInput | undefined,
+  checkInSignals: CheckInSignalsInput | undefined,
   topThemes: TopTheme[],
 ): ConfidenceResult {
   const reasons: string[] = [];
   let score = 0;
 
-  // Feeling signal quality
+  // ── Feeling signal quality (max +0.30) ──
   const activeFeelings = feelings.filter(f => (f.intensity ?? 0) > 0);
   if (activeFeelings.length >= 3) {
     score += 0.30;
@@ -336,7 +341,7 @@ function computeConfidence(
     reasons.push('No feelings selected');
   }
 
-  // Text signal quality
+  // ── Text signal quality (max +0.25) ──
   const textCov = textSignals?.coverage ?? 0;
   if (textCov >= 0.5) {
     score += 0.25;
@@ -344,10 +349,24 @@ function computeConfidence(
   } else if (textCov > 0.15) {
     score += 0.12;
     reasons.push('Some text signal');
+  } else {
+    reasons.push('No text signal');
   }
 
-  // Theme coherence: do top themes agree?
-  if (topThemes.length >= 2) {
+  // ── Check-in signal quality (max +0.10) ──
+  const checkInCom = checkInSignals?.completeness ?? 0;
+  if (checkInCom >= 0.5) {
+    score += 0.10;
+    reasons.push('Recent check-in data available');
+  } else if (checkInCom > 0) {
+    score += 0.05;
+    reasons.push('Partial check-in data');
+  } else {
+    reasons.push('No check-in data');
+  }
+
+  // ── Theme coherence (max +0.20) ──
+  if (topThemes.length >= 1) {
     const topScore = topThemes[0]?.score ?? 0;
     if (topScore >= 0.4) {
       score += 0.20;
@@ -358,7 +377,7 @@ function computeConfidence(
     }
   }
 
-  // Multi-source agreement
+  // ── Multi-source agreement (max +0.15) ──
   const topTheme = topThemes[0];
   if (topTheme) {
     const sourceCount = [
@@ -376,6 +395,7 @@ function computeConfidence(
     }
   }
 
+  // Max achievable: 0.30 + 0.25 + 0.10 + 0.20 + 0.15 = 1.00
   score = clamp(score, 0, 1);
 
   const level: ConfidenceResult['level'] =
@@ -531,7 +551,7 @@ export function runDreamSynthesisEngine(input: EngineInput): EngineOutput {
   const nervousConflict = detectNervousSystemConflict(dominant.nervousSystemProfile);
 
   // 6) Compute confidence
-  const confidence = computeConfidence(selectedFeelings, textSignals, topThemes);
+  const confidence = computeConfidence(selectedFeelings, textSignals, checkInSignals, topThemes);
 
   // 7) Compute pattern flags
   const patternFlags = computePatternFlags(topThemes, historySignals, ambivalence, nervousConflict);
@@ -546,3 +566,18 @@ export function runDreamSynthesisEngine(input: EngineInput): EngineOutput {
     weights,
   };
 }
+
+// ─── Test-only exports ────────────────────────────────────────────────────────
+export const __test = {
+  clamp,
+  normalize,
+  scoreFeelings,
+  blendTriggerScores,
+  buildDominantProfiles,
+  computeConfidence,
+  computePatternFlags,
+  DEFAULT_WEIGHTS,
+  ALL_TRIGGERS,
+  ALL_NERVOUS_BRANCHES,
+  ALL_ATTACHMENT_STYLES,
+};

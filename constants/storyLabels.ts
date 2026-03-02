@@ -87,14 +87,23 @@ const SIGN_LABELS: Record<string, string> = {
 // (Moon phases, nodes, chart terminology, retrograde — none appear as verbs
 //  in the way that trine/sextile/square do.)
 const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
-  // Moon-compound phrases (must precede Moon → Emotional body single-word replacement)
-  [/\bMoon phase\b/gi, 'Emotional cycle'],
-  [/\bFull Moon\b/g, 'Heightened awareness phase'],
-  [/\bfull moon\b/g, 'heightened awareness phase'],
-  [/\bNew Moon\b/g, 'Initiation phase'],
-  [/\bnew moon\b/g, 'initiation phase'],
-  [/\bWaxing [Mm]oon\b/g, 'Building phase'],
-  [/\bWaning [Mm]oon\b/g, 'Integration phase'],
+  // Moon phase names are KEPT as-is — they are observable astronomy, not astrology.
+  // The following prevent the standalone Moon→Emotional body replacement from
+  // mangling moon-phase compound phrases that should pass through untouched.
+  [/\bMoon phase\b/gi, 'Moon phase'],       // identity – protect from Moon→Emotional body
+  [/\bFull Moon\b/g, 'Full Moon'],
+  [/\bfull moon\b/g, 'full moon'],
+  [/\bNew Moon\b/g, 'New Moon'],
+  [/\bnew moon\b/g, 'new moon'],
+  [/\bWaxing [Mm]oon\b/g, 'Waxing Moon'],
+  [/\bWaning [Mm]oon\b/g, 'Waning Moon'],
+  [/\bFirst Quarter\b/g, 'First Quarter'],
+  [/\bLast Quarter\b/g, 'Last Quarter'],
+  [/\bWaxing Crescent\b/g, 'Waxing Crescent'],
+  [/\bWaning Crescent\b/g, 'Waning Crescent'],
+  [/\bWaxing Gibbous\b/g, 'Waxing Gibbous'],
+  [/\bWaning Gibbous\b/g, 'Waning Gibbous'],
+  [/\bDark Moon\b/gi, 'Dark Moon'],
 
   // Node / sign compound phrases (must precede single-word planet/sign replacement)
   [/\bNorth Node's\b/gi, "Growth direction's"],
@@ -136,6 +145,49 @@ const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
   [/\bdestiny\b/g, 'direction'],
   [/\bFate\b/g, 'Pattern'],
   [/\bfate\b/g, 'pattern'],
+
+  // Broad cosmic / astrological terms (catch-all for daily context)
+  [/\bcosmic weather\b/gi, 'energy weather'],
+  [/\bcosmic blueprint\b/gi, 'personal blueprint'],
+  [/\bcosmic forecast\b/gi, 'daily outlook'],
+  [/\bcosmic fuel\b/gi, 'inner fuel'],
+  [/\bcosmic debrief\b/gi, 'evening debrief'],
+  [/\bcosmic story\b/gi, 'personal story'],
+  [/\bcosmic calm\b/gi, 'deep calm'],
+  [/\bcosmic mirror\b/gi, 'mirror'],
+  [/\bcosmic bardo\b/gi, 'transition space'],
+  [/\bcosmic medicine\b/gi, 'inner medicine'],
+  [/\bcosmic view\b/gi, 'wider perspective'],
+  [/\bcosmic mood\b/gi, 'overall mood'],
+  [/\bcosmic equilibrium\b/gi, 'steady balance'],
+  [/\bcosmic message\b/gi, 'inner message'],
+  [/\bcosmic insight\b/gi, 'daily insight'],
+  [/\bcosmic energy\b/gi, 'deep energy'],
+  [/\bcosmic pressure\b/gi, 'inner pressure'],
+  [/\bcosmic currents\b/gi, 'deep currents'],
+  [/\bcosmic intensity\b/gi, 'emotional intensity'],
+  [/\bcosmic activity\b/gi, 'underlying activity'],
+  [/\bcosmic\b/gi, 'deep'],
+  [/\bthe cosmos\b/gi, 'the day'],
+  [/\bthe stars\b/gi, 'the day'],
+  [/\bthe sky\b/gi, 'the day'],
+  [/\bthe planets\b/gi, 'the currents'],
+  [/\bcelestial\b/gi, 'inner'],
+  [/\bplanetary\b/gi, 'underlying'],
+  [/\bastral\b/gi, 'inner'],
+  [/\bdivine timing\b/gi, 'natural timing'],
+  [/\bfire sign\b/gi, 'active type'],
+  [/\bearth sign\b/gi, 'grounded type'],
+  [/\bair sign\b/gi, 'mental type'],
+  [/\bwater sign\b/gi, 'feeling type'],
+  [/\bfire signs\b/gi, 'active types'],
+  [/\bearth signs\b/gi, 'grounded types'],
+  [/\bair signs\b/gi, 'mental types'],
+  [/\bwater signs\b/gi, 'feeling types'],
+  [/\bmy chart\b/gi, 'my personal framework'],
+  [/\byour placements\b/gi, 'your inner wiring'],
+  [/\bthe universe\b/gi, 'life'],
+  [/\bzodiac\b/gi, 'archetypal'],
 ];
 
 // Aspect terms: safe as nouns in essay text ("a trine between…") but break as

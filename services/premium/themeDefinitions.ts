@@ -140,12 +140,12 @@ function buildVariants(def: TriggerDefinition): ThemeDefinition[] {
       meaning: def.interpretationFrame,
       evidenceHints: def.commonMotifs.slice(0, 5),
       reflectionQuestions: [
-        `What part of "${def.label.toLowerCase()}" resonates most with your current life?`,
-        `If this dream is pointing to ${subFirst}, what might need attention?`,
-        `What would it mean to sit with the feeling of ${feelsShort} without fixing it?`,
+        `Where in your waking life does this feeling of ${subFirst} show up?`,
+        `If something in you is pointing to ${subFirst}, what might it be asking for?`,
+        `What would it mean to let yourself feel ${feelsShort} without needing to fix it?`,
       ],
       integrationPrompts: [
-        `Notice what comes up when you sit with the word "${def.label.toLowerCase()}." No need to fix — just observe.`,
+        `Notice what comes up when you sit with the word "${def.label.toLowerCase()}." No need to solve anything \u2014 just notice.`,
       ],
       nervousPreferred: def.typicalNervousSystem,
       attachmentPreferred: def.typicalAttachment,
@@ -163,13 +163,13 @@ function buildVariants(def: TriggerDefinition): ThemeDefinition[] {
         `physical sensations like ${feelsShort}`,
       ],
       reflectionQuestions: [
-        `Where in your body did you feel the ${def.label.toLowerCase()} theme most?`,
-        `What would your nervous system need to feel safer right now?`,
+        `Where in your body did you feel this most?`,
+        `What would the part of you holding this need in order to feel safer?`,
         `When you think of "${def.label.toLowerCase()}," does your body tense, sink, or go still?`,
       ],
       integrationPrompts: [
         `Place a hand on your chest. Take three slow breaths. Notice what shifts.`,
-        `Scan from head to feet — where do you feel this theme living?`,
+        `Scan from head to feet \u2014 where does this theme live in your body?`,
       ],
       nervousPreferred: def.typicalNervousSystem,
       attachmentPreferred: [],
@@ -187,12 +187,12 @@ function buildVariants(def: TriggerDefinition): ThemeDefinition[] {
         `relational cues: ${feelsLong}`,
       ],
       reflectionQuestions: [
-        `Who in your life does this ${def.label.toLowerCase()} theme remind you of?`,
-        `What relational pattern might this dream be pointing to?`,
-        `What would "enough" look like in the relationship this theme evokes?`,
+        `Who in your life does this theme bring to mind?`,
+        `What relational pattern might a part of you be trying to understand here?`,
+        `What would \"enough\" look like in the relationship this brings up?`,
       ],
       integrationPrompts: [
-        `Consider one relationship where this theme shows up. What would "enough" look like there?`,
+        `Think of one relationship where this shows up. What would \"enough\" look like there?`,
       ],
       nervousPreferred: [],
       attachmentPreferred: def.typicalAttachment,
@@ -301,7 +301,7 @@ export function selectThemesForDream(args: {
   }
 
   // Sort by score, then deduplicate: at most 1 variant per trigger
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort((a, b) => b.score - a.score || a.theme.id.localeCompare(b.theme.id));
 
   const usedTriggers = new Set<ShadowTrigger>();
   const selected: ScoredTheme[] = [];
@@ -329,7 +329,7 @@ export function selectThemesForDream(args: {
         matchedTriggers.push({ trigger: ts.trigger, score: ts.score });
       }
     }
-    matchedTriggers.sort((a, b) => b.score - a.score);
+    matchedTriggers.sort((a, b) => b.score - a.score || a.trigger.localeCompare(b.trigger));
 
     return {
       id: x.theme.id,

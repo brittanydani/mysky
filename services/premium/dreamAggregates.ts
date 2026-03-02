@@ -117,7 +117,7 @@ export function computeDreamAggregates(
   // Build shadow heatmap — sorted descending
   const shadowHeatmap = Object.entries(triggerWeights)
     .filter(([, w]) => w > 0)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([trigger, weight]) => ({ trigger: trigger as ShadowTrigger, weight }));
 
   // Dominant branch + attachment
@@ -127,7 +127,7 @@ export function computeDreamAggregates(
   // Top 2–3 feelings by intensity
   const dominantFeelings = [...feelings]
     .filter(f => f.intensity > 0)
-    .sort((a, b) => b.intensity - a.intensity)
+    .sort((a, b) => b.intensity - a.intensity || a.id.localeCompare(b.id))
     .slice(0, 3);
 
   return {
@@ -216,7 +216,7 @@ export function computeDreamPatterns(
 
   const coOccurringPairs: [string, string][] = Object.entries(pairCounts)
     .filter(([, count]) => count >= 2)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 3)
     .map(([key]) => key.split('|') as [string, string]);
 

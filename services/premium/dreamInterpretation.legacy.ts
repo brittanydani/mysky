@@ -62,7 +62,7 @@ function analyzeMood(checkIns: DailyCheckIn[]): MoodContext {
     }
   }
   const dominantTags = Object.entries(tagCounts)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 3)
     .map(([tag]) => tag);
 
@@ -148,7 +148,7 @@ function journalMoodPhrase(entries: JournalEntry[]): string | null {
   for (const e of recent) {
     moodCounts[e.mood] = (moodCounts[e.mood] ?? 0) + 1;
   }
-  const top = Object.entries(moodCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const top = Object.entries(moodCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
 
   const JOURNAL_MOOD_MAP: Record<string, string> = {
     calm: 'a quieter internal tone',

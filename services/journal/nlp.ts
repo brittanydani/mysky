@@ -263,7 +263,7 @@ export function extractKeywords(text: string): KeywordResult {
     : scored;
 
   // Sort by score descending, take top 8
-  filtered.sort((a, b) => b.score - a.score);
+  filtered.sort((a, b) => b.score - a.score || a.word.localeCompare(b.word));
   const top = filtered.slice(0, 8);
 
   return {

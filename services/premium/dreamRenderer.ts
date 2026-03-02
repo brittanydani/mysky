@@ -49,7 +49,7 @@ function confidenceLabel(score: number): "Low" | "Medium" | "High" {
 function formatFeelings(selected: SelectedFeeling[], max = 3): string {
   const sorted = selected
     .slice()
-    .sort((a, b) => (b.intensity ?? 0) - (a.intensity ?? 0))
+    .sort((a, b) => (b.intensity ?? 0) - (a.intensity ?? 0) || a.id.localeCompare(b.id))
     .slice(0, max);
 
   if (!sorted.length) return "mixed or unclear emotions";
@@ -61,7 +61,7 @@ function dominantNervousSystem(engine: EngineOutput): string {
   const entries = Object.entries(engine.dominant.nervousSystemProfile);
   if (!entries.length) return "a mixed nervous system state";
 
-  const top = entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0];
+  const top = entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0) || a[0].localeCompare(b[0]))[0];
   const key = top?.[0];
 
   switch (key) {

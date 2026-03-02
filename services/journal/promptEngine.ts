@@ -135,7 +135,7 @@ function getActiveTriggers(chart: NatalChart, date: Date = new Date()): ActiveTr
     // Dominant element
     if (patterns.elementBalance) {
       const counts = patterns.elementBalance.counts;
-      const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      const entries = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
       if (entries.length > 0 && entries[0][1] >= 4) {
         triggers.dominantElement = entries[0][0].toLowerCase();
       }
@@ -250,7 +250,7 @@ function selectPrompts(triggers: ActiveTriggers, date: Date): JournalPromptEntry
   }));
 
   // Sort by score descending
-  scored.sort((a, b) => b.score - a.score);
+  scored.sort((a, b) => b.score - a.score || a.prompt.id.localeCompare(b.prompt.id));
 
   // Take top 20 candidates
   const top = scored.slice(0, 20);

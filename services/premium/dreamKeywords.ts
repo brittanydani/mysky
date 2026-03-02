@@ -772,13 +772,13 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   {
     id: 'knife',
     keywords: ['knife', 'blade', 'sharp', 'cutting', 'stabbed'],
-    meaning: 'A knife may represent the need to cut something away, aggression, fear, a boundary that needs to be made, or something that can both harm and heal.',
+    meaning: 'The image of a blade or knife often represents perceived threat \u2014 whether external or internal. It can reflect fear of being hurt, a boundary that needs to exist, or something sharp that has not yet been addressed.',
     category: 'objects',
   },
   {
     id: 'gun',
     keywords: ['gun', 'pistol', 'rifle', 'shot', 'shooting', 'bullet', 'gunshot'],
-    meaning: 'Guns in dreams often reflect power dynamics, fear, aggression, feeling targeted, or high-stakes situations where control is at play.',
+    meaning: 'The image of a weapon often represents perceived threat \u2014 whether external or internal. It can reflect fear of consequences, exposure, vulnerability, or a situation where you feel the stakes are high.',
     category: 'objects',
   },
   {
@@ -977,7 +977,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   },
   {
     id: 'funeral_dream',
-    keywords: ['funeral', 'wake', 'casket', 'coffin', 'mourning', 'eulogy'],
+    keywords: ['funeral', 'funeral wake', 'casket', 'coffin', 'mourning', 'eulogy', 'memorial service'],
     meaning: 'A funeral often represents the ending of something \u2014 a belief, a phase, a relationship \u2014 and the grief that comes with letting go.',
     category: 'scenarios',
   },
@@ -1352,7 +1352,87 @@ for (const entry of DREAM_KEYWORDS) {
 
 /** All unique keywords sorted longest-first (for greedy matching) */
 const _allKeywordsSorted: string[] = Array.from(_keywordIndex.keys())
-  .sort((a, b) => b.length - a.length);
+  .sort((a, b) => b.length - a.length || a.localeCompare(b));
+
+// ─── Ambiguous Keyword Exclusion Rules ────────────────────────────────────────
+
+/**
+ * Words that are highly ambiguous in dream journal context.
+ * These single words commonly appear with an unrelated meaning.
+ *
+ * Each key is a keyword, and the value is a regex pattern that, if it matches
+ * nearby text, DISQUALIFIES the keyword match (= the word was used in its
+ * common non-symbolic sense).
+ *
+ * This prevents hallucinated imagery: e.g., "I woke up scared" should NOT
+ * match the funeral-wake keyword.
+ */
+const AMBIGUOUS_KEYWORD_DISQUALIFIERS: Record<string, RegExp> = {
+  // "wake" almost always means "waking up" in dream journals, not a funeral wake
+  wake: /\b(woke\s+up|wake\s+up|waking\s+up|when\s+i\s+woke|after\s+waking|before\s+waking|i\s+wake|didn't\s+wake|couldn't\s+wake|tried\s+to\s+wake)\b/i,
+  // "late" is often used as "I was late" (time), not death-related
+  late: /\b(was\s+late|too\s+late|running\s+late|getting\s+late|it\s+was\s+late|came\s+late)\b/i,
+  // "cell" is often a phone, not a prison cell
+  cell: /\b(cell\s*phone|my\s+cell|on\s+my\s+cell)\b/i,
+  // "moving" is often about physical motion, not relocation
+  moving: /\b(moving\s+(fast|slow|quick|toward|away|through|forward|backward))\b/i,
+  // "shot" can be a photograph or a chance, not just gunfire
+  shot: /\b(took\s+a\s+shot|got\s+a\s+shot|had\s+a\s+shot|one\s+shot)\b/i,
+};
+
+/**
+ * Minimum confidence threshold for accepting a keyword match.
+ *
+ * Multi-word phrases are inherently higher confidence (≥ 0.9).
+ * Single words score lower (0.6) and can be disqualified by context.
+ * Very short single words (≤ 3 chars) get the lowest base confidence (0.4)
+ * UNLESS they are in the high-specificity set below.
+ */
+const CONFIDENCE_THRESHOLD = 0.5;
+
+/**
+ * Short words (≤ 3 chars) that are highly specific and unambiguous as dream
+ * imagery. These get a confidence boost to pass the threshold despite length.
+ */
+const HIGH_SPECIFICITY_SHORT_WORDS = new Set([
+  'gun', 'dog', 'cat', 'owl', 'car', 'bus', 'fog', 'axe', 'war', 'sea',
+  'rat', 'bat', 'mud', 'ice', 'egg', 'map', 'dam', 'den', 'pit', 'web',
+]);
+
+/** Compute match confidence for a keyword hit based on lexical properties. */
+function computeKeywordConfidence(
+  keyword: string,
+  dreamTextLower: string,
+  matchIndex: number,
+): number {
+  const wordCount = keyword.split(/\s+/).length;
+
+  // Multi-word phrases have high inherent confidence (direct lexical match)
+  if (wordCount >= 3) return 1.0;
+  if (wordCount === 2) return 0.9;
+
+  // Single-word confidence depends on word length and context
+  let confidence: number;
+  if (keyword.length <= 3) {
+    // Short words are risky, but some are unambiguous nouns
+    confidence = HIGH_SPECIFICITY_SHORT_WORDS.has(keyword) ? 0.7 : 0.4;
+  } else {
+    confidence = 0.6;
+  }
+
+  // Boost if the keyword appears more than once in the text
+  const secondOccurrence = dreamTextLower.indexOf(keyword, matchIndex + keyword.length);
+  if (secondOccurrence !== -1) confidence += 0.15;
+
+  // Check disqualifier patterns — if the word is used in its common
+  // non-symbolic sense, reduce confidence to zero
+  const disqualifier = AMBIGUOUS_KEYWORD_DISQUALIFIERS[keyword];
+  if (disqualifier && disqualifier.test(dreamTextLower)) {
+    confidence = 0;
+  }
+
+  return Math.min(confidence, 1.0);
+}
 
 // ─── Matcher ──────────────────────────────────────────────────────────────────
 
@@ -1362,10 +1442,19 @@ export type KeywordMatch = {
   matchedKeyword: string;
   /** Start index in the lowercased text */
   index: number;
+  /** Match confidence 0..1 — only matches ≥ CONFIDENCE_THRESHOLD are returned */
+  confidence: number;
 };
 
 /**
  * Scan dream text for known symbols/keywords.
+ *
+ * STRICT EXTRACTION RULES:
+ * - Only returns symbols whose keywords appear LITERALLY in the dream text
+ * - Never infers symbolic associations (e.g., "fear of dying" ≠ "funeral")
+ * - Ambiguous single words are validated against disqualifier patterns
+ * - Matches below the confidence threshold are excluded
+ *
  * Returns matched entries, deduplicated by entry id (first match wins).
  * Sorted by position in text (earliest mention first).
  */
@@ -1392,11 +1481,16 @@ export function matchDreamKeywords(dreamText: string): KeywordMatch[] {
         /[\s,.!?;:\-\u2014()"']/.test(after) || idx + kw.length === lower.length;
 
       if (isWordBoundary && isWordBoundaryAfter) {
-        const entries = _keywordIndex.get(kw) ?? [];
-        for (const entry of entries) {
-          if (!seen.has(entry.id)) {
-            seen.add(entry.id);
-            matches.push({ entry, matchedKeyword: kw, index: idx });
+        // Compute confidence and apply threshold
+        const confidence = computeKeywordConfidence(kw, lower, idx);
+
+        if (confidence >= CONFIDENCE_THRESHOLD) {
+          const entries = _keywordIndex.get(kw) ?? [];
+          for (const entry of entries) {
+            if (!seen.has(entry.id)) {
+              seen.add(entry.id);
+              matches.push({ entry, matchedKeyword: kw, index: idx, confidence });
+            }
           }
         }
       }

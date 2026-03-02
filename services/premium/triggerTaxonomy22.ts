@@ -269,14 +269,14 @@ export const TRIGGER_TAXONOMY_22: Record<ShadowTrigger, TriggerDefinition> = {
       "natural disasters",
       "dark unknown presence",
     ],
-    commonFeels: ["terrified", "hyperalert", "urgent", "panicked", "ready to bolt"],
+    commonFeels: ["terrified", "alert", "urgent", "panicked", "ready to bolt"],
     defaultValence: "negative",
     defaultActivation: "high",
     typicalAttachment: ["disorganized"],
     typicalNervousSystem: ["flight", "fight", "freeze"],
-    subThemes: ["hypervigilance", "threat bias", "unsafe environment", "anticipation", "startle response"],
+    subThemes: ["watchfulness", "sensing threat", "unsafe environment", "anticipation", "feeling braced"],
     interpretationFrame:
-      "May reflect stress load, vigilance patterns, or emotional danger cues that your system treats as urgent.",
+      "May reflect something your nervous system is tracking \u2014 a real or perceived sense of threat that hasn't been fully processed. This can show up as stress, vigilance, or feeling on guard.",
   },
 
   intimacy: {
