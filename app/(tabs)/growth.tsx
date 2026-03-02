@@ -21,6 +21,7 @@ import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import { localDb } from '../../services/storage/localDb';
 import { DailyCheckIn } from '../../services/patterns/types';
+import { TAG_LABELS } from '../../utils/tagAnalytics';
 import { logger } from '../../utils/logger';
 
 // ── Rotating daily reflection prompts (non-astrological) ──
@@ -221,8 +222,8 @@ export default function ReflectScreen() {
     const lowAvg = avg(lowEnergyDays);
     if (highAvg != null && lowAvg != null && Math.abs(highAvg - lowAvg) >= 0.4) {
       return highAvg > lowAvg
-        ? `On high-energy days your mood averages ${highAvg.toFixed(1)} — vs ${lowAvg.toFixed(1)} on low-energy days.`
-        : `Your mood stays steady even on low-energy days (${lowAvg.toFixed(1)} vs ${highAvg.toFixed(1)} on high-energy days).`;
+        ? `On your high-energy days, your mood averages ${highAvg.toFixed(1)} — ${(highAvg - lowAvg).toFixed(1)} points higher than on low-energy days. For you, energy and emotional wellbeing move together.`
+        : `Your mood holds steady even on low-energy days (${lowAvg.toFixed(1)} vs ${highAvg.toFixed(1)} on high-energy days) — you're more resilient than the numbers might suggest.`;
     }
     return null;
   }, [checkIns]);
@@ -249,6 +250,36 @@ export default function ReflectScreen() {
       }
     });
     return bestDay >= 0 ? dayNames[bestDay] : null;
+  }, [checkIns]);
+
+  // Which tags correlate with the user's better vs worse days (their own data)
+  const tagCorrelation = useMemo(() => {
+    if (checkIns.length < 7) return null;
+    const allMoods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
+    if (allMoods.length === 0) return null;
+    const baseline = allMoods.reduce((a, b) => a + b, 0) / allMoods.length;
+
+    const tagMap: Record<string, number[]> = {};
+    checkIns.forEach(c => {
+      if (c.moodScore == null) return;
+      (c.tags ?? []).forEach(tag => {
+        if (!tagMap[tag]) tagMap[tag] = [];
+        tagMap[tag].push(c.moodScore!);
+      });
+    });
+
+    const THRESHOLD = 0.6;
+    const restores: string[] = [];
+    const drains: string[] = [];
+    Object.entries(tagMap).forEach(([tag, moods]) => {
+      if (moods.length < 2) return;
+      const avg = moods.reduce((a, b) => a + b, 0) / moods.length;
+      const label = TAG_LABELS[tag] ?? tag.replace(/_/g, ' ');
+      if (avg >= baseline + THRESHOLD) restores.push(label.toLowerCase());
+      else if (avg <= baseline - THRESHOLD) drains.push(label.toLowerCase());
+    });
+
+    return { restores: restores.slice(0, 3), drains: drains.slice(0, 3) };
   }, [checkIns]);
 
   const trendIcon = (dir: 'up' | 'down' | 'flat', inverse = false) => {
@@ -486,10 +517,10 @@ export default function ReflectScreen() {
                         <View style={styles.correlationDot} />
                         <Text style={styles.correlationText}>
                           {moodTrend === 'up'
-                            ? 'Your mood has been climbing — something is working.'
+                            ? 'Your mood has been moving upward — something is landing differently for you, even if you can\'t quite name it yet.'
                             : moodTrend === 'down'
-                            ? 'Mood has dipped this week — a good time for gentle reflection.'
-                            : 'Your mood has been holding steady.'}
+                            ? 'Something has been pulling at your mood this week. That\'s worth sitting with, not rushing past.'
+                            : 'Your mood has been holding steady — that kind of groundedness is its own quiet accomplishment.'}
                         </Text>
                       </View>
 
@@ -497,10 +528,10 @@ export default function ReflectScreen() {
                         <View style={styles.correlationDot} />
                         <Text style={styles.correlationText}>
                           {stressTrend === 'down'
-                            ? 'Stress is easing — keep doing what you\'re doing.'
+                            ? 'The pressure has been easing. Whatever you\'ve been choosing differently, it\'s showing.'
                             : stressTrend === 'up'
-                            ? 'Stress is rising — consider a lighter day or journaling it out.'
-                            : 'Stress levels are stable.'}
+                            ? 'Stress has been building. Worth asking what\'s actually being required of you right now — and whether it\'s all yours to carry.'
+                            : 'Stress is holding at a consistent level. Not escalating, but not releasing either — that\'s information worth noticing.'}
                         </Text>
                       </View>
 
