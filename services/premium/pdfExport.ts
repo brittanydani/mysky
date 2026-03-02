@@ -202,13 +202,59 @@ function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
 <title>${esc(chartName)} — MySky</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── Starfield background ── */
 body {
   font-family: Georgia, 'Times New Roman', serif;
-  background: #0c0c14;
-  color: #e8e0d0;
-  padding: 40px 48px;
+  background: #0D1421;
+  color: #FFFFFF;
+  padding: 0;
   font-size: 14px;
   line-height: 1.6;
+  position: relative;
+  min-height: 100vh;
+}
+.star-layer {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(1.2px 1.2px at 12% 8%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 25% 18%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 42% 5%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 58% 22%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.3px 1.3px at 73% 12%, rgba(255,255,255,0.65), transparent),
+    radial-gradient(1px 1px at 88% 6%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1.1px 1.1px at 95% 20%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 8% 35%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.4px 1.4px at 33% 42%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 50% 38%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.2px 1.2px at 67% 45%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1px 1px at 82% 32%, rgba(255,255,255,0.65), transparent),
+    radial-gradient(1.3px 1.3px at 15% 55%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 28% 62%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 45% 58%, rgba(201,169,98,0.5), transparent),
+    radial-gradient(1px 1px at 62% 65%, rgba(255,255,255,0.45), transparent),
+    radial-gradient(1.1px 1.1px at 78% 52%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 92% 60%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.2px 1.2px at 5% 75%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1px 1px at 20% 82%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.4px 1.4px at 38% 78%, rgba(255,255,255,0.65), transparent),
+    radial-gradient(1px 1px at 55% 85%, rgba(201,169,98,0.45), transparent),
+    radial-gradient(1.3px 1.3px at 70% 72%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.1px 1.1px at 10% 92%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 30% 95%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1.5px 1.5px at 48% 90%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 65% 97%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1.2px 1.2px at 80% 88%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(1px 1px at 93% 94%, rgba(255,255,255,0.5), transparent);
+}
+.content-wrap {
+  position: relative;
+  z-index: 1;
+  padding: 40px 48px;
 }
 
 /* ── Cover ── */
@@ -228,13 +274,13 @@ body {
 .cover-title {
   font-size: 34px;
   font-weight: 700;
-  color: #e8e0d0;
+  color: #FFFFFF;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
 }
 .cover-subtitle {
   font-size: 14px;
-  color: rgba(232,224,208,0.45);
+  color: rgba(255,255,255,0.5);
   font-style: italic;
   margin-bottom: 32px;
 }
@@ -243,7 +289,7 @@ body {
   border: 1px solid rgba(201,169,98,0.2);
   border-radius: 12px;
   padding: 18px 32px;
-  background: rgba(201,169,98,0.04);
+  background: rgba(30,45,71,0.6);
   text-align: left;
 }
 .birth-row { display: flex; gap: 20px; margin-bottom: 5px; }
@@ -257,7 +303,7 @@ body {
   flex-shrink: 0;
   padding-top: 1px;
 }
-.birth-value { font-size: 13px; color: #e0d8c8; }
+.birth-value { font-size: 13px; color: rgba(255,255,255,0.7); }
 
 /* ── Big Three ── */
 .big-three {
@@ -271,7 +317,7 @@ body {
   border: 1px solid rgba(201,169,98,0.18);
   border-radius: 10px;
   padding: 18px 10px;
-  background: rgba(201,169,98,0.04);
+  background: rgba(30,45,71,0.5);
 }
 .bt-label {
   font-size: 10px;
@@ -282,12 +328,12 @@ body {
 }
 .bt-sign {
   font-size: 18px;
-  color: #c9a962;
+  color: #C9A962;
   margin-bottom: 4px;
 }
 .bt-house {
   font-size: 11px;
-  color: rgba(232,224,208,0.4);
+  color: rgba(255,255,255,0.4);
 }
 
 /* ── Sections ── */
@@ -295,7 +341,7 @@ body {
 .section-title {
   font-size: 17px;
   font-weight: 600;
-  color: #c9a962;
+  color: #C9A962;
   letter-spacing: 0.3px;
   margin-bottom: 14px;
   padding-bottom: 8px;
@@ -304,7 +350,7 @@ body {
 
 /* ── Tables ── */
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead tr { background: rgba(201,169,98,0.07); }
+thead tr { background: rgba(26,39,64,0.7); }
 th {
   text-align: left;
   padding: 7px 11px;
@@ -316,7 +362,7 @@ th {
 }
 td {
   padding: 7px 11px;
-  color: #d0c8b8;
+  color: rgba(255,255,255,0.7);
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 tr:last-child td { border-bottom: none; }
@@ -329,18 +375,18 @@ tr:last-child td { border-bottom: none; }
   letter-spacing: 0.3px;
   margin: 18px 0 8px;
 }
-.aspect-group.harmonious { color: #7ab88a; }
-.aspect-group.challenging { color: #c07878; }
-.aspect-group.neutral { color: #8090b0; }
+.aspect-group.harmonious { color: #6EBF8B; }
+.aspect-group.challenging { color: #E07A7A; }
+.aspect-group.neutral { color: #8BC4E8; }
 .aspect-sym { font-size: 15px; }
-.aspect-name { font-size: 12px; color: rgba(232,224,208,0.6); }
-.empty-note { color: rgba(232,224,208,0.35); font-style: italic; font-size: 13px; }
+.aspect-name { font-size: 12px; color: rgba(255,255,255,0.5); }
+.empty-note { color: rgba(255,255,255,0.35); font-style: italic; font-size: 13px; }
 
 /* ── Chapters ── */
 .chapters-header {
   font-size: 22px;
   font-weight: 700;
-  color: #c9a962;
+  color: #C9A962;
   text-align: center;
   margin: 48px 0 32px;
   letter-spacing: 0.3px;
@@ -361,30 +407,30 @@ tr:last-child td { border-bottom: none; }
 .chapter-title {
   font-size: 21px;
   font-weight: 700;
-  color: #e8e0d0;
+  color: #FFFFFF;
   margin-bottom: 4px;
   letter-spacing: 0.2px;
 }
 .chapter-subtitle {
   font-size: 13px;
-  color: rgba(232,224,208,0.45);
+  color: rgba(255,255,255,0.5);
   font-style: italic;
   margin-bottom: 14px;
 }
 .chapter-content {
   font-size: 14px;
   line-height: 1.8;
-  color: #c0b8a8;
+  color: rgba(255,255,255,0.7);
   margin-bottom: 20px;
 }
 .chapter-reflection {
-  background: rgba(201,169,98,0.06);
+  background: rgba(30,45,71,0.5);
   border-left: 2px solid rgba(201,169,98,0.35);
   border-radius: 0 8px 8px 0;
   padding: 13px 15px;
   margin-bottom: 12px;
   font-size: 13px;
-  color: #c8c0b0;
+  color: rgba(255,255,255,0.7);
   line-height: 1.7;
 }
 .chapter-affirmation {
@@ -401,7 +447,7 @@ tr:last-child td { border-bottom: none; }
 }
 .affirmation-text {
   font-style: italic;
-  color: #c9a962;
+  color: #C9A962;
   font-size: 14px;
 }
 
@@ -412,12 +458,15 @@ tr:last-child td { border-bottom: none; }
   padding-top: 20px;
   border-top: 1px solid rgba(255,255,255,0.06);
   font-size: 11px;
-  color: rgba(232,224,208,0.25);
+  color: rgba(255,255,255,0.25);
   letter-spacing: 1px;
 }
 </style>
 </head>
 <body>
+
+<div class="star-layer"></div>
+<div class="content-wrap">
 
 <div class="cover">
   <p class="app-name">MySky</p>
@@ -486,6 +535,7 @@ ${chapterHtml}
   <p>Generated by MySky &middot; ${generatedDate}</p>
 </div>
 
+</div><!-- /content-wrap -->
 </body>
 </html>`;
 }

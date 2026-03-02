@@ -264,5 +264,5 @@ export function applyThemeMultipliers<T extends { id: string; score: number }>(
       ...c,
       score: clamp(c.score * (model.theme_multipliers[c.id] ?? 1.0), 0, 1),
     }))
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
 }

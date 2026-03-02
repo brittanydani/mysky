@@ -29,7 +29,7 @@ export interface PremiumDailyGuidance {
   overallTheme: string;
   moonPhaseContext: string;
   categories: CategoryGuidance[];
-  transitExplanation: string;  // "Here's what's happening in the sky..."
+  transitExplanation: string;  // "Here's what's influencing your day..."
   personalizedAffirmation: string;
   eveningReflection: string;   // For end-of-day check-in
 }
@@ -309,7 +309,7 @@ export class PremiumDailyGuidanceGenerator {
       overallTheme: `Today invites ${primaryElement.toLowerCase()} energy into your emotional world.`,
       moonPhaseContext: 'Upgrade to Deeper Sky to see how the moon phase affects you.',
       categories: [emotionalGuidance],
-      transitExplanation: 'Upgrade to Deeper Sky to understand what\'s happening in the sky and why it matters for you.',
+      transitExplanation: 'Upgrade to Deeper Sky to understand what\'s influencing your day and why it matters for you.',
       personalizedAffirmation: 'Your feelings are valid.',
       eveningReflection: 'Upgrade to receive personalized evening reflections.',
     };
@@ -487,7 +487,7 @@ export class PremiumDailyGuidanceGenerator {
     }
 
     // Generic fallback
-    return `The Moon is making a ${aspectType} aspect to your natal ${planet} today. This highlights ${planet.toLowerCase()}-related themes in your emotional life. Pay attention to what feels emphasized.`;
+    return `Today highlights ${planet.toLowerCase()}-related themes in your emotional life. Pay attention to what feels emphasized.`;
   }
 
   /**

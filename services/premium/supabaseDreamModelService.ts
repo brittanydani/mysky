@@ -59,6 +59,10 @@ export class DreamModelService {
   ): Promise<void> {
     const { nextModel, delta, dreamId, feedbackId } = args;
 
+    // Resolve authenticated user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) throw new Error('Not authenticated');
+
     // Update model
     const { error: upErr } = await supabase
       .from("user_dream_model")
@@ -69,12 +73,13 @@ export class DreamModelService {
         feedback_count: nextModel.feedback_count,
         last_feedback_at: new Date().toISOString(),
       })
-      .eq("user_id", (await supabase.auth.getUser()).data.user?.id);
+      .eq("user_id", user.id);
 
     if (upErr) throw upErr;
 
     // Log deltas
     const { error: logErr } = await supabase.from("user_dream_model_updates").insert({
+      user_id: user.id,
       dream_id: dreamId ?? null,
       feedback_id: feedbackId ?? null,
       delta_engine_weights: delta.deltaEngineWeights ?? {},

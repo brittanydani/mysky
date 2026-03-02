@@ -50,11 +50,16 @@ export async function submitCardFeedbackAndLearn(args: {
     note,
   } = args;
 
-  // 1) Upsert feedback
+  // 1) Resolve authenticated user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.id) throw new Error('Not authenticated');
+
+  // 2) Upsert feedback
   const { data: feedbackRow, error: fbErr } = await supabase
     .from("dream_card_feedback")
     .upsert(
       {
+        user_id: user.id,
         dream_id: dreamId,
         rendered_card_id: renderedCardId,
         rating,
@@ -68,10 +73,10 @@ export async function submitCardFeedbackAndLearn(args: {
 
   if (fbErr) throw fbErr;
 
-  // 2) Load model
+  // 3) Load model
   const model: UserDreamModel = await DreamModelService.getOrCreateModel(supabase);
 
-  // 3) Compute update
+  // 4) Compute update
   const ctx: LearningContext = {
     themeId,
     matchedTriggers,
@@ -84,7 +89,7 @@ export async function submitCardFeedbackAndLearn(args: {
 
   const { nextModel, delta } = computeLearningUpdate({ model, rating, ctx });
 
-  // 4) Save model + log
+  // 5) Save model + log
   await DreamModelService.saveModelAndLog(supabase, {
     nextModel,
     delta,

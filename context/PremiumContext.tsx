@@ -67,13 +67,14 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
       const result = await revenueCatService.purchasePackage(packageToPurchase);
       if (result.success && result.customerInfo) updateCustomerInfo(result.customerInfo);
       return { success: result.success, error: result.error, userCancelled: result.userCancelled };
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error('[PremiumContext] purchase failed:', e);
-      return { success: false, error: e?.message ?? 'Purchase failed' };
+      const message = e instanceof Error ? e.message : 'Purchase failed';
+      return { success: false, error: message };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updateCustomerInfo]);
 
   const restore = useCallback(async (): Promise<RestoreResult> => {
     setLoading(true);
@@ -82,13 +83,14 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
       const hasPremium = result.customerInfo ? revenueCatService.isPremium(result.customerInfo) : false;
       if (result.success && result.customerInfo) updateCustomerInfo(result.customerInfo);
       return { success: result.success, hasPremium, error: result.error };
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error('[PremiumContext] restore failed:', e);
-      return { success: false, error: e?.message ?? 'Restore failed' };
+      const message = e instanceof Error ? e.message : 'Restore failed';
+      return { success: false, error: message };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updateCustomerInfo]);
 
   useEffect(() => {
     let mounted = true;

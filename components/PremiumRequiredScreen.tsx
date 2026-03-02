@@ -84,6 +84,17 @@ export default function PremiumRequiredScreen({
 
         <Text style={styles.priceHint}>Starting at $4.99/mo · Cancel anytime</Text>
 
+        {/* App Store requires Terms & Privacy links on any screen showing subscription pricing */}
+        <View style={styles.legalLinks}>
+          <Pressable onPress={() => router.push('/terms' as Href)} accessibilityRole="link" hitSlop={12}>
+            <Text style={styles.legalLink}>Terms of Use</Text>
+          </Pressable>
+          <Text style={styles.legalSeparator}>·</Text>
+          <Pressable onPress={() => router.push('/privacy' as Href)} accessibilityRole="link" hitSlop={12}>
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </Pressable>
+        </View>
+
         <Pressable style={styles.button} onPress={safeGoBack} accessibilityRole="button" accessibilityLabel="Go back">
           <Text style={styles.buttonText}>Not now</Text>
         </Pressable>
@@ -189,5 +200,20 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
     fontWeight: '500',
     fontSize: 14,
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
+  },
+  legalLink: {
+    fontSize: 12,
+    color: theme.primary,
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    fontSize: 12,
+    color: theme.textMuted,
   },
 });

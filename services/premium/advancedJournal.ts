@@ -375,7 +375,7 @@ export class AdvancedJournalAnalyzer {
     }
 
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const maxDay = [...dayMap.entries()].sort((a, b) => b[1] - a[1])[0];
+    const maxDay = [...dayMap.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];
     
     if (maxDay && maxDay[1] >= 3) {
       insights.push({
@@ -529,7 +529,7 @@ export class AdvancedJournalAnalyzer {
       }
     }
     const topTags = [...tagCounts.entries()]
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
       .slice(0, 5)
       .map(([tag]) => tag);
 

@@ -27,7 +27,6 @@ class RevenueCatService {
 
       // Sanity check logging
       logger.info('[RevenueCat] Platform:', Platform.OS);
-      logger.info('[RevenueCat] Using key prefix:', apiKey?.slice(0, 5));
 
       // Fail fast if wrong key format
       if (!apiKey || !(apiKey.startsWith("appl_") || apiKey.startsWith("goog_"))) {

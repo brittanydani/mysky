@@ -27,6 +27,35 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const [restoring, setRestoring] = useState(false);
 
+  /**
+   * Resolve display prices from live RevenueCat offerings when available,
+   * falling back to hardcoded config.ts prices when offline / loading.
+   * Apple requires the paywall to show the ACTUAL price the store will charge
+   * (Guideline 3.1.2) — live offering prices are locale-aware and currency-correct.
+   */
+  const resolvedTiers = config.premium.tiers.map((tier) => {
+    if (!offerings) return tier; // offline fallback
+
+    const identifierMap: Record<string, string[]> = {
+      monthly: ['monthly', '$rc_monthly', 'mysky_monthly'],
+      yearly: ['annual', 'yearly', '$rc_annual', 'mysky_annual', 'mysky_yearly'],
+      lifetime: ['lifetime', '$rc_lifetime', 'mysky_lifetime'],
+    };
+
+    const ids = identifierMap[tier.id] ?? [];
+    const pkg = offerings.availablePackages.find((p) =>
+      ids.some((id) => p.identifier.toLowerCase().includes(id.toLowerCase()))
+    );
+
+    if (!pkg) return tier; // package not in offering — keep fallback
+
+    return {
+      ...tier,
+      price: pkg.product.priceString, // localized, e.g. "$4.99", "€4,99"
+      period: tier.period, // keep human-readable period
+    };
+  });
+
   const safeGoBack = useCallback(() => {
     if (onClose) {
       onClose();
@@ -188,7 +217,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* Pricing Cards */}
           <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.pricingSection}>
             <Text style={styles.sectionTitle}>Choose Your Plan</Text>
-            {config.premium.tiers.map((tier) => (
+            {resolvedTiers.map((tier) => (
               <PricingCard
                 key={tier.id}
                 name={tier.name}
@@ -217,7 +246,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   <ActivityIndicator color={theme.background} />
                 ) : (
                   <Text style={styles.purchaseButtonText}>
-                    Continue with {config.premium.tiers.find(t => t.id === selectedPlan)?.name}
+                    Continue with {resolvedTiers.find(t => t.id === selectedPlan)?.name}
                   </Text>
                 )}
               </LinearGradient>
