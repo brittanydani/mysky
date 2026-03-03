@@ -12,7 +12,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
-import NatalChartWheel from '../../components/ui/NatalChartWheel';
+import NatalChartWheel from '../../components/ui/NatalChartWheelSkia';
 import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
 import BirthDataModal from '../../components/BirthDataModal';
 import AstrologySettingsModal from '../../components/AstrologySettingsModal';
@@ -625,12 +625,12 @@ export default function ChartScreen() {
                     <Ionicons
                       name="layers-outline"
                       size={14}
-                      color={overlayPerson?.id === person.id ? '#D4A0E0' : theme.textMuted}
+                      color={overlayPerson?.id === person.id ? '#C8D0E0' : theme.textMuted}
                     />
                     <Text
                       style={[
                         styles.personChipText,
-                        overlayPerson?.id === person.id && { color: '#D4A0E0' },
+                        overlayPerson?.id === person.id && { color: '#C8D0E0' },
                       ]}
                       numberOfLines={1}
                     >
@@ -654,21 +654,36 @@ export default function ChartScreen() {
                 </Pressable>
               </ScrollView>
 
-              {/* Overlay legend when active */}
+              {/* Overlay legend when active — luxury pill tags */}
               {overlayChart && (
                 <View style={styles.overlayLegend}>
-                  <View style={styles.overlayLegendRow}>
-                    <View style={[styles.overlayLegendDot, { backgroundColor: theme.primary }]} />
-                    <Text style={styles.overlayLegendText}>Your planets</Text>
-                  </View>
-                  <View style={styles.overlayLegendRow}>
-                    <View style={[styles.overlayLegendDot, { backgroundColor: '#D4A0E0' }]} />
-                    <Text style={styles.overlayLegendText}>{overlayPerson?.name}'s planets</Text>
-                  </View>
-                  <View style={styles.overlayLegendRow}>
-                    <View style={[styles.overlayLegendDot, { backgroundColor: 'rgba(160,110,220,0.6)', borderStyle: 'dashed' }]} />
-                    <Text style={styles.overlayLegendText}>Cross-aspects</Text>
-                  </View>
+                  <LinearGradient
+                    colors={['rgba(201,169,98,0.18)', 'rgba(160,128,64,0.08)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.legendPill}
+                  >
+                    <View style={[styles.legendPillDot, { backgroundColor: '#D4B46A' }]} />
+                    <Text style={[styles.legendPillText, { color: '#D4B46A' }]}>Your planets</Text>
+                  </LinearGradient>
+                  <LinearGradient
+                    colors={['rgba(200,208,224,0.18)', 'rgba(160,168,190,0.08)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.legendPill}
+                  >
+                    <View style={[styles.legendPillDot, { backgroundColor: '#C8D0E0' }]} />
+                    <Text style={[styles.legendPillText, { color: '#C8D0E0' }]}>{overlayPerson?.name}'s planets</Text>
+                  </LinearGradient>
+                  <LinearGradient
+                    colors={['rgba(140,200,220,0.15)', 'rgba(220,160,180,0.10)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.legendPill}
+                  >
+                    <View style={[styles.legendPillDot, { backgroundColor: 'rgba(180,200,210,0.7)' }]} />
+                    <Text style={[styles.legendPillText, { color: 'rgba(200,210,220,0.8)' }]}>Cross-aspects</Text>
+                  </LinearGradient>
                 </View>
               )}
             </Animated.View>
@@ -1900,28 +1915,34 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Overlay Legend ──
+  // ── Overlay Legend (luxury pill tags) ──
   overlayLegend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 16,
-    paddingVertical: 6,
+    flexWrap: 'wrap',
+    gap: 10,
+    paddingVertical: 8,
     paddingHorizontal: 8,
   },
-  overlayLegendRow: {
+  legendPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  overlayLegendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  legendPillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  overlayLegendText: {
-    color: theme.textMuted,
+  legendPillText: {
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 
   // ── Relationship Type Picker ──

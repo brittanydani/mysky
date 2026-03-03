@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import StarField from './ui/StarField';
+import { Image } from 'react-native';
 import BirthDataModal from './BirthDataModal';
 import { BirthData } from '../services/astrology/types';
 import { AstrologyCalculator } from '../services/astrology/calculator';
@@ -142,6 +143,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
 
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <StarField starCount={100} />
 
@@ -150,10 +152,12 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
             {step === 'welcome' && (
               <>
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.welcomeContainer}>
-                  <View style={styles.logoContainer}>
-                    <View style={styles.logoCircle}>
-                      <Text style={styles.logoText}>🌙</Text>
-                    </View>
+                  <View style={[styles.logoContainer, { marginBottom: 8 }]}> 
+                    <Image
+                      source={require('../assets/images/logo.png')}
+                      style={{ width: 220, height: 220, resizeMode: 'contain', alignSelf: 'center' }}
+                      accessibilityLabel="MySky logo"
+                    />
                   </View>
 
                   <Text style={styles.welcomeTitle}>Welcome to MySky</Text>
@@ -276,6 +280,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
 
         <BirthDataModal visible={showBirthModal} onClose={handleBirthModalClose} onSave={handleBirthDataComplete} />
       </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -291,7 +296,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xl,
   },
   welcomeContainer: { alignItems: 'center', marginBottom: theme.spacing.xl },
-  logoContainer: { marginBottom: theme.spacing.xl },
+  logoContainer: { marginBottom: 0 },
   logoCircle: {
     width: 120,
     height: 120,
@@ -309,6 +314,7 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
+    marginTop: -64,
   },
   welcomeSubtitle: {
     fontSize: 18,

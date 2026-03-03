@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -9,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -231,6 +233,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <StarField starCount={20} />
 
@@ -457,6 +460,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           </KeyboardAvoidingView>
         </SafeAreaView>
       </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }

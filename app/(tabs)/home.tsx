@@ -138,6 +138,7 @@ export default function HomeScreen() {
   const handleOnboardingComplete = (chart: NatalChart) => {
     setUserChart(chart);
     setShowOnboarding(false);
+    router.replace('/(tabs)/mood' as Href);
   };
 
   const handleEditBirthData = async (birthData: BirthData, extra?: { chartName?: string }) => {

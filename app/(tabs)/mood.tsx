@@ -12,6 +12,8 @@ import {
   Dimensions,
   TextInput,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -746,6 +748,7 @@ export default function MoodScreen() {
   // ── Main render ───────────────────────────────────────────────────────────
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
       <StarField starCount={60} />
       <SafeAreaView edges={['top']} style={styles.flex}>
@@ -917,12 +920,12 @@ export default function MoodScreen() {
                   </Pressable>
                 ))}
 
-                {/* Custom tag chip — shown when user has typed one; hold to remove */}
-                {(() => {
-                  const customTag = selectedTags.find(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'));
-                  if (!customTag) return null;
-                  return (
+                {/* Custom tags — up to 3 total (preset + custom); hold to remove */}
+                {selectedTags
+                  .filter(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'))
+                  .map(customTag => (
                     <Pressable
+                      key={customTag}
                       style={[styles.tagChip, styles.tagChipOn]}
                       onLongPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -934,13 +937,11 @@ export default function MoodScreen() {
                     >
                       <Text style={[styles.tagTxt, styles.tagTxtOn]}>✏️ {customTag}</Text>
                     </Pressable>
-                  );
-                })()}
+                  ))
+                }
 
                 {/* "+ other" chip or inline input */}
                 {(() => {
-                  const customTag = selectedTags.find(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'));
-                  if (customTag) return null;
                   if (showCustomInput) {
                     return (
                       <View style={styles.customTagInputRow}>
@@ -1317,6 +1318,7 @@ export default function MoodScreen() {
         </ScrollView>
       </SafeAreaView>
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 

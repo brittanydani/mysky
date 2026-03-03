@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -11,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { logger } from '../utils/logger';
@@ -248,6 +250,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only load global house system on mount; initialData is a prop that won't change
   }, []);
 
+  const [showConfirm, setShowConfirm] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -263,6 +266,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
   useEffect(() => {
     if (!visible) {
       // reset suggestion UI when closed
+      setShowConfirm(false);
       setShowSuggestions(false);
       setLocationSuggestions([]);
       setSearchingLocation(false);
@@ -397,6 +401,12 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
       return;
     }
 
+    Haptics.selectionAsync();
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = () => {
+    setShowConfirm(false);
     onSave(birthData, { chartName: chartName.trim() || undefined });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
@@ -458,6 +468,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <StarField starCount={30} />
 
@@ -676,6 +687,93 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
           </KeyboardAvoidingView>
         </SafeAreaView>
 
+        {/* ── Confirmation Overlay ── */}
+        {showConfirm && (
+          <View style={styles.confirmOverlay}>
+            <LinearGradient
+              colors={[theme.background, 'rgba(13, 20, 33, 0.98)']}
+              style={styles.confirmGradient}
+            >
+              <SafeAreaView edges={['top', 'bottom']} style={styles.confirmSafeArea}>
+                <Animated.View entering={FadeInDown.duration(400)} style={styles.confirmContent}>
+                  <View style={styles.confirmIconRow}>
+                    <Ionicons name="checkmark-circle-outline" size={40} color={theme.primary} />
+                  </View>
+
+                  <Text style={styles.confirmTitle}>Review Your Birth Data</Text>
+
+                  <View style={styles.confirmCard}>
+                    <LinearGradient
+                      colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                      style={styles.confirmCardGradient}
+                    >
+                      {chartName.trim() ? (
+                        <View style={styles.confirmRow}>
+                          <Ionicons name="person-outline" size={16} color={theme.textMuted} />
+                          <Text style={styles.confirmLabel}>Name</Text>
+                          <Text style={styles.confirmValue}>{chartName.trim()}</Text>
+                        </View>
+                      ) : null}
+
+                      <View style={styles.confirmRow}>
+                        <Ionicons name="calendar-outline" size={16} color={theme.textMuted} />
+                        <Text style={styles.confirmLabel}>Date</Text>
+                        <Text style={styles.confirmValue}>{formatDate(date)}</Text>
+                      </View>
+
+                      <View style={styles.confirmRow}>
+                        <Ionicons name="time-outline" size={16} color={theme.textMuted} />
+                        <Text style={styles.confirmLabel}>Time</Text>
+                        <Text style={styles.confirmValue}>{hasUnknownTime ? 'Unknown' : formatTime(time)}</Text>
+                      </View>
+
+                      <View style={styles.confirmRow}>
+                        <Ionicons name="location-outline" size={16} color={theme.textMuted} />
+                        <Text style={styles.confirmLabel}>Location</Text>
+                        <Text style={styles.confirmValue} numberOfLines={2}>{place}</Text>
+                      </View>
+                    </LinearGradient>
+                  </View>
+
+                  <View style={styles.confirmWarning}>
+                    <Ionicons name="information-circle-outline" size={15} color={theme.textMuted} style={{ marginRight: 8, marginTop: 1 }} />
+                    <Text style={styles.confirmWarningText}>
+                      Birth data cannot be changed after saving. You can delete your data and start over in Settings if needed.
+                    </Text>
+                  </View>
+
+                  <View style={styles.confirmButtons}>
+                    <Pressable
+                      style={({ pressed }) => [styles.confirmBackButton, pressed && { opacity: 0.8 }]}
+                      onPress={() => { Haptics.selectionAsync(); setShowConfirm(false); }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Go back and edit"
+                    >
+                      <Text style={styles.confirmBackText}>Go Back</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={({ pressed }) => [styles.confirmSaveButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                      onPress={handleConfirm}
+                      accessibilityRole="button"
+                      accessibilityLabel="Confirm and save birth data"
+                    >
+                      <LinearGradient
+                        colors={[...theme.goldGradient]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.confirmSaveGradient}
+                      >
+                        <Text style={styles.confirmSaveText}>Confirm & Save</Text>
+                      </LinearGradient>
+                    </Pressable>
+                  </View>
+                </Animated.View>
+              </SafeAreaView>
+            </LinearGradient>
+          </View>
+        )}
+
         {/* iOS Date Picker Overlay - outside KeyboardAvoidingView */}
         {showDatePicker && Platform.OS === 'ios' && (
           <Pressable style={styles.pickerOverlay} onPress={() => setShowDatePicker(false)} accessibilityRole="button" accessibilityLabel="Dismiss date picker">
@@ -722,6 +820,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
           </View>
         )}
       </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -861,5 +960,113 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: theme.primary,
+  },
+
+  // ── Confirmation overlay ──
+  confirmOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+  },
+  confirmGradient: {
+    flex: 1,
+  },
+  confirmSafeArea: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  confirmContent: {
+    paddingHorizontal: theme.spacing.xl,
+  },
+  confirmIconRow: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  confirmTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    fontFamily: 'serif',
+    textAlign: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  confirmCard: {
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    marginBottom: theme.spacing.lg,
+  },
+  confirmCardGradient: {
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+  },
+  confirmRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.sm,
+  },
+  confirmLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.textMuted,
+    width: 65,
+  },
+  confirmValue: {
+    fontSize: 11,
+    color: theme.textPrimary,
+    flex: 1,
+  },
+  confirmWarning: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+  },
+  confirmWarningText: {
+    flex: 1,
+    fontSize: 13,
+    color: theme.textMuted,
+    lineHeight: 19,
+  },
+  confirmButtons: {
+    gap: theme.spacing.md,
+  },
+  confirmBackButton: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  confirmBackText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.textSecondary,
+  },
+  confirmSaveButton: {
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+    ...theme.shadows.glow,
+  },
+  confirmSaveGradient: {
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  confirmSaveText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0D1421',
+    fontFamily: 'serif',
   },
 });

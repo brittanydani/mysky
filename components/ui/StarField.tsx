@@ -6,7 +6,9 @@ import Animated, {
   withRepeat,
   withTiming,
   withDelay,
+  withSequence,
   Easing,
+  interpolate,
 } from 'react-native-reanimated';
 
 interface Star {
@@ -16,6 +18,10 @@ interface Star {
   size: number;
   delay: number;
   duration: number;
+  driftX: number; // slow horizontal drift distance
+  driftY: number; // slow vertical drift distance
+  driftDuration: number; // drift cycle duration
+  layer: number; // parallax layer (0 = far, 1 = mid, 2 = near)
 }
 
 /**
@@ -39,13 +45,19 @@ function splitmix32(seed: number): () => number {
 const generateStars = (count: number, w: number, h: number): Star[] =>
   Array.from({ length: count }, (_, i) => {
     const rand = splitmix32(i * 2654435761); // unique seed per star
+    const layer = rand() < 0.5 ? 0 : rand() < 0.75 ? 1 : 2;
+    const sizeBase = layer === 0 ? 0.8 : layer === 1 ? 1.2 : 1.8;
     return {
       id: i,
       x: rand() * w,
       y: rand() * h,
-      size: rand() * 2 + 1,
+      size: rand() * sizeBase + 0.5,
       delay: rand() * 3000,
       duration: rand() * 2000 + 2000,
+      driftX: (rand() - 0.5) * (layer === 0 ? 3 : layer === 1 ? 6 : 10),
+      driftY: (rand() - 0.5) * (layer === 0 ? 2 : layer === 1 ? 4 : 7),
+      driftDuration: rand() * 8000 + 12000 + layer * 4000,
+      layer,
     };
   });
 
@@ -56,20 +68,43 @@ const AnimatedStar = memo(function AnimatedStar({
   star: Star;
   color: string;
 }) {
-  const opacity = useSharedValue(0.3);
+  const opacity = useSharedValue(0.2);
+  const drift = useSharedValue(0);
 
   useEffect(() => {
+    // Twinkle
     opacity.value = withDelay(
       star.delay,
       withRepeat(
-        withTiming(1, { duration: star.duration, easing: Easing.inOut(Easing.ease) }),
+        withTiming(star.layer === 2 ? 1 : star.layer === 1 ? 0.85 : 0.6, {
+          duration: star.duration,
+          easing: Easing.inOut(Easing.ease),
+        }),
         -1,
         true
       )
     );
-  }, [opacity, star.delay, star.duration]);
+    // Slow particle drift
+    drift.value = withDelay(
+      star.delay * 0.5,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: star.driftDuration, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: star.driftDuration, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        false
+      )
+    );
+  }, [opacity, drift, star.delay, star.duration, star.driftDuration, star.layer]);
 
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [
+      { translateX: interpolate(drift.value, [0, 1], [0, star.driftX]) },
+      { translateY: interpolate(drift.value, [0, 1], [0, star.driftY]) },
+    ],
+  }));
 
   return (
     <Animated.View
@@ -82,6 +117,13 @@ const AnimatedStar = memo(function AnimatedStar({
           height: star.size,
           borderRadius: star.size / 2,
           backgroundColor: color,
+          // Subtle glow for closer stars
+          ...(star.layer === 2 && {
+            shadowColor: color,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 3,
+          }),
         },
         animatedStyle,
       ]}

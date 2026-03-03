@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PremiumProvider } from '../context/PremiumContext';
+import { AuthProvider } from '../context/AuthContext';
 import { useEffect, useState, Component, type ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MigrationService } from '../services/storage/migrationService';
@@ -124,6 +125,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
+      <AuthProvider>
       <PremiumProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <SafeAreaProvider>
@@ -145,6 +147,7 @@ export default function RootLayout() {
             </SafeAreaProvider>
           </GestureHandlerRootView>
       </PremiumProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

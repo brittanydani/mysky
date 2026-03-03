@@ -13,10 +13,13 @@ import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
 import BackupPassphraseModal from '../../components/BackupPassphraseModal';
 import PrivacySettingsModal from '../../components/PrivacySettingsModal';
+import BirthDataModal from '../../components/BirthDataModal';
 import { usePremium } from '../../context/PremiumContext';
 import PremiumModal from '../../components/PremiumModal';
 import { localDb } from '../../services/storage/localDb';
 import { BackupService } from '../../services/storage/backupService';
+import { BirthData } from '../../services/astrology/types';
+import { AstrologyCalculator } from '../../services/astrology/calculator';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
 import { logger } from '../../utils/logger';
@@ -80,7 +83,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How do I change my birth data?',
     answer:
-      'Open your chart profile, then tap the edit icon next to your birth information. You can update your birth date, time, and location at any time. Your chart and all insights will recalculate automatically.',
+      'Birth data cannot be changed after saving. A confirmation step lets you review everything before it\u2019s locked in. If you need to start fresh, you can delete all your data in Settings under Privacy Settings and set up your chart again.',
   },
   {
     question: 'What house system does MySky use?',
@@ -118,6 +121,11 @@ export default function SettingsScreen() {
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [showFaq, setShowFaq] = useState(false);
   const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
+
+  // Dev-only: edit birth data for screenshots
+  const [showDevBirthModal, setShowDevBirthModal] = useState(false);
+  const [devBirthInitial, setDevBirthInitial] = useState<Partial<BirthData> & { chartName?: string } | undefined>(undefined);
+  const [devChartId, setDevChartId] = useState<string | null>(null);
 
   const ensureSettings = useCallback(async () => {
     const existing = await localDb.getSettings();
@@ -272,6 +280,60 @@ export default function SettingsScreen() {
       Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com.');
     }
   };
+
+  const handleDevEditBirthData = useCallback(async () => {
+    try {
+      const charts = await localDb.getCharts();
+      if (charts.length === 0) {
+        Alert.alert('No Chart', 'No chart found to edit.');
+        return;
+      }
+      const chart = charts[0];
+      setDevChartId(chart.id);
+      setDevBirthInitial({
+        chartName: chart.name,
+        date: chart.birthDate,
+        time: chart.birthTime,
+        hasUnknownTime: chart.hasUnknownTime,
+        place: chart.birthPlace,
+        latitude: chart.latitude,
+        longitude: chart.longitude,
+        timezone: chart.timezone,
+        houseSystem: chart.houseSystem as any,
+      });
+      setShowDevBirthModal(true);
+    } catch (error) {
+      logger.error('Failed to load chart for dev edit:', error);
+      Alert.alert('Error', 'Could not load chart data.');
+    }
+  }, []);
+
+  const handleDevBirthSave = useCallback(async (birthData: BirthData, extra?: { chartName?: string }) => {
+    setShowDevBirthModal(false);
+    try {
+      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      const now = new Date().toISOString();
+      await localDb.saveChart({
+        id: devChartId || chart.id,
+        name: extra?.chartName ?? chart.name,
+        birthDate: chart.birthData.date,
+        birthTime: chart.birthData.time,
+        hasUnknownTime: chart.birthData.hasUnknownTime,
+        birthPlace: chart.birthData.place,
+        latitude: chart.birthData.latitude,
+        longitude: chart.birthData.longitude,
+        houseSystem: chart.birthData.houseSystem,
+        timezone: chart.birthData.timezone,
+        createdAt: chart.createdAt,
+        updatedAt: now,
+        isDeleted: false,
+      });
+      Alert.alert('Birth Data Updated', 'Restart the app or navigate away and back to see changes everywhere.');
+    } catch (error) {
+      logger.error('Dev birth data save failed:', error);
+      Alert.alert('Error', 'Failed to update birth data.');
+    }
+  }, [devChartId]);
 
   const openPrivacyPolicy = async () => {
     try {
@@ -696,6 +758,40 @@ export default function SettingsScreen() {
           )}
 
           <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
+
+          {__DEV__ && (
+            <Animated.View entering={FadeInDown.delay(775).duration(600)} style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: 'rgba(224, 122, 152, 0.8)' }]}>Developer Tools</Text>
+
+              <Pressable
+                style={styles.settingCard}
+                onPress={handleDevEditBirthData}
+                accessibilityRole="button"
+                accessibilityLabel="Edit birth data (dev only)"
+              >
+                <LinearGradient
+                  colors={['rgba(224, 122, 152, 0.12)', 'rgba(224, 122, 152, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(224, 122, 152, 0.2)' }]}
+                >
+                  <View style={styles.settingRow}>
+                    <View style={styles.settingInfo}>
+                      <View style={styles.settingHeader}>
+                        <Ionicons name="create-outline" size={20} color="rgba(224, 122, 152, 0.8)" />
+                        <Text style={styles.settingTitle}>Edit Birth Data</Text>
+                        <View style={[styles.premiumBadge, { backgroundColor: 'rgba(224, 122, 152, 0.2)' }]}>
+                          <Text style={[styles.premiumText, { color: 'rgba(224, 122, 152, 0.8)' }]}>DEV</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.settingDescription}>
+                        Temporarily change birth data for screenshots. This overwrites your chart.
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          )}
         </ScrollView>
       </SafeAreaView>
 
@@ -723,6 +819,15 @@ export default function SettingsScreen() {
           await performRestore(passphrase);
         }}
       />
+
+      {__DEV__ && (
+        <BirthDataModal
+          visible={showDevBirthModal}
+          onClose={() => setShowDevBirthModal(false)}
+          onSave={handleDevBirthSave}
+          initialData={devBirthInitial}
+        />
+      )}
     </View>
   );
 }

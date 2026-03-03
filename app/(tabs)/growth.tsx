@@ -7,7 +7,7 @@
  * very bottom as an intentional, secondary link.
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +22,8 @@ import StarField from '../../components/ui/StarField';
 import { localDb } from '../../services/storage/localDb';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { TAG_LABELS } from '../../utils/tagAnalytics';
+import { generateReflectionInsights, ReflectionInsightsResponse, ReflectionInsightsPayload } from '../../services/premium/reflectionInsights';
+import { useAuth } from '../../context/AuthContext';
 import { logger } from '../../utils/logger';
 
 // ── Rotating daily reflection prompts (non-astrological) ──
@@ -173,9 +175,12 @@ function scoreToPercent(score: number | null): number {
 
 export default function ReflectScreen() {
   const router = useRouter();
+  const { session } = useAuth();
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasChart, setHasChart] = useState(false);
+  const [aiInsights, setAiInsights] = useState<ReflectionInsightsResponse | null>(null);
+  const [aiInsightsError, setAiInsightsError] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -252,7 +257,7 @@ export default function ReflectScreen() {
     return bestDay >= 0 ? dayNames[bestDay] : null;
   }, [checkIns]);
 
-  // Which tags correlate with the user's better vs worse days (their own data)
+  // Which tags correlate with the user's better vs worse days, with lift scores
   const tagCorrelation = useMemo(() => {
     if (checkIns.length < 7) return null;
     const allMoods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
@@ -269,18 +274,94 @@ export default function ReflectScreen() {
     });
 
     const THRESHOLD = 0.6;
-    const restores: string[] = [];
-    const drains: string[] = [];
+    type TagEntry = { tag: string; label: string; liftMood: number };
+    const richRestores: TagEntry[] = [];
+    const richDrains: TagEntry[] = [];
+
     Object.entries(tagMap).forEach(([tag, moods]) => {
       if (moods.length < 2) return;
       const avg = moods.reduce((a, b) => a + b, 0) / moods.length;
+      const liftMood = parseFloat((avg - baseline).toFixed(2));
       const label = TAG_LABELS[tag] ?? tag.replace(/_/g, ' ');
-      if (avg >= baseline + THRESHOLD) restores.push(label.toLowerCase());
-      else if (avg <= baseline - THRESHOLD) drains.push(label.toLowerCase());
+      if (liftMood >= THRESHOLD) richRestores.push({ tag, label, liftMood });
+      else if (liftMood <= -THRESHOLD) richDrains.push({ tag, label, liftMood });
     });
 
-    return { restores: restores.slice(0, 3), drains: drains.slice(0, 3) };
+    richRestores.sort((a, b) => b.liftMood - a.liftMood);
+    richDrains.sort((a, b) => a.liftMood - b.liftMood);
+
+    return {
+      restores: richRestores.slice(0, 3).map(r => r.label.toLowerCase()),
+      drains: richDrains.slice(0, 3).map(d => d.label.toLowerCase()),
+      richRestores: richRestores.slice(0, 3),
+      richDrains: richDrains.slice(0, 3),
+    };
   }, [checkIns]);
+
+  // Raw numeric energy–mood correlation (for the AI payload)
+  const energyMoodDiff = useMemo(() => {
+    if (checkIns.length < 7) return null;
+    const high = checkIns.filter(c => c.energyLevel === 'high');
+    const low = checkIns.filter(c => c.energyLevel === 'low');
+    const avg = (items: DailyCheckIn[]) => {
+      const m = items.map(c => c.moodScore).filter((v): v is number => v != null);
+      return m.length > 0 ? m.reduce((a, b) => a + b, 0) / m.length : null;
+    };
+    const hAvg = avg(high);
+    const lAvg = avg(low);
+    if (hAvg == null || lAvg == null) return null;
+    return parseFloat((hAvg - lAvg).toFixed(2));
+  }, [checkIns]);
+
+  // Load AI reflection copy once we have enough data + an active session (cached daily)
+  useEffect(() => {
+    if (checkIns.length < 7 || !session?.access_token) return;
+    let cancelled = false;
+
+    const payload: ReflectionInsightsPayload = {
+      timeWindowLabel: 'last 30 days',
+      mood: {
+        trend: moodTrend,
+        avg: buckets[0]?.avgMood != null ? parseFloat(buckets[0].avgMood.toFixed(1)) : 0,
+        delta: parseFloat(((buckets[0]?.avgMood ?? 0) - (buckets[1]?.avgMood ?? 0)).toFixed(1)),
+      },
+      stress: {
+        trend: stressTrend,
+        avg: buckets[0]?.avgStress != null ? parseFloat(buckets[0].avgStress.toFixed(1)) : 0,
+        delta: parseFloat(((buckets[0]?.avgStress ?? 0) - (buckets[1]?.avgStress ?? 0)).toFixed(1)),
+      },
+      energy: {
+        trend: energyTrend,
+        avg: buckets[0]?.avgEnergy != null ? parseFloat(buckets[0].avgEnergy.toFixed(1)) : 0,
+        delta: parseFloat(((buckets[0]?.avgEnergy ?? 0) - (buckets[1]?.avgEnergy ?? 0)).toFixed(1)),
+      },
+      energyMood: {
+        correlation: energyMoodDiff,
+        interpretationHint:
+          energyMoodDiff == null ? 'unknown'
+          : energyMoodDiff > 0 ? 'moves_together'
+          : energyMoodDiff < 0 ? 'inverse'
+          : 'independent',
+      },
+      restores: {
+        sampleSizeDays: checkIns.length,
+        top: tagCorrelation?.richRestores ?? [],
+        drains: tagCorrelation?.richDrains ?? [],
+      },
+    };
+
+    generateReflectionInsights(payload, session?.access_token).then(result => {
+      if (!cancelled) setAiInsights(result);
+    }).catch(err => {
+      if (!cancelled) {
+        logger.warn('AI reflection insights unavailable:', err);
+        setAiInsightsError('unavailable');
+      }
+    });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkIns, session?.access_token]);
 
   const trendIcon = (dir: 'up' | 'down' | 'flat', inverse = false) => {
     const isPositive = inverse ? dir === 'down' : dir === 'up';
@@ -504,6 +585,31 @@ export default function ReflectScreen() {
               )}
 
               {/* ── Correlation Scaffold ── */}
+              {/* ── Sign-in CTA (shown when data exists but no session) ── */}
+              {checkIns.length >= 7 && !session && (
+                <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
+                  <Pressable
+                    style={styles.signInCard}
+                    onPress={() => nav('/(auth)/sign-in')}
+                  >
+                    <LinearGradient
+                      colors={['rgba(122, 139, 224, 0.12)', 'rgba(122, 139, 224, 0.04)']}
+                      style={styles.signInCardInner}
+                    >
+                      <Ionicons name="sparkles-outline" size={20} color="#7A8BE0" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.signInCardTitle}>Unlock your personal reflections</Text>
+                        <Text style={styles.signInCardBody}>
+                          Sign in to generate AI insights written just for you — based on your actual patterns.
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+                    </LinearGradient>
+                  </Pressable>
+                </Animated.View>
+              )}
+
+              {/* ── Correlation Scaffold ── */}
               <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Observations</Text>
                 <LinearGradient
@@ -511,37 +617,42 @@ export default function ReflectScreen() {
                   style={styles.correlationCard}
                 >
                   {checkIns.length >= 7 ? (
-                    <>
-                      {/* Journaling frequency vs mood — computed from available data */}
-                      <View style={styles.correlationItem}>
-                        <View style={styles.correlationDot} />
-                        <Text style={styles.correlationText}>
-                          {moodTrend === 'up'
-                            ? 'Your mood has been moving upward — something is landing differently for you, even if you can\'t quite name it yet.'
-                            : moodTrend === 'down'
-                            ? 'Something has been pulling at your mood this week. That\'s worth sitting with, not rushing past.'
-                            : 'Your mood has been holding steady — that kind of groundedness is its own quiet accomplishment.'}
-                        </Text>
-                      </View>
-
-                      <View style={styles.correlationItem}>
-                        <View style={styles.correlationDot} />
-                        <Text style={styles.correlationText}>
-                          {stressTrend === 'down'
-                            ? 'The pressure has been easing. Whatever you\'ve been choosing differently, it\'s showing.'
-                            : stressTrend === 'up'
-                            ? 'Stress has been building. Worth asking what\'s actually being required of you right now — and whether it\'s all yours to carry.'
-                            : 'Stress is holding at a consistent level. Not escalating, but not releasing either — that\'s information worth noticing.'}
-                        </Text>
-                      </View>
-
-                      {energyMoodInsight != null && (
+                    aiInsights ? (
+                      aiInsights.observations.map((line, i) => (
+                        <Text key={i} style={styles.reflectionLine}>{line}</Text>
+                      ))
+                    ) : (
+                      <>
                         <View style={styles.correlationItem}>
                           <View style={styles.correlationDot} />
-                          <Text style={styles.correlationText}>{energyMoodInsight}</Text>
+                          <Text style={styles.correlationText}>
+                            {moodTrend === 'up'
+                              ? 'Your mood has been moving upward — something is landing differently for you, even if you can\'t quite name it yet.'
+                              : moodTrend === 'down'
+                              ? 'Something has been pulling at your mood this week. That\'s worth sitting with, not rushing past.'
+                              : 'Your mood has been holding steady — that kind of groundedness is its own quiet accomplishment.'}
+                          </Text>
                         </View>
-                      )}
-                    </>
+
+                        <View style={styles.correlationItem}>
+                          <View style={styles.correlationDot} />
+                          <Text style={styles.correlationText}>
+                            {stressTrend === 'down'
+                              ? 'The pressure has been easing. Whatever you\'ve been choosing differently, it\'s showing.'
+                              : stressTrend === 'up'
+                              ? 'Stress has been building. Worth asking what\'s actually being required of you right now — and whether it\'s all yours to carry.'
+                              : 'Stress is holding at a consistent level. Not escalating, but not releasing either — that\'s information worth noticing.'}
+                          </Text>
+                        </View>
+
+                        {energyMoodInsight != null && (
+                          <View style={styles.correlationItem}>
+                            <View style={styles.correlationDot} />
+                            <Text style={styles.correlationText}>{energyMoodInsight}</Text>
+                          </View>
+                        )}
+                      </>
+                    )
                   ) : (
                     <Text style={styles.correlationPlaceholder}>
                       Log at least 7 check-ins to unlock correlation insights.
@@ -550,6 +661,21 @@ export default function ReflectScreen() {
                 </LinearGradient>
               </Animated.View>
 
+              {/* ── AI Insights (only shown when AI copy has loaded) ── */}
+              {aiInsights && (
+                <Animated.View entering={FadeInDown.delay(310).duration(600)} style={styles.section}>
+                  <Text style={styles.sectionTitle}>Insights</Text>
+                  <LinearGradient
+                    colors={['rgba(122, 139, 224, 0.08)', 'rgba(122, 139, 224, 0.02)']}
+                    style={styles.correlationCard}
+                  >
+                    {aiInsights.insights.map((line, i) => (
+                      <Text key={i} style={styles.reflectionLine}>{line}</Text>
+                    ))}
+                  </LinearGradient>
+                </Animated.View>
+              )}
+
               {/* ── Restorative Patterns Scaffold ── */}
               <Animated.View entering={FadeInDown.delay(340).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>What Restores You</Text>
@@ -557,58 +683,41 @@ export default function ReflectScreen() {
                   colors={['rgba(110, 191, 139, 0.08)', 'rgba(110, 191, 139, 0.02)']}
                   style={styles.restorativeCard}
                 >
-                  <Ionicons name="leaf-outline" size={24} color={theme.growth} />
-                  <Text style={styles.restorativeText}>
-                    {energyTrend === 'up'
-                      ? 'Your energy is rising — take note of what\'s been different this week.'
-                      : 'Track more consistently to discover what restores your energy most.'}
-                  </Text>
+                  {aiInsights ? (
+                    <>
+                      <Text style={styles.microLine}>{aiInsights.micro_line}</Text>
+                      {aiInsights.restores.map((line, i) => (
+                        <Text key={i} style={[styles.reflectionLine, styles.reflectionLineLeft]}>{line}</Text>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      <Ionicons name="leaf-outline" size={24} color={theme.growth} />
+                      <Text style={styles.restorativeText}>
+                        {tagCorrelation && tagCorrelation.restores.length > 0
+                          ? `Days involving ${tagCorrelation.restores.length === 1 ? tagCorrelation.restores[0] : tagCorrelation.restores.slice(0, -1).join(', ') + ' and ' + tagCorrelation.restores[tagCorrelation.restores.length - 1]} tend to be your better ones — your own data shows it.`
+                          : energyTrend === 'up'
+                          ? 'Your energy has been rising — pay attention to what\'s been different. The pattern is starting to emerge.'
+                          : 'Keep logging — once you have a few more weeks of data, what restores you will start to show up clearly.'}
+                      </Text>
 
-                  {bestEnergyDay != null && (
-                    <Text style={styles.restorativeDetail}>
-                      Your energy tends to be highest on {bestEnergyDay}.
-                    </Text>
+                      {tagCorrelation && tagCorrelation.drains.length > 0 && (
+                        <Text style={styles.restorativeDetail}>
+                          {`Days with ${tagCorrelation.drains.length === 1 ? tagCorrelation.drains[0] : tagCorrelation.drains.slice(0, -1).join(', ') + ' or ' + tagCorrelation.drains[tagCorrelation.drains.length - 1]} tend to be harder for you. That's not judgment — it's just your pattern.`}
+                        </Text>
+                      )}
+
+                      {bestEnergyDay != null && (
+                        <Text style={styles.restorativeDetail}>
+                          Your energy and mood tend to peak on {bestEnergyDay} — consistent enough to actually plan around.
+                        </Text>
+                      )}
+                    </>
                   )}
                 </LinearGradient>
               </Animated.View>
             </>
           )}
-
-          {/* ── Explore ── */}
-          <Animated.View entering={FadeInDown.delay(370).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Explore</Text>
-            <View style={styles.exploreRow}>
-              <Pressable
-                style={styles.exploreChip}
-                onPress={() => nav('/(tabs)/chart')}
-                accessibilityRole="button"
-                accessibilityLabel="Personal map"
-              >
-                <Ionicons name="map-outline" size={16} color={theme.primary} />
-                <Text style={styles.exploreChipText}>Personal Map</Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.exploreChip}
-                onPress={() => nav('/(tabs)/story')}
-                accessibilityRole="button"
-                accessibilityLabel="My story"
-              >
-                <Ionicons name="book-outline" size={16} color="#8BC4E8" />
-                <Text style={styles.exploreChipText}>My Story</Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.exploreChip}
-                onPress={() => nav('/(tabs)/healing')}
-                accessibilityRole="button"
-                accessibilityLabel="Healing"
-              >
-                <Ionicons name="heart-outline" size={16} color="#E07A98" />
-                <Text style={styles.exploreChipText}>Healing</Text>
-              </Pressable>
-            </View>
-          </Animated.View>
 
           {/* ── Astrology Context — intentional, secondary ── */}
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
@@ -798,22 +907,23 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // Explore row
-  exploreRow: { flexDirection: 'row', gap: theme.spacing.sm },
-  exploreChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+  // AI reflection copy
+  reflectionLine: {
+    fontSize: 15,
+    color: theme.textSecondary,
+    lineHeight: 26,
+    marginBottom: 6,
   },
-  exploreChipText: { fontSize: 12, fontWeight: '600', color: theme.textSecondary },
+  reflectionLineLeft: {
+    textAlign: 'left',
+  },
+  microLine: {
+    fontSize: 16,
+    color: theme.textPrimary,
+    lineHeight: 24,
+    marginBottom: theme.spacing.md,
+    fontWeight: '500',
+  },
 
   // Weekly intention
   intentionCard: {
@@ -895,4 +1005,30 @@ const styles = StyleSheet.create({
   astrologyTextWrap: { flex: 1 },
   astrologyTitle: { fontSize: 14, fontWeight: '600', color: theme.primary, marginBottom: 3 },
   astrologySubtitle: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },
+
+  // Sign-in CTA card
+  signInCard: {
+    borderRadius: theme.borderRadius.xl,
+    overflow: 'hidden',
+  },
+  signInCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(122, 139, 224, 0.2)',
+  },
+  signInCardTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#7A8BE0',
+    marginBottom: 3,
+  },
+  signInCardBody: {
+    fontSize: 12,
+    color: theme.textSecondary,
+    lineHeight: 17,
+  },
 });

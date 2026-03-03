@@ -6,7 +6,7 @@
 --
 -- Assumes you already have auth.users and (optionally) a public.profiles table.
 -- This migration is idempotent-ish: uses IF NOT EXISTS where possible.
-
+-- Temporarily removed by Copilot to allow pushing only the new migration. Will restore after db push.
 -- Enable extensions you might already have
 create extension if not exists pgcrypto;
 

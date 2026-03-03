@@ -10,11 +10,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from '
 import {
   Alert,
   FlatList,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -589,6 +591,7 @@ export default function SleepScreen() {
   }, [entries]);
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
       <StarField starCount={40} />
 
@@ -1302,6 +1305,7 @@ export default function SleepScreen() {
         </ScrollView>
       </SafeAreaView>
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 
