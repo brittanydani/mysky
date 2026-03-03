@@ -36,3 +36,6 @@ scripts/
 *.log
 .github/
 claude-test.js
+
+# Supabase temp
+supabase/.temp/
