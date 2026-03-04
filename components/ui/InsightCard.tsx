@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
@@ -15,6 +15,16 @@ interface InsightCardProps {
   variant?: 'default' | 'featured';
 }
 
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  amethyst: '#9D76C1',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
+
 function InsightCard({
   title,
   content,
@@ -27,63 +37,74 @@ function InsightCard({
 }: InsightCardProps) {
   const isFeatured = variant === 'featured';
 
+  // Determine accent color based on state
+  const accentColor = locked ? PALETTE.amethyst : isFeatured ? PALETTE.gold : PALETTE.silverBlue;
+
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.container,
-        isFeatured && styles.featuredContainer,
         locked && styles.lockedContainer,
         pressed && styles.pressed,
       ]}
-      android_ripple={{ color: 'rgba(255,255,255,0.08)' }}
     >
       <LinearGradient
         colors={
           locked
-            ? ['rgba(201, 169, 98, 0.1)', 'rgba(201, 169, 98, 0.03)']
+            ? ['rgba(40, 30, 60, 0.4)', 'rgba(20, 24, 34, 0.7)'] // Amethyst obsidian for locked
             : isFeatured
-            ? ['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.08)']
-            : ['rgba(30, 45, 71, 0.8)', 'rgba(26, 39, 64, 0.6)']
+            ? ['rgba(50, 45, 30, 0.5)', 'rgba(20, 24, 34, 0.8)']  // Gold obsidian for featured
+            : ['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']   // Standard frosted glass
         }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
         <View style={styles.header}>
           {icon && (
-            <View style={[styles.iconContainer, isFeatured && styles.featuredIcon]}>
+            <View style={[styles.iconContainer, { backgroundColor: `${accentColor}15`, borderColor: `${accentColor}30` }]}>
               <Ionicons
                 name={icon}
                 size={18}
-                color={isFeatured ? theme.primary : theme.textSecondary}
+                color={accentColor}
               />
             </View>
           )}
 
           <View style={styles.titleContainer}>
-            <Text style={[styles.title, isFeatured && styles.featuredTitle]}>{title}</Text>
+            <Text style={[styles.title, { color: isFeatured ? PALETTE.gold : PALETTE.textMain }]}>
+              {title}
+            </Text>
 
             {locked && (
               <View style={styles.lockedBadge}>
-                <Ionicons name="sparkles" size={11} color={theme.primary} />
+                <Ionicons name="sparkles" size={10} color={PALETTE.amethyst} />
                 <Text style={styles.lockedText}>{lockedText}</Text>
               </View>
             )}
           </View>
 
-          {locked && <Ionicons name="chevron-forward" size={16} color={theme.primary} />}
+          {locked ? (
+            <Ionicons name="lock-closed-outline" size={16} color={PALETTE.amethyst} style={styles.lockIcon} />
+          ) : (
+            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.2)" />
+          )}
         </View>
 
-        <Text style={[styles.content, locked && styles.lockedContent]} numberOfLines={locked ? 2 : undefined}>
+        <Text 
+          style={[styles.content, locked && styles.lockedContent]} 
+          numberOfLines={locked ? 2 : undefined}
+        >
           {content}
         </Text>
 
         {locked && (
-          <Text style={styles.lockedHintText}>
-            {lockedHint || 'Tap to see what your chart reveals →'}
-          </Text>
+          <View style={styles.lockedHintRow}>
+            <Text style={styles.lockedHintText}>
+              {lockedHint || 'Tap to unlock this insight'}
+            </Text>
+            <Ionicons name="arrow-forward" size={12} color={PALETTE.amethyst} />
+          </View>
         )}
       </LinearGradient>
     </Pressable>
@@ -94,50 +115,51 @@ export default memo(InsightCard);
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    marginBottom: theme.spacing.md,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
+    marginBottom: 16,
+    backgroundColor: 'transparent',
   },
-  featuredContainer: {
-    borderColor: theme.cardBorder,
+  lockedContainer: {
+    borderColor: 'rgba(157, 118, 193, 0.2)',
+    borderTopColor: 'rgba(157, 118, 193, 0.4)',
   },
   pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.99 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }],
   },
   gradient: {
-    padding: theme.spacing.lg,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.sm,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
-  },
-  featuredIcon: {
-    backgroundColor: 'rgba(201, 169, 98, 0.2)',
+    marginRight: 14,
   },
   titleContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    letterSpacing: 0.3,
   },
-  featuredTitle: {
-    color: theme.primary,
+  lockIcon: {
+    marginLeft: 8,
+    opacity: 0.8,
   },
   lockedBadge: {
     flexDirection: 'row',
@@ -145,25 +167,32 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   lockedText: {
-    fontSize: 11,
-    color: theme.textMuted,
-    marginLeft: 4,
+    fontSize: 10,
+    color: PALETTE.amethyst,
+    marginLeft: 5,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   content: {
-    fontSize: 14,
+    fontSize: 15,
     color: theme.textSecondary,
-    lineHeight: 21,
+    lineHeight: 23,
   },
   lockedContent: {
     color: theme.textMuted,
+    fontStyle: 'italic',
+    opacity: 0.7,
   },
-  lockedContainer: {
-    borderColor: 'rgba(201, 169, 98, 0.15)',
+  lockedHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
   },
   lockedHintText: {
-    fontSize: 12,
-    color: theme.primary,
-    fontWeight: '600',
-    marginTop: 8,
+    fontSize: 13,
+    color: PALETTE.amethyst,
+    fontWeight: '700',
   },
 });

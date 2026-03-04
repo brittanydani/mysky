@@ -2,10 +2,7 @@
  * context/AuthContext.tsx
  *
  * Provides Supabase auth state (session, user, loading) to the entire app.
- *
- * Usage in any component:
- *   const { session, user, signOut } = useAuth();
- *   const accessToken = session?.access_token;
+ * High-end refactor for the Deeper Sky ecosystem.
  */
 
 import React, {
@@ -14,23 +11,22 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import type { Session, User } from '@supabase/supabase-js';
+import * as Haptics from 'expo-haptics';
+
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/logger';
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
 interface AuthContextValue {
-  /** Current Supabase session (null if not signed in) */
   session: Session | null;
-  /** Shortcut — session.user */
   user: User | null;
-  /** True while the initial session is being restored from storage */
   loading: boolean;
-  /** Sign out the current user */
   signOut: () => Promise<void>;
 }
 
@@ -46,30 +42,52 @@ const AuthContext = createContext<AuthContextValue>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    // 1. Restore existing session from AsyncStorage
-    supabase.auth.getSession().then(({ data: { session: restored } }) => {
-      setSession(restored);
-      setLoading(false);
-    });
+    isMounted.current = true;
+    
+    // 1. Orbital Restoration — Hydrate session from local storage
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: restored }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (isMounted.current) {
+          setSession(restored);
+        }
+      } catch (err) {
+        logger.error('[AuthContext] Session restoration failed:', err);
+      } finally {
+        if (isMounted.current) setLoading(false);
+      }
+    };
 
-    // 2. Listen for auth state changes (sign in, sign out, token refresh)
+    initializeAuth();
+
+    // 2. Observer Pattern — Listen for real-time auth transitions
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      logger.info(`[AuthContext] State change: ${event}`);
+      if (isMounted.current) {
+        setSession(newSession);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted.current = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // 3. Auto-refresh token when app comes back to foreground
+  // 3. App Lifecycle Management — Stop refresh when backgrounded
   useEffect(() => {
     const handleAppState = (state: AppStateStatus) => {
       if (state === 'active') {
         supabase.auth.startAutoRefresh();
       } else {
+        // Halt refresh to save energy for the user
         supabase.auth.stopAutoRefresh();
       }
     };
@@ -80,10 +98,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
-      setSession(null);
+      // Tactile confirmation of closing the session
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      if (isMounted.current) {
+        setSession(null);
+      }
+      
+      logger.info('[AuthContext] User successfully signed out');
     } catch (err) {
-      logger.error('Sign-out failed:', err);
+      logger.error('[AuthContext] Sign-out failed:', err);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   }, []);
 
@@ -104,5 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useAuth(): AuthContextValue {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }

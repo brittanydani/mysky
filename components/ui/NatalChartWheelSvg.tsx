@@ -1,4 +1,4 @@
-// File: components/ui/NatalChartWheel.tsx
+// File: components/ui/NatalChartWheelSvg.tsx
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import Svg, {
@@ -49,19 +49,12 @@ const ZODIAC_SIGNS = [
   { name: 'Pisces', symbol: '♓', element: 'Water' },
 ];
 
-// Desaturated element colors — restrained luxury
+// Desaturated element colors — restrained luxury (glyph-only)
 const ELEMENT_COLORS: Record<string, string> = {
   Fire: '#C07878',
   Earth: '#6AAE82',
   Air: '#86B4D8',
   Water: '#7480C4',
-};
-
-const ELEMENT_BG: Record<string, string> = {
-  Fire: 'rgba(192,120,120,0.09)',
-  Earth: 'rgba(106,174,130,0.09)',
-  Air: 'rgba(134,180,216,0.09)',
-  Water: 'rgba(116,128,196,0.09)',
 };
 
 // ── Planet display symbols ──
@@ -98,35 +91,80 @@ const PLANET_COLORS: Record<string, string> = {
 
 // Gradient highlight (inner sphere catch-light)
 const PLANET_GRADIENT_INNER: Record<string, string> = {
-  Sun: '#E8D7A6', Jupiter: '#E8D7A6', Ascendant: '#E8D7A6', Midheaven: '#E8D7A6',
-  Moon: '#D4DDE8', Mercury: '#B8D4F0', Venus: '#EAB8C8', Mars: '#E8B4B4',
-  Saturn: '#B0B0C8', Uranus: '#A8DAE0', Neptune: '#B0BCEC', Pluto: '#C8B4E4',
+  Sun: '#E8D7A6',
+  Jupiter: '#E8D7A6',
+  Ascendant: '#E8D7A6',
+  Midheaven: '#E8D7A6',
+  Moon: '#D4DDE8',
+  Mercury: '#B8D4F0',
+  Venus: '#EAB8C8',
+  Mars: '#E8B4B4',
+  Saturn: '#B0B0C8',
+  Uranus: '#A8DAE0',
+  Neptune: '#B0BCEC',
+  Pluto: '#C8B4E4',
 };
 
 // Gradient shadow (outer sphere depth)
 const PLANET_GRADIENT_OUTER: Record<string, string> = {
-  Sun: '#7E6330', Jupiter: '#7E6330', Ascendant: '#7E6330', Midheaven: '#7E6330',
-  Moon: '#748098', Mercury: '#44849C', Venus: '#9C4C6C', Mars: '#9C4C4C',
-  Saturn: '#505070', Uranus: '#348490', Neptune: '#44549C', Pluto: '#5E4088',
+  Sun: '#7E6330',
+  Jupiter: '#7E6330',
+  Ascendant: '#7E6330',
+  Midheaven: '#7E6330',
+  Moon: '#748098',
+  Mercury: '#44849C',
+  Venus: '#9C4C6C',
+  Mars: '#9C4C4C',
+  Saturn: '#505070',
+  Uranus: '#348490',
+  Neptune: '#44549C',
+  Pluto: '#5E4088',
 };
 
 // Velvet indigo-violet palette for overlay/partner planets
 const OVERLAY_PLANET_COLORS: Record<string, string> = {
-  Sun: '#8C7CCF', Moon: '#7C70C0', Mercury: '#7080C4', Venus: '#9878C8',
-  Mars: '#9870B8', Jupiter: '#8C7CCF', Saturn: '#6864A8', Uranus: '#7090C8',
-  Neptune: '#6878C0', Pluto: '#8068C0', Ascendant: '#8C7CCF', Midheaven: '#8C7CCF',
+  Sun: '#8C7CCF',
+  Moon: '#7C70C0',
+  Mercury: '#7080C4',
+  Venus: '#9878C8',
+  Mars: '#9870B8',
+  Jupiter: '#8C7CCF',
+  Saturn: '#6864A8',
+  Uranus: '#7090C8',
+  Neptune: '#6878C0',
+  Pluto: '#8068C0',
+  Ascendant: '#8C7CCF',
+  Midheaven: '#8C7CCF',
 };
 
 const OVERLAY_GRADIENT_INNER: Record<string, string> = {
-  Sun: '#C4B8F0', Moon: '#B8ACEC', Mercury: '#B0BCEC', Venus: '#C8B0F0',
-  Mars: '#C4ACEC', Jupiter: '#C4B8F0', Saturn: '#A8A4DC', Uranus: '#B0C0EC',
-  Neptune: '#A8B8E8', Pluto: '#C0AEE8', Ascendant: '#C4B8F0', Midheaven: '#C4B8F0',
+  Sun: '#C4B8F0',
+  Moon: '#B8ACEC',
+  Mercury: '#B0BCEC',
+  Venus: '#C8B0F0',
+  Mars: '#C4ACEC',
+  Jupiter: '#C4B8F0',
+  Saturn: '#A8A4DC',
+  Uranus: '#B0C0EC',
+  Neptune: '#A8B8E8',
+  Pluto: '#C0AEE8',
+  Ascendant: '#C4B8F0',
+  Midheaven: '#C4B8F0',
 };
 
 const OVERLAY_GRADIENT_OUTER: Record<string, string> = {
-  Sun: '#2E2550', Moon: '#28205C', Mercury: '#243060', Venus: '#38285C',
-  Mars: '#3C2858', Jupiter: '#2E2550', Saturn: '#20205C', Uranus: '#243060',
-  Neptune: '#202858', Pluto: '#2E2060', Ascendant: '#2E2550', Midheaven: '#2E2550',
+  Sun: '#2E2550',
+  Moon: '#28205C',
+  Mercury: '#243060',
+  Venus: '#38285C',
+  Mars: '#3C2858',
+  Jupiter: '#2E2550',
+  Saturn: '#20205C',
+  Uranus: '#243060',
+  Neptune: '#202858',
+  Pluto: '#2E2060',
+  Ascendant: '#2E2550',
+  Midheaven: '#2E2550',
 };
 
 // Restrained aspect colors — glow without noise
@@ -351,7 +389,9 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   // ── Planet longitude map for aspect lookups ──
   const planetLongitudes = useMemo(() => {
     const map: Record<string, number> = {};
-    placedPlanets.forEach((p) => { map[p.label] = p.longitude; });
+    placedPlanets.forEach((p) => {
+      map[p.label] = p.longitude;
+    });
     return map;
   }, [placedPlanets]);
 
@@ -368,7 +408,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
       raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
     const placed = spreadPlanets(raw, ascLongitude, 8);
-    return placed.map(p => ({
+    return placed.map((p) => ({
       ...p,
       color: OVERLAY_PLANET_COLORS[p.label] || '#8C7CCF',
     }));
@@ -405,7 +445,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   const visibleAspects = useMemo(() => {
     if (!showAspects) return [];
     return (chart.aspects ?? [])
-      .filter((a: Aspect) => a?.orb < 8 && ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'].includes(a?.type?.name))
+      .filter(
+        (a: Aspect) =>
+          a?.orb < 8 &&
+          ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'].includes(a?.type?.name)
+      )
       .sort((a: Aspect, b: Aspect) => (a.orb ?? 99) - (b.orb ?? 99))
       .slice(0, 20);
   }, [chart.aspects, showAspects]);
@@ -422,15 +466,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
     return parts.join('. ');
   }, [chart, overlayChart, overlayName]);
 
-  return (
-    <View
-      style={styles.container}
-      accessible={true}
-      accessibilityRole="image"
-      accessibilityLabel={accessibilitySummary}
-    >
-      <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+  const ZODIAC_BAND_STROKE = 'rgba(194,166,90,0.10)';
 
+  return (
+    <View style={styles.container} accessible={true} accessibilityRole="image" accessibilityLabel={accessibilitySummary}>
+      <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
         {/* ── Gradient Definitions ── */}
         <Defs>
           {/* Deep navy background */}
@@ -440,12 +480,27 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             <Stop offset="100%" stopColor="#0F2238" stopOpacity="1" />
           </RadialGradient>
 
-          {/* Soft nebula vignette */}
+          {/* Soft nebula vignette — de-purpled (more indigo/steel) */}
           <RadialGradient id="nebulaGrad" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="#3D2952" stopOpacity="0.18" />
-            <Stop offset="40%" stopColor="#2D3A5C" stopOpacity="0.08" />
+            <Stop offset="0%" stopColor="#223A5C" stopOpacity="0.16" />
+            <Stop offset="45%" stopColor="#1B2E4D" stopOpacity="0.08" />
             <Stop offset="100%" stopColor="#0A1626" stopOpacity="0" />
           </RadialGradient>
+
+          {/* Zodiac band glass base (this replaces per-sign colored fills) */}
+          <RadialGradient id="zodiacBandGlass" cx="50%" cy="45%" r="65%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.035" />
+            <Stop offset="55%" stopColor="#FFFFFF" stopOpacity="0.018" />
+            <Stop offset="100%" stopColor="#000000" stopOpacity="0.10" />
+          </RadialGradient>
+
+          {/* Zodiac ring glass sheen — diagonal sweep */}
+          <SvgLinearGradient id="zodiacGlassSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.07" />
+            <Stop offset="30%" stopColor="#FFFFFF" stopOpacity="0.03" />
+            <Stop offset="65%" stopColor="#000000" stopOpacity="0.03" />
+            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.04" />
+          </SvgLinearGradient>
 
           {/* Center hub glass face */}
           <RadialGradient id="centerGlassGrad" cx="40%" cy="35%" r="70%">
@@ -459,14 +514,6 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             <Stop offset="55%" stopColor="#C2A65A" stopOpacity="0.04" />
             <Stop offset="100%" stopColor="#C2A65A" stopOpacity="0" />
           </RadialGradient>
-
-          {/* Zodiac ring glass sheen — diagonal sweep */}
-          <SvgLinearGradient id="zodiacGlassSheen" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.07" />
-            <Stop offset="30%" stopColor="#FFFFFF" stopOpacity="0.03" />
-            <Stop offset="65%" stopColor="#000000" stopOpacity="0.03" />
-            <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.04" />
-          </SvgLinearGradient>
 
           {/* Natal planet sphere gradients */}
           {Object.keys(PLANET_GRADIENT_INNER).map((planet) => (
@@ -501,19 +548,22 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
           return (
             <G key={sign.name}>
+              {/* Segment base: uniform glass (NO per-element colored blocks) */}
               <Path
                 d={arcPath(startAngle, endAngle, R_ZODIAC_OUTER, R_ZODIAC_INNER)}
-                fill={ELEMENT_BG[sign.element]}
-                stroke="rgba(194,166,90,0.10)"
-                strokeWidth={0.5}
+                fill="url(#zodiacBandGlass)"
+                stroke={ZODIAC_BAND_STROKE}
+                strokeWidth={0.6}
               />
+
+              {/* Gold glyph only, no background, smaller size for luxury look */}
               <SvgText
                 x={labelPos.x}
                 y={labelPos.y}
                 textAnchor="middle"
                 alignmentBaseline="central"
-                fontSize={14}
-                fill={elColor}
+                fontSize={18}
+                fill="#D4AF6A"
                 fontWeight="700"
               >
                 {sign.symbol}
@@ -638,14 +688,20 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             <G key={`cross-asp-${idx}`}>
               {/* Diffuse glow layer underneath */}
               <Line
-                x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+                x1={p1.x}
+                y1={p1.y}
+                x2={p2.x}
+                y2={p2.y}
                 stroke="rgba(159,168,184,1)"
                 strokeWidth={isTight ? 2.0 : 1.5}
                 opacity={0.08}
               />
               {/* Crisp platinum silk thread */}
               <Line
-                x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+                x1={p1.x}
+                y1={p1.y}
+                x2={p2.x}
+                y2={p2.y}
                 stroke={threadColor}
                 strokeWidth={isTight ? 0.5 : 0.3}
                 strokeDasharray="2,4"
@@ -666,8 +722,10 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             <G key={planet.label}>
               {/* Position tick */}
               <Line
-                x1={tickOuter.x} y1={tickOuter.y}
-                x2={tickInner.x} y2={tickInner.y}
+                x1={tickOuter.x}
+                y1={tickOuter.y}
+                x2={tickInner.x}
+                y2={tickInner.y}
                 stroke={baseColor}
                 strokeWidth={0.8}
                 opacity={0.45}
@@ -677,7 +735,9 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               <Circle cx={glyphPos.x} cy={glyphPos.y} r={12} fill={baseColor} opacity={0.06} />
               {/* Gradient sphere */}
               <Circle
-                cx={glyphPos.x} cy={glyphPos.y} r={11}
+                cx={glyphPos.x}
+                cy={glyphPos.y}
+                r={11}
                 fill={gradId}
                 stroke={baseColor}
                 strokeWidth={0.8}
@@ -724,8 +784,10 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             <G key={`overlay-${planet.label}`}>
               {/* Position tick — dashed for overlay */}
               <Line
-                x1={tickOuter.x} y1={tickOuter.y}
-                x2={tickInner.x} y2={tickInner.y}
+                x1={tickOuter.x}
+                y1={tickOuter.y}
+                x2={tickInner.x}
+                y2={tickInner.y}
                 stroke={baseColor}
                 strokeWidth={0.6}
                 opacity={0.35}
@@ -736,7 +798,9 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               <Circle cx={glyphPos.x} cy={glyphPos.y} r={10} fill={baseColor} opacity={0.05} />
               {/* Gradient sphere — dashed border to distinguish from natal */}
               <Circle
-                cx={glyphPos.x} cy={glyphPos.y} r={9}
+                cx={glyphPos.x}
+                cy={glyphPos.y}
+                r={9}
                 fill={gradId}
                 stroke={baseColor}
                 strokeWidth={1.2}
@@ -773,41 +837,51 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         })}
 
         {/* ── ASC / MC axis labels ── */}
-        {chart.ascendant && (() => {
-          const lon = getLongitude(chart.ascendant);
-          if (lon === null) return null;
-          const ang = astroToAngle(lon, ascLongitude);
-          const pos = polarToXY(ang, R_ZODIAC_INNER - 12);
-          return (
-            <G>
-              <SvgText
-                x={pos.x} y={pos.y}
-                textAnchor="middle" alignmentBaseline="central"
-                fontSize={7} fill={theme.primary} fontWeight="700"
-              >
-                ASC
-              </SvgText>
-            </G>
-          );
-        })()}
+        {chart.ascendant &&
+          (() => {
+            const lon = getLongitude(chart.ascendant);
+            if (lon === null) return null;
+            const ang = astroToAngle(lon, ascLongitude);
+            const pos = polarToXY(ang, R_ZODIAC_INNER - 12);
+            return (
+              <G>
+                <SvgText
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor="middle"
+                  alignmentBaseline="central"
+                  fontSize={7}
+                  fill={theme.primary}
+                  fontWeight="700"
+                >
+                  ASC
+                </SvgText>
+              </G>
+            );
+          })()}
 
-        {chart.midheaven && (() => {
-          const lon = getLongitude(chart.midheaven);
-          if (lon === null) return null;
-          const ang = astroToAngle(lon, ascLongitude);
-          const pos = polarToXY(ang, R_ZODIAC_INNER - 12);
-          return (
-            <G>
-              <SvgText
-                x={pos.x} y={pos.y}
-                textAnchor="middle" alignmentBaseline="central"
-                fontSize={7} fill={theme.primary} fontWeight="700"
-              >
-                MC
-              </SvgText>
-            </G>
-          );
-        })()}
+        {chart.midheaven &&
+          (() => {
+            const lon = getLongitude(chart.midheaven);
+            if (lon === null) return null;
+            const ang = astroToAngle(lon, ascLongitude);
+            const pos = polarToXY(ang, R_ZODIAC_INNER - 12);
+            return (
+              <G>
+                <SvgText
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor="middle"
+                  alignmentBaseline="central"
+                  fontSize={7}
+                  fill={theme.primary}
+                  fontWeight="700"
+                >
+                  MC
+                </SvgText>
+              </G>
+            );
+          })()}
 
         {/* ── House ring border ── */}
         <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={0.5} />
@@ -855,7 +929,6 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             </SvgText>
           </G>
         )}
-
       </Svg>
     </View>
   );

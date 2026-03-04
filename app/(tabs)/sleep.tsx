@@ -1,4 +1,5 @@
 /**
+ * File: app/(tabs)/sleep.tsx
  * Sleep Tab — Rest tracking & dream journal
  *
  * Log nightly sleep quality (1–5 moons), duration, and dream journal.
@@ -18,6 +19,7 @@ import {
   TextInput,
   TouchableWithoutFeedback,
   View,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,9 +38,7 @@ import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { NatalChart } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
-import {
-  generateDreamInterpretation,
-} from '../../services/premium/dreamInterpretation';
+import { generateDreamInterpretation } from '../../services/premium/dreamInterpretation';
 import {
   DreamInterpretation,
   DreamMetadata,
@@ -48,32 +48,40 @@ import {
   AwakenState,
   FeelingTier,
 } from '../../services/premium/dreamTypes';
+import { computeDreamAggregates, computeDreamPatterns } from '../../services/premium/dreamAggregates';
+
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  copper: '#CD7F5D',
+  emerald: '#6EBF8B',
+  amethyst: '#9D76C1',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
 
 /** Tier options shown as the first step in the feeling picker */
 const FEELING_TIERS: { id: FeelingTier; label: string; color: string }[] = [
-  { id: 'negative', label: 'Mostly Negative', color: '#E85D75' },
-  { id: 'positive', label: 'Mostly Positive', color: '#6CD97E' },
-  { id: 'mixed',    label: 'Mixed',           color: '#E8A94D' },
-  { id: 'hard',     label: 'Hard to name',    color: '#9B8EC4' },
-  { id: 'all',      label: 'All',             color: '#8A9BB5' },
+  { id: 'negative', label: 'Mostly Negative', color: PALETTE.copper },
+  { id: 'positive', label: 'Mostly Positive', color: PALETTE.emerald },
+  { id: 'mixed',    label: 'Mixed',           color: PALETTE.gold },
+  { id: 'hard',     label: 'Hard to name',    color: PALETTE.amethyst },
+  { id: 'all',      label: 'All',             color: PALETTE.silverBlue },
 ];
-import { computeDreamAggregates, computeDreamPatterns } from '../../services/premium/dreamAggregates';
 
-const ACCENT = '#7A8BE0';
-
-/** Precomputed lookup map: feeling id → DreamFeelingDef (avoids O(n) find in render) */
+/** Precomputed lookup map: feeling id → DreamFeelingDef */
 const FEELING_LOOKUP: Map<string, typeof DREAM_FEELINGS[number]> = new Map(
   DREAM_FEELINGS.map(f => [f.id, f]),
 );
 
-/** Simple fuzzy match — case-insensitive substring with tolerance for transposed chars */
+/** Simple fuzzy match */
 function fuzzyMatch(text: string, query: string): boolean {
   if (!query) return true;
   const lowerText = text.toLowerCase();
   const lowerQuery = query.toLowerCase().trim();
-  // Direct substring match
   if (lowerText.includes(lowerQuery)) return true;
-  // Character-by-character fuzzy: all query chars appear in order
   let ti = 0;
   for (let qi = 0; qi < lowerQuery.length; qi++) {
     const idx = lowerText.indexOf(lowerQuery[qi], ti);
@@ -108,27 +116,14 @@ const FeelingItem = memo(function FeelingItem({
           onToggle(feel.id);
         }}
         style={[styles.dreamMoodOption, isSelected && styles.dreamMoodOptionSelected]}
-        accessibilityRole="button"
-        accessibilityLabel={`${feel.label}${isSelected ? ', selected' : ''}`}
-        accessibilityHint={isSelected ? 'Double-tap to remove' : 'Double-tap to add this feeling'}
       >
-        <Text
-          style={[
-            styles.dreamMoodOptionText,
-            isSelected && styles.dreamMoodOptionTextSelected,
-          ]}
-        >
+        <Text style={[styles.dreamMoodOptionText, isSelected && styles.dreamMoodOptionTextSelected]}>
           {feel.label}
         </Text>
-        {isSelected && <Ionicons name="checkmark" size={16} color={ACCENT} />}
+        {isSelected && <Ionicons name="checkmark" size={18} color={PALETTE.amethyst} />}
       </Pressable>
       {isSelected && (
-        <View
-          style={styles.intensityRow}
-          accessibilityRole="adjustable"
-          accessibilityLabel={`${feel.label} intensity`}
-          accessibilityValue={{ min: 1, max: 5, now: intensity, text: `${intensity} of 5` }}
-        >
+        <View style={styles.intensityRow}>
           <Text style={styles.intensityLabel}>Intensity</Text>
           <View style={styles.intensityDots}>
             {[1, 2, 3, 4, 5].map(n => (
@@ -138,21 +133,9 @@ const FeelingItem = memo(function FeelingItem({
                   Haptics.selectionAsync().catch(() => {});
                   onIntensityChange(feel.id, n);
                 }}
-                style={[
-                  styles.intensityDot,
-                  n <= intensity && styles.intensityDotActive,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={`Set ${feel.label} intensity to ${n}`}
+                style={[styles.intensityDot, n <= intensity && styles.intensityDotActive]}
               >
-                <Text
-                  style={[
-                    styles.intensityDotText,
-                    n <= intensity && styles.intensityDotTextActive,
-                  ]}
-                >
-                  {n}
-                </Text>
+                <Text style={[styles.intensityDotText, n <= intensity && styles.intensityDotTextActive]}>{n}</Text>
               </Pressable>
             ))}
           </View>
@@ -185,7 +168,7 @@ const DREAM_THEMES: { id: DreamTheme; label: string }[] = [
 ];
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T12:00:00'); // noon to avoid TZ edge cases
+  const d = new Date(dateStr + 'T12:00:00');
   const todayStr = new Date().toISOString().split('T')[0];
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -214,49 +197,39 @@ export default function SleepScreen() {
   const [saved, setSaved] = useState(false);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // When non-null, we're editing an existing entry
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
-  // Date of the entry being edited (so we don't overwrite it with today)
   const [editingDate, setEditingDate] = useState<string | null>(null);
 
-  // Dream interpretation state
   const [natalChart, setNatalChart] = useState<NatalChart | null>(null);
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
   const [recentJournalEntries, setRecentJournalEntries] = useState<JournalEntry[]>([]);
-  /** Map of entryId → generated interpretation (lazy, on tap) */
   const [interpretations, setInterpretations] = useState<Record<string, DreamInterpretation>>({});
-  /** Which entry's dream reflection is expanded */
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
-  // Form state
-  const [quality, setQuality] = useState(0);           // 0 = unset, 1-5
+  const [quality, setQuality] = useState(0);
   const [durationHours, setDurationHours] = useState(7.5);
   const [hasDuration, setHasDuration] = useState(false);
   const [dreamText, setDreamText] = useState('');
-  // New feeling/metadata state for v2 engine
+  
   const [selectedFeelings, setSelectedFeelings] = useState<SelectedFeeling[]>([]);
   const [dreamMetadata, setDreamMetadata] = useState<DreamMetadata>({
-    vividness: 3,
-    lucidity: 1,
-    controlLevel: 3,
-    awakenState: 'calm',
-    recurring: false,
+    vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false,
   });
+  
   const [showAwakenDropdown, setShowAwakenDropdown] = useState(false);
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
   const [selectedTier, setSelectedTier] = useState<FeelingTier | null>(null);
   const [showMetadata, setShowMetadata] = useState(false);
-  // Fuzzy search state for feelings picker
+  
   const [feelingSearch, setFeelingSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Error / offline state
+  
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Clear timers on unmount
   useEffect(() => {
     return () => {
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -264,18 +237,12 @@ export default function SleepScreen() {
     };
   }, []);
 
-  // Debounce feeling search input (250ms)
   useEffect(() => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
-      setDebouncedSearch(feelingSearch);
-    }, 250);
-    return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    };
+    searchTimerRef.current = setTimeout(() => { setDebouncedSearch(feelingSearch); }, 250);
+    return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
   }, [feelingSearch]);
 
-  /** Filtered + sorted feelings based on tier + search query */
   const filteredFeelings = useMemo(() => {
     if (!selectedTier) return [];
     return DREAM_FEELINGS
@@ -284,7 +251,6 @@ export default function SleepScreen() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [selectedTier, debouncedSearch]);
 
-  /** Stable callbacks for FeelingItem to avoid re-renders */
   const handleToggleFeeling = useCallback((id: string) => {
     setSelectedFeelings(prev => {
       const exists = prev.some(f => f.id === id);
@@ -293,18 +259,14 @@ export default function SleepScreen() {
   }, []);
 
   const handleIntensityChange = useCallback((id: string, intensity: number) => {
-    setSelectedFeelings(prev =>
-      prev.map(f => (f.id === id ? { ...f, intensity } : f)),
-    );
+    setSelectedFeelings(prev => prev.map(f => (f.id === id ? { ...f, intensity } : f)));
   }, []);
 
-  /** Resolve feeling labels using lookup map (O(1) per feeling) */
   const selectedFeelingLabels = useMemo(
     () => selectedFeelings.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id).join(', '),
     [selectedFeelings],
   );
 
-  // Populate the form from an existing entry (edit mode) or reset to blank (new mode)
   const applyEntryToForm = useCallback((entry: SleepEntry | undefined) => {
     if (entry) {
       setEditingEntryId(entry.id);
@@ -318,7 +280,6 @@ export default function SleepScreen() {
         setDurationHours(7.5);
       }
       setDreamText(entry.dreamText ?? '');
-      // Parse feelings & metadata from stored JSON
       if (entry.dreamFeelings) {
         try {
           const parsed = JSON.parse(entry.dreamFeelings) as SelectedFeeling[];
@@ -329,9 +290,7 @@ export default function SleepScreen() {
         try {
           const parsed = JSON.parse(entry.dreamMetadata) as DreamMetadata;
           setDreamMetadata(parsed);
-        } catch {
-          setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
-        }
+        } catch { setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false }); }
       } else {
         setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
       }
@@ -377,22 +336,14 @@ export default function SleepScreen() {
           setRecentJournalEntries(journalEntries);
           applyEntryToForm(data.find(e => e.date === today));
 
-          // Generate natal chart silently for personality profile layer
           try {
             const chart = AstrologyCalculator.generateNatalChart({
-              date: savedChart.birthDate,
-              time: savedChart.birthTime,
-              hasUnknownTime: savedChart.hasUnknownTime,
-              place: savedChart.birthPlace,
-              latitude: savedChart.latitude,
-              longitude: savedChart.longitude,
-              timezone: savedChart.timezone,
-              houseSystem: savedChart.houseSystem,
+              date: savedChart.birthDate, time: savedChart.birthTime, hasUnknownTime: savedChart.hasUnknownTime,
+              place: savedChart.birthPlace, latitude: savedChart.latitude, longitude: savedChart.longitude,
+              timezone: savedChart.timezone, houseSystem: savedChart.houseSystem,
             });
             setNatalChart(chart);
-          } catch {
-            // Chart unavailable — interpretation still works, just without personality layer
-          }
+          } catch {}
         } catch (e) {
           logger.error('Sleep load failed:', e);
           setLoadError('Could not load your sleep data. Check your connection and pull down to retry.');
@@ -411,22 +362,14 @@ export default function SleepScreen() {
       setSaving(true);
       setSaveError(null);
 
-      // Offline check
       let isConnected = true;
       try { await fetch('https://clients3.google.com/generate_204', { method: 'HEAD', mode: 'no-cors' }); } catch { isConnected = false; }
-      if (!isConnected) {
-        // Allow local-only save but warn
-        logger.warn('Saving sleep entry while offline');
-      }
+      if (!isConnected) logger.warn('Saving sleep entry while offline');
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
       const now = new Date().toISOString();
-
-      // Preserve createdAt when updating an existing entry
-      const existingCreatedAt = editingEntryId
-        ? entries.find(e => e.id === editingEntryId)?.createdAt ?? now
-        : now;
+      const existingCreatedAt = editingEntryId ? entries.find(e => e.id === editingEntryId)?.createdAt ?? now : now;
 
       const entry: SleepEntry = {
         id: editingEntryId ?? generateId(),
@@ -445,33 +388,25 @@ export default function SleepScreen() {
       };
 
       await localDb.saveSleepEntry(entry);
-
       const updated = await localDb.getSleepEntries(chartId, 30);
       setEntries(updated);
 
-      // Find the saved entry in the refreshed list
       const savedEntry = updated.find(e => e.id === entry.id);
-
-      // Clear cached interpretation so it regenerates with updated dream text
       const savedId = entry.id;
+      
       setInterpretations(prev => {
         const next = { ...prev };
         delete next[savedId];
         return next;
       });
 
-      // Auto-generate interpretation when premium user saves a dream with text or feelings
       if (isPremium && savedEntry?.dreamText) {
         try {
           const aggregates = computeDreamAggregates(selectedFeelings, natalChart);
           const patterns = computeDreamPatterns(selectedFeelings, updated.filter(e => e.id !== savedEntry.id));
           const result = generateDreamInterpretation({
-            entry: savedEntry,
-            dreamText: savedEntry.dreamText,
-            feelings: selectedFeelings,
-            metadata: dreamMetadata,
-            aggregates,
-            patterns,
+            entry: savedEntry, dreamText: savedEntry.dreamText, feelings: selectedFeelings,
+            metadata: dreamMetadata, aggregates, patterns,
           });
           setInterpretations(prev => ({ ...prev, [savedEntry.id]: result }));
           setExpandedEntryId(savedEntry.id);
@@ -482,10 +417,7 @@ export default function SleepScreen() {
         if (expandedEntryId === savedId) setExpandedEntryId(null);
       }
 
-      // Stay in edit mode for the entry we just saved
       applyEntryToForm(savedEntry);
-
-      // Show brief "Saved" confirmation
       setSaving(false);
       setSaved(true);
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
@@ -494,9 +426,7 @@ export default function SleepScreen() {
       logger.error('Sleep save failed:', e);
       let isOffline = false;
       try { await fetch('https://clients3.google.com/generate_204', { method: 'HEAD', mode: 'no-cors' }); } catch { isOffline = true; }
-      const msg = isOffline
-        ? 'You appear to be offline. Your entry could not be saved. Please try again when connected.'
-        : 'Could not save entry. Please try again.';
+      const msg = isOffline ? 'You appear to be offline. Your entry could not be saved.' : 'Could not save entry. Please try again.';
       setSaveError(msg);
       Alert.alert('Save Error', msg);
       setSaving(false);
@@ -505,8 +435,6 @@ export default function SleepScreen() {
 
   const handleDreamReflect = useCallback((entry: SleepEntry) => {
     if (!entry.dreamText) return;
-
-    // Toggle off if already open
     if (expandedEntryId === entry.id) {
       setExpandedEntryId(null);
       return;
@@ -515,28 +443,19 @@ export default function SleepScreen() {
     setExpandedEntryId(entry.id);
     Haptics.selectionAsync().catch(() => {});
 
-    // Generate if not already cached
     if (!interpretations[entry.id]) {
       try {
-        // Parse stored feelings and metadata
         let feelings: SelectedFeeling[] = [];
         let metadata: DreamMetadata = { vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false };
-        if (entry.dreamFeelings) {
-          try { feelings = JSON.parse(entry.dreamFeelings); } catch {}
-        }
-        if (entry.dreamMetadata) {
-          try { metadata = JSON.parse(entry.dreamMetadata); } catch {}
-        }
+        if (entry.dreamFeelings) { try { feelings = JSON.parse(entry.dreamFeelings); } catch {} }
+        if (entry.dreamMetadata) { try { metadata = JSON.parse(entry.dreamMetadata); } catch {} }
+        
         const aggregates = computeDreamAggregates(feelings, natalChart);
         const otherEntries = entries.filter(e => e.id !== entry.id);
         const patterns = computeDreamPatterns(feelings, otherEntries);
+        
         const result = generateDreamInterpretation({
-          entry,
-          dreamText: entry.dreamText,
-          feelings,
-          metadata,
-          aggregates,
-          patterns,
+          entry, dreamText: entry.dreamText, feelings, metadata, aggregates, patterns,
         });
         setInterpretations(prev => ({ ...prev, [entry.id]: result }));
       } catch (e) {
@@ -558,8 +477,6 @@ export default function SleepScreen() {
             if (chartId) {
               const updated = await localDb.getSleepEntries(chartId, 30);
               setEntries(updated);
-
-              // Reset form if we just deleted the entry being edited
               if (editingEntryId === id) {
                 const todayEntry = updated.find(e => e.date === today);
                 applyEntryToForm(todayEntry);
@@ -581,12 +498,8 @@ export default function SleepScreen() {
     const qualities = recent.filter(e => e.quality != null).map(e => e.quality!);
     return {
       count: recent.length,
-      avgDuration: durations.length > 0
-        ? durations.reduce((a, b) => a + b) / durations.length
-        : null,
-      avgQuality: qualities.length > 0
-        ? qualities.reduce((a, b) => a + b) / qualities.length
-        : null,
+      avgDuration: durations.length > 0 ? durations.reduce((a, b) => a + b) / durations.length : null,
+      avgQuality: qualities.length > 0 ? qualities.reduce((a, b) => a + b) / qualities.length : null,
     };
   }, [entries]);
 
@@ -609,31 +522,19 @@ export default function SleepScreen() {
             <Text style={styles.subtitle}>Track your rest and dreams</Text>
           </Animated.View>
 
-          {/* ── Log Form ── */}
+          {/* ── Log Form (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.section}>
-            <LinearGradient
-              colors={['rgba(122, 139, 224, 0.10)', 'rgba(122, 139, 224, 0.03)']}
-              style={styles.formCard}
-            >
+            <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.formCard}>
               <View style={styles.formTitleRow}>
                 <Text style={styles.formTitle}>
-                  {editingEntryId
-                    ? editingDate === today
-                      ? "Update tonight's entry"
-                      : `Edit ${formatDate(editingDate!)}`
-                    : 'How was last night?'}
+                  {editingEntryId ? editingDate === today ? "Update tonight's entry" : `Edit ${formatDate(editingDate!)}` : 'How was last night?'}
                 </Text>
                 {editingEntryId && editingDate !== today && (
                   <Pressable
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      applyEntryToForm(entries.find(e => e.date === today));
-                    }}
+                    onPress={() => { Haptics.selectionAsync().catch(() => {}); applyEntryToForm(entries.find(e => e.date === today)); }}
                     style={styles.cancelEditBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel="Cancel editing, return to today"
                   >
-                    <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
+                    <Ionicons name="close-circle" size={16} color={theme.textMuted} />
                     <Text style={styles.cancelEditText}>Cancel</Text>
                   </Pressable>
                 )}
@@ -645,19 +546,10 @@ export default function SleepScreen() {
                 {[1, 2, 3, 4, 5].map(n => (
                   <Pressable
                     key={n}
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setQuality(n === quality ? 0 : n);
-                    }}
+                    onPress={() => { Haptics.selectionAsync().catch(() => {}); setQuality(n === quality ? 0 : n); }}
                     style={styles.moonBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Rate sleep ${n} out of 5`}
                   >
-                    <Ionicons
-                      name={n <= quality ? 'moon' : 'moon-outline'}
-                      size={30}
-                      color={n <= quality ? theme.primary : theme.textMuted}
-                    />
+                    <Ionicons name={n <= quality ? 'moon' : 'moon-outline'} size={32} color={n <= quality ? PALETTE.silverBlue : 'rgba(255,255,255,0.1)'} />
                   </Pressable>
                 ))}
               </View>
@@ -667,22 +559,14 @@ export default function SleepScreen() {
               <View style={styles.stepperRow}>
                 <Pressable
                   style={styles.stepperBtn}
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setHasDuration(true);
-                    setDurationHours(h => Math.max(0.5, parseFloat((h - 0.5).toFixed(1))));
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Decrease hours"
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setHasDuration(true); setDurationHours(h => Math.max(0.5, parseFloat((h - 0.5).toFixed(1)))); }}
                 >
-                  <Ionicons name="remove" size={22} color={theme.textPrimary} />
+                  <Ionicons name="remove" size={24} color={PALETTE.textMain} />
                 </Pressable>
 
                 <Pressable
                   style={styles.stepperValue}
                   onLongPress={() => { setHasDuration(false); setDurationHours(7.5); }}
-                  accessibilityRole="button"
-                  accessibilityLabel={hasDuration ? `${durationHours} hours, long press to clear` : 'Hours not set'}
                 >
                   <Text style={[styles.stepperValueText, !hasDuration && styles.stepperPlaceholder]}>
                     {hasDuration ? formatDuration(durationHours) : '—'}
@@ -691,20 +575,12 @@ export default function SleepScreen() {
 
                 <Pressable
                   style={styles.stepperBtn}
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setHasDuration(true);
-                    setDurationHours(h => Math.min(12, parseFloat((h + 0.5).toFixed(1))));
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Increase hours"
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setHasDuration(true); setDurationHours(h => Math.min(12, parseFloat((h + 0.5).toFixed(1)))); }}
                 >
-                  <Ionicons name="add" size={22} color={theme.textPrimary} />
+                  <Ionicons name="add" size={24} color={PALETTE.textMain} />
                 </Pressable>
               </View>
-              {hasDuration && (
-                <Text style={styles.stepperHint}>Long press to clear</Text>
-              )}
+              {hasDuration && <Text style={styles.stepperHint}>Long press to clear</Text>}
 
               {/* Dream journal — Deeper Sky only */}
               <Text style={styles.fieldLabel}>Dream journal</Text>
@@ -718,30 +594,21 @@ export default function SleepScreen() {
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
-                  accessibilityLabel="Dream journal text"
-                  accessibilityHint="Describe what you dreamed about"
                 />
               ) : (
-                <Pressable
-                  onPress={() => router.push('/(tabs)/premium' as Href)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Unlock dream journal with Deeper Sky"
-                >
-                  <LinearGradient
-                    colors={['rgba(201,169,98,0.08)', 'rgba(201,169,98,0.03)']}
-                    style={styles.dreamLock}
-                  >
-                    <Ionicons name="lock-closed" size={15} color={theme.primary} />
+                <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                  <LinearGradient colors={['rgba(212, 175, 55, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={styles.dreamLock}>
+                    <Ionicons name="lock-closed" size={16} color={PALETTE.gold} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.dreamLockTitle}>Dream journal — Deeper Sky</Text>
                       <Text style={styles.dreamLockSub}>Log and search your dreams with Deeper Sky</Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                    <Ionicons name="arrow-forward" size={16} color={PALETTE.gold} />
                   </LinearGradient>
                 </Pressable>
               )}
 
-              {/* Dream feelings — multi-select with intensity (shown when dream text is non-empty, premium only) */}
+              {/* Dream feelings */}
               {isPremium && dreamText.trim().length > 0 && (
                 <>
                   <Text style={styles.fieldLabel}>How did the dream feel?</Text>
@@ -752,51 +619,32 @@ export default function SleepScreen() {
                       if (!showFeelingPicker) { setFeelingSearch(''); setDebouncedSearch(''); }
                     }}
                     style={styles.dreamMoodDropdown}
-                    accessibilityRole="button"
-                    accessibilityLabel={selectedFeelings.length > 0 ? `${selectedFeelings.length} feelings selected` : 'Select dream feelings'}
-                    accessibilityHint="Opens a searchable list of dream feelings"
                   >
                     <Text style={selectedFeelings.length > 0 ? styles.dreamMoodDropdownText : styles.dreamMoodDropdownPlaceholder}>
-                      {selectedFeelings.length > 0
-                        ? selectedFeelingLabels
-                        : 'Tap to select feelings…'}
+                      {selectedFeelings.length > 0 ? selectedFeelingLabels : 'Tap to select feelings…'}
                     </Text>
-                    <Ionicons
-                      name={showFeelingPicker ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={theme.textMuted}
-                    />
+                    <Ionicons name={showFeelingPicker ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                   </Pressable>
+
                   {showFeelingPicker && (
-                    <View style={styles.dreamMoodOptions} accessibilityRole="list" accessibilityLabel="Dream feelings selector">
-                      {/* Step 1: Tier selector */}
+                    <View style={styles.dreamMoodOptions}>
+                      {/* Tier selector */}
                       <View style={styles.tierRow}>
                         {FEELING_TIERS.map(tier => {
                           const isActive = selectedTier === tier.id;
-                          const tierCount = tier.id === 'all'
-                            ? selectedFeelings.length
-                            : selectedFeelings.filter(f => FEELING_LOOKUP.get(f.id)?.tier === tier.id).length;
+                          const tierCount = tier.id === 'all' ? selectedFeelings.length : selectedFeelings.filter(f => FEELING_LOOKUP.get(f.id)?.tier === tier.id).length;
                           return (
                             <Pressable
                               key={tier.id}
                               onPress={() => {
                                 Haptics.selectionAsync().catch(() => {});
                                 setSelectedTier(prev => prev === tier.id ? null : tier.id);
-                                setFeelingSearch('');
-                                setDebouncedSearch('');
+                                setFeelingSearch(''); setDebouncedSearch('');
                               }}
-                              style={[
-                                styles.tierPill,
-                                isActive && { backgroundColor: tier.color + '22', borderColor: tier.color },
-                              ]}
-                              accessibilityRole="button"
-                              accessibilityLabel={`${tier.label}${tierCount > 0 ? `, ${tierCount} selected` : ''}${isActive ? ', showing' : ''}`}
+                              style={[styles.tierPill, isActive && { backgroundColor: tier.color + '22', borderColor: tier.color }]}
                             >
                               <View style={[styles.tierDot, { backgroundColor: tier.color }]} />
-                              <Text style={[
-                                styles.tierPillText,
-                                isActive && { color: tier.color },
-                              ]}>{tier.label}</Text>
+                              <Text style={[styles.tierPillText, isActive && { color: tier.color }]}>{tier.label}</Text>
                               {tierCount > 0 && (
                                 <View style={[styles.tierBadge, { backgroundColor: tier.color }]}>
                                   <Text style={styles.tierBadgeText}>{tierCount}</Text>
@@ -807,10 +655,10 @@ export default function SleepScreen() {
                         })}
                       </View>
 
-                      {/* Step 1b: Search input (shown when a tier is selected) */}
+                      {/* Search input */}
                       {selectedTier && (
                         <View style={styles.feelingSearchRow}>
-                          <Ionicons name="search-outline" size={16} color={theme.textMuted} />
+                          <Ionicons name="search-outline" size={18} color={theme.textMuted} />
                           <TextInput
                             style={styles.feelingSearchInput}
                             value={feelingSearch}
@@ -818,22 +666,16 @@ export default function SleepScreen() {
                             placeholder="Search feelings…"
                             placeholderTextColor={theme.textMuted}
                             autoCorrect={false}
-                            accessibilityLabel="Search feelings"
-                            accessibilityHint="Type to filter the feelings list"
                           />
                           {feelingSearch.length > 0 && (
-                            <Pressable
-                              onPress={() => { setFeelingSearch(''); setDebouncedSearch(''); }}
-                              accessibilityRole="button"
-                              accessibilityLabel="Clear search"
-                            >
-                              <Ionicons name="close-circle" size={16} color={theme.textMuted} />
+                            <Pressable onPress={() => { setFeelingSearch(''); setDebouncedSearch(''); }}>
+                              <Ionicons name="close-circle" size={18} color={theme.textMuted} />
                             </Pressable>
                           )}
                         </View>
                       )}
 
-                      {/* Step 2: Virtualized feeling list */}
+                      {/* Feeling list */}
                       {selectedTier && filteredFeelings.length > 0 && (
                         <FlatList
                           data={filteredFeelings}
@@ -856,18 +698,13 @@ export default function SleepScreen() {
                           style={{ maxHeight: 320 }}
                           nestedScrollEnabled
                           keyboardShouldPersistTaps="handled"
-                          ListEmptyComponent={
-                            <Text style={styles.tierHint}>No feelings match your search</Text>
-                          }
+                          ListEmptyComponent={<Text style={styles.tierHint}>No feelings match your search</Text>}
                         />
                       )}
 
-                      {/* Empty search results message */}
                       {selectedTier && filteredFeelings.length === 0 && debouncedSearch.length > 0 && (
                         <Text style={styles.tierHint}>No feelings match "{debouncedSearch}"</Text>
                       )}
-
-                      {/* Hint when no tier is selected */}
                       {!selectedTier && (
                         <Text style={styles.tierHint}>Choose a category above to see feelings</Text>
                       )}
@@ -876,166 +713,76 @@ export default function SleepScreen() {
 
                   {/* Dream metadata section */}
                   <Pressable
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setShowMetadata(prev => !prev);
-                    }}
-                    style={[styles.dreamMoodDropdown, { marginTop: theme.spacing.sm }]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Dream details"
+                    onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowMetadata(prev => !prev); }}
+                    style={[styles.dreamMoodDropdown, { marginTop: 12 }]}
                   >
                     <Text style={styles.dreamMoodDropdownText}>Dream details</Text>
-                    <Ionicons
-                      name={showMetadata ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={theme.textMuted}
-                    />
+                    <Ionicons name={showMetadata ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                   </Pressable>
+                  
                   {showMetadata && (
                     <View style={styles.metadataSection}>
-                      {/* Vividness */}
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Vividness</Text>
                         <View style={styles.intensityDots}>
                           {[1, 2, 3, 4, 5].map(n => (
-                            <Pressable
-                              key={n}
-                              onPress={() => {
-                                Haptics.selectionAsync().catch(() => {});
-                                setDreamMetadata(prev => ({ ...prev, vividness: n }));
-                              }}
-                              style={[styles.intensityDot, n <= dreamMetadata.vividness && styles.intensityDotActive]}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Vividness ${n}`}
-                            >
+                            <Pressable key={n} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, vividness: n })); }} style={[styles.intensityDot, n <= dreamMetadata.vividness && styles.intensityDotActive]}>
                               <Text style={[styles.intensityDotText, n <= dreamMetadata.vividness && styles.intensityDotTextActive]}>{n}</Text>
                             </Pressable>
                           ))}
                         </View>
                       </View>
-                      {/* Lucidity */}
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Lucidity</Text>
                         <View style={styles.intensityDots}>
                           {[1, 2, 3, 4, 5].map(n => (
-                            <Pressable
-                              key={n}
-                              onPress={() => {
-                                Haptics.selectionAsync().catch(() => {});
-                                setDreamMetadata(prev => ({ ...prev, lucidity: n }));
-                              }}
-                              style={[styles.intensityDot, n <= dreamMetadata.lucidity && styles.intensityDotActive]}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Lucidity ${n}`}
-                            >
+                            <Pressable key={n} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, lucidity: n })); }} style={[styles.intensityDot, n <= dreamMetadata.lucidity && styles.intensityDotActive]}>
                               <Text style={[styles.intensityDotText, n <= dreamMetadata.lucidity && styles.intensityDotTextActive]}>{n}</Text>
                             </Pressable>
                           ))}
                         </View>
                       </View>
-                      {/* Sense of control */}
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Sense of control</Text>
                         <View style={styles.intensityDots}>
                           {[1, 2, 3, 4, 5].map(n => (
-                            <Pressable
-                              key={n}
-                              onPress={() => {
-                                Haptics.selectionAsync().catch(() => {});
-                                setDreamMetadata(prev => ({ ...prev, controlLevel: n }));
-                              }}
-                              style={[styles.intensityDot, n <= dreamMetadata.controlLevel && styles.intensityDotActive]}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Sense of control ${n}`}
-                            >
+                            <Pressable key={n} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, controlLevel: n })); }} style={[styles.intensityDot, n <= dreamMetadata.controlLevel && styles.intensityDotActive]}>
                               <Text style={[styles.intensityDotText, n <= dreamMetadata.controlLevel && styles.intensityDotTextActive]}>{n}</Text>
                             </Pressable>
                           ))}
                         </View>
                       </View>
-                      {/* Overall theme */}
+
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Overall theme</Text>
                         <View style={styles.awakenRow}>
                           {DREAM_THEMES.map(t => (
-                            <Pressable
-                              key={t.id}
-                              onPress={() => {
-                                Haptics.selectionAsync().catch(() => {});
-                                setDreamMetadata(prev => ({
-                                  ...prev,
-                                  overallTheme: prev.overallTheme === t.id ? undefined : t.id,
-                                }));
-                              }}
-                              style={[styles.awakenChip, dreamMetadata.overallTheme === t.id && styles.awakenChipActive]}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Theme ${t.label}${dreamMetadata.overallTheme === t.id ? ', selected' : ''}`}
-                            >
-                              <Text style={[styles.awakenChipText, dreamMetadata.overallTheme === t.id && styles.awakenChipTextActive]}>
-                                {t.label}
-                              </Text>
+                            <Pressable key={t.id} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, overallTheme: prev.overallTheme === t.id ? undefined : t.id })); }} style={[styles.awakenChip, dreamMetadata.overallTheme === t.id && styles.awakenChipActive]}>
+                              <Text style={[styles.awakenChipText, dreamMetadata.overallTheme === t.id && styles.awakenChipTextActive]}>{t.label}</Text>
                             </Pressable>
                           ))}
                         </View>
                       </View>
-                      {/* Awaken state — dropdown */}
+
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Woke up feeling</Text>
-                        <Pressable
-                          onPress={() => {
-                            Haptics.selectionAsync().catch(() => {});
-                            setShowAwakenDropdown(prev => !prev);
-                          }}
-                          style={styles.awakenDropdown}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Woke up feeling ${AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}`}
-                          accessibilityHint="Opens a list of wake-up feelings"
-                        >
-                          <Text style={styles.awakenDropdownText}>
-                            {AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}
-                          </Text>
-                          <Ionicons
-                            name={showAwakenDropdown ? 'chevron-up' : 'chevron-down'}
-                            size={16}
-                            color={theme.textMuted}
-                          />
+                        <Pressable onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowAwakenDropdown(prev => !prev); }} style={styles.awakenDropdown}>
+                          <Text style={styles.awakenDropdownText}>{AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}</Text>
+                          <Ionicons name={showAwakenDropdown ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                         </Pressable>
                         {showAwakenDropdown && (
                           <View style={styles.awakenDropdownList}>
                             {AWAKEN_STATES.map(s => (
-                              <Pressable
-                                key={s.id}
-                                onPress={() => {
-                                  Haptics.selectionAsync().catch(() => {});
-                                  setDreamMetadata(prev => ({ ...prev, awakenState: s.id }));
-                                  setShowAwakenDropdown(false);
-                                }}
-                                style={[styles.awakenDropdownItem, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemActive]}
-                                accessibilityRole="button"
-                                accessibilityLabel={`Woke up ${s.label}${dreamMetadata.awakenState === s.id ? ', selected' : ''}`}
-                              >
-                                <Text style={[styles.awakenDropdownItemText, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemTextActive]}>
-                                  {s.label}
-                                </Text>
-                                {dreamMetadata.awakenState === s.id && (
-                                  <Ionicons name="checkmark" size={16} color={ACCENT} />
-                                )}
+                              <Pressable key={s.id} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, awakenState: s.id })); setShowAwakenDropdown(false); }} style={[styles.awakenDropdownItem, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemActive]}>
+                                <Text style={[styles.awakenDropdownItemText, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemTextActive]}>{s.label}</Text>
+                                {dreamMetadata.awakenState === s.id && <Ionicons name="checkmark" size={18} color={PALETTE.amethyst} />}
                               </Pressable>
                             ))}
                           </View>
                         )}
                       </View>
-                      {/* Recurring toggle */}
-                      <Pressable
-                        onPress={() => {
-                          Haptics.selectionAsync().catch(() => {});
-                          setDreamMetadata(prev => ({ ...prev, recurring: !prev.recurring }));
-                        }}
-                        style={styles.recurringRow}
-                        accessibilityRole="switch"
-                        accessibilityState={{ checked: dreamMetadata.recurring }}
-                        accessibilityLabel="Recurring dream"
-                      >
+                      
+                      <Pressable onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, recurring: !prev.recurring })); }} style={styles.recurringRow}>
                         <Text style={styles.metadataLabel}>Recurring dream?</Text>
                         <View style={[styles.toggleTrack, dreamMetadata.recurring && styles.toggleTrackActive]}>
                           <View style={[styles.toggleThumb, dreamMetadata.recurring && styles.toggleThumbActive]} />
@@ -1048,46 +795,25 @@ export default function SleepScreen() {
 
               {/* Save */}
               <Pressable
-                style={({ pressed }) => [
-                  styles.saveBtn,
-                  (!canSave || saving || saved) && styles.saveBtnDisabled,
-                  pressed && styles.saveBtnPressed,
-                ]}
+                style={({ pressed }) => [styles.saveBtn, (!canSave || saving || saved) && styles.saveBtnDisabled, pressed && styles.saveBtnPressed]}
                 onPress={handleSave}
                 disabled={!canSave || saving || saved}
-                accessibilityRole="button"
-                accessibilityLabel="Save sleep entry"
               >
                 <LinearGradient
-                  colors={
-                    saved
-                      ? ['rgba(110,191,139,0.6)', 'rgba(110,191,139,0.4)']
-                      : canSave
-                        ? [...theme.goldGradient]
-                        : ['rgba(201,169,98,0.3)', 'rgba(201,169,98,0.2)']
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
+                  colors={saved ? ['rgba(110,191,139,0.6)', 'rgba(110,191,139,0.4)'] : canSave ? ['rgba(212, 175, 55, 0.25)', 'rgba(212, 175, 55, 0.1)'] : ['rgba(212, 175, 55, 0.1)', 'rgba(212, 175, 55, 0.05)']}
                   style={styles.saveBtnGradient}
                 >
                   <Text style={[styles.saveBtnText, !canSave && !saved && styles.saveBtnTextDisabled]}>
-                    {saving ? 'Saving…' : saved ? 'Saved ✓' : editingEntryId ? 'Update Entry' : 'Save Entry'}
+                    {saving ? 'Saving...' : saved ? 'Saved ✓' : editingEntryId ? 'Update Entry' : 'Save Entry'}
                   </Text>
                 </LinearGradient>
               </Pressable>
 
-              {/* Save error banner */}
               {saveError && (
                 <View style={styles.errorBanner}>
-                  <Ionicons name="warning-outline" size={16} color="#E85D75" />
+                  <Ionicons name="warning-outline" size={18} color={PALETTE.copper} />
                   <Text style={styles.errorBannerText}>{saveError}</Text>
-                  <Pressable
-                    onPress={() => setSaveError(null)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Dismiss error"
-                  >
-                    <Ionicons name="close" size={16} color={theme.textMuted} />
-                  </Pressable>
+                  <Pressable onPress={() => setSaveError(null)}><Ionicons name="close" size={18} color={theme.textMuted} /></Pressable>
                 </View>
               )}
             </LinearGradient>
@@ -1100,20 +826,15 @@ export default function SleepScreen() {
             if (!isPremium || !todayEntry?.dreamText || !todayInterp) return null;
             return (
               <Animated.View entering={FadeInDown.delay(180).duration(600)} style={styles.section}>
-                <LinearGradient
-                  colors={['rgba(122,139,224,0.12)', 'rgba(122,139,224,0.03)']}
-                  style={styles.todayInterpretCard}
-                >
+                <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(20, 24, 34, 0.7)']} style={styles.todayInterpretCard}>
                   <View style={styles.todayInterpretHeader}>
-                    <Ionicons name="sparkles" size={16} color={ACCENT} />
+                    <Ionicons name="sparkles" size={18} color={PALETTE.amethyst} />
                     <Text style={styles.todayInterpretTitle}>Your Dream Reflection</Text>
                   </View>
-
                   <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
-
                   <View style={styles.sitWithBox}>
                     <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                    <Text style={styles.sitWithText}>{todayInterp.question}</Text>
+                    <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
                   </View>
                 </LinearGradient>
               </Animated.View>
@@ -1125,34 +846,19 @@ export default function SleepScreen() {
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Last 7 Days</Text>
               <View style={styles.statsRow}>
-                <LinearGradient
-                  colors={['rgba(122,139,224,0.12)', 'rgba(122,139,224,0.04)']}
-                  style={styles.statCard}
-                >
-                  <Text style={styles.statLabel}>NIGHTS</Text>
+                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.statCard}>
+                  <Text style={[styles.statLabel, { color: PALETTE.silverBlue }]}>NIGHTS</Text>
                   <Text style={styles.statValue}>{stats.count}</Text>
                   <Text style={styles.statSub}>logged</Text>
                 </LinearGradient>
-
-                <LinearGradient
-                  colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']}
-                  style={styles.statCard}
-                >
-                  <Text style={styles.statLabel}>AVG SLEEP</Text>
-                  <Text style={styles.statValue}>
-                    {stats.avgDuration != null ? formatDuration(stats.avgDuration) : '—'}
-                  </Text>
+                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.statCard}>
+                  <Text style={[styles.statLabel, { color: PALETTE.gold }]}>AVG SLEEP</Text>
+                  <Text style={styles.statValue}>{stats.avgDuration != null ? formatDuration(stats.avgDuration) : '—'}</Text>
                   <Text style={styles.statSub}>per night</Text>
                 </LinearGradient>
-
-                <LinearGradient
-                  colors={['rgba(110,191,139,0.10)', 'rgba(110,191,139,0.03)']}
-                  style={styles.statCard}
-                >
-                  <Text style={styles.statLabel}>AVG REST</Text>
-                  <Text style={styles.statValue}>
-                    {stats.avgQuality != null ? `${stats.avgQuality.toFixed(1)}/5` : '—'}
-                  </Text>
+                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.statCard}>
+                  <Text style={[styles.statLabel, { color: PALETTE.emerald }]}>AVG REST</Text>
+                  <Text style={styles.statValue}>{stats.avgQuality != null ? `${stats.avgQuality.toFixed(1)}/5` : '—'}</Text>
                   <Text style={styles.statSub}>quality</Text>
                 </LinearGradient>
               </View>
@@ -1163,114 +869,62 @@ export default function SleepScreen() {
           {entries.length > 0 && (
             <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Recent Nights</Text>
-
               {entries.map(entry => {
                 const isExpanded = expandedEntryId === entry.id;
                 const interp = interpretations[entry.id];
                 return (
                   <View key={entry.id} style={styles.entryCard}>
                     <Pressable
-                      onPress={() => {
-                        Haptics.selectionAsync().catch(() => {});
-                        applyEntryToForm(entry);
-                        scrollRef.current?.scrollTo({ y: 0, animated: true });
-                      }}
+                      onPress={() => { Haptics.selectionAsync().catch(() => {}); applyEntryToForm(entry); scrollRef.current?.scrollTo({ y: 0, animated: true }); }}
                       onLongPress={() => handleDelete(entry.id)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Sleep entry for ${entry.date}, tap to edit`}
-                      accessibilityHint="Tap to edit, long press to delete"
                     >
-                      <LinearGradient
-                        colors={['rgba(30,45,71,0.85)', 'rgba(26,39,64,0.55)']}
-                        style={styles.entryCardInner}
-                      >
+                      <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.entryCardInner}>
                         <View style={styles.entryHeader}>
                           <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
                           <View style={styles.entryMeta}>
                             {entry.durationHours != null && (
                               <View style={styles.entryMetaItem}>
-                                <Ionicons name="time-outline" size={13} color={theme.textMuted} />
+                                <Ionicons name="time-outline" size={14} color={theme.textMuted} />
                                 <Text style={styles.entryMetaText}>{formatDuration(entry.durationHours)}</Text>
                               </View>
                             )}
                             {entry.quality != null && (
                               <View style={styles.entryMoons}>
                                 {[1, 2, 3, 4, 5].map(n => (
-                                  <Ionicons
-                                    key={n}
-                                    name={n <= entry.quality! ? 'moon' : 'moon-outline'}
-                                    size={11}
-                                    color={n <= entry.quality! ? theme.primary : 'rgba(201,169,98,0.3)'}
-                                  />
+                                  <Ionicons key={n} name={n <= entry.quality! ? 'moon' : 'moon-outline'} size={12} color={n <= entry.quality! ? PALETTE.silverBlue : 'rgba(255,255,255,0.15)'} />
                                 ))}
                               </View>
                             )}
                           </View>
                         </View>
 
-                        {entry.dreamText ? (
-                          <Text style={styles.entryDream} numberOfLines={isExpanded ? undefined : 2}>
-                            {entry.dreamText}
-                          </Text>
-                        ) : null}
+                        {entry.dreamText ? <Text style={styles.entryDream} numberOfLines={isExpanded ? undefined : 2}>{entry.dreamText}</Text> : null}
 
                         {entry.dreamMood || entry.dreamFeelings ? (
                           <View style={styles.entryDreamMoodRow}>
                             <Text style={styles.entryDreamMoodText}>
-                              {entry.dreamFeelings
-                                ? (() => {
-                                    try {
-                                      const parsed = JSON.parse(entry.dreamFeelings) as SelectedFeeling[];
-                                      return parsed.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id).join(', ');
-                                    } catch { return entry.dreamMood ?? ''; }
-                                  })()
-                                : entry.dreamMood ?? ''}
+                              {entry.dreamFeelings ? (() => { try { const parsed = JSON.parse(entry.dreamFeelings) as SelectedFeeling[]; return parsed.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id).join(', '); } catch { return entry.dreamMood ?? ''; } })() : entry.dreamMood ?? ''}
                             </Text>
                           </View>
                         ) : null}
 
-                        {/* Dream Reflection button — premium only */}
                         {isPremium && entry.dreamText ? (
-                          <Pressable
-                            onPress={() => handleDreamReflect(entry)}
-                            style={({ pressed }) => [
-                              styles.reflectBtn,
-                              pressed && styles.reflectBtnPressed,
-                            ]}
-                            accessibilityRole="button"
-                            accessibilityLabel={isExpanded ? 'Close dream reflection' : 'Open dream reflection'}
-                          >
-                            <Ionicons
-                              name={isExpanded ? 'chevron-up' : 'sparkles'}
-                              size={14}
-                              color={ACCENT}
-                            />
-                            <Text style={styles.reflectBtnText}>
-                              {isExpanded ? 'Close reflection' : 'Reflect on this dream'}
-                            </Text>
-                            <Ionicons
-                              name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'}
-                              size={12}
-                              color={ACCENT}
-                              style={{ marginLeft: 'auto' }}
-                            />
+                          <Pressable onPress={() => handleDreamReflect(entry)} style={({ pressed }) => [styles.reflectBtn, pressed && styles.reflectBtnPressed]}>
+                            <Ionicons name={isExpanded ? 'chevron-up' : 'sparkles'} size={14} color={PALETTE.amethyst} />
+                            <Text style={styles.reflectBtnText}>{isExpanded ? 'Close reflection' : 'Reflect on this dream'}</Text>
+                            <Ionicons name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} color={PALETTE.amethyst} style={{ marginLeft: 'auto' }} />
                           </Pressable>
                         ) : null}
                       </LinearGradient>
                     </Pressable>
 
-                    {/* Expanded dream interpretation — v2 format */}
                     {isExpanded && interp && (
                       <Animated.View entering={FadeInDown.duration(400)}>
-                        <LinearGradient
-                          colors={['rgba(122,139,224,0.10)', 'rgba(122,139,224,0.04)']}
-                          style={styles.interpretCard}
-                        >
+                        <LinearGradient colors={['rgba(157, 118, 193, 0.1)', 'rgba(20, 24, 34, 0.6)']} style={styles.interpretCard}>
                           <Text style={styles.interpretBody}>{interp.paragraph}</Text>
-
                           <View style={styles.sitWithBox}>
                             <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                            <Text style={styles.sitWithText}>{interp.question}</Text>
+                            <Text style={styles.sitWithText}>"{interp.question}"</Text>
                           </View>
                         </LinearGradient>
                       </Animated.View>
@@ -1278,28 +932,23 @@ export default function SleepScreen() {
                   </View>
                 );
               })}
-
               <Text style={styles.deleteHint}>Tap to edit · Long press to delete</Text>
             </Animated.View>
           )}
 
-          {/* ── Load error state ── */}
           {loadError && entries.length === 0 && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
-              <Ionicons name="cloud-offline-outline" size={44} color="#E85D75" />
+              <Ionicons name="cloud-offline-outline" size={48} color={PALETTE.copper} />
               <Text style={styles.emptyTitle}>Could not load data</Text>
               <Text style={styles.emptySubtitle}>{loadError}</Text>
             </Animated.View>
           )}
 
-          {/* ── Empty state ── */}
           {!loading && !loadError && entries.length === 0 && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
-              <Ionicons name="moon-outline" size={44} color={theme.textMuted} />
+              <Ionicons name="moon-outline" size={56} color={theme.textMuted} style={{ marginBottom: 12 }} />
               <Text style={styles.emptyTitle}>Your sleep story starts here</Text>
-              <Text style={styles.emptySubtitle}>
-                Log your first night above. Even just a quality rating helps you spot patterns over time.
-              </Text>
+              <Text style={styles.emptySubtitle}>Log your first night above. Even just a quality rating helps you spot patterns over time.</Text>
             </Animated.View>
           )}
         </ScrollView>
@@ -1310,697 +959,155 @@ export default function SleepScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#07090F' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: theme.spacing.lg },
+  scrollContent: { paddingHorizontal: 20 },
 
-  header: { marginTop: theme.spacing.lg, marginBottom: theme.spacing.lg },
-  title: { fontSize: 30, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif' },
-  subtitle: { color: theme.textSecondary, fontSize: 15, marginTop: 6 },
+  header: { marginTop: 16, marginBottom: 24 },
+  title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
+  subtitle: { color: theme.textSecondary, fontSize: 15, fontStyle: 'italic', marginTop: 4 },
 
-  section: { marginBottom: theme.spacing.lg },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    marginBottom: theme.spacing.md,
-    letterSpacing: 0.3,
-  },
+  section: { marginBottom: 32 },
+  sectionTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16, paddingLeft: 4 },
 
-  // Form card
   formCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(122, 139, 224, 0.15)',
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-    flex: 1,
-  },
-  formTitleRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    marginBottom: theme.spacing.lg,
-  },
-  cancelEditBtn: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  cancelEditText: {
-    fontSize: 13,
-    color: theme.textMuted,
-    fontWeight: '600',
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.textSecondary,
-    marginBottom: theme.spacing.sm,
-    marginTop: theme.spacing.md,
-  },
-  optional: { fontWeight: '400', color: theme.textMuted, fontSize: 12 },
-
-  // Quality rating
-  qualityRow: { flexDirection: 'row', gap: theme.spacing.md, marginBottom: theme.spacing.sm },
-  moonBtn: { padding: 6 },
-
-  // Duration stepper
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    overflow: 'hidden',
-    marginBottom: 4,
-  },
-  stepperBtn: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepperValue: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-  },
-  stepperValueText: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-  },
-  stepperPlaceholder: { color: theme.textMuted, fontWeight: '400', fontSize: 22 },
-  stepperHint: {
-    fontSize: 11,
-    color: theme.textMuted,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: theme.spacing.sm,
-  },
-
-  // Dream / notes input
-  dreamInput: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    color: theme.textPrimary,
-    fontSize: 15,
-    lineHeight: 22,
-    minHeight: 100,
-    marginBottom: theme.spacing.md,
-  },
-  dreamLock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(201,169,98,0.18)',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  },
-  dreamLockTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.primary,
-    marginBottom: 2,
-  },
-  dreamLockSub: {
-    fontSize: 12,
-    color: theme.textMuted,
-    lineHeight: 16,
-  },
-  notesInput: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    color: theme.textPrimary,
-    fontSize: 15,
-    lineHeight: 22,
-    minHeight: 80,
-    marginBottom: theme.spacing.md,
-  },
-
-  // Dream mood dropdown
-  dreamMoodDropdown: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
-  },
-  dreamMoodDropdownText: {
-    color: theme.textPrimary,
-    fontSize: 15,
-  },
-  dreamMoodDropdownPlaceholder: {
-    color: theme.textMuted,
-    fontSize: 15,
-  },
-  dreamMoodOptions: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.md,
-    overflow: 'hidden',
-  },
-  dreamMoodOption: {
-    paddingVertical: theme.spacing.sm + 2,
-    paddingHorizontal: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-  },
-  dreamMoodOptionSelected: {
-    backgroundColor: 'rgba(122,139,224,0.08)',
-  },
-  dreamMoodOptionText: {
-    color: theme.textPrimary,
-    fontSize: 15,
-  },
-  dreamMoodOptionTextSelected: {
-    color: ACCENT,
-    fontWeight: '600',
-  },
-
-  // Feeling search
-  feelingSearchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
-  },
-  feelingSearchInput: {
-    flex: 1,
-    color: theme.textPrimary,
-    fontSize: 14,
-    height: 32,
-    paddingVertical: 0,
-  },
-
-  // Error banner
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(232,93,117,0.12)',
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(232,93,117,0.25)',
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.sm,
-  },
-  errorBannerText: {
-    flex: 1,
-    color: '#E85D75',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-
-  // Tiered feeling selector
-  tierRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    padding: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
-  },
-  tierPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
     borderRadius: 20,
+    padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
   },
-  tierDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  tierPillText: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  tierBadge: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 2,
-  },
-  tierBadgeText: {
-    color: '#0D1421',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  tierHint: {
-    color: theme.textMuted,
-    fontSize: 13,
-    textAlign: 'center',
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
-  },
+  formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  formTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), flex: 1 },
+  
+  cancelEditBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.06)' },
+  cancelEditText: { fontSize: 13, color: theme.textMuted, fontWeight: '600' },
+  
+  fieldLabel: { fontSize: 14, fontWeight: '600', color: PALETTE.textMain, marginBottom: 12, marginTop: 24 },
+  
+  qualityRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
+  moonBtn: { padding: 4 },
 
-  // Save button
-  saveBtn: {
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    marginTop: theme.spacing.sm,
+  stepperRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, overflow: 'hidden', marginBottom: 6 },
+  stepperBtn: { paddingHorizontal: 24, paddingVertical: 16, justifyContent: 'center', alignItems: 'center' },
+  stepperValue: { flex: 1, alignItems: 'center', paddingVertical: 16 },
+  stepperValueText: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  stepperPlaceholder: { color: theme.textMuted, fontWeight: '400', fontSize: 24 },
+  stepperHint: { fontSize: 12, color: theme.textMuted, textAlign: 'center', fontStyle: 'italic', marginBottom: 8 },
+
+  dreamInput: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    borderRadius: 16,
+    padding: 16,
+    color: PALETTE.textMain,
+    fontSize: 16,
+    lineHeight: 24,
+    minHeight: 120,
+    marginBottom: 8,
   },
-  saveBtnDisabled: { opacity: 0.55 },
-  saveBtnPressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
-  saveBtnGradient: {
-    paddingVertical: theme.spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveBtnText: { fontSize: 16, fontWeight: '700', color: '#0D1421' },
+  dreamLock: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', padding: 16, marginBottom: 8 },
+  dreamLockTitle: { fontSize: 14, fontWeight: '600', color: PALETTE.gold, marginBottom: 4 },
+  dreamLockSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
+
+  dreamMoodDropdown: { backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  dreamMoodDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
+  dreamMoodDropdownPlaceholder: { color: theme.textMuted, fontSize: 15 },
+  dreamMoodOptions: { backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, overflow: 'hidden' },
+  dreamMoodOption: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  dreamMoodOptionSelected: { backgroundColor: 'rgba(157, 118, 193, 0.15)' },
+  dreamMoodOptionText: { color: PALETTE.textMain, fontSize: 15 },
+  dreamMoodOptionTextSelected: { color: PALETTE.amethyst, fontWeight: '600' },
+
+  feelingSearchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
+  feelingSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, height: 40 },
+
+  tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
+  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
+  tierDot: { width: 8, height: 8, borderRadius: 4 },
+  tierPillText: { color: theme.textSecondary, fontSize: 14, fontWeight: '600' },
+  tierBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
+  tierBadgeText: { color: '#07090F', fontSize: 11, fontWeight: '700' },
+  tierHint: { color: theme.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16, fontStyle: 'italic' },
+
+  intensityRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.02)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  intensityLabel: { fontSize: 13, color: theme.textMuted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
+  intensityDots: { flexDirection: 'row', gap: 8 },
+  intensityDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center' },
+  intensityDotActive: { backgroundColor: 'rgba(157, 118, 193, 0.25)', borderColor: PALETTE.amethyst },
+  intensityDotText: { fontSize: 14, color: theme.textMuted, fontWeight: '600' },
+  intensityDotTextActive: { color: PALETTE.amethyst },
+
+  metadataSection: { backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, padding: 16 },
+  metadataRow: { marginBottom: 20 },
+  metadataLabel: { fontSize: 14, color: theme.textSecondary, fontWeight: '600', marginBottom: 12 },
+  
+  awakenRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  awakenChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  awakenChipActive: { backgroundColor: 'rgba(157, 118, 193, 0.2)', borderColor: PALETTE.amethyst },
+  awakenChipText: { fontSize: 14, color: theme.textMuted, fontWeight: '500' },
+  awakenChipTextActive: { color: PALETTE.amethyst, fontWeight: '600' },
+
+  awakenDropdown: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
+  awakenDropdownList: { backgroundColor: 'rgba(0,0,0,0.4)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginTop: 8, overflow: 'hidden' },
+  awakenDropdownItem: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  awakenDropdownItemActive: { backgroundColor: 'rgba(157, 118, 193, 0.15)' },
+  awakenDropdownItemText: { fontSize: 15, color: theme.textSecondary, fontWeight: '500' },
+  awakenDropdownItemTextActive: { color: PALETTE.amethyst, fontWeight: '600' },
+
+  recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', paddingHorizontal: 3 },
+  toggleTrackActive: { backgroundColor: 'rgba(157, 118, 193, 0.4)' },
+  toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: theme.textMuted },
+  toggleThumbActive: { alignSelf: 'flex-end', backgroundColor: PALETTE.amethyst },
+
+  saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 24 },
+  saveBtnDisabled: { opacity: 0.5 },
+  saveBtnPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
+  saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', borderRadius: 16 },
+  saveBtnText: { fontSize: 16, fontWeight: '700', color: PALETTE.gold },
   saveBtnTextDisabled: { color: theme.textMuted },
 
-  // Stats
-  statsRow: { flexDirection: 'row', gap: theme.spacing.sm },
-  statCard: {
-    flex: 1,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    minHeight: 82,
-    justifyContent: 'center',
-  },
-  statLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5, color: theme.textMuted, marginBottom: 4 },
-  statValue: { fontSize: 19, fontWeight: '700', color: theme.textPrimary },
-  statSub: { fontSize: 10, color: theme.textMuted, marginTop: 2, textAlign: 'center' },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(205, 127, 93, 0.15)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 14, marginTop: 16 },
+  errorBannerText: { flex: 1, color: PALETTE.copper, fontSize: 14, lineHeight: 20 },
 
-  // Entry cards
-  entryCard: { marginBottom: theme.spacing.sm },
-  entryCardInner: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  entryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  entryDate: { fontSize: 14, fontWeight: '600', color: theme.textPrimary },
-  entryMeta: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
-  entryMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  entryMetaText: { fontSize: 12, color: theme.textMuted },
+  statsRow: { flexDirection: 'row', gap: 10 },
+  statCard: { flex: 1, borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, minHeight: 90, justifyContent: 'center' },
+  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 },
+  statValue: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
+  statSub: { fontSize: 11, color: theme.textMuted, marginTop: 4, textAlign: 'center', fontStyle: 'italic' },
+
+  entryCard: { marginBottom: 16 },
+  entryCardInner: { borderRadius: 20, padding: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
+  entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  entryDate: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
+  entryMeta: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  entryMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  entryMetaText: { fontSize: 13, color: theme.textMuted, fontWeight: '500' },
   entryMoons: { flexDirection: 'row', gap: 2 },
-  entryDream: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    lineHeight: 19,
-    fontStyle: 'italic',
-  },
-  entryDreamMoodRow: {
-    marginTop: 4,
-  },
-  entryDreamMoodText: {
-    fontSize: 12,
-    color: theme.textMuted,
-  },
-  deleteHint: {
-    fontSize: 11,
-    color: theme.textMuted,
-    textAlign: 'center',
-    marginTop: theme.spacing.sm,
-    fontStyle: 'italic',
-  },
+  entryDream: { fontSize: 15, color: theme.textSecondary, lineHeight: 24, fontStyle: 'italic', marginBottom: 8 },
+  entryDreamMoodRow: { marginTop: 4 },
+  entryDreamMoodText: { fontSize: 13, color: theme.textMuted, fontWeight: '500' },
+  deleteHint: { fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
 
-  // Dream reflection
-  reflectBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: 'rgba(122,139,224,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(122,139,224,0.15)',
-  },
-  reflectBtnPressed: {
-    opacity: 0.7,
-  },
-  reflectBtnText: {
-    fontSize: 13,
-    color: ACCENT,
-    fontWeight: '600',
-  },
-  todayInterpretCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(122,139,224,0.18)',
-  },
-  todayInterpretHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: theme.spacing.md,
-  },
-  todayInterpretTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-  },
-  interpretCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    marginTop: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(122,139,224,0.15)',
-  },
-  symbolRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.md,
-  },
-  symbolChip: {
-    backgroundColor: 'rgba(122,139,224,0.15)',
-    borderRadius: theme.borderRadius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  symbolChipText: {
-    fontSize: 11,
-    color: ACCENT,
-    fontWeight: '600',
-  },
-  interpretSection: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 6,
-    marginTop: theme.spacing.md,
-  },
-  interpretBody: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    lineHeight: 21,
-  },
-  sitWithBox: {
-    marginTop: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(122,139,224,0.10)',
-  },
-  sitWithLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  sitWithText: {
-    fontSize: 14,
-    color: theme.textPrimary,
-    lineHeight: 21,
-    fontStyle: 'italic',
-  },
+  reflectBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.1)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
+  reflectBtnPressed: { opacity: 0.7 },
+  reflectBtnText: { fontSize: 14, color: PALETTE.amethyst, fontWeight: '600' },
+  
+  todayInterpretCard: { borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.25)', borderTopColor: 'rgba(157, 118, 193, 0.4)' },
+  todayInterpretHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
+  todayInterpretTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  interpretCard: { borderRadius: 20, padding: 24, marginTop: 6, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
+  interpretBody: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
+  
+  sitWithBox: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(157, 118, 193, 0.15)' },
+  sitWithLabel: { fontSize: 11, fontWeight: '700', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
+  sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24, fontStyle: 'italic', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
 
-  // Empty state
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-    textAlign: 'center',
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-
-  // Intensity selector (for feelings)
-  intensityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(122,139,224,0.04)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-  },
-  intensityLabel: {
-    fontSize: 12,
-    color: theme.textMuted,
-    fontWeight: '500',
-  },
-  intensityDots: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  intensityDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  intensityDotActive: {
-    backgroundColor: 'rgba(122,139,224,0.25)',
-    borderColor: ACCENT,
-  },
-  intensityDotText: {
-    fontSize: 12,
-    color: theme.textMuted,
-    fontWeight: '600',
-  },
-  intensityDotTextActive: {
-    color: ACCENT,
-  },
-
-  // Metadata section
-  metadataSection: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.md,
-    padding: theme.spacing.md,
-  },
-  metadataRow: {
-    marginBottom: theme.spacing.md,
-  },
-  metadataLabel: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  awakenRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  awakenChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  awakenChipActive: {
-    backgroundColor: 'rgba(122,139,224,0.20)',
-    borderColor: ACCENT,
-  },
-  awakenChipText: {
-    fontSize: 12,
-    color: theme.textMuted,
-    fontWeight: '500',
-  },
-  awakenChipTextActive: {
-    color: ACCENT,
-    fontWeight: '600',
-  },
-
-  // Awaken state dropdown
-  awakenDropdown: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  awakenDropdownText: {
-    color: theme.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  awakenDropdownList: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: theme.borderRadius.lg,
-    marginTop: 4,
-    overflow: 'hidden',
-  },
-  awakenDropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: theme.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-  },
-  awakenDropdownItemActive: {
-    backgroundColor: 'rgba(122,139,224,0.10)',
-  },
-  awakenDropdownItemText: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    fontWeight: '500',
-  },
-  awakenDropdownItemTextActive: {
-    color: ACCENT,
-    fontWeight: '600',
-  },
-
-  recurringRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  toggleTrack: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleTrackActive: {
-    backgroundColor: 'rgba(122,139,224,0.40)',
-  },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: theme.textMuted,
-  },
-  toggleThumbActive: {
-    alignSelf: 'flex-end',
-    backgroundColor: ACCENT,
-  },
-
-  // Theme cards (interpretation v2)
-  themeCardBox: {
-    marginTop: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(122,139,224,0.08)',
-  },
-  themeCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  themeCardTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-    flex: 1,
-  },
-  confidenceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: 'rgba(122,139,224,0.15)',
-    marginLeft: 8,
-  },
-  confidenceHigh: {
-    backgroundColor: 'rgba(110,191,139,0.20)',
-  },
-  confidenceLow: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  confidenceText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: theme.textMuted,
-    letterSpacing: 0.5,
-  },
-  evidenceList: {
-    marginTop: 8,
-    paddingLeft: 4,
-  },
-  evidenceItem: {
-    fontSize: 12,
-    color: theme.textMuted,
-    lineHeight: 18,
-    marginBottom: 2,
-  },
+  emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
+  emptyTitle: { fontSize: 22, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 12 },
+  emptySubtitle: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22 },
 });

@@ -8,7 +8,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +25,18 @@ import { TAG_LABELS } from '../../utils/tagAnalytics';
 import { generateReflectionInsights, ReflectionInsightsResponse, ReflectionInsightsPayload } from '../../services/premium/reflectionInsights';
 import { useAuth } from '../../context/AuthContext';
 import { logger } from '../../utils/logger';
+
+// ── Cinematic Color Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  amethyst: '#9D76C1',
+  copper: '#CD7F5D',
+  emerald: '#6EBF8B',
+  glassBorder: 'rgba(255,255,255,0.08)',
+  glassHighlight: 'rgba(255,255,255,0.15)',
+  textMain: '#FDFBF7',
+};
 
 // ── Rotating daily reflection prompts (non-astrological) ──
 const REFLECTION_PROMPTS = [
@@ -46,11 +58,11 @@ function getDailyPrompt(): string {
 
 // Rotating weekly intentions (by calendar week number)
 const WEEKLY_INTENTIONS = [
-  "Notice what gives you energy \u2014 and what quietly drains it.",
+  "Notice what gives you energy — and what quietly drains it.",
   "Let one thing be enough.",
   "Pay attention to how your body feels at the end of each day.",
   "Do one small thing you've been putting off.",
-  "Notice what you're resisting \u2014 and get curious about why.",
+  "Notice what you're resisting — and get curious about why.",
   "Leave one hour unscheduled and see what you do with it.",
   "Reach out to someone you've been meaning to contact.",
   "Focus on what you can actually influence.",
@@ -69,7 +81,7 @@ const WEEKLY_INTENTIONS = [
   "Move your body in a way that isn't about fitness.",
   "Spend time outside for no reason.",
   "Do something slow on purpose.",
-  "Notice what you envy \u2014 it's usually information.",
+  "Notice what you envy — it's usually information.",
   "Let yourself want what you actually want.",
   "Be less available this week and see what opens up.",
   "Ask for help with something specific.",
@@ -114,7 +126,6 @@ interface WeekBucket {
   count: number;
 }
 
-// EnergyLevel / StressLevel are 'low' | 'medium' | 'high' strings — map to 1–10 scale
 function levelToScore(level: string | null | undefined): number | null {
   if (level === 'low') return 2;
   if (level === 'medium') return 5;
@@ -124,8 +135,6 @@ function levelToScore(level: string | null | undefined): number | null {
 
 function buildWeekBuckets(checkIns: DailyCheckIn[]): WeekBucket[] {
   if (checkIns.length === 0) return [];
-
-  // Bucket by calendar week (0 = most recent week)
   const now = new Date();
   const buckets: WeekBucket[] = [];
 
@@ -154,7 +163,6 @@ function buildWeekBuckets(checkIns: DailyCheckIn[]): WeekBucket[] {
       count: inBucket.length,
     });
   }
-
   return buckets;
 }
 
@@ -167,7 +175,6 @@ function trendDirection(buckets: WeekBucket[], field: 'avgMood' | 'avgEnergy' | 
   return 'flat';
 }
 
-// Bar width 0–100% from a 1–10 score
 function scoreToPercent(score: number | null): number {
   if (score == null) return 0;
   return Math.min(100, Math.max(0, ((score - 1) / 9) * 100));
@@ -214,7 +221,6 @@ export default function ReflectScreen() {
   const energyTrend = trendDirection(buckets, 'avgEnergy');
   const stressTrend = trendDirection(buckets, 'avgStress');
 
-  // Real energy–mood correlation from check-in data
   const energyMoodInsight = useMemo(() => {
     if (checkIns.length < 7) return null;
     const highEnergyDays = checkIns.filter(c => c.energyLevel === 'high');
@@ -233,7 +239,6 @@ export default function ReflectScreen() {
     return null;
   }, [checkIns]);
 
-  // Best day-of-week for energy from check-in data
   const bestEnergyDay = useMemo(() => {
     if (checkIns.length < 7) return null;
     const byDay: Record<number, number[]> = {};
@@ -257,7 +262,6 @@ export default function ReflectScreen() {
     return bestDay >= 0 ? dayNames[bestDay] : null;
   }, [checkIns]);
 
-  // Which tags correlate with the user's better vs worse days, with lift scores
   const tagCorrelation = useMemo(() => {
     if (checkIns.length < 7) return null;
     const allMoods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
@@ -298,7 +302,6 @@ export default function ReflectScreen() {
     };
   }, [checkIns]);
 
-  // Raw numeric energy–mood correlation (for the AI payload)
   const energyMoodDiff = useMemo(() => {
     if (checkIns.length < 7) return null;
     const high = checkIns.filter(c => c.energyLevel === 'high');
@@ -313,7 +316,6 @@ export default function ReflectScreen() {
     return parseFloat((hAvg - lAvg).toFixed(2));
   }, [checkIns]);
 
-  // Load AI reflection copy once we have enough data + an active session (cached daily)
   useEffect(() => {
     if (checkIns.length < 7 || !session?.access_token) return;
     let cancelled = false;
@@ -360,22 +362,21 @@ export default function ReflectScreen() {
     });
 
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkIns, session?.access_token]);
 
   const trendIcon = (dir: 'up' | 'down' | 'flat', inverse = false) => {
     const isPositive = inverse ? dir === 'down' : dir === 'up';
     const isNegative = inverse ? dir === 'up' : dir === 'down';
-    if (isPositive) return { name: 'trending-up' as const, color: theme.growth };
-    if (isNegative) return { name: 'trending-down' as const, color: theme.love };
+    if (isPositive) return { name: 'trending-up' as const, color: PALETTE.emerald };
+    if (isNegative) return { name: 'trending-down' as const, color: PALETTE.copper };
     return { name: 'remove' as const, color: theme.textMuted };
   };
 
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <StarField starCount={30} />
-        <Text style={styles.loadingText}>Loading…</Text>
+        <StarField starCount={40} />
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -383,18 +384,13 @@ export default function ReflectScreen() {
   if (!hasChart) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <StarField starCount={30} />
-        <Ionicons name="leaf-outline" size={48} color={theme.textMuted} />
-        <Text style={styles.emptyTitle}>Your reflection space</Text>
+        <StarField starCount={40} />
+        <Ionicons name="journal-outline" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
+        <Text style={styles.emptyTitle}>Your Reflection Space</Text>
         <Text style={styles.emptySubtitle}>
-          Log a few mood check-ins and journal entries to see your patterns and insights here.
+          Log a few mood check-ins and journal entries to uncover your hidden patterns and emotional rhythms.
         </Text>
-        <Pressable
-          style={styles.ctaButton}
-          onPress={() => nav('/(tabs)/mood')}
-          accessibilityRole="button"
-          accessibilityLabel="Log your first mood"
-        >
+        <Pressable style={styles.ctaButton} onPress={() => nav('/(tabs)/mood')}>
           <Text style={styles.ctaText}>Log Your First Mood</Text>
         </Pressable>
       </View>
@@ -403,75 +399,50 @@ export default function ReflectScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={30} />
+      <StarField starCount={60} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 }]}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <Text style={styles.title}>Reflect</Text>
             <Text style={styles.subtitle}>Check in with yourself</Text>
           </Animated.View>
 
-          {/* ── Daily Reflection Prompt ── */}
+          {/* ── Daily Reflection Prompt (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(120).duration(600)} style={styles.section}>
-            <LinearGradient
-              colors={['rgba(122, 139, 224, 0.14)', 'rgba(122, 139, 224, 0.04)']}
-              style={styles.promptCard}
-            >
+            <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.glassCard}>
               <View style={styles.promptLabelRow}>
-                <Ionicons name="sparkles" size={14} color="#7A8BE0" />
-                <Text style={styles.promptLabel}>PROMPT FOR TODAY</Text>
+                <Ionicons name="sparkles" size={14} color={PALETTE.silverBlue} />
+                <Text style={[styles.promptLabel, { color: PALETTE.silverBlue }]}>PROMPT FOR TODAY</Text>
               </View>
               <Text style={styles.promptText}>{getDailyPrompt()}</Text>
 
               <View style={styles.promptActions}>
-                <Pressable
-                  style={styles.promptBtn}
-                  onPress={() => nav('/(tabs)/mood')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Log mood"
-                >
-                  <LinearGradient
-                    colors={['rgba(122, 139, 224, 0.3)', 'rgba(122, 139, 224, 0.15)']}
-                    style={styles.promptBtnGradient}
-                  >
-                    <Ionicons name="happy-outline" size={18} color="#7A8BE0" />
-                    <Text style={[styles.promptBtnText, { color: '#7A8BE0' }]}>Log Mood</Text>
+                <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/mood')}>
+                  <LinearGradient colors={['rgba(139, 196, 232, 0.25)', 'rgba(139, 196, 232, 0.1)']} style={styles.promptBtnGradient}>
+                    <Ionicons name="happy-outline" size={18} color={PALETTE.silverBlue} />
+                    <Text style={[styles.promptBtnText, { color: PALETTE.silverBlue }]}>Log Mood</Text>
                   </LinearGradient>
                 </Pressable>
 
-                <Pressable
-                  style={styles.promptBtn}
-                  onPress={() => nav('/(tabs)/journal')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Write in journal"
-                >
-                  <LinearGradient
-                    colors={['rgba(201, 169, 98, 0.25)', 'rgba(201, 169, 98, 0.10)']}
-                    style={styles.promptBtnGradient}
-                  >
-                    <Ionicons name="create-outline" size={18} color={theme.primary} />
-                    <Text style={[styles.promptBtnText, { color: theme.primary }]}>Write Journal</Text>
+                <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/journal')}>
+                  <LinearGradient colors={['rgba(212, 175, 55, 0.25)', 'rgba(212, 175, 55, 0.1)']} style={styles.promptBtnGradient}>
+                    <Ionicons name="create-outline" size={18} color={PALETTE.gold} />
+                    <Text style={[styles.promptBtnText, { color: PALETTE.gold }]}>Write Journal</Text>
                   </LinearGradient>
                 </Pressable>
               </View>
             </LinearGradient>
           </Animated.View>
 
-          {/* ── Weekly Intention ── */}
+          {/* ── Weekly Intention (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.section}>
-            <LinearGradient
-              colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']}
-              style={styles.intentionCard}
-            >
-              <View style={styles.intentionLabelRow}>
-                <Ionicons name="leaf-outline" size={13} color={theme.growth} />
-                <Text style={styles.intentionLabel}>THIS WEEK'S INTENTION</Text>
+            <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.glassCard}>
+              <View style={styles.promptLabelRow}>
+                <Ionicons name="leaf-outline" size={14} color={PALETTE.emerald} />
+                <Text style={[styles.promptLabel, { color: PALETTE.emerald }]}>THIS WEEK'S INTENTION</Text>
               </View>
               <Text style={styles.intentionText}>{getWeeklyIntention()}</Text>
             </LinearGradient>
@@ -479,129 +450,86 @@ export default function ReflectScreen() {
 
           {checkIns.length === 0 ? (
             <Animated.View entering={FadeInDown.delay(160).duration(600)}>
-              <LinearGradient
-                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
-                style={styles.emptyCard}
-              >
+              <LinearGradient colors={['rgba(35, 40, 55, 0.5)', 'rgba(20, 24, 34, 0.8)']} style={styles.glassCardEmpty}>
                 <Ionicons name="pulse" size={32} color={theme.textMuted} />
-                <Text style={styles.emptyCardText}>
-                  No data yet. Log your mood daily to unlock trend analysis.
-                </Text>
-                <Pressable
-                  style={styles.inlineCtaButton}
-                  onPress={() => nav('/(tabs)/mood')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Log mood"
-                >
+                <Text style={styles.emptyCardText}>No data yet. Log your mood daily to unlock trend analysis.</Text>
+                <Pressable style={styles.inlineCtaButton} onPress={() => nav('/(tabs)/mood')}>
                   <Text style={styles.inlineCtaText}>Log Mood Now</Text>
                 </Pressable>
               </LinearGradient>
             </Animated.View>
           ) : (
             <>
-              {/* ── Trend Summary Cards ── */}
+              {/* ── 30-Day Overview Widgets ── */}
               <Animated.View entering={FadeInDown.delay(160).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>30-Day Overview</Text>
                 <View style={styles.trendCards}>
-                  {/* Mood */}
-                  <LinearGradient
-                    colors={['rgba(122, 139, 224, 0.12)', 'rgba(122, 139, 224, 0.04)']}
-                    style={styles.trendCard}
-                  >
+                  {/* Mood Widget */}
+                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.trendCard}>
                     <View style={styles.trendCardHeader}>
-                      <Text style={styles.trendCardLabel}>MOOD</Text>
+                      <Text style={[styles.trendCardLabel, { color: PALETTE.silverBlue }]}>MOOD</Text>
                       <Ionicons name={trendIcon(moodTrend).name} size={16} color={trendIcon(moodTrend).color} />
                     </View>
-                    <Text style={styles.trendCardValue}>
-                      {buckets[0]?.avgMood != null ? buckets[0].avgMood.toFixed(1) : '—'}
-                    </Text>
+                    <Text style={styles.trendCardValue}>{buckets[0]?.avgMood != null ? buckets[0].avgMood.toFixed(1) : '—'}</Text>
                     <Text style={styles.trendCardSub}>this week avg</Text>
                   </LinearGradient>
 
-                  {/* Energy */}
-                  <LinearGradient
-                    colors={['rgba(110, 191, 139, 0.12)', 'rgba(110, 191, 139, 0.04)']}
-                    style={styles.trendCard}
-                  >
+                  {/* Energy Widget */}
+                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.trendCard}>
                     <View style={styles.trendCardHeader}>
-                      <Text style={styles.trendCardLabel}>ENERGY</Text>
+                      <Text style={[styles.trendCardLabel, { color: PALETTE.gold }]}>ENERGY</Text>
                       <Ionicons name={trendIcon(energyTrend).name} size={16} color={trendIcon(energyTrend).color} />
                     </View>
-                    <Text style={styles.trendCardValue}>
-                      {buckets[0]?.avgEnergy != null ? buckets[0].avgEnergy.toFixed(1) : '—'}
-                    </Text>
+                    <Text style={styles.trendCardValue}>{buckets[0]?.avgEnergy != null ? buckets[0].avgEnergy.toFixed(1) : '—'}</Text>
                     <Text style={styles.trendCardSub}>this week avg</Text>
                   </LinearGradient>
 
-                  {/* Stress (inverted — down is good) */}
-                  <LinearGradient
-                    colors={['rgba(224, 176, 122, 0.10)', 'rgba(224, 176, 122, 0.03)']}
-                    style={styles.trendCard}
-                  >
+                  {/* Stress Widget */}
+                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.trendCard}>
                     <View style={styles.trendCardHeader}>
-                      <Text style={styles.trendCardLabel}>STRESS</Text>
+                      <Text style={[styles.trendCardLabel, { color: PALETTE.copper }]}>STRESS</Text>
                       <Ionicons name={trendIcon(stressTrend, true).name} size={16} color={trendIcon(stressTrend, true).color} />
                     </View>
-                    <Text style={styles.trendCardValue}>
-                      {buckets[0]?.avgStress != null ? buckets[0].avgStress.toFixed(1) : '—'}
-                    </Text>
+                    <Text style={styles.trendCardValue}>{buckets[0]?.avgStress != null ? buckets[0].avgStress.toFixed(1) : '—'}</Text>
                     <Text style={styles.trendCardSub}>this week avg</Text>
                   </LinearGradient>
                 </View>
               </Animated.View>
 
-              {/* ── Weekly Mood Bars ── */}
+              {/* ── Mood by Week (Elevated Bars) ── */}
               {buckets.some(b => b.avgMood != null) && (
                 <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.section}>
                   <Text style={styles.sectionTitle}>Mood by Week</Text>
-                  <LinearGradient
-                    colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
-                    style={styles.barsCard}
-                  >
+                  <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                     {buckets.map((bucket, i) => (
                       bucket.count > 0 ? (
                         <View key={i} style={styles.barRow}>
                           <Text style={styles.barLabel}>{bucket.label}</Text>
                           <View style={styles.barTrack}>
-                            <View
-                              style={[
-                                styles.barFill,
-                                {
-                                  width: `${scoreToPercent(bucket.avgMood)}%`,
-                                  backgroundColor: i === 0 ? theme.primary : 'rgba(201,169,98,0.5)',
-                                },
-                              ]}
+                            <View style={[styles.barFill, { 
+                                width: `${scoreToPercent(bucket.avgMood)}%`, 
+                                backgroundColor: i === 0 ? PALETTE.silverBlue : 'rgba(139, 196, 232, 0.4)',
+                              }]} 
                             />
                           </View>
-                          <Text style={styles.barValue}>
-                            {bucket.avgMood != null ? bucket.avgMood.toFixed(1) : '—'}
-                          </Text>
+                          <Text style={styles.barValue}>{bucket.avgMood != null ? bucket.avgMood.toFixed(1) : '—'}</Text>
                         </View>
                       ) : null
                     ))}
-                    <Text style={styles.barsNote}>Score out of 10 · {checkIns.length} check-ins total</Text>
+                    <Text style={styles.barsNote}>Score out of 10 · Based on {checkIns.length} total check-ins</Text>
                   </LinearGradient>
                 </Animated.View>
               )}
 
-              {/* ── Correlation Scaffold ── */}
-              {/* ── Sign-in CTA (shown when data exists but no session) ── */}
+              {/* ── Sign-in CTA (if no session) ── */}
               {checkIns.length >= 7 && !session && (
                 <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
-                  <Pressable
-                    style={styles.signInCard}
-                    onPress={() => nav('/(auth)/sign-in')}
-                  >
-                    <LinearGradient
-                      colors={['rgba(122, 139, 224, 0.12)', 'rgba(122, 139, 224, 0.04)']}
-                      style={styles.signInCardInner}
-                    >
-                      <Ionicons name="sparkles-outline" size={20} color="#7A8BE0" />
+                  <Pressable onPress={() => nav('/(auth)/sign-in')}>
+                    <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={[styles.glassCard, { flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
+                      <Ionicons name="sparkles-outline" size={24} color={PALETTE.silverBlue} />
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.signInCardTitle}>Unlock your personal reflections</Text>
-                        <Text style={styles.signInCardBody}>
-                          Sign in to generate AI insights written just for you — based on your actual patterns.
-                        </Text>
+                        <Text style={[styles.sectionTitle, { marginBottom: 4, color: PALETTE.silverBlue }]}>Unlock AI Reflections</Text>
+                        <Text style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 18 }}>Sign in to generate deep insights written just for you, based on your actual data patterns.</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
                     </LinearGradient>
@@ -609,91 +537,76 @@ export default function ReflectScreen() {
                 </Animated.View>
               )}
 
-              {/* ── Correlation Scaffold ── */}
+              {/* ── Observations (Raw Data) ── */}
               <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Observations</Text>
-                <LinearGradient
-                  colors={['rgba(30,45,71,0.7)', 'rgba(26,39,64,0.4)']}
-                  style={styles.correlationCard}
-                >
+                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                   {checkIns.length >= 7 ? (
                     aiInsights ? (
                       aiInsights.observations.map((line, i) => (
-                        <Text key={i} style={styles.reflectionLine}>{line}</Text>
+                        <Text key={i} style={styles.insightLine}>{line}</Text>
                       ))
                     ) : (
                       <>
-                        <View style={styles.correlationItem}>
-                          <View style={styles.correlationDot} />
-                          <Text style={styles.correlationText}>
-                            {moodTrend === 'up'
-                              ? 'Your mood has been moving upward — something is landing differently for you, even if you can\'t quite name it yet.'
-                              : moodTrend === 'down'
-                              ? 'Something has been pulling at your mood this week. That\'s worth sitting with, not rushing past.'
+                        <View style={styles.observationItem}>
+                          <View style={[styles.observationDot, { backgroundColor: PALETTE.silverBlue }]} />
+                          <Text style={styles.insightLine}>
+                            {moodTrend === 'up' ? 'Your mood has been moving upward — something is landing differently for you, even if you can\'t quite name it yet.'
+                              : moodTrend === 'down' ? 'Something has been pulling at your mood this week. That\'s worth sitting with, not rushing past.'
                               : 'Your mood has been holding steady — that kind of groundedness is its own quiet accomplishment.'}
                           </Text>
                         </View>
 
-                        <View style={styles.correlationItem}>
-                          <View style={styles.correlationDot} />
-                          <Text style={styles.correlationText}>
-                            {stressTrend === 'down'
-                              ? 'The pressure has been easing. Whatever you\'ve been choosing differently, it\'s showing.'
-                              : stressTrend === 'up'
-                              ? 'Stress has been building. Worth asking what\'s actually being required of you right now — and whether it\'s all yours to carry.'
+                        <View style={styles.observationItem}>
+                          <View style={[styles.observationDot, { backgroundColor: PALETTE.copper }]} />
+                          <Text style={styles.insightLine}>
+                            {stressTrend === 'down' ? 'The pressure has been easing. Whatever you\'ve been choosing differently, it\'s showing.'
+                              : stressTrend === 'up' ? 'Stress has been building. Worth asking what\'s actually being required of you right now — and whether it\'s all yours to carry.'
                               : 'Stress is holding at a consistent level. Not escalating, but not releasing either — that\'s information worth noticing.'}
                           </Text>
                         </View>
 
                         {energyMoodInsight != null && (
-                          <View style={styles.correlationItem}>
-                            <View style={styles.correlationDot} />
-                            <Text style={styles.correlationText}>{energyMoodInsight}</Text>
+                          <View style={styles.observationItem}>
+                            <View style={[styles.observationDot, { backgroundColor: PALETTE.gold }]} />
+                            <Text style={styles.insightLine}>{energyMoodInsight}</Text>
                           </View>
                         )}
                       </>
                     )
                   ) : (
-                    <Text style={styles.correlationPlaceholder}>
-                      Log at least 7 check-ins to unlock correlation insights.
-                    </Text>
+                    <Text style={styles.placeholderText}>Log at least 7 check-ins to unlock pattern observations.</Text>
                   )}
                 </LinearGradient>
               </Animated.View>
 
-              {/* ── AI Insights (only shown when AI copy has loaded) ── */}
+              {/* ── AI Synthesis ── */}
               {aiInsights && (
                 <Animated.View entering={FadeInDown.delay(310).duration(600)} style={styles.section}>
-                  <Text style={styles.sectionTitle}>Insights</Text>
-                  <LinearGradient
-                    colors={['rgba(122, 139, 224, 0.08)', 'rgba(122, 139, 224, 0.02)']}
-                    style={styles.correlationCard}
-                  >
+                  <Text style={styles.sectionTitle}>Synthesis</Text>
+                  <LinearGradient colors={['rgba(212, 175, 55, 0.08)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                     {aiInsights.insights.map((line, i) => (
-                      <Text key={i} style={styles.reflectionLine}>{line}</Text>
+                      <Text key={i} style={styles.insightLine}>{line}</Text>
                     ))}
                   </LinearGradient>
                 </Animated.View>
               )}
 
-              {/* ── Restorative Patterns Scaffold ── */}
+              {/* ── What Restores You ── */}
               <Animated.View entering={FadeInDown.delay(340).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>What Restores You</Text>
-                <LinearGradient
-                  colors={['rgba(110, 191, 139, 0.08)', 'rgba(110, 191, 139, 0.02)']}
-                  style={styles.restorativeCard}
-                >
+                <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                   {aiInsights ? (
                     <>
-                      <Text style={styles.microLine}>{aiInsights.micro_line}</Text>
+                      <Text style={styles.insightHighlight}>{aiInsights.micro_line}</Text>
                       {aiInsights.restores.map((line, i) => (
-                        <Text key={i} style={[styles.reflectionLine, styles.reflectionLineLeft]}>{line}</Text>
+                        <Text key={i} style={styles.insightLine}>{line}</Text>
                       ))}
                     </>
                   ) : (
-                    <>
-                      <Ionicons name="leaf-outline" size={24} color={theme.growth} />
-                      <Text style={styles.restorativeText}>
+                    <View style={{ alignItems: 'center' }}>
+                      <Ionicons name="leaf-outline" size={28} color={PALETTE.emerald} style={{ marginBottom: 12 }} />
+                      <Text style={styles.restorativeMain}>
                         {tagCorrelation && tagCorrelation.restores.length > 0
                           ? `Days involving ${tagCorrelation.restores.length === 1 ? tagCorrelation.restores[0] : tagCorrelation.restores.slice(0, -1).join(', ') + ' and ' + tagCorrelation.restores[tagCorrelation.restores.length - 1]} tend to be your better ones — your own data shows it.`
                           : energyTrend === 'up'
@@ -702,46 +615,35 @@ export default function ReflectScreen() {
                       </Text>
 
                       {tagCorrelation && tagCorrelation.drains.length > 0 && (
-                        <Text style={styles.restorativeDetail}>
+                        <Text style={styles.restorativeSub}>
                           {`Days with ${tagCorrelation.drains.length === 1 ? tagCorrelation.drains[0] : tagCorrelation.drains.slice(0, -1).join(', ') + ' or ' + tagCorrelation.drains[tagCorrelation.drains.length - 1]} tend to be harder for you. That's not judgment — it's just your pattern.`}
                         </Text>
                       )}
 
                       {bestEnergyDay != null && (
-                        <Text style={styles.restorativeDetail}>
+                        <Text style={styles.restorativeSub}>
                           Your energy and mood tend to peak on {bestEnergyDay} — consistent enough to actually plan around.
                         </Text>
                       )}
-                    </>
+                    </View>
                   )}
                 </LinearGradient>
               </Animated.View>
             </>
           )}
 
-          {/* ── Astrology Context — intentional, secondary ── */}
-          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-            <Pressable
-              onPress={() => nav('/astrology-context')}
-              accessibilityRole="button"
-              accessibilityLabel="View daily context"
-            >
-              <LinearGradient
-                colors={['rgba(201, 169, 98, 0.08)', 'rgba(201, 169, 98, 0.03)']}
-                style={styles.astrologyCard}
-              >
-                <View style={styles.astrologyHeader}>
-                  <View style={styles.astrologyIconWrap}>
-                    <Ionicons name="partly-sunny-outline" size={18} color={theme.primary} />
-                  </View>
-                  <View style={styles.astrologyTextWrap}>
-                    <Text style={styles.astrologyTitle}>Daily Context & Influences</Text>
-                    <Text style={styles.astrologySubtitle}>
-                      View your current influences
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+          {/* ── Astrology Context (Secondary Hook) ── */}
+          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={[styles.section, { marginTop: 16 }]}>
+            <Pressable onPress={() => nav('/astrology-context')}>
+              <LinearGradient colors={['rgba(212, 175, 55, 0.1)', 'rgba(212, 175, 55, 0.02)']} style={styles.astroContextCard}>
+                <View style={styles.astroIconWrap}>
+                  <Ionicons name="planet-outline" size={18} color={PALETTE.gold} />
                 </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.astroContextTitle}>Cosmic Context</Text>
+                  <Text style={styles.astroContextSub}>View today's transits and influences</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
               </LinearGradient>
             </Pressable>
           </Animated.View>
@@ -753,282 +655,68 @@ export default function ReflectScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#07090F' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: theme.spacing.lg },
-  loadingContainer: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: theme.spacing.xl },
-  loadingText: { fontSize: 16, color: theme.textSecondary, textAlign: 'center', fontStyle: 'italic' },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
+  loadingContainer: { justifyContent: 'center', alignItems: 'center' },
+  loadingText: { fontSize: 16, color: theme.textSecondary, textAlign: 'center', fontStyle: 'italic', marginTop: 16 },
 
-  header: { marginTop: theme.spacing.lg, marginBottom: theme.spacing.xl },
-  title: { fontSize: 30, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif' },
-  subtitle: { color: theme.textSecondary, fontSize: 15, marginTop: 6 },
+  header: { marginTop: 16, marginBottom: 24 },
+  title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
+  subtitle: { color: theme.textSecondary, fontSize: 15, marginTop: 4, fontStyle: 'italic', letterSpacing: 0.3 },
 
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-    textAlign: 'center',
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  ctaButton: {
-    backgroundColor: 'rgba(201, 169, 98, 0.2)',
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.3)',
-  },
-  ctaText: { color: theme.primary, fontWeight: '600', fontSize: 16 },
+  emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 12 },
+  emptySubtitle: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 32, marginBottom: 32 },
+  ctaButton: { backgroundColor: 'rgba(212, 175, 55, 0.15)', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)' },
+  ctaText: { color: PALETTE.gold, fontWeight: '700', fontSize: 16 },
 
-  section: { marginBottom: theme.spacing.lg },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    marginBottom: theme.spacing.md,
-    letterSpacing: 0.3,
-  },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 12, letterSpacing: 0.3, paddingLeft: 4 },
 
-  // Trend summary cards
-  trendCards: { flexDirection: 'row', gap: theme.spacing.sm },
-  trendCard: {
-    flex: 1,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    minHeight: 90,
-    justifyContent: 'center',
-  },
-  trendCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 },
-  trendCardLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5, color: theme.textMuted },
-  trendCardValue: { fontSize: 22, fontWeight: '700', color: theme.textPrimary },
-  trendCardSub: { fontSize: 10, color: theme.textMuted, marginTop: 2 },
+  glassCard: { borderRadius: 20, padding: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
+  glassCardEmpty: { borderRadius: 20, padding: 32, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center' },
 
-  // Bar chart
-  barsCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
-  barLabel: { width: 90, fontSize: 12, color: theme.textSecondary },
-  barTrack: {
-    flex: 1,
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  barFill: { height: '100%', borderRadius: 4 },
-  barValue: { width: 30, fontSize: 12, color: theme.textPrimary, textAlign: 'right', marginLeft: 8 },
-  barsNote: { fontSize: 11, color: theme.textMuted, marginTop: theme.spacing.sm, textAlign: 'center' },
+  promptLabelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 6 },
+  promptLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.5 },
+  promptText: { fontSize: 22, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), lineHeight: 32, marginBottom: 24 },
+  promptActions: { flexDirection: 'row', gap: 12 },
+  promptBtn: { flex: 1, borderRadius: 16, overflow: 'hidden' },
+  promptBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, gap: 8 },
+  promptBtnText: { fontSize: 14, fontWeight: '700' },
 
-  // Empty card
-  emptyCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    marginBottom: theme.spacing.lg,
-  },
-  emptyCardText: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-  },
-  inlineCtaButton: {
-    backgroundColor: 'rgba(201, 169, 98, 0.15)',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.25)',
-  },
-  inlineCtaText: { color: theme.primary, fontWeight: '600', fontSize: 14 },
+  intentionText: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), lineHeight: 30 },
 
-  // Correlation
-  correlationCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  correlationItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: theme.spacing.md },
-  correlationDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.primary,
-    marginTop: 6,
-    marginRight: theme.spacing.sm,
-    flexShrink: 0,
-  },
-  correlationText: { flex: 1, fontSize: 14, color: theme.textSecondary, lineHeight: 21 },
-  correlationPlaceholder: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic', textAlign: 'center', padding: theme.spacing.md },
+  trendCards: { flexDirection: 'row', gap: 10 },
+  trendCard: { flex: 1, borderRadius: 16, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
+  trendCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  trendCardLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  trendCardValue: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain },
+  trendCardSub: { fontSize: 11, color: theme.textMuted, marginTop: 4 },
 
-  // Restorative
-  restorativeCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(110, 191, 139, 0.12)',
-    alignItems: 'center',
-  },
-  restorativeText: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginTop: theme.spacing.md,
-  },
-  restorativeDetail: {
-    fontSize: 13,
-    color: theme.textMuted,
-    textAlign: 'center',
-    marginTop: theme.spacing.md,
-    fontStyle: 'italic',
-  },
+  barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  barLabel: { width: 90, fontSize: 13, color: theme.textSecondary },
+  barTrack: { flex: 1, height: 6, backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 3, overflow: 'hidden' },
+  barFill: { height: '100%', borderRadius: 3 },
+  barValue: { width: 32, fontSize: 13, color: PALETTE.textMain, textAlign: 'right', fontWeight: '600' },
+  barsNote: { fontSize: 11, color: theme.textMuted, marginTop: 8, textAlign: 'center', fontStyle: 'italic' },
 
-  // AI reflection copy
-  reflectionLine: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    lineHeight: 26,
-    marginBottom: 6,
-  },
-  reflectionLineLeft: {
-    textAlign: 'left',
-  },
-  microLine: {
-    fontSize: 16,
-    color: theme.textPrimary,
-    lineHeight: 24,
-    marginBottom: theme.spacing.md,
-    fontWeight: '500',
-  },
+  observationItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 12 },
+  observationDot: { width: 6, height: 6, borderRadius: 3, marginTop: 8, marginRight: 12 },
+  
+  insightLine: { fontSize: 15, color: theme.textSecondary, lineHeight: 24, marginBottom: 12 },
+  insightHighlight: { fontSize: 16, color: PALETTE.textMain, fontWeight: '600', lineHeight: 24, marginBottom: 16 },
+  placeholderText: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic', textAlign: 'center', paddingVertical: 12 },
 
-  // Weekly intention
-  intentionCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(110, 191, 139, 0.15)',
-  },
-  intentionLabelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
-  intentionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: theme.growth,
-    marginLeft: theme.spacing.xs,
-  },
-  intentionText: {
-    fontSize: 19,
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-    lineHeight: 28,
-  },
+  restorativeMain: { fontSize: 16, color: PALETTE.textMain, textAlign: 'center', lineHeight: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  restorativeSub: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', fontStyle: 'italic', lineHeight: 20, marginBottom: 12 },
 
-  // Daily reflection prompt
-  promptCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(122, 139, 224, 0.15)',
-  },
-  promptLabelRow: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
-  promptLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: '#7A8BE0',
-    marginLeft: theme.spacing.xs,
-  },
-  promptText: {
-    fontSize: 20,
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-    lineHeight: 30,
-    marginBottom: theme.spacing.xl,
-  },
-  promptActions: { flexDirection: 'row', gap: theme.spacing.sm },
-  promptBtn: { flex: 1, borderRadius: theme.borderRadius.lg, overflow: 'hidden' },
-  promptBtnGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    gap: 6,
-  },
-  promptBtnText: { fontSize: 14, fontWeight: '600' },
-
-  // Astrology context card (bottom, intentionally subtle)
-  astrologyCard: {
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.12)',
-  },
-  astrologyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  astrologyIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(201, 169, 98, 0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  astrologyTextWrap: { flex: 1 },
-  astrologyTitle: { fontSize: 14, fontWeight: '600', color: theme.primary, marginBottom: 3 },
-  astrologySubtitle: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },
-
-  // Sign-in CTA card
-  signInCard: {
-    borderRadius: theme.borderRadius.xl,
-    overflow: 'hidden',
-  },
-  signInCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(122, 139, 224, 0.2)',
-  },
-  signInCardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#7A8BE0',
-    marginBottom: 3,
-  },
-  signInCardBody: {
-    fontSize: 12,
-    color: theme.textSecondary,
-    lineHeight: 17,
-  },
+  astroContextCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', gap: 16 },
+  astroIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(212, 175, 55, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  astroContextTitle: { fontSize: 15, fontWeight: '600', color: PALETTE.gold, marginBottom: 2 },
+  astroContextSub: { fontSize: 12, color: theme.textMuted },
+  
+  emptyCardText: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, marginVertical: 20 },
+  inlineCtaButton: { backgroundColor: 'rgba(212, 175, 55, 0.15)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)' },
+  inlineCtaText: { color: PALETTE.gold, fontWeight: '600', fontSize: 14 },
 });

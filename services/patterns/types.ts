@@ -6,6 +6,12 @@
  * enabling the app to correlate mood/themes with transits over time.
  */
 
+import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
+import type { AspectTypeName } from '../astrology/types';
+
+// Re-export so consumers don't need to reach into other modules
+export type { MoonPhaseKeyTag, AspectTypeName };
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Daily Check-In (user input)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -88,7 +94,7 @@ export interface DailyCheckIn {
   moonHouse: number;
   sunHouse: number;
   transitEvents: TransitEvent[];
-  lunarPhase: string;          // 'new' | 'waxing_crescent' | 'first_quarter' | 'waxing_gibbous' | 'full' | 'waning_gibbous' | 'last_quarter' | 'waning_crescent'
+  lunarPhase: MoonPhaseKeyTag | 'unknown';  // typed moon phase (+ 'unknown' for error fallback)
   retrogrades: string[];       // planet names currently retrograde
 
   createdAt: string;
@@ -98,7 +104,7 @@ export interface DailyCheckIn {
 export interface TransitEvent {
   transitPlanet: string;       // e.g., "Moon"
   natalPlanet: string;         // e.g., "Venus"
-  aspect: string;              // e.g., "conjunction"
+  aspect: AspectTypeName;      // conjunction | opposition | trine | square | sextile
   orb: number;                 // tightness
   isApplying: boolean;
 }
@@ -197,4 +203,30 @@ export interface MagicTouch {
   icon: string;
   isActionable: boolean;
   action?: string;             // route to navigate to
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Check-In Input & Sky Snapshot
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** User-facing input for creating a check-in (before sky data is attached). */
+export interface CheckInInput {
+  moodScore: number;
+  energyLevel: EnergyLevel;
+  stressLevel: StressLevel;
+  tags: ThemeTag[];
+  note?: string;
+  wins?: string;
+  challenges?: string;
+  timeOfDay?: TimeOfDay;       // If not provided, auto-detected from current time
+}
+
+/** Auto-captured astrology context at the moment of a check-in. */
+export interface SkySnapshot {
+  moonSign: string;
+  moonHouse: number;
+  sunHouse: number;
+  transitEvents: TransitEvent[];
+  lunarPhase: MoonPhaseKeyTag | 'unknown';
+  retrogrades: string[];
 }

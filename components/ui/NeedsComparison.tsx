@@ -2,7 +2,7 @@
 // MySky — Side-by-side "What Each Person Needs" card for Relationships
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
@@ -14,6 +14,15 @@ interface NeedsComparisonProps {
   person2Needs: string[];
 }
 
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
+
 export default function NeedsComparison({
   person1Name,
   person1Needs,
@@ -23,58 +32,60 @@ export default function NeedsComparison({
   return (
     <View style={styles.container}>
       <View style={styles.columns}>
-        {/* Person 1 */}
+        
+        {/* Person 1 - Gold Profile */}
         <LinearGradient
-          colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.03)']}
-          style={styles.column}
+          colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+          style={[styles.column, { borderColor: `${PALETTE.gold}20` }]}
         >
           <View style={styles.nameRow}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={14} color={theme.primary} />
+            <View style={[styles.avatar, { backgroundColor: 'rgba(212, 175, 55, 0.15)' }]}>
+              <Ionicons name="person" size={12} color={PALETTE.gold} />
             </View>
-            <Text style={styles.name} numberOfLines={1}>{person1Name}</Text>
+            <Text style={[styles.name, { color: PALETTE.gold }]} numberOfLines={1}>{person1Name}</Text>
           </View>
           <View style={styles.needsList}>
             {person1Needs.slice(0, 3).map((need, i) => (
               <View key={i} style={styles.needRow}>
-                <View style={styles.needDot} />
+                <View style={[styles.needDot, { backgroundColor: PALETTE.gold }]} />
                 <Text style={styles.needText}>{need}</Text>
               </View>
             ))}
           </View>
         </LinearGradient>
 
-        {/* Divider */}
+        {/* Floating Connection Centerpiece */}
         <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
           <View style={styles.dividerIcon}>
-            <Ionicons name="heart" size={12} color={theme.primary} />
+            <Ionicons name="heart" size={10} color={PALETTE.gold} />
           </View>
           <View style={styles.dividerLine} />
         </View>
 
-        {/* Person 2 */}
+        {/* Person 2 - Silver/Blue Profile */}
         <LinearGradient
-          colors={['rgba(139,196,232,0.1)', 'rgba(139,196,232,0.03)']}
-          style={styles.column}
+          colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+          style={[styles.column, { borderColor: `${PALETTE.silverBlue}20` }]}
         >
           <View style={styles.nameRow}>
-            <View style={[styles.avatar, { backgroundColor: 'rgba(139,196,232,0.2)' }]}>
-              <Ionicons name="person" size={14} color="#8BC4E8" />
+            <View style={[styles.avatar, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
+              <Ionicons name="person" size={12} color={PALETTE.silverBlue} />
             </View>
-            <Text style={[styles.name, { color: '#8BC4E8' }]} numberOfLines={1}>
+            <Text style={[styles.name, { color: PALETTE.silverBlue }]} numberOfLines={1}>
               {person2Name}
             </Text>
           </View>
           <View style={styles.needsList}>
             {person2Needs.slice(0, 3).map((need, i) => (
               <View key={i} style={styles.needRow}>
-                <View style={[styles.needDot, { backgroundColor: 'rgba(139,196,232,0.5)' }]} />
+                <View style={[styles.needDot, { backgroundColor: PALETTE.silverBlue }]} />
                 <Text style={styles.needText}>{need}</Text>
               </View>
             ))}
           </View>
         </LinearGradient>
+
       </View>
     </View>
   );
@@ -82,66 +93,66 @@ export default function NeedsComparison({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 4,
+    marginTop: 8,
   },
   columns: {
     flexDirection: 'row',
-    gap: 4,
+    alignItems: 'stretch',
   },
   column: {
     flex: 1,
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: PALETTE.glassHighlight,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   avatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(201,169,98,0.15)',
+    width: 24,
+    height: 24,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   name: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    color: theme.primary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     flex: 1,
   },
   needsList: {
-    gap: 8,
+    gap: 12,
   },
   needRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 10,
   },
   needDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(201,169,98,0.5)',
-    marginTop: 5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 7,
     flexShrink: 0,
+    opacity: 0.8,
   },
   needText: {
-    fontSize: 12.5,
+    fontSize: 13,
     color: theme.textSecondary,
-    lineHeight: 17,
+    lineHeight: 18,
     flex: 1,
   },
   dividerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 20,
-    paddingVertical: 12,
+    width: 12,
   },
   dividerLine: {
     flex: 1,
@@ -149,10 +160,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
   dividerIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(201,169,98,0.1)',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 4,

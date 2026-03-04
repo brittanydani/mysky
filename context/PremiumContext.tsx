@@ -1,9 +1,16 @@
-import { logger } from '../utils/logger';
-// context/PremiumContext.tsx
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode } from 'react';
+/**
+ * context/PremiumContext.tsx
+ * * Manages the "Deeper Sky" premium state via RevenueCat.
+ * Synchronizes local state with cloud entitlements and handles IAP flows.
+ */
+
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode, useRef } from 'react';
 import Purchases from 'react-native-purchases';
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
+import * as Haptics from 'expo-haptics';
+
 import { revenueCatService } from '../services/premium/revenuecat';
+import { logger } from '../utils/logger';
 
 type PurchaseResult = { success: boolean; error?: string; userCancelled?: boolean };
 type RestoreResult = { success: boolean; hasPremium?: boolean; error?: string };
@@ -21,127 +28,147 @@ interface PremiumContextType {
 
 const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
-export function usePremium(): PremiumContextType {
-  const ctx = useContext(PremiumContext);
-  if (!ctx) throw new Error('usePremium must be used within a PremiumProvider');
-  return ctx;
-}
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-interface PremiumProviderProps {
-  children: ReactNode;
-}
+const DEBUG_FORCE_PREMIUM = true; // Toggle for local development
 
-export function PremiumProvider({ children }: PremiumProviderProps) {
+export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  const isMounted = useRef(true);
 
-  const FORCE_PREMIUM = true;
+  // ─── Logic ──────────────────────────────────────────────────────────────────
 
-  const updateCustomerInfo = useCallback((info: CustomerInfo | null) => {
+  const updatePremiumState = useCallback((info: CustomerInfo | null) => {
+    if (!isMounted.current) return;
+    
     setCustomerInfo(info);
-    // Set isPremium based on RevenueCat entitlements
-    if (FORCE_PREMIUM) {
+
+    if (DEBUG_FORCE_PREMIUM) {
       setIsPremium(true);
-    } else if (info) {
-      setIsPremium(revenueCatService.isPremium(info));
-    } else {
-      setIsPremium(false);
+      return;
     }
-  }, []);
+
+    const premiumActive = info ? revenueCatService.isPremium(info) : false;
+    
+    // Trigger haptic if user just became premium
+    if (premiumActive && !isPremium && isReady) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+    
+    setIsPremium(premiumActive);
+  }, [isPremium, isReady]);
 
   const refreshCustomerInfo = useCallback(async () => {
     try {
       const info = await revenueCatService.getCustomerInfo();
-      updateCustomerInfo(info);
+      updatePremiumState(info);
     } catch (e) {
       logger.error('[PremiumContext] refreshCustomerInfo failed:', e);
     }
-  }, [updateCustomerInfo]);
+  }, [updatePremiumState]);
 
-  const purchase = useCallback(async (packageToPurchase: PurchasesPackage): Promise<PurchaseResult> => {
+  const purchase = useCallback(async (pkg: PurchasesPackage): Promise<PurchaseResult> => {
     setLoading(true);
     try {
-      const result = await revenueCatService.purchasePackage(packageToPurchase);
-      if (result.success && result.customerInfo) updateCustomerInfo(result.customerInfo);
+      const result = await revenueCatService.purchasePackage(pkg);
+      if (result.success && result.customerInfo) {
+        updatePremiumState(result.customerInfo);
+      }
       return { success: result.success, error: result.error, userCancelled: result.userCancelled };
-    } catch (e: unknown) {
+    } catch (e) {
       logger.error('[PremiumContext] purchase failed:', e);
-      const message = e instanceof Error ? e.message : 'Purchase failed';
-      return { success: false, error: message };
+      return { success: false, error: 'Purchase encountered an unexpected error.' };
     } finally {
       setLoading(false);
     }
-  }, [updateCustomerInfo]);
+  }, [updatePremiumState]);
 
   const restore = useCallback(async (): Promise<RestoreResult> => {
     setLoading(true);
     try {
       const result = await revenueCatService.restorePurchases();
       const hasPremium = result.customerInfo ? revenueCatService.isPremium(result.customerInfo) : false;
-      if (result.success && result.customerInfo) updateCustomerInfo(result.customerInfo);
+      if (result.success && result.customerInfo) {
+        updatePremiumState(result.customerInfo);
+      }
       return { success: result.success, hasPremium, error: result.error };
-    } catch (e: unknown) {
+    } catch (e) {
       logger.error('[PremiumContext] restore failed:', e);
-      const message = e instanceof Error ? e.message : 'Restore failed';
-      return { success: false, error: message };
+      return { success: false, error: 'Restore failed.' };
     } finally {
       setLoading(false);
     }
-  }, [updateCustomerInfo]);
+  }, [updatePremiumState]);
+
+  // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    let mounted = true;
+    isMounted.current = true;
 
     const init = async () => {
       try {
         await revenueCatService.initialize();
-
-        const [ci, off] = await Promise.all([
+        
+        // Parallel fetch for speed, but atomic state update
+        const [info, activeOfferings] = await Promise.all([
           revenueCatService.getCustomerInfo(),
           revenueCatService.getOfferings(),
         ]);
 
-        if (!mounted) return;
-        updateCustomerInfo(ci);
-        setOfferings(off);
+        if (isMounted.current) {
+          setOfferings(activeOfferings);
+          updatePremiumState(info);
+          setIsReady(true);
+          logger.info('[PremiumContext] System Ready');
+        }
       } catch (e) {
-        logger.error('[PremiumContext] initialize failed:', e);
-      } finally {
-        if (mounted) setIsReady(true);
+        logger.error('[PremiumContext] Initialization failed:', e);
+        if (isMounted.current) setIsReady(true); // Don't block app boot on failure
       }
     };
 
     init();
 
-    // Listen for subscription changes (e.g. renewals, cancellations)
-    // addCustomerInfoUpdateListener is typed as void but returns a removal
-    // function at runtime — cast to keep both TS and the runtime happy.
-    const listenerRemove = Purchases.addCustomerInfoUpdateListener((info) => {
-      if (mounted) updateCustomerInfo(info);
-    }) as unknown as (() => void) | void;
+    // Entitlement Listener
+    const removeListener = Purchases.addCustomerInfoUpdateListener((info) => {
+      updatePremiumState(info);
+    }) as unknown as (() => void);
 
     return () => {
-      mounted = false;
-      if (typeof listenerRemove === 'function') listenerRemove();
+      isMounted.current = false;
+      if (typeof removeListener === 'function') removeListener();
     };
   }, []);
 
-  const value = useMemo<PremiumContextType>(
-    () => ({
-      isPremium,
-      isReady,
-      offerings,
-      customerInfo,
-      loading,
-      purchase,
-      restore,
-      refreshCustomerInfo,
-    }),
-    [isPremium, isReady, offerings, customerInfo, loading, purchase, restore, refreshCustomerInfo]
-  );
+  // ─── Value ──────────────────────────────────────────────────────────────────
 
-  return <PremiumContext.Provider value={value}>{children}</PremiumContext.Provider>;
+  const contextValue = useMemo(() => ({
+    isPremium,
+    isReady,
+    offerings,
+    customerInfo,
+    loading,
+    purchase,
+    restore,
+    refreshCustomerInfo,
+  }), [isPremium, isReady, offerings, customerInfo, loading, purchase, restore, refreshCustomerInfo]);
+
+  return (
+    <PremiumContext.Provider value={contextValue}>
+      {children}
+    </PremiumContext.Provider>
+  );
+}
+
+export function usePremium(): PremiumContextType {
+  const context = useContext(PremiumContext);
+  if (!context) {
+    throw new Error('usePremium must be used within a PremiumProvider');
+  }
+  return context;
 }

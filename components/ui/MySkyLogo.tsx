@@ -1,5 +1,6 @@
 // This file contains the new MySky logo as a React component.
 
+import React from 'react';
 import Svg, { Rect, G, Path, Polygon, Circle } from 'react-native-svg';
 
 const MySkyLogo = ({ size = 120 }) => (

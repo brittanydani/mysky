@@ -13,7 +13,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme.background,
+          backgroundColor: 'transparent',
           borderTopWidth: 1,
           borderTopColor: 'rgba(201, 169, 98, 0.15)',
           height: Platform.select({
@@ -28,6 +28,7 @@ export default function TabLayout() {
             default: 8,
           }),
         },
+        sceneStyle: { backgroundColor: 'transparent' },
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textMuted,
         tabBarLabelStyle: {

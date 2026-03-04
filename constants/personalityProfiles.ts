@@ -22,6 +22,10 @@ export interface PersonalityProfile {
   connectionStyle: string;
   /** The recurring inner challenge they tend to work through */
   wrestlingTheme: string;
+  /** How they process information and communicate */
+  communicationStyle: string;
+  /** Where they naturally find expansion and optimism */
+  growthArea: string;
   /** Short phrase for "given your nature" sentence — fits after "given" */
   givenPhrase: string;
 }
@@ -121,6 +125,44 @@ const SATURN_WRESTLING_THEME: Record<string, string> = {
   Pisces: 'tend to work through diffusion and boundaries — learning to stay present in your own life rather than drifting into others\'',
 };
 
+// ─── Mercury Sign → Communication Processing Style ───────────────────────────
+// Describes how they process information and speak their truth.
+// Used in: journaling prompts, reflecting on messages and dialogue in dreams.
+
+const MERCURY_COMMUNICATION_STYLE: Record<string, string> = {
+  Aries: 'process information quickly and directly, preferring to get straight to the point without overthinking',
+  Taurus: 'process information deliberately and practically, preferring tangible facts over abstract theories',
+  Gemini: 'process information rapidly through synthesis and exchange, often thinking out loud',
+  Cancer: 'process information emotionally, often interpreting tone, mood, and subtext before actual words',
+  Leo: 'process information expressively, often framing thoughts as stories and communicating with natural warmth',
+  Virgo: 'process information analytically, sorting details with precision and clear categorization',
+  Libra: 'process information relationally, often weighing different sides before coming to a conclusion',
+  Scorpio: 'process information incisively, looking past the surface to find the hidden truth or underlying motive',
+  Sagittarius: 'process information expansively, preferring the big picture and philosophical meaning over small details',
+  Capricorn: 'process information logically and structurally, valuing practical application over abstract musing',
+  Aquarius: 'process information conceptually, often connecting seemingly unrelated ideas from an objective distance',
+  Pisces: 'process information intuitively, absorbing meaning through feeling and imagery rather than strict logic',
+};
+
+// ─── Jupiter Sign → Growth & Expansion ───────────────────────────────────────
+// Describes where they naturally find expansion and optimism.
+// Used in: growth tab, positive/expanding dream symbols.
+
+const JUPITER_GROWTH_AREA: Record<string, string> = {
+  Aries: 'find expansion through courage, independence, and taking the initiative in new territory',
+  Taurus: 'find expansion through cultivating stability, enjoying the senses, and building slow, lasting wealth',
+  Gemini: 'find expansion through learning, writing, and engaging with a wide variety of perspectives',
+  Cancer: 'find expansion through nurturing others, strengthening roots, and creating a profound sense of home',
+  Leo: 'find expansion through creative self-expression, leadership, and generous playfulness',
+  Virgo: 'find expansion through service, mastery of skills, and bringing order to chaotic environments',
+  Libra: 'find expansion through partnership, diplomacy, and the active creation of harmony and beauty',
+  Scorpio: 'find expansion through profound psychological transformation and delving fearlessly into the unknown',
+  Sagittarius: 'find expansion through travel (physical or mental), seeking ultimate truths, and philosophy',
+  Capricorn: 'find expansion through disciplined ambition, taking responsibility, and achieving structural goals',
+  Aquarius: 'find expansion through humanitarian efforts, radical innovation, and connecting with progressive communities',
+  Pisces: 'find expansion through spiritual surrender, deep compassion, and boundless creative imagination',
+};
+
 // ─── "Given" Phrase → for "given your nature" sentence construction ───────────
 // Short phrases that complete "given your tendency to..." in prose.
 
@@ -162,6 +204,8 @@ export function buildPersonalityProfile(chart: NatalChart): PersonalityProfile {
   const marsSign = chart.mars?.sign?.name || '';
   const venusSign = chart.venus?.sign?.name || '';
   const saturnSign = chart.saturn?.sign?.name || '';
+  const mercurySign = chart.mercury?.sign?.name || '';
+  const jupiterSign = chart.jupiter?.sign?.name || '';
 
   const moonElement = chart.moonSign?.element || 'Water';
 
@@ -186,6 +230,14 @@ export function buildPersonalityProfile(chart: NatalChart): PersonalityProfile {
     SATURN_WRESTLING_THEME[saturnSign] ??
     'tend to return to a recurring inner challenge that keeps inviting growth';
 
+  const communicationStyle =
+    MERCURY_COMMUNICATION_STYLE[mercurySign] ??
+    'process and share your thoughts in a highly distinct way';
+
+  const growthArea =
+    JUPITER_GROWTH_AREA[jupiterSign] ??
+    'find genuine meaning and expansion on your own terms';
+
   const givenPhrase =
     GIVEN_PHRASES[moonSign] ??
     GIVEN_PHRASES[sunSign] ??
@@ -197,6 +249,8 @@ export function buildPersonalityProfile(chart: NatalChart): PersonalityProfile {
     tensionResponse,
     connectionStyle,
     wrestlingTheme,
+    communicationStyle,
+    growthArea,
     givenPhrase,
   };
 }

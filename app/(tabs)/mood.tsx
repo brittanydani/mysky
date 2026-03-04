@@ -1,4 +1,4 @@
-// app/(tabs)/mood.tsx
+// File: app/(tabs)/mood.tsx
 // MySky — Mood Tab: slider check-in + pattern graphs
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
@@ -94,7 +94,7 @@ const ALL_TAG_LABELS: Record<string, string> = {
 };
 
 const COLORS = {
-  mood:   '#c9a962',
+  mood: '#c9a962',
   energy: '#6fb3d3',
   stress: '#e07b7b',
 };
@@ -136,7 +136,7 @@ function filterByRange(checkIns: DailyCheckIn[], range: TimeRange): DailyCheckIn
 
 function computeAverages(cis: DailyCheckIn[]) {
   if (!cis.length) return { mood: 0, energy: 0, stress: 0 };
-  const mood   = cis.reduce((s, c) => s + c.moodScore, 0) / cis.length;
+  const mood = cis.reduce((s, c) => s + c.moodScore, 0) / cis.length;
   const energy = cis.reduce((s, c) => s + levelToNum(c.energyLevel), 0) / cis.length;
   const stress = cis.reduce((s, c) => s + levelToNum(c.stressLevel), 0) / cis.length;
   return { mood, energy, stress };
@@ -178,7 +178,15 @@ interface SliderProps {
   max?: number;
 }
 
-const MetricSlider = memo(function MetricSlider({ question, value, onChange, color, anchors, min = 1, max = 10 }: SliderProps) {
+const MetricSlider = memo(function MetricSlider({
+  question,
+  value,
+  onChange,
+  color,
+  anchors,
+  min = 1,
+  max = 10,
+}: SliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
   const trackWidthRef = useRef(0);
   const valueRef = useRef(value);
@@ -328,7 +336,15 @@ interface GraphProps {
   gradId: string;
 }
 
-const LineGraph = memo(function LineGraph({ data, minY: absMin, maxY: absMax, color, width, height, gradId }: GraphProps) {
+const LineGraph = memo(function LineGraph({
+  data,
+  minY: absMin,
+  maxY: absMax,
+  color,
+  width,
+  height,
+  gradId,
+}: GraphProps) {
   const PAD = { top: 10, bottom: 10, left: 4, right: 4 };
   const gW = width - PAD.left - PAD.right;
   const gH = height - PAD.top - PAD.bottom;
@@ -366,9 +382,7 @@ const LineGraph = memo(function LineGraph({ data, minY: absMin, maxY: absMax, co
   }
 
   const last = pts[pts.length - 1];
-  const areaPath =
-    linePath +
-    ` L ${last.x} ${PAD.top + gH} L ${pts[0].x} ${PAD.top + gH} Z`;
+  const areaPath = linePath + ` L ${last.x} ${PAD.top + gH} L ${pts[0].x} ${PAD.top + gH} Z`;
 
   return (
     <Svg width={width} height={height}>
@@ -387,7 +401,11 @@ const LineGraph = memo(function LineGraph({ data, minY: absMin, maxY: absMax, co
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const SectionLabel = memo(function SectionLabel({ icon, title, delay }: {
+const SectionLabel = memo(function SectionLabel({
+  icon,
+  title,
+  delay,
+}: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   delay: number;
@@ -453,13 +471,23 @@ export default function MoodScreen() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
 
+  useEffect(() => {
+    if (!loading && !hasChart) {
+      // If user somehow hits Mood with no chart, send them to chart creation
+      router.replace('/(tabs)/home' as Href);
+    }
+  }, [loading, hasChart, router]);
+
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
         try {
           setLoading(true);
           const charts = await localDb.getCharts();
-          if (!charts?.length) { setHasChart(false); return; }
+          if (!charts?.length) {
+            setHasChart(false);
+            return;
+          }
           setHasChart(true);
 
           const saved = charts[0];
@@ -513,6 +541,7 @@ export default function MoodScreen() {
           setLoading(false);
         }
       };
+
       load();
     }, [])
   );
@@ -522,9 +551,11 @@ export default function MoodScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     setSaving(true);
     setSaveError(null);
+
     try {
       const allTags: ThemeTag[] = [...selectedTags];
       if (selectedQuality) allTags.push(selectedQuality);
+
       const input: CheckInInput = {
         moodScore: moodSlider,
         energyLevel: sliderToLevel(energySlider) as EnergyLevel,
@@ -532,6 +563,7 @@ export default function MoodScreen() {
         tags: allTags,
         timeOfDay: selectedTimeSlot,
       };
+
       const result = await CheckInService.saveCheckIn(input, userChart, chartId);
       setTodayCheckIn(result);
       setSavedAt(new Date());
@@ -579,11 +611,11 @@ export default function MoodScreen() {
     [allCheckIns, timeRange]
   );
 
-  const moodData   = useMemo(() => filteredCheckIns.map(c => c.moodScore), [filteredCheckIns]);
+  const moodData = useMemo(() => filteredCheckIns.map(c => c.moodScore), [filteredCheckIns]);
   const energyData = useMemo(() => filteredCheckIns.map(c => levelToNum(c.energyLevel)), [filteredCheckIns]);
   const stressData = useMemo(() => filteredCheckIns.map(c => levelToNum(c.stressLevel)), [filteredCheckIns]);
-  const avgs       = useMemo(() => computeAverages(filteredCheckIns), [filteredCheckIns]);
-  const topTags    = useMemo(() => computeTopTags(filteredCheckIns), [filteredCheckIns]);
+  const avgs = useMemo(() => computeAverages(filteredCheckIns), [filteredCheckIns]);
+  const topTags = useMemo(() => computeTopTags(filteredCheckIns), [filteredCheckIns]);
 
   /** Time-of-day breakdown from check-in data */
   const todInsights = useMemo(() => {
@@ -595,6 +627,7 @@ export default function MoodScreen() {
       Evening: { moods: [], energies: [], stresses: [] },
       Night: { moods: [], energies: [], stresses: [] },
     };
+
     const todMap: Record<string, string> = {
       morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', night: 'Night',
     };
@@ -635,8 +668,8 @@ export default function MoodScreen() {
 
       const hl = high.label.toLowerCase();
       const ll = low.label.toLowerCase();
-      let text: string;
 
+      let text: string;
       if (m.key === 'mood') {
         text = spread >= 1.0
           ? `Your mood peaks in the ${hl} (${m.extract(high).toFixed(1)}) and is lowest at ${ll} (${m.extract(low).toFixed(1)}).`
@@ -652,9 +685,15 @@ export default function MoodScreen() {
       }
 
       metricInsights.push({
-        metric: m.key, emoji: m.emoji, label: m.label, insight: text,
-        highBucket: high.label, lowBucket: low.label,
-        highValue: m.extract(high), lowValue: m.extract(low), spread,
+        metric: m.key,
+        emoji: m.emoji,
+        label: m.label,
+        insight: text,
+        highBucket: high.label,
+        lowBucket: low.label,
+        highValue: m.extract(high),
+        lowValue: m.extract(low),
+        spread,
       });
     }
 
@@ -669,46 +708,6 @@ export default function MoodScreen() {
       formatDate(filteredCheckIns[filteredCheckIns.length - 1].date),
     ];
   }, [filteredCheckIns]);
-
-  // ── No-chart state ────────────────────────────────────────────────────────
-
-  if (!loading && !hasChart) {
-    return (
-      <View style={styles.container}>
-        <StarField starCount={28} />
-        <SafeAreaView edges={['top']} style={styles.flex}>
-          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Mood</Text>
-            <Text style={styles.subtitle}>Track how you feel, discover your patterns.</Text>
-          </Animated.View>
-          <ScrollView
-            style={styles.flex}
-            contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
-            showsVerticalScrollIndicator={false}
-          >
-            <Animated.View entering={FadeInDown.delay(180).duration(600)}>
-              <LinearGradient colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']} style={styles.card}>
-                <Ionicons name="sparkles" size={32} color={theme.primary} style={{ marginBottom: 12 }} />
-                <Text style={styles.heroText}>Add your date of birth</Text>
-                <Text style={[styles.body, { marginTop: 8 }]}> 
-                  Enter your date of birth to unlock more personalized insights and check-ins tailored just for you.
-                </Text>
-                <Pressable
-                  style={[styles.primaryBtn, { marginTop: 16 }]}
-                  onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/home' as Href); }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Create Chart"
-                >
-                  <Ionicons name="add-circle-outline" size={16} color={theme.primary} />
-                  <Text style={styles.primaryBtnTxt}>Create Chart</Text>
-                </Pressable>
-              </LinearGradient>
-            </Animated.View>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
 
   // ── Loading state ─────────────────────────────────────────────────────────
 
@@ -726,9 +725,14 @@ export default function MoodScreen() {
     );
   }
 
-  // ── Load error state ──────────────────────────────────────────────────────
+  // ✅ HARD STOP: Mood should never render without a chart (prevents flicker/pop-in UI)
+  if (!hasChart) {
+    return null;
+  }
 
-  if (loadError && !hasChart) {
+  // ── Load error state ──────────────────────────────────────────────────────
+  // If you ever get here, we DO have a chart, so it's fine to show.
+  if (loadError) {
     return (
       <View style={styles.container}>
         <StarField starCount={28} />
@@ -749,575 +753,604 @@ export default function MoodScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-    <View style={styles.container}>
-      <StarField starCount={60} />
-      <SafeAreaView edges={['top']} style={styles.flex}>
-
-        {/* Header */}
-        <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
-          <Text style={styles.title}>Mood</Text>
-          <Text style={styles.subtitle}>
-            {userName || 'Daily check-in'} · {formatToday()}
-          </Text>
-        </Animated.View>
-
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
-          showsVerticalScrollIndicator={false}
-        >
-
-          {/* Streak row */}
-          {currentStreak > 0 && (
-            <Animated.View entering={FadeInDown.delay(80).duration(500)} style={styles.streakRow}>
-              <Ionicons name="flame-outline" size={14} color={theme.primary} />
-              <Text style={styles.streakTxt}>{currentStreak} day streak</Text>
-              {allCheckIns.length > 0 && (
-                <>
-                  <Text style={styles.dot}> · </Text>
-                  <Text style={styles.streakTxt}>{allCheckIns.length} total</Text>
-                </>
-              )}
-            </Animated.View>
-          )}
-
-          {/* ═══ Quick Check-In ═══ */}
-          <SectionLabel icon="heart-outline" title="Quick Check-In" delay={100} />
-          <Animated.View entering={FadeInDown.delay(120).duration(600)}>
-            <LinearGradient
-              colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
-              style={styles.card}
-            >
-              {/* Save confirmation */}
-              {savedAt && (
-                <View style={styles.savedBanner}>
-                  <Ionicons name="checkmark-circle" size={16} color={theme.energy} />
-                  <Text style={styles.savedTxt}>Check-in saved. Patterns updated.</Text>
-                </View>
-              )}
-
-              {/* Time-of-day selector */}
-              <Text style={[styles.tagsLabel, { marginBottom: 8 }]}>
-                When are you checking in?
-              </Text>
-              <View style={styles.timeSlotRow}>
-                {TIME_OF_DAY_ORDER.map(slot => {
-                  const info = TIME_OF_DAY_LABELS[slot];
-                  const isSelected = selectedTimeSlot === slot;
-                  const isCompleted = completedSlots.includes(slot);
-                  const isCurrent = CheckInService.getCurrentTimeSlot() === slot;
-                  return (
-                    <Pressable
-                      key={slot}
-                      style={[
-                        styles.timeSlotChip,
-                        isSelected && styles.timeSlotChipOn,
-                        isCompleted && !isSelected && styles.timeSlotChipDone,
-                      ]}
-                      onPress={() => {
-                        Haptics.selectionAsync().catch(() => {});
-                        setSelectedTimeSlot(slot);
-                        // Load existing data for this slot if it exists
-                        const existing = todayCheckIns.find(c => c.timeOfDay === slot);
-                        if (existing) {
-                          setMoodSlider(existing.moodScore);
-                          setEnergySlider(levelToNum(existing.energyLevel));
-                          setStressSlider(levelToNum(existing.stressLevel));
-                          const restoredTags = existing.tags ?? [];
-                          const eqTag = restoredTags.find((t: string) => t.startsWith('eq_')) as ThemeTag | undefined;
-                          setSelectedQuality(eqTag ?? null);
-                          setSelectedTags(restoredTags.filter((t: string) => !t.startsWith('eq_')));
-                          setShowCustomInput(false);
-                          setCustomInputText('');
-                          setTodayCheckIn(existing);
-                        } else {
-                          // Reset form for new time slot
-                          setMoodSlider(5);
-                          setEnergySlider(5);
-                          setStressSlider(5);
-                          setSelectedTags([]);
-                          setSelectedQuality(null);
-                          setShowCustomInput(false);
-                          setCustomInputText('');
-                          setTodayCheckIn(null);
-                        }
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${info.label} check-in${isCompleted ? ' (completed)' : ''}`}
-                      accessibilityState={{ selected: isSelected }}
-                    >
-                      <Text style={styles.timeSlotEmoji}>{info.emoji}</Text>
-                      <Text style={[
-                        styles.timeSlotLabel,
-                        isSelected && styles.timeSlotLabelOn,
-                        isCompleted && !isSelected && styles.timeSlotLabelDone,
-                      ]}>
-                        {info.label}
-                      </Text>
-                      {isCompleted && (
-                        <Ionicons name="checkmark-circle" size={12} color={isSelected ? theme.primary : theme.energy} style={{ marginTop: 2 }} />
-                      )}
-                      {isCurrent && !isCompleted && (
-                        <View style={styles.currentDot} />
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              {/* Today's check-in summary */}
-              {todayCheckIns.length > 0 && !savedAt && (
-                <View style={styles.todayNotice}>
-                  <Ionicons name="time-outline" size={13} color={theme.textMuted} />
-                  <Text style={styles.todayNoticeTxt}>
-                    {completedSlots.includes(selectedTimeSlot)
-                      ? `${TIME_OF_DAY_LABELS[selectedTimeSlot].label} check-in logged — update below`
-                      : `${todayCheckIns.length}/4 check-in${todayCheckIns.length !== 1 ? 's' : ''} today`}
-                  </Text>
-                </View>
-              )}
-
-              {/* Sliders */}
-              <MetricSlider
-                question="How are you feeling emotionally?"
-                value={moodSlider} onChange={setMoodSlider} color={COLORS.mood}
-                anchors={['Very low', 'Neutral', 'Excellent']}
-              />
-              <MetricSlider
-                question="How is your energy right now?"
-                value={energySlider} onChange={setEnergySlider} color={COLORS.energy}
-                anchors={['Exhausted', 'Steady', 'Energized']}
-              />
-              <MetricSlider
-                question="How activated or stressed do you feel?"
-                value={stressSlider} onChange={setStressSlider} color={COLORS.stress}
-                anchors={['Calm', 'Alert', 'Overwhelmed']}
-              />
-
-              {/* Influence tags */}
-              <Text style={styles.tagsLabel}>What shaped your day? <Text style={styles.tagsMuted}>(pick up to 3)</Text></Text>
-              <View style={styles.tagRow}>
-                {INFLUENCE_TAGS.map(tag => (
-                  <Pressable
-                    key={tag}
-                    style={[styles.tagChip, selectedTags.includes(tag) && styles.tagChipOn]}
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setSelectedTags(prev =>
-                        prev.includes(tag)
-                          ? prev.filter(t => t !== tag)
-                          : prev.length >= 3 ? prev : [...prev, tag]
-                      );
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={INFLUENCE_LABELS[tag]}
-                    accessibilityState={{ selected: selectedTags.includes(tag) }}
-                    accessibilityHint={selectedTags.includes(tag) ? 'Double-tap to remove' : selectedTags.length >= 3 ? 'Maximum 3 tags already selected' : 'Double-tap to add, up to 3 tags'}
-                  >
-                    <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
-                      {INFLUENCE_LABELS[tag]}
-                    </Text>
-                  </Pressable>
-                ))}
-
-                {/* Custom tags — up to 3 total (preset + custom); hold to remove */}
-                {selectedTags
-                  .filter(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'))
-                  .map(customTag => (
-                    <Pressable
-                      key={customTag}
-                      style={[styles.tagChip, styles.tagChipOn]}
-                      onLongPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                        setSelectedTags(prev => prev.filter(t => t !== customTag));
-                      }}
-                      delayLongPress={600}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${customTag}, hold to remove`}
-                    >
-                      <Text style={[styles.tagTxt, styles.tagTxtOn]}>✏️ {customTag}</Text>
-                    </Pressable>
-                  ))
-                }
-
-                {/* "+ other" chip or inline input */}
-                {(() => {
-                  if (showCustomInput) {
-                    return (
-                      <View style={styles.customTagInputRow}>
-                        <TextInput
-                          style={styles.customTagInput}
-                          value={customInputText}
-                          onChangeText={t => setCustomInputText(t.slice(0, 20))}
-                          placeholder="e.g. travel"
-                          placeholderTextColor={theme.textSecondary}
-                          autoFocus
-                          returnKeyType="done"
-                          onSubmitEditing={handleAddCustomTag}
-                          onBlur={() => { if (!customInputText.trim()) setShowCustomInput(false); }}
-                          maxLength={20}
-                          accessibilityLabel="Custom influence tag"
-                          accessibilityHint="Type a custom tag and press done to add it"
-                        />
-                      </View>
-                    );
-                  }
-                  if (selectedTags.length >= 3) return null;
-                  return (
-                    <Pressable
-                      style={styles.tagChipOther}
-                      onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowCustomInput(true); }}
-                      accessibilityRole="button"
-                      accessibilityLabel="Add your own influence"
-                    >
-                      <Text style={styles.tagTxtOther}>+ other</Text>
-                    </Pressable>
-                  );
-                })()}
-              </View>
-
-              {/* Premium: Emotional Quality */}
-              {isPremium && (
-                <>
-                  <Text style={[styles.tagsLabel, { marginTop: 4 }]}>
-                    What best describes today? <Text style={styles.tagsMuted}>(optional)</Text>
-                  </Text>
-                  <View style={styles.tagRow}>
-                    {QUALITY_OPTIONS.map(q => (
-                      <Pressable
-                        key={q}
-                        style={[styles.qualityChip, selectedQuality === q && styles.qualityChipOn]}
-                        onPress={() => {
-                          Haptics.selectionAsync().catch(() => {});
-                          setSelectedQuality(prev => prev === q ? null : q);
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel={QUALITY_LABELS[q]}
-                        accessibilityState={{ selected: selectedQuality === q }}
-                      >
-                        <Text style={[styles.qualityTxt, selectedQuality === q && styles.qualityTxtOn]}>
-                          {QUALITY_LABELS[q]}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </>
-              )}
-
-              {/* Save button */}
-              <Pressable
-                style={[styles.saveBtn, saving && { opacity: 0.6 }]}
-                onPress={handleSave}
-                disabled={saving}
-                accessibilityRole="button"
-                accessibilityLabel={saving ? 'Saving check-in' : completedSlots.includes(selectedTimeSlot) ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In` : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`}
-                accessibilityState={{ disabled: saving }}
-              >
-                <LinearGradient
-                  colors={['rgba(201,169,98,0.22)', 'rgba(201,169,98,0.12)']}
-                  style={styles.saveBtnInner}
-                >
-                  <Ionicons
-                    name={saving ? 'hourglass-outline' : 'checkmark-circle-outline'}
-                    size={18}
-                    color={theme.primary}
-                  />
-                  <Text style={styles.saveBtnTxt}>
-                    {saving
-                      ? 'Saving…'
-                      : completedSlots.includes(selectedTimeSlot)
-                        ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
-                        : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`}
-                  </Text>
-                </LinearGradient>
-              </Pressable>
-
-              <Text style={styles.hint}>Check in up to 4× daily — morning, afternoon, evening, night.</Text>
-
-              {/* Save error banner */}
-              {saveError && (
-                <View style={styles.errorBanner}>
-                  <Ionicons name="warning-outline" size={16} color="#E85D75" />
-                  <Text style={styles.errorBannerText}>{saveError}</Text>
-                  <Pressable
-                    onPress={() => setSaveError(null)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Dismiss error"
-                  >
-                    <Ionicons name="close" size={16} color={theme.textMuted} />
-                  </Pressable>
-                </View>
-              )}
-            </LinearGradient>
+      <View style={styles.container}>
+        <StarField starCount={60} />
+        <SafeAreaView edges={['top']} style={styles.flex}>
+          {/* Header */}
+          <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
+            <Text style={styles.title}>Mood</Text>
+            <Text style={styles.subtitle}>
+              {userName || 'Daily check-in'} · {formatToday()}
+            </Text>
           </Animated.View>
 
-          {/* ═══ Energy Reading link ═══ */}
-          <Animated.View entering={FadeInDown.delay(180).duration(600)}>
-            <Pressable
-              onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/energy' as Href); }}
-              accessibilityRole="button"
-              accessibilityLabel="Energy Reading"
-            >
-              <LinearGradient
-                colors={['rgba(25,38,60,0.50)', 'rgba(20,32,50,0.35)']}
-                style={[styles.card, { padding: theme.spacing.md }]}
-              >
-                <View style={styles.linkRow}>
-                  <View style={styles.linkLeft}>
-                    <Ionicons name="pulse-outline" size={20} color={theme.primary} />
-                    <View>
-                      <Text style={styles.linkTitle}>Energy Reading</Text>
-                      <Text style={styles.linkSub}>Chakra wheel · Domain breakdown · Guidance</Text>
-                    </View>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.primary} />
-                </View>
-              </LinearGradient>
-            </Pressable>
-          </Animated.View>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Streak row */}
+            {currentStreak > 0 && (
+              <Animated.View entering={FadeInDown.delay(80).duration(500)} style={styles.streakRow}>
+                <Ionicons name="flame-outline" size={14} color={theme.primary} />
+                <Text style={styles.streakTxt}>{currentStreak} day streak</Text>
+                {allCheckIns.length > 0 && (
+                  <>
+                    <Text style={styles.dot}> · </Text>
+                    <Text style={styles.streakTxt}>{allCheckIns.length} total</Text>
+                  </>
+                )}
+              </Animated.View>
+            )}
 
-          {/* ═══ Your Patterns ═══ */}
-          <SectionLabel icon="analytics-outline" title="Your Patterns" delay={200} />
-
-          {isPremium ? (
-            <Animated.View entering={FadeInDown.delay(220).duration(600)}>
+            {/* ═══ Quick Check-In ═══ */}
+            <SectionLabel icon="heart-outline" title="Quick Check-In" delay={100} />
+            <Animated.View entering={FadeInDown.delay(120).duration(600)}>
               <LinearGradient
                 colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
                 style={styles.card}
               >
-                {/* Time range selector */}
-                <View style={styles.rangeRow}>
-                  {(['7d', '30d', '90d', 'all'] as TimeRange[]).map(r => (
+                {/* Save confirmation */}
+                {savedAt && (
+                  <View style={styles.savedBanner}>
+                    <Ionicons name="checkmark-circle" size={16} color={theme.energy} />
+                    <Text style={styles.savedTxt}>Check-in saved. Patterns updated.</Text>
+                  </View>
+                )}
+
+                {/* Time-of-day selector */}
+                <Text style={[styles.tagsLabel, { marginBottom: 8 }]}>
+                  When are you checking in?
+                </Text>
+                <View style={styles.timeSlotRow}>
+                  {TIME_OF_DAY_ORDER.map(slot => {
+                    const info = TIME_OF_DAY_LABELS[slot];
+                    const isSelected = selectedTimeSlot === slot;
+                    const isCompleted = completedSlots.includes(slot);
+                    const isCurrent = CheckInService.getCurrentTimeSlot() === slot;
+
+                    return (
+                      <Pressable
+                        key={slot}
+                        style={[
+                          styles.timeSlotChip,
+                          isSelected && styles.timeSlotChipOn,
+                          isCompleted && !isSelected && styles.timeSlotChipDone,
+                        ]}
+                        onPress={() => {
+                          Haptics.selectionAsync().catch(() => {});
+                          setSelectedTimeSlot(slot);
+
+                          // Load existing data for this slot if it exists
+                          const existing = todayCheckIns.find(c => c.timeOfDay === slot);
+                          if (existing) {
+                            setMoodSlider(existing.moodScore);
+                            setEnergySlider(levelToNum(existing.energyLevel));
+                            setStressSlider(levelToNum(existing.stressLevel));
+
+                            const restoredTags = existing.tags ?? [];
+                            const eqTag = restoredTags.find((t: string) => t.startsWith('eq_')) as ThemeTag | undefined;
+
+                            setSelectedQuality(eqTag ?? null);
+                            setSelectedTags(restoredTags.filter((t: string) => !t.startsWith('eq_')));
+                            setShowCustomInput(false);
+                            setCustomInputText('');
+                            setTodayCheckIn(existing);
+                          } else {
+                            // Reset form for new time slot
+                            setMoodSlider(5);
+                            setEnergySlider(5);
+                            setStressSlider(5);
+                            setSelectedTags([]);
+                            setSelectedQuality(null);
+                            setShowCustomInput(false);
+                            setCustomInputText('');
+                            setTodayCheckIn(null);
+                          }
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${info.label} check-in${isCompleted ? ' (completed)' : ''}`}
+                        accessibilityState={{ selected: isSelected }}
+                      >
+                        <Text style={styles.timeSlotEmoji}>{info.emoji}</Text>
+                        <Text
+                          style={[
+                            styles.timeSlotLabel,
+                            isSelected && styles.timeSlotLabelOn,
+                            isCompleted && !isSelected && styles.timeSlotLabelDone,
+                          ]}
+                        >
+                          {info.label}
+                        </Text>
+                        {isCompleted && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={12}
+                            color={isSelected ? theme.primary : theme.energy}
+                            style={{ marginTop: 2 }}
+                          />
+                        )}
+                        {isCurrent && !isCompleted && (
+                          <View style={styles.currentDot} />
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* Today's check-in summary */}
+                {todayCheckIns.length > 0 && !savedAt && (
+                  <View style={styles.todayNotice}>
+                    <Ionicons name="time-outline" size={13} color={theme.textMuted} />
+                    <Text style={styles.todayNoticeTxt}>
+                      {completedSlots.includes(selectedTimeSlot)
+                        ? `${TIME_OF_DAY_LABELS[selectedTimeSlot].label} check-in logged — update below`
+                        : `${todayCheckIns.length}/4 check-in${todayCheckIns.length !== 1 ? 's' : ''} today`}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Sliders */}
+                <MetricSlider
+                  question="How are you feeling emotionally?"
+                  value={moodSlider}
+                  onChange={setMoodSlider}
+                  color={COLORS.mood}
+                  anchors={['Very low', 'Neutral', 'Excellent']}
+                />
+                <MetricSlider
+                  question="How is your energy right now?"
+                  value={energySlider}
+                  onChange={setEnergySlider}
+                  color={COLORS.energy}
+                  anchors={['Exhausted', 'Steady', 'Energized']}
+                />
+                <MetricSlider
+                  question="How activated or stressed do you feel?"
+                  value={stressSlider}
+                  onChange={setStressSlider}
+                  color={COLORS.stress}
+                  anchors={['Calm', 'Alert', 'Overwhelmed']}
+                />
+
+                {/* Influence tags */}
+                <Text style={styles.tagsLabel}>
+                  What shaped your day? <Text style={styles.tagsMuted}>(pick up to 3)</Text>
+                </Text>
+                <View style={styles.tagRow}>
+                  {INFLUENCE_TAGS.map(tag => (
                     <Pressable
-                      key={r}
-                      style={[styles.rangeBtn, timeRange === r && styles.rangeBtnOn]}
+                      key={tag}
+                      style={[styles.tagChip, selectedTags.includes(tag) && styles.tagChipOn]}
                       onPress={() => {
                         Haptics.selectionAsync().catch(() => {});
-                        setTimeRange(r);
+                        setSelectedTags(prev =>
+                          prev.includes(tag)
+                            ? prev.filter(t => t !== tag)
+                            : prev.length >= 3 ? prev : [...prev, tag]
+                        );
                       }}
                       accessibilityRole="button"
-                      accessibilityLabel={`Show ${r === 'all' ? 'all' : r === '7d' ? '7 day' : r === '30d' ? '30 day' : '90 day'} trends`}
-                      accessibilityState={{ selected: timeRange === r }}
+                      accessibilityLabel={INFLUENCE_LABELS[tag]}
+                      accessibilityState={{ selected: selectedTags.includes(tag) }}
+                      accessibilityHint={
+                        selectedTags.includes(tag)
+                          ? 'Double-tap to remove'
+                          : selectedTags.length >= 3
+                            ? 'Maximum 3 tags already selected'
+                            : 'Double-tap to add, up to 3 tags'
+                      }
                     >
-                      <Text style={[styles.rangeTxt, timeRange === r && styles.rangeTxtOn]}>
-                        {r === 'all' ? 'All' : r.toUpperCase()}
+                      <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
+                        {INFLUENCE_LABELS[tag]}
                       </Text>
                     </Pressable>
                   ))}
+
+                  {/* Custom tags — up to 3 total (preset + custom); hold to remove */}
+                  {selectedTags
+                    .filter(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'))
+                    .map(customTag => (
+                      <Pressable
+                        key={customTag}
+                        style={[styles.tagChip, styles.tagChipOn]}
+                        onLongPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                          setSelectedTags(prev => prev.filter(t => t !== customTag));
+                        }}
+                        delayLongPress={600}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${customTag}, hold to remove`}
+                      >
+                        <Text style={[styles.tagTxt, styles.tagTxtOn]}>✏️ {customTag}</Text>
+                      </Pressable>
+                    ))}
+
+                  {/* "+ other" chip or inline input */}
+                  {(() => {
+                    if (showCustomInput) {
+                      return (
+                        <View style={styles.customTagInputRow}>
+                          <TextInput
+                            style={styles.customTagInput}
+                            value={customInputText}
+                            onChangeText={t => setCustomInputText(t.slice(0, 20))}
+                            placeholder="e.g. travel"
+                            placeholderTextColor={theme.textSecondary}
+                            autoFocus
+                            returnKeyType="done"
+                            onSubmitEditing={handleAddCustomTag}
+                            onBlur={() => { if (!customInputText.trim()) setShowCustomInput(false); }}
+                            maxLength={20}
+                            accessibilityLabel="Custom influence tag"
+                            accessibilityHint="Type a custom tag and press done to add it"
+                          />
+                        </View>
+                      );
+                    }
+
+                    if (selectedTags.length >= 3) return null;
+
+                    return (
+                      <Pressable
+                        style={styles.tagChipOther}
+                        onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowCustomInput(true); }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Add your own influence"
+                      >
+                        <Text style={styles.tagTxtOther}>+ other</Text>
+                      </Pressable>
+                    );
+                  })()}
                 </View>
 
-                {filteredCheckIns.length < 2 ? (
-                  <View style={styles.emptyState}>
-                    <Ionicons name="hourglass-outline" size={28} color={theme.primary} />
-                    <Text style={[styles.body, { textAlign: 'center', marginTop: 10 }]}>
-                      {allCheckIns.length === 0
-                        ? 'Log your first check-in above to start tracking'
-                        : 'Not enough check-ins in this date range'}
-                    </Text>
-                  </View>
-                ) : (
+                {/* Premium: Emotional Quality */}
+                {isPremium && (
                   <>
-                    {/* Date range labels */}
-                    {dateLabels && (
-                      <View style={styles.dateRow}>
-                        <Text style={styles.dateTxt}>{dateLabels[0]}</Text>
-                        <Text style={styles.dateTxt}>{dateLabels[1]}</Text>
-                      </View>
-                    )}
-
-                    {/* Averages row */}
-                    <View style={styles.avgsRow}>
-                      <AvgBadge label="Avg Mood" value={avgs.mood.toFixed(1)} color={COLORS.mood} />
-                      <AvgBadge label="Avg Energy" value={numToLevelLabel(avgs.energy)} color={COLORS.energy} />
-                      <AvgBadge label="Avg Stress" value={numToLevelLabel(avgs.stress)} color={COLORS.stress} />
+                    <Text style={[styles.tagsLabel, { marginTop: 4 }]}>
+                      What best describes today? <Text style={styles.tagsMuted}>(optional)</Text>
+                    </Text>
+                    <View style={styles.tagRow}>
+                      {QUALITY_OPTIONS.map(q => (
+                        <Pressable
+                          key={q}
+                          style={[styles.qualityChip, selectedQuality === q && styles.qualityChipOn]}
+                          onPress={() => {
+                            Haptics.selectionAsync().catch(() => {});
+                            setSelectedQuality(prev => prev === q ? null : q);
+                          }}
+                          accessibilityRole="button"
+                          accessibilityLabel={QUALITY_LABELS[q]}
+                          accessibilityState={{ selected: selectedQuality === q }}
+                        >
+                          <Text style={[styles.qualityTxt, selectedQuality === q && styles.qualityTxtOn]}>
+                            {QUALITY_LABELS[q]}
+                          </Text>
+                        </Pressable>
+                      ))}
                     </View>
-
-                    {/* Graph: Mood */}
-                    <GraphLabel label="Mood" color={COLORS.mood} />
-                    <LineGraph
-                      data={moodData}
-                      minY={1}
-                      maxY={10}
-                      color={COLORS.mood}
-                      width={GRAPH_W}
-                      height={60}
-                      gradId="grad_mood"
-                    />
-
-                    {/* Graph: Energy */}
-                    <GraphLabel label="Energy" color={COLORS.energy} />
-                    <LineGraph
-                      data={energyData}
-                      minY={1}
-                      maxY={10}
-                      color={COLORS.energy}
-                      width={GRAPH_W}
-                      height={60}
-                      gradId="grad_energy"
-                    />
-
-                    {/* Graph: Stress */}
-                    <GraphLabel label="Stress" color={COLORS.stress} />
-                    <LineGraph
-                      data={stressData}
-                      minY={1}
-                      maxY={10}
-                      color={COLORS.stress}
-                      width={GRAPH_W}
-                      height={60}
-                      gradId="grad_stress"
-                    />
-
-                    {/* Top themes */}
-                    {topTags.length > 0 && (
-                      <>
-                        <Text style={[styles.graphLabelTxt, { marginTop: 12, marginBottom: 6, color: theme.textSecondary }]}>
-                          Most Common Themes
-                        </Text>
-                        {topTags.map(({ tag, count }) => (
-                          <View key={tag} style={styles.tagStatRow}>
-                            <Text style={styles.tagStatLabel}>{ALL_TAG_LABELS[tag] ?? tag}</Text>
-                            <View style={styles.tagStatBar}>
-                              <View
-                                style={[
-                                  styles.tagStatFill,
-                                  { width: `${(count / topTags[0].count) * 100}%` },
-                                ]}
-                              />
-                            </View>
-                            <Text style={styles.tagStatCount}>{count}×</Text>
-                          </View>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Time-of-Day Insights */}
-                    {todInsights && todInsights.buckets.length >= 2 && (
-                      <>
-                        <Text style={[styles.graphLabelTxt, { marginTop: 16, marginBottom: 8, color: theme.textSecondary }]}>
-                          🕐 Time of Day Patterns
-                        </Text>
-
-                        {/* Bucket overview */}
-                        <View style={styles.todBucketRow}>
-                          {todInsights.buckets.map(b => {
-                            const emoji: Record<string, string> = {
-                              Morning: '🌅', Afternoon: '☀️', Evening: '🌆', Night: '🌙',
-                            };
-                            return (
-                              <View key={b.label} style={styles.todBucket}>
-                                <Text style={{ fontSize: 16 }}>{emoji[b.label]}</Text>
-                                <Text style={styles.todBucketLabel}>{b.label}</Text>
-                                <View style={{ gap: 1, alignItems: 'center' }}>
-                                  <Text style={[styles.todBucketVal, { color: COLORS.mood }]}>{b.avgMood.toFixed(1)}</Text>
-                                  <Text style={[styles.todBucketVal, { color: COLORS.energy }]}>{b.avgEnergy.toFixed(1)}</Text>
-                                  <Text style={[styles.todBucketVal, { color: COLORS.stress }]}>{b.avgStress.toFixed(1)}</Text>
-                                </View>
-                                <Text style={styles.todBucketCount}>{b.count}×</Text>
-                              </View>
-                            );
-                          })}
-                        </View>
-
-                        {/* Legend */}
-                        <View style={styles.todLegend}>
-                          <View style={styles.todLegendItem}>
-                            <View style={[styles.todLegendDot, { backgroundColor: COLORS.mood }]} />
-                            <Text style={styles.todLegendTxt}>Mood</Text>
-                          </View>
-                          <View style={styles.todLegendItem}>
-                            <View style={[styles.todLegendDot, { backgroundColor: COLORS.energy }]} />
-                            <Text style={styles.todLegendTxt}>Energy</Text>
-                          </View>
-                          <View style={styles.todLegendItem}>
-                            <View style={[styles.todLegendDot, { backgroundColor: COLORS.stress }]} />
-                            <Text style={styles.todLegendTxt}>Stress</Text>
-                          </View>
-                        </View>
-
-                        {/* Per-metric insights */}
-                        {todInsights.metricInsights.length > 0 && (
-                          <View style={styles.todInsightList}>
-                            {todInsights.metricInsights.map(mi => (
-                              <View key={mi.metric} style={styles.todInsightRow}>
-                                <Text style={styles.todInsightEmoji}>{mi.emoji}</Text>
-                                <Text style={styles.todInsightText}>{mi.insight}</Text>
-                              </View>
-                            ))}
-                          </View>
-                        )}
-                      </>
-                    )}
                   </>
+                )}
+
+                {/* Save button */}
+                <Pressable
+                  style={[styles.saveBtn, saving && { opacity: 0.6 }]}
+                  onPress={handleSave}
+                  disabled={saving}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    saving
+                      ? 'Saving check-in'
+                      : completedSlots.includes(selectedTimeSlot)
+                        ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
+                        : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
+                  }
+                  accessibilityState={{ disabled: saving }}
+                >
+                  <LinearGradient
+                    colors={['rgba(201,169,98,0.22)', 'rgba(201,169,98,0.12)']}
+                    style={styles.saveBtnInner}
+                  >
+                    <Ionicons
+                      name={saving ? 'hourglass-outline' : 'checkmark-circle-outline'}
+                      size={18}
+                      color={theme.primary}
+                    />
+                    <Text style={styles.saveBtnTxt}>
+                      {saving
+                        ? 'Saving…'
+                        : completedSlots.includes(selectedTimeSlot)
+                          ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
+                          : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+
+                <Text style={styles.hint}>Check in up to 4× daily — morning, afternoon, evening, night.</Text>
+
+                {/* Save error banner */}
+                {saveError && (
+                  <View style={styles.errorBanner}>
+                    <Ionicons name="warning-outline" size={16} color="#E85D75" />
+                    <Text style={styles.errorBannerText}>{saveError}</Text>
+                    <Pressable
+                      onPress={() => setSaveError(null)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Dismiss error"
+                    >
+                      <Ionicons name="close" size={16} color={theme.textMuted} />
+                    </Pressable>
+                  </View>
                 )}
               </LinearGradient>
             </Animated.View>
-          ) : (
-            <Animated.View entering={FadeInDown.delay(220).duration(600)}>
+
+            {/* ═══ Energy Reading link ═══ */}
+            <Animated.View entering={FadeInDown.delay(180).duration(600)}>
               <Pressable
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/premium' as Href); }}
+                onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/energy' as Href); }}
                 accessibilityRole="button"
-                accessibilityLabel="Unlock Patterns"
+                accessibilityLabel="Energy Reading"
               >
                 <LinearGradient
-                  colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']}
-                  style={[styles.card, { borderColor: 'rgba(201,169,98,0.2)' }]}
+                  colors={['rgba(25,38,60,0.50)', 'rgba(20,32,50,0.35)']}
+                  style={[styles.card, { padding: theme.spacing.md }]}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-                      <Ionicons name="sparkles" size={10} color={theme.primary} />
-                      <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
+                  <View style={styles.linkRow}>
+                    <View style={styles.linkLeft}>
+                      <Ionicons name="pulse-outline" size={20} color={theme.primary} />
+                      <View>
+                        <Text style={styles.linkTitle}>Energy Reading</Text>
+                        <Text style={styles.linkSub}>Chakra wheel · Domain breakdown · Guidance</Text>
+                      </View>
                     </View>
-                  </View>
-
-                  {/* Preview of what pattern analysis looks like */}
-                  <View style={{ marginBottom: 14 }}>
-                    {allCheckIns.length > 0 ? (
-                      <>
-                        <Text style={[styles.body, { marginBottom: 8 }]}>
-                          You have {allCheckIns.length} check-in{allCheckIns.length !== 1 ? 's' : ''} — enough data to start revealing your emotional rhythms.
-                        </Text>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
-                          <View style={{ alignItems: 'center' }}>
-                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
-                            <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Mood</Text>
-                          </View>
-                          <View style={{ alignItems: 'center' }}>
-                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
-                            <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Energy</Text>
-                          </View>
-                          <View style={{ alignItems: 'center' }}>
-                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
-                            <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Stress</Text>
-                          </View>
-                        </View>
-                      </>
-                    ) : (
-                      <Text style={styles.body}>
-                        See mood, energy, and stress trends over time. Discover which days you feel best and which themes come up most.
-                      </Text>
-                    )}
-                  </View>
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: theme.primary }}>Unlock your patterns</Text>
-                    <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                    <Ionicons name="chevron-forward" size={20} color={theme.primary} />
                   </View>
                 </LinearGradient>
               </Pressable>
             </Animated.View>
-          )}
 
-          {/* Footer */}
-          <Animated.View entering={FadeInDown.delay(380).duration(600)} style={styles.footer}>
-            <Text style={styles.footerTxt}>
-              Tracking how you feel is an act of self-awareness, not self-judgment.
-            </Text>
-          </Animated.View>
+            {/* ═══ Your Patterns ═══ */}
+            <SectionLabel icon="analytics-outline" title="Your Patterns" delay={200} />
 
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+            {isPremium ? (
+              <Animated.View entering={FadeInDown.delay(220).duration(600)}>
+                <LinearGradient
+                  colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
+                  style={styles.card}
+                >
+                  {/* Time range selector */}
+                  <View style={styles.rangeRow}>
+                    {(['7d', '30d', '90d', 'all'] as TimeRange[]).map(r => (
+                      <Pressable
+                        key={r}
+                        style={[styles.rangeBtn, timeRange === r && styles.rangeBtnOn]}
+                        onPress={() => {
+                          Haptics.selectionAsync().catch(() => {});
+                          setTimeRange(r);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Show ${r === 'all' ? 'all' : r === '7d' ? '7 day' : r === '30d' ? '30 day' : '90 day'} trends`}
+                        accessibilityState={{ selected: timeRange === r }}
+                      >
+                        <Text style={[styles.rangeTxt, timeRange === r && styles.rangeTxtOn]}>
+                          {r === 'all' ? 'All' : r.toUpperCase()}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+
+                  {filteredCheckIns.length < 2 ? (
+                    <View style={styles.emptyState}>
+                      <Ionicons name="hourglass-outline" size={28} color={theme.primary} />
+                      <Text style={[styles.body, { textAlign: 'center', marginTop: 10 }]}>
+                        {allCheckIns.length === 0
+                          ? 'Log your first check-in above to start tracking'
+                          : 'Not enough check-ins in this date range'}
+                      </Text>
+                    </View>
+                  ) : (
+                    <>
+                      {/* Date range labels */}
+                      {dateLabels && (
+                        <View style={styles.dateRow}>
+                          <Text style={styles.dateTxt}>{dateLabels[0]}</Text>
+                          <Text style={styles.dateTxt}>{dateLabels[1]}</Text>
+                        </View>
+                      )}
+
+                      {/* Averages row */}
+                      <View style={styles.avgsRow}>
+                        <AvgBadge label="Avg Mood" value={avgs.mood.toFixed(1)} color={COLORS.mood} />
+                        <AvgBadge label="Avg Energy" value={numToLevelLabel(avgs.energy)} color={COLORS.energy} />
+                        <AvgBadge label="Avg Stress" value={numToLevelLabel(avgs.stress)} color={COLORS.stress} />
+                      </View>
+
+                      {/* Graph: Mood */}
+                      <GraphLabel label="Mood" color={COLORS.mood} />
+                      <LineGraph
+                        data={moodData}
+                        minY={1}
+                        maxY={10}
+                        color={COLORS.mood}
+                        width={GRAPH_W}
+                        height={60}
+                        gradId="grad_mood"
+                      />
+
+                      {/* Graph: Energy */}
+                      <GraphLabel label="Energy" color={COLORS.energy} />
+                      <LineGraph
+                        data={energyData}
+                        minY={1}
+                        maxY={10}
+                        color={COLORS.energy}
+                        width={GRAPH_W}
+                        height={60}
+                        gradId="grad_energy"
+                      />
+
+                      {/* Graph: Stress */}
+                      <GraphLabel label="Stress" color={COLORS.stress} />
+                      <LineGraph
+                        data={stressData}
+                        minY={1}
+                        maxY={10}
+                        color={COLORS.stress}
+                        width={GRAPH_W}
+                        height={60}
+                        gradId="grad_stress"
+                      />
+
+                      {/* Top themes */}
+                      {topTags.length > 0 && (
+                        <>
+                          <Text style={[styles.graphLabelTxt, { marginTop: 12, marginBottom: 6, color: theme.textSecondary }]}>
+                            Most Common Themes
+                          </Text>
+                          {topTags.map(({ tag, count }) => (
+                            <View key={tag} style={styles.tagStatRow}>
+                              <Text style={styles.tagStatLabel}>{ALL_TAG_LABELS[tag] ?? tag}</Text>
+                              <View style={styles.tagStatBar}>
+                                <View
+                                  style={[
+                                    styles.tagStatFill,
+                                    { width: `${(count / topTags[0].count) * 100}%` },
+                                  ]}
+                                />
+                              </View>
+                              <Text style={styles.tagStatCount}>{count}×</Text>
+                            </View>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Time-of-Day Insights */}
+                      {todInsights && todInsights.buckets.length >= 2 && (
+                        <>
+                          <Text style={[styles.graphLabelTxt, { marginTop: 16, marginBottom: 8, color: theme.textSecondary }]}>
+                            🕐 Time of Day Patterns
+                          </Text>
+
+                          {/* Bucket overview */}
+                          <View style={styles.todBucketRow}>
+                            {todInsights.buckets.map(b => {
+                              const emoji: Record<string, string> = {
+                                Morning: '🌅', Afternoon: '☀️', Evening: '🌆', Night: '🌙',
+                              };
+                              return (
+                                <View key={b.label} style={styles.todBucket}>
+                                  <Text style={{ fontSize: 16 }}>{emoji[b.label]}</Text>
+                                  <Text style={styles.todBucketLabel}>{b.label}</Text>
+                                  <View style={{ gap: 1, alignItems: 'center' }}>
+                                    <Text style={[styles.todBucketVal, { color: COLORS.mood }]}>{b.avgMood.toFixed(1)}</Text>
+                                    <Text style={[styles.todBucketVal, { color: COLORS.energy }]}>{b.avgEnergy.toFixed(1)}</Text>
+                                    <Text style={[styles.todBucketVal, { color: COLORS.stress }]}>{b.avgStress.toFixed(1)}</Text>
+                                  </View>
+                                  <Text style={styles.todBucketCount}>{b.count}×</Text>
+                                </View>
+                              );
+                            })}
+                          </View>
+
+                          {/* Legend */}
+                          <View style={styles.todLegend}>
+                            <View style={styles.todLegendItem}>
+                              <View style={[styles.todLegendDot, { backgroundColor: COLORS.mood }]} />
+                              <Text style={styles.todLegendTxt}>Mood</Text>
+                            </View>
+                            <View style={styles.todLegendItem}>
+                              <View style={[styles.todLegendDot, { backgroundColor: COLORS.energy }]} />
+                              <Text style={styles.todLegendTxt}>Energy</Text>
+                            </View>
+                            <View style={styles.todLegendItem}>
+                              <View style={[styles.todLegendDot, { backgroundColor: COLORS.stress }]} />
+                              <Text style={styles.todLegendTxt}>Stress</Text>
+                            </View>
+                          </View>
+
+                          {/* Per-metric insights */}
+                          {todInsights.metricInsights.length > 0 && (
+                            <View style={styles.todInsightList}>
+                              {todInsights.metricInsights.map(mi => (
+                                <View key={mi.metric} style={styles.todInsightRow}>
+                                  <Text style={styles.todInsightEmoji}>{mi.emoji}</Text>
+                                  <Text style={styles.todInsightText}>{mi.insight}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+                </LinearGradient>
+              </Animated.View>
+            ) : (
+              <Animated.View entering={FadeInDown.delay(220).duration(600)}>
+                <Pressable
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/premium' as Href); }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Unlock Patterns"
+                >
+                  <LinearGradient
+                    colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']}
+                    style={[styles.card, { borderColor: 'rgba(201,169,98,0.2)' }]}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                        <Ionicons name="sparkles" size={10} color={theme.primary} />
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
+                      </View>
+                    </View>
+
+                    {/* Preview of what pattern analysis looks like */}
+                    <View style={{ marginBottom: 14 }}>
+                      {allCheckIns.length > 0 ? (
+                        <>
+                          <Text style={[styles.body, { marginBottom: 8 }]}>
+                            You have {allCheckIns.length} check-in{allCheckIns.length !== 1 ? 's' : ''} — enough data to start revealing your emotional rhythms.
+                          </Text>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
+                            <View style={{ alignItems: 'center' }}>
+                              <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
+                              <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Mood</Text>
+                            </View>
+                            <View style={{ alignItems: 'center' }}>
+                              <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
+                              <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Energy</Text>
+                            </View>
+                            <View style={{ alignItems: 'center' }}>
+                              <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
+                              <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Stress</Text>
+                            </View>
+                          </View>
+                        </>
+                      ) : (
+                        <Text style={styles.body}>
+                          See mood, energy, and stress trends over time. Discover which days you feel best and which themes come up most.
+                        </Text>
+                      )}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: theme.primary }}>Unlock your patterns</Text>
+                      <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                    </View>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
+            )}
+
+            {/* Footer */}
+            <Animated.View entering={FadeInDown.delay(380).duration(600)} style={styles.footer}>
+              <Text style={styles.footerTxt}>
+                Tracking how you feel is an act of self-awareness, not self-judgment.
+              </Text>
+            </Animated.View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -1457,6 +1490,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.primary,
     marginTop: 3,
   },
+
   tagChip: {
     paddingHorizontal: 13,
     paddingVertical: 8,
@@ -1499,6 +1533,7 @@ const styles = StyleSheet.create({
     maxWidth: 140,
     height: 20,
   },
+
   qualityChip: {
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -1550,19 +1585,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(201,169,98,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(201,169,98,0.22)',
-  },
-  primaryBtnTxt: { color: theme.primary, fontSize: 14, fontWeight: '800' },
 
   // Graphs
   rangeRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },

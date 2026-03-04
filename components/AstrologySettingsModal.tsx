@@ -1,11 +1,8 @@
 /**
  * Astrology Settings Modal
- * 
- * Allows users to configure:
+ * * Allows users to configure:
  * - House system (Placidus, Whole Sign, etc.)
  * - Orb presets (Tight, Normal, Wide)
- * 
- * Clean, native iOS feel with gold accent theme.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,11 +14,11 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-// Animated entering/exiting removed — causes invisible modal inside <Modal> on some RN/Reanimated versions
 
 import { theme } from '../constants/theme';
 import {
@@ -34,6 +31,15 @@ import {
 import { HouseSystem } from '../services/astrology/types';
 import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
+
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
 
 interface AstrologySettingsModalProps {
   visible: boolean;
@@ -52,7 +58,6 @@ export default function AstrologySettingsModal({
   const [selectedHouseSystem, setSelectedHouseSystem] = useState<HouseSystem>('placidus');
   const [selectedOrbPreset, setSelectedOrbPreset] = useState<OrbPreset>('normal');
 
-  // Load settings when modal opens
   useEffect(() => {
     if (visible) {
       loadSettings();
@@ -76,15 +81,13 @@ export default function AstrologySettingsModal({
   const handleSave = async () => {
     try {
       setSaving(true);
-      try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
       const updated = await AstrologySettingsService.saveSettings({
         houseSystem: selectedHouseSystem,
         orbPreset: selectedOrbPreset,
       });
 
-      // Persist house system to all saved charts in the database
-      // so every screen that reads savedChart.houseSystem picks it up
       try {
         await localDb.updateAllChartsHouseSystem(selectedHouseSystem);
       } catch (e) {
@@ -94,24 +97,20 @@ export default function AstrologySettingsModal({
       setSettings(updated);
       onSettingsChanged?.(updated);
 
-      try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onClose();
     } catch (error) {
       logger.error('[AstrologySettingsModal] Failed to save settings:', error);
-      try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     } finally {
       setSaving(false);
     }
   };
 
-  const handleHouseSystemSelect = async (value: HouseSystem) => {
-    try { await Haptics.selectionAsync(); } catch {}
-    setSelectedHouseSystem(value);
-  };
-
-  const handleOrbPresetSelect = async (value: OrbPreset) => {
-    try { await Haptics.selectionAsync(); } catch {}
-    setSelectedOrbPreset(value);
+  const handleSelect = (type: 'house' | 'orb', value: any) => {
+    Haptics.selectionAsync().catch(() => {});
+    if (type === 'house') setSelectedHouseSystem(value);
+    else setSelectedOrbPreset(value);
   };
 
   const hasChanges =
@@ -119,180 +118,109 @@ export default function AstrologySettingsModal({
     (settings.houseSystem !== selectedHouseSystem || settings.orbPreset !== selectedOrbPreset);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlayBackground}>
-        <View style={styles.overlay}>
-          <Pressable style={styles.dismissArea} onPress={onClose} />
+    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <Pressable style={styles.dismissArea} onPress={onClose} />
 
-          <View style={styles.modalContainer}>
-            <LinearGradient
-              colors={[theme.surface, 'rgba(18, 25, 38, 0.98)']}
-              style={styles.modalContent}
-            >
-              {/* Header */}
-              <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                  <Ionicons name="settings" size={24} color={theme.primary} />
-                  <Text style={styles.title}>Chart Settings</Text>
-                </View>
-                <Pressable onPress={onClose} hitSlop={12}>
-                  <Ionicons name="close" size={24} color={theme.textMuted} />
+        <View style={styles.modalContainer}>
+          <LinearGradient colors={['rgba(30, 35, 50, 0.98)', '#07090F']} style={styles.modalContent}>
+            
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.headerIndicator} />
+              <View style={styles.headerRow}>
+                <Text style={styles.title}>Calculation Settings</Text>
+                <Pressable onPress={onClose} style={styles.closeBtn}>
+                  <Ionicons name="close" size={22} color={theme.textMuted} />
                 </Pressable>
               </View>
+            </View>
 
-              {loading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator color={theme.primary} />
-                </View>
-              ) : (
-                <ScrollView
-                  style={styles.scrollView}
-                  contentContainerStyle={styles.scrollContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  {/* House System Section */}
-                  <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                      <Ionicons name="home" size={18} color={theme.primary} />
-                      <Text style={styles.sectionTitle}>House System</Text>
-                    </View>
-                    <Text style={styles.sectionDescription}>
-                      Choose how the 12 houses are calculated in your chart
-                    </Text>
-
-                    <View style={styles.optionsContainer}>
-                      {HOUSE_SYSTEM_OPTIONS.map((option) => (
-                        <Pressable
-                          key={option.value}
-                          style={[
-                            styles.optionCard,
-                            selectedHouseSystem === option.value && styles.optionCardSelected,
-                          ]}
-                          onPress={() => handleHouseSystemSelect(option.value)}
-                        >
-                          <View style={styles.optionHeader}>
-                            <View
-                              style={[
-                                styles.radioOuter,
-                                selectedHouseSystem === option.value && styles.radioOuterSelected,
-                              ]}
-                            >
-                              {selectedHouseSystem === option.value && (
-                                <View style={styles.radioInner} />
-                              )}
-                            </View>
-                            <Text
-                              style={[
-                                styles.optionLabel,
-                                selectedHouseSystem === option.value && styles.optionLabelSelected,
-                              ]}
-                            >
-                              {option.label}
-                            </Text>
-                          </View>
-                          <Text style={styles.optionDescription}>{option.description}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-
-                  {/* Orb Presets Section */}
-                  <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                      <Ionicons name="resize" size={18} color={theme.primary} />
-                      <Text style={styles.sectionTitle}>Aspect Orbs</Text>
-                    </View>
-                    <Text style={styles.sectionDescription}>
-                      How wide of an angle counts as an aspect
-                    </Text>
-
-                    <View style={styles.orbOptionsRow}>
-                      {ORB_PRESET_OPTIONS.map((option) => (
-                        <Pressable
-                          key={option.value}
-                          style={[
-                            styles.orbCard,
-                            selectedOrbPreset === option.value && styles.orbCardSelected,
-                          ]}
-                          onPress={() => handleOrbPresetSelect(option.value)}
-                        >
-                          <View
-                            style={[
-                              styles.orbIconContainer,
-                              selectedOrbPreset === option.value && styles.orbIconSelected,
-                            ]}
-                          >
-                            <Ionicons
-                              name={
-                                option.value === 'tight'
-                                  ? 'contract'
-                                  : option.value === 'wide'
-                                  ? 'expand'
-                                  : 'remove'
-                              }
-                              size={20}
-                              color={
-                                selectedOrbPreset === option.value ? theme.primary : theme.textMuted
-                              }
-                            />
-                          </View>
-                          <Text
-                            style={[
-                              styles.orbLabel,
-                              selectedOrbPreset === option.value && styles.orbLabelSelected,
-                            ]}
-                          >
+            {loading ? (
+              <View style={styles.loadingContainer}><ActivityIndicator color={PALETTE.gold} /></View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                
+                {/* House Systems */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionLabel}>House System</Text>
+                  <Text style={styles.sectionSub}>Determines how the 12 houses are mapped to your location.</Text>
+                  
+                  <View style={styles.optionsList}>
+                    {HOUSE_SYSTEM_OPTIONS.map((option) => (
+                      <Pressable
+                        key={option.value}
+                        style={[styles.houseCard, selectedHouseSystem === option.value && styles.cardSelected]}
+                        onPress={() => handleSelect('house', option.value)}
+                      >
+                        <View style={styles.cardHeader}>
+                          <Text style={[styles.optionTitle, selectedHouseSystem === option.value && { color: PALETTE.gold }]}>
                             {option.label}
                           </Text>
-                          <Text style={styles.orbDescription}>{option.description}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
+                          <View style={[styles.radio, selectedHouseSystem === option.value && styles.radioActive]}>
+                            {selectedHouseSystem === option.value && <View style={styles.radioInner} />}
+                          </View>
+                        </View>
+                        <Text style={styles.optionSub}>{option.description}</Text>
+                      </Pressable>
+                    ))}
                   </View>
+                </View>
 
-                  {/* Info Box */}
-                  <View style={styles.infoBox}>
-                    <Ionicons name="information-circle" size={18} color={theme.textMuted} />
-                    <Text style={styles.infoText}>
-                      Changes will apply to new chart calculations. Existing cached interpretations
-                      may need to be refreshed.
-                    </Text>
+                {/* Aspect Orbs */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionLabel}>Aspect Precision</Text>
+                  <Text style={styles.sectionSub}>Adjust the mathematical tolerance for planetary angles.</Text>
+                  
+                  <View style={styles.orbGrid}>
+                    {ORB_PRESET_OPTIONS.map((option) => (
+                      <Pressable
+                        key={option.value}
+                        style={[styles.orbCard, selectedOrbPreset === option.value && styles.cardSelected]}
+                        onPress={() => handleSelect('orb', option.value)}
+                      >
+                        <Ionicons 
+                          name={option.value === 'tight' ? 'contract' : option.value === 'wide' ? 'expand' : 'remove'} 
+                          size={20} 
+                          color={selectedOrbPreset === option.value ? PALETTE.gold : theme.textMuted} 
+                        />
+                        <Text style={[styles.orbLabel, selectedOrbPreset === option.value && { color: PALETTE.gold }]}>
+                          {option.label}
+                        </Text>
+                      </Pressable>
+                    ))}
                   </View>
-                </ScrollView>
-              )}
+                </View>
 
-              {/* Footer Actions */}
-              <View style={styles.footer}>
-                <Pressable style={styles.cancelButton} onPress={onClose}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </Pressable>
+                <View style={styles.infoNote}>
+                  <Ionicons name="information-circle-outline" size={16} color={theme.textMuted} />
+                  <Text style={styles.infoNoteText}>Changes will recalculate your chart and relationship profiles.</Text>
+                </View>
 
-                <Pressable
-                  style={[
-                    styles.saveButton,
-                    (!hasChanges || saving) && styles.saveButtonDisabled,
-                  ]}
-                  onPress={handleSave}
-                  disabled={!hasChanges || saving}
+              </ScrollView>
+            )}
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Pressable 
+                style={[styles.saveBtn, (!hasChanges || saving) && styles.saveBtnDisabled]} 
+                onPress={handleSave} 
+                disabled={!hasChanges || saving}
+              >
+                <LinearGradient 
+                  colors={!hasChanges ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#D4AF37', '#7A5C13']} 
+                  style={styles.saveBtnGradient}
                 >
                   {saving ? (
-                    <ActivityIndicator color="#0D1421" size="small" />
+                    <ActivityIndicator color="#1A1A1A" size="small" />
                   ) : (
-                    <>
-                      <Ionicons name="checkmark" size={18} color="#0D1421" />
-                      <Text style={styles.saveButtonText}>Save</Text>
-                    </>
+                    <Text style={[styles.saveBtnText, !hasChanges && { color: theme.textMuted }]}>Apply Changes</Text>
                   )}
-                </Pressable>
-              </View>
-            </LinearGradient>
-          </View>
+                </LinearGradient>
+              </Pressable>
+            </View>
+
+          </LinearGradient>
         </View>
       </View>
     </Modal>
@@ -300,226 +228,66 @@ export default function AstrologySettingsModal({
 }
 
 const styles = StyleSheet.create({
-  overlayBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  dismissArea: {
-    flex: 1,
-  },
+  overlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'flex-end' },
+  dismissArea: { flex: 1 },
   modalContainer: {
-    maxHeight: '85%',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    maxHeight: '90%',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
+    borderColor: PALETTE.glassBorder,
   },
-  modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-  },
-  loadingContainer: {
-    padding: theme.spacing.xl * 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollView: {
-    maxHeight: 480,
-  },
-  scrollContent: {
-    padding: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
-  },
-  section: {
-    marginBottom: theme.spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.textPrimary,
-  },
-  sectionDescription: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    marginBottom: theme.spacing.md,
-    lineHeight: 18,
-  },
-  optionsContainer: {
-    gap: theme.spacing.sm,
-  },
-  optionCard: {
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  modalContent: { flex: 1 },
+  header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
+  headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)', marginBottom: 20 },
+  headerRow: { flexDirection: 'row', width: '100%', paddingHorizontal: 24, justifyContent: 'space-between', alignItems: 'center' },
+  title: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  closeBtn: { padding: 4 },
+
+  loadingContainer: { padding: 60, alignItems: 'center' },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 40 },
+
+  section: { marginBottom: 32 },
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.gold, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
+  sectionSub: { fontSize: 14, color: theme.textMuted, lineHeight: 20, marginBottom: 16 },
+
+  optionsList: { gap: 10 },
+  houseCard: {
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: PALETTE.glassBorder,
   },
-  optionCardSelected: {
-    backgroundColor: 'rgba(201, 169, 98, 0.08)',
-    borderColor: 'rgba(201, 169, 98, 0.3)',
-  },
-  optionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: 4,
-  },
-  radioOuter: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: theme.textMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: theme.primary,
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.primary,
-  },
-  optionLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: theme.textPrimary,
-  },
-  optionLabelSelected: {
-    color: theme.primary,
-  },
-  optionDescription: {
-    fontSize: 12,
-    color: theme.textMuted,
-    marginLeft: 26,
-  },
-  orbOptionsRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
+  cardSelected: { backgroundColor: 'rgba(212, 175, 55, 0.08)', borderColor: 'rgba(212, 175, 55, 0.3)' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  optionTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
+  optionSub: { fontSize: 12, color: theme.textMuted, lineHeight: 18 },
+
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  radioActive: { borderColor: PALETTE.gold },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: PALETTE.gold },
+
+  orbGrid: { flexDirection: 'row', gap: 10 },
   orbCard: {
     flex: 1,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: PALETTE.glassBorder,
     alignItems: 'center',
+    gap: 8,
   },
-  orbCardSelected: {
-    backgroundColor: 'rgba(201, 169, 98, 0.08)',
-    borderColor: 'rgba(201, 169, 98, 0.3)',
-  },
-  orbIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  orbIconSelected: {
-    backgroundColor: 'rgba(201, 169, 98, 0.15)',
-  },
-  orbLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    marginBottom: 2,
-  },
-  orbLabelSelected: {
-    color: theme.primary,
-  },
-  orbDescription: {
-    fontSize: 10,
-    color: theme.textMuted,
-    textAlign: 'center',
-  },
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: theme.spacing.sm,
-    padding: theme.spacing.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: theme.borderRadius.md,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 12,
-    color: theme.textMuted,
-    lineHeight: 18,
-  },
-  footer: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.textSecondary,
-  },
-  saveButton: {
-    flex: 1,
-    flexDirection: 'row',
-    paddingVertical: theme.spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.xs,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.primary,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#0D1421',
-  },
+  orbLabel: { fontSize: 13, fontWeight: '700', color: theme.textSecondary },
+
+  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 },
+  infoNoteText: { flex: 1, fontSize: 12, color: theme.textMuted, fontStyle: 'italic' },
+
+  footer: { padding: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
+  saveBtn: { borderRadius: 16, overflow: 'hidden' },
+  saveBtnDisabled: { opacity: 0.5 },
+  saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
+  saveBtnText: { color: '#1A1A1A', fontSize: 16, fontWeight: '700' },
 });

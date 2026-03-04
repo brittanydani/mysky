@@ -1,3 +1,9 @@
+/**
+ * JournalEntryModal
+ * * A cinematic, high-end writing environment featuring obsidian glass architecture,
+ * transit-tied prompt engines, and jewel-tone interactive feedback.
+ */
+
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Alert,
@@ -35,6 +41,16 @@ import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from
 
 import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
 
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  amethyst: '#9D76C1',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
+
 interface JournalEntryModalProps {
   visible: boolean;
   onClose: () => void;
@@ -55,59 +71,43 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [content, setContent] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   
-  // Chart state — loaded for all users (used for transit capture + shadow quotes)
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [chartId, setChartId] = useState<string>('');
   const [promptSet, setPromptSet] = useState<JournalPromptSet | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
 
-  // New 4-layer prompt engine
   const [enginePromptSet, setEnginePromptSet] = useState<PromptSet | null>(null);
   const [freePrompt, setFreePrompt] = useState<GeneratedPrompt | null>(null);
 
-  // Shadow quotes
   const [shadowResult, setShadowResult] = useState<ShadowQuoteResult | null>(null);
   const [closeQuote, setCloseQuote] = useState<ShadowQuote | null>(null);
   const [showCloseQuote, setShowCloseQuote] = useState(false);
   const closeQuoteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
     };
   }, []);
 
-  // Load user chart for all users (transit capture + shadow quotes + premium prompts)
   useEffect(() => {
-    if (visible) {
-      loadUserChart();
-    }
+    if (visible) loadUserChart();
   }, [visible]);
 
-  // Update prompts when mood changes (legacy)
   useEffect(() => {
     if (isPremium && userChart) {
       const prompts = ChartTiedPromptsService.getPromptSet(userChart, mood, new Date());
       setPromptSet(prompts);
-      // Also generate new engine prompts
       try {
         const engineSet = generateJournalPrompt(userChart, new Date());
         setEnginePromptSet(engineSet);
-      } catch {
-        // Engine failed, legacy prompts remain
-      }
+      } catch {}
     }
   }, [isPremium, userChart, mood]);
 
-  // Free-tier prompt (no chart needed)
   useEffect(() => {
     if (!isPremium && visible) {
-      try {
-        setFreePrompt(getFreePrompt(new Date()));
-      } catch {
-        // Ignore
-      }
+      try { setFreePrompt(getFreePrompt(new Date())); } catch {}
     }
   }, [isPremium, visible]);
 
@@ -117,7 +117,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       if (charts.length > 0) {
         const savedChart = charts[0];
         setChartId(savedChart.id);
-        const birthData = {
+        const chart = AstrologyCalculator.generateNatalChart({
           date: savedChart.birthDate,
           time: savedChart.birthTime,
           hasUnknownTime: savedChart.hasUnknownTime,
@@ -126,77 +126,47 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           longitude: savedChart.longitude,
           timezone: savedChart.timezone,
           houseSystem: savedChart.houseSystem,
-        };
-        const chart = AstrologyCalculator.generateNatalChart(birthData);
+        });
         setUserChart(chart);
-
-        // Load shadow quote for journal (all users)
         try {
           const shadow = await ShadowQuoteEngine.getJournalPromptQuote(chart);
           setShadowResult(shadow);
-        } catch {
-          // Continue without shadow quote
-        }
+        } catch {}
       }
-    } catch {
-      // Continue without chart-tied features
-    }
+    } catch {}
   };
-
-  const applyPrompt = useCallback((prompt: ChartTiedPrompt) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Append prompt to content with attribution
-    setContent(prev => {
-      if (prev.trim()) {
-        return `${prev}\n\n${prompt.prompt}`;
-      }
-      return prompt.prompt;
-    });
-    setShowPrompts(false);
-  }, []);
 
   useEffect(() => {
     if (!visible) return;
-
     if (initialData) {
       setDate(new Date(initialData.date));
       setMood(initialData.mood);
-      const stored = initialData.moonPhase as string;
       const moonPhaseToEnergy: Record<string, EnergyKey> = {
-        low: 'low', steady: 'steady', high: 'high',   // legacy direct values
+        low: 'low', steady: 'steady', high: 'high',
         waning: 'low', full: 'steady', waxing: 'high', new: 'steady',
       };
-      setEnergyLevel(moonPhaseToEnergy[stored] ?? 'steady');
+      setEnergyLevel(moonPhaseToEnergy[initialData.moonPhase as string] ?? 'steady');
       setTitle(initialData.title || '');
       setContent(initialData.content);
     } else {
-      setDate(new Date());
-      setMood('okay');
-      setEnergyLevel('steady');
-      setTitle('');
-      setContent('');
-      setShowCloseQuote(false);
-      setCloseQuote(null);
+      setDate(new Date()); setMood('okay'); setEnergyLevel('steady');
+      setTitle(''); setContent(''); setShowCloseQuote(false); setCloseQuote(null);
     }
   }, [initialData, visible]);
 
   const handleSave = () => {
     if (!content.trim()) {
-      Alert.alert('Missing Content', 'Please write something in your journal entry.');
+      Alert.alert('Empty Reflection', 'Please share a few thoughts before saving.');
       return;
     }
-
     try {
       let transitSnapshotJson: string | undefined;
       if (userChart) {
         try {
           const snap = AdvancedJournalAnalyzer.captureTransitSnapshot(userChart, date);
           transitSnapshotJson = JSON.stringify(snap);
-        } catch {
-          // Non-critical — entry saves fine without it
-        }
+        } catch {}
       }
-
       onSave({
         date: toLocalDateString(date),
         mood,
@@ -206,260 +176,135 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         chartId: chartId || undefined,
         transitSnapshot: transitSnapshotJson,
       });
+      if (shadowResult?.closeQuote) {
+        setCloseQuote(shadowResult.closeQuote);
+        setShowCloseQuote(true);
+        if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
+        closeQuoteTimeoutRef.current = setTimeout(() => setShowCloseQuote(false), 4000);
+      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (e) {
-      Alert.alert('Save Error', 'Could not save your journal entry. Please try again.');
-      return;
+      Alert.alert('Save Error', 'Could not secure your entry. Please try again.');
     }
-
-    // Show close shadow quote after saving
-    if (shadowResult?.closeQuote) {
-      setCloseQuote(shadowResult.closeQuote);
-      setShowCloseQuote(true);
-      // Auto-hide after 4 seconds
-      if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
-      closeQuoteTimeoutRef.current = setTimeout(() => setShowCloseQuote(false), 4000);
-    }
-
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
-  const formatDate = (d: Date) =>
-    d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-  const onDateChange = (_event: DateTimePickerEvent, selected?: Date) => {
-    setShowDatePicker(false);
-    if (selected) setDate(selected);
-  };
+  const formatDate = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <StarField starCount={20} />
+        <View style={styles.container}>
+          <StarField starCount={40} />
+          <SafeAreaView edges={['top']} style={styles.safeArea}>
+            
+            {/* Header */}
+            <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+              <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
+                <Ionicons name="close" size={24} color={PALETTE.textMain} />
+              </Pressable>
+              <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
+              <View style={{ width: 44 }} />
+            </Animated.View>
 
-        <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Pressable style={styles.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close journal entry">
-              <Ionicons name="close" size={24} color={theme.textPrimary} />
-            </Pressable>
-            <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Entry'}</Text>
-            <View style={styles.closeButton} />
-          </Animated.View>
-
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
-          >
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>Date</Text>
-                <Pressable style={styles.dateButton} onPress={() => setShowDatePicker(true)} accessibilityRole="button" accessibilityLabel={`Entry date: ${formatDate(date)}. Tap to change`}>
-                  <LinearGradient
-                    colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
-                    style={styles.dateGradient}
-                  >
-                    <Ionicons name="calendar" size={20} color={theme.primary} />
-                    <Text style={styles.dateText}>{formatDate(date)}</Text>
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
-
-              <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>Title (Optional)</Text>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.titleInput}
-                    value={title}
-                    onChangeText={setTitle}
-                    placeholder="Give your entry a title..."
-                    placeholderTextColor={theme.textMuted}
-                    accessibilityLabel="Journal entry title"
-                    accessibilityHint="Optional title for this journal entry"
-                  />
-                </View>
-              </Animated.View>
-
-              <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-                <View style={styles.reflectionHeader}>
-                  <Text style={styles.sectionTitle}>Your Reflection</Text>
-                  {/* Prompts button — available for all users */}
-                  {(enginePromptSet || promptSet || freePrompt) && (
-                    <Pressable 
-                      style={styles.promptsButton}
-                      onPress={() => {
-                        Haptics.selectionAsync();
-                        setShowPrompts(!showPrompts);
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={showPrompts ? 'Hide prompts' : 'Show prompts'}
-                    >
-                      <Ionicons 
-                        name={showPrompts ? 'bulb' : 'bulb-outline'} 
-                        size={18} 
-                        color={theme.primary} 
-                      />
-                      <Text style={styles.promptsButtonText}>Prompts</Text>
-                    </Pressable>
-                  )}
-                </View>
-
-                {/* Shadow quote — quiet truth at the top of reflection */}
-                {shadowResult && (
-                  <ShadowQuoteInline
-                    text={shadowResult.quote.text}
-                    delay={100}
-                  />
-                )}
-
-                {/* Premium: 4-Layer Prompt Engine */}
-                {isPremium && showPrompts && enginePromptSet && (
-                  <Animated.View entering={FadeInDown.duration(300)} style={styles.promptsContainer}>
-                    {/* Daily summary */}
-                    <Text style={styles.transitContext}>
-                      ✨ {enginePromptSet.dailySummary}
-                    </Text>
-
-                    {/* Primary prompt — full 4 layers */}
-                    <Pressable
-                      style={styles.promptCard}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setContent(prev => prev.trim() ? `${prev}\n\n${enginePromptSet.primary.question}` : enginePromptSet.primary.question);
-                        setShowPrompts(false);
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Use prompt: ${enginePromptSet.primary.question}`}
-                    >
-                      <Text style={styles.promptContextLine}>{enginePromptSet.primary.context}</Text>
-                      <Text style={styles.promptText}>{enginePromptSet.primary.question}</Text>
-                      {enginePromptSet.primary.close && (
-                        <Text style={styles.promptClose}>{enginePromptSet.primary.close}</Text>
-                      )}
-                      {enginePromptSet.primary.chakra && (
-                        <View style={styles.chakraHint}>
-                          <Text style={styles.chakraHintText}>
-                            {enginePromptSet.primary.chakra.chakra.icon} {enginePromptSet.primary.chakra.bodyAwareness}
-                          </Text>
-                        </View>
-                      )}
-                    </Pressable>
-
-                    {/* Alternative prompts */}
-                    {enginePromptSet.alternatives.length > 0 && (
-                      <View style={styles.altPromptsRow}>
-                        {enginePromptSet.alternatives.map((alt, index) => (
-                          <Pressable
-                            key={index}
-                            style={styles.altPromptCard}
-                            onPress={() => {
-                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                              setContent(prev => prev.trim() ? `${prev}\n\n${alt.question}` : alt.question);
-                              setShowPrompts(false);
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Use alternative prompt: ${alt.question}`}
-                          >
-                            <Text style={styles.altPromptContext} numberOfLines={1}>{alt.context}</Text>
-                            <Text style={styles.altPromptText} numberOfLines={2}>{alt.question}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    )}
-                  </Animated.View>
-                )}
-
-                {/* Free-tier: Single daily prompt */}
-                {!isPremium && showPrompts && freePrompt && (
-                  <Animated.View entering={FadeInDown.duration(300)} style={styles.promptsContainer}>
-                    <Pressable
-                      style={styles.promptCard}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setContent(prev => prev.trim() ? `${prev}\n\n${freePrompt.question}` : freePrompt.question);
-                        setShowPrompts(false);
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Use prompt: ${freePrompt.question}`}
-                    >
-                      <Text style={styles.promptContextLine}>{freePrompt.context}</Text>
-                      <Text style={styles.promptText}>{freePrompt.question}</Text>
-                      {freePrompt.close && (
-                        <Text style={styles.promptClose}>{freePrompt.close}</Text>
-                      )}
-                    </Pressable>
-                  </Animated.View>
-                )}
-
-                {/* Legacy fallback if engine not available */}
-                {isPremium && showPrompts && !enginePromptSet && promptSet && (
-                  <Animated.View entering={FadeInDown.duration(300)} style={styles.promptsContainer}>
-                    <Pressable
-                      style={styles.promptCard}
-                      onPress={() => applyPrompt(promptSet.primary)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Use prompt: ${promptSet.primary.prompt}`}
-                    >
-                      <Text style={styles.promptText}>{promptSet.primary.prompt}</Text>
-                      <Text style={styles.promptContext}>{promptSet.primary.context}</Text>
-                    </Pressable>
-                  </Animated.View>
-                )}
+            <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.contentInput}
-                    value={content}
-                    onChangeText={setContent}
-                    placeholder="What's on your mind? How are you feeling? What insights have you discovered?"
-                    placeholderTextColor={theme.textMuted}
-                    multiline
-                    textAlignVertical="top"
-                    accessibilityLabel="Journal entry content"
-                    accessibilityHint="Write your thoughts, feelings, and reflections"
-                  />
-                </View>
-              </Animated.View>
+                {/* Date Selection */}
+                <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
+                  <Text style={styles.sectionLabel}>Timeline</Text>
+                  <Pressable style={styles.glassInteractive} onPress={() => setShowDatePicker(true)}>
+                    <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(20, 24, 34, 0.6)']} style={styles.innerGradient}>
+                      <Ionicons name="calendar-outline" size={18} color={PALETTE.silverBlue} />
+                      <Text style={styles.interactiveText}>{formatDate(date)}</Text>
+                    </LinearGradient>
+                  </Pressable>
+                </Animated.View>
 
-              <Animated.View entering={FadeInUp.delay(500).duration(600)} style={styles.saveContainer}>
-                {/* Close quote — appears briefly after saving */}
-                {showCloseQuote && closeQuote && (
-                  <ShadowQuoteCard
-                    quote={closeQuote}
-                    variant="footer"
-                    isCloseQuote
-                    animationDelay={0}
-                  />
-                )}
-                <Pressable style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]} onPress={handleSave} accessibilityRole="button" accessibilityLabel={initialData ? 'Update entry' : 'Save entry'}>
-                  <LinearGradient
-                    colors={[...theme.goldGradient]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.saveGradient}
-                  >
-                    <Text style={styles.saveButtonText}>{initialData ? 'Update Entry' : 'Save Entry'}</Text>
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
-            </ScrollView>
+                {/* Title Input */}
+                <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
+                  <Text style={styles.sectionLabel}>Title (Optional)</Text>
+                  <View style={styles.glassInput}>
+                    <TextInput 
+                      style={styles.titleInput} 
+                      value={title} 
+                      onChangeText={setTitle} 
+                      placeholder="Title this moment..." 
+                      placeholderTextColor={theme.textMuted} 
+                    />
+                  </View>
+                </Animated.View>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={onDateChange}
-              />
-            )}
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </View>
+                {/* Main Reflection Area */}
+                <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
+                  <View style={styles.reflectionHeader}>
+                    <Text style={styles.sectionLabel}>Reflection</Text>
+                    {(enginePromptSet || freePrompt) && (
+                      <Pressable style={styles.promptsToggle} onPress={() => { Haptics.selectionAsync(); setShowPrompts(!showPrompts); }}>
+                        <Ionicons name={showPrompts ? 'bulb' : 'bulb-outline'} size={16} color={PALETTE.gold} />
+                        <Text style={styles.promptsToggleText}>Guided Prompts</Text>
+                      </Pressable>
+                    )}
+                  </View>
+
+                  {shadowResult && <ShadowQuoteInline text={shadowResult.quote.text} delay={100} />}
+
+                  {/* Prompt Engine UI */}
+                  {showPrompts && (isPremium && enginePromptSet ? (
+                    <Animated.View entering={FadeInDown.duration(400)} style={styles.promptZone}>
+                      <Text style={styles.transitContext}>✨ {enginePromptSet.dailySummary}</Text>
+                      <Pressable style={styles.primaryPromptCard} onPress={() => { setContent(prev => prev.trim() ? `${prev}\n\n${enginePromptSet.primary.question}` : enginePromptSet.primary.question); setShowPrompts(false); }}>
+                        <Text style={styles.promptContextLabel}>{enginePromptSet.primary.context}</Text>
+                        <Text style={styles.primaryPromptText}>{enginePromptSet.primary.question}</Text>
+                        {enginePromptSet.primary.chakra && (
+                          <Text style={styles.chakraNote}>{enginePromptSet.primary.chakra.chakra.icon} Focus: {enginePromptSet.primary.chakra.bodyAwareness}</Text>
+                        )}
+                      </Pressable>
+                    </Animated.View>
+                  ) : !isPremium && freePrompt && (
+                    <Animated.View entering={FadeInDown.duration(400)} style={styles.promptZone}>
+                      <Pressable style={styles.primaryPromptCard} onPress={() => { setContent(prev => prev.trim() ? `${prev}\n\n${freePrompt.question}` : freePrompt.question); setShowPrompts(false); }}>
+                        <Text style={styles.primaryPromptText}>{freePrompt.question}</Text>
+                      </Pressable>
+                    </Animated.View>
+                  ))}
+
+                  <View style={[styles.glassInput, styles.contentBox]}>
+                    <TextInput
+                      style={styles.contentInput}
+                      value={content}
+                      onChangeText={setContent}
+                      placeholder="What is surfacing for you right now?"
+                      placeholderTextColor={theme.textMuted}
+                      multiline
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </Animated.View>
+
+                {/* Footer / Save */}
+                <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
+                  {showCloseQuote && closeQuote && <ShadowQuoteCard quote={closeQuote} variant="footer" isCloseQuote />}
+                  <Pressable style={styles.saveBtn} onPress={handleSave}>
+                    <LinearGradient colors={['#FFF4D4', '#D4AF37', '#7A5C13']} style={styles.saveGradient}>
+                      <Text style={styles.saveBtnText}>{initialData ? 'Secure Changes' : 'Secure Entry'}</Text>
+                    </LinearGradient>
+                  </Pressable>
+                </Animated.View>
+
+              </ScrollView>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  themeVariant="dark"
+                  onChange={(_e, d) => { setShowDatePicker(false); if(d) setDate(d); }}
+                />
+              )}
+            </KeyboardAvoidingView>
+          </SafeAreaView>
+        </View>
       </TouchableWithoutFeedback>
     </Modal>
   );
@@ -467,49 +312,41 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#07090F' },
   safeArea: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  closeButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
+  headerTitle: { fontSize: 18, color: PALETTE.textMain, fontWeight: '600', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  iconBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xl },
-  section: { marginTop: theme.spacing.xl },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: theme.spacing.md, fontFamily: 'serif' },
-  dateButton: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder },
-  dateGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md },
-  dateText: { fontSize: 16, color: theme.textPrimary, marginLeft: theme.spacing.md, flex: 1 },
-  inputContainer: { backgroundColor: theme.backgroundTertiary, borderRadius: theme.borderRadius.lg, borderWidth: 1, borderColor: theme.cardBorder },
-  titleInput: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, fontSize: 16, color: theme.textPrimary },
-  contentInput: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, fontSize: 16, color: theme.textPrimary, minHeight: 120 },
-  // Premium prompts
-  reflectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: theme.spacing.md },
-  promptsButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: theme.spacing.sm, paddingVertical: 4 },
-  promptsButtonText: { fontSize: 13, color: theme.primary, fontWeight: '500' },
-  promptsContainer: { marginBottom: theme.spacing.md },
-  transitContext: { fontSize: 12, color: theme.primary, fontStyle: 'italic', marginBottom: theme.spacing.sm, textAlign: 'center' },
-  promptCard: { backgroundColor: 'rgba(201, 169, 98, 0.1)', borderRadius: theme.borderRadius.lg, padding: theme.spacing.md, marginBottom: theme.spacing.sm, borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' },
-  promptContextLine: { fontSize: 12, color: theme.textMuted, fontStyle: 'italic', marginBottom: 6, letterSpacing: 0.3 },
-  promptText: { fontSize: 15, color: theme.textPrimary, fontStyle: 'italic', lineHeight: 22, marginBottom: 4 },
-  promptClose: { fontSize: 12, color: theme.primary, marginTop: 6, fontWeight: '500', letterSpacing: 0.3 },
-  promptContext: { fontSize: 11, color: theme.textMuted },
-  chakraHint: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  chakraHintText: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic', lineHeight: 16 },
-  altPromptsRow: { flexDirection: 'row', gap: theme.spacing.sm },
-  altPromptCard: { flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: theme.borderRadius.md, padding: theme.spacing.sm },
-  altPromptContext: { fontSize: 10, color: theme.textMuted, marginBottom: 2, fontStyle: 'italic' },
-  altPromptText: { fontSize: 12, color: theme.textSecondary, fontStyle: 'italic', lineHeight: 16 },
-  saveContainer: { marginTop: theme.spacing.xl },
-  saveButton: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', ...theme.shadows.glow },
-  saveButtonPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
-  saveGradient: { paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl, alignItems: 'center' },
-  saveButtonText: { fontSize: 18, fontWeight: '700', color: '#0D1421', fontFamily: 'serif' },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 60 },
+  
+  section: { marginBottom: 24 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: PALETTE.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12, paddingLeft: 4 },
+  
+  glassInteractive: { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  innerGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+  interactiveText: { color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
+  
+  glassInput: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder },
+  titleInput: { padding: 16, color: PALETTE.textMain, fontSize: 16 },
+  
+  reflectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  promptsToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+  promptsToggleText: { fontSize: 13, color: PALETTE.gold, fontWeight: '600' },
+  
+  promptZone: { marginBottom: 20 },
+  transitContext: { fontSize: 13, color: PALETTE.silverBlue, fontStyle: 'italic', marginBottom: 12, textAlign: 'center' },
+  primaryPromptCard: { backgroundColor: 'rgba(212, 175, 55, 0.08)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)' },
+  promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
+  primaryPromptText: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontStyle: 'italic', lineHeight: 24 },
+  chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
+  
+  contentBox: { minHeight: 240 },
+  contentInput: { padding: 16, color: PALETTE.textMain, fontSize: 16, lineHeight: 26 },
+  
+  footer: { marginTop: 24 },
+  saveBtn: { borderRadius: 16, overflow: 'hidden', shadowColor: PALETTE.gold, shadowOpacity: 0.2, shadowRadius: 12 },
+  saveGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
+  saveBtnText: { color: '#1A1A1A', fontSize: 17, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
 });

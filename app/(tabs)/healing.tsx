@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -18,24 +18,36 @@ import { localDb } from '../../services/storage/localDb';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  copper: '#CD7F5D',
+  emerald: '#6EBF8B',
+  rose: '#D4A3B3',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
+
 // ── Shared sub-components ──
 
-function DetailRow({ label, text }: { label: string; text: string }) {
+function DetailRow({ label, text, color = PALETTE.gold }: { label: string; text: string; color?: string }) {
   return (
     <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={[styles.detailLabel, { color }]}>{label}</Text>
       <Text style={styles.detailText}>{text}</Text>
     </View>
   );
 }
 
-function ToolList({ label, items }: { label: string; items: string[] }) {
+function ToolList({ label, items, color = PALETTE.gold }: { label: string; items: string[]; color?: string }) {
   return (
     <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={[styles.detailLabel, { color }]}>{label}</Text>
       {items.map((item, i) => (
         <View key={i} style={styles.toolItem}>
-          <View style={styles.toolDot} />
+          <View style={[styles.toolDot, { backgroundColor: color }]} />
           <Text style={styles.toolText}>{item}</Text>
         </View>
       ))}
@@ -46,20 +58,22 @@ function ToolList({ label, items }: { label: string; items: string[] }) {
 function DeepCard({
   icon,
   title,
+  color = PALETTE.gold,
   children,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
+  color?: string;
   children: React.ReactNode;
 }) {
   return (
     <LinearGradient
-      colors={['rgba(30,45,71,0.85)', 'rgba(26,39,64,0.65)']}
+      colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
       style={styles.deepCard}
     >
       <View style={styles.deepCardHeader}>
-        <View style={styles.deepCardIcon}>
-          <Ionicons name={icon} size={18} color={theme.primary} />
+        <View style={[styles.deepCardIcon, { backgroundColor: `${color}15` }]}>
+          <Ionicons name={icon} size={18} color={color} />
         </View>
         <Text style={styles.deepCardTitle}>{title}</Text>
       </View>
@@ -121,12 +135,12 @@ export default function HealingScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={25} />
+      <StarField starCount={40} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
@@ -139,20 +153,22 @@ export default function HealingScreen() {
 
           {/* Empty state */}
           {!loading && !healingData && !healingQuote && (
-            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyState}>
-              <Ionicons name="heart-outline" size={48} color={theme.textMuted} />
-              <Text style={styles.emptyTitle}>No chart yet</Text>
-              <Text style={styles.emptySubtitle}>
-                Create your chart to unlock personalized healing insights.
-              </Text>
-              <Pressable
-                onPress={() => router.push('/(tabs)/chart' as Href)}
-                style={styles.emptyButton}
-                accessibilityRole="button"
-                accessibilityLabel="Create chart"
-              >
-                <Text style={styles.emptyButtonText}>Create Chart</Text>
-              </Pressable>
+            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
+              <LinearGradient colors={['rgba(35, 40, 55, 0.5)', 'rgba(20, 24, 34, 0.8)']} style={styles.emptyCard}>
+                <Ionicons name="heart-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>No chart yet</Text>
+                <Text style={styles.emptySubtitle}>
+                  Create your chart to unlock personalized healing insights.
+                </Text>
+                <Pressable
+                  onPress={() => router.push('/(tabs)/chart' as Href)}
+                  style={styles.emptyButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Create chart"
+                >
+                  <Text style={styles.emptyButtonText}>Create Chart</Text>
+                </Pressable>
+              </LinearGradient>
             </Animated.View>
           )}
 
@@ -165,16 +181,16 @@ export default function HealingScreen() {
 
           {/* ── Inner Child / Reparenting ── */}
           {healingData && (
-            <Animated.View entering={FadeInDown.delay(200).duration(600)}>
+            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
               {isPremium ? (
-                <DeepCard icon="heart" title="Inner Child">
+                <DeepCard icon="heart" title="Inner Child" color={PALETTE.rose}>
                   <Text style={styles.deepCardMain}>{healingData.reparenting.innerChildNeeds}</Text>
                   <View style={styles.deepDivider} />
-                  <DetailRow label="WHAT WAS MISSING" text={healingData.reparenting.whatWasMissing} />
-                  <DetailRow label="HOW TO PROVIDE IT NOW" text={healingData.reparenting.howToProvideItNow} />
-                  <DetailRow label="DAILY PRACTICE" text={healingData.reparenting.dailyPractice} />
-                  <View style={styles.affirmationBox}>
-                    <Text style={styles.affirmationText}>"{healingData.reparenting.affirmation}"</Text>
+                  <DetailRow label="WHAT WAS MISSING" text={healingData.reparenting.whatWasMissing} color={PALETTE.rose} />
+                  <DetailRow label="HOW TO PROVIDE IT NOW" text={healingData.reparenting.howToProvideItNow} color={PALETTE.rose} />
+                  <DetailRow label="DAILY PRACTICE" text={healingData.reparenting.dailyPractice} color={PALETTE.rose} />
+                  <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.rose }]}>
+                    <Text style={[styles.affirmationText, { color: PALETTE.rose }]}>"{healingData.reparenting.affirmation}"</Text>
                   </View>
                 </DeepCard>
               ) : (
@@ -193,14 +209,14 @@ export default function HealingScreen() {
             <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Fear Patterns</Text>
               {isPremium ? (
-                <DeepCard icon="shield" title="Core Fear">
+                <DeepCard icon="shield" title="Core Fear" color={PALETTE.copper}>
                   <Text style={styles.deepCardMain}>{healingData.fears.coreFear}</Text>
                   <View style={styles.deepDivider} />
-                  <DetailRow label="HOW IT SHOWS UP" text={healingData.fears.howItShows} />
-                  <DetailRow label="WHAT IT PROTECTS" text={healingData.fears.whatItProtects} />
-                  <DetailRow label="GENTLE REFRAME" text={healingData.fears.gentleReframe} />
-                  <View style={styles.promptBox}>
-                    <Text style={styles.promptBoxLabel}>REFLECTION PROMPT</Text>
+                  <DetailRow label="HOW IT SHOWS UP" text={healingData.fears.howItShows} color={PALETTE.copper} />
+                  <DetailRow label="WHAT IT PROTECTS" text={healingData.fears.whatItProtects} color={PALETTE.copper} />
+                  <DetailRow label="GENTLE REFRAME" text={healingData.fears.gentleReframe} color={PALETTE.copper} />
+                  <View style={[styles.promptBox, { borderLeftColor: PALETTE.copper }]}>
+                    <Text style={[styles.promptBoxLabel, { color: PALETTE.copper }]}>REFLECTION PROMPT</Text>
                     <Text style={styles.promptBoxText}>{healingData.fears.journalPrompt}</Text>
                   </View>
                 </DeepCard>
@@ -225,15 +241,16 @@ export default function HealingScreen() {
                 <DeepCard
                   icon="link"
                   title={`${healingData.attachment.style.charAt(0).toUpperCase() + healingData.attachment.style.slice(1)} Style`}
+                  color={PALETTE.gold}
                 >
                   <Text style={styles.deepCardMain}>{healingData.attachment.headline}</Text>
                   <View style={styles.deepDivider} />
-                  <DetailRow label="DESCRIPTION" text={healingData.attachment.description} />
-                  <DetailRow label="WHERE IT CAME FROM" text={healingData.attachment.origins} />
-                  <DetailRow label="IN RELATIONSHIPS" text={healingData.attachment.inRelationships} />
-                  <DetailRow label="HEALING PATH" text={healingData.attachment.healingPath} />
-                  <View style={styles.affirmationBox}>
-                    <Text style={styles.affirmationText}>"{healingData.attachment.affirmation}"</Text>
+                  <DetailRow label="DESCRIPTION" text={healingData.attachment.description} color={PALETTE.gold} />
+                  <DetailRow label="WHERE IT CAME FROM" text={healingData.attachment.origins} color={PALETTE.gold} />
+                  <DetailRow label="IN RELATIONSHIPS" text={healingData.attachment.inRelationships} color={PALETTE.gold} />
+                  <DetailRow label="HEALING PATH" text={healingData.attachment.healingPath} color={PALETTE.gold} />
+                  <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.gold }]}>
+                    <Text style={[styles.affirmationText, { color: PALETTE.gold }]}>"{healingData.attachment.affirmation}"</Text>
                   </View>
                 </DeepCard>
               ) : (
@@ -254,13 +271,13 @@ export default function HealingScreen() {
             <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Safety & Nervous System</Text>
               {isPremium ? (
-                <DeepCard icon="moon" title="Regulation">
+                <DeepCard icon="moon" title="Regulation" color={PALETTE.silverBlue}>
                   <Text style={styles.deepCardMain}>{healingData.safety.whatFeelsSafe}</Text>
                   <View style={styles.deepDivider} />
-                  <DetailRow label="WHAT FEELS UNSAFE" text={healingData.safety.whatFeelsUnsafe} />
-                  <DetailRow label="NERVOUS SYSTEM TENDENCY" text={healingData.safety.nervousSystemTendency} />
-                  <ToolList label="SELF-SOOTHING TOOLS" items={healingData.safety.selfSoothingTools} />
-                  <DetailRow label="BOUNDARY NEEDS" text={healingData.safety.boundaryNeeds} />
+                  <DetailRow label="WHAT FEELS UNSAFE" text={healingData.safety.whatFeelsUnsafe} color={PALETTE.silverBlue} />
+                  <DetailRow label="NERVOUS SYSTEM TENDENCY" text={healingData.safety.nervousSystemTendency} color={PALETTE.silverBlue} />
+                  <ToolList label="SELF-SOOTHING TOOLS" items={healingData.safety.selfSoothingTools} color={PALETTE.silverBlue} />
+                  <DetailRow label="BOUNDARY NEEDS" text={healingData.safety.boundaryNeeds} color={PALETTE.silverBlue} />
                 </DeepCard>
               ) : (
                 <InsightCard
@@ -281,10 +298,10 @@ export default function HealingScreen() {
               <Text style={styles.sectionTitle}>This Week's Reflection</Text>
               {isPremium ? (
                 <LinearGradient
-                  colors={['rgba(122,139,224,0.12)', 'rgba(122,139,224,0.04)']}
+                  colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.6)']}
                   style={styles.weeklyCard}
                 >
-                  <Ionicons name="telescope-outline" size={20} color="#7A8BE0" style={{ marginBottom: 10 }} />
+                  <Ionicons name="telescope-outline" size={24} color={PALETTE.silverBlue} style={{ marginBottom: 12 }} />
                   <Text style={styles.weeklyText}>{healingData.weeklyReflection}</Text>
                 </LinearGradient>
               ) : (
@@ -329,164 +346,170 @@ export default function HealingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#07090F' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: theme.spacing.lg },
-  header: { marginTop: theme.spacing.lg, marginBottom: theme.spacing.xl },
+  scrollContent: { paddingHorizontal: 20 },
+  
+  header: { marginTop: 16, marginBottom: 24 },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    fontSize: 34,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     letterSpacing: 0.5,
     marginBottom: 6,
   },
-  headerSub: { fontSize: 13, color: theme.textMuted, lineHeight: 19 },
-  section: { marginTop: theme.spacing.lg },
-  shadowSection: { marginBottom: theme.spacing.md },
+  headerSub: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, fontStyle: 'italic' },
+  
+  section: { marginTop: 8, marginBottom: 16 },
+  shadowSection: { marginBottom: 16 },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.md,
+    fontSize: 18,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    marginBottom: 12,
+    letterSpacing: 0.3,
+    paddingLeft: 4,
   },
-  emptyState: {
+  
+  emptyStateContainer: { marginTop: 32 },
+  emptyCard: {
+    borderRadius: 20,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 80,
-    gap: 12,
   },
-  emptyTitle: { fontSize: 20, fontWeight: '600', color: theme.textPrimary, marginTop: 8 },
+  emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 12 },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: theme.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: 260,
+    lineHeight: 22,
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
   emptyButton: {
-    marginTop: 12,
-    backgroundColor: theme.primary,
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
     paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: theme.borderRadius.full,
-  },
-  emptyButtonText: { color: theme.background, fontWeight: '600', fontSize: 15 },
-
-  // ── Deep Card ──
-  deepCard: {
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    paddingVertical: 14,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+  },
+  emptyButtonText: { color: PALETTE.gold, fontWeight: '700', fontSize: 15 },
+
+  // ── Deep Card (Cinematic Glass) ──
+  deepCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
   },
   deepCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 16,
+    gap: 12,
   },
   deepCardIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(201,169,98,0.15)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
   },
   deepCardTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    fontSize: 20,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   deepCardMain: {
     fontSize: 15,
     color: theme.textSecondary,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   deepDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    marginVertical: theme.spacing.md,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    marginVertical: 16,
   },
-  detailRow: { marginBottom: theme.spacing.md },
+  
+  detailRow: { marginBottom: 16 },
   detailLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: theme.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: 4,
+    letterSpacing: 1.5,
+    marginBottom: 6,
   },
-  detailText: { fontSize: 14, color: theme.textSecondary, lineHeight: 21 },
-  toolItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 4 },
+  detailText: { fontSize: 15, color: PALETTE.textMain, lineHeight: 22, fontWeight: '500' },
+  
+  toolItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 6, gap: 10 },
   toolDot: {
-    width: 5,
-    height: 5,
+    width: 6,
+    height: 6,
     borderRadius: 3,
-    backgroundColor: theme.primary,
-    marginTop: 7,
-    marginRight: 8,
+    marginTop: 8,
   },
-  toolText: { flex: 1, fontSize: 14, color: theme.textSecondary, lineHeight: 21 },
+  toolText: { flex: 1, fontSize: 15, color: PALETTE.textMain, lineHeight: 22, fontWeight: '500' },
+  
   affirmationBox: {
-    backgroundColor: 'rgba(201,169,98,0.08)',
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.sm,
-    borderLeftWidth: 2,
-    borderLeftColor: 'rgba(201,169,98,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    borderLeftWidth: 3,
   },
   affirmationText: {
-    fontSize: 14,
-    color: theme.primary,
+    fontSize: 16,
     fontStyle: 'italic',
-    lineHeight: 21,
-    fontFamily: 'serif',
+    lineHeight: 24,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
+  
   promptBox: {
-    backgroundColor: 'rgba(139,196,232,0.08)',
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    marginTop: theme.spacing.sm,
-    borderLeftWidth: 2,
-    borderLeftColor: 'rgba(139,196,232,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    borderLeftWidth: 3,
   },
   promptBoxLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#8BC4E8',
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: 6,
+    letterSpacing: 1.5,
+    marginBottom: 8,
   },
   promptBoxText: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    lineHeight: 21,
+    fontSize: 15,
+    color: PALETTE.textMain,
+    lineHeight: 22,
     fontStyle: 'italic',
   },
 
   // ── Weekly Reflection ──
   weeklyCard: {
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xl,
+    borderRadius: 20,
+    padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(122,139,224,0.15)',
-    marginBottom: theme.spacing.md,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
+    marginBottom: 8,
   },
   weeklyText: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    lineHeight: 23,
+    fontSize: 17,
+    color: PALETTE.textMain,
+    lineHeight: 26,
     textAlign: 'center',
     fontStyle: 'italic',
-    fontFamily: 'serif',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
 });
+

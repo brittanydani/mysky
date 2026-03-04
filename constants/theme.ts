@@ -12,6 +12,7 @@ export const theme = {
 
   // Background Colors - Deep velvet night sky
   background: '#0D1421', // Deep midnight
+  backgroundDeep: '#07090F', // True black — used as root container bg
   backgroundSecondary: '#141E2E',
   backgroundTertiary: '#1A2740',
   surface: '#1E2D47',
@@ -119,6 +120,8 @@ export const theme = {
 
   // Gold gradient (used for CTAs / premium buttons)
   goldGradient: ['#E8D5A8', '#C9A962', '#B8994F'] as const,
+  ctaGradient: ['#FFF4D4', '#D4AF37', '#7A5C13'] as const,
+  ctaTextDark: '#1A1A1A', // Dark text on gold CTA buttons
 
   // Shadows
   shadows: {
@@ -137,4 +140,35 @@ export const theme = {
       elevation: 6,
     },
   },
+
+  // High-end obsidian glass effects
+  glass: {
+    base: 'rgba(15, 18, 25, 0.85)',
+    border: 'rgba(255, 255, 255, 0.06)',
+    highlight: 'rgba(255, 255, 255, 0.12)',
+  },
+  
+  // Archetypal mapping for dynamic card styling
+  archetypes: {
+    shadow: { main: '#9D76C1', glow: 'rgba(157, 118, 193, 0.2)' }, // Amethyst
+    self: { main: '#D4AF37', glow: 'rgba(212, 175, 55, 0.2)' },   // gold
+    threshold: { main: '#8BC4E8', glow: 'rgba(139, 196, 232, 0.2)' }, // SilverBlue
+    transform: { main: '#CD7F5D', glow: 'rgba(205, 127, 93, 0.2)' }, // Copper
+  },
+
+  // Cinematic palette — shared accent colors used across screens
+  cinematic: {
+    gold: '#D4AF37',
+    silverBlue: '#8BC4E8',
+    copper: '#CD7F5D',
+    emerald: '#6EBF8B',
+    rose: '#D4A3B3',
+    textMain: '#FDFBF7',
+    glassBorder: 'rgba(255,255,255,0.06)',
+    glassHighlight: 'rgba(255,255,255,0.12)',
+  },
+
+  // Enhanced Gradients
+  obsidianGradient: ['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)'] as const,
+  amethystGradient: ['rgba(40, 30, 60, 0.4)', 'rgba(20, 24, 34, 0.7)'] as const,
 } as const;

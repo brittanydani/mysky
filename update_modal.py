@@ -1,4 +1,6 @@
-/**
+import sys
+
+new_content = """/**
  * BirthDataModal
  * * Cinematic entry point for personal birth data.
  * Features custom obsidian scroll wheels and glassmorphic confirmation seal.
@@ -13,7 +15,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  ScrollView,
   Pressable,
   StyleSheet,
   Text,
@@ -464,3 +465,7 @@ const styles = StyleSheet.create({
   sepText: { color: PALETTE.textMain, fontSize: 24, fontWeight: '700', textAlign: 'center' },
   pickerSelectorOverlay: { position: 'absolute', top: (PICKER_HEIGHT - ITEM_HEIGHT) / 2, left: 0, right: 0, height: ITEM_HEIGHT, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', backgroundColor: 'rgba(212, 175, 55, 0.05)', zIndex: 1 },
 });
+"""
+
+with open('components/BirthDataModal.tsx', 'w') as f:
+    f.write(new_content)

@@ -1,14 +1,20 @@
 import React, { memo, useEffect, useMemo } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
-import Animated, {
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Canvas,
+  Circle,
+  Group,
+  Path,
+  Shadow,
+  BlurMask,
+} from '@shopify/react-native-skia';
+import {
   useSharedValue,
-  useAnimatedStyle,
   withRepeat,
   withTiming,
-  withDelay,
-  withSequence,
   Easing,
-  interpolate,
+  useDerivedValue,
+  useFrameCallback,
 } from 'react-native-reanimated';
 
 interface Star {
@@ -16,18 +22,17 @@ interface Star {
   x: number;
   y: number;
   size: number;
-  delay: number;
+  delayOffset: number; // For phase shift
   duration: number;
-  driftX: number; // slow horizontal drift distance
-  driftY: number; // slow vertical drift distance
-  driftDuration: number; // drift cycle duration
-  layer: number; // parallax layer (0 = far, 1 = mid, 2 = near)
+  driftX: number;
+  driftY: number;
+  driftDuration: number;
+  layer: number;
+  starColor: string;
 }
 
-/**
- * Seeded PRNG (splitmix32) — deterministic star layout for a given index.
- * Returns a function that yields successive [0,1) values.
- */
+const STAR_PALETTE = ['#FFFFFF', '#FDFBF7', '#E8F4FF', '#FFF4D4'];
+
 function splitmix32(seed: number): () => number {
   let s = seed | 0;
   return () => {
@@ -44,109 +49,154 @@ function splitmix32(seed: number): () => number {
 
 const generateStars = (count: number, w: number, h: number): Star[] =>
   Array.from({ length: count }, (_, i) => {
-    const rand = splitmix32(i * 2654435761); // unique seed per star
-    const layer = rand() < 0.5 ? 0 : rand() < 0.75 ? 1 : 2;
-    const sizeBase = layer === 0 ? 0.8 : layer === 1 ? 1.2 : 1.8;
+    const rand = splitmix32(i * 2654435761);
+    const layer = rand() < 0.6 ? 0 : rand() < 0.9 ? 1 : 2; // 0=Far, 1=Mid, 2=Near
+    const sizeBase = layer === 0 ? 0.6 : layer === 1 ? 1.0 : 2.2;
     return {
       id: i,
       x: rand() * w,
       y: rand() * h,
-      size: rand() * sizeBase + 0.5,
-      delay: rand() * 3000,
-      duration: rand() * 2000 + 2000,
-      driftX: (rand() - 0.5) * (layer === 0 ? 3 : layer === 1 ? 6 : 10),
-      driftY: (rand() - 0.5) * (layer === 0 ? 2 : layer === 1 ? 4 : 7),
-      driftDuration: rand() * 8000 + 12000 + layer * 4000,
+      size: rand() * sizeBase + 0.4,
+      delayOffset: rand() * Math.PI * 2,
+      duration: rand() * 3000 + 3000,
+      driftX: (rand() - 0.5) * (layer === 0 ? 5 : layer === 1 ? 15 : 30),
+      driftY: (rand() - 0.5) * (layer === 0 ? 3 : layer === 1 ? 8 : 15),
+      driftDuration: rand() * 15000 + 20000,
       layer,
+      starColor: STAR_PALETTE[Math.floor(rand() * STAR_PALETTE.length)],
     };
   });
 
-const AnimatedStar = memo(function AnimatedStar({
-  star,
-  color,
-}: {
-  star: Star;
-  color: string;
-}) {
-  const opacity = useSharedValue(0.2);
-  const drift = useSharedValue(0);
+// Skia animation components
+const SkiaStar = memo(({ star, time }: { star: Star; time: any }) => {
+  const x = useDerivedValue(() => {
+    const progress = (time.value / star.driftDuration) * Math.PI * 2;
+    return star.x + Math.sin(progress) * star.driftX;
+  });
 
-  useEffect(() => {
-    // Twinkle
-    opacity.value = withDelay(
-      star.delay,
-      withRepeat(
-        withTiming(star.layer === 2 ? 1 : star.layer === 1 ? 0.85 : 0.6, {
-          duration: star.duration,
-          easing: Easing.inOut(Easing.ease),
-        }),
-        -1,
-        true
-      )
-    );
-    // Slow particle drift
-    drift.value = withDelay(
-      star.delay * 0.5,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: star.driftDuration, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: star.driftDuration, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        false
-      )
-    );
-  }, [opacity, drift, star.delay, star.duration, star.driftDuration, star.layer]);
+  const y = useDerivedValue(() => {
+    const progress = (time.value / star.driftDuration) * Math.PI * 2;
+    return star.y + Math.sin(progress) * star.driftY;
+  });
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [
-      { translateX: interpolate(drift.value, [0, 1], [0, star.driftX]) },
-      { translateY: interpolate(drift.value, [0, 1], [0, star.driftY]) },
-    ],
-  }));
+  const r = useDerivedValue(() => {
+    const progress = (time.value / star.duration) * Math.PI * 2 + star.delayOffset;
+    const scale = 1 + Math.sin(progress) * (star.layer === 2 ? 0.2 : 0.1);
+    return (star.size / 2) * scale;
+  });
+
+  const opacity = useDerivedValue(() => {
+    const progress = (time.value / star.duration) * Math.PI * 2 + star.delayOffset;
+    const baseOpacity = star.layer === 2 ? 0.8 : star.layer === 1 ? 0.6 : 0.4;
+    const variance = star.layer === 2 ? 0.2 : 0.1;
+    return baseOpacity + Math.sin(progress) * variance;
+  });
 
   return (
-    <Animated.View
-      style={[
-        styles.star,
-        {
-          left: star.x,
-          top: star.y,
-          width: star.size,
-          height: star.size,
-          borderRadius: star.size / 2,
-          backgroundColor: color,
-          // Subtle glow for closer stars
-          ...(star.layer === 2 && {
-            shadowColor: color,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.6,
-            shadowRadius: 3,
-          }),
-        },
-        animatedStyle,
-      ]}
+    <Group>
+      <Circle cx={x} cy={y} r={r} color={star.starColor} opacity={opacity}>
+        {star.layer === 2 && <BlurMask blur={2} style="normal" />}
+      </Circle>
+    </Group>
+  );
+});
+
+// Constellation line that connects two SkiaStars dynamically
+const SkiaConstellationLine = memo(({ 
+  star1, 
+  star2, 
+  time, 
+  delayOffset 
+}: { 
+  star1: Star; 
+  star2: Star; 
+  time: any;
+  delayOffset: number;
+}) => {
+  const path = useDerivedValue(() => {
+    const p1 = (time.value / star1.driftDuration) * Math.PI * 2;
+    const x1 = star1.x + Math.sin(p1) * star1.driftX;
+    const y1 = star1.y + Math.sin(p1) * star1.driftY;
+
+    const p2 = (time.value / star2.driftDuration) * Math.PI * 2;
+    const x2 = star2.x + Math.sin(p2) * star2.driftX;
+    const y2 = star2.y + Math.sin(p2) * star2.driftY;
+
+    // Use string definition for path, simplified
+    return `M ${x1} ${y1} L ${x2} ${y2}`;
+  });
+
+  const opacity = useDerivedValue(() => {
+    // Pulse sequence for the constelation lines
+    const cycle = (time.value / 6000) * Math.PI * 2 + delayOffset;
+    return 0.15 + Math.sin(cycle) * 0.1;
+  });
+
+  return (
+    <Path
+      path={path}
+      color="rgba(201, 169, 98, 0.4)" // Soft gold text.primary or theme.primary
+      style="stroke"
+      strokeWidth={0.8}
+      opacity={opacity}
     />
   );
 });
 
-function StarField({
-  starCount = 30,
-  color = '#FFFFFF',
-}: {
-  starCount?: number;
-  color?: string;
-}) {
+function StarField({ starCount = 40 }: { starCount?: number }) {
   const { width, height } = useWindowDimensions();
+  
+  const { stars, constellations } = useMemo(() => {
+    const generatedStars = generateStars(starCount, width, height);
 
-  const stars = useMemo(() => generateStars(starCount, width, height), [starCount, width, height]);
+    // Filter out only medium and far stars or near stars to connect
+    const connectableStars = generatedStars.filter(s => s.layer > 0);
+    const lines = [];
+
+    // Make a few random constellations (lines between close stars)
+    // Using simple math to find somewhat close pairs
+    for (let i = 0; i < connectableStars.length; i++) {
+       const s1 = connectableStars[i];
+       for (let j = i + 1; j < connectableStars.length; j++) {
+          const s2 = connectableStars[j];
+          const dist = Math.hypot(s1.x - s2.x, s1.y - s2.y);
+          if (dist < 120 && lines.length < 8) {
+             lines.push({ s1, s2, delayOffset: i * 0.5 });
+             break; // Max 1 line per star typically
+          }
+       }
+    }
+
+    return { stars: generatedStars, constellations: lines };
+  }, [starCount, width, height]);
+
+  const time = useSharedValue(0);
+
+  // High performance frame loop
+  useFrameCallback((frameInfo) => {
+    if (frameInfo.timeSinceFirstFrame !== undefined) {
+      time.value = frameInfo.timeSinceFirstFrame;
+    }
+  });
 
   return (
     <View style={styles.container} pointerEvents="none">
-      {stars.map((star) => (
-        <AnimatedStar key={star.id} star={star} color={color} />
-      ))}
+      <Canvas style={styles.canvas}>
+        <Group>
+          {constellations.map((line, idx) => (
+            <SkiaConstellationLine 
+              key={`line-${idx}`} 
+              star1={line.s1} 
+              star2={line.s2} 
+              time={time} 
+              delayOffset={line.delayOffset} 
+            />
+          ))}
+          {stars.map((star) => (
+            <SkiaStar key={star.id} star={star} time={time} />
+          ))}
+        </Group>
+      </Canvas>
     </View>
   );
 }
@@ -156,9 +206,9 @@ export default memo(StarField);
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
-  star: {
-    position: 'absolute',
+  canvas: {
+    flex: 1,
   },
 });

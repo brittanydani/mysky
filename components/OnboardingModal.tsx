@@ -1,3 +1,5 @@
+// File: components/OnboardingModal.tsx
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +12,8 @@ import { theme } from '../constants/theme';
 import StarField from './ui/StarField';
 import { Image } from 'react-native';
 import BirthDataModal from './BirthDataModal';
+import TermsConsentModal from './TermsConsentModal';
+
 import { BirthData } from '../services/astrology/types';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { localDb } from '../services/storage/localDb';
@@ -19,11 +23,24 @@ import { logger } from '../utils/logger';
 interface OnboardingModalProps {
   visible: boolean;
   onComplete: (chart: any) => void;
+
+  // NEW: Terms is handled inside onboarding
+  needsTermsConsent?: boolean;
+  onTermsConsent?: (granted: boolean) => void;
 }
 
-export default function OnboardingModal({ visible, onComplete }: OnboardingModalProps) {
+export default function OnboardingModal({
+  visible,
+  onComplete,
+  needsTermsConsent = false,
+  onTermsConsent,
+}: OnboardingModalProps) {
   const [step, setStep] = useState<'welcome' | 'birth-data' | 'generating' | 'passphrase'>('welcome');
   const [showBirthModal, setShowBirthModal] = useState(false);
+
+  // NEW
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
   const [backupUri, setBackupUri] = useState<string | null>(null);
   const [passphrase, setPassphrase] = useState('');
 
@@ -33,6 +50,9 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
     if (!visible) {
       setStep('welcome');
       setShowBirthModal(false);
+      setShowTermsModal(false);
+      setBackupUri(null);
+      setPassphrase('');
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
@@ -44,10 +64,21 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
     };
   }, []);
 
-  const handleGetStarted = () => {
-    Haptics.selectionAsync();
+  const openBirthFlow = () => {
     setStep('birth-data');
     setShowBirthModal(true);
+  };
+
+  const handleGetStarted = () => {
+    Haptics.selectionAsync().catch(() => {});
+
+    // If terms not accepted yet, show terms FIRST
+    if (needsTermsConsent) {
+      setShowTermsModal(true);
+      return;
+    }
+
+    openBirthFlow();
   };
 
   const handleRestoreBackup = async () => {
@@ -81,6 +112,7 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
           latitude: charts[0].latitude,
           longitude: charts[0].longitude,
           houseSystem: charts[0].houseSystem,
+          timezone: charts[0].timezone,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
         timeoutRef.current = setTimeout(() => {
@@ -99,10 +131,18 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
     }
   };
 
+  // IMPORTANT: birth data is REQUIRED — user can't close this modal.
   const handleBirthModalClose = () => {
-    // Treat closing as “back to welcome” (prevents being stuck in a dead step)
-    setShowBirthModal(false);
-    setStep('welcome');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+    Alert.alert(
+      'Birth details required',
+      'To set up MySky, please enter your birth details. You can update them later in Settings.',
+      [{ text: 'OK', onPress: () => setShowBirthModal(true) }]
+    );
+
+    // keep it open / re-open
+    setShowBirthModal(true);
+    setStep('birth-data');
   };
 
   const handleBirthDataComplete = async (birthData: BirthData, extra?: { chartName?: string }) => {
@@ -141,145 +181,184 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
     }
   };
 
+  const handleTermsDecision = async (granted: boolean) => {
+    try {
+      // If they decline, keep modal open (cannot proceed)
+      if (!granted) {
+        onTermsConsent?.(false);
+        setShowTermsModal(true);
+        return;
+      }
+
+      onTermsConsent?.(true);
+      setShowTermsModal(false);
+
+      // Proceed directly into required birth flow
+      openBirthFlow();
+    } catch (e) {
+      logger.error('Terms decision failed:', e);
+      if (granted) {
+        setShowTermsModal(false);
+        openBirthFlow();
+      } else {
+        setShowTermsModal(true);
+      }
+    }
+  };
+
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <StarField starCount={100} />
+        <View style={styles.container}>
+          <StarField starCount={100} />
 
-        <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {step === 'welcome' && (
-              <>
-                <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.welcomeContainer}>
-                  <View style={[styles.logoContainer, { marginBottom: 8 }]}> 
-                    <Image
-                      source={require('../assets/images/logo.png')}
-                      style={{ width: 220, height: 220, resizeMode: 'contain', alignSelf: 'center' }}
-                      accessibilityLabel="MySky logo"
-                    />
+          <SafeAreaView edges={['top']} style={styles.safeArea}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              {step === 'welcome' && (
+                <>
+                  <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.welcomeContainer}>
+                    <View style={[styles.logoContainer, { marginBottom: 8 }]}>
+                      <Image
+                        source={require('../assets/images/logo.png')}
+                        style={{ width: 220, height: 220, resizeMode: 'contain', alignSelf: 'center' }}
+                        accessibilityLabel="MySky logo"
+                      />
+                    </View>
+
+                    <Text style={styles.welcomeTitle}>Welcome to MySky</Text>
+                    <Text style={styles.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
+
+                    <Text style={styles.description}>
+                      MySky is a personal growth and wellness app. Track your mood, sleep, and energy — journal your thoughts — and discover your patterns over time, guided by a framework built uniquely for you.
+                    </Text>
+                  </Animated.View>
+
+                  <Animated.View entering={FadeInUp.delay(400).duration(600)} style={styles.featuresContainer}>
+                    <View style={styles.feature}>
+                      <View style={styles.featureIcon}>
+                        <Ionicons name="pencil" size={20} color={theme.primary} />
+                      </View>
+                      <Text style={styles.featureText}>Daily journaling & guided reflection</Text>
+                    </View>
+
+                    <View style={styles.feature}>
+                      <View style={styles.featureIcon}>
+                        <Ionicons name="pulse" size={20} color={theme.primary} />
+                      </View>
+                      <Text style={styles.featureText}>Mood, sleep & energy tracking</Text>
+                    </View>
+
+                    <View style={styles.feature}>
+                      <View style={styles.featureIcon}>
+                        <Ionicons name="analytics" size={20} color={theme.primary} />
+                      </View>
+                      <Text style={styles.featureText}>Pattern insights drawn from your own data</Text>
+                    </View>
+
+                    <View style={styles.feature}>
+                      <View style={styles.featureIcon}>
+                        <Ionicons name="lock-closed" size={20} color={theme.primary} />
+                      </View>
+                      <Text style={styles.featureText}>Private & encrypted — only on your device</Text>
+                    </View>
+                  </Animated.View>
+
+                  <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.ctaContainer}>
+                    <Pressable
+                      style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]}
+                      onPress={handleGetStarted}
+                      accessibilityRole="button"
+                      accessibilityLabel="Get started"
+                    >
+                      <LinearGradient
+                        colors={[...theme.goldGradient]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.ctaGradient}
+                      >
+                        <Text style={styles.ctaText}>Get Started</Text>
+                        <Ionicons name="arrow-forward" size={20} color="#1A1A1A" />
+                      </LinearGradient>
+                    </Pressable>
+
+                    <Pressable style={styles.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button" accessibilityLabel="Restore from backup">
+                      <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
+                      <Text style={styles.restoreText}>Restore from Backup</Text>
+                    </Pressable>
+                  </Animated.View>
+                </>
+              )}
+
+              {step === 'generating' && (
+                <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.generatingContainer}>
+                  <View style={styles.generatingIcon}>
+                    <Ionicons name="sparkles" size={48} color={theme.primary} />
                   </View>
 
-                  <Text style={styles.welcomeTitle}>Welcome to MySky</Text>
-                  <Text style={styles.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
+                  <Text style={styles.generatingTitle}>Setting Up Your Profile</Text>
+                  <Text style={styles.generatingSubtitle}>Personalizing your reflection framework…</Text>
 
-                  <Text style={styles.description}>
-                    MySky is a personal growth and wellness app. Track your mood, sleep, and energy — journal your thoughts — and discover your patterns over time, guided by a framework built uniquely for you.
-                  </Text>
+                  <View style={styles.loadingDots}>
+                    <View style={[styles.dot, styles.dot1]} />
+                    <View style={[styles.dot, styles.dot2]} />
+                    <View style={[styles.dot, styles.dot3]} />
+                  </View>
                 </Animated.View>
+              )}
 
-                <Animated.View entering={FadeInUp.delay(400).duration(600)} style={styles.featuresContainer}>
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="pencil" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Daily journaling & guided reflection</Text>
+              {step === 'passphrase' && (
+                <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.generatingContainer}>
+                  <View style={styles.generatingIcon}>
+                    <Ionicons name="lock-closed" size={48} color={theme.primary} />
                   </View>
 
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="pulse" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Mood, sleep & energy tracking</Text>
-                  </View>
+                  <Text style={styles.generatingTitle}>Enter Backup Passphrase</Text>
+                  <Text style={styles.generatingSubtitle}>This is the passphrase you set when you created the backup.</Text>
 
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="analytics" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Pattern insights drawn from your own data</Text>
-                  </View>
+                  <TextInput
+                    style={styles.passphraseInput}
+                    value={passphrase}
+                    onChangeText={setPassphrase}
+                    placeholder="Enter passphrase"
+                    placeholderTextColor={theme.textSecondary}
+                    secureTextEntry
+                    autoFocus
+                    returnKeyType="done"
+                    onSubmitEditing={handlePassphraseSubmit}
+                  />
 
-                  <View style={styles.feature}>
-                    <View style={styles.featureIcon}>
-                      <Ionicons name="lock-closed" size={20} color={theme.primary} />
-                    </View>
-                    <Text style={styles.featureText}>Private & encrypted — only on your device</Text>
-                  </View>
-                </Animated.View>
-
-                <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.ctaContainer}>
-                  <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handleGetStarted} accessibilityRole="button" accessibilityLabel="Get started">
+                  <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handlePassphraseSubmit} accessibilityRole="button" accessibilityLabel="Restore backup">
                     <LinearGradient
                       colors={[...theme.goldGradient]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.ctaGradient}
                     >
-                      <Text style={styles.ctaText}>Get Started</Text>
-                      <Ionicons name="arrow-forward" size={20} color="#1A1A1A" />
+                      <Text style={styles.ctaText}>Restore</Text>
+                      <Ionicons name="cloud-download" size={20} color="#1A1A1A" />
                     </LinearGradient>
                   </Pressable>
 
-                  <Pressable style={styles.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button" accessibilityLabel="Restore from backup">
-                    <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
-                    <Text style={styles.restoreText}>Restore from Backup</Text>
+                  <Pressable style={styles.restoreButton} onPress={() => setStep('welcome')} accessibilityRole="button" accessibilityLabel="Cancel restore">
+                    <Text style={styles.restoreText}>Cancel</Text>
                   </Pressable>
                 </Animated.View>
+              )}
+            </ScrollView>
+          </SafeAreaView>
 
-              </>
-            )}
+          {/* Terms inside onboarding (after Welcome) */}
+          {showTermsModal && (
+            <TermsConsentModal visible onConsent={handleTermsDecision} />
+          )}
 
-            {step === 'generating' && (
-              <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.generatingContainer}>
-                <View style={styles.generatingIcon}>
-                  <Ionicons name="sparkles" size={48} color={theme.primary} />
-                </View>
-
-                <Text style={styles.generatingTitle}>Setting Up Your Profile</Text>
-                <Text style={styles.generatingSubtitle}>Personalizing your reflection framework…</Text>
-
-                <View style={styles.loadingDots}>
-                  <View style={[styles.dot, styles.dot1]} />
-                  <View style={[styles.dot, styles.dot2]} />
-                  <View style={[styles.dot, styles.dot3]} />
-                </View>
-              </Animated.View>
-            )}
-
-            {step === 'passphrase' && (
-              <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.generatingContainer}>
-                <View style={styles.generatingIcon}>
-                  <Ionicons name="lock-closed" size={48} color={theme.primary} />
-                </View>
-
-                <Text style={styles.generatingTitle}>Enter Backup Passphrase</Text>
-                <Text style={styles.generatingSubtitle}>This is the passphrase you set when you created the backup.</Text>
-
-                <TextInput
-                  style={styles.passphraseInput}
-                  value={passphrase}
-                  onChangeText={setPassphrase}
-                  placeholder="Enter passphrase"
-                  placeholderTextColor={theme.textSecondary}
-                  secureTextEntry
-                  autoFocus
-                  returnKeyType="done"
-                  onSubmitEditing={handlePassphraseSubmit}
-                />
-
-                <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handlePassphraseSubmit} accessibilityRole="button" accessibilityLabel="Restore backup">
-                  <LinearGradient
-                    colors={[...theme.goldGradient]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.ctaGradient}
-                  >
-                    <Text style={styles.ctaText}>Restore</Text>
-                    <Ionicons name="cloud-download" size={20} color="#1A1A1A" />
-                  </LinearGradient>
-                </Pressable>
-
-                <Pressable style={styles.restoreButton} onPress={() => setStep('welcome')} accessibilityRole="button" accessibilityLabel="Cancel restore">
-                  <Text style={styles.restoreText}>Cancel</Text>
-                </Pressable>
-              </Animated.View>
-            )}
-          </ScrollView>
-        </SafeAreaView>
-
-        <BirthDataModal visible={showBirthModal} onClose={handleBirthModalClose} onSave={handleBirthDataComplete} />
-      </View>
+          {/* Birth data is REQUIRED: onClose won't let user exit */}
+          <BirthDataModal
+            visible={showBirthModal}
+            onClose={handleBirthModalClose}
+            onSave={handleBirthDataComplete}
+          />
+        </View>
       </TouchableWithoutFeedback>
     </Modal>
   );

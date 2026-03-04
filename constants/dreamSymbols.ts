@@ -334,6 +334,46 @@ export const DREAM_SYMBOLS: Record<string, DreamSymbol> = {
       'An ocean in a dream tends to hold the quality of vastness — something beyond your usual edges, both terrifying and deeply freeing.',
     ],
   },
+
+  bridge: {
+    label: 'A bridge',
+    archetype: 'Threshold',
+    themes: ['crossing over', 'connection between two states', 'a decision point'],
+    interpretations: [
+      'Bridges in dreams often appear when you are navigating a transition — leaving one state of being or phase of life and moving toward another.',
+      'A bridge tends to represent a connection between where you are and where you are going. Its condition often reflects how you feel about this transition.',
+    ],
+  },
+
+  key: {
+    label: 'A key',
+    archetype: 'Integration',
+    themes: ['access', 'a new solution', 'unlocking a suppressed memory or capability'],
+    interpretations: [
+      'Finding or using a key in a dream often suggests you are discovering a solution or gaining access to something that was previously unavailable to you.',
+      'Keys point toward unlocking something — a new understanding, an opportunity, or a part of yourself that has been kept closed off.',
+    ],
+  },
+
+  clock: {
+    label: 'A clock or watch',
+    archetype: 'Persona',
+    themes: ['social pressure', 'the passage of time', 'fear of being "late" to a life stage'],
+    interpretations: [
+      'Clocks in dreams frequently reflect waking anxieties about time — feeling rushed, falling behind, or the pressure of external expectations and milestones.',
+      'A focus on time or clocks often highlights a tension between your natural inner pace and the demands of the outer world.',
+    ],
+  },
+
+  mask: {
+    label: 'A mask',
+    archetype: 'Persona',
+    themes: ['what you hide from others', 'the roles you play', 'the gap between your inner and outer self'],
+    interpretations: [
+      'Masks in dreams often explore the persona — the face you present to the world versus who you are underneath. They ask to be removed or investigated.',
+      'When masks appear, they tend to reflect the roles we play for safety or social acceptance, bringing attention to the gap between performance and authenticity.',
+    ],
+  },
 };
 
 // ─── Keyword → Symbol Key Mapping ────────────────────────────────────────────
@@ -429,6 +469,19 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   school: 'test', class: 'test', exam: 'test', test: 'test',
   teacher: 'test', study: 'test', classroom: 'test', homework: 'test',
   grade: 'test', university: 'test', college: 'test', professor: 'test',
+
+  // Bridge
+  bridge: 'bridge', bridges: 'bridge', crossing: 'bridge',
+
+  // Key
+  key: 'key', keys: 'key', unlock: 'key', locked: 'key',
+
+  // Clock
+  clock: 'clock', watch: 'clock', time: 'clock', timer: 'clock', ticking: 'clock',
+  late: 'clock',
+
+  // Mask
+  mask: 'mask', masks: 'mask', disguise: 'mask',
 
   // Child / childhood
   child: 'child', children: 'child', kid: 'child', kids: 'child',

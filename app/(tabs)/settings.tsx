@@ -83,7 +83,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How do I change my birth data?',
     answer:
-      'Birth data cannot be changed after saving. A confirmation step lets you review everything before it\u2019s locked in. If you need to start fresh, you can delete all your data in Settings under Privacy Settings and set up your chart again.',
+      'You can update your birth data from the Home screen by tapping "Edit Birth Data" below your chart summary. Your chart and all dependent insights will recalculate automatically. If you prefer to start completely fresh, you can delete all your data in Settings under Privacy Settings and set up your chart again.',
   },
   {
     question: 'What house system does MySky use?',

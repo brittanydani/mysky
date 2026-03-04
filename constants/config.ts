@@ -5,7 +5,7 @@ export const config = {
   tagline: 'Personal Growth, Mapped to You',
   version: '1.0.0',
   
-  // Premium pricing tiers (for display only)
+  // Premium pricing tiers (for display only - live prices from RevenueCat override these)
   premium: {
     tiers: [
       {
@@ -23,7 +23,7 @@ export const config = {
         price: '$29.99',
         priceValue: 29.99,
         period: 'per year',
-        description: 'Save 50%',
+        description: 'Save 50% vs monthly',
         popular: true,
       },
       {
@@ -32,38 +32,38 @@ export const config = {
         price: '$49.99',
         priceValue: 49.99,
         period: 'one time',
-        description: 'Best value',
+        description: 'The complete journey',
         popular: false,
       },
     ],
   },
   
-  // Premium features list
+  // Premium features list — Evocative language for Deeper Sky
   premiumFeatures: {
     free: [
       'Daily mood, energy & stress check-ins',
       'Sleep logging — quality & duration',
-      'Journal with guided daily prompts',
-      'Basic weekly averages (avg mood & sleep)',
-      'Natal chart & Big Three',
-      'Basic daily guidance',
-      'One relationship chart',
-      'Private & encrypted — always on-device',
+      'Journaling with basic guided prompts',
+      'Basic weekly averages & summaries',
+      'Natal chart & Big Three framework',
+      'Essential daily guidance',
+      'One personal relationship profile',
+      'Private & encrypted — on-device only',
     ],
     premium: [
-      'Dream journal with sleep entries (encrypted)',
-      'Symbolic dream reflections',
-      'Sleep & mood trend analysis over time',
-      'Behavioral insights & trend charts',
-      'Healing & inner work (attachment, shadow work)',
-      'Unlimited relationship charts',
-      'Mood & journal pattern analysis',
-      'Deep insights & tag intelligence',
-      'Full natal story (10 chapters)',
-      'Personalized guidance with action steps',
-      'Chiron & Node depth mapping',
-      'PDF chart export',
-      'Encrypted backup & restore',
+      'Dream journal with encrypted sleep entries',
+      'Symbolic & archetypal dream reflections',
+      'Deep mood & behavioral trend mapping',
+      'Advanced behavioral pattern analysis',
+      'Healing framework (Attachment & Shadow)',
+      'Unlimited relationship depth mapping',
+      'Correlation mapping (Mood & Journaling)',
+      'Insight tagging & behavioral intelligence',
+      'Full Natal Story (All 10 Chapters)',
+      'Personalized daily action steps',
+      'Chiron & Lunar Node depth mapping',
+      'High-resolution PDF chart exports',
+      'Encrypted cloud-agnostic backup & restore',
     ],
   },
 };

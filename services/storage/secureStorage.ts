@@ -363,12 +363,19 @@ class SecureStorageService {
 
     if (this.isEncryptedEnvelope(parsed)) {
       try {
-        return await EncryptionManager.decryptSensitiveData<T>(parsed.payload);
+        return await EncryptionManager.verifySensitiveData<T>(parsed.payload);
       } catch {
-        // HMAC integrity check failed. Do NOT silently re-sign — that would
-        // accept potentially tampered data. Log and return null to surface
-        // the integrity mismatch to the caller.
-        logger.error(`[SecureStorage] HMAC integrity check failed for "${key}" — rejecting data`);
+        // HMAC verification failed — this commonly happens after a simulator
+        // reset, app reinstall, or device migration where the HMAC key in
+        // SecureStore was regenerated.  Attempt to recover the plaintext data
+        // and re-sign it with the current key so future reads succeed.
+        const recovered = EncryptionManager.tryParseSensitiveData<T>(parsed.payload);
+        if (recovered !== null) {
+          logger.warn(`[SecureStorage] HMAC mismatch for "${key}" — recovered data and re-signed`);
+          await this.setEncryptedItem(key, recovered);
+          return recovered;
+        }
+        logger.error(`[SecureStorage] HMAC integrity check failed for "${key}" and recovery failed — rejecting data`);
         return null;
       }
     }

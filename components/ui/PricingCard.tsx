@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
@@ -13,6 +13,16 @@ interface PricingCardProps {
   selected?: boolean;
   onPress?: () => void;
 }
+
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  amethyst: '#9D76C1',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
 
 function PricingCard({
   name,
@@ -33,21 +43,24 @@ function PricingCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      android_ripple={{ color: 'rgba(255,255,255,0.08)' }}
     >
       {popular && (
         <View style={styles.popularBadgeContainer}>
-          <View style={styles.popularBadge}>
+          <LinearGradient
+            colors={['#FFF4D4', '#D4AF37']}
+            style={styles.popularBadge}
+          >
+            <Ionicons name="sparkles" size={10} color="#1A1A1A" />
             <Text style={styles.popularText}>Most Popular</Text>
-          </View>
+          </LinearGradient>
         </View>
       )}
 
       <LinearGradient
         colors={
           selected
-            ? ['rgba(201, 169, 98, 0.2)', 'rgba(201, 169, 98, 0.08)']
-            : ['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']
+            ? ['rgba(50, 45, 30, 0.5)', 'rgba(20, 24, 34, 0.8)'] // Gold obsidian
+            : ['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']  // Standard frosted
         }
         style={styles.gradient}
       >
@@ -55,7 +68,7 @@ function PricingCard({
           <Text style={[styles.name, selected && styles.selectedName]}>{name}</Text>
           {selected && (
             <View style={styles.checkmark}>
-              <Ionicons name="checkmark" size={14} color={theme.background} />
+              <Ionicons name="checkmark" size={14} color="#1A1A1A" />
             </View>
           )}
         </View>
@@ -75,90 +88,103 @@ export default memo(PricingCard);
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    marginBottom: theme.spacing.md,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
+    marginBottom: 16,
     position: 'relative',
+    backgroundColor: 'transparent',
   },
   selectedContainer: {
-    borderColor: theme.primary,
-    borderWidth: 2,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderTopColor: 'rgba(212, 175, 55, 0.5)',
+    borderWidth: 1.5,
   },
   pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.99 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }],
   },
   popularBadgeContainer: {
     position: 'absolute',
-    top: -1,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+    top: 0,
+    right: 20,
     zIndex: 2,
   },
   popularBadge: {
-    backgroundColor: theme.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    shadowColor: PALETTE.gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   popularText: {
     fontSize: 10,
-    fontWeight: '700',
-    color: theme.background,
+    fontWeight: '800',
+    color: '#1A1A1A',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   gradient: {
-    padding: theme.spacing.lg,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
   },
   name: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.textSecondary,
-    fontFamily: 'serif',
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
   },
   selectedName: {
-    color: theme.primary,
+    color: PALETTE.gold,
   },
   checkmark: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: theme.primary,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: PALETTE.gold,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: PALETTE.gold,
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 8,
   },
   price: {
-    fontSize: 28,
+    fontSize: 32,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
   },
   selectedPrice: {
-    color: theme.primary,
+    color: PALETTE.textMain,
   },
   period: {
-    fontSize: 14,
-    color: theme.textMuted,
-    marginLeft: theme.spacing.sm,
+    fontSize: 15,
+    color: theme.textSecondary,
+    marginLeft: 6,
+    fontStyle: 'italic',
   },
   description: {
-    fontSize: 13,
+    fontSize: 14,
     color: theme.textMuted,
+    lineHeight: 20,
   },
 });

@@ -5,13 +5,14 @@
  * Every check-in becomes: User signals + Astrology context.
  */
 
-import { DailyCheckIn, TransitEvent, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from './types';
+import { DailyCheckIn, TransitEvent, ThemeTag, EnergyLevel, StressLevel, TimeOfDay, CheckInInput, SkySnapshot } from './types';
 import { localDb } from '../storage/localDb';
 import { NatalChart } from '../astrology/types';
 import { getTransitInfo, getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
 import { generateId } from '../storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
+import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import { getMoonPhaseKey } from '../../utils/moonPhase';
 import {
   signNameFromLongitude as degreeToSign,
@@ -23,7 +24,7 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Moon phase calculation (precise, via astronomy-engine)
-function getMoonPhase(date: Date): string {
+function getMoonPhase(date: Date): MoonPhaseKeyTag {
   return getMoonPhaseKey(date);
 }
 
@@ -40,15 +41,6 @@ function getRetrogradePlanets(date: Date, latitude: number, longitude: number): 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sky Snapshot Capture
 // ─────────────────────────────────────────────────────────────────────────────
-
-export interface SkySnapshot {
-  moonSign: string;
-  moonHouse: number;
-  sunHouse: number;
-  transitEvents: TransitEvent[];
-  lunarPhase: string;
-  retrogrades: string[];
-}
 
 export function captureSkySnapshot(chart: NatalChart, date: Date = new Date()): SkySnapshot {
   try {
@@ -116,16 +108,8 @@ export function captureSkySnapshot(chart: NatalChart, date: Date = new Date()): 
 // Check-In CRUD
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface CheckInInput {
-  moodScore: number;
-  energyLevel: EnergyLevel;
-  stressLevel: StressLevel;
-  tags: ThemeTag[];
-  note?: string;
-  wins?: string;
-  challenges?: string;
-  timeOfDay?: TimeOfDay;  // If not provided, auto-detected from current time
-}
+// CheckInInput is now defined in ./types and re-exported here for backward compat
+export type { CheckInInput, SkySnapshot } from './types';
 
 /**
  * Determine time-of-day from current hour

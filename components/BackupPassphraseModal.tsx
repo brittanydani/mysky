@@ -1,3 +1,9 @@
+/**
+ * BackupPassphraseModal
+ * * Handles passphrase creation for backups and entry for restores.
+ * Obsidian glass aesthetic with high-precision validation feedback.
+ */
+
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Keyboard,
@@ -5,6 +11,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +20,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
@@ -23,6 +31,16 @@ interface BackupPassphraseModalProps {
   onCancel: () => void;
   onConfirm: (passphrase: string) => void | Promise<void>;
 }
+
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#D4AF37',
+  silverBlue: '#8BC4E8',
+  copper: '#CD7F5D',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
 
 export default function BackupPassphraseModal({
   visible,
@@ -46,9 +64,9 @@ export default function BackupPassphraseModal({
 
   const validation = useMemo(() => {
     const trimmed = passphrase.trim();
-    const isTooShort = trimmed.length < 8;
-    const mismatch = needsConfirm && trimmed !== confirm;
-    const canSubmit = trimmed.length > 0 && !isTooShort && !mismatch && !submitting;
+    const isTooShort = trimmed.length > 0 && trimmed.length < 8;
+    const mismatch = needsConfirm && confirm.length > 0 && trimmed !== confirm;
+    const canSubmit = trimmed.length >= 8 && (!needsConfirm || (trimmed === confirm)) && !submitting;
     return { trimmed, isTooShort, mismatch, canSubmit };
   }, [passphrase, confirm, needsConfirm, submitting]);
 
@@ -70,109 +88,103 @@ export default function BackupPassphraseModal({
       onRequestClose={onCancel}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
-            <Pressable
-              style={styles.iconButton}
-              onPress={onCancel}
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-            >
-              <Ionicons name="close" size={24} color={theme.textPrimary} />
-            </Pressable>
-
-            <Text style={styles.title} numberOfLines={1}>
-              {mode === 'backup' ? 'Create Backup Passphrase' : 'Enter Backup Passphrase'}
-            </Text>
-
-            <View style={styles.iconButton} />
-          </Animated.View>
-
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
-          >
-            <View style={styles.content}>
-              <Text style={styles.description}>
-                {mode === 'backup'
-                  ? 'This passphrase encrypts your backup. Keep it safe — it is required to restore on another device.'
-                  : 'Enter the passphrase used to encrypt this backup.'}
+        <View style={styles.container}>
+          <SafeAreaView edges={['top']} style={styles.safeArea}>
+            
+            {/* Header */}
+            <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
+              <Pressable style={styles.iconButton} onPress={onCancel}>
+                <Ionicons name="close" size={24} color={PALETTE.textMain} />
+              </Pressable>
+              <Text style={styles.title}>
+                {mode === 'backup' ? 'Create Passphrase' : 'Unlock Backup'}
               </Text>
+              <View style={styles.iconButton} />
+            </Animated.View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Passphrase</Text>
-                <TextInput
-                  style={styles.input}
-                  value={passphrase}
-                  onChangeText={setPassphrase}
-                  placeholder="At least 8 characters"
-                  placeholderTextColor={theme.textMuted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType={needsConfirm ? 'next' : 'done'}
-                  onSubmitEditing={() => {
-                    if (!needsConfirm) handleSubmit();
-                  }}
-                />
-              </View>
+            <KeyboardAvoidingView
+              style={styles.flex}
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+              <ScrollView 
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+              >
+                <Text style={styles.description}>
+                  {mode === 'backup'
+                    ? 'This passphrase encrypts your data. MySky cannot recover it—store it in a secure location.'
+                    : 'Enter the passphrase used to secure this backup file.'}
+                </Text>
 
-              {needsConfirm && (
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirm Passphrase</Text>
+                  <Text style={styles.label}>Passphrase</Text>
                   <TextInput
-                    style={styles.input}
-                    value={confirm}
-                    onChangeText={setConfirm}
-                    placeholder="Re-enter passphrase"
+                    style={[styles.input, validation.isTooShort && styles.inputError]}
+                    value={passphrase}
+                    onChangeText={setPassphrase}
+                    placeholder="At least 8 characters"
                     placeholderTextColor={theme.textMuted}
                     secureTextEntry
                     autoCapitalize="none"
                     autoCorrect={false}
-                    returnKeyType="done"
-                    onSubmitEditing={handleSubmit}
+                    returnKeyType={needsConfirm ? 'next' : 'done'}
+                    onSubmitEditing={() => {
+                      if (!needsConfirm) handleSubmit();
+                    }}
                   />
+                  {validation.isTooShort && (
+                    <Text style={styles.warningText}>Required: 8 characters minimum</Text>
+                  )}
                 </View>
-              )}
 
-              {validation.isTooShort && (
-                <Text style={styles.warningText}>Passphrase must be at least 8 characters.</Text>
-              )}
-              {validation.mismatch && <Text style={styles.warningText}>Passphrases do not match.</Text>}
+                {needsConfirm && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Verify Passphrase</Text>
+                    <TextInput
+                      style={[styles.input, validation.mismatch && styles.inputError]}
+                      value={confirm}
+                      onChangeText={setConfirm}
+                      placeholder="Repeat passphrase"
+                      placeholderTextColor={theme.textMuted}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="done"
+                      onSubmitEditing={handleSubmit}
+                    />
+                    {validation.mismatch && (
+                      <Text style={styles.warningText}>Passphrases do not match</Text>
+                    )}
+                  </View>
+                )}
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  !validation.canSubmit && styles.primaryButtonDisabled,
-                  pressed && validation.canSubmit && styles.primaryButtonPressed,
-                ]}
-                disabled={!validation.canSubmit}
-                onPress={handleSubmit}
-                accessibilityRole="button"
-                accessibilityLabel={mode === 'backup' ? 'Create Backup' : 'Restore Backup'}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {submitting
-                    ? mode === 'backup'
-                      ? 'Creating…'
-                      : 'Restoring…'
-                    : mode === 'backup'
-                      ? 'Create Backup'
-                      : 'Restore Backup'}
-                </Text>
-              </Pressable>
+                <Pressable
+                  onPress={handleSubmit}
+                  disabled={!validation.canSubmit}
+                  style={styles.ctaButton}
+                >
+                  <LinearGradient
+                    colors={!validation.canSubmit ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#D4AF37', '#7A5C13']}
+                    style={[styles.ctaGradient, !validation.canSubmit && { borderColor: 'transparent' }]}
+                  >
+                    <Text style={[styles.ctaText, !validation.canSubmit && { color: theme.textMuted }]}>
+                      {submitting ? 'Processing...' : mode === 'backup' ? 'Confirm & Backup' : 'Confirm & Restore'}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
 
-              {mode === 'backup' && (
-                <Text style={styles.helperText}>
-                  Tip: Use a phrase you can remember (e.g., 3–5 random words). Don’t reuse a password you use elsewhere.
-                </Text>
-              )}
-            </View>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </View>
+                {mode === 'backup' && (
+                  <View style={styles.securityNote}>
+                    <Ionicons name="shield-checkmark-outline" size={16} color={PALETTE.silverBlue} />
+                    <Text style={styles.helperText}>
+                      We recommend using a phrase of 4+ random words. This encryption happens entirely on your device.
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </SafeAreaView>
+        </View>
       </TouchableWithoutFeedback>
     </Modal>
   );
@@ -180,91 +192,100 @@ export default function BackupPassphraseModal({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: {
-    flex: 1,
-    backgroundColor: theme.background,
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#07090F' },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  iconButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   title: {
-    flex: 1,
-    textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
-  content: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.xl,
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 32,
   },
   description: {
-    fontSize: 14,
+    fontSize: 15,
     color: theme.textSecondary,
-    lineHeight: 20,
-    marginBottom: theme.spacing.lg,
+    lineHeight: 22,
+    marginBottom: 32,
+    fontStyle: 'italic',
   },
   inputGroup: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 24,
   },
   label: {
-    fontSize: 14,
-    color: theme.textPrimary,
-    marginBottom: theme.spacing.sm,
+    fontSize: 12,
+    fontWeight: '700',
+    color: PALETTE.gold,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: 10,
+    paddingLeft: 4,
   },
   input: {
-    backgroundColor: theme.backgroundTertiary,
-    borderRadius: theme.borderRadius.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    color: theme.textPrimary,
+    borderColor: PALETTE.glassBorder,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: PALETTE.textMain,
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: 'rgba(205, 127, 93, 0.4)',
   },
   warningText: {
     fontSize: 12,
-    color: theme.warning,
-    marginBottom: theme.spacing.sm,
-  },
-  primaryButton: {
-    backgroundColor: theme.primary,
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: theme.spacing.md,
-    alignItems: 'center',
-    marginTop: theme.spacing.sm,
-  },
-  primaryButtonPressed: {
-    opacity: 0.9,
-  },
-  primaryButtonDisabled: {
-    opacity: 0.4,
-  },
-  primaryButtonText: {
-    fontSize: 16,
+    color: PALETTE.copper,
+    marginTop: 8,
+    paddingLeft: 4,
     fontWeight: '600',
-    color: '#0D1421',
+  },
+  ctaButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 12,
+  },
+  ctaGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+  },
+  ctaText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  securityNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginTop: 32,
+    backgroundColor: 'rgba(139, 196, 232, 0.05)',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 196, 232, 0.1)',
   },
   helperText: {
-    marginTop: theme.spacing.lg,
-    fontSize: 12,
-    color: theme.textMuted,
-    lineHeight: 18,
+    flex: 1,
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 19,
   },
 });
