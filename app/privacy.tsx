@@ -1,3 +1,4 @@
+// File: app/privacy.tsx
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,7 +43,7 @@ export default function PrivacyPolicyScreen() {
           showsVerticalScrollIndicator={false}
         >
 
-          <Text style={styles.lastUpdated}>Last updated: March 1, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 3, 2026</Text>
 
           {/* ── 1. Introduction ── */}
           <View style={styles.section}>
@@ -64,7 +65,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletPoint}>Brittany Hornick</Text>
             <Text style={styles.bulletPoint}>brittanyapps@outlook.com</Text>
             <Text style={styles.paragraph}>
-              Because all personal data is stored exclusively on your device, MySky functions as a data controller only to the extent of defining what data the app processes and how. We never receive, access, or store your personal data on any server.
+              Most personal data is stored exclusively on your device. However, if you create an optional account to use premium AI features, certain data is stored on Supabase servers as described below. In all cases, raw journal content, birth data, and personal notes are never transmitted to any external server.
             </Text>
           </View>
 
@@ -81,40 +82,29 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletPoint}>• Chart display preferences (e.g., house system)</Text>
 
             <Text style={styles.subSectionTitle}>Journal Entries</Text>
-            <Text style={styles.bulletPoint}>• Mood selection (calm, soft, okay, heavy, stormy)</Text>
-            <Text style={styles.bulletPoint}>• Entry title and free-text content</Text>
-            <Text style={styles.bulletPoint}>• Moon phase at time of entry</Text>
-            <Text style={styles.bulletPoint}>• On-device NLP summaries (keywords, emotional tone, sentiment) derived from your journal text — processed entirely on your device</Text>
+            <Text style={styles.bulletPoint}>• Mood selection, entry title and free-text content, moon phase at time of entry, on-device NLP summaries (keywords, emotional tone, sentiment) derived from your journal text — processed entirely on your device</Text>
 
             <Text style={styles.subSectionTitle}>Daily Check-Ins</Text>
-            <Text style={styles.bulletPoint}>• Mood score (1–10), energy level, and stress level</Text>
-            <Text style={styles.bulletPoint}>• Theme tags you select (e.g., relationships, career, sleep, creativity)</Text>
-            <Text style={styles.bulletPoint}>• Optional notes, wins, and challenges</Text>
-            <Text style={styles.bulletPoint}>• Astronomical snapshot at time of check-in (moon sign, transits, retrogrades) — computed on-device</Text>
+            <Text style={styles.bulletPoint}>• Mood score, energy level, stress level, theme tags, optional notes, wins, challenges, and an astronomical snapshot at time of check-in (moon sign, transits, retrogrades) — all computed on-device</Text>
 
             <Text style={styles.subSectionTitle}>Sleep Tracking</Text>
-            <Text style={styles.bulletPoint}>• Nightly sleep quality rating (1–5) and duration</Text>
-            <Text style={styles.bulletPoint}>• Wake feeling, dream quality, and optional dream journal note (encrypted)</Text>
-            <Text style={styles.bulletPoint}>• On-device symbolic dream reflections derived from your sleep journal, mood, check-ins, and journal entries — processed entirely on your device, never transmitted</Text>
-            <Text style={styles.bulletPoint}>• One entry per night — you can edit the same day</Text>
+            <Text style={styles.bulletPoint}>• Nightly sleep quality rating, duration, wake feeling, dream quality, optional dream journal note (encrypted), and on-device symbolic dream reflections. One entry per night.</Text>
 
             <Text style={styles.subSectionTitle}>Relationship Charts</Text>
-            <Text style={styles.bulletPoint}>• Name, birth date, birth time, and birth location of another person (e.g., partner, friend, family member)</Text>
-            <Text style={styles.bulletPoint}>• Relationship type (partner, ex, child, parent, friend, sibling, other)</Text>
-            <Text style={styles.paragraph}>
-              Important: When you enter another person&apos;s birth data, you are responsible for ensuring you have their permission to do so. This data is stored only on your device and is never transmitted.
-            </Text>
+            <Text style={styles.bulletPoint}>• Name, birth date, birth time, and birth location of another person; relationship type. When you enter another person&apos;s birth data, you are responsible for ensuring you have their permission. This data is stored only on your device and is never transmitted.</Text>
 
             <Text style={styles.subSectionTitle}>Saved Insights</Text>
-            <Text style={styles.bulletPoint}>• Personalized daily guidance automatically saved on your device (greetings, reflection messages, journal prompts, growth themes)</Text>
-            <Text style={styles.bulletPoint}>• Insights you mark as favorites</Text>
+            <Text style={styles.bulletPoint}>• Personalized daily guidance automatically saved on your device (greetings, reflection messages, journal prompts, growth themes); insights you mark as favorites.</Text>
 
             <Text style={styles.subSectionTitle}>App Settings</Text>
-            <Text style={styles.bulletPoint}>• Display preferences and configuration choices</Text>
+            <Text style={styles.bulletPoint}>• Display preferences and configuration choices.</Text>
+
+            <Text style={styles.subSectionTitle}>Optional Account (Premium AI Features)</Text>
+            <Text style={styles.bulletPoint}>• If you choose to create an account to unlock AI-generated reflections, we collect your email address and a password (hashed — never stored in plain text). Your account is managed by Supabase. No other personal information is required to create an account. An account is never required to use the core app features (chart, journal, mood tracking, sleep, relationships).</Text>
 
             <Text style={styles.subSectionTitle}>What We Do Not Collect</Text>
             <Text style={styles.paragraph}>
-              We do not collect advertising identifiers (such as IDFA) and we do not collect device identifiers for tracking. We do use an anonymous identifier for subscription verification through RevenueCat (see Third-Party Services). We do not collect IP addresses (beyond what is incidentally transmitted during geocoding lookups — see Third-Party Services), precise location data (beyond the birth location you enter), browsing history, contacts, photos, audio, usage analytics, crash reports sent to us, or any data beyond what you explicitly provide. We do not use analytics SDKs, advertising SDKs, or third-party behavioral tracking of any kind.
+              We do not collect advertising identifiers (such as IDFA), device identifiers for tracking, IP addresses (beyond what is incidentally transmitted during geocoding lookups), precise location data (beyond the birth location you enter), browsing history, contacts, photos, audio, usage analytics, crash reports sent to us, or any data beyond what you explicitly provide. We do not use analytics SDKs, advertising SDKs, or third-party behavioral tracking of any kind.
             </Text>
           </View>
 
@@ -122,20 +112,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>How We Use Your Information</Text>
             <Text style={styles.paragraph}>
-              All data processing occurs entirely on your device. Your data is used exclusively to provide and personalize the app&apos;s features:
-            </Text>
-            <Text style={styles.bulletPoint}>• Track mood, energy, stress, and sleep patterns over time</Text>
-            <Text style={styles.bulletPoint}>• Analyze behavioral trends and what restores vs drains you</Text>
-            <Text style={styles.bulletPoint}>• Derive on-device keyword and sentiment summaries from your journal</Text>
-            <Text style={styles.bulletPoint}>• Calculate and display your chart as a personalization framework</Text>
-            <Text style={styles.bulletPoint}>• Generate personalized daily guidance and growth prompts</Text>
-            <Text style={styles.bulletPoint}>• Provide relationship compatibility reflections</Text>
-            <Text style={styles.bulletPoint}>• Correlate your check-in themes with planetary transits</Text>
-            <Text style={styles.bulletPoint}>• Generate your personal story narrative and PDF export</Text>
-            <Text style={styles.bulletPoint}>• Map chakra and healing insights from your chart profile</Text>
-            <Text style={styles.bulletPoint}>• Generate symbolic dream reflections from your sleep journal, mood, check-ins, and journal entries — entirely on-device</Text>
-            <Text style={styles.paragraph}>
-              We do not use your data for advertising, marketing, third-party profiling, research, AI/ML model training, or any purpose other than providing the app&apos;s features to you on your device.
+              All core data processing occurs entirely on your device. Your data is used exclusively to provide and personalize the app&apos;s features: track mood, energy, stress, and sleep patterns; analyze behavioral trends; derive on-device keyword and sentiment summaries; calculate and display your chart; generate personalized daily guidance and growth prompts; provide relationship compatibility reflections; correlate your check-in themes with planetary transits; generate your personal story narrative and PDF export; generate symbolic dream reflections — all on-device. For premium AI features (if you create an account), aggregated behavioral statistics are sent to a cloud service to generate AI-written reflections. We do not use your data for advertising, marketing, third-party profiling, research, AI/ML model training, or any purpose other than providing the app&apos;s features to you.
             </Text>
           </View>
 
@@ -143,44 +120,27 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Lawful Basis for Processing (GDPR)</Text>
             <Text style={styles.paragraph}>
-              Under the GDPR, the lawful basis for processing your personal data is:
-            </Text>
-            <Text style={styles.bulletPoint}>• Consent (Article 6(1)(a)): You provide explicit consent before any personal data is collected. The app presents a consent prompt before storing birth data, journal entries, or check-ins. You may withdraw consent at any time through Privacy Settings.</Text>
-            <Text style={styles.bulletPoint}>• Contract Performance (Article 6(1)(b)): Processing is necessary to deliver the app&apos;s core service — personalized chart calculation and reflection features — that you have requested.</Text>
-            <Text style={styles.paragraph}>
-              Birth data (date, time, location) may be considered sensitive data under certain interpretations. MySky collects this data only with your explicit consent and processes it locally on your device for the sole purpose of chart calculation.
+              Under the GDPR, the lawful basis for processing your personal data is: Consent (Article 6(1)(a)): You provide explicit consent before any personal data is collected. The app presents a consent prompt before storing birth data, journal entries, or check-ins. You may withdraw consent at any time through Privacy Settings. Contract Performance (Article 6(1)(b)): Processing is necessary to deliver the app&apos;s core service — personalized chart calculation and reflection features — that you have requested. Birth data (date, time, location) may be considered sensitive data under certain interpretations. MySky collects this data only with your explicit consent and processes it locally on your device for the sole purpose of chart calculation.
             </Text>
           </View>
 
           {/* ── 6. Data Storage and Security ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Storage and Security</Text>
-            <Text style={styles.paragraph}>
-              Your data is stored locally on your device using multiple layers of protection:
-            </Text>
-            <Text style={styles.bulletPoint}>• All data is stored in a local SQLite database on your device — never on external servers</Text>
-            <Text style={styles.bulletPoint}>• Sensitive fields are encrypted at rest using AES-256-GCM: birth data (name, date, time, location), journal content and titles, relationship chart data, check-in notes, wins and challenges, dream journal text, and personalized daily insight text (guidance messages, reflection prompts)</Text>
-            <Text style={styles.bulletPoint}>• A unique Data Encryption Key (DEK) is generated on your device and stored in the hardware-backed keychain (iOS) or keystore (Android) via SecureStore</Text>
-            <Text style={styles.bulletPoint}>• Each encrypted field uses a unique random 96-bit initialization vector (IV)</Text>
-            <Text style={styles.bulletPoint}>• HMAC-SHA256 integrity verification detects any tampering with stored data</Text>
-            <Text style={styles.bulletPoint}>• Your device passcode, Face ID, or fingerprint provide an additional layer of protection</Text>
-            <Text style={styles.bulletPoint}>• Consent records and recent security events are encrypted and stored in the device keychain</Text>
-            <Text style={styles.paragraph}>
-              Your journal entries, check-ins, sleep logs, and birth details are never uploaded to or stored on any external server. Limited data is transmitted only to the service providers listed in Third-Party Services (RevenueCat for subscription verification; Nominatim for birth-city geocoding).
-            </Text>
+            <Text style={styles.subSectionTitle}>On-Device (all users):</Text>
+            <Text style={styles.bulletPoint}>• All core app data — charts, journal entries, check-ins, sleep logs, relationship charts, and saved insights — is stored in a local SQLite database on your device and never uploaded.</Text>
+            <Text style={styles.bulletPoint}>• Sensitive fields are encrypted at rest using AES-256-GCM; a unique Data Encryption Key (DEK) is generated on your device and stored in the hardware-backed keychain (iOS) or keystore (Android) via SecureStore; each encrypted field uses a unique random 96-bit initialization vector (IV); HMAC-SHA256 integrity verification detects tampering. Your device passcode, Face ID, or fingerprint provide an additional layer of protection.</Text>
+            <Text style={styles.subSectionTitle}>Server-Side (optional, premium account holders only):</Text>
+            <Text style={styles.bulletPoint}>• If you create an account, your email address and hashed password are stored in Supabase's authentication system.</Text>
+            <Text style={styles.bulletPoint}>• If you use AI Reflection Insights, aggregated behavioral statistics (mood/energy/stress trend averages and anonymous theme-tag correlations) are sent to a Supabase Edge Function, which calls the Anthropic API. Raw journal content, notes, and birth data are never transmitted. If you rate dream reflections, your personalized preference weights (numerical scores only — no raw dream text) are stored in Supabase to improve future suggestions.</Text>
           </View>
 
           {/* ── 7. Data Sharing ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Sharing</Text>
             <Text style={styles.paragraph}>
-              We do not sell, rent, or share your personal information for advertising, marketing, or analytics. We disclose limited data only to the service providers listed below for app functionality (RevenueCat for subscription verification; Nominatim for geocoding). Specifically:
+              We do not sell, rent, or share your personal information for advertising, marketing, or analytics. We disclose limited data only to the service providers listed below for app functionality. No third-party advertising networks, analytics, data brokers, marketing companies, or AI/machine learning training receive any data. We do not sell or share personal information as defined under the CCPA/CPRA.
             </Text>
-            <Text style={styles.bulletPoint}>• No third-party advertising networks receive any data</Text>
-            <Text style={styles.bulletPoint}>• No analytics or tracking services receive any data</Text>
-            <Text style={styles.bulletPoint}>• No data brokers or marketing companies receive any data</Text>
-            <Text style={styles.bulletPoint}>• No AI or machine learning training is performed on your data</Text>
-            <Text style={styles.bulletPoint}>• We do not sell or share personal information as defined under the CCPA/CPRA</Text>
           </View>
 
           {/* ── 8. Third-Party Services ── */}
@@ -189,28 +149,32 @@ export default function PrivacyPolicyScreen() {
 
             <Text style={styles.subSectionTitle}>Apple App Store / Google Play Store</Text>
             <Text style={styles.paragraph}>
-              Subscription purchases are processed by Apple (App Store) or Google (Google Play). Payment information is handled entirely by the respective platform. MySky never receives or stores your payment details, credit card number, or billing address.
+              Subscription purchases are processed by Apple or Google. Payment information is handled entirely by the respective platform. MySky never receives or stores your payment details, credit card number, or billing address.
             </Text>
 
             <Text style={styles.subSectionTitle}>RevenueCat</Text>
             <Text style={styles.paragraph}>
-              MySky uses RevenueCat solely to verify your subscription status and unlock premium features. RevenueCat receives an anonymous app user identifier and subscription/entitlement information needed to verify premium access. It does not receive your journal content, birth data, check-ins, or sleep logs. RevenueCat&apos;s privacy policy is available here.
+              Used solely to verify your subscription status and unlock premium features. RevenueCat receives an anonymous app user identifier and subscription/entitlement information needed to verify premium access. It does not receive your journal content, birth data, check-ins, or sleep logs. (https://www.revenuecat.com/privacy)
             </Text>
-            <Pressable onPress={() => openLink('https://www.revenuecat.com/privacy')}>
-              <Text style={styles.link}>https://www.revenuecat.com/privacy</Text>
-            </Pressable>
 
             <Text style={styles.subSectionTitle}>Geocoding (OpenStreetMap Nominatim)</Text>
             <Text style={styles.paragraph}>
-              When you enter a birth city or location, the app uses OpenStreetMap&apos;s Nominatim geocoding service to convert that location into geographic coordinates. This request includes the location text you type and standard network metadata (such as your IP address). No birth date, birth time, journal content, or other personal data is transmitted as part of this request. Nominatim&apos;s privacy policy is available here.
+              When you enter a birth city or location, the app uses OpenStreetMap&apos;s Nominatim geocoding service to convert that location into geographic coordinates. This request includes the location text you type and standard network metadata (such as your IP address). No birth date, birth time, journal content, or other personal data is transmitted as part of this request. (https://osmfoundation.org/wiki/Privacy_Policy)
             </Text>
-            <Pressable onPress={() => openLink('https://osmfoundation.org/wiki/Privacy_Policy')}>
-              <Text style={styles.link}>https://osmfoundation.org/wiki/Privacy_Policy</Text>
-            </Pressable>
+
+            <Text style={styles.subSectionTitle}>Supabase</Text>
+            <Text style={styles.paragraph}>
+              Used for optional account authentication and, for premium users, to host the Edge Function that processes AI reflection requests and to store personalized dream model preference weights. Supabase stores your email address and hashed password if you create an account. Supabase infrastructure is hosted on AWS. (https://supabase.com/privacy)
+            </Text>
+
+            <Text style={styles.subSectionTitle}>Anthropic (Claude AI)</Text>
+            <Text style={styles.paragraph}>
+              Used exclusively via the Supabase Edge Function to generate AI Reflection Insights for premium users. Anthropic receives only aggregated behavioral statistics (mood/energy/stress trends, theme-tag correlations) — no email, birth data, journal content, or directly identifying information. Anthropic&apos;s API key is stored exclusively in the Edge Function environment and is never accessible by your device. (https://www.anthropic.com/privacy)
+            </Text>
 
             <Text style={styles.subSectionTitle}>No Other Third Parties</Text>
             <Text style={styles.paragraph}>
-              No other third-party services, SDKs, APIs, analytics platforms, or external servers receive any information from MySky. Beyond the services listed above, the app does not make network requests to any external server.
+              Beyond the services listed above, the app does not make network requests to any external server. No analytics SDKs, advertising networks, data brokers, or behavioral tracking tools are used.
             </Text>
           </View>
 
@@ -218,71 +182,31 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>PDF Export</Text>
             <Text style={styles.paragraph}>
-              When you export your chart as a PDF:
+              When you export your chart as a PDF: the PDF is generated entirely on your device; it is saved to your device&apos;s temporary cache, then the system share sheet opens; you choose where to save or share the file; MySky does not upload, transmit, or retain the PDF.
             </Text>
-            <Text style={styles.bulletPoint}>• The PDF is generated entirely on your device</Text>
-            <Text style={styles.bulletPoint}>• It is saved to your device&apos;s temporary cache, then the system share sheet opens</Text>
-            <Text style={styles.bulletPoint}>• You choose where to save or share the file</Text>
-            <Text style={styles.bulletPoint}>• MySky does not upload, transmit, or retain the PDF</Text>
           </View>
 
           {/* ── 10. Encrypted Backup (Premium) ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Encrypted Backup (Premium)</Text>
             <Text style={styles.paragraph}>
-              If you choose to create an encrypted backup:
+              If you choose to create an encrypted backup: your data is encrypted with AES-256-GCM using a passphrase you create; the backup includes your charts, journal entries, mood &amp; energy check-ins, sleep entries, relationship charts, saved daily insights and favorites, and app settings; a .msky backup file is generated on your device; the system share sheet opens for you to choose a destination; MySky never uploads your backup to any server; you are solely responsible for the security of your backup file and passphrase; you can restore from a backup file at any time.
             </Text>
-            <Text style={styles.bulletPoint}>• Your data is encrypted with AES-256-GCM using a passphrase you create</Text>
-            <Text style={styles.bulletPoint}>• The backup includes: your charts, journal entries, mood &amp; energy check-ins, sleep entries, relationship charts, saved daily insights and favorites, and app settings</Text>
-            <Text style={styles.bulletPoint}>• A .msky backup file is generated on your device</Text>
-            <Text style={styles.bulletPoint}>• The system share sheet opens for you to choose a destination (Files, iCloud Drive, AirDrop, email, etc.)</Text>
-            <Text style={styles.bulletPoint}>• MySky never uploads your backup to any server</Text>
-            <Text style={styles.bulletPoint}>• You are solely responsible for the security of your backup file and passphrase</Text>
-            <Text style={styles.bulletPoint}>• You can restore from a backup file at any time</Text>
           </View>
 
           {/* ── 11. Data Retention ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Retention</Text>
             <Text style={styles.paragraph}>
-              Your data is retained on your device for as long as you use the app. We do not impose retention periods because no data is stored on our servers.
+              On-device data is retained for as long as you use the app. Active data: retained until you delete it or uninstall the app. Deleted data: permanently removed from the local database. Full data reset: available at any time via the “Delete All Data” option in Privacy Settings. Uninstall: removing the app fully erases all on-device data. Account data: if you delete your account, your email and hashed password are removed from Supabase. Dream model weights are deleted with your account. Consent records: stored on-device for GDPR compliance; re-requested annually or when the policy version changes.
             </Text>
-            <Text style={styles.bulletPoint}>• Active data: Retained on your device until you delete it or uninstall the app</Text>
-            <Text style={styles.bulletPoint}>• Deleted data: When you delete a chart, journal entry, or other record via the app, it is permanently removed from the local database</Text>
-            <Text style={styles.bulletPoint}>• Full data reset: You can permanently delete all data at any time using the &quot;Delete All Data&quot; option in Privacy Settings</Text>
-            <Text style={styles.bulletPoint}>• Uninstall: Removing the app from your device fully erases all stored data, including the SQLite database and keychain entries</Text>
-            <Text style={styles.bulletPoint}>• Consent records: Privacy consent history is stored on-device for GDPR compliance. Consent is re-requested annually or when the privacy policy version changes.</Text>
           </View>
 
           {/* ── 12. Your Rights ── */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Your Rights</Text>
             <Text style={styles.paragraph}>
-              You have the following rights, exercisable at any time through the app or by contacting us:
-            </Text>
-
-            <Text style={styles.subSectionTitle}>Under GDPR (EU/EEA/UK Residents)</Text>
-            <Text style={styles.bulletPoint}>• Right of Access (Art. 15): View a summary of all data stored in the app via Privacy Settings</Text>
-            <Text style={styles.bulletPoint}>• Right to Rectification (Art. 16): Edit your birth data, journal entries, and check-ins at any time</Text>
-            <Text style={styles.bulletPoint}>• Right to Erasure (Art. 17): Delete individual records or all data via Privacy Settings</Text>
-            <Text style={styles.bulletPoint}>• Right to Data Portability (Art. 20): Export all your data as a JSON file or encrypted backup</Text>
-            <Text style={styles.bulletPoint}>• Right to Withdraw Consent (Art. 7(3)): Withdraw consent at any time through Privacy Settings; withdrawal does not affect the lawfulness of processing before withdrawal</Text>
-            <Text style={styles.bulletPoint}>• Right to Restriction of Processing (Art. 18): Contact us to request restriction</Text>
-            <Text style={styles.bulletPoint}>• Right to Lodge a Complaint: You may lodge a complaint with your local Data Protection Authority</Text>
-
-            <Text style={styles.subSectionTitle}>Under CCPA/CPRA (California Residents)</Text>
-            <Text style={styles.bulletPoint}>• Right to Know: You can view all categories and specific pieces of personal information the app stores</Text>
-            <Text style={styles.bulletPoint}>• Right to Delete: You can delete all personal information via Privacy Settings or by uninstalling the app</Text>
-            <Text style={styles.bulletPoint}>• Right to Opt-Out of Sale/Sharing: MySky does not sell or share your personal information. No opt-out is needed because no sale or sharing occurs.</Text>
-            <Text style={styles.bulletPoint}>• Right to Non-Discrimination: We will not discriminate against you for exercising any of your privacy rights</Text>
-            <Text style={styles.bulletPoint}>• Right to Correct: You can correct your personal information at any time within the app</Text>
-            <Text style={styles.bulletPoint}>• Right to Limit Use of Sensitive Personal Information: MySky uses sensitive information (birth data) only to provide services you request</Text>
-
-            <Text style={styles.subSectionTitle}>All Users</Text>
-            <Text style={styles.bulletPoint}>• No account required: MySky works without creating any account or providing an email address</Text>
-            <Text style={styles.bulletPoint}>• Offline capable: Core features work without an internet connection</Text>
-            <Text style={styles.paragraph}>
-              Because all data is stored locally on your device, you can exercise your rights instantly through the app without needing to contact us. However, you are welcome to email us at brittanyapps@outlook.com with any privacy-related request.
+              <Text style={styles.subSectionTitle}>Under GDPR (EU/EEA/UK Residents):</Text> Right of Access, Right to Rectification, Right to Erasure, Right to Data Portability, Right to Withdraw Consent, Right to Restriction of Processing, Right to Lodge a Complaint. <Text style={styles.subSectionTitle}>Under CCPA/CPRA (California Residents):</Text> Right to Know, Right to Delete, Right to Opt-Out of Sale/Sharing, Right to Non-Discrimination, Right to Correct, Right to Limit Use of Sensitive Personal Information. <Text style={styles.subSectionTitle}>All Users:</Text> No account required for core features; offline capable. You can exercise most rights instantly through the app. For account data (email, dream model) contact us at brittanyapps@outlook.com to request deletion. We will respond to privacy-related inquiries within 30 days.
             </Text>
           </View>
 
@@ -290,10 +214,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Automated Processing & Profiling</Text>
             <Text style={styles.paragraph}>
-              MySky performs automated calculations on your device, including chart computation, transit tracking, pattern correlation, keyword extraction from journal entries, and symbolic dream reflections. These calculations are used solely to display personalized reflections and insights within the app.
-            </Text>
-            <Text style={styles.paragraph}>
-              The app generates personalized reflections by blending information you provide (birth data, mood check-ins, journal entries, and sleep logs). Under GDPR, this constitutes automated profiling. However, these insights are intended solely for personal self-reflection and do not produce legal effects or similarly significant effects concerning you. No automated decisions are made about your creditworthiness, employment, health treatment, or any other consequential outcome. All interpretations are generalized reflection prompts — not predictions, diagnoses, or consequential decisions.
+              MySky performs automated calculations on your device, including chart computation, transit tracking, pattern correlation, keyword extraction from journal entries, and symbolic dream reflections. For premium users, aggregated behavioral statistics are processed by the Anthropic API to generate personalized reflection copy. Under GDPR, this constitutes automated profiling. However, these insights are intended solely for personal self-reflection and do not produce legal effects or similarly significant effects concerning you. No automated decisions are made about your creditworthiness, employment, health treatment, or any other consequential outcome. All interpretations are generalized reflection prompts — not predictions, diagnoses, or consequential decisions.
             </Text>
           </View>
 
@@ -301,7 +222,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>International Data Transfers</Text>
             <Text style={styles.paragraph}>
-              MySky does not transfer your personal data internationally. All personal data remains on your device. The only cross-border data flow is the anonymized app user ID sent to RevenueCat for subscription verification, which is not intended to identify you directly.
+              On-device data does not leave your device. For premium account holders: Supabase (hosted on AWS) and Anthropic may process data in the United States or other jurisdictions. Supabase provides Standard Contractual Clauses (SCCs) for GDPR compliance. Anthropic processes data in accordance with its privacy policy. RevenueCat and Nominatim may also process data internationally.
             </Text>
           </View>
 

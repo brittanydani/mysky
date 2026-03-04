@@ -1,3 +1,4 @@
+// File: app/terms.tsx
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,6 +41,7 @@ export default function TermsOfServiceScreen() {
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
 
             <Text style={styles.lastUpdated}>Last updated: March 1, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: March 3, 2026</Text>
 
             <Text style={styles.sectionTitle}>Welcome to MySky</Text>
             <Text style={styles.paragraph}>
@@ -67,18 +69,21 @@ export default function TermsOfServiceScreen() {
               • Daily guidance and reflection prompts{'\n'}
               • Relationship reflection tools{'\n'}
               • PDF chart export (premium){'\n'}
-              • Encrypted backup and restore (premium)
+              • Encrypted backup and restore (premium){'\n'}
+              • Optional premium AI-generated reflection features (requires account)
             </Text>
 
             <Text style={styles.sectionTitle}>Your Data</Text>
             <Text style={styles.paragraph}>
-              MySky does not require an account. All data is stored locally on your device with sensitive fields encrypted at rest using AES-256-GCM.{' '}
-              You are responsible for maintaining your device&apos;s security and for any backup or PDF files you create and share.
+              MySky does not require an account for core features. All data is stored locally on your device with sensitive fields encrypted at rest using AES-256-GCM. You are responsible for maintaining your device&apos;s security and for any backup or PDF files you create and share.
+            </Text>
+            <Text style={styles.paragraph}>
+              If you choose to create an account to unlock premium AI-generated reflection features, your email address and a hashed password (never stored in plain text) are stored with our authentication provider (Supabase). For these features, only aggregated, non-identifying behavioral data (such as mood/energy/stress averages and theme-tag correlations) may be sent to Supabase and Anthropic (Claude AI) for the purpose of generating AI-written reflections. Raw journal content, birth data, and personal notes are never transmitted to any external server.
             </Text>
 
             <Text style={styles.sectionTitle}>Data Security</Text>
             <Text style={styles.paragraph}>
-              All sensitive data in MySky is encrypted at rest using AES-256-GCM. Encryption keys are stored using your device&apos;s hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup, export a PDF, or you perform a birth-location lookup (which sends only the location text you type to a geocoding provider). Subscription status is managed by RevenueCat, which receives only an anonymous app user identifier for purchase verification—never your journal, birth data, or other personal information.
+              All sensitive data in MySky is encrypted at rest using AES-256-GCM. Encryption keys are stored using your device&apos;s hardware-backed keychain/keystore (via SecureStore). No personal data ever leaves your device unless you explicitly export an encrypted backup, export a PDF, use premium AI features (see above), or perform a birth-location lookup (which sends only the location text you type to a geocoding provider). Subscription status is managed by RevenueCat, which receives only an anonymous app user identifier for purchase verification—never your journal, birth data, or other personal information.
             </Text>
 
             <Text style={styles.sectionTitle}>Free and Premium Features</Text>
@@ -148,7 +153,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Data and Privacy</Text>
             <Text style={styles.paragraph}>
-              Your privacy is important to us. All data stays on your device. Please review our Privacy Policy to understand how we handle your information. Your data is never sold, shared, or used for AI training.
+              Your privacy is important to us. All data stays on your device unless you opt in to premium AI features, in which case only aggregated, non-identifying behavioral data is sent to Supabase and Anthropic for the purpose of generating AI-written reflections. Raw journal content, birth data, and personal notes are never transmitted. Please review our Privacy Policy to understand how we handle your information. Your data is never sold, shared, or used for AI training outside the scope of your own premium features.
             </Text>
 
             <Text style={styles.sectionTitle}>Termination</Text>

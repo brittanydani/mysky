@@ -108,15 +108,23 @@ function TimeWheelColumn({ data, selected, onSelect, formatItem }: {
     }
   }, [selectedIndex]);
 
-  const handleMomentumScrollEnd = useCallback((e: any) => {
-    const offsetY = e.nativeEvent.contentOffset.y;
+  const commitFromOffset = useCallback((offsetY: number) => {
     const index = Math.round(offsetY / ITEM_HEIGHT);
     const clampedIndex = Math.max(0, Math.min(index, data.length - 1));
-    if (data[clampedIndex] !== selected) {
+    const next = data[clampedIndex];
+    if (next !== selected) {
       Haptics.selectionAsync();
-      onSelect(data[clampedIndex]);
+      onSelect(next);
     }
   }, [data, selected, onSelect]);
+
+  const handleMomentumScrollEnd = useCallback((e: any) => {
+    commitFromOffset(e.nativeEvent.contentOffset.y);
+  }, [commitFromOffset]);
+
+  const handleScrollEndDrag = useCallback((e: any) => {
+    commitFromOffset(e.nativeEvent.contentOffset.y);
+  }, [commitFromOffset]);
 
   const renderItem = useCallback(({ item }: { item: any }) => {
     const isSelected = item === selected;
@@ -160,10 +168,13 @@ function TimeWheelColumn({ data, selected, onSelect, formatItem }: {
         extraData={selected}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_HEIGHT}
+        snapToAlignment="start"
+        disableIntervalMomentum
         decelerationRate="fast"
         nestedScrollEnabled={true}
         scrollEnabled={true}
         onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScrollEndDrag={handleScrollEndDrag}
         contentContainerStyle={{
           paddingTop: paddingCount * ITEM_HEIGHT,
           paddingBottom: paddingCount * ITEM_HEIGHT,
@@ -385,24 +396,39 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
     [date, time, hasUnknownTime, place, latitude, longitude, houseSystem, timezone]
   );
 
+
+  // Allow skipping birth data
+  const [skipped, setSkipped] = useState(false);
+
   const handleSave = () => {
+    if (skipped) {
+      onSave(undefined, { chartName: chartName.trim() || undefined });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      onClose();
+      return;
+    }
     if (!birthData.place) {
-      Alert.alert('Missing Information', 'Please enter your birth location.');
+      Alert.alert('Missing Information', 'Please enter your birth location or choose to skip.');
       return;
     }
     if (!locationSelected) {
-      Alert.alert('Confirm Location', 'Please select a location from the suggestions for accurate coordinates.');
+      Alert.alert('Confirm Location', 'Please select a location from the suggestions for accurate coordinates or choose to skip.');
       return;
     }
-
     const validation = InputValidator.validateBirthData(birthData);
     if (!validation.valid) {
       Alert.alert('Invalid Birth Data', validation.errors.join('\n'));
       return;
     }
-
     Haptics.selectionAsync();
     setShowConfirm(true);
+  };
+
+  const handleSkip = () => {
+    setSkipped(true);
+    onSave(undefined, { chartName: chartName.trim() || undefined });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    onClose();
   };
 
   const handleConfirm = () => {
@@ -466,360 +492,388 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
     setShowTimePicker(false);
   };
 
+  // Block dismiss if any picker/confirm is open
+  const blockDismiss = showTimePicker || showDatePicker || showConfirm;
+  // Safe backdrop handler
+  const handleBackdropPress = useCallback(() => {
+    if (!blockDismiss) Keyboard.dismiss();
+  }, [blockDismiss]);
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <StarField starCount={30} />
+      <TouchableWithoutFeedback onPress={handleBackdropPress} accessible={false}>
+        <View style={styles.container}>
+          <StarField starCount={30} />
 
-        <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Pressable style={styles.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close birth data modal">
-              <Ionicons name="close" size={24} color={theme.textPrimary} />
-            </Pressable>
-            <Text style={styles.headerTitle}>Birth Information</Text>
-            <View style={styles.closeButton} />
-          </Animated.View>
+          <SafeAreaView edges={['top']} style={styles.safeArea}>
+            <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+              <Pressable style={styles.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close birth data modal">
+                <Ionicons name="close" size={24} color={theme.textPrimary} />
+              </Pressable>
+              <Text style={styles.headerTitle}>Birth Information</Text>
+              <View style={styles.closeButton} />
+            </Animated.View>
 
-          <KeyboardAvoidingView
-            style={styles.flex}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
-          >
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
+            <KeyboardAvoidingView
+              style={styles.flex}
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
             >
-              {/* Context — why we ask for birth data */}
-              <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.contextBanner}>
-                <Ionicons name="information-circle-outline" size={15} color={theme.textMuted} style={styles.contextIcon} />
-                <Text style={styles.contextText}>
-                  Your birth details create a personalization framework for your reflections — like a personality profile, but uniquely yours. This data never leaves your device.
-                </Text>
-              </Animated.View>
+              <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                {/* Context — why we ask for birth data */}
+                <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.contextBanner}>
+                  <Ionicons name="information-circle-outline" size={15} color={theme.textMuted} style={styles.contextIcon} />
+                  <Text style={styles.contextText}>
+                    Your birth details create a personalization framework for your reflections — like a personality profile, but uniquely yours. This data never leaves your device.
+                  </Text>
+                </Animated.View>
+                {skipped && (
+                  <View style={[styles.contextBanner, { backgroundColor: 'rgba(255, 200, 0, 0.08)', borderColor: theme.warning }]}> 
+                    <Ionicons name="warning-outline" size={15} color={theme.warning} style={styles.contextIcon} />
+                    <Text style={[styles.contextText, { color: theme.warning }]}>You declined to provide birth details. A chart cannot be created and insights may not be as personalized.</Text>
+                  </View>
+                )}
 
-              {/* Name Field (local only) */}
-              <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>Name (Optional)</Text>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={chartName}
-                    onChangeText={setChartName}
-                    placeholder="Enter a name for this chart"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                </View>
-              </Animated.View>
-
-              {/* Date */}
-              <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>Birth Date</Text>
-                <Pressable style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)} accessibilityRole="button" accessibilityLabel={`Birth date: ${formatDate(date)}. Tap to change`}>
-                  <LinearGradient
-                    colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
-                    style={styles.dateTimeGradient}
-                  >
-                    <Ionicons name="calendar" size={20} color={theme.primary} />
-                    <Text style={styles.dateTimeText}>{formatDate(date)}</Text>
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
-
-              {/* Time */}
-              <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-                <View style={styles.timeHeader}>
-                  <Text style={styles.sectionTitle}>Birth Time</Text>
-                  <Pressable
-                    style={styles.unknownTimeToggle}
-                    onPress={() => {
-                      setHasUnknownTime((v) => !v);
-                      Haptics.selectionAsync();
-                    }}
-                    accessibilityRole="checkbox"
-                    accessibilityLabel="Unknown birth time"
-                    accessibilityState={{ checked: hasUnknownTime }}
-                  >
-                    <Ionicons
-                      name={hasUnknownTime ? 'checkbox' : 'square-outline'}
-                      size={20}
-                      color={hasUnknownTime ? theme.primary : theme.textMuted}
+                {/* Name Field (local only) */}
+                <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
+                  <Text style={styles.sectionTitle}>Name (Optional)</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      style={styles.textInput}
+                      value={chartName}
+                      onChangeText={setChartName}
+                      placeholder="Enter a name for this chart"
+                      placeholderTextColor={theme.textMuted}
                     />
-                    <Text style={styles.unknownTimeText}>Unknown time</Text>
-                  </Pressable>
-                </View>
+                  </View>
+                </Animated.View>
 
-                {!hasUnknownTime ? (
-                  <Pressable style={styles.dateTimeButton} onPress={() => {
-                    setPickerTime(time);
-                    const t12 = to12Hour(time.getHours());
-                    setPickerHour(t12.hour);
-                    setPickerMinute(time.getMinutes());
-                    setPickerPeriod(t12.period);
-                    setShowTimePicker(true);
-                  }} accessibilityRole="button" accessibilityLabel={`Birth time: ${formatTime(time)}. Tap to change`}>
+                {/* Date */}
+                <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
+                  <Text style={styles.sectionTitle}>Birth Date</Text>
+                  <Pressable style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)} accessibilityRole="button" accessibilityLabel={`Birth date: ${formatDate(date)}. Tap to change`}>
                     <LinearGradient
                       colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
                       style={styles.dateTimeGradient}
                     >
-                      <Ionicons name="time" size={20} color={theme.primary} />
-                      <Text style={styles.dateTimeText}>{formatTime(time)}</Text>
+                      <Ionicons name="calendar" size={20} color={theme.primary} />
+                      <Text style={styles.dateTimeText}>{formatDate(date)}</Text>
                     </LinearGradient>
                   </Pressable>
-                ) : (
-                  <Text style={styles.warningText}>
-                    An exact birth time unlocks your Rising sign and house-based insights.
-                  </Text>
-                )}
-              </Animated.View>
+                </Animated.View>
 
-              {/* Location */}
-              <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>Birth Location</Text>
-
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={place}
-                    onChangeText={(text) => {
-                      setPlace(text);
-                      searchLocation(text);
-                    }}
-                    placeholder="Enter city, state, country"
-                    placeholderTextColor={theme.textMuted}
-                  />
-                  {searchingLocation && (
-                    <ActivityIndicator size="small" color={theme.primary} style={styles.searchIndicator} />
-                  )}
-                </View>
-
-                {showSuggestions && (
-                  <View style={styles.suggestionsContainer}>
-                    {locationSuggestions.length > 0 ? (
-                      locationSuggestions.map((s, idx) => (
-                        <Pressable
-                          key={String(s.place_id ?? idx)}
-                          style={styles.suggestionItem}
-                          onPress={() => selectLocation(s)}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Select location: ${s.display_name}`}
-                        >
-                          <Ionicons name="location-outline" size={16} color={theme.textMuted} />
-                          <Text style={styles.suggestionText} numberOfLines={2}>
-                            {s.display_name}
-                          </Text>
-                        </Pressable>
-                      ))
-                    ) : (
-                      <View style={styles.noResultsContainer}>
-                        <Ionicons name="search-outline" size={20} color={theme.textMuted} />
-                        <Text style={styles.noResultsText}>No matches found. Try “City, Country”.</Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {!locationSelected && place.trim().length >= 3 && (
-                  <Text style={styles.warningText}>Select a suggestion to lock in accurate coordinates.</Text>
-                )}
-              </Animated.View>
-
-              {/* Timezone */}
-              <Animated.View entering={FadeInDown.delay(540).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>Timezone (Optional)</Text>
-                <Text style={styles.sectionSubtitle}>
-                  For exact accuracy, enter an IANA timezone like “America/Detroit”.
-                </Text>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.textInput}
-                    value={timezone}
-                    onChangeText={setTimezone}
-                    placeholder="America/Detroit"
-                    placeholderTextColor={theme.textMuted}
-                    autoCapitalize="none"
-                  />
-                </View>
-              </Animated.View>
-
-              {/* Save */}
-              <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.saveContainer}>
-                <Pressable
-                  style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]}
-                  onPress={handleSave}
-                  accessibilityRole="button"
-                  accessibilityLabel="Save birth data"
-                >
-                  <LinearGradient
-                    colors={[...theme.goldGradient]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.saveGradient}
-                  >
-                    <Text style={styles.saveButtonText}>Save Birth Data</Text>
-                  </LinearGradient>
-                </Pressable>
-                <Text style={styles.privacyNote}>Your birth data is stored securely on your device</Text>
-              </Animated.View>
-            </ScrollView>
-
-            {showDatePicker && Platform.OS !== 'ios' && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="default"
-                onChange={onDateChange}
-                maximumDate={new Date()}
-                minimumDate={new Date(new Date().getFullYear() - 115, 0, 1)}
-              />
-            )}
-
-            {showTimePicker && Platform.OS !== 'ios' && (
-              <DateTimePicker
-                value={time}
-                mode="time"
-                display="default"
-                onChange={onTimeChange}
-              />
-            )}
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-
-        {/* ── Confirmation Overlay ── */}
-        {showConfirm && (
-          <View style={styles.confirmOverlay}>
-            <LinearGradient
-              colors={[theme.background, 'rgba(13, 20, 33, 0.98)']}
-              style={styles.confirmGradient}
-            >
-              <SafeAreaView edges={['top', 'bottom']} style={styles.confirmSafeArea}>
-                <Animated.View entering={FadeInDown.duration(400)} style={styles.confirmContent}>
-                  <View style={styles.confirmIconRow}>
-                    <Ionicons name="checkmark-circle-outline" size={40} color={theme.primary} />
-                  </View>
-
-                  <Text style={styles.confirmTitle}>Review Your Birth Data</Text>
-
-                  <View style={styles.confirmCard}>
-                    <LinearGradient
-                      colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                      style={styles.confirmCardGradient}
-                    >
-                      {chartName.trim() ? (
-                        <View style={styles.confirmRow}>
-                          <Ionicons name="person-outline" size={16} color={theme.textMuted} />
-                          <Text style={styles.confirmLabel}>Name</Text>
-                          <Text style={styles.confirmValue}>{chartName.trim()}</Text>
-                        </View>
-                      ) : null}
-
-                      <View style={styles.confirmRow}>
-                        <Ionicons name="calendar-outline" size={16} color={theme.textMuted} />
-                        <Text style={styles.confirmLabel}>Date</Text>
-                        <Text style={styles.confirmValue}>{formatDate(date)}</Text>
-                      </View>
-
-                      <View style={styles.confirmRow}>
-                        <Ionicons name="time-outline" size={16} color={theme.textMuted} />
-                        <Text style={styles.confirmLabel}>Time</Text>
-                        <Text style={styles.confirmValue}>{hasUnknownTime ? 'Unknown' : formatTime(time)}</Text>
-                      </View>
-
-                      <View style={styles.confirmRow}>
-                        <Ionicons name="location-outline" size={16} color={theme.textMuted} />
-                        <Text style={styles.confirmLabel}>Location</Text>
-                        <Text style={styles.confirmValue} numberOfLines={2}>{place}</Text>
-                      </View>
-                    </LinearGradient>
-                  </View>
-
-                  <View style={styles.confirmWarning}>
-                    <Ionicons name="information-circle-outline" size={15} color={theme.textMuted} style={{ marginRight: 8, marginTop: 1 }} />
-                    <Text style={styles.confirmWarningText}>
-                      Birth data cannot be changed after saving. You can delete your data and start over in Settings if needed.
-                    </Text>
-                  </View>
-
-                  <View style={styles.confirmButtons}>
+                {/* Time */}
+                <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
+                  <View style={styles.timeHeader}>
+                    <Text style={styles.sectionTitle}>Birth Time</Text>
                     <Pressable
-                      style={({ pressed }) => [styles.confirmBackButton, pressed && { opacity: 0.8 }]}
-                      onPress={() => { Haptics.selectionAsync(); setShowConfirm(false); }}
-                      accessibilityRole="button"
-                      accessibilityLabel="Go back and edit"
+                      style={styles.unknownTimeToggle}
+                      onPress={() => {
+                        setHasUnknownTime((v) => !v);
+                        Haptics.selectionAsync();
+                      }}
+                      accessibilityRole="checkbox"
+                      accessibilityLabel="Unknown birth time"
+                      accessibilityState={{ checked: hasUnknownTime }}
                     >
-                      <Text style={styles.confirmBackText}>Go Back</Text>
+                      <Ionicons
+                        name={hasUnknownTime ? 'checkbox' : 'square-outline'}
+                        size={20}
+                        color={hasUnknownTime ? theme.primary : theme.textMuted}
+                      />
+                      <Text style={styles.unknownTimeText}>Unknown time</Text>
                     </Pressable>
+                  </View>
 
-                    <Pressable
-                      style={({ pressed }) => [styles.confirmSaveButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-                      onPress={handleConfirm}
-                      accessibilityRole="button"
-                      accessibilityLabel="Confirm and save birth data"
-                    >
+                  {!hasUnknownTime ? (
+                    <Pressable style={styles.dateTimeButton} onPress={() => {
+                      setPickerTime(time);
+                      const t12 = to12Hour(time.getHours());
+                      setPickerHour(t12.hour);
+                      setPickerMinute(time.getMinutes());
+                      setPickerPeriod(t12.period);
+                      requestAnimationFrame(() => setShowTimePicker(true));
+                    }} accessibilityRole="button" accessibilityLabel={`Birth time: ${formatTime(time)}. Tap to change`}>
                       <LinearGradient
-                        colors={[...theme.goldGradient]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.confirmSaveGradient}
+                        colors={['rgba(201, 169, 98, 0.15)', 'rgba(201, 169, 98, 0.05)']}
+                        style={styles.dateTimeGradient}
                       >
-                        <Text style={styles.confirmSaveText}>Confirm & Save</Text>
+                        <Ionicons name="time" size={20} color={theme.primary} />
+                        <Text style={styles.dateTimeText}>{formatTime(time)}</Text>
                       </LinearGradient>
                     </Pressable>
+                  ) : (
+                    <Text style={styles.warningText}>
+                      An exact birth time unlocks your Rising sign and house-based insights.
+                    </Text>
+                  )}
+                </Animated.View>
+
+                {/* Location */}
+                <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.section}>
+                  <Text style={styles.sectionTitle}>Birth Location</Text>
+
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      style={styles.textInput}
+                      value={place}
+                      onChangeText={(text) => {
+                        setPlace(text);
+                        searchLocation(text);
+                      }}
+                      placeholder="Enter city, state, country"
+                      placeholderTextColor={theme.textMuted}
+                    />
+                    {searchingLocation && (
+                      <ActivityIndicator size="small" color={theme.primary} style={styles.searchIndicator} />
+                    )}
+                  </View>
+
+                  {showSuggestions && (
+                    <View style={styles.suggestionsContainer}>
+                      {locationSuggestions.length > 0 ? (
+                        locationSuggestions.map((s, idx) => (
+                          <Pressable
+                            key={String(s.place_id ?? idx)}
+                            style={styles.suggestionItem}
+                            onPress={() => selectLocation(s)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Select location: ${s.display_name}`}
+                          >
+                            <Ionicons name="location-outline" size={16} color={theme.textMuted} />
+                            <Text style={styles.suggestionText} numberOfLines={2}>
+                              {s.display_name}
+                            </Text>
+                          </Pressable>
+                        ))
+                      ) : (
+                        <View style={styles.noResultsContainer}>
+                          <Ionicons name="search-outline" size={20} color={theme.textMuted} />
+                          <Text style={styles.noResultsText}>No matches found. Try “City, Country”.</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
+                  {!locationSelected && place.trim().length >= 3 && (
+                    <Text style={styles.warningText}>Select a suggestion to lock in accurate coordinates.</Text>
+                  )}
+                </Animated.View>
+
+                {/* Timezone */}
+                <Animated.View entering={FadeInDown.delay(540).duration(600)} style={styles.section}>
+                  <Text style={styles.sectionTitle}>Timezone (Optional)</Text>
+                  <Text style={styles.sectionSubtitle}>
+                    For exact accuracy, enter an IANA timezone like “America/Detroit”.
+                  </Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      style={styles.textInput}
+                      value={timezone}
+                      onChangeText={setTimezone}
+                      placeholder="America/Detroit"
+                      placeholderTextColor={theme.textMuted}
+                      autoCapitalize="none"
+                    />
                   </View>
                 </Animated.View>
-              </SafeAreaView>
-            </LinearGradient>
-          </View>
-        )}
 
-        {/* iOS Date Picker Overlay - outside KeyboardAvoidingView */}
-        {showDatePicker && Platform.OS === 'ios' && (
-          <Pressable style={styles.pickerOverlay} onPress={() => setShowDatePicker(false)} accessibilityRole="button" accessibilityLabel="Dismiss date picker">
-            <Pressable style={styles.pickerContainer} onPress={(e) => e.stopPropagation()} accessibilityRole="none">
-              <View style={styles.pickerHeader}>
-                <Pressable onPress={() => setShowDatePicker(false)} hitSlop={20} accessibilityRole="button" accessibilityLabel="Done selecting date">
-                  <Text style={styles.pickerDone}>Done</Text>
-                </Pressable>
-              </View>
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="spinner"
-                onChange={onDateChange}
-                style={{ backgroundColor: 'transparent' }}
-                themeVariant="dark"
-                maximumDate={new Date()}
-                minimumDate={new Date(new Date().getFullYear() - 115, 0, 1)}
-              />
-            </Pressable>
-          </Pressable>
-        )}
+                {/* Save & Skip */}
+                <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.saveContainer}>
+                  <Pressable
+                    style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]}
+                    onPress={handleSave}
+                    accessibilityRole="button"
+                    accessibilityLabel="Save birth data"
+                  >
+                    <LinearGradient
+                      colors={[...theme.goldGradient]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.saveGradient}
+                    >
+                      <Text style={styles.saveButtonText}>Save Birth Data</Text>
+                    </LinearGradient>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [styles.saveButton, { backgroundColor: theme.warning, marginTop: 12 }, pressed && styles.saveButtonPressed]}
+                    onPress={handleSkip}
+                    accessibilityRole="button"
+                    accessibilityLabel="Skip birth data"
+                  >
+                    <LinearGradient
+                      colors={[theme.warning, '#fffbe6']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.saveGradient}
+                    >
+                      <Text style={[styles.saveButtonText, { color: '#7a5a00' }]}>Skip Birth Data</Text>
+                    </LinearGradient>
+                  </Pressable>
+                  <Text style={styles.privacyNote}>Your birth data is stored securely on your device</Text>
+                </Animated.View>
+              </ScrollView>
 
-        {/* iOS Time Picker Overlay - Custom scroll wheels */}
-        {showTimePicker && Platform.OS === 'ios' && (
-          <View style={styles.pickerOverlay}>
-            <Pressable style={{ flex: 1 }} onPress={() => setShowTimePicker(false)} accessibilityRole="button" accessibilityLabel="Dismiss time picker" />
-            <View style={styles.pickerContainer}>
-              <View style={styles.pickerHeader}>
-                <Pressable onPress={() => setShowTimePicker(false)} hitSlop={20} accessibilityRole="button" accessibilityLabel="Cancel time selection">
-                  <Text style={[styles.pickerDone, { color: theme.textSecondary }]}>Cancel</Text>
-                </Pressable>
-                <Pressable onPress={handleTimePickerDone} hitSlop={20} accessibilityRole="button" accessibilityLabel="Done selecting time">
-                  <Text style={styles.pickerDone}>Done</Text>
-                </Pressable>
-              </View>
-              <CustomTimePicker
-                hour={pickerHour}
-                minute={pickerMinute}
-                period={pickerPeriod}
-                onTimeChange={handleCustomTimeChange}
-              />
+              {showDatePicker && Platform.OS !== 'ios' && (
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display="default"
+                  onChange={onDateChange}
+                  maximumDate={new Date()}
+                  minimumDate={new Date(new Date().getFullYear() - 115, 0, 1)}
+                />
+              )}
+
+              {showTimePicker && Platform.OS !== 'ios' && (
+                <DateTimePicker
+                  value={time}
+                  mode="time"
+                  display="default"
+                  onChange={onTimeChange}
+                />
+              )}
+            </KeyboardAvoidingView>
+          </SafeAreaView>
+
+          {/* ── Confirmation Overlay ── */}
+          {showConfirm && (
+            <View style={styles.confirmOverlay}>
+              <LinearGradient
+                colors={[theme.background, 'rgba(13, 20, 33, 0.98)']}
+                style={styles.confirmGradient}
+              >
+                <SafeAreaView edges={['top', 'bottom']} style={styles.confirmSafeArea}>
+                  <Animated.View entering={FadeInDown.duration(400)} style={styles.confirmContent}>
+                    <View style={styles.confirmIconRow}>
+                      <Ionicons name="checkmark-circle-outline" size={40} color={theme.primary} />
+                    </View>
+
+                    <Text style={styles.confirmTitle}>Review Your Birth Data</Text>
+
+                    <View style={styles.confirmCard}>
+                      <LinearGradient
+                        colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                        style={styles.confirmCardGradient}
+                      >
+                        {chartName.trim() ? (
+                          <View style={styles.confirmRow}>
+                            <Ionicons name="person-outline" size={16} color={theme.textMuted} />
+                            <Text style={styles.confirmLabel}>Name</Text>
+                            <Text style={styles.confirmValue}>{chartName.trim()}</Text>
+                          </View>
+                        ) : null}
+
+                        <View style={styles.confirmRow}>
+                          <Ionicons name="calendar-outline" size={16} color={theme.textMuted} />
+                          <Text style={styles.confirmLabel}>Date</Text>
+                          <Text style={styles.confirmValue}>{formatDate(date)}</Text>
+                        </View>
+
+                        <View style={styles.confirmRow}>
+                          <Ionicons name="time-outline" size={16} color={theme.textMuted} />
+                          <Text style={styles.confirmLabel}>Time</Text>
+                          <Text style={styles.confirmValue}>{hasUnknownTime ? 'Unknown' : formatTime(time)}</Text>
+                        </View>
+
+                        <View style={styles.confirmRow}>
+                          <Ionicons name="location-outline" size={16} color={theme.textMuted} />
+                          <Text style={styles.confirmLabel}>Location</Text>
+                          <Text style={styles.confirmValue} numberOfLines={2}>{place}</Text>
+                        </View>
+                      </LinearGradient>
+                    </View>
+
+                    <View style={styles.confirmWarning}>
+                      <Ionicons name="information-circle-outline" size={15} color={theme.textMuted} style={{ marginRight: 8, marginTop: 1 }} />
+                      <Text style={styles.confirmWarningText}>
+                        Birth data cannot be changed after saving. You can delete your data and start over in Settings if needed.
+                      </Text>
+                    </View>
+
+                    <View style={styles.confirmButtons}>
+                      <Pressable
+                        style={({ pressed }) => [styles.confirmBackButton, pressed && { opacity: 0.8 }]}
+                        onPress={() => { Haptics.selectionAsync(); setShowConfirm(false); }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Go back and edit"
+                      >
+                        <Text style={styles.confirmBackText}>Go Back</Text>
+                      </Pressable>
+
+                      <Pressable
+                        style={({ pressed }) => [styles.confirmSaveButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                        onPress={handleConfirm}
+                        accessibilityRole="button"
+                        accessibilityLabel="Confirm and save birth data"
+                      >
+                        <LinearGradient
+                          colors={[...theme.goldGradient]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.confirmSaveGradient}
+                        >
+                          <Text style={styles.confirmSaveText}>Confirm & Save</Text>
+                        </LinearGradient>
+                      </Pressable>
+                    </View>
+                  </Animated.View>
+                </SafeAreaView>
+              </LinearGradient>
             </View>
-          </View>
-        )}
-      </View>
+          )}
+
+          {/* iOS Date Picker Overlay - outside KeyboardAvoidingView */}
+          {showDatePicker && Platform.OS === 'ios' && (
+            <Pressable style={styles.pickerOverlay} onPress={() => setShowDatePicker(false)} accessibilityRole="button" accessibilityLabel="Dismiss date picker">
+              <Pressable style={styles.pickerContainer} onPress={(e) => e.stopPropagation()} accessibilityRole="none">
+                <View style={styles.pickerHeader}>
+                  <Pressable onPress={() => setShowDatePicker(false)} hitSlop={20} accessibilityRole="button" accessibilityLabel="Done selecting date">
+                    <Text style={styles.pickerDone}>Done</Text>
+                  </Pressable>
+                </View>
+                <DateTimePicker
+                  value={date}
+                  mode="date"
+                  display="spinner"
+                  onChange={onDateChange}
+                  style={{ backgroundColor: 'transparent' }}
+                  themeVariant="dark"
+                  maximumDate={new Date()}
+                  minimumDate={new Date(new Date().getFullYear() - 115, 0, 1)}
+                />
+              </Pressable>
+            </Pressable>
+          )}
+
+          {/* iOS Time Picker Overlay - Custom scroll wheels */}
+          {showTimePicker && Platform.OS === 'ios' && (
+            <View style={styles.pickerOverlay}>
+              <Pressable style={{ flex: 1 }} onPress={() => setShowTimePicker(false)} accessibilityRole="button" accessibilityLabel="Dismiss time picker" />
+              <View style={styles.pickerContainer}>
+                <View style={styles.pickerHeader}>
+                  <Pressable onPress={() => setShowTimePicker(false)} hitSlop={20} accessibilityRole="button" accessibilityLabel="Cancel time selection">
+                    <Text style={[styles.pickerDone, { color: theme.textSecondary }]}>Cancel</Text>
+                  </Pressable>
+                  <Pressable onPress={handleTimePickerDone} hitSlop={20} accessibilityRole="button" accessibilityLabel="Done selecting time">
+                    <Text style={styles.pickerDone}>Done</Text>
+                  </Pressable>
+                </View>
+                <CustomTimePicker
+                  hour={pickerHour}
+                  minute={pickerMinute}
+                  period={pickerPeriod}
+                  onTimeChange={handleCustomTimeChange}
+                />
+              </View>
+            </View>
+          )}
+        </View>
       </TouchableWithoutFeedback>
     </Modal>
   );
@@ -942,12 +996,16 @@ const styles = StyleSheet.create({
     top: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+    zIndex: 9999,
+    elevation: 9999,
   },
   pickerContainer: {
     backgroundColor: theme.backgroundSecondary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 40,
+    zIndex: 10000,
+    elevation: 10000,
   },
   pickerHeader: {
     flexDirection: 'row',

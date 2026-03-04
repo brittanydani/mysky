@@ -339,14 +339,21 @@ export default function SettingsScreen() {
     try {
       await Haptics.selectionAsync();
     } catch {}
-    router.push('/privacy' as Href);
+    router.navigate('/privacy' as Href);
   };
 
   const openTerms = async () => {
     try {
       await Haptics.selectionAsync();
     } catch {}
-    router.push('/terms' as Href);
+    router.navigate('/terms' as Href);
+  };
+
+  const openFaq = async () => {
+    try {
+      await Haptics.selectionAsync();
+    } catch {}
+    router.navigate('/faq' as Href);
   };
 
   return (
@@ -652,6 +659,31 @@ export default function SettingsScreen() {
                     </View>
                     <Text style={styles.settingDescription}>
                       App terms, subscription details, and disclaimers
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                </View>
+              </LinearGradient>
+            </Pressable>
+
+            <Pressable
+              style={styles.settingCard}
+              onPress={openFaq}
+              accessibilityRole="button"
+              accessibilityLabel="FAQ"
+            >
+              <LinearGradient
+                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                style={styles.cardGradient}
+              >
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <Ionicons name="help-circle-outline" size={20} color={theme.primary} />
+                      <Text style={styles.settingTitle}>FAQ</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>
+                      Answers to common questions about privacy, backups, and premium
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />

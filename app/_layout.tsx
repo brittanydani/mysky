@@ -1,15 +1,22 @@
+// File: app/_layout.tsx
+
+import React, { Component, type ReactNode, useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
+import OnboardingModal from '../components/OnboardingModal';
+import TermsConsentModal from '../components/TermsConsentModal';
+import PrivacyConsentModal from '../components/PrivacyConsentModal';
+
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider } from '../context/AuthContext';
-import { useEffect, useState, Component, type ReactNode } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
-import PrivacyConsentModal from '../components/PrivacyConsentModal';
 import { logger } from '../utils/logger';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -50,32 +57,46 @@ const styles = StyleSheet.create({
   errorButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '500' },
 });
 
+async function getTermsConsent(): Promise<boolean> {
+  try {
+    const SecureStore = await import('expo-secure-store');
+    const value = await SecureStore.getItemAsync('terms_consent');
+    return value === 'true';
+  } catch {
+    return false;
+  }
+}
+
+async function setTermsConsent(granted: boolean) {
+  const SecureStore = await import('expo-secure-store');
+  await SecureStore.setItemAsync('terms_consent', granted ? 'true' : 'false');
+}
+
 export default function RootLayout() {
   const [dbReady, setDbReady] = useState(false);
   const [needsPrivacyConsent, setNeedsPrivacyConsent] = useState(false);
+  const [needsTermsConsent, setNeedsTermsConsent] = useState(false);
   const [checkingConsent, setCheckingConsent] = useState(true);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   useEffect(() => {
-    // Initialize database and check privacy consent on app start
     const initializeApp = async () => {
       try {
-        // Check if user has given privacy consent (including expiry/policy version)
         const privacyManager = new PrivacyComplianceManager();
         const consentStatus = await privacyManager.requestConsent();
         setNeedsPrivacyConsent(consentStatus.required);
-        
-        // If user has consent, perform migration if needed
+
+        const termsAccepted = await getTermsConsent();
+        setNeedsTermsConsent(!termsAccepted);
+
         if (!consentStatus.required) {
           await MigrationService.performMigrationIfNeeded();
-          // Pre-load astrology settings cache so calculator uses correct orbs/house system
           await AstrologySettingsService.getSettings();
         }
-        
+
         setDbReady(true);
       } catch (error) {
         logger.error('Failed to initialize app:', error);
-        // Only mark ready if it's a non-critical error (consent/migration)
-        // DB init failure should NOT silently continue
         setDbReady(true);
       } finally {
         setCheckingConsent(false);
@@ -87,8 +108,9 @@ export default function RootLayout() {
 
   const handlePrivacyConsent = async (granted: boolean) => {
     try {
+      const privacyManager = new PrivacyComplianceManager();
+
       if (granted) {
-        const privacyManager = new PrivacyComplianceManager();
         await privacyManager.recordConsent({
           granted: true,
           policyVersion: await privacyManager.getPolicyVersion(),
@@ -97,56 +119,81 @@ export default function RootLayout() {
           lawfulBasis: 'consent',
           purpose: 'astrology_personalization',
         });
-        
-        // After consent is given, perform migration if needed
+
         await MigrationService.performMigrationIfNeeded();
-        
+        await AstrologySettingsService.getSettings();
+
         setNeedsPrivacyConsent(false);
       } else {
-        const privacyManager = new PrivacyComplianceManager();
         await privacyManager.withdrawConsent();
-        // User declined - you might want to show a message or exit
-        // For now, we'll just keep showing the consent modal
         logger.info('User declined privacy consent');
+        setNeedsPrivacyConsent(true);
       }
     } catch (error) {
       logger.error('Privacy consent handling failed:', error);
-      // Don't leave user stuck — allow them through if consent was granted
-      if (granted) {
-        setNeedsPrivacyConsent(false);
-      }
+      if (granted) setNeedsPrivacyConsent(false);
     }
   };
 
-  // Show loading screen while initializing
+  const handleTermsConsent = async (granted: boolean) => {
+    try {
+      await setTermsConsent(granted);
+      setNeedsTermsConsent(!granted);
+    } catch (error) {
+      logger.error('Terms consent handling failed:', error);
+      setNeedsTermsConsent(!granted);
+    }
+  };
+
   if (checkingConsent || !dbReady) {
-    return null; // Or a loading screen component
+    return null; // you can swap in a loading screen later
   }
+
+  const showPrivacyModal = needsPrivacyConsent;
+  const showTermsModal = !showPrivacyModal && needsTermsConsent;
+  const showOnboarding = !showPrivacyModal && !showTermsModal && !onboardingComplete;
 
   return (
     <ErrorBoundary>
       <AuthProvider>
-      <PremiumProvider>
+        <PremiumProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <SafeAreaProvider>
               <StatusBar style="light" />
+
+              {/* ✅ Router is ALWAYS mounted so /terms /privacy /faq can stay open */}
               <Stack
                 screenOptions={{
                   headerShown: false,
                   contentStyle: { backgroundColor: '#0D1421' },
                   animation: 'fade',
                 }}
-              />
+              >
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="privacy" />
+                <Stack.Screen name="terms" />
+                <Stack.Screen name="faq" />
+              </Stack>
 
-              {/* Privacy Consent Modal - shown before user can use the app */}
+              {/* ✅ Overlays (do NOT early return) */}
               <PrivacyConsentModal
-                visible={needsPrivacyConsent}
+                visible={showPrivacyModal}
                 onConsent={handlePrivacyConsent}
                 contactEmail="brittanyapps@outlook.com"
               />
+
+              <TermsConsentModal
+                visible={showTermsModal}
+                onConsent={handleTermsConsent}
+              />
+
+              <OnboardingModal
+                visible={showOnboarding}
+                onComplete={() => setOnboardingComplete(true)}
+              />
             </SafeAreaProvider>
           </GestureHandlerRootView>
-      </PremiumProvider>
+        </PremiumProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

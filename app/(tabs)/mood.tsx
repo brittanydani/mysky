@@ -689,9 +689,9 @@ export default function MoodScreen() {
             <Animated.View entering={FadeInDown.delay(180).duration(600)}>
               <LinearGradient colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']} style={styles.card}>
                 <Ionicons name="sparkles" size={32} color={theme.primary} style={{ marginBottom: 12 }} />
-                <Text style={styles.heroText}>Create your chart first</Text>
-                <Text style={[styles.body, { marginTop: 8 }]}>
-                  Your chart personalizes your check-ins and unlocks pattern insights.
+                <Text style={styles.heroText}>Add your date of birth</Text>
+                <Text style={[styles.body, { marginTop: 8 }]}> 
+                  Enter your date of birth to unlock more personalized insights and check-ins tailored just for you.
                 </Text>
                 <Pressable
                   style={[styles.primaryBtn, { marginTop: 16 }]}

@@ -215,8 +215,8 @@ export default function OnboardingModal({ visible, onComplete }: OnboardingModal
                     <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
                     <Text style={styles.restoreText}>Restore from Backup</Text>
                   </Pressable>
-
                 </Animated.View>
+
               </>
             )}
 

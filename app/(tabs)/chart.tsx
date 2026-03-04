@@ -12,7 +12,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
-import NatalChartWheel from '../../components/ui/NatalChartWheelSkia';
+import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
 import BirthDataModal from '../../components/BirthDataModal';
 import AstrologySettingsModal from '../../components/AstrologySettingsModal';
@@ -730,12 +730,26 @@ export default function ChartScreen() {
 
           {/* ── Chart Wheel ── */}
           <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ alignItems: 'center', width: '100%' }}>
-            <NatalChartWheel
-              chart={userChart}
-              showAspects={true}
-              overlayChart={overlayChart ?? undefined}
-              overlayName={overlayPerson?.name}
-            />
+            <LinearGradient
+              colors={['rgba(201,169,98,0.14)', 'rgba(30,45,71,0.10)', 'rgba(0,0,0,0)']}
+              start={{ x: 0.1, y: 0.1 }}
+              end={{ x: 0.9, y: 0.9 }}
+              style={styles.wheelFrame}
+            >
+              <View style={styles.wheelInner}>
+                <NatalChartWheel
+                  chart={userChart}
+                  showAspects={true}
+                  overlayChart={overlayChart ?? undefined}
+                  overlayName={overlayPerson?.name}
+                />
+              </View>
+            </LinearGradient>
+
+            {/* subtle caption line to anchor the visual */}
+            <Text style={styles.wheelHint}>
+              Tap a person to overlay · Long-press to remove
+            </Text>
           </Animated.View>
 
           {/* ── Big Three Summary ── */}
@@ -1611,8 +1625,8 @@ const styles = StyleSheet.create({
 
   header: {
     alignItems: 'center',
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
     width: '100%',
   },
   title: {
@@ -1666,9 +1680,9 @@ const styles = StyleSheet.create({
   },
   bigThreeRow: { flexDirection: 'row', justifyContent: 'space-evenly' },
   bigThreeItem: { alignItems: 'center', flex: 1 },
-  bigThreeLabel: { color: theme.textMuted, fontSize: 12, letterSpacing: 0.5, textAlign: 'center' },
-  bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 11, marginTop: 4, textAlign: 'center' },
-  bigThreeDeg: { color: theme.textSecondary, fontSize: 11, marginTop: 2, textAlign: 'center' },
+  bigThreeLabel: { color: theme.textMuted, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', textAlign: 'center' },
+  bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 12, marginTop: 6, textAlign: 'center' },
+  bigThreeDeg: { color: theme.textSecondary, fontSize: 10, marginTop: 3, textAlign: 'center', opacity: 0.9 },
   mcRow: {
     alignItems: 'center',
     marginTop: theme.spacing.md,
@@ -1784,12 +1798,42 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 14,
-    borderRadius: 8,
-    marginBottom: 2,
+    borderRadius: 14,
+    marginBottom: 8,
     width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
+    wheelFrame: {
+      width: '100%',
+      alignItems: 'center',
+      padding: 14,
+      borderRadius: 28,
+      borderWidth: 1,
+      borderColor: 'rgba(201,169,98,0.22)',
+      backgroundColor: 'rgba(10,14,22,0.35)',
+    },
+
+    wheelInner: {
+      width: '100%',
+      alignItems: 'center',
+      borderRadius: 22,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.08)',
+      backgroundColor: 'rgba(8,12,18,0.45)',
+    },
+
+    wheelHint: {
+      marginTop: 10,
+      color: theme.textMuted,
+      fontSize: 11,
+      fontStyle: 'italic',
+      textAlign: 'center',
+      opacity: 0.85,
+    },
   td: { justifyContent: 'center', alignItems: 'center' },
 
   planetSymbol: { fontSize: 20, color: theme.primary, marginRight: 10, width: 28, textAlign: 'center' },

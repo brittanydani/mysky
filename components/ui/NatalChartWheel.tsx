@@ -19,22 +19,22 @@ import { theme } from '../../constants/theme';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ── Configuration ──
-const SIZE = Math.min(SCREEN_WIDTH - 32, 380);
-const CX = SIZE / 2;
-const CY = SIZE / 2;
+export const SIZE = Math.min(SCREEN_WIDTH - 32, 380);
+export const CX = SIZE / 2;
+export const CY = SIZE / 2;
 
 // Ring radii (from outside in)
-const R_OUTER = SIZE / 2 - 4; // outermost edge
-const R_ZODIAC_OUTER = R_OUTER; // zodiac band outer
-const R_ZODIAC_INNER = R_OUTER - 36; // zodiac band inner (sign glyphs live here)
-const R_HOUSE_OUTER = R_ZODIAC_INNER; // house ring outer
-const R_HOUSE_INNER = R_ZODIAC_INNER - 28; // house numbers
-const R_PLANET_RING = R_HOUSE_INNER - 16; // planet glyphs orbit
-const R_ASPECT_RING = R_PLANET_RING - 24; // aspect lines live inside this
-const R_INNER = 36; // inner circle — expanded for watch-face presence
+export const R_OUTER = SIZE / 2 - 4; // outermost edge
+export const R_ZODIAC_OUTER = R_OUTER; // zodiac band outer
+export const R_ZODIAC_INNER = R_OUTER - 36; // zodiac band inner (sign glyphs live here)
+export const R_HOUSE_OUTER = R_ZODIAC_INNER; // house ring outer
+export const R_HOUSE_INNER = R_ZODIAC_INNER - 28; // house numbers
+export const R_PLANET_RING = R_HOUSE_INNER - 16; // planet glyphs orbit
+export const R_ASPECT_RING = R_PLANET_RING - 24; // aspect lines live inside this
+export const R_INNER = 36; // inner circle — expanded for watch-face presence
 
 // ── Zodiac Data ──
-const ZODIAC_SIGNS = [
+export const ZODIAC_SIGNS = [
   { name: 'Aries', symbol: '♈', element: 'Fire' },
   { name: 'Taurus', symbol: '♉', element: 'Earth' },
   { name: 'Gemini', symbol: '♊', element: 'Air' },
@@ -47,17 +47,17 @@ const ZODIAC_SIGNS = [
   { name: 'Capricorn', symbol: '♑', element: 'Earth' },
   { name: 'Aquarius', symbol: '♒', element: 'Air' },
   { name: 'Pisces', symbol: '♓', element: 'Water' },
-];
+] as const;
 
 // Desaturated element colors — restrained luxury
-const ELEMENT_COLORS: Record<string, string> = {
+export const ELEMENT_COLORS: Record<string, string> = {
   Fire: '#C07878',
   Earth: '#6AAE82',
   Air: '#86B4D8',
   Water: '#7480C4',
 };
 
-const ELEMENT_BG: Record<string, string> = {
+export const ELEMENT_BG: Record<string, string> = {
   Fire: 'rgba(192,120,120,0.09)',
   Earth: 'rgba(106,174,130,0.09)',
   Air: 'rgba(134,180,216,0.09)',
@@ -65,6 +65,7 @@ const ELEMENT_BG: Record<string, string> = {
 };
 
 // ── Planet display symbols ──
+export const PLANET_LABELS = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'] as const;
 const PLANET_SYMBOLS: Record<string, string> = {
   Sun: '☉',
   Moon: '☽',
@@ -81,7 +82,7 @@ const PLANET_SYMBOLS: Record<string, string> = {
 };
 
 // Champagne metal palette — #C2A65A core
-const PLANET_COLORS: Record<string, string> = {
+export const PLANET_COLORS: Record<string, string> = {
   Sun: '#C2A65A',
   Moon: '#B8C2D0',
   Mercury: '#86BCEC',
@@ -97,53 +98,53 @@ const PLANET_COLORS: Record<string, string> = {
 };
 
 // Gradient highlight (inner sphere catch-light)
-const PLANET_GRADIENT_INNER: Record<string, string> = {
+export const PLANET_GRADIENT_INNER: Record<string, string> = {
   Sun: '#E8D7A6', Jupiter: '#E8D7A6', Ascendant: '#E8D7A6', Midheaven: '#E8D7A6',
   Moon: '#D4DDE8', Mercury: '#B8D4F0', Venus: '#EAB8C8', Mars: '#E8B4B4',
   Saturn: '#B0B0C8', Uranus: '#A8DAE0', Neptune: '#B0BCEC', Pluto: '#C8B4E4',
 };
 
 // Gradient shadow (outer sphere depth)
-const PLANET_GRADIENT_OUTER: Record<string, string> = {
+export const PLANET_GRADIENT_OUTER: Record<string, string> = {
   Sun: '#7E6330', Jupiter: '#7E6330', Ascendant: '#7E6330', Midheaven: '#7E6330',
   Moon: '#748098', Mercury: '#44849C', Venus: '#9C4C6C', Mars: '#9C4C4C',
   Saturn: '#505070', Uranus: '#348490', Neptune: '#44549C', Pluto: '#5E4088',
 };
 
 // Velvet indigo-violet palette for overlay/partner planets
-const OVERLAY_PLANET_COLORS: Record<string, string> = {
+export const OVERLAY_PLANET_COLORS: Record<string, string> = {
   Sun: '#8C7CCF', Moon: '#7C70C0', Mercury: '#7080C4', Venus: '#9878C8',
   Mars: '#9870B8', Jupiter: '#8C7CCF', Saturn: '#6864A8', Uranus: '#7090C8',
   Neptune: '#6878C0', Pluto: '#8068C0', Ascendant: '#8C7CCF', Midheaven: '#8C7CCF',
 };
 
-const OVERLAY_GRADIENT_INNER: Record<string, string> = {
+export const OVERLAY_GRADIENT_INNER: Record<string, string> = {
   Sun: '#C4B8F0', Moon: '#B8ACEC', Mercury: '#B0BCEC', Venus: '#C8B0F0',
   Mars: '#C4ACEC', Jupiter: '#C4B8F0', Saturn: '#A8A4DC', Uranus: '#B0C0EC',
   Neptune: '#A8B8E8', Pluto: '#C0AEE8', Ascendant: '#C4B8F0', Midheaven: '#C4B8F0',
 };
 
-const OVERLAY_GRADIENT_OUTER: Record<string, string> = {
+export const OVERLAY_GRADIENT_OUTER: Record<string, string> = {
   Sun: '#2E2550', Moon: '#28205C', Mercury: '#243060', Venus: '#38285C',
   Mars: '#3C2858', Jupiter: '#2E2550', Saturn: '#20205C', Uranus: '#243060',
   Neptune: '#202858', Pluto: '#2E2060', Ascendant: '#2E2550', Midheaven: '#2E2550',
 };
 
 // Restrained aspect colors — glow without noise
-const ASPECT_LINE_COLORS: Record<string, string> = {
+export const ASPECT_LINE_COLORS: Record<string, string> = {
   Harmonious: 'rgba(110,191,139,0.28)',
   Challenging: 'rgba(224,122,122,0.28)',
   Neutral: 'rgba(194,166,90,0.32)',
 };
 
-const ASPECT_STRONG_COLORS: Record<string, string> = {
+export const ASPECT_STRONG_COLORS: Record<string, string> = {
   Harmonious: 'rgba(110,191,139,0.52)',
   Challenging: 'rgba(224,122,122,0.52)',
   Neutral: 'rgba(194,166,90,0.58)',
 };
 
 // Platinum silk thread for cross/synastry aspects
-const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
+export const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
   Harmonious: { tight: 'rgba(159,168,184,0.42)', loose: 'rgba(159,168,184,0.22)' },
   Challenging: { tight: 'rgba(175,162,178,0.42)', loose: 'rgba(175,162,178,0.22)' },
   Neutral: { tight: 'rgba(159,168,184,0.42)', loose: 'rgba(159,168,184,0.22)' },
@@ -157,14 +158,14 @@ const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
  * Convert ecliptic longitude (0° Aries = 0) to canvas angle.
  * We rotate the wheel so the Ascendant sits at 9 o'clock (left).
  */
-function astroToAngle(longitude: number, ascLongitude: number): number {
+export function astroToAngle(longitude: number, ascLongitude: number): number {
   const offset = ascLongitude;
   const adjusted = longitude - offset;
   const angleDeg = -adjusted;
   return (angleDeg * Math.PI) / 180;
 }
 
-function polarToXY(angle: number, radius: number): { x: number; y: number } {
+export function polarToXY(angle: number, radius: number): { x: number; y: number } {
   return {
     x: CX + radius * Math.cos(angle),
     y: CY - radius * Math.sin(angle),
@@ -172,7 +173,7 @@ function polarToXY(angle: number, radius: number): { x: number; y: number } {
 }
 
 /** Create an SVG arc path between two angles at a given radius. */
-function arcPath(startAngle: number, endAngle: number, outerR: number, innerR: number): string {
+export function arcPath(startAngle: number, endAngle: number, outerR: number, innerR: number): string {
   const s1 = polarToXY(startAngle, outerR);
   const e1 = polarToXY(endAngle, outerR);
   const s2 = polarToXY(endAngle, innerR);
@@ -195,12 +196,12 @@ function arcPath(startAngle: number, endAngle: number, outerR: number, innerR: n
 // DATA NORMALIZATION
 // ══════════════════════════════════════════════════
 
-function normalize360(deg: number): number {
+export function normalize360(deg: number): number {
   const x = deg % 360;
   return x < 0 ? x + 360 : x;
 }
 
-function getLongitude(obj: any): number | null {
+export function getLongitude(obj: any): number | null {
   if (!obj) return null;
   const candidates = [
     obj.longitude,
@@ -216,7 +217,7 @@ function getLongitude(obj: any): number | null {
   return null;
 }
 
-function getRetrograde(obj: any): boolean {
+export function getRetrograde(obj: any): boolean {
   if (!obj) return false;
   const v =
     obj.isRetrograde ??
@@ -228,7 +229,7 @@ function getRetrograde(obj: any): boolean {
   return !!v;
 }
 
-function normalizePlanetName(name: unknown): string {
+export function normalizePlanetName(name: unknown): string {
   const s = String(name ?? '').trim();
   if (!s) return '';
   const low = s.toLowerCase();
@@ -250,7 +251,7 @@ function normalizePlanetName(name: unknown): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function getChartPlanet(chart: NatalChart, name: string): any | null {
+export function getChartPlanet(chart: NatalChart, name: string): any | null {
   const direct = (chart as any)[name.toLowerCase()] ?? (chart as any)[name];
   if (direct) return direct;
 
@@ -266,7 +267,7 @@ function getChartPlanet(chart: NatalChart, name: string): any | null {
 // ══════════════════════════════════════════════════
 // COLLISION AVOIDANCE for planet glyphs
 // ══════════════════════════════════════════════════
-interface PlacedPlanet {
+export interface PlacedPlanet {
   label: string;
   symbol: string;
   color: string;
@@ -276,7 +277,7 @@ interface PlacedPlanet {
   isRetrograde: boolean;
 }
 
-function spreadPlanets(
+export function spreadPlanets(
   planets: { label: string; longitude: number; isRetrograde: boolean }[],
   ascLongitude: number,
   minSeparationDeg: number = 8
@@ -335,11 +336,31 @@ interface Props {
 export default function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName }: Props) {
   const ascLongitude = getLongitude(chart.ascendant) ?? 0;
 
+  // Cache house cusps and midpoints for efficient lookup
+  const houseCusps = useMemo(() => (chart.houseCusps ?? []).slice(), [chart.houseCusps]);
+  const houseMidLongitudeByHouse = useMemo(() => {
+    const byHouse = new Map<number, HouseCusp>();
+    for (const c of houseCusps) byHouse.set(c.house, c);
+
+    const mid = new Map<number, number>();
+    for (const cusp of houseCusps) {
+      const next = byHouse.get(((cusp.house % 12) + 1) as number);
+      let midLon = cusp.longitude;
+      if (next) {
+        let diff = next.longitude - cusp.longitude;
+        if (diff < 0) diff += 360;
+        midLon = cusp.longitude + diff / 2;
+        if (midLon >= 360) midLon -= 360;
+      }
+      mid.set(cusp.house, midLon);
+    }
+    return mid;
+  }, [houseCusps]);
+
   // ── Prepare natal planets ──
   const placedPlanets = useMemo(() => {
-    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
     const raw: { label: string; longitude: number; isRetrograde: boolean }[] = [];
-    for (const label of labels) {
+    for (const label of PLANET_LABELS) {
       const obj = getChartPlanet(chart, label);
       const lon = getLongitude(obj);
       if (lon === null) continue;
@@ -359,9 +380,8 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   const R_OVERLAY_RING = R_PLANET_RING - 8;
   const placedOverlayPlanets = useMemo(() => {
     if (!overlayChart) return [];
-    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
     const raw: { label: string; longitude: number; isRetrograde: boolean }[] = [];
-    for (const label of labels) {
+    for (const label of PLANET_LABELS) {
       const obj = getChartPlanet(overlayChart, label);
       const lon = getLongitude(obj);
       if (lon === null) continue;
@@ -555,7 +575,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         })}
 
         {/* ── House cusps ── */}
-        {(chart.houseCusps ?? []).map((cusp: HouseCusp) => {
+        {houseCusps.map((cusp: HouseCusp) => {
           const angle = astroToAngle(cusp.longitude, ascLongitude);
           const outer = polarToXY(angle, R_ZODIAC_INNER);
           const inner = polarToXY(angle, R_INNER);
@@ -564,14 +584,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           const strokeW = isAngular ? 1.2 : 0.5;
           const strokeColor = isAngular ? 'rgba(194,166,90,0.35)' : 'rgba(255,255,255,0.07)';
 
-          const nextHouse = (chart.houseCusps ?? []).find((c: HouseCusp) => c.house === (cusp.house % 12) + 1);
-          let midLon = cusp.longitude;
-          if (nextHouse) {
-            let diff = nextHouse.longitude - cusp.longitude;
-            if (diff < 0) diff += 360;
-            midLon = cusp.longitude + diff / 2;
-            if (midLon >= 360) midLon -= 360;
-          }
+          const midLon = houseMidLongitudeByHouse.get(cusp.house) ?? cusp.longitude;
           const midAngle = astroToAngle(midLon, ascLongitude);
           const numPos = polarToXY(midAngle, R_HOUSE_INNER);
 
@@ -619,7 +632,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               y2={p2.y}
               stroke={color}
               strokeWidth={isTight ? 1.2 : 0.6}
-              strokeDasharray={nature === 'Harmonious' ? undefined : '4,3'}
+              strokeDasharray={nature === 'Harmonious' ? undefined : [4, 3]}
             />
           );
         })}
@@ -716,7 +729,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         {placedOverlayPlanets.map((planet) => {
           const glyphPos = polarToXY(planet.displayAngle, R_OVERLAY_RING);
           const tickOuter = polarToXY(planet.originalAngle, R_ZODIAC_INNER - 1);
-          const tickInner = polarToXY(planet.originalAngle, R_OVERLAY_RING + 10);
+          const tickInner = polarToXY(planet.originalAngle, R_OVERLAY_RING + 9);
           const baseColor = planet.color;
           const gradId = OVERLAY_GRADIENT_INNER[planet.label] ? `url(#opGrad_${planet.label})` : baseColor;
 

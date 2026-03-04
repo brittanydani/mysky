@@ -8,7 +8,7 @@
  * Insights tab. NOT a bottom tab. All logic is preserved from today.tsx.
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -96,6 +96,14 @@ export default function AstrologyContextScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
 
+  // Prevent setState after unmount / fast nav
+  const isMountedRef = useRef(true);
+  React.useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [guidance, setGuidance] = useState<HumanDailyGuidance | null>(null);
   const [insight, setInsight] = useState<DailyInsight | null>(null);
@@ -125,14 +133,9 @@ export default function AstrologyContextScreen() {
     });
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadTodayData();
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- loadTodayData defined below; adding it creates a circular dep
-    }, [isPremium])
-  );
-
-  const loadTodayData = async () => {
+  const loadTodayData = useCallback(async () => {
+    // When revisiting, refresh + show a short loading state (prevents stale “yesterday” + keeps premium changes in sync)
+    if (isMountedRef.current) setLoading(true);
     try {
       const charts = await localDb.getCharts();
       if (charts.length > 0) {
@@ -154,15 +157,15 @@ export default function AstrologyContextScreen() {
         chart.createdAt = savedChart.createdAt;
         chart.updatedAt = savedChart.updatedAt;
 
-        setUserChart(chart);
+        if (isMountedRef.current) setUserChart(chart);
 
         // Generate human-first daily guidance
         const dailyGuidance = HumanGuidanceGenerator.generateDailyGuidance(chart);
-        setGuidance(dailyGuidance);
+        if (isMountedRef.current) setGuidance(dailyGuidance);
 
         // Get full insight with timeline (for premium features)
         const dailyInsight = DailyInsightEngine.generateDailyInsight(chart);
-        setInsight(dailyInsight);
+        if (isMountedRef.current) setInsight(dailyInsight);
 
         // Detect retrograde transiting planets
         let currentRetrogrades: string[] = [];
@@ -173,7 +176,7 @@ export default function AstrologyContextScreen() {
             chart.birthData.longitude || 0,
           );
           currentRetrogrades = transitInfo.retrogrades;
-          setRetrogradePlanets(currentRetrogrades);
+          if (isMountedRef.current) setRetrogradePlanets(currentRetrogrades);
         } catch (e) {
           logger.error('Failed to detect retrogrades:', e);
         }
@@ -181,7 +184,7 @@ export default function AstrologyContextScreen() {
         // Generate daily affirmation from chart + transits
         try {
           const affirmation = DailyAffirmationEngine.getAffirmation(chart, new Date());
-          setDailyAffirmation(affirmation);
+          if (isMountedRef.current) setDailyAffirmation(affirmation);
         } catch (e) {
           logger.error('Failed to generate daily affirmation:', e);
         }
@@ -195,7 +198,7 @@ export default function AstrologyContextScreen() {
             dailyGuidance.dominantDomain,
             currentRetrogrades.length > 0,
           );
-          setTodayContent(content);
+          if (isMountedRef.current) setTodayContent(content);
         } catch (e) {
           logger.error('Failed to generate today content:', e);
         }
@@ -203,7 +206,7 @@ export default function AstrologyContextScreen() {
         // Generate today's shadow quote
         try {
           const shadow = await ShadowQuoteEngine.getDailyShadowQuote(chart);
-          setShadowQuote(shadow);
+          if (isMountedRef.current) setShadowQuote(shadow);
         } catch (e) {
           logger.error('Failed to generate shadow quote:', e);
         }
@@ -211,12 +214,22 @@ export default function AstrologyContextScreen() {
         // Premium: generate stellium/chiron/node context + personalized guidance
         if (isPremium) {
           try {
-            setChartPatterns(detectChartPatterns(chart));
-            setChironInsight(getChironInsightFromChart(chart));
-            setNodeInsight(getNodeInsight(chart));
-            setPremiumGuidance(PremiumDailyGuidanceGenerator.generatePremiumGuidance(chart));
+            if (isMountedRef.current) {
+              setChartPatterns(detectChartPatterns(chart));
+              setChironInsight(getChironInsightFromChart(chart));
+              setNodeInsight(getNodeInsight(chart));
+              setPremiumGuidance(PremiumDailyGuidanceGenerator.generatePremiumGuidance(chart));
+            }
           } catch {
             // Non-critical premium context
+          }
+        } else {
+          // Ensure premium-only content doesn’t “stick” after downgrades / dev testing
+          if (isMountedRef.current) {
+            setChartPatterns(null);
+            setChironInsight(null);
+            setNodeInsight(null);
+            setPremiumGuidance(null);
           }
         }
 
@@ -227,7 +240,7 @@ export default function AstrologyContextScreen() {
             savedChart.id,
             dailyInsight.signals
           );
-          setSavedInsight(saved);
+          if (isMountedRef.current) setSavedInsight(saved);
 
           // Get yesterday's insight for continuity thread
           try {
@@ -235,7 +248,7 @@ export default function AstrologyContextScreen() {
             yesterday.setDate(yesterday.getDate() - 1);
             const yStr = yesterday.toISOString().split('T')[0];
             const yInsight = await InsightHistoryService.getInsightByDate(yStr, savedChart.id);
-            setYesterdayInsight(yInsight);
+            if (isMountedRef.current) setYesterdayInsight(yInsight);
           } catch {
             // Not critical
           }
@@ -244,10 +257,18 @@ export default function AstrologyContextScreen() {
     } catch (error) {
       logger.error('Failed to load today data:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
-  };
+  }, [isPremium]);
 
+  useFocusEffect(
+    useCallback(() => {
+      void loadTodayData();
+      // Collapse expanded panels on re-entry (feels more intentional)
+      setShowWhyThis(false);
+      setShowMoonWeek(false);
+    }, [loadTodayData])
+  );
   const toggleFavorite = useCallback(async () => {
     if (!savedInsight) return;
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
@@ -303,8 +324,8 @@ export default function AstrologyContextScreen() {
   const premiumWork = premiumGuidance?.categories.find(c => c.category === 'work');
   const premiumEmotional = premiumGuidance?.categories.find(c => c.category === 'emotional');
 
-  const formatDate = (dateString: string) => {
-    const date = parseLocalDate(dateString);
+  const formatDate = (dateString?: string) => {
+    const date = parseLocalDate(dateString || new Date().toISOString().split('T')[0]);
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
@@ -364,7 +385,38 @@ export default function AstrologyContextScreen() {
                 <Ionicons name="partly-sunny" size={20} color={theme.primary} />
                 <Text style={styles.cosmicWeatherLabel}>TODAY'S CONTEXT</Text>
               </View>
+
               <Text style={styles.cosmicWeatherText}>{applyGuidanceLabels(todayContent?.cosmicWeather || guidance.cosmicWeather)}</Text>
+
+              {/* Luxury meta chips (makes the card feel designed, not just text) */}
+              <View style={styles.metaChipsRow}>
+                <View style={styles.metaChip}>
+                  <Ionicons name="pulse" size={12} color={theme.textMuted} />
+                  <Text style={styles.metaChipText}>
+                    {intensity === 'calm' ? 'Gentle' : intensity === 'moderate' ? 'Active' : 'High'} intensity
+                  </Text>
+                </View>
+                <View style={styles.metaChip}>
+                  <Ionicons name="compass-outline" size={12} color={theme.textMuted} />
+                  <Text style={styles.metaChipText}>
+                    {dominantDomain === 'love'
+                      ? 'Love'
+                      : dominantDomain === 'energy'
+                      ? 'Energy'
+                      : dominantDomain === 'mood'
+                      ? 'Mood'
+                      : 'Growth'} focus
+                  </Text>
+                </View>
+                {notableRetrogrades.length > 0 && (
+                  <View style={styles.metaChip}>
+                    <Ionicons name="sync" size={12} color={theme.warning} />
+                    <Text style={[styles.metaChipText, { color: theme.warning }]}> 
+                      {notableRetrogrades.length} review cycle{notableRetrogrades.length > 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                )}
+              </View>
               <View style={styles.intensityRow}>
                 <View style={[styles.intensityDot, { backgroundColor: intensity === 'calm' ? theme.growth : intensity === 'moderate' ? theme.primary : theme.love }]} />
                 <Text style={styles.intensityText}>
@@ -378,7 +430,10 @@ export default function AstrologyContextScreen() {
           <Animated.View entering={FadeInDown.delay(180).duration(600)}>
             <Pressable
               style={styles.section}
-              onPress={() => setShowMoonWeek(prev => !prev)}
+              onPress={async () => {
+                try { await Haptics.selectionAsync(); } catch {}
+                setShowMoonWeek(prev => !prev);
+              }}
               accessibilityRole="button"
               accessibilityLabel={showMoonWeek ? 'Collapse moon week view' : 'Expand moon week view'}
             >
@@ -831,7 +886,6 @@ const styles = StyleSheet.create({
 
   section: { marginBottom: theme.spacing.lg },
 
-  // ── Cosmic Weather ──
   cosmicWeatherCard: {
     borderRadius: theme.borderRadius.xl, padding: theme.spacing.xl, borderWidth: 1,
     borderColor: 'rgba(201, 169, 98, 0.15)',
@@ -846,6 +900,31 @@ const styles = StyleSheet.create({
   },
   intensityDot: { width: 8, height: 8, borderRadius: 4, marginRight: theme.spacing.sm },
   intensityText: { fontSize: 12, color: theme.textMuted, fontWeight: '600', letterSpacing: 0.5 },
+
+  // ── Meta Chips (Luxury row under context) ──
+  metaChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+  },
+  metaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  metaChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.textMuted,
+    letterSpacing: 0.2,
+  },
 
   // ── Moon Phase ──
   moonPhaseCard: {
