@@ -1,14 +1,13 @@
 // File: app/(tabs)/mood.tsx
 // MySky — Mood Tab: slider check-in + pattern graphs
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Pressable,
-  PanResponder,
   Dimensions,
   TextInput,
   Alert,
@@ -22,16 +21,19 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
-import Svg, {
-  Path,
-  Defs,
-  LinearGradient as SvgGradient,
-  Stop,
-  Circle,
-} from 'react-native-svg';
+import {
+  Canvas,
+  Path as SkiaPath,
+  LinearGradient as SkiaGradient,
+  vec,
+  Skia,
+  BlurMask,
+  Circle as SkiaCircle,
+} from '@shopify/react-native-skia';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
+import NebulaBackground from '../../components/ui/NebulaBackground';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { NatalChart } from '../../services/astrology/types';
@@ -40,11 +42,14 @@ import { CheckInService, CheckInInput, TIME_OF_DAY_LABELS, TIME_OF_DAY_ORDER } f
 import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../../services/patterns/types';
 import { logger } from '../../utils/logger';
 import type { TimeOfDayMetricInsight, TimeOfDayBucket } from '../../utils/insightsEngine';
+import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
+import SkiaResonanceSlider from '../../components/ui/SkiaResonanceSlider';
+import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
+import SkiaBiometricScatter from '../../components/ui/SkiaBiometricScatter';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 // card padding (16) × 2 + scroll horizontal padding (16) × 2 = 64
 const GRAPH_W = SCREEN_W - 64;
-const THUMB = 22;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -166,164 +171,6 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// ─── MetricSlider ─────────────────────────────────────────────────────────────
-
-interface SliderProps {
-  question: string;
-  value: number;
-  onChange: (v: number) => void;
-  color: string;
-  anchors: [string, string, string];
-  min?: number;
-  max?: number;
-}
-
-const MetricSlider = memo(function MetricSlider({
-  question,
-  value,
-  onChange,
-  color,
-  anchors,
-  min = 1,
-  max = 10,
-}: SliderProps) {
-  const [trackWidth, setTrackWidth] = useState(0);
-  const trackWidthRef = useRef(0);
-  const valueRef = useRef(value);
-  const onChangeRef = useRef(onChange);
-  const startValueRef = useRef(value);
-
-  useEffect(() => { valueRef.current = value; }, [value]);
-  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (e) => {
-        const tw = trackWidthRef.current;
-        if (tw > 0) {
-          // Tap-to-position: jump to tapped location
-          const pct = Math.min(1, Math.max(0, e.nativeEvent.locationX / tw));
-          const tapped = Math.round(min + pct * (max - min));
-          startValueRef.current = tapped;
-          onChangeRef.current(tapped);
-          Haptics.selectionAsync().catch(() => {});
-        } else {
-          startValueRef.current = valueRef.current;
-        }
-      },
-      onPanResponderMove: (_, gs) => {
-        const tw = trackWidthRef.current;
-        if (tw === 0) return;
-        const deltaPct = gs.dx / tw;
-        const raw = startValueRef.current + deltaPct * (max - min);
-        const clamped = Math.round(Math.min(max, Math.max(min, raw)));
-        if (clamped !== valueRef.current) {
-          Haptics.selectionAsync().catch(() => {});
-          onChangeRef.current(clamped);
-        }
-      },
-    })
-  ).current;
-
-  const fillPct = (value - min) / (max - min);
-  const thumbLeft = trackWidth > 0 ? fillPct * trackWidth - THUMB / 2 : 0;
-
-  return (
-    <View
-      style={sS.container}
-      accessible={true}
-      accessibilityRole="adjustable"
-      accessibilityLabel={question}
-      accessibilityValue={{ min, max, now: value, text: `${value} out of ${max}` }}
-      accessibilityActions={[
-        { name: 'increment', label: 'Increase' },
-        { name: 'decrement', label: 'Decrease' },
-      ]}
-      onAccessibilityAction={(event) => {
-        if (event.nativeEvent.actionName === 'increment') {
-          const next = Math.min(max, value + 1);
-          onChange(next);
-        } else if (event.nativeEvent.actionName === 'decrement') {
-          const next = Math.max(min, value - 1);
-          onChange(next);
-        }
-      }}
-    >
-      <Text style={sS.question}>{question}</Text>
-      <View style={sS.labelRow}>
-        <Text style={[sS.val, { color }]}>
-          {value}<Text style={sS.valMax}> / 10</Text>
-        </Text>
-      </View>
-      <View
-        style={sS.trackWrap}
-        onLayout={(e) => {
-          const w = e.nativeEvent.layout.width;
-          setTrackWidth(w);
-          trackWidthRef.current = w;
-        }}
-        {...panResponder.panHandlers}
-      >
-        <View style={sS.trackBg} />
-        <View style={[sS.trackFill, { width: fillPct * trackWidth, backgroundColor: color }]} />
-        {trackWidth > 0 && (
-          <View style={[sS.thumb, { left: thumbLeft, borderColor: color }]} />
-        )}
-      </View>
-      <View style={sS.anchorRow}>
-        <Text style={sS.anchor}>{anchors[0]}</Text>
-        <Text style={sS.anchor}>{anchors[1]}</Text>
-        <Text style={sS.anchor}>{anchors[2]}</Text>
-      </View>
-    </View>
-  );
-});
-
-const sS = StyleSheet.create({
-  container: { marginBottom: 18 },
-  question: { color: theme.textSecondary, fontSize: 13, fontWeight: '500', marginBottom: 6 },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  val: { fontSize: 16, fontWeight: '800' },
-  valMax: { fontSize: 12, color: theme.textMuted, fontWeight: '400' },
-  anchorRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  anchor: { color: theme.textMuted, fontSize: 10, fontWeight: '500' },
-  trackWrap: {
-    height: THUMB,
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  trackBg: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-  },
-  trackFill: {
-    position: 'absolute',
-    left: 0,
-    height: 4,
-    borderRadius: 2,
-  },
-  thumb: {
-    position: 'absolute',
-    width: THUMB,
-    height: THUMB,
-    borderRadius: THUMB / 2,
-    backgroundColor: theme.background,
-    borderWidth: 2,
-    top: 0,
-  },
-});
-
 // ─── LineGraph ────────────────────────────────────────────────────────────────
 
 interface GraphProps {
@@ -333,7 +180,7 @@ interface GraphProps {
   color: string;
   width: number;
   height: number;
-  gradId: string;
+  gradId?: string; // kept for API compat, unused by Skia
 }
 
 const LineGraph = memo(function LineGraph({
@@ -343,13 +190,51 @@ const LineGraph = memo(function LineGraph({
   color,
   width,
   height,
-  gradId,
 }: GraphProps) {
   const PAD = { top: 10, bottom: 10, left: 4, right: 4 };
   const gW = width - PAD.left - PAD.right;
   const gH = height - PAD.top - PAD.bottom;
 
-  if (data.length < 2) {
+  // Build Skia paths via useMemo so they're only recalculated when data changes
+  const { linePath, areaPath, lastPt } = useMemo(() => {
+    if (data.length < 2) return { linePath: null, areaPath: null, lastPt: null };
+
+    // Auto-scale to actual data range with padding so trends are prominent
+    const dataMin = Math.min(...data);
+    const dataMax = Math.max(...data);
+    const dataSpan = dataMax - dataMin;
+    const buf = Math.max(dataSpan * 0.25, 0.5);
+    const minY = Math.max(absMin, Math.floor(dataMin - buf));
+    const maxY = Math.min(absMax, Math.ceil(dataMax + buf));
+    const range = maxY - minY || 1;
+
+    const pts = data.map((v, i) => ({
+      x: PAD.left + (i / (data.length - 1)) * gW,
+      y: PAD.top + gH - ((v - minY) / range) * gH,
+    }));
+
+    // ── Stroke path (cubic bezier) ──
+    const stroke = Skia.Path.Make();
+    stroke.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      const p = pts[i - 1];
+      const c = pts[i];
+      const cpX = (p.x + c.x) / 2;
+      stroke.cubicTo(cpX, p.y, cpX, c.y, c.x, c.y);
+    }
+
+    // ── Area fill path (close to bottom) ──
+    const area = Skia.Path.Make();
+    area.addPath(stroke);
+    const last = pts[pts.length - 1];
+    area.lineTo(last.x, PAD.top + gH);
+    area.lineTo(pts[0].x, PAD.top + gH);
+    area.close();
+
+    return { linePath: stroke, areaPath: area, lastPt: last };
+  }, [data, absMin, absMax, gW, gH]);
+
+  if (!linePath || !areaPath || !lastPt) {
     return (
       <View style={{ width, height, justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ color: theme.textMuted, fontSize: 12 }}>Not enough data yet</Text>
@@ -357,45 +242,45 @@ const LineGraph = memo(function LineGraph({
     );
   }
 
-  // Auto-scale to actual data range with padding so trends are prominent
-  const dataMin = Math.min(...data);
-  const dataMax = Math.max(...data);
-  const dataSpan = dataMax - dataMin;
-  // Add 20% buffer above/below, but clamp to absolute bounds
-  const buf = Math.max(dataSpan * 0.25, 0.5);
-  const minY = Math.max(absMin, Math.floor(dataMin - buf));
-  const maxY = Math.min(absMax, Math.ceil(dataMax + buf));
-  const range = maxY - minY || 1;
-
-  const pts = data.map((v, i) => ({
-    x: PAD.left + (i / (data.length - 1)) * gW,
-    y: PAD.top + gH - ((v - minY) / range) * gH,
-  }));
-
-  // Smooth cubic bezier through points
-  let linePath = `M ${pts[0].x} ${pts[0].y}`;
-  for (let i = 1; i < pts.length; i++) {
-    const p = pts[i - 1];
-    const c = pts[i];
-    const cpX = (p.x + c.x) / 2;
-    linePath += ` C ${cpX} ${p.y}, ${cpX} ${c.y}, ${c.x} ${c.y}`;
-  }
-
-  const last = pts[pts.length - 1];
-  const areaPath = linePath + ` L ${last.x} ${PAD.top + gH} L ${pts[0].x} ${PAD.top + gH} Z`;
-
   return (
-    <Svg width={width} height={height}>
-      <Defs>
-        <SvgGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0%" stopColor={color} stopOpacity={0.45} />
-          <Stop offset="100%" stopColor={color} stopOpacity={0.03} />
-        </SvgGradient>
-      </Defs>
-      <Path d={areaPath} fill={`url(#${gradId})`} />
-      <Path d={linePath} stroke={color} strokeWidth={2.5} fill="none" strokeLinejoin="round" />
-      <Circle cx={last.x} cy={last.y} r={4} fill={color} />
-    </Svg>
+    <Canvas style={{ width, height }}>
+      {/* Gradient area fill — GPU-accelerated */}
+      <SkiaPath path={areaPath} style="fill">
+        <SkiaGradient
+          start={vec(0, PAD.top)}
+          end={vec(0, PAD.top + gH)}
+          colors={[`${color}73`, `${color}08`]}
+        />
+      </SkiaPath>
+
+      {/* Stroke with outer glow (BlurMask) for a neon light-bleed effect */}
+      <SkiaPath
+        path={linePath}
+        style="stroke"
+        strokeWidth={2.5}
+        color={color}
+        strokeCap="round"
+        strokeJoin="round"
+      >
+        <BlurMask blur={3} style="outer" />
+      </SkiaPath>
+
+      {/* Crisp inner stroke on top */}
+      <SkiaPath
+        path={linePath}
+        style="stroke"
+        strokeWidth={2}
+        color={color}
+        strokeCap="round"
+        strokeJoin="round"
+      />
+
+      {/* Pulsing last-data-point indicator */}
+      <SkiaCircle cx={lastPt.x} cy={lastPt.y} r={5} color={`${color}40`}>
+        <BlurMask blur={4} style="normal" />
+      </SkiaCircle>
+      <SkiaCircle cx={lastPt.x} cy={lastPt.y} r={3.5} color={color} />
+    </Canvas>
   );
 });
 
@@ -714,6 +599,7 @@ export default function MoodScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
+        <NebulaBackground mood={5} />
         <StarField starCount={28} />
         <SafeAreaView edges={['top']} style={styles.flex}>
           <View style={styles.centered}>
@@ -735,6 +621,7 @@ export default function MoodScreen() {
   if (loadError) {
     return (
       <View style={styles.container}>
+        <NebulaBackground mood={3} />
         <StarField starCount={28} />
         <SafeAreaView edges={['top']} style={styles.flex}>
           <View style={styles.centered}>
@@ -754,13 +641,14 @@ export default function MoodScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
+        <NebulaBackground mood={moodSlider} />
         <StarField starCount={60} />
         <SafeAreaView edges={['top']} style={styles.flex}>
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Mood</Text>
+            <Text style={styles.title}>Internal Weather</Text>
             <Text style={styles.subtitle}>
-              {userName || 'Daily check-in'} · {formatToday()}
+              Somatic check-in · {formatToday()}
             </Text>
           </Animated.View>
 
@@ -780,6 +668,17 @@ export default function MoodScreen() {
                     <Text style={styles.streakTxt}>{allCheckIns.length} total</Text>
                   </>
                 )}
+              </Animated.View>
+            )}
+
+            {/* ═══ Unified Aura — Internal Weather Station ═══ */}
+            {allCheckIns.length > 0 && (
+              <Animated.View entering={FadeInDown.delay(90).duration(600)} style={{ marginBottom: 8 }}>
+                <SkiaUnifiedAura
+                  mood={moodSlider}
+                  energy={energySlider}
+                  tension={stressSlider}
+                />
               </Animated.View>
             )}
 
@@ -890,22 +789,22 @@ export default function MoodScreen() {
                   </View>
                 )}
 
-                {/* Sliders */}
-                <MetricSlider
+                {/* Sliders — Resonance-enhanced */}
+                <SkiaResonanceSlider
                   question="How are you feeling emotionally?"
                   value={moodSlider}
                   onChange={setMoodSlider}
                   color={COLORS.mood}
                   anchors={['Very low', 'Neutral', 'Excellent']}
                 />
-                <MetricSlider
+                <SkiaResonanceSlider
                   question="How is your energy right now?"
                   value={energySlider}
                   onChange={setEnergySlider}
                   color={COLORS.energy}
                   anchors={['Exhausted', 'Steady', 'Energized']}
                 />
-                <MetricSlider
+                <SkiaResonanceSlider
                   question="How activated or stressed do you feel?"
                   value={stressSlider}
                   onChange={setStressSlider}
@@ -1032,41 +931,14 @@ export default function MoodScreen() {
                   </>
                 )}
 
-                {/* Save button */}
-                <Pressable
-                  style={[styles.saveBtn, saving && { opacity: 0.6 }]}
-                  onPress={handleSave}
-                  disabled={saving}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    saving
-                      ? 'Saving check-in'
-                      : completedSlots.includes(selectedTimeSlot)
-                        ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
-                        : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
-                  }
-                  accessibilityState={{ disabled: saving }}
-                >
-                  <LinearGradient
-                    colors={['rgba(201,169,98,0.22)', 'rgba(201,169,98,0.12)']}
-                    style={styles.saveBtnInner}
-                  >
-                    <Ionicons
-                      name={saving ? 'hourglass-outline' : 'checkmark-circle-outline'}
-                      size={18}
-                      color={theme.primary}
-                    />
-                    <Text style={styles.saveBtnTxt}>
-                      {saving
-                        ? 'Saving…'
-                        : completedSlots.includes(selectedTimeSlot)
-                          ? `Update ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`
-                          : `Save ${TIME_OF_DAY_LABELS[selectedTimeSlot].label} Check-In`}
-                    </Text>
-                  </LinearGradient>
-                </Pressable>
+                {/* Somatic Pulse Monitor — Hold to confirm presence */}
+                <View style={styles.pulseSection}>
+                  <Text style={styles.pulseLabel}>Hold to sync your check-in</Text>
+                  <Text style={styles.pulseHint}>3 seconds of presence to confirm</Text>
+                  <SkiaPulseMonitor onSyncComplete={handleSave} />
+                </View>
 
-                <Text style={styles.hint}>Check in up to 4× daily — morning, afternoon, evening, night.</Text>
+                <Text style={styles.hint}>Somatic sync — up to 4× daily. Morning, afternoon, evening, night.</Text>
 
                 {/* Save error banner */}
                 {saveError && (
@@ -1085,8 +957,29 @@ export default function MoodScreen() {
               </LinearGradient>
             </Animated.View>
 
+            {/* ═══ Biometric Scatter — mood vs energy correlation ═══ */}
+            {allCheckIns.length >= 3 && (
+              <Animated.View entering={FadeInDown.delay(180).duration(600)}>
+                <LinearGradient
+                  colors={['rgba(25,38,60,0.50)', 'rgba(20,32,50,0.35)']}
+                  style={styles.card}
+                >
+                  <View style={styles.scatterSection}>
+                    <Text style={styles.scatterTitle}>Mood × Energy Correlation</Text>
+                    <Text style={styles.scatterHint}>Each point maps one check-in — clusters reveal your baseline patterns</Text>
+                    <SkiaBiometricScatter
+                      points={allCheckIns.slice(0, 30).map(c => ({
+                        x: c.moodScore / 10,
+                        y: c.energyLevel === 'high' ? 0.85 : c.energyLevel === 'medium' ? 0.5 : 0.2,
+                      }))}
+                    />
+                  </View>
+                </LinearGradient>
+              </Animated.View>
+            )}
+
             {/* ═══ Energy Reading link ═══ */}
-            <Animated.View entering={FadeInDown.delay(180).duration(600)}>
+            <Animated.View entering={FadeInDown.delay(200).duration(600)}>
               <Pressable
                 onPress={() => { Haptics.selectionAsync().catch(() => {}); router.push('/(tabs)/energy' as Href); }}
                 accessibilityRole="button"
@@ -1670,6 +1563,43 @@ const styles = StyleSheet.create({
   todInsightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   todInsightEmoji: { fontSize: 14, marginTop: 1 },
   todInsightText: { color: theme.textSecondary, fontSize: 13, flex: 1, lineHeight: 18 },
+
+  // Pulse monitor
+  pulseSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    gap: 10,
+  },
+  pulseLabel: {
+    color: theme.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  pulseHint: {
+    color: theme.textMuted,
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+
+  // Biometric scatter
+  scatterSection: {
+    marginTop: 4,
+    alignItems: 'center',
+    gap: 8,
+  },
+  scatterTitle: {
+    color: theme.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  scatterHint: {
+    color: theme.textMuted,
+    fontSize: 11,
+    textAlign: 'center',
+    maxWidth: 260,
+  },
 
   // Energy link
   linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

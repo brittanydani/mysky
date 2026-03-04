@@ -1,10 +1,14 @@
-// feedbackHandlerExample.ts
-// Example: handle thumbs up/down from UI.
-// This shows the whole "agreement loop":
-// 1) Write feedback row for rendered card
-// 2) Fetch user model
-// 3) Compute learning update
-// 4) Save model + log deltas
+/**
+ * @file feedbackHandlerExample.ts
+ * @description EXAMPLE / REFERENCE ONLY — not imported by the production app.
+ * Shows the full "agreement loop" for handling thumbs-up/down feedback:
+ *   1) Write feedback row for rendered card
+ *   2) Fetch user model
+ *   3) Compute learning update
+ *   4) Save model + log deltas
+ *
+ * Safe to delete if no longer needed as a reference.
+ */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ShadowTrigger } from "./dreamTypes";

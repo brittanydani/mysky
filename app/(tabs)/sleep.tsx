@@ -10,6 +10,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import {
   Alert,
+  Dimensions,
   FlatList,
   Keyboard,
   Pressable,
@@ -31,6 +32,8 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
+import SkiaRestorationField from '../../components/ui/SkiaRestorationField';
+import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 import { localDb } from '../../services/storage/localDb';
 import { SleepEntry, JournalEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
@@ -49,6 +52,12 @@ import {
   FeelingTier,
 } from '../../services/premium/dreamTypes';
 import { computeDreamAggregates, computeDreamPatterns } from '../../services/premium/dreamAggregates';
+import SkiaSleepGraph from '../../components/ui/SkiaSleepGraph';
+import type { SleepPoint } from '../../components/ui/SkiaSleepGraph';
+import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
+import SkiaMoonDragger from '../../components/ui/SkiaMoonDragger';
+
+const SCREEN_W = Dimensions.get('window').width;
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -503,10 +512,24 @@ export default function SleepScreen() {
     };
   }, [entries]);
 
+  /** Map SleepEntry[] → SleepPoint[] for the restoration graph (sorted ascending by date) */
+  const historicalSleep: SleepPoint[] = useMemo(() => {
+    return entries
+      .filter(e => e.durationHours != null || e.quality != null)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-14) // last 14 nights for a clear visual
+      .map(e => ({
+        duration: e.durationHours ?? 0,
+        quality: e.quality ?? 3,
+        date: e.date,
+      }));
+  }, [entries]);
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
       <StarField starCount={40} />
+      <SkiaRestorationField quality={quality || 3} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
@@ -518,8 +541,8 @@ export default function SleepScreen() {
         >
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Sleep</Text>
-            <Text style={styles.subtitle}>Track your rest and dreams</Text>
+            <Text style={styles.title}>Restoration</Text>
+            <Text style={styles.subtitle}>Circadian field · Rest architecture</Text>
           </Animated.View>
 
           {/* ── Log Form (Cinematic Glass) ── */}
@@ -554,8 +577,17 @@ export default function SleepScreen() {
                 ))}
               </View>
 
-              {/* Duration stepper */}
+              {/* Moon Dragger — Radial duration instrument */}
               <Text style={styles.fieldLabel}>Hours slept</Text>
+              <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                <SkiaMoonDragger
+                  value={durationHours}
+                  onChange={(h) => { setHasDuration(true); setDurationHours(h); }}
+                />
+              </View>
+
+              {/* Duration stepper (fine-tune) */}
+              <Text style={[styles.fieldLabel, { fontSize: 12, color: theme.textMuted }]}>Fine-tune</Text>
               <View style={styles.stepperRow}>
                 <Pressable
                   style={styles.stepperBtn}
@@ -793,21 +825,12 @@ export default function SleepScreen() {
                 </>
               )}
 
-              {/* Save */}
-              <Pressable
-                style={({ pressed }) => [styles.saveBtn, (!canSave || saving || saved) && styles.saveBtnDisabled, pressed && styles.saveBtnPressed]}
-                onPress={handleSave}
-                disabled={!canSave || saving || saved}
-              >
-                <LinearGradient
-                  colors={saved ? ['rgba(110,191,139,0.6)', 'rgba(110,191,139,0.4)'] : canSave ? ['rgba(212, 175, 55, 0.25)', 'rgba(212, 175, 55, 0.1)'] : ['rgba(212, 175, 55, 0.1)', 'rgba(212, 175, 55, 0.05)']}
-                  style={styles.saveBtnGradient}
-                >
-                  <Text style={[styles.saveBtnText, !canSave && !saved && styles.saveBtnTextDisabled]}>
-                    {saving ? 'Saving...' : saved ? 'Saved ✓' : editingEntryId ? 'Update Entry' : 'Save Entry'}
-                  </Text>
-                </LinearGradient>
-              </Pressable>
+              {/* Somatic Pulse Monitor — Hold to confirm */}
+              <View style={styles.pulseSection}>
+                <Text style={styles.pulseLabel}>Hold to seal your rest data</Text>
+                <Text style={styles.pulseHint}>3 seconds of stillness to confirm</Text>
+                <SkiaPulseMonitor onSyncComplete={handleSave} />
+              </View>
 
               {saveError && (
                 <View style={styles.errorBanner}>
@@ -862,6 +885,51 @@ export default function SleepScreen() {
                   <Text style={styles.statSub}>quality</Text>
                 </LinearGradient>
               </View>
+            </Animated.View>
+          )}
+
+          {/* ── Restoration Cycle Graph ── */}
+          {historicalSleep.length >= 2 && (
+            <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.section}>
+              <Text style={styles.sectionTitle}>Restoration Cycle</Text>
+              <LinearGradient
+                colors={['rgba(15, 18, 28, 0.85)', 'rgba(10, 13, 22, 0.95)']}
+                style={styles.obsidianCard}
+              >
+                <View style={styles.obsidianCardHeader}>
+                  <Ionicons name="moon-outline" size={14} color={PALETTE.silverBlue} />
+                  <Text style={styles.obsidianCardEyebrow}>Nightly Ascent</Text>
+                </View>
+                <SkiaSleepGraph
+                  data={historicalSleep}
+                  width={SCREEN_W - 80}
+                  height={140}
+                />
+                <View style={styles.obsidianCardFooter}>
+                  <Text style={styles.obsidianCardFooterText}>
+                    {historicalSleep.length} night{historicalSleep.length !== 1 ? 's' : ''} · Height = duration · Glow = quality
+                  </Text>
+                </View>
+              </LinearGradient>
+
+              {/* ── Restoration Insight: Sleep Quality vs Morning Mood ── */}
+              {recentCheckIns.length >= 2 && isPremium && (
+                <View style={{ marginTop: 16 }}>
+                  <SkiaRestorationInsight
+                    data={historicalSleep.slice(-7).map((sp, i) => {
+                      const ci = recentCheckIns.find(c => c.date === sp.date);
+                      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                      const d = new Date(sp.date + 'T12:00:00');
+                      return {
+                        label: dayNames[d.getDay()] || '',
+                        quality: sp.quality,
+                        moodScore: ci?.moodScore ?? 5,
+                      };
+                    })}
+                    title="Restoration vs. Morning Mood"
+                  />
+                </View>
+              )}
             </Animated.View>
           )}
 
@@ -1074,6 +1142,41 @@ const styles = StyleSheet.create({
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(205, 127, 93, 0.15)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 14, marginTop: 16 },
   errorBannerText: { flex: 1, color: PALETTE.copper, fontSize: 14, lineHeight: 20 },
 
+  // Obsidian card (Restoration Cycle)
+  obsidianCard: {
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 196, 232, 0.08)',
+    borderTopColor: 'rgba(139, 196, 232, 0.15)',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  obsidianCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  obsidianCardEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: PALETTE.silverBlue,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+  },
+  obsidianCardFooter: {
+    marginTop: 10,
+    alignSelf: 'center',
+  },
+  obsidianCardFooterText: {
+    fontSize: 11,
+    color: 'rgba(253, 251, 247, 0.3)',
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+
   statsRow: { flexDirection: 'row', gap: 10 },
   statCard: { flex: 1, borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, minHeight: 90, justifyContent: 'center' },
   statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 },
@@ -1110,4 +1213,9 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyTitle: { fontSize: 22, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 12 },
   emptySubtitle: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22 },
+
+  // Pulse monitor
+  pulseSection: { alignItems: 'center', paddingVertical: 20, gap: 10 },
+  pulseLabel: { color: PALETTE.textMain, fontSize: 15, fontWeight: '700', letterSpacing: 0.3 },
+  pulseHint: { color: theme.textMuted, fontSize: 12, fontStyle: 'italic' },
 });

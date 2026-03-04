@@ -1,25 +1,56 @@
 // File: app/(tabs)/home.tsx
+// MySky — The Stability Dashboard
+//
+// Command center for the Biometric Wellness Suite. Focuses on the
+// Stability Index — a proprietary wellness metric measuring how
+// synchronised your Sleep, Mood, and Energy signals are.
+//
+// Layers:
+//   1. NebulaBackground — atmospheric shader driven by energy & transits
+//   2. SkiaUnifiedAura  — fluid Mood/Energy/Tension signature
+//   3. SkiaStabilityDashboard — 7-day Bézier coherence graph
+//   4. Actionable Insights — text engine with stability recommendations
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, FlatList, Platform } from 'react-native';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  Platform,
+  Dimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
+
+// ── Custom Skia Suite ──
+import NebulaBackground from '../../components/ui/NebulaBackground';
 import StarField from '../../components/ui/StarField';
+import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
+import SkiaStabilityDashboard, { computeStabilityIndex } from '../../components/ui/SkiaStabilityDashboard';
+import type { StabilityDataPoint } from '../../components/ui/SkiaStabilityDashboard';
+import SkiaWarpTransition from '../../components/ui/SkiaWarpTransition';
+import type { WarpRef } from '../../components/ui/SkiaWarpTransition';
+
 import BirthDataModal from '../../components/BirthDataModal';
 import { localDb } from '../../services/storage/localDb';
 import { NatalChart, BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
+import { CheckInService } from '../../services/patterns/checkInService';
 import { config } from '../../constants/config';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
 import { usePremium } from '../../context/PremiumContext';
+
+const { width } = Dimensions.get('window');
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -33,99 +64,164 @@ const PALETTE = {
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
-/** Rotating daily previews of what premium unlocks — personalized to chart */
-const PREMIUM_PREVIEWS = [
-  {
-    icon: 'heart-half' as const,
-    color: PALETTE.rose,
-    label: 'Healing',
-    title: 'Your attachment style is shaped by your emotional blueprint',
-    sub: 'Understand your fear patterns, what safety looks like for you, and how to start healing.',
-    cta: 'Explore your healing map',
-    route: '/(tabs)/healing',
-  },
-  {
-    icon: 'analytics' as const,
-    color: PALETTE.emerald,
-    label: 'Patterns',
-    title: 'Your mood data is ready to reveal patterns',
-    sub: 'See trends over time, discover which days you feel best, and correlate with daily influences.',
-    cta: 'See your patterns',
-    route: '/(tabs)/growth', // Pointing to the Reflect tab (growth.tsx)
-  },
-  {
-    icon: 'people' as const,
-    color: PALETTE.silverBlue,
-    label: 'Relationships',
-    title: 'Deeper Sky includes unlimited relationship profiles',
-    sub: 'Partner, parent, child, friend — understand how you truly connect with the people who matter.',
-    cta: 'Compare profiles',
-    route: '/(tabs)/relationships',
-  },
-  {
-    icon: 'compass' as const,
-    color: PALETTE.copper,
-    label: 'Chiron & Nodes',
-    title: 'Your chart holds a sensitivity map only you can see',
-    sub: "Chiron reveals your tender spots. Your Nodes show where you've been and where you're growing.",
-    cta: 'Explore sensitive points',
-    route: '/(tabs)/chart',
-  },
-];
+// ── Insight Engine ─────────────────────────────────────────────────────────
 
-function getDailyPreviewIndex(): number {
-  const now = new Date();
-  const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
-  return dayOfYear % PREMIUM_PREVIEWS.length;
+function generateInsight(
+  stabilityIndex: number,
+  mood: number,
+  energy: number,
+  sleep: number,
+): string {
+  const sleepDeficit = 8 - sleep;
+  if (stabilityIndex >= 80) {
+    return `Your stability is ${stabilityIndex}% today. Your signals are coherent — maintain this rhythm and your vitality will continue to build.`;
+  }
+  if (sleepDeficit > 1.5) {
+    return `Your stability is ${stabilityIndex}% today. Increasing rest by ${sleepDeficit.toFixed(0)} hours could stabilise your emerald vitality and lift mood coherence.`;
+  }
+  if (energy < 5) {
+    return `Your stability is ${stabilityIndex}% today. Your energy signal is low — consider gentle movement or sunlight exposure to restore your baseline.`;
+  }
+  if (mood < 4) {
+    return `Your stability is ${stabilityIndex}% today. Your emotional weather is heavy. A somatic breath session could help re-center your internal landscape.`;
+  }
+  return `Your stability is ${stabilityIndex}% today. Small adjustments to rest and movement could shift your coherence toward alignment.`;
 }
+
+// ── Quick Action Card ───────────────────────────────────────────────────────
+
+function QuickActionCard({
+  icon,
+  label,
+  sublabel,
+  accentColor,
+  onPress,
+  delay,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  sublabel: string;
+  accentColor: string;
+  onPress: () => void;
+  delay: number;
+}) {
+  return (
+    <Animated.View entering={FadeInDown.delay(delay)} style={{ flex: 1 }}>
+      <Pressable onPress={onPress} style={styles.actionCard}>
+        <View style={[styles.actionIconCircle, { backgroundColor: `${accentColor}15` }]}>
+          <Ionicons name={icon} size={20} color={accentColor} />
+        </View>
+        <Text style={styles.actionLabel}>{label}</Text>
+        <Text style={styles.actionSublabel}>{sublabel}</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ── Home Screen ─────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
+  const warpRef = useRef<WarpRef>(null);
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [showEditBirth, setShowEditBirth] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const loadUserChart = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = opts?.silent ?? false;
-    if (!silent) setLoading(true);
+  // Aura data — derived from latest check-in (defaults until loaded)
+  const [mood, setMood] = useState(7);
+  const [energy, setEnergy] = useState(8);
+  const [tension, setTension] = useState(3);
 
-    try {
-      const charts = await localDb.getCharts();
+  // Stability data — last 7 days of combined metrics
+  const [stabilityData, setStabilityData] = useState<StabilityDataPoint[]>([]);
+  const [latestSleep, setLatestSleep] = useState(7);
 
-      if (charts.length > 0) {
-        const savedChart = charts[0];
-        const birthData = {
-          date: savedChart.birthDate,
-          time: savedChart.birthTime,
-          hasUnknownTime: savedChart.hasUnknownTime,
-          place: savedChart.birthPlace,
-          latitude: savedChart.latitude,
-          longitude: savedChart.longitude,
-          timezone: savedChart.timezone,
-          houseSystem: savedChart.houseSystem,
-        };
+  // ── Chart Loading ──
 
-        const chart = AstrologyCalculator.generateNatalChart(birthData);
-        chart.id = savedChart.id;
-        chart.name = savedChart.name;
-        chart.createdAt = savedChart.createdAt;
-        chart.updatedAt = savedChart.updatedAt;
+  const loadUserChart = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      const silent = opts?.silent ?? false;
+      if (!silent) setLoading(true);
 
-        setUserChart(chart);
-      } else {
+      try {
+        const charts = await localDb.getCharts();
+
+        if (charts.length > 0) {
+          const savedChart = charts[0];
+          const birthData = {
+            date: savedChart.birthDate,
+            time: savedChart.birthTime,
+            hasUnknownTime: savedChart.hasUnknownTime,
+            place: savedChart.birthPlace,
+            latitude: savedChart.latitude,
+            longitude: savedChart.longitude,
+            timezone: savedChart.timezone,
+            houseSystem: savedChart.houseSystem,
+          };
+
+          const chart = AstrologyCalculator.generateNatalChart(birthData);
+          chart.id = savedChart.id;
+          chart.name = savedChart.name;
+          chart.createdAt = savedChart.createdAt;
+          chart.updatedAt = savedChart.updatedAt;
+
+          setUserChart(chart);
+
+          // Hydrate latest check-in data for the aura
+          try {
+            const checkins = await localDb.getCheckIns(chart.id, 7);
+            if (checkins.length > 0) {
+              const latest = checkins[0];
+              if (latest.moodScore != null) setMood(latest.moodScore);
+              const energyMap: Record<string, number> = { low: 3, medium: 5, high: 8 };
+              if (latest.energyLevel) setEnergy(energyMap[latest.energyLevel] ?? 5);
+              const stressMap: Record<string, number> = { low: 2, medium: 5, high: 8 };
+              if (latest.stressLevel) setTension(stressMap[latest.stressLevel] ?? 3);
+            }
+
+            // Build stability data from check-ins + sleep entries
+            const sleepEntries = await localDb.getSleepEntries(chart.id, 7);
+            const sleepByDate: Record<string, number> = {};
+            for (const s of sleepEntries) {
+              sleepByDate[s.date] = s.durationHours ?? 7;
+            }
+
+            const stabilityPoints: StabilityDataPoint[] = checkins
+              .slice(0, 7)
+              .reverse()
+              .map(ci => {
+                const energyMapLocal: Record<string, number> = { low: 3, medium: 5, high: 8 };
+                return {
+                  date: ci.date,
+                  mood: ci.moodScore,
+                  energy: energyMapLocal[ci.energyLevel] ?? 5,
+                  sleep: sleepByDate[ci.date] ?? 7,
+                };
+              });
+            setStabilityData(stabilityPoints);
+
+            if (sleepEntries.length > 0 && sleepEntries[0].durationHours != null) {
+              setLatestSleep(sleepEntries[0].durationHours);
+            }
+          } catch {
+            // Silently fall back to defaults
+          }
+        } else {
+          setUserChart(null);
+          router.replace('/onboarding' as Href);
+        }
+      } catch (error) {
+        logger.error('Failed to load user chart:', error);
         setUserChart(null);
         router.replace('/onboarding' as Href);
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } catch (error) {
-      logger.error('Failed to load user chart:', error);
-      setUserChart(null);
-      router.replace('/onboarding' as Href);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -136,10 +232,13 @@ export default function HomeScreen() {
           logger.error('Home focus load failed:', e);
         }
       })();
-    }, [loadUserChart])
+    }, [loadUserChart]),
   );
 
-  const handleEditBirthData = async (birthData: BirthData, extra?: { chartName?: string }) => {
+  const handleEditBirthData = async (
+    birthData: BirthData,
+    extra?: { chartName?: string },
+  ) => {
     setShowEditBirth(false);
     try {
       const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -175,28 +274,25 @@ export default function HomeScreen() {
     }
   };
 
-  const displayChart = userChart ? ChartDisplayManager.formatChartWithTimeWarnings(userChart) : null;
+  const displayChart = userChart
+    ? ChartDisplayManager.formatChartWithTimeWarnings(userChart)
+    : null;
 
-  const allPlacements = userChart
-    ? [
-        { label: 'Sun', placement: userChart.sun },
-        { label: 'Moon', placement: userChart.moon },
-        { label: 'Mercury', placement: userChart.mercury },
-        { label: 'Venus', placement: userChart.venus },
-        { label: 'Mars', placement: userChart.mars },
-        { label: 'Jupiter', placement: userChart.jupiter },
-        { label: 'Saturn', placement: userChart.saturn },
-        { label: 'Uranus', placement: userChart.uranus },
-        { label: 'Neptune', placement: userChart.neptune },
-        { label: 'Pluto', placement: userChart.pluto },
-      ]
-    : [];
+  // ── Stability computation ──
+  const stability = useMemo(() => computeStabilityIndex(stabilityData), [stabilityData]);
+  const insightText = useMemo(
+    () => generateInsight(stability.index, mood, energy, latestSleep),
+    [stability.index, mood, energy, latestSleep],
+  );
+
+  // ── Loading / Onboarding Gates ──
 
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
+        <NebulaBackground mood={5} />
         <StarField starCount={40} />
-        <Text style={styles.loadingText}>Loading your profile...</Text>
+        <Text style={styles.loadingText}>Calibrating your signals...</Text>
       </View>
     );
   }
@@ -204,200 +300,214 @@ export default function HomeScreen() {
   if (!userChart) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
+        <NebulaBackground mood={3} />
         <StarField starCount={40} />
         <Text style={styles.loadingText}>Preparing onboarding…</Text>
       </View>
     );
   }
 
+  // ── Stability Dashboard ──
+
   return (
     <View style={styles.container}>
+      {/* LAYER 1: Atmospheric Shader — turbulence driven by energy, color by transits */}
+      <NebulaBackground mood={mood} energy={energy} />
+
+      {/* LAYER 2: Particle depth field */}
       <StarField starCount={60} />
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
+
+      {/* LAYER 3: Interactive UI */}
+      <SafeAreaView style={styles.safeArea}>
         <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
           {/* ── Header ── */}
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <View style={styles.headerTop}>
-              <View>
-                <Text style={styles.title}>{config.appName}</Text>
-                <Text style={styles.tagline}>
-                  {userChart ? `Your story in the stars.` : config.tagline}
-                </Text>
-              </View>
+          <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>
+                {userChart.name || 'Welcome'}
+              </Text>
+              <Text style={styles.dateLabel}>
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </Text>
             </View>
+            <Pressable
+              onPress={() => router.push('/settings' as Href)}
+              style={styles.profileBtn}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={24}
+                color={theme.textMuted}
+              />
+            </Pressable>
           </Animated.View>
 
-          {/* ── Warnings ── */}
-          {displayChart?.warnings.length ? (
-            <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.warningBox}>
-              <Ionicons name="alert-circle" size={20} color={PALETTE.copper} />
-              <View style={styles.warningContent}>
-                <Text style={styles.warningTitle}>Birth time unknown</Text>
-                <Text style={styles.warningText}>{displayChart.warnings[0]}</Text>
-              </View>
-            </Animated.View>
-          ) : null}
+          {/* ── Unified Aura — Fluid Mood/Energy/Tension Signature ── */}
+          <Animated.View
+            entering={FadeIn.delay(300).duration(1200)}
+            style={styles.auraContainer}
+          >
+            <SkiaUnifiedAura mood={mood} energy={energy} tension={tension} />
+          </Animated.View>
 
-          {/* ── Hero Chart Summary (Glassmorphic) ── */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.chartSummary}>
+          {/* ── Stability Index Card ── */}
+          <Animated.View entering={FadeInDown.delay(500).duration(600)}>
+            <SkiaStabilityDashboard data={stabilityData} />
+          </Animated.View>
+
+          {/* ── Actionable Insight ── */}
+          <Animated.View
+            entering={FadeInDown.delay(700).duration(600)}
+            style={styles.insightCard}
+          >
             <LinearGradient
               colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
-              style={styles.chartCard}
+              style={styles.insightGradient}
             >
-              <View style={styles.chartHeader}>
-                <View>
-                  <Text style={styles.chartTitle}>{userChart.name || 'Your Personal Map'}</Text>
-                  <Text style={styles.chartDate}>Born {parseLocalDate(userChart.birthData.date).toLocaleDateString()}</Text>
-                </View>
-                <View style={styles.heroSunNode}>
-                  <LinearGradient colors={['#FFF4D4', '#D4AF37', '#7A5C13']} style={styles.heroSunGradient} />
-                  <Text style={styles.heroSunSymbol}>☉</Text>
-                </View>
+              <View style={styles.insightHeader}>
+                <Ionicons name="analytics" size={16} color={PALETTE.emerald} />
+                <Text style={styles.insightEyebrow}>WELLNESS INSIGHT</Text>
               </View>
-
-              <View style={styles.bigThree}>
-                <View style={styles.signItem}>
-                  <Text style={styles.signLabel}>Sun</Text>
-                  <Text style={styles.signValue}>{userChart.sun.sign.symbol} {userChart.sun.sign.name}</Text>
-                </View>
-
-                <View style={styles.signItem}>
-                  <Text style={styles.signLabel}>Moon</Text>
-                  <Text style={styles.signValue}>{userChart.moon.sign.symbol} {userChart.moon.sign.name}</Text>
-                </View>
-
-                {userChart.ascendant && (
-                  <View style={styles.signItem}>
-                    <Text style={styles.signLabel}>Rising</Text>
-                    <Text style={styles.signValue}>{userChart.ascendant.sign.symbol} {userChart.ascendant.sign.name}</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.chartActions}>
-                <Pressable style={styles.viewChartButton} onPress={() => router.push('/(tabs)/chart' as Href)}>
-                  <Text style={styles.viewChartText}>See Full Chart</Text>
-                  <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
-                </Pressable>
-
-                <Pressable style={styles.editBirthButton} onPress={() => setShowEditBirth(true)}>
-                  <Ionicons name="create-outline" size={14} color={theme.textMuted} />
-                  <Text style={styles.editBirthText}>Edit Birth Data</Text>
-                </Pressable>
-              </View>
+              <Text style={styles.insightText}>{insightText}</Text>
             </LinearGradient>
           </Animated.View>
 
-          {/* ── Planet Strip ── */}
-          {allPlacements.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.sectionBlock}>
-              <Text style={styles.sectionTitle}>Your Planets</Text>
-              <FlatList
-                horizontal
-                data={allPlacements}
-                keyExtractor={(item) => item.label}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.planetStrip}
-                renderItem={({ item, index }) => (
-                  <Animated.View entering={FadeInRight.delay(index * 60).duration(400)}>
-                    <LinearGradient
-                      colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
-                      style={styles.planetChip}
-                    >
-                      <Text style={styles.planetSymbol}>{item.placement.planet.symbol}</Text>
-                      <Text style={styles.planetName}>{item.label}</Text>
-                      <Text style={styles.planetSign}>{item.placement.sign.symbol} {item.placement.sign.name}</Text>
-                      <Text style={styles.planetDegree}>{item.placement.degree}°</Text>
-                    </LinearGradient>
-                  </Animated.View>
-                )}
-              />
-            </Animated.View>
-          )}
+          {/* ── Biometric Quick Actions ── */}
+          <Animated.View entering={FadeInDown.delay(850).duration(600)}>
+            <Text style={styles.sectionTitle}>Daily Rituals</Text>
+          </Animated.View>
+          <View style={styles.actionRow}>
+            <QuickActionCard
+              icon="cloudy"
+              label="Weather"
+              sublabel="Check in"
+              accentColor={PALETTE.gold}
+              onPress={() => router.push('/(tabs)/mood' as Href)}
+              delay={900}
+            />
+            <QuickActionCard
+              icon="moon"
+              label="Restore"
+              sublabel="Log sleep"
+              accentColor={PALETTE.silverBlue}
+              onPress={() => router.push('/(tabs)/sleep' as Href)}
+              delay={950}
+            />
+            <QuickActionCard
+              icon="document-text"
+              label="Archive"
+              sublabel="Reflect"
+              accentColor={PALETTE.rose}
+              onPress={() => router.push('/(tabs)/journal' as Href)}
+              delay={1000}
+            />
+          </View>
 
-          {/* ── Premium Teaser ── */}
-          {!isPremium && (() => {
-            const preview = PREMIUM_PREVIEWS[getDailyPreviewIndex()];
-            return (
-              <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.sectionBlock}>
-                <Pressable onPress={() => router.push(preview.route as Href)}>
-                  <LinearGradient
-                    colors={[`${preview.color}15`, 'rgba(20, 24, 34, 0.8)']}
-                    style={styles.premiumPreviewCard}
-                  >
-                    <View style={styles.premiumPreviewHeader}>
-                      <View style={[styles.premiumPreviewIcon, { backgroundColor: `${preview.color}20` }]}>
-                        <Ionicons name={preview.icon} size={18} color={preview.color} />
-                      </View>
-                      <Text style={styles.premiumPreviewLabel}>{preview.label}</Text>
-                      <View style={styles.premiumPreviewBadge}>
-                        <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
-                        <Text style={styles.premiumPreviewBadgeText}>Deeper Sky</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.premiumPreviewTitle}>{preview.title}</Text>
-                    <Text style={styles.premiumPreviewSub}>{preview.sub}</Text>
-                    <View style={styles.premiumPreviewCta}>
-                      <Text style={[styles.premiumPreviewCtaText, { color: preview.color }]}>{preview.cta}</Text>
-                      <Ionicons name="arrow-forward" size={14} color={preview.color} />
-                    </View>
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
-            );
-          })()}
-
-          {/* ── Quick Links ── */}
-          <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.sectionBlock}>
+          {/* ── Explore Cards ── */}
+          <Animated.View
+            entering={FadeInDown.delay(1050).duration(600)}
+            style={styles.sectionBlock}
+          >
             <Text style={styles.sectionTitle}>Explore</Text>
             <View style={styles.quickLinksRow}>
-              
-              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/story' as Href)}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.quickLinkGradient}>
+              <Pressable
+                style={styles.quickLink}
+                onPress={() => router.push('/(tabs)/story' as Href)}
+              >
+                <LinearGradient
+                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                  style={styles.quickLinkGradient}
+                >
                   <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(212, 175, 55, 0.15)' }]}>
-                     <Ionicons name="book-outline" size={22} color={PALETTE.gold} />
+                    <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Story</Text>
-                    <Text style={styles.quickLinkSub}>Your narrative</Text>
+                    <Text style={styles.quickLinkTitle}>Architecture</Text>
+                    <Text style={styles.quickLinkSub}>Your framework</Text>
                   </View>
                 </LinearGradient>
               </Pressable>
 
-              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/journal' as Href)}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.quickLinkGradient}>
-                   <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(212, 163, 179, 0.15)' }]}>
-                     <Ionicons name="pencil-outline" size={22} color={PALETTE.rose} />
+              <Pressable
+                style={styles.quickLink}
+                onPress={() => router.push('/(tabs)/growth' as Href)}
+              >
+                <LinearGradient
+                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                  style={styles.quickLinkGradient}
+                >
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(110, 191, 139, 0.15)' }]}>
+                    <Ionicons name="trending-up-outline" size={22} color={PALETTE.emerald} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Journal</Text>
-                    <Text style={styles.quickLinkSub}>Record entries</Text>
+                    <Text style={styles.quickLinkTitle}>Patterns</Text>
+                    <Text style={styles.quickLinkSub}>Track correlations</Text>
                   </View>
                 </LinearGradient>
               </Pressable>
 
-              <Pressable style={styles.quickLink} onPress={() => router.push('/(tabs)/growth' as Href)}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.quickLinkGradient}>
-                   <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(110, 191, 139, 0.15)' }]}>
-                     <Ionicons name="leaf-outline" size={22} color={PALETTE.emerald} />
+              <Pressable
+                style={styles.quickLink}
+                onPress={() => router.push('/(tabs)/chart' as Href)}
+              >
+                <LinearGradient
+                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                  style={styles.quickLinkGradient}
+                >
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
+                    <Ionicons name="grid-outline" size={22} color={PALETTE.silverBlue} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Reflect</Text>
-                    <Text style={styles.quickLinkSub}>Track patterns</Text>
+                    <Text style={styles.quickLinkTitle}>Profile</Text>
+                    <Text style={styles.quickLinkSub}>Your blueprint</Text>
                   </View>
                 </LinearGradient>
               </Pressable>
-
             </View>
           </Animated.View>
 
+          {/* ── Premium Teaser ── */}
+          {!isPremium && (
+            <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
+              <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
+                <LinearGradient
+                  colors={[`${PALETTE.gold}15`, 'rgba(20, 24, 34, 0.8)']}
+                  style={styles.premiumPreviewCard}
+                >
+                  <View style={styles.premiumPreviewHeader}>
+                    <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                    <Text style={styles.premiumPreviewLabel}>Deeper Wellness</Text>
+                  </View>
+                  <Text style={styles.premiumPreviewTitle}>
+                    Unlock the full Biometric Correlation Engine
+                  </Text>
+                  <Text style={styles.premiumPreviewSub}>
+                    Advanced pattern analysis, behavioral correlations, somatic breath journaling, and full restoration field analytics.
+                  </Text>
+                  <View style={styles.premiumPreviewCta}>
+                    <Text style={[styles.premiumPreviewCtaText, { color: PALETTE.gold }]}>
+                      Explore Deeper Wellness
+                    </Text>
+                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          )}
         </ScrollView>
       </SafeAreaView>
 
+      {/* LAYER 4: Global Warp Overlay */}
+      <SkiaWarpTransition ref={warpRef} />
+
+      {/* Birth Data Modal */}
       <BirthDataModal
         visible={showEditBirth}
         onClose={() => setShowEditBirth(false)}
@@ -417,133 +527,174 @@ export default function HomeScreen() {
   );
 }
 
+// ── Styles ──────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#07090F' },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: theme.textSecondary, fontStyle: 'italic', marginTop: 16 },
-  safeArea: { flex: 1 },
-  scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
-  
-  header: { marginTop: 16, marginBottom: 24 },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
-  tagline: { color: theme.textSecondary, fontSize: 15, fontStyle: 'italic', marginTop: 6, letterSpacing: 0.3 },
-
-  chartSummary: { marginBottom: 32 },
-  chartCard: { 
-    borderRadius: 20, 
-    padding: 24, 
-    borderWidth: 1, 
-    borderColor: PALETTE.glassBorder, 
-    borderTopColor: PALETTE.glassHighlight 
+  loadingText: {
+    color: theme.textSecondary,
+    fontStyle: 'italic',
+    marginTop: 16,
   },
-  chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  chartTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 4 },
-  chartDate: { color: theme.textSecondary, fontSize: 13 },
-  
-  heroSunNode: {
+  safeArea: { flex: 1 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 100 },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  greeting: {
+    color: '#FDFBF7',
+    fontSize: 24,
+    fontWeight: '700',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+  dateLabel: {
+    color: theme.textMuted,
+    fontSize: 13,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  profileBtn: { opacity: 0.8 },
+
+  // Aura
+  auraContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+
+  // Insight Card
+  insightCard: { marginTop: 20, marginBottom: 28 },
+  insightGradient: {
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
+  },
+  insightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  insightEyebrow: {
+    color: PALETTE.emerald,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  insightText: {
+    color: PALETTE.textMain,
+    fontSize: 15,
+    lineHeight: 24,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+
+  // Quick Actions
+  actionRow: { flexDirection: 'row', gap: 12, marginBottom: 32 },
+  actionCard: {
+    flex: 1,
+    height: 100,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  actionIconCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 5,
+    justifyContent: 'center',
   },
-  heroSunGradient: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 20,
-    opacity: 0.8,
-  },
-  heroSunSymbol: { color: '#4A3500', fontSize: 18, fontWeight: '600' },
+  actionLabel: { color: '#FDFBF7', fontSize: 12, fontWeight: '600' },
+  actionSublabel: { color: theme.textMuted, fontSize: 10 },
 
-  bigThree: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
-  signItem: { alignItems: 'flex-start', flex: 1 },
-  signLabel: { color: theme.textMuted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 },
-  signValue: { color: PALETTE.textMain, fontWeight: '600', fontSize: 15, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  
-  chartActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.1)' },
-  viewChartButton: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  viewChartText: { color: PALETTE.gold, fontSize: 14, fontWeight: '600' },
-  editBirthButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  editBirthText: { color: theme.textMuted, fontSize: 12, fontWeight: '500' },
-
+  // Sections
   sectionBlock: { marginBottom: 32 },
-  sectionTitle: { color: PALETTE.textMain, fontSize: 20, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16, paddingLeft: 4 },
-
-  planetStrip: { paddingRight: 20, gap: 10 },
-  planetChip: {
-    minWidth: 100,
-    height: 110,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+  sectionTitle: {
+    color: PALETTE.textMain,
+    fontSize: 20,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    marginBottom: 16,
+    paddingLeft: 4,
   },
-  planetSymbol: { fontSize: 24, color: PALETTE.gold, marginBottom: 6 },
-  planetName: { color: theme.textMuted, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 },
-  planetSign: { color: PALETTE.textMain, fontWeight: '600', fontSize: 12, marginTop: 4, textAlign: 'center' },
-  planetDegree: { color: theme.textSecondary, fontSize: 11, marginTop: 2 },
 
+  // Quick links
   quickLinksRow: { flexDirection: 'row', gap: 10 },
   quickLink: { flex: 1, borderRadius: 16, overflow: 'hidden' },
-  quickLinkGradient: { padding: 12, alignItems: 'flex-start', height: 110, borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16 },
-  quickLinkIconWrap: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  quickLinkTitle: { color: PALETTE.textMain, fontWeight: '600', fontSize: 14, marginBottom: 2 },
+  quickLinkGradient: {
+    padding: 12,
+    alignItems: 'flex-start',
+    height: 110,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    borderRadius: 16,
+  },
+  quickLinkIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  quickLinkTitle: {
+    color: PALETTE.textMain,
+    fontWeight: '600',
+    fontSize: 14,
+    marginBottom: 2,
+  },
   quickLinkSub: { color: theme.textMuted, fontSize: 11 },
 
+  // Premium preview
   premiumPreviewCard: {
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     borderTopColor: PALETTE.glassHighlight,
+    marginBottom: 32,
   },
-  premiumPreviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  premiumPreviewIcon: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  premiumPreviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
   premiumPreviewLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: theme.textSecondary,
+    color: PALETTE.gold,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
     flex: 1,
   },
-  premiumPreviewBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  premiumPreviewTitle: {
+    fontSize: 20,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    lineHeight: 28,
+    marginBottom: 8,
   },
-  premiumPreviewBadgeText: { fontSize: 10, fontWeight: '700', color: PALETTE.gold },
-  premiumPreviewTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), lineHeight: 28, marginBottom: 8 },
-  premiumPreviewSub: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, marginBottom: 16 },
+  premiumPreviewSub: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
   premiumPreviewCta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   premiumPreviewCtaText: { fontSize: 14, fontWeight: '600' },
-
-  warningBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(205, 127, 93, 0.1)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(205, 127, 93, 0.2)',
-  },
-  warningContent: { flex: 1, marginLeft: 12 },
-  warningTitle: { color: PALETTE.copper, fontWeight: '700', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  warningText: { color: theme.textSecondary, fontSize: 14, lineHeight: 20 },
 });
 

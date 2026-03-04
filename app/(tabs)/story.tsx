@@ -11,6 +11,7 @@ import { theme } from '../../constants/theme';
 import { applyStoryLabels } from '../../constants/storyLabels';
 import StarField from '../../components/ui/StarField';
 import ChapterCard from '../../components/ui/ChapterCard';
+import SkiaStoryGate, { CHAPTER_COLORS } from '../../components/ui/SkiaStoryGate';
 import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -177,7 +178,7 @@ export default function StoryScreen() {
       <View style={[styles.container, styles.centered]}>
         <StarField starCount={40} />
         <ActivityIndicator size="large" color={PALETTE.gold} style={{ marginBottom: 16 }} />
-        <Text style={styles.loadingText}>Reading your themes...</Text>
+        <Text style={styles.loadingText}>Mapping your architecture...</Text>
       </View>
     );
   }
@@ -196,13 +197,13 @@ export default function StoryScreen() {
         >
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Your Themes</Text>
+            <Text style={styles.title}>Architecture</Text>
             <Text style={styles.headerSub}>
-              A structured reflection shaped by your personal framework — designed for awareness and journaling, not prediction.
+              Your personal blueprint — a structured framework of behavioral patterns, core drives, and growth vectors derived from your unique data.
             </Text>
             {chapters.length > 0 && (
               <Text style={styles.subtitle}>
-                {chapters.length} chapters — {unlockedCount} unlocked
+                {chapters.length} dimensions — {unlockedCount} mapped
               </Text>
             )}
             
@@ -234,7 +235,7 @@ export default function StoryScreen() {
           {/* Radar Chart */}
           {chart && chapters.length > 0 && (
             <Animated.View entering={FadeInDown.delay(150).duration(600)}>
-              <Text style={[styles.title, { fontSize: 22, marginTop: 10, marginBottom: -10 }]}>Your Core Balances</Text>
+              <Text style={[styles.title, { fontSize: 22, marginTop: 10, marginBottom: -10 }]}>Core Force Map</Text>
               <PsychologicalForcesRadar forces={calculateForces(chart)} />
             </Animated.View>
           )}
@@ -244,17 +245,17 @@ export default function StoryScreen() {
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
               <LinearGradient colors={['rgba(35, 40, 55, 0.5)', 'rgba(20, 24, 34, 0.8)']} style={styles.emptyCard}>
                 <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>Your story awaits</Text>
+                <Text style={styles.emptyTitle}>Your architecture awaits</Text>
                 <Text style={styles.emptySubtitle}>
-                  Enter your birth details to unlock a personalized reflection framework designed for growth and awareness.
+                  Enter your birth details to build a personalized blueprint of behavioral patterns, drives, and growth directions.
                 </Text>
                 <Pressable
                   onPress={() => router.push('/(tabs)/chart' as Href)}
                   style={styles.emptyButton}
                   accessibilityRole="button"
-                  accessibilityLabel="Create your framework"
+                  accessibilityLabel="Build your blueprint"
                 >
-                  <Text style={styles.emptyButtonText}>Create Your Framework</Text>
+                  <Text style={styles.emptyButtonText}>Build Your Blueprint</Text>
                 </Pressable>
               </LinearGradient>
             </Animated.View>
@@ -267,14 +268,12 @@ export default function StoryScreen() {
                   key={chapter.id}
                   entering={FadeInDown.delay(200 + index * 80).duration(500)}
                 >
-                  <ChapterCard
-                    chapter={`Chapter ${index + 1}`}
+                  <SkiaStoryGate
+                    index={index}
                     title={applyStoryLabels(chapter.title)}
-                    content={applyStoryLabels(chapter.content)}
-                    preview={isLocked ? applyStoryLabels(chapter.reflection) : undefined}
-                    reflection={!isLocked ? applyStoryLabels(chapter.reflection) : undefined}
-                    affirmation={!isLocked ? applyStoryLabels(chapter.affirmation) : undefined}
-                    isLocked={isLocked}
+                    isUnlocked={!isLocked}
+                    isPremium={isPremium}
+                    accentColor={CHAPTER_COLORS[index]}
                     onPress={() => {
                       if (isLocked) router.push('/(tabs)/premium' as Href);
                     }}
@@ -299,16 +298,16 @@ export default function StoryScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                     <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
                     <Text style={styles.upsellTitle}>
-                      7 more chapters await
+                      7 more dimensions to explore
                     </Text>
                   </View>
 
                   <Text style={styles.upsellText}>
-                    How You Love · How You Navigate Conflict · Your Inner Child · Your Shadow Work · Your Growth Direction — and more.
+                    Attachment Style · Conflict Resolution · Inner Child Patterns · Shadow Integration · Growth Vectors — and more.
                   </Text>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                    <Text style={styles.unlockText}>Continue your story</Text>
+                    <Text style={styles.unlockText}>Expand your blueprint</Text>
                     <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
                   </View>
                 </LinearGradient>

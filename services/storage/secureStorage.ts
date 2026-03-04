@@ -287,18 +287,23 @@ class SecureStorageService {
     journalEntries: JournalEntry[];
     settings: AppSettings | null;
     consentRecord: { granted: boolean; timestamp?: string; version?: string } | null;
+    lawfulBasisRecords: any[];
+    consentHistory: any[];
     exportedAt: string;
   }> {
-    const [charts, journalEntries, settings, consentRecord] = await Promise.all([
+    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, consentHistory] = await Promise.all([
       this.getCharts(),
       this.getJournalEntries(),
       this.getSettings(),
       this.getConsentRecord(),
+      this.getLawfulBasisRecords(),
+      this.getConsentHistory(),
     ]);
 
     await this.auditDataAccess('data_export', {
       chartsCount: charts.length,
       entriesCount: journalEntries.length,
+      lawfulBasisCount: lawfulBasisRecords.length,
     });
 
     return {
@@ -306,6 +311,8 @@ class SecureStorageService {
       journalEntries,
       settings,
       consentRecord,
+      lawfulBasisRecords,
+      consentHistory,
       exportedAt: new Date().toISOString(),
     };
   }
@@ -329,22 +336,27 @@ class SecureStorageService {
 
   // Encryption wrapper helpers
   private async setEncryptedItem(key: string, value: any): Promise<void> {
-    const payload = await EncryptionManager.encryptSensitiveData(value);
+    const payload = await EncryptionManager.signSensitiveData(value);
     const envelope: EncryptedEnvelope = { encrypted: true, payload };
     let serialised = JSON.stringify(envelope);
 
     // If the serialised blob exceeds the soft limit and the value is an array,
     // progressively trim oldest entries until it fits (or the array is empty).
     if (serialised.length > SECURE_STORE_SOFT_LIMIT && Array.isArray(value)) {
+      const originalLength = value.length;
       let trimmed = value;
       while (trimmed.length > 0 && serialised.length > SECURE_STORE_SOFT_LIMIT) {
         trimmed = trimmed.slice(-Math.max(1, Math.floor(trimmed.length * 0.75)));
-        const p = await EncryptionManager.encryptSensitiveData(trimmed);
+        const p = await EncryptionManager.signSensitiveData(trimmed);
         serialised = JSON.stringify({ encrypted: true, payload: p });
       }
-      logger.warn(
-        `[SecureStorage] Trimmed array for key "${key}" from ${value.length} → ${trimmed.length} to stay ≤ ${SECURE_STORE_SOFT_LIMIT} bytes`,
-      );
+      const dropped = originalLength - trimmed.length;
+      if (dropped > 0) {
+        logger.warn(
+          `[SecureStorage] Trimmed array for key "${key}" from ${originalLength} → ${trimmed.length} ` +
+            `(dropped ${dropped} oldest entries) to stay ≤ ${SECURE_STORE_SOFT_LIMIT} bytes`,
+        );
+      }
     } else if (serialised.length > SECURE_STORE_SOFT_LIMIT) {
       logger.warn(
         `[SecureStorage] Value for key "${key}" is ${serialised.length} bytes (limit ${SECURE_STORE_SOFT_LIMIT}). Write may fail on some devices.`,

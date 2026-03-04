@@ -14,29 +14,8 @@
 //
 // You can tune weights and pattern lists over time.
 
-export type ShadowTrigger =
-  | "abandonment"
-  | "rejection"
-  | "betrayal"
-  | "shame"
-  | "exposure"
-  | "control"
-  | "power"
-  | "helplessness"
-  | "danger"
-  | "intimacy"
-  | "sexuality"
-  | "consent_violation"
-  | "worthiness"
-  | "responsibility"
-  | "failure"
-  | "grief"
-  | "identity"
-  | "belonging"
-  | "unpredictability"
-  | "punishment"
-  | "isolation"
-  | "transformation";
+import type { ShadowTrigger } from './dreamTypes';
+export type { ShadowTrigger };
 
 export type EvidenceHit = {
   trigger: ShadowTrigger;

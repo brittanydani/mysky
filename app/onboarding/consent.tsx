@@ -10,6 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
+import { PrivacyComplianceManager } from '../../services/privacy/privacyComplianceManager';
+import { logger } from '../../utils/logger';
 
 const TERMS_KEY = 'msky_termsAccepted_v1';
 const TERMS_VERSION = '2026-03-03';
@@ -46,6 +48,23 @@ export default function OnboardingConsentScreen() {
     Haptics.selectionAsync().catch(() => {});
     try {
       await AsyncStorage.setItem(TERMS_KEY, JSON.stringify({ accepted: true, version: TERMS_VERSION, at: new Date().toISOString() }));
+
+      // Record consent through the privacy compliance system so SecureStore,
+      // the lawful-basis audit trail, and consent history all stay in sync.
+      try {
+        const compliance = new PrivacyComplianceManager();
+        await compliance.recordConsent({
+          granted: true,
+          policyVersion: TERMS_VERSION,
+          timestamp: new Date().toISOString(),
+          method: 'explicit',
+          lawfulBasis: 'consent',
+          purpose: 'astrology_personalization',
+        });
+      } catch (e) {
+        logger.error('[Consent] Failed to record consent in compliance system:', e);
+      }
+
       router.replace(nextRoute);
     } finally {
       setSaving(false);

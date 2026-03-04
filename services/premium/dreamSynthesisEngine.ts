@@ -128,6 +128,10 @@ const DEFAULT_WEIGHTS = {
   history: 0.07,
   personality: 0.03,
 } as const;
+// NOTE: These weights differ from dreamInterpretation.ts (Wt=0.55, Wf=0.25).
+// This engine is FEELINGS-FIRST (used by the pipeline/renderer when the user
+// selects feelings). dreamInterpretation.ts is TEXT-FIRST (used when the dream
+// journal entry is the primary signal). Both are intentional designs.
 
 const ALL_NERVOUS_BRANCHES: NervousSystemBranch[] = [
   'ventral_safety', 'fight', 'flight', 'freeze', 'collapse', 'mixed',
@@ -568,6 +572,7 @@ export function runDreamSynthesisEngine(input: EngineInput): EngineOutput {
 }
 
 // ─── Test-only exports ────────────────────────────────────────────────────────
+/** @internal Exposed for unit tests only; tree-shaken in production builds. */
 export const __test = {
   clamp,
   normalize,

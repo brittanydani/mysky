@@ -1,6 +1,6 @@
 // File: app/privacy.tsx
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -98,8 +98,55 @@ export default function PrivacyPolicyScreen() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Rights</Text>
+            <Text style={styles.paragraph}>
+              Under GDPR, CCPA, and applicable privacy law, you have the following rights over your personal data:
+            </Text>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right of Access</Text>
+              <Text style={styles.paragraph}>You can view all data MySky holds about you at any time via Privacy Settings.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Data Portability</Text>
+              <Text style={styles.paragraph}>Export your complete data as a structured JSON archive or an encrypted .msky backup from Settings.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Erasure</Text>
+              <Text style={styles.paragraph}>Delete all personal data at any time using the "Hard Reset" option in Privacy Settings. Uninstalling the app also erases all locally stored data.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Rectification</Text>
+              <Text style={styles.paragraph}>You can update your birth data and edit or delete journal entries at any time directly within the app.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Withdraw Consent</Text>
+              <Text style={styles.paragraph}>You may withdraw your data processing consent at any time via Privacy Settings. Existing data is preserved but no new personal data will be collected until consent is restored.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Restrict Processing</Text>
+              <Text style={styles.paragraph}>Since all processing happens on-device, you control it entirely. Withdrawing consent effectively restricts all processing of new personal data.</Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Data Retention</Text>
+            <Text style={styles.paragraph}>
+              Your data is stored locally on your device for as long as you keep the app installed. Consent records expire after 365 days and will be re-requested. There is no server-side storage of personal data.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>Contact Us</Text>
-            <Pressable style={styles.contactCard} onPress={() => {/* Linking logic */}}>
+            <Pressable
+              style={styles.contactCard}
+              onPress={() => Linking.openURL('mailto:brittanyapps@outlook.com?subject=MySky%20Privacy%20Inquiry')}
+            >
               <Ionicons name="mail-outline" size={20} color={PALETTE.gold} />
               <Text style={styles.contactInfo}>brittanyapps@outlook.com</Text>
             </Pressable>

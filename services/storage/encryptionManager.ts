@@ -141,7 +141,7 @@ export class EncryptionManager {
     const randomString = Array.from(randomBytes)
       .map((byte) => byte.toString(16).padStart(2, '0'))
       .join('');
-    const payload = await this.encryptSensitiveData({
+    const payload = await this.signSensitiveData({
       overwrittenAt: new Date().toISOString(),
       randomString,
     });

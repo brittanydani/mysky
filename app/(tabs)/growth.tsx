@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import StarField from '../../components/ui/StarField';
+import SkiaReflectionMirror from '../../components/ui/SkiaReflectionMirror';
 import { localDb } from '../../services/storage/localDb';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { TAG_LABELS } from '../../utils/tagAnalytics';
@@ -186,6 +187,8 @@ export default function ReflectScreen() {
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasChart, setHasChart] = useState(false);
+  const [mirrorText, setMirrorText] = useState('');
+  const [showMirror, setShowMirror] = useState(false);
   const [aiInsights, setAiInsights] = useState<ReflectionInsightsResponse | null>(null);
   const [aiInsightsError, setAiInsightsError] = useState<string | null>(null);
 
@@ -420,6 +423,13 @@ export default function ReflectScreen() {
               <Text style={styles.promptText}>{getDailyPrompt()}</Text>
 
               <View style={styles.promptActions}>
+                <Pressable style={styles.promptBtn} onPress={() => { setShowMirror(prev => !prev); }}>
+                  <LinearGradient colors={['rgba(110, 191, 139, 0.25)', 'rgba(110, 191, 139, 0.1)']} style={styles.promptBtnGradient}>
+                    <Ionicons name="eye-outline" size={18} color={PALETTE.emerald} />
+                    <Text style={[styles.promptBtnText, { color: PALETTE.emerald }]}>Mirror Portal</Text>
+                  </LinearGradient>
+                </Pressable>
+
                 <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/mood')}>
                   <LinearGradient colors={['rgba(139, 196, 232, 0.25)', 'rgba(139, 196, 232, 0.1)']} style={styles.promptBtnGradient}>
                     <Ionicons name="happy-outline" size={18} color={PALETTE.silverBlue} />
@@ -436,6 +446,19 @@ export default function ReflectScreen() {
               </View>
             </LinearGradient>
           </Animated.View>
+
+          {/* ── The Mirror Portal (Frosted Glass Reflection Space) ── */}
+          {showMirror && (
+            <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.section}>
+              <SkiaReflectionMirror
+                prompt={getDailyPrompt()}
+                instruction="Breathe slowly. Let the glass clear. Begin when you're ready."
+                value={mirrorText}
+                onChangeText={setMirrorText}
+                placeholder="Let the words come..."
+              />
+            </Animated.View>
+          )}
 
           {/* ── Weekly Intention (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.section}>

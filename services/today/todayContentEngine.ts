@@ -33,16 +33,21 @@ import { localDb } from '../storage/localDb';
 // DATABASE HELPER
 // ═══════════════════════════════════════════════════════════════
 
+let _tableEnsured = false;
+
 async function getDb() {
   const db = await localDb.getDb();
-  await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS content_shown_history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      category TEXT NOT NULL,
-      content_id INTEGER NOT NULL,
-      shown_date TEXT NOT NULL
-    );
-  `);
+  if (!_tableEnsured) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS content_shown_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category TEXT NOT NULL,
+        content_id INTEGER NOT NULL,
+        shown_date TEXT NOT NULL
+      );
+    `);
+    _tableEnsured = true;
+  }
   return db;
 }
 

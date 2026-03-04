@@ -15,6 +15,7 @@ import CosmicBackground from '../components/ui/CosmicBackground';
 
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider } from '../context/AuthContext';
+import { StarNotificationProvider } from '../context/StarNotificationContext';
 
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
@@ -195,6 +196,7 @@ export default function RootLayout() {
     <ErrorBoundary>
       <AuthProvider>
         <PremiumProvider>
+          <StarNotificationProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <View style={{ flex: 1, position: 'relative' }}>
               <CosmicBackground />
@@ -230,6 +232,7 @@ export default function RootLayout() {
               </SafeAreaProvider>
             </View>
           </GestureHandlerRootView>
+          </StarNotificationProvider>
         </PremiumProvider>
       </AuthProvider>
     </ErrorBoundary>

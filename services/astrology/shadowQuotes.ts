@@ -625,14 +625,19 @@ async function markQuoteShown(quoteId: string): Promise<void> {
   }
 }
 
+let _quotesTableEnsured = false;
+
 async function getDb() {
   const db = await localDb.getDb();
-  await db.execAsync(`
-    CREATE TABLE IF NOT EXISTS shadow_quotes_shown (
-      quote_id TEXT PRIMARY KEY,
-      shown_at TEXT NOT NULL
-    );
-  `);
+  if (!_quotesTableEnsured) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS shadow_quotes_shown (
+        quote_id TEXT PRIMARY KEY,
+        shown_at TEXT NOT NULL
+      );
+    `);
+    _quotesTableEnsured = true;
+  }
   return db;
 }
 

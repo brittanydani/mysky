@@ -22,6 +22,7 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
       animationType="slide"
       // pageSheet on iOS gives that nice "layered" depth look
       presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
+      statusBarTranslucent={Platform.OS === 'android'}
       onRequestClose={onClose}
       transparent={false}
     >

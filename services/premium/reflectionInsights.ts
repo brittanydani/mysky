@@ -193,11 +193,16 @@ export async function generateReflectionInsights(
   }
 
   // The Edge Function requires a valid user JWT (verified by Supabase gateway).
-  // If the caller provided a user access token, use it. Otherwise fall back to
-  // the anon key (which will be rejected by JWT verification — this is intentional).
-  const bearer = userAccessToken || SUPABASE_ANON_KEY;
-  if (bearer) {
-    headers['authorization'] = `Bearer ${bearer}`;
+  // If the caller provided a user access token, use it. Otherwise, the request
+  // will fail with a 401 — which is intentional. We do NOT fall back to the
+  // anon key as a bearer token because it bypasses row-level security.
+  if (userAccessToken) {
+    headers['authorization'] = `Bearer ${userAccessToken}`;
+  } else {
+    throw new Error(
+      'reflectionInsights: userAccessToken is required. ' +
+        'Pass the Supabase session access_token to authenticate.',
+    );
   }
 
   const res = await fetch(EDGE_FUNCTION_URL, {

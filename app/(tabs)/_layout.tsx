@@ -38,54 +38,54 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* ── Visible tabs (exactly 5) ── */}
+      {/* ── Visible tabs (exactly 5) — Biometric Wellness Suite ── */}
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Stability',
+          tabBarIcon: ({ color }) => <Ionicons name="pulse" size={22} color={color} />,
+        }}
+      />
+
       <Tabs.Screen
         name="mood"
         options={{
-          title: 'Mood',
-          tabBarIcon: ({ color }) => <Ionicons name="happy" size={22} color={color} />,
-        }}
-      />
-
-      <Tabs.Screen
-        name="journal"
-        options={{
-          title: 'Journal',
-          tabBarIcon: ({ color }) => <Ionicons name="journal" size={22} color={color} />,
-        }}
-      />
-
-      <Tabs.Screen
-        name="growth"
-        options={{
-          title: 'Reflect',
-          tabBarIcon: ({ color }) => <Ionicons name="leaf" size={22} color={color} />,
+          title: 'Weather',
+          tabBarIcon: ({ color }) => <Ionicons name="cloudy" size={22} color={color} />,
         }}
       />
 
       <Tabs.Screen
         name="sleep"
         options={{
-          title: 'Sleep',
+          title: 'Restore',
           tabBarIcon: ({ color }) => <Ionicons name="moon" size={22} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="journal"
+        options={{
+          title: 'Archive',
+          tabBarIcon: ({ color }) => <Ionicons name="document-text" size={22} color={color} />,
         }}
       />
 
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <Ionicons name="settings" size={22} color={color} />,
+          title: 'Calibrate',
+          tabBarIcon: ({ color }) => <Ionicons name="options" size={22} color={color} />,
         }}
       />
 
       {/* ── Hidden routes — still accessible via router.push ── */}
       <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Screen name="home" options={{ href: null }} />
       <Tabs.Screen name="today" options={{ href: null }} />
       <Tabs.Screen name="energy" options={{ href: null }} />
       <Tabs.Screen name="chart" options={{ href: null }} />
       <Tabs.Screen name="story" options={{ href: null }} />
+      <Tabs.Screen name="growth" options={{ href: null }} />
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing" options={{ href: null }} />
       <Tabs.Screen name="premium" options={{ href: null }} />

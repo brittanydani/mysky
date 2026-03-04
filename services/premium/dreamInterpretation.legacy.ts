@@ -1,5 +1,11 @@
 /**
- * Dream Interpretation Engine — Premium Feature
+ * @deprecated LEGACY — Do not import from this file.
+ * Use './dreamInterpretation' instead (v3 engine with multi-signal scoring).
+ *
+ * This file is retained only as a reference for the original symbol-based
+ * interpretation approach. It will be removed in a future release.
+ *
+ * Dream Interpretation Engine — Premium Feature (LEGACY)
  *
  * Generates personalized symbolic dream interpretations without AI or network calls.
  * Draws from:

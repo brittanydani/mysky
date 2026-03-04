@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, Platform, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -148,9 +148,30 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               ))}
             </Animated.View>
 
-            <Text style={styles.manageText}>
-              Manage your subscription in Settings → Apple ID → Subscriptions
-            </Text>
+            <Pressable
+              onPress={async () => {
+                try {
+                  const url = Platform.select({
+                    ios: 'https://apps.apple.com/account/subscriptions',
+                    android: 'https://play.google.com/store/account/subscriptions',
+                    default: 'https://apps.apple.com/account/subscriptions',
+                  });
+                  await Linking.openURL(url);
+                } catch {
+                  // fall through to text instructions
+                }
+              }}
+              accessibilityRole="link"
+              accessibilityLabel="Manage your subscription"
+            >
+              <Text style={[styles.manageText, { textDecorationLine: 'underline' }]}>
+                {Platform.select({
+                  ios: 'Manage your subscription in Settings → Apple ID → Subscriptions',
+                  android: 'Manage your subscription in Google Play → Subscriptions',
+                  default: 'Manage your subscription in your app store settings',
+                })}
+              </Text>
+            </Pressable>
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -264,7 +285,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* Legal links — required for App Store subscription compliance */}
           <Animated.View entering={FadeInDown.delay(420).duration(600)} style={styles.legalSection}>
             <Text style={styles.legalDisclosure}>
-              Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Settings → Apple ID → Subscriptions.
+              {Platform.OS === 'ios'
+                ? 'Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Settings → Apple ID → Subscriptions.'
+                : 'Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Google Play → Payments & subscriptions.'}
             </Text>
             <Text style={styles.legalDisclosure}>
               MySky is for self-reflection and personal insight only. It is not medical, psychological, or financial advice.

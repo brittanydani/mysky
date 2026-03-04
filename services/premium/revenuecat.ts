@@ -107,6 +107,13 @@ class RevenueCatService {
           error: 'This product is not available for purchase. Please try again later.' 
         };
       }
+
+      if (error.code === 'NETWORK_ERROR' || error.code === 'UNEXPECTED_BACKEND_RESPONSE_ERROR') {
+        return {
+          success: false,
+          error: 'Network error — please check your connection and try again.',
+        };
+      }
       
       return { 
         success: false, 

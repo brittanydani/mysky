@@ -108,7 +108,12 @@ export default function PremiumRequiredScreen({
           </Pressable>
         </View>
 
-        <Pressable style={styles.skipButton} onPress={safeGoBack}>
+        <Pressable
+          style={styles.skipButton}
+          onPress={safeGoBack}
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss and go back"
+        >
           <Text style={styles.skipButtonText}>Maybe later</Text>
         </Pressable>
       </Animated.View>

@@ -57,6 +57,7 @@ const PLANET_LABELS: Record<string, string> = {
   Neptune: 'Diffuse influence',
   Uranus: 'Disruptive force',
   Chiron: 'Healing archetype',
+  Midheaven: 'Public path',
   Ascendant: 'Outward expression',
   Rising: 'Outward expression',
 };
@@ -161,6 +162,7 @@ const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
   [/\bcosmic mood\b/gi, 'overall mood'],
   [/\bcosmic equilibrium\b/gi, 'steady balance'],
   [/\bcosmic message\b/gi, 'inner message'],
+  [/\bcosmic context\b/gi, 'broader context'],
   [/\bcosmic insight\b/gi, 'daily insight'],
   [/\bcosmic energy\b/gi, 'deep energy'],
   [/\bcosmic pressure\b/gi, 'inner pressure'],

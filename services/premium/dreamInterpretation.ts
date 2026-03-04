@@ -586,4 +586,5 @@ export function generateDreamInterpretation(
 }
 
 // ─── Test-only Exports ────────────────────────────────────────────────────────
+/** @internal Exposed for unit tests only; tree-shaken in production builds. */
 export const __test = { GROUNDING_LINES } as const;

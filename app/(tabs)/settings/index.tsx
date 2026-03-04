@@ -1,7 +1,7 @@
-// app/(tabs)/settings.tsx
+// app/(tabs)/settings/index.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,20 +9,25 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
-import BackupPassphraseModal from '../../components/BackupPassphraseModal';
-import PrivacySettingsModal from '../../components/PrivacySettingsModal';
-import BirthDataModal from '../../components/BirthDataModal';
-import { usePremium } from '../../context/PremiumContext';
-import PremiumModal from '../../components/PremiumModal';
-import { localDb } from '../../services/storage/localDb';
-import { BackupService } from '../../services/storage/backupService';
-import { BirthData } from '../../services/astrology/types';
-import { AstrologyCalculator } from '../../services/astrology/calculator';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { theme } from '../../../constants/theme';
+import StarField from '../../../components/ui/StarField';
+import NebulaBackground from '../../../components/ui/NebulaBackground';
+import BackupPassphraseModal from '../../../components/BackupPassphraseModal';
+import PrivacySettingsModal from '../../../components/PrivacySettingsModal';
+import BirthDataModal from '../../../components/BirthDataModal';
+import { usePremium } from '../../../context/PremiumContext';
+import PremiumModal from '../../../components/PremiumModal';
+import { localDb } from '../../../services/storage/localDb';
+import { BackupService } from '../../../services/storage/backupService';
+import { BirthData } from '../../../services/astrology/types';
+import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
-import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
-import { logger } from '../../utils/logger';
+import { FieldEncryptionService } from '../../../services/storage/fieldEncryption';
+import { logger } from '../../../utils/logger';
+import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
+import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -107,8 +112,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
 
-  const successColor = (theme as any).success ?? theme.primary;
-  const errorColor = (theme as any).error ?? '#E07A7A';
+  const successColor = theme.success;
+  const errorColor = theme.error;
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -121,6 +126,12 @@ export default function SettingsScreen() {
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [showFaq, setShowFaq] = useState(false);
   const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
+
+  // ── Calibration preferences (persisted via AsyncStorage) ──
+  const [hapticEnabled, setHapticEnabled] = useState(true);
+  const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
+  const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
+  const [dreamLoggingEnabled, setDreamLoggingEnabled] = useState(true);
 
   // Dev-only: edit birth data for screenshots
   const [showDevBirthModal, setShowDevBirthModal] = useState(false);
@@ -151,6 +162,18 @@ export default function SettingsScreen() {
       // Detect encryption key loss — if the DEK is gone, warn the user
       const keyOk = await FieldEncryptionService.isKeyAvailable();
       setEncryptionKeyLost(!keyOk);
+
+      // Calibration preferences
+      const [haptic, reminder, mood, dream] = await Promise.all([
+        AsyncStorage.getItem('pref_haptic'),
+        AsyncStorage.getItem('pref_daily_reminder'),
+        AsyncStorage.getItem('pref_mood_insights'),
+        AsyncStorage.getItem('pref_dream_logging'),
+      ]);
+      if (haptic !== null) setHapticEnabled(haptic === '1');
+      if (reminder !== null) setDailyReminderEnabled(reminder === '1');
+      if (mood !== null) setMoodInsightsEnabled(mood === '1');
+      if (dream !== null) setDreamLoggingEnabled(dream === '1');
     } catch (error) {
       logger.error('Failed to load settings:', error);
     }
@@ -159,6 +182,12 @@ export default function SettingsScreen() {
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  // ── Calibration toggle helpers ──
+  const togglePref = useCallback(async (key: string, value: boolean, setter: (v: boolean) => void) => {
+    setter(value);
+    try { await AsyncStorage.setItem(key, value ? '1' : '0'); } catch {}
+  }, []);
 
   const gatePremium = async (): Promise<boolean> => {
     if (isPremium) return true;
@@ -358,12 +387,13 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
+      <NebulaBackground mood={5} energy={3} />
       <StarField starCount={25} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-          <Text style={styles.subtitle}>Manage your MySky experience</Text>
+          <Text style={styles.title}>Calibration</Text>
+          <Text style={styles.subtitle}>Instrument precision · Data sovereignty</Text>
         </Animated.View>
 
         <ScrollView
@@ -412,70 +442,59 @@ export default function SettingsScreen() {
           )}
 
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Encrypted Backup</Text>
+            <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key">
+                <View style={{ paddingHorizontal: 16 }}>
+                  <View style={styles.settingRow}>
+                    <View style={styles.settingInfo}>
+                      <View style={styles.settingHeader}>
+                        <Ionicons name="cloud-upload" size={20} color={theme.primary} />
+                        <Text style={styles.settingTitle}>Backup & Restore</Text>
+                        {!isPremium && (
+                          <View style={styles.premiumBadge}>
+                            <Text style={styles.premiumText}>Premium</Text>
+                          </View>
+                        )}
+                      </View>
 
-            <View style={styles.settingCard}>
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
-              >
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <Ionicons name="cloud-upload" size={20} color={theme.primary} />
-                      <Text style={styles.settingTitle}>Backup & Restore</Text>
-                      {!isPremium && (
-                        <View style={styles.premiumBadge}>
-                          <Text style={styles.premiumText}>Premium</Text>
-                        </View>
+                      <Text style={styles.settingDescription}>
+                        Create an end-to-end encrypted backup you control.
+                      </Text>
+
+                      {lastBackupAt && (
+                        <Text style={styles.lastSyncText}>Last backup: {formatLastBackup(lastBackupAt)}</Text>
                       )}
                     </View>
+                  </View>
 
-                    <Text style={styles.settingDescription}>
-                      Create an end-to-end encrypted backup you control.
-                    </Text>
+                  <View style={styles.backupActions}>
+                    <Pressable
+                      style={[styles.syncButton, disableActions && styles.syncButtonDisabled]}
+                      onPress={handleBackup}
+                      disabled={disableActions}
+                      accessibilityRole="button"
+                      accessibilityLabel="Backup now"
+                    >
+                      <Ionicons name="cloud-upload" size={16} color={theme.primary} />
+                      <Text style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</Text>
+                    </Pressable>
 
-                    {lastBackupAt && (
-                      <Text style={styles.lastSyncText}>Last backup: {formatLastBackup(lastBackupAt)}</Text>
-                    )}
+                    <Pressable
+                      style={[styles.syncButton, disableActions && styles.syncButtonDisabled]}
+                      onPress={handleRestore}
+                      disabled={disableActions}
+                      accessibilityRole="button"
+                      accessibilityLabel="Restore backup"
+                    >
+                      <Ionicons name="cloud-download" size={16} color={theme.primary} />
+                      <Text style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</Text>
+                    </Pressable>
                   </View>
                 </View>
-
-                <View style={styles.backupActions}>
-                  <Pressable
-                    style={[styles.syncButton, disableActions && styles.syncButtonDisabled]}
-                    onPress={handleBackup}
-                    disabled={disableActions}
-                    accessibilityRole="button"
-                    accessibilityLabel="Backup now"
-                  >
-                    <Ionicons name="cloud-upload" size={16} color={theme.primary} />
-                    <Text style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.syncButton, disableActions && styles.syncButtonDisabled]}
-                    onPress={handleRestore}
-                    disabled={disableActions}
-                    accessibilityRole="button"
-                    accessibilityLabel="Restore backup"
-                  >
-                    <Ionicons name="cloud-download" size={16} color={theme.primary} />
-                    <Text style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</Text>
-                  </Pressable>
-                </View>
-              </LinearGradient>
-            </View>
+            </ObsidianSettingsGroup>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Security & Data Protection</Text>
-
-            <View style={styles.settingCard}>
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
-              >
+            <ObsidianSettingsGroup title="Security & Data Protection" subtitle="Your data is fully encrypted">
                 <View style={styles.securityGrid}>
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
@@ -517,18 +536,68 @@ export default function SettingsScreen() {
                     </View>
                   </View>
                 </View>
-              </LinearGradient>
-            </View>
+            </ObsidianSettingsGroup>
+          </Animated.View>
+
+          {/* ── Calibration (Celestial Toggles) ── */}
+          <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.section}>
+            <ObsidianSettingsGroup title="Calibration" subtitle="Fine-tune your experience">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={async () => {
+                  try { await Haptics.selectionAsync(); } catch {}
+                  router.push('/(tabs)/settings/calibration' as Href);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Somatic resonance calibration"
+              >
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <Ionicons name="color-filter" size={20} color={theme.primary} />
+                      <Text style={styles.settingTitle}>Somatic Resonance</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>
+                      Calibrate your biometric color-frequency mapping using the GPU shader console
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                </View>
+              </Pressable>
+              <ObsidianDivider />
+              <SkiaCelestialToggle
+                value={hapticEnabled}
+                onToggle={(v) => togglePref('pref_haptic', v, setHapticEnabled)}
+                label="Haptic Feedback"
+                description="Tactile response on interactions"
+              />
+              <ObsidianDivider />
+              <SkiaCelestialToggle
+                value={dailyReminderEnabled}
+                onToggle={(v) => togglePref('pref_daily_reminder', v, setDailyReminderEnabled)}
+                label="Somatic Check-in Reminder"
+                description="Daily nudge to log your internal weather"
+              />
+              <ObsidianDivider />
+              <SkiaCelestialToggle
+                value={moodInsightsEnabled}
+                onToggle={(v) => togglePref('pref_mood_insights', v, setMoodInsightsEnabled)}
+                label="Somatic Pattern Insights"
+                description="Surface recurring patterns in your biometric check-ins"
+              />
+              <ObsidianDivider />
+              <SkiaCelestialToggle
+                value={dreamLoggingEnabled}
+                onToggle={(v) => togglePref('pref_dream_logging', v, setDreamLoggingEnabled)}
+                label="Subconscious Capture"
+                description="Enable dream logging and archetypal reflection"
+              />
+            </ObsidianSettingsGroup>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Privacy & Data</Text>
-
-            <Pressable style={styles.settingCard} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
-              >
+            <ObsidianSettingsGroup title="Privacy & Data" subtitle="Device-only, encrypted at rest">
+              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
@@ -541,23 +610,23 @@ export default function SettingsScreen() {
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                 </View>
-              </LinearGradient>
-            </Pressable>
-
-            <View style={styles.privacyInfo}>
-              <View style={styles.privacyItem}>
-                <Ionicons name="phone-portrait" size={16} color={successColor} />
-                <Text style={styles.privacyText}>Data stored locally on your device</Text>
+              </Pressable>
+              <ObsidianDivider />
+              <View style={[styles.privacyInfo, { marginHorizontal: 16, marginBottom: 8 }]}>
+                <View style={styles.privacyItem}>
+                  <Ionicons name="phone-portrait" size={16} color={successColor} />
+                  <Text style={styles.privacyText}>Data stored locally on your device</Text>
+                </View>
+                <View style={styles.privacyItem}>
+                  <Ionicons name="shield" size={16} color={successColor} />
+                  <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
+                </View>
+                <View style={styles.privacyItem}>
+                  <Ionicons name="ban" size={16} color={successColor} />
+                  <Text style={styles.privacyText}>Never sold or shared</Text>
+                </View>
               </View>
-              <View style={styles.privacyItem}>
-                <Ionicons name="shield" size={16} color={successColor} />
-                <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
-              </View>
-              <View style={styles.privacyItem}>
-                <Ionicons name="ban" size={16} color={successColor} />
-                <Text style={styles.privacyText}>Never sold or shared</Text>
-              </View>
-            </View>
+            </ObsidianSettingsGroup>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(475).duration(600)} style={styles.section}>
@@ -614,17 +683,12 @@ export default function SettingsScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Legal</Text>
-
-            <Pressable
-              style={styles.settingCard}
-              onPress={openPrivacyPolicy}
-              accessibilityRole="button"
-              accessibilityLabel="Privacy Policy"
-            >
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
+            <ObsidianSettingsGroup title="Legal" subtitle="Policies and documentation">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openPrivacyPolicy}
+                accessibilityRole="button"
+                accessibilityLabel="Privacy Policy"
               >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -638,18 +702,13 @@ export default function SettingsScreen() {
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                 </View>
-              </LinearGradient>
-            </Pressable>
-
-            <Pressable
-              style={styles.settingCard}
-              onPress={openTerms}
-              accessibilityRole="button"
-              accessibilityLabel="Terms of Service"
-            >
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
+              </Pressable>
+              <ObsidianDivider />
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openTerms}
+                accessibilityRole="button"
+                accessibilityLabel="Terms of Service"
               >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -663,18 +722,13 @@ export default function SettingsScreen() {
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                 </View>
-              </LinearGradient>
-            </Pressable>
-
-            <Pressable
-              style={styles.settingCard}
-              onPress={openFaq}
-              accessibilityRole="button"
-              accessibilityLabel="FAQ"
-            >
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
+              </Pressable>
+              <ObsidianDivider />
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openFaq}
+                accessibilityRole="button"
+                accessibilityLabel="FAQ"
               >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -688,8 +742,8 @@ export default function SettingsScreen() {
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                 </View>
-              </LinearGradient>
-            </Pressable>
+              </Pressable>
+            </ObsidianSettingsGroup>
 
             <Text style={styles.versionText}>
               MySky v{Constants.expoConfig?.version ?? '1.0.0'}
@@ -697,17 +751,12 @@ export default function SettingsScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(625).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Support</Text>
-
-            <Pressable
-              style={styles.settingCard}
-              onPress={openSupportEmail}
-              accessibilityRole="link"
-              accessibilityLabel="Contact us via email"
-            >
-              <LinearGradient
-                colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
-                style={styles.cardGradient}
+            <ObsidianSettingsGroup title="Support" subtitle="We're here to help">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openSupportEmail}
+                accessibilityRole="link"
+                accessibilityLabel="Contact us via email"
               >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -719,8 +768,8 @@ export default function SettingsScreen() {
                   </View>
                   <Ionicons name="open-outline" size={18} color={theme.textMuted} />
                 </View>
-              </LinearGradient>
-            </Pressable>
+              </Pressable>
+            </ObsidianSettingsGroup>
           </Animated.View>
 
           {!isPremium && (
@@ -760,9 +809,19 @@ export default function SettingsScreen() {
                 onPress={async () => {
                   try { await Haptics.selectionAsync(); } catch {}
                   try {
-                    await Linking.openURL('https://apps.apple.com/account/subscriptions');
+                    const url = Platform.select({
+                      ios: 'https://apps.apple.com/account/subscriptions',
+                      android: 'https://play.google.com/store/account/subscriptions',
+                      default: 'https://apps.apple.com/account/subscriptions',
+                    });
+                    await Linking.openURL(url);
                   } catch {
-                    Alert.alert('Unable to Open', 'Go to Settings → Apple ID → Subscriptions to manage your plan.');
+                    const instructions = Platform.select({
+                      ios: 'Go to Settings → Apple ID → Subscriptions to manage your plan.',
+                      android: 'Go to Google Play → Payments & subscriptions → Subscriptions to manage your plan.',
+                      default: 'Go to your device\'s app store settings to manage your subscription.',
+                    });
+                    Alert.alert('Unable to Open', instructions);
                   }
                 }}
                 accessibilityRole="button"

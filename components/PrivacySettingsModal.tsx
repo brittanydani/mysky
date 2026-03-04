@@ -16,6 +16,7 @@ import { theme } from '../constants/theme';
 import StarField from './ui/StarField';
 import { secureStorage } from '../services/storage/secureStorage';
 import { localDb } from '../services/storage/localDb';
+import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { logger } from '../utils/logger';
 
 // ── Cinematic Palette ──
@@ -37,6 +38,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   const [hasData, setHasData] = useState(false);
   const [consentRecord, setConsentRecord] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const compliance = new PrivacyComplianceManager();
 
   useEffect(() => {
     if (visible) loadPrivacyInfo();
@@ -45,14 +47,13 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   const loadPrivacyInfo = async () => {
     try {
       await localDb.initialize();
-      const [secureData, dbCharts, dbEntries, consent] = await Promise.all([
-        secureStorage.hasUserData(),
+      const [dbCharts, dbEntries, consentStatus] = await Promise.all([
         localDb.getCharts(),
         localDb.getJournalEntries(),
-        secureStorage.getConsentRecord(),
+        compliance.getConsentStatus(),
       ]);
-      setHasData(!!secureData || dbCharts.length > 0 || dbEntries.length > 0);
-      setConsentRecord(consent ?? null);
+      setHasData(dbCharts.length > 0 || dbEntries.length > 0);
+      setConsentRecord(consentStatus);
     } catch (error) {
       logger.error('Error loading privacy info:', error);
     }
@@ -62,14 +63,42 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
     try {
       setIsLoading(true);
       Haptics.selectionAsync().catch(() => {});
-      const userData = await secureStorage.exportAllUserData();
-      const exportData = JSON.stringify(userData, null, 2);
+      // Export from both SQLite (where real data lives) and SecureStore
+      const result = await compliance.handleExportRequest();
+      if (!result.success || !result.package) {
+        Alert.alert('Export Failed', 'Unable to gather your data for export.');
+        return;
+      }
+      const exportData = JSON.stringify(result.package, null, 2);
       await Share.share({ message: exportData, title: 'MySky Data Export' });
     } catch (error) {
       Alert.alert('Export Failed', 'Unable to secure your data for export.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleWithdrawConsent = () => {
+    Alert.alert(
+      'Withdraw Consent',
+      'This will revoke your data processing consent. You can still use the app, but new data will not be saved until you consent again.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Withdraw',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await compliance.withdrawConsent();
+              await loadPrivacyInfo();
+              Alert.alert('Consent Withdrawn', 'Your data processing consent has been revoked.');
+            } catch (error) {
+              Alert.alert('Error', 'Could not withdraw consent. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleDeleteAllData = () => {
@@ -87,9 +116,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
     try {
       setIsLoading(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-      await secureStorage.deleteAllUserData();
-      await localDb.initialize();
-      await localDb.hardDeleteAllData();
+      await compliance.handleDeletionRequest();
       Alert.alert('Reset Complete', 'Your personal data has been erased from this device.', [
         { text: 'OK', onPress: onClose },
       ]);
@@ -135,6 +162,51 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     </View>
                   ))}
                 </LinearGradient>
+              </View>
+
+              {/* Consent Status */}
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>Consent Record</Text>
+                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                  <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
+                    <View style={styles.rowLead}>
+                      <Ionicons name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
+                      <Text style={styles.statusLabel}>Status</Text>
+                    </View>
+                    <Text style={[styles.statusVal, { color: consentRecord?.granted ? PALETTE.gold : PALETTE.copper }]}>
+                      {consentRecord?.granted ? (consentRecord.expired ? 'Expired' : 'Active') : 'Not granted'}
+                    </Text>
+                  </View>
+                  {consentRecord?.timestamp && (
+                    <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
+                      <View style={styles.rowLead}>
+                        <Ionicons name="time-outline" size={16} color={PALETTE.silverBlue} />
+                        <Text style={styles.statusLabel}>Consented</Text>
+                      </View>
+                      <Text style={[styles.statusVal, { color: PALETTE.silverBlue }]}>
+                        {new Date(consentRecord.timestamp).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={[styles.statusRow, { borderBottomWidth: 0 }]}>
+                    <View style={styles.rowLead}>
+                      <Ionicons name="document-outline" size={16} color={PALETTE.silverBlue} />
+                      <Text style={styles.statusLabel}>Policy Version</Text>
+                    </View>
+                    <Text style={[styles.statusVal, { color: PALETTE.silverBlue }]}>
+                      {consentRecord?.policyVersion ?? '—'}
+                    </Text>
+                  </View>
+                </LinearGradient>
+                {consentRecord?.granted && (
+                  <Pressable style={styles.actionCard} onPress={handleWithdrawConsent} disabled={isLoading}>
+                    <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
+                      <Ionicons name="close-circle-outline" size={22} color={PALETTE.copper} />
+                      <Text style={[styles.actionTitle, { color: PALETTE.copper }]}>Withdraw Consent</Text>
+                      <Text style={styles.actionSub}>Revoke data processing consent. Existing data is preserved.</Text>
+                    </LinearGradient>
+                  </Pressable>
+                )}
               </View>
 
               {/* Data Actions */}

@@ -30,7 +30,8 @@ const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DEBUG_FORCE_PREMIUM = true; // Toggle for local development
+// Only applies in __DEV__ — production builds always rely on RevenueCat entitlement
+const DEBUG_FORCE_PREMIUM = __DEV__ && false; // Toggle for local development
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
@@ -55,13 +56,14 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
     const premiumActive = info ? revenueCatService.isPremium(info) : false;
     
-    // Trigger haptic if user just became premium
-    if (premiumActive && !isPremium && isReady) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    }
-    
-    setIsPremium(premiumActive);
-  }, [isPremium, isReady]);
+    // Trigger haptic when user first becomes premium
+    setIsPremium((prev) => {
+      if (premiumActive && !prev) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+      return premiumActive;
+    });
+  }, []);
 
   const refreshCustomerInfo = useCallback(async () => {
     try {

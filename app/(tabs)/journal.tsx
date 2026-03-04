@@ -21,7 +21,9 @@ import { parseLocalDate } from '../../utils/dateUtils';
 import { CheckInService } from '../../services/patterns/checkInService';
 import { DailyCheckIn } from '../../services/patterns/types';
 import CheckInTrendGraph from '../../components/ui/CheckInTrendGraph';
+import ObsidianJournalEntry from '../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../services/journal/nlp';
+import SkiaDreamEngine from '../../components/ui/SkiaDreamEngine';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
@@ -53,48 +55,19 @@ interface EntryCardProps {
 const EntryCard = memo(function EntryCard({
   entry, isExpanded, onToggle, onEdit, onDelete, formatDate, formatTime,
 }: EntryCardProps) {
+  const wordCount = entry.contentWordCount ?? (entry.content || '').trim().split(/\s+/).filter(Boolean).length;
   return (
-    <Pressable
-      style={styles.entryCard}
+    <ObsidianJournalEntry
+      title={entry.title}
+      content={entry.content}
+      dateLabel={formatDate(entry.date)}
+      timeLabel={formatTime(entry.createdAt)}
+      mood={entry.mood}
+      isExpanded={isExpanded}
       onPress={() => void onEdit(entry)}
       onLongPress={() => void onDelete(entry)}
-      accessibilityRole="button"
-      accessibilityLabel={`Journal entry: ${entry.title || formatDate(entry.date)}`}
-    >
-      <LinearGradient
-        colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
-        style={styles.entryGradient}
-      >
-        <View style={styles.entryHeader}>
-          <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
-          <Text style={styles.entryTime}>{formatTime(entry.createdAt)}</Text>
-        </View>
-
-        {!!entry.title && (
-          <Text style={styles.entryTitle} numberOfLines={1}>
-            {entry.title}
-          </Text>
-        )}
-
-        <Text style={styles.entryContent} numberOfLines={isExpanded ? undefined : 3}>
-          {entry.content}
-        </Text>
-
-        <Pressable
-          style={styles.expandButton}
-          onPress={() => onToggle(entry.id)}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          accessibilityRole="button"
-          accessibilityLabel={isExpanded ? 'Collapse entry' : 'Expand entry'}
-        >
-          <Ionicons
-            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-            size={18}
-            color={theme.textMuted}
-          />
-        </Pressable>
-      </LinearGradient>
-    </Pressable>
+      wordCount={wordCount}
+    />
   );
 });
 
@@ -314,28 +287,28 @@ export default function JournalScreen() {
       <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.title}>Journal</Text>
-            <Text style={styles.subtitle}>Your inner landscape</Text>
+            <Text style={styles.title}>Archive</Text>
+            <Text style={styles.subtitle}>Subconscious field · Pattern memory</Text>
           </View>
         </View>
 
         <Text style={styles.poeticIntro}>
-          This is a space for your unfiltered truth. A private space for honest reflection. Let the words come without judgment.
+          Your private subconscious archive. Each entry becomes a data point in your personal pattern architecture — revealing what the conscious mind overlooks.
         </Text>
       </Animated.View>
 
       {checkIns.length >= 2 && (
         isPremium ? (
           <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
-            <Text style={styles.chartTitle}>7-Day Energy Trends</Text>
-            <Text style={styles.checkInTrendSubtitle}>From your daily check-ins</Text>
+            <Text style={styles.chartTitle}>7-Day Somatic Trends</Text>
+            <Text style={styles.checkInTrendSubtitle}>From your daily weather check-ins</Text>
             <CheckInTrendGraph checkIns={checkIns} width={width - 40} />
           </Animated.View>
         ) : (
           <Pressable onPress={() => setShowPremiumRequired(true)} accessibilityRole="button" accessibilityLabel="Unlock 7-day check-in trends">
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <Text style={styles.chartTitle}>7-Day Energy Trends</Text>
+                <Text style={styles.chartTitle}>7-Day Somatic Trends</Text>
                 <View style={styles.premiumBadge}>
                   <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>

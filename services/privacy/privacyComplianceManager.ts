@@ -1,12 +1,17 @@
 import { secureStorage } from '../storage/secureStorage';
+import { localDb } from '../storage/localDb';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
 import {
   ConsentData,
   ConsentRecord,
   ConsentResult,
+  ConsentStatus,
   LawfulBasisRecord,
   LawfulBasisAuditReport,
+  ExportResult,
+  DeletionResult,
+  AccessResult,
 } from './types';
 
 export class PrivacyComplianceManager {
@@ -73,7 +78,146 @@ export class PrivacyComplianceManager {
   }
 
   async withdrawConsent(): Promise<void> {
-    await secureStorage.setPrivacyConsent(false, await this.getPolicyVersion(), 'withdrawn');
+    const policyVersion = await this.getPolicyVersion();
+    await secureStorage.setPrivacyConsent(false, policyVersion, 'withdrawn');
+
+    // Record the withdrawal in the lawful basis audit trail for GDPR compliance
+    await this.audit.recordProcessingOperation({
+      policyVersion,
+      lawfulBasis: 'consent',
+      purpose: 'consent_withdrawal',
+      dataCategories: ['birth_data', 'journal_entries', 'usage_preferences'],
+      processingActivities: ['consent_withdrawn'],
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Get current consent status including expiry information.
+   * Useful for UI display and compliance checks.
+   */
+  async getConsentStatus(): Promise<ConsentStatus> {
+    const policyVersion = await this.getPolicyVersion();
+    const existing = await secureStorage.getConsentRecord();
+
+    if (!existing) {
+      return {
+        granted: false,
+        policyVersion,
+        method: 'explicit',
+        lawfulBasis: 'consent',
+        purpose: 'astrology_personalization',
+      };
+    }
+
+    const isExpired = this.isConsentExpired(existing.timestamp);
+    const expiresAt = existing.timestamp
+      ? new Date(
+          new Date(existing.timestamp).getTime() +
+            PrivacyComplianceManager.CONSENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000
+        ).toISOString()
+      : undefined;
+
+    return {
+      granted: existing.granted,
+      policyVersion: existing.version ?? policyVersion,
+      timestamp: existing.timestamp,
+      expired: isExpired,
+      expiresAt,
+      method: 'explicit',
+      lawfulBasis: 'consent',
+      purpose: 'astrology_personalization',
+    };
+  }
+
+  // ── GDPR Data Rights ──
+
+  /**
+   * Article 15 — Right of access.
+   * Returns an inventory of all personal data held.
+   */
+  async handleAccessRequest(): Promise<AccessResult> {
+    await localDb.initialize();
+    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords] =
+      await Promise.all([
+        localDb.getCharts(),
+        localDb.getJournalEntries(),
+        localDb.getSettings(),
+        secureStorage.getConsentRecord(),
+        secureStorage.getLawfulBasisRecords(),
+      ]);
+
+    await secureStorage.auditDataAccess('gdpr_access_request', {
+      chartsCount: charts.length,
+      entriesCount: journalEntries.length,
+    });
+
+    return {
+      success: true,
+      dataInventory: {
+        chartsCount: charts.length,
+        journalEntriesCount: journalEntries.length,
+        settingsPresent: settings !== null,
+        consentRecordPresent: consentRecord !== null,
+        lawfulBasisRecordsCount: lawfulBasisRecords.length,
+      },
+      completedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Article 20 — Right to data portability.
+   * Exports all personal data in a structured, machine-readable format.
+   */
+  async handleExportRequest(): Promise<ExportResult> {
+    await localDb.initialize();
+    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords] =
+      await Promise.all([
+        localDb.getCharts(),
+        localDb.getJournalEntries(),
+        localDb.getSettings(),
+        secureStorage.getConsentRecord(),
+        secureStorage.getLawfulBasisRecords(),
+      ]);
+
+    await secureStorage.auditDataAccess('gdpr_export_request', {
+      chartsCount: charts.length,
+      entriesCount: journalEntries.length,
+    });
+
+    return {
+      success: true,
+      package: {
+        charts,
+        journalEntries,
+        settings,
+        consentRecord,
+        lawfulBasisRecords,
+        exportedAt: new Date().toISOString(),
+      },
+      completedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Article 17 — Right to erasure ("right to be forgotten").
+   * Deletes all personal data from both SQLite and SecureStore.
+   */
+  async handleDeletionRequest(): Promise<DeletionResult> {
+    await localDb.initialize();
+
+    // Record audit entry before deletion (so we have proof the request was received)
+    await secureStorage.auditDataAccess('gdpr_deletion_request', {});
+
+    await Promise.all([
+      secureStorage.deleteAllUserData(),
+      localDb.hardDeleteAllData(),
+    ]);
+
+    return {
+      success: true,
+      completedAt: new Date().toISOString(),
+    };
   }
 
   async recordLawfulBasis(record: LawfulBasisRecord): Promise<void> {
