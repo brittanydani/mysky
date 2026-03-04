@@ -1,14 +1,25 @@
 {
-  "name": "MySky",
+  "name": "mysky",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+
+    "dev": "expo start --dev-client",
+    "dev:tunnel": "expo start --dev-client --tunnel",
+    "dev:lan": "expo start --dev-client --lan",
+
     "reset-project": "node ./scripts/reset-project.js",
+
     "android": "expo run:android",
+
     "ios": "expo run:ios",
+    "ios:device": "expo run:ios --device",
+    "ios:sim": "expo run:ios --simulator",
+
     "web": "expo start --web",
     "lint": "expo lint",
+
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
