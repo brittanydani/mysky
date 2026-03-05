@@ -164,7 +164,7 @@ export default function ChartScreen() {
   const [showGlossary, setShowGlossary] = useState(false);
   const [expandedTerm, setExpandedTerm] = useState<string | null>(null);
   const [showAstrologyModal, setShowAstrologyModal] = useState(false);
-  const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Whole Sign');
+  const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Placidus');
   const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
 
   // Reload chart every time this screen is focused (fixes "No chart found" after creating from Home)
@@ -233,7 +233,7 @@ export default function ChartScreen() {
 
   // ── Overlay handlers ──
   const handleSelectOverlay = useCallback(
-    async (person: RelationshipChart) => {
+    (person: RelationshipChart) => {
       // Find if already active
       const isActive = activeOverlays.some((o) => o.person.id === person.id);
       
@@ -250,8 +250,6 @@ export default function ChartScreen() {
       }
 
       try {
-        // Use the user's house system setting for overlay charts too
-        const astroSettings = await AstrologySettingsService.getSettings();
         const birthData: BirthData = {
           date: person.birthDate,
           time: person.birthTime,
@@ -260,7 +258,6 @@ export default function ChartScreen() {
           latitude: person.latitude,
           longitude: person.longitude,
           timezone: person.timezone,
-          houseSystem: astroSettings.houseSystem,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
         (chart as any).name = person.name;
@@ -1603,10 +1600,6 @@ export default function ChartScreen() {
         onSettingsChanged={(updated) => {
           setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(updated.houseSystem));
           setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(updated.orbPreset));
-          // Clear overlays so they regenerate with new settings
-          setActiveOverlays([]);
-          // Recalculate chart with new house system / orb settings
-          void loadChart();
         }}
       />
 

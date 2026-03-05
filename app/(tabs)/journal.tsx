@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform, ScrollView, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,15 +14,16 @@ import PremiumRequiredScreen from '../../components/PremiumRequiredScreen';
 import { localDb } from '../../services/storage/localDb';
 import { JournalEntry, generateId } from '../../services/storage/models';
 import JournalEntryModal from '../../components/JournalEntryModal';
+import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../services/premium/advancedJournal';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
-
+import { CheckInService } from '../../services/patterns/checkInService';
+import { DailyCheckIn } from '../../services/patterns/types';
+import CheckInTrendGraph from '../../components/ui/CheckInTrendGraph';
 import ObsidianJournalEntry from '../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../services/journal/nlp';
 import SkiaDreamEngine from '../../components/ui/SkiaDreamEngine';
-import { SomaticHeatMap } from '../../components/premium/SomaticHeatMap';
-import WeeklyResilienceShield from '../../components/ui/WeeklyResilienceShield';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
@@ -55,25 +56,6 @@ const EntryCard = memo(function EntryCard({
   entry, isExpanded, onToggle, onEdit, onDelete, formatDate, formatTime,
 }: EntryCardProps) {
   const wordCount = entry.contentWordCount ?? (entry.content || '').trim().split(/\s+/).filter(Boolean).length;
-  
-  // Create deterministic mock values for demo if they are missing
-  const idNum = parseInt(entry.id.replace(/\D/g, '').slice(0, 5) || '0', 10);
-  const mockDelta = entry.stabilityDelta ?? ((idNum % 20) - 5); // between -5 and +14
-  
-  const colors = ['#8BC4E8', '#C5B493', '#CD7F5D', '#6EBF8B'];
-  let somaticColor = colors[idNum % colors.length];
-  if (entry.somaticSnapshotData) {
-    try {
-      const parsed = typeof entry.somaticSnapshotData === 'string' 
-        ? JSON.parse(entry.somaticSnapshotData) 
-        : entry.somaticSnapshotData;
-      if (parsed?.color) somaticColor = parsed.color;
-      else somaticColor = '#CD7F5D'; // glowing Copper
-    } catch {
-      somaticColor = '#CD7F5D';
-    }
-  }
-
   return (
     <ObsidianJournalEntry
       title={entry.title}
@@ -85,8 +67,6 @@ const EntryCard = memo(function EntryCard({
       onPress={() => void onEdit(entry)}
       onLongPress={() => void onDelete(entry)}
       wordCount={wordCount}
-      stabilityDelta={mockDelta}
-      somaticSnapshotColor={somaticColor}
     />
   );
 });
@@ -108,9 +88,9 @@ export default function JournalScreen() {
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
 
+  const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
+  const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
-  const [contextFilter, setContextFilter] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedEntryIds(prev => {
@@ -124,8 +104,14 @@ export default function JournalScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadEntries(true);
+      void loadCheckIns();
     }, [])
   );
+
+  useEffect(() => {
+    if (entries.length >= 3) generatePatternInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries.length, isPremium]);
 
   const formatDate = (dateString: string) => {
     const date = parseLocalDate(dateString);
@@ -145,8 +131,8 @@ export default function JournalScreen() {
     });
   };
 
-  const moodToLevel = (mood: string): number => {
-    const map: Record<string, number> = {
+  const moodToLevel = (mood: string): MoodLevel => {
+    const map: Record<string, MoodLevel> = {
       calm: 5,
       soft: 4,
       okay: 3,
@@ -154,6 +140,31 @@ export default function JournalScreen() {
       stormy: 1,
     };
     return map[mood] ?? 3;
+  };
+
+  const generatePatternInsights = () => {
+    try {
+      const sample = entries.slice(0, 90);
+      const entryMetas: JournalEntryMeta[] = sample.map((e) => {
+        let transitSnapshot: TransitSnapshot | undefined;
+        if (e.transitSnapshot) {
+          try { transitSnapshot = JSON.parse(e.transitSnapshot); } catch {}
+        }
+        return {
+          id: e.id,
+          date: e.date,
+          mood: { overall: moodToLevel(e.mood) },
+          tags: [],
+          wordCount: e.contentWordCount ?? (e.content || '').trim().split(/\s+/).filter(Boolean).length,
+          transitSnapshot,
+        };
+      });
+
+      const insights = AdvancedJournalAnalyzer.analyzePatterns(entryMetas, isPremium);
+      setPatternInsights(insights);
+    } catch (e) {
+      logger.error('[Journal] Pattern analysis failed:', e);
+    }
   };
 
   const loadEntries = async (reset = false) => {
@@ -193,7 +204,21 @@ export default function JournalScreen() {
     }
   };
 
-
+  const loadCheckIns = async () => {
+    try {
+      const charts = await localDb.getCharts();
+      const primaryChart = charts[0];
+      if (!primaryChart) {
+        setCheckIns([]);
+        return;
+      }
+      const result = await CheckInService.getAllCheckIns(primaryChart.id, 7);
+      setCheckIns(Array.isArray(result) ? result : []);
+    } catch (error) {
+      logger.error('Failed to load check-ins:', error);
+      setCheckIns([]);
+    }
+  };
 
   const handleAddEntry = async () => {
     try {
@@ -212,9 +237,6 @@ export default function JournalScreen() {
   }, []);
 
   const handleDeleteEntry = useCallback(async (entry: JournalEntry) => {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch {}
     Alert.alert('Delete entry?', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -238,36 +260,6 @@ export default function JournalScreen() {
 
   const keyExtractor = useCallback((item: JournalEntry) => item.id, []);
 
-  const categories = useMemo(() => {
-    const counts: Record<string, number> = {};
-    entries.forEach((e) => {
-      const mockScore = (e.content && e.content.length) ? e.content.length % 4 : 0;
-      const cat = e.contextCategory || ['Parenting', 'Work', 'Relationships', 'Health'][mockScore];
-      counts[cat] = (counts[cat] || 0) + 1;
-    });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  }, [entries]);
-
-  const filteredEntries = useMemo(() => {
-    let result = entries;
-    if (contextFilter) {
-      result = result.filter((e) => {
-        const mockScore = (e.content && e.content.length) ? e.content.length % 4 : 0;
-        const assignedCat = e.contextCategory || ['Parenting', 'Work', 'Relationships', 'Health'][mockScore];
-        return assignedCat === contextFilter;
-      });
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((e) => 
-        (e.title && e.title.toLowerCase().includes(q)) || 
-        (e.content && e.content.toLowerCase().includes(q)) ||
-        (e.contentKeywords && e.contentKeywords.toLowerCase().includes(q))
-      );
-    }
-    return result;
-  }, [entries, contextFilter, searchQuery]);
-
   const renderEntry = useCallback(({ item }: ListRenderItemInfo<JournalEntry>) => {
     return (
       <EntryCard
@@ -290,16 +282,6 @@ export default function JournalScreen() {
 
   // ── List header ────────────────────────────────────────────────────────────
 
-  const shieldScore = useMemo(() => {
-    if (!entries.length) return 82;
-    const recent = entries.slice(0, 7);
-    const avgMood = recent.reduce((sum, e) => {
-      const level = { calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1 }[e.mood] || 3;
-      return sum + level;
-    }, 0) / recent.length;
-    return Math.min(100, Math.round(avgMood * 20));
-  }, [entries]);
-
   const ListHeader = useMemo(() => (
     <>
       <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
@@ -310,46 +292,98 @@ export default function JournalScreen() {
           </View>
         </View>
 
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={16} color={theme.textMuted} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search keywords, somatic feelings..."
-            placeholderTextColor={theme.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
+        <Text style={styles.poeticIntro}>
+          Your private subconscious archive. Each entry becomes a data point in your personal pattern architecture — revealing what the conscious mind overlooks.
+        </Text>
       </Animated.View>
 
-      <View style={styles.entriesSection}>
-        <WeeklyResilienceShield score={shieldScore} />
-        
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-          {categories.map(([cat, count]) => (
-            <Pressable
-              key={cat}
-              onPress={() => setContextFilter(contextFilter === cat ? null : cat)}
-              style={[
-                styles.filterChip,
-                contextFilter === cat && styles.filterChipActive
-              ]}
-            >
-              <Text style={[
-                styles.filterChipText,
-                contextFilter === cat && styles.filterChipTextActive
-              ]}>{`${cat} (${count})`}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+      {checkIns.length >= 2 && (
+        isPremium ? (
+          <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
+            <Text style={styles.chartTitle}>7-Day Mood Trends</Text>
+            <Text style={styles.checkInTrendSubtitle}>From your daily weather check-ins</Text>
+            <CheckInTrendGraph checkIns={checkIns} width={width - 40} />
+          </Animated.View>
+        ) : (
+          <Pressable onPress={() => setShowPremiumRequired(true)} accessibilityRole="button" accessibilityLabel="Unlock 7-day check-in trends">
+            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <Text style={styles.chartTitle}>7-Day Mood Trends</Text>
+                <View style={styles.premiumBadge}>
+                  <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
+                  <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
+                </View>
+              </View>
+              <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.lockBox}>
+                <Ionicons name="trending-up" size={36} color={PALETTE.gold} style={{ marginBottom: 8 }} />
+                <Text style={styles.lockTitle}>Your trends are ready</Text>
+                <Text style={styles.lockSubtitle}>See how your mood, energy, and stress shift across the week</Text>
+              </LinearGradient>
+            </Animated.View>
+          </Pressable>
+        )
+      )}
 
+      {isPremium && patternInsights.length > 0 && (
+        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
+          <Text style={styles.insightsTitle}>Pattern Insights</Text>
+          <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
+
+          {patternInsights.map((insight, idx) => {
+            const isTransit = insight.type === 'transit_correlation';
+            const colors = isTransit 
+              ? ['rgba(157, 118, 193, 0.15)', 'rgba(74, 53, 89, 0.6)'] // Amethyst tone
+              : ['rgba(197, 180, 147, 0.15)', 'rgba(122, 92, 19, 0.6)']; // Gold tone
+
+            return (
+              <LinearGradient key={`${insight.title}-${idx}`} colors={colors as any} style={styles.insightCard}>
+                <View style={styles.insightHeader}>
+                  <Text style={styles.insightTitle}>{insight.title}</Text>
+                  <View style={[styles.confidenceBadge, insight.confidence === 'strong' && styles.confidenceStrong, insight.confidence === 'suggested' && styles.confidenceSuggested]}>
+                    <Text style={styles.confidenceText}>{insight.confidence}</Text>
+                  </View>
+                </View>
+                <Text style={styles.insightDescription}>{insight.description}</Text>
+                {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
+                {!!insight.actionable && <Text style={[styles.insightActionable, { color: isTransit ? PALETTE.rose : PALETTE.gold }]}>{insight.actionable}</Text>}
+              </LinearGradient>
+            );
+          })}
+        </Animated.View>
+      )}
+
+      {!isPremium && totalCount >= 5 && (
+        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
+          <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
+            <LinearGradient colors={['rgba(197, 180, 147, 0.12)', 'rgba(20, 24, 34, 0.8)']} style={[styles.insightCard, { borderColor: 'rgba(197, 180, 147, 0.25)' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <Ionicons name="analytics" size={18} color={PALETTE.gold} />
+                <Text style={styles.insightTitle}>Pattern Insights</Text>
+                <View style={[styles.premiumBadge, { marginLeft: 'auto' }]}>
+                  <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
+                  <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
+                </View>
+              </View>
+              <Text style={styles.insightDescription}>
+                With {totalCount} entries, Deeper Sky can reveal which energy patterns lift your mood, when you tend to journal most, and what emotional themes keep appearing.
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+                <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]}>Reveal your patterns</Text>
+                <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+              </View>
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
+      )}
+
+      <View style={styles.entriesSection}>
         <View style={styles.entriesHeader}>
           <Text style={styles.sectionTitle}>Recent Entries</Text>
-          <Text style={styles.entriesCount}>{filteredEntries.length} entries</Text>
+          <Text style={styles.entriesCount}>{totalCount} entries</Text>
         </View>
       </View>
     </>
-  ), [totalCount, contextFilter, filteredEntries.length, searchQuery, categories, shieldScore]);
+  ), [checkIns, isPremium, patternInsights, totalCount, router, width]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 
@@ -390,21 +424,12 @@ export default function JournalScreen() {
       const nowIso = new Date().toISOString();
       const contentText = data.content ?? editingEntry?.content ?? '';
       const nlp = analyzeJournalContent(contentText);
-      
-      const autoTags: string[] = [];
-      const lowerContent = contentText.toLowerCase();
-      if (lowerContent.includes('son') || lowerContent.includes('school')) autoTags.push('Parenting');
-      if (lowerContent.includes('code') || lowerContent.includes('work') || lowerContent.includes('meeting')) autoTags.push('Work');
-      if (lowerContent.includes('health') || lowerContent.includes('workout') || lowerContent.includes('gym')) autoTags.push('Health');
-      if (lowerContent.includes('partner') || lowerContent.includes('friend')) autoTags.push('Relationships');
-
       const nlpFields = {
         contentKeywords: JSON.stringify(nlp.keywords),
         contentEmotions: JSON.stringify(nlp.emotions),
         contentSentiment: JSON.stringify(nlp.sentiment),
         contentWordCount: nlp.wordCount,
         contentReadingMinutes: nlp.readingMinutes,
-        contextCategory: data.contextCategory ?? editingEntry?.contextCategory ?? autoTags[0] ?? 'Uncategorized',
       };
 
       if (editingEntry?.id) {
@@ -467,7 +492,7 @@ export default function JournalScreen() {
           />
         ) : (
           <FlatList
-            data={filteredEntries}
+            data={entries}
             renderItem={renderEntry}
             keyExtractor={keyExtractor}
             ListHeaderComponent={ListHeader}
@@ -516,26 +541,11 @@ const styles = StyleSheet.create({
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
   subtitle: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic', marginTop: 4, letterSpacing: 0.3 },
-
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    marginTop: 20,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#FFF',
+  poeticIntro: {
     fontSize: 15,
-    paddingVertical: 12,
+    color: theme.textSecondary,
+    lineHeight: 24,
+    marginTop: 20,
   },
 
   chartTitle: {
@@ -590,10 +600,6 @@ const styles = StyleSheet.create({
   insightActionable: { fontSize: 14, fontWeight: '600', marginTop: 4 },
 
   entriesSection: { marginBottom: 16 },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', marginRight: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  filterChipActive: { backgroundColor: 'rgba(197, 180, 147, 0.2)', borderColor: '#C5B493' },
-  filterChipText: { color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: Platform.select({ ios: 'Times New Roman', android: 'serif' }) },
-  filterChipTextActive: { color: '#C5B493', fontWeight: 'bold' },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sectionTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic' },

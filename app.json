@@ -16,12 +16,10 @@
 
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
-      "buildNumber": "10",
+      "buildNumber": "9",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
-        "NSHealthShareUsageDescription": "MySky uses your heart rate variability and sleep data to calibrate your daily Resilience Shield and Stability Index.",
-        "NSHealthUpdateUsageDescription": "MySky logs your mindful somatic sessions to your health records."
+        "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -108,16 +106,7 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
-      "expo-secure-store",
-      [
-        "./plugins/withReactNativeHealth",
-        {
-          "permissions": {
-            "read": ["HeartRate", "RestingHeartRate", "HeartRateVariability", "SleepAnalysis", "MindfulSession"],
-            "write": ["MindfulSession"]
-          }
-        }
-      ]
+      "expo-secure-store"
     ],
 
     "experiments": {

@@ -183,6 +183,10 @@ export default function EnergyScreen() {
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+              <Ionicons name="chevron-back" size={20} color={theme.primary} />
+              <Text style={styles.backBtnText}>Mood</Text>
+            </Pressable>
             <Text style={styles.title}>Energy</Text>
             <Text style={styles.subtitle}>Your personal energy weather {'\u2014'} built from your profile.</Text>
           </Animated.View>
@@ -233,6 +237,10 @@ export default function EnergyScreen() {
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+            <Ionicons name="chevron-back" size={20} color={theme.primary} />
+            <Text style={styles.backBtnText}>Mood</Text>
+          </Pressable>
           <Text style={styles.title}>Energy</Text>
           <Text style={styles.subtitle}>
             {userName ? `${userName}'s energy` : 'Your energy'} {'\u2022'} {formatToday()}

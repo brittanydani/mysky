@@ -88,7 +88,6 @@ export interface DailyCheckIn {
   note?: string;               // optional quick note
   wins?: string;               // optional: what went well
   challenges?: string;         // optional: what was hard
-  silhouetteNodes?: string[];
 
   // Auto-captured sky snapshot
   moonSign: string;
@@ -219,7 +218,6 @@ export interface CheckInInput {
   note?: string;
   wins?: string;
   challenges?: string;
-  silhouetteNodes?: string[];
   timeOfDay?: TimeOfDay;       // If not provided, auto-detected from current time
 }
 

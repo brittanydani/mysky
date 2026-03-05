@@ -38,11 +38,6 @@ import { ChartTiedPromptsService, ChartTiedPrompt, JournalPromptSet } from '../s
 import { NatalChart } from '../services/astrology/types';
 import { ShadowQuoteEngine, ShadowQuoteResult, ShadowQuote } from '../services/astrology/shadowQuotes';
 import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from '../services/journal/promptEngine';
-import { useSomaticContext } from '../context/SomaticContext';
-import { useSomaticBreathing } from '../hooks/useSomaticBreathing';
-import { DynamicBreathPortal } from './ui/DynamicBreathPortal';
-import { SkiaSyncSuccess } from './ui/SkiaSyncSuccess';
-import { StabilityDeltaSparkline } from './ui/StabilityDeltaSparkline';
 
 import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
 
@@ -68,28 +63,7 @@ type EnergyKey = 'low' | 'steady' | 'high';
 
 export default function JournalEntryModal({ visible, onClose, onSave, initialData }: JournalEntryModalProps) {
   const { isPremium } = usePremium();
-  const { tensionNodes } = useSomaticContext();
   
-  // Gate: True if editing or if they just finished breathing
-  const [isRegulated, setIsRegulated] = useState(!!initialData);
-  const [showSyncSuccess, setShowSyncSuccess] = useState(false);
-  
-  // Use strongest tension node or baseline
-  const primaryNode = tensionNodes.length > 0 
-    ? tensionNodes.reduce((prev, curr) => (curr.intensity > prev.intensity ? curr : prev))
-    : { x: 150, y: 0.5, intensity: 1, type: 'flow' };
-    
-  const breathConfig = useSomaticBreathing(primaryNode ? primaryNode.y : null, primaryNode?.intensity || 1);
-
-  const handleBreathComplete = () => {
-    setShowSyncSuccess(true);
-  };
-
-  const handleSyncComplete = () => {
-    setShowSyncSuccess(false);
-    setIsRegulated(true);
-  };
-
   const [date, setDate] = useState(new Date());
   const [mood, setMood] = useState<MoodKey>('okay');
   const [energyLevel, setEnergyLevel] = useState<EnergyKey>('steady');
@@ -231,27 +205,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
               <View style={{ width: 44 }} />
             </Animated.View>
 
-            {/* Dynamic Breath Portal Rendering if not regulated */}
-            {!isRegulated ? (
-              <Animated.View entering={FadeInUp.duration(600)} style={styles.gateContainer}>
-                {showSyncSuccess ? (
-                  <SkiaSyncSuccess originX={primaryNode.x} originY={primaryNode.y * 500} onComplete={handleSyncComplete} />
-                ) : (
-                  <>
-                    <Text style={styles.gateTitle}>Regulate to Reflect</Text>
-                    <Text style={styles.gateSubtitle}>Align your nervous system for deeper insights.</Text>
-                    <DynamicBreathPortal 
-                      inhale={breathConfig.inhale} 
-                      exhale={breathConfig.exhale} 
-                      label={breathConfig.label} 
-                      color={breathConfig.color} 
-                      durationInSeconds={10} // Just for preview/flow ease, adjust as necessary
-                      onComplete={handleBreathComplete} 
-                    />
-                  </>
-                )}
-              </Animated.View>
-            ) : (
             <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
               <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 
@@ -325,14 +278,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       textAlignVertical="top"
                     />
                   </View>
-                  
-                  <StabilityDeltaSparkline intensity={primaryNode.intensity} />
-                  
-                  <View style={styles.blueprintFooter}>
-                    <Text style={styles.footerText}>
-                      Alignment: {breathConfig.label} applied to {primaryNode.type} tension.
-                    </Text>
-                  </View>
                 </Animated.View>
 
                 {/* Footer / Save */}
@@ -357,7 +302,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 />
               )}
             </KeyboardAvoidingView>
-            )}
           </SafeAreaView>
         </View>
     </Modal>
@@ -365,11 +309,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 }
 
 const styles = StyleSheet.create({
-  gateContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  gateTitle: { color: PALETTE.textMain, fontSize: 24, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
-  gateSubtitle: { color: theme.textMuted, fontSize: 15, marginBottom: 40, textAlign: 'center' },
-  blueprintFooter: { marginTop: 12, padding: 12, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 8 },
-  footerText: { color: theme.textMuted, fontSize: 12, textAlign: 'center', textTransform: 'uppercase', letterSpacing: 1 },
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#07090F' },
   safeArea: { flex: 1 },

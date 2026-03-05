@@ -20,7 +20,6 @@ import * as Haptics from 'expo-haptics';
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaReflectionMirror from '../../components/ui/SkiaReflectionMirror';
-import SkiaKeywordStarfield from '../../components/reflect/SkiaKeywordStarfield';
 import { localDb } from '../../services/storage/localDb';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { TAG_LABELS } from '../../utils/tagAnalytics';
@@ -59,23 +58,65 @@ function getDailyPrompt(): string {
   return REFLECTION_PROMPTS[dayOfYear % REFLECTION_PROMPTS.length];
 }
 
-// ── Data-Driven Somatic Intention ──
-function getSomaticIntention(checkIns: DailyCheckIn[]): string {
-  if (checkIns.length === 0) return "Ground yourself in the present moment.";
-  
-  const recent = checkIns[0];
-  
-  if (recent.stressLevel === 'high') {
-    return "Based on your high 'Connection Pressure' yesterday, your intention today is to protect your Indigo Window.";
-  }
-  if (recent.energyLevel === 'low') {
-    return "Your energy dropped recently. Focus on resting without guilt today.";
-  }
-  if (recent.moodScore && recent.moodScore >= 8) {
-    return "You're in a high-resonance state. Anchor this feeling physically today.";
-  }
+// Rotating weekly intentions (by calendar week number)
+const WEEKLY_INTENTIONS = [
+  "Notice what gives you energy — and what quietly drains it.",
+  "Let one thing be enough.",
+  "Pay attention to how your body feels at the end of each day.",
+  "Do one small thing you've been putting off.",
+  "Notice what you're resisting — and get curious about why.",
+  "Leave one hour unscheduled and see what you do with it.",
+  "Reach out to someone you've been meaning to contact.",
+  "Focus on what you can actually influence.",
+  "Let yourself be bad at something new.",
+  "What you do on ordinary days is who you are.",
+  "Choose one expectation to quietly drop this week.",
+  "Notice the moments when time feels slow in a good way.",
+  "Finish something small that's been lingering.",
+  "Say no to one thing without explaining yourself.",
+  "Eat one meal without your phone.",
+  "Notice the difference between tired and depleted.",
+  "Let a conversation go deeper than usual.",
+  "Stop optimizing one part of your routine.",
+  "Watch how you talk to yourself when things go wrong.",
+  "Write down three things that actually happened well today.",
+  "Move your body in a way that isn't about fitness.",
+  "Spend time outside for no reason.",
+  "Do something slow on purpose.",
+  "Notice what you envy — it's usually information.",
+  "Let yourself want what you actually want.",
+  "Be less available this week and see what opens up.",
+  "Ask for help with something specific.",
+  "Finish a thought before reaching for your phone.",
+  "Pick one habit and do it without tracking it.",
+  "Sit somewhere new. Notice what's different.",
+  "Read something with no practical use.",
+  "Let a problem rest overnight before responding to it.",
+  "Notice what kind of tired you are.",
+  "Do one thing this week that isn't for anyone else.",
+  "Stop correcting your instincts and follow one.",
+  "Write down what's actually bothering you.",
+  "Let yourself be fully in one conversation this week.",
+  "Decide something without researching it.",
+  "Notice what you're tolerating.",
+  "Go to bed when you're tired instead of when you feel ready.",
+  "Do less than you planned. Notice what actually mattered.",
+  "Don't explain yourself once this week.",
+  "Notice what you're grateful for before checking your phone in the morning.",
+  "Let yourself feel awkward about something instead of fixing it.",
+  "Spend less time on something you do out of habit.",
+  "Make one decision based on how it'll feel in a month, not a day.",
+  "Call or text someone you love, without a reason.",
+  "Acknowledge something difficult without trying to solve it yet.",
+  "Do one thing you said you'd do, for yourself.",
+  "Notice where you're performing versus actually feeling.",
+];
 
-  return "Pay attention to how your body holds boundaries today.";
+function getWeeklyIntention(): string {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.floor((now.getTime() - startOfYear.getTime()) / (7 * 86_400_000));
+  return WEEKLY_INTENTIONS[weekNum % WEEKLY_INTENTIONS.length];
 }
 
 // Group 30 check-ins into up to 4 weekly buckets
@@ -84,9 +125,6 @@ interface WeekBucket {
   avgMood: number | null;
   avgEnergy: number | null;
   avgStress: number | null;
-  moodStability: string;
-  energyStability: string;
-  stressStability: string;
   count: number;
 }
 
@@ -95,18 +133,6 @@ function levelToScore(level: string | null | undefined): number | null {
   if (level === 'medium') return 5;
   if (level === 'high') return 9;
   return null;
-}
-
-function calculateStability(values: number[], minVal: number, maxVal: number): string {
-  if (values.length < 2) return '—';
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (values.length - 1);
-  const stdDev = Math.sqrt(variance);
-  const maxStdDev = (maxVal - minVal) / 2;
-  
-  let stability = 100 - ((stdDev / maxStdDev) * 100);
-  stability = Math.max(0, Math.min(100, Math.round(stability)));
-  return `${stability}%`;
 }
 
 function buildWeekBuckets(checkIns: DailyCheckIn[]): WeekBucket[] {
@@ -136,9 +162,6 @@ function buildWeekBuckets(checkIns: DailyCheckIn[]): WeekBucket[] {
       avgMood: avg(moods),
       avgEnergy: avg(energies),
       avgStress: avg(stresses),
-      moodStability: calculateStability(moods, 1, 10),
-      energyStability: calculateStability(energies, 2, 9),
-      stressStability: calculateStability(stresses, 2, 9),
       count: inBucket.length,
     });
   }
@@ -298,23 +321,6 @@ export default function ReflectScreen() {
     return parseFloat((hAvg - lAvg).toFixed(2));
   }, [checkIns]);
 
-  const somaticPattern = useMemo(() => {
-    if (checkIns.length < 10) return null;
-    
-    // Logic: Find the most common tension node on days where 'Stress' is High
-    const highStressDays = checkIns.filter(c => c.stressLevel === 'high');
-    const nodeFrequency: Record<string, number> = {};
-    
-    highStressDays.forEach(day => {
-      day.silhouetteNodes?.forEach(node => {
-        nodeFrequency[node] = (nodeFrequency[node] || 0) + 1;
-      });
-    });
-
-    const topNode = Object.entries(nodeFrequency).sort((a,b) => b[1] - a[1])[0];
-    return topNode ? topNode[0] : null;
-  }, [checkIns]);
-
   useEffect(() => {
     if (checkIns.length < 7 || !session?.access_token || !isPremium) return;
     let cancelled = false;
@@ -406,7 +412,7 @@ export default function ReflectScreen() {
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <Text style={styles.title}>Reflect</Text>
-            <Text style={styles.subtitle}>Current Window: Somatic Processing</Text>
+            <Text style={styles.subtitle}>Check in with yourself</Text>
           </Animated.View>
 
           {/* ── Daily Reflection Prompt (Cinematic Glass) ── */}
@@ -456,14 +462,14 @@ export default function ReflectScreen() {
             </Animated.View>
           )}
 
-          {/* ── Somatic Intention (Cinematic Glass) ── */}
+          {/* ── Weekly Intention (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.section}>
             <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.glassCard}>
               <View style={styles.promptLabelRow}>
                 <Ionicons name="leaf-outline" size={14} color={PALETTE.emerald} />
-                <Text style={[styles.promptLabel, { color: PALETTE.emerald }]}>SOMATIC INTENTION</Text>
+                <Text style={[styles.promptLabel, { color: PALETTE.emerald }]}>THIS WEEK'S INTENTION</Text>
               </View>
-              <Text style={styles.intentionText}>{getSomaticIntention(checkIns)}</Text>
+              <Text style={styles.intentionText}>{getWeeklyIntention()}</Text>
             </LinearGradient>
           </Animated.View>
 
@@ -479,9 +485,9 @@ export default function ReflectScreen() {
             </Animated.View>
           ) : (
             <>
-              {/* ── 30-Day Overview Widgets (Volatility) ── */}
+              {/* ── 30-Day Overview Widgets ── */}
               <Animated.View entering={FadeInDown.delay(160).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>System Stability</Text>
+                <Text style={styles.sectionTitle}>30-Day Overview</Text>
                 <View style={styles.trendCards}>
                   {/* Mood Widget */}
                   <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.trendCard}>
@@ -489,8 +495,8 @@ export default function ReflectScreen() {
                       <Text style={[styles.trendCardLabel, { color: PALETTE.silverBlue }]}>MOOD</Text>
                       <Ionicons name={trendIcon(moodTrend).name} size={16} color={trendIcon(moodTrend).color} />
                     </View>
-                    <Text style={styles.trendCardValue}>{buckets[0]?.moodStability || '—'}</Text>
-                    <Text style={styles.trendCardSub}>stability</Text>
+                    <Text style={styles.trendCardValue}>{buckets[0]?.avgMood != null ? buckets[0].avgMood.toFixed(1) : '—'}</Text>
+                    <Text style={styles.trendCardSub}>this week avg</Text>
                   </LinearGradient>
 
                   {/* Energy Widget */}
@@ -499,8 +505,8 @@ export default function ReflectScreen() {
                       <Text style={[styles.trendCardLabel, { color: PALETTE.gold }]}>ENERGY</Text>
                       <Ionicons name={trendIcon(energyTrend).name} size={16} color={trendIcon(energyTrend).color} />
                     </View>
-                    <Text style={styles.trendCardValue}>{buckets[0]?.energyStability || '—'}</Text>
-                    <Text style={styles.trendCardSub}>stability</Text>
+                    <Text style={styles.trendCardValue}>{buckets[0]?.avgEnergy != null ? buckets[0].avgEnergy.toFixed(1) : '—'}</Text>
+                    <Text style={styles.trendCardSub}>this week avg</Text>
                   </LinearGradient>
 
                   {/* Stress Widget */}
@@ -509,8 +515,8 @@ export default function ReflectScreen() {
                       <Text style={[styles.trendCardLabel, { color: PALETTE.copper }]}>STRESS</Text>
                       <Ionicons name={trendIcon(stressTrend, true).name} size={16} color={trendIcon(stressTrend, true).color} />
                     </View>
-                    <Text style={styles.trendCardValue}>{buckets[0]?.stressStability || '—'}</Text>
-                    <Text style={styles.trendCardSub}>stability</Text>
+                    <Text style={styles.trendCardValue}>{buckets[0]?.avgStress != null ? buckets[0].avgStress.toFixed(1) : '—'}</Text>
+                    <Text style={styles.trendCardSub}>this week avg</Text>
                   </LinearGradient>
                 </View>
               </Animated.View>
@@ -540,32 +546,36 @@ export default function ReflectScreen() {
                 </Animated.View>
               )}
 
-              {/* ── System Analysis ── */}
+              {/* ── Sign-in CTA (if no session) ── */}
+              {checkIns.length >= 7 && !session && (
+                <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
+                  <Pressable onPress={() => nav('/(auth)/sign-in')}>
+                    <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={[styles.glassCard, { flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
+                      <Ionicons name="sparkles-outline" size={24} color={PALETTE.silverBlue} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.sectionTitle, { marginBottom: 4, color: PALETTE.silverBlue }]}>Unlock AI Reflections</Text>
+                        <Text style={{ fontSize: 13, color: theme.textSecondary, lineHeight: 18 }}>Sign in to generate deep insights written just for you, based on your actual data patterns.</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+                    </LinearGradient>
+                  </Pressable>
+                </Animated.View>
+              )}
+
+              {/* ── Observations (Raw Data) ── */}
               <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
-                <Text style={styles.sectionTitle}>System Analysis</Text>
-
-                {/* The visual linguistic cloud */}
-                <View style={{ marginBottom: 16 }}>
-                  <SkiaKeywordStarfield keywords={tagCorrelation ? [...tagCorrelation.restores, ...tagCorrelation.drains].filter(Boolean).slice(0, 5) : ['Quiet', 'Focus', 'Movement']} />
-                </View>
-
-                {/* 3-4 Punchy Bullets */}
+                <Text style={styles.sectionTitle}>Observations</Text>
                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                   {checkIns.length >= 7 ? (
                     aiInsights ? (
-                      <View style={{ gap: 16 }}>
-                        {aiInsights.insights.slice(0, 3).map((line, i) => (
-                          <View key={i} style={styles.observationItem}>
-                            <View style={[styles.observationDot, { backgroundColor: i === 0 ? PALETTE.silverBlue : i === 1 ? PALETTE.emerald : PALETTE.gold }]} />
-                            <Text style={[styles.insightLine, { marginBottom: 0 }]}>{line}</Text>
-                          </View>
-                        ))}
-                      </View>
+                      aiInsights.observations.map((line, i) => (
+                        <Text key={i} style={styles.insightLine}>{line}</Text>
+                      ))
                     ) : (
-                      <View style={{ gap: 16 }}>
+                      <>
                         <View style={styles.observationItem}>
                           <View style={[styles.observationDot, { backgroundColor: PALETTE.silverBlue }]} />
-                          <Text style={[styles.insightLine, { marginBottom: 0 }]}>
+                          <Text style={styles.insightLine}>
                             {moodTrend === 'up' ? 'Your mood has been moving upward — something is landing differently for you, even if you can\'t quite name it yet.'
                               : moodTrend === 'down' ? 'Something has been pulling at your mood this week. That\'s worth sitting with, not rushing past.'
                               : 'Your mood has been holding steady — that kind of groundedness is its own quiet accomplishment.'}
@@ -574,7 +584,7 @@ export default function ReflectScreen() {
 
                         <View style={styles.observationItem}>
                           <View style={[styles.observationDot, { backgroundColor: PALETTE.copper }]} />
-                          <Text style={[styles.insightLine, { marginBottom: 0 }]}>
+                          <Text style={styles.insightLine}>
                             {stressTrend === 'down' ? 'The pressure has been easing. Whatever you\'ve been choosing differently, it\'s showing.'
                               : stressTrend === 'up' ? 'Stress has been building. Worth asking what\'s actually being required of you right now — and whether it\'s all yours to carry.'
                               : 'Stress is holding at a consistent level. Not escalating, but not releasing either — that\'s information worth noticing.'}
@@ -584,36 +594,28 @@ export default function ReflectScreen() {
                         {energyMoodInsight != null && (
                           <View style={styles.observationItem}>
                             <View style={[styles.observationDot, { backgroundColor: PALETTE.gold }]} />
-                            <Text style={[styles.insightLine, { marginBottom: 0 }]}>{energyMoodInsight}</Text>
+                            <Text style={styles.insightLine}>{energyMoodInsight}</Text>
                           </View>
                         )}
-                      </View>
+                      </>
                     )
                   ) : (
                     <Text style={styles.placeholderText}>Log at least 7 check-ins to unlock pattern observations.</Text>
                   )}
-
-                  {somaticPattern && (
-                    <View style={{ marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(197, 180, 147, 0.15)' }}>
-                      <Text style={[styles.insightHighlight, { color: PALETTE.amethyst, marginBottom: 12 }]}>Somatic Pattern</Text>
-                      <View style={{ gap: 12 }}>
-                        <Text style={[styles.insightLine, { marginBottom: 0 }]}>
-                          <Text style={{ fontWeight: '700', color: PALETTE.textMain }}>Observation: </Text>
-                          You've frequently logged '{somaticPattern.charAt(0).toUpperCase() + somaticPattern.slice(1)}' tension on your high-stress days.
-                        </Text>
-                        <Text style={[styles.insightLine, { marginBottom: 0 }]}>
-                          <Text style={{ fontWeight: '700', color: PALETTE.textMain }}>The Link: </Text>
-                          This aligns with your current Blueprint load in the "Focus Domain".
-                        </Text>
-                        <Text style={[styles.insightLine, { marginBottom: 0 }]}>
-                          <Text style={{ fontWeight: '700', color: PALETTE.textMain }}>The Directive: </Text>
-                          Try the 4:8 breathing ratio tonight to prevent this tension from entering your "Indigo" recovery window.
-                        </Text>
-                      </View>
-                    </View>
-                  )}
                 </LinearGradient>
               </Animated.View>
+
+              {/* ── AI Synthesis ── */}
+              {aiInsights && (
+                <Animated.View entering={FadeInDown.delay(310).duration(600)} style={styles.section}>
+                  <Text style={styles.sectionTitle}>Synthesis</Text>
+                  <LinearGradient colors={['rgba(197, 180, 147, 0.08)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                    {aiInsights.insights.map((line, i) => (
+                      <Text key={i} style={styles.insightLine}>{line}</Text>
+                    ))}
+                  </LinearGradient>
+                </Animated.View>
+              )}
 
               {/* ── What Restores You ── */}
               <Animated.View entering={FadeInDown.delay(340).duration(600)} style={styles.section}>
@@ -654,6 +656,22 @@ export default function ReflectScreen() {
               </Animated.View>
             </>
           )}
+
+          {/* ── Astrology Context (Secondary Hook) ── */}
+          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={[styles.section, { marginTop: 16 }]}>
+            <Pressable onPress={() => nav('/astrology-context')}>
+              <LinearGradient colors={['rgba(197, 180, 147, 0.1)', 'rgba(197, 180, 147, 0.02)']} style={styles.astroContextCard}>
+                <View style={styles.astroIconWrap}>
+                  <Ionicons name="planet-outline" size={18} color={PALETTE.gold} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.astroContextTitle}>Cosmic Context</Text>
+                  <Text style={styles.astroContextSub}>View today's transits and influences</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
 
         </ScrollView>
       </SafeAreaView>

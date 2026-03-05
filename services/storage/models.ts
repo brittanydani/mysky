@@ -44,11 +44,6 @@ export interface JournalEntry {
   contentWordCount?: number;    // plaintext word count
   contentReadingMinutes?: number; // estimated reading time
 
-  // Archive Features
-  contextCategory?: string; // e.g., "Parenting", "Work", "Relationships"
-  stabilityDelta?: number; // e.g. +14, -5
-  somaticSnapshotData?: string; // JSON data for the somatic thumbnail
-
   createdAt: string;
   updatedAt: string;
 
