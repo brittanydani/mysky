@@ -110,7 +110,7 @@
       "expo-web-browser",
       "expo-secure-store",
       [
-        "react-native-health",
+        "./plugins/withReactNativeHealth",
         {
           "permissions": {
             "read": ["HeartRate", "RestingHeartRate", "HeartRateVariability", "SleepAnalysis", "MindfulSession"],
