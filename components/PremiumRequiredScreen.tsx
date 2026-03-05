@@ -13,7 +13,7 @@ interface PremiumRequiredScreenProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   textMain: '#FDFBF7',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -86,7 +86,7 @@ export default function PremiumRequiredScreen({
           accessibilityRole="button"
         >
           <LinearGradient
-            colors={['#FFF4D4', '#D4AF37', '#7A5C13']}
+            colors={['#FFF4D4', '#C5B493', '#8B6508']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.ctaGradient}
@@ -137,9 +137,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 24,
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.25)',
+    borderColor: 'rgba(197, 180, 147, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,

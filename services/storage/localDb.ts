@@ -7,7 +7,7 @@ import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 18;
+const CURRENT_DB_VERSION = 19;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -65,10 +65,18 @@ class LocalDatabase {
 
     logger.info(`[LocalDB] Current version: ${currentVersion}, Target version: ${CURRENT_DB_VERSION}`);
 
+    // Forward-compatibility guard: refuse to open a database created by a
+    // newer version of the app (e.g. TestFlight → App Store downgrade).
+    if (currentVersion > CURRENT_DB_VERSION) {
+      throw new Error(
+        `Database version ${currentVersion} is newer than this app supports (${CURRENT_DB_VERSION}). ` +
+        `Please update MySky to the latest version.`
+      );
+    }
+
     if (currentVersion < CURRENT_DB_VERSION) {
       await this.runMigrations(currentVersion);
-      await db.execAsync(`PRAGMA user_version = ${CURRENT_DB_VERSION}`);
-      logger.info(`[LocalDB] Migrated to version ${CURRENT_DB_VERSION}`);
+      logger.info(`[LocalDB] All migrations complete (now at version ${CURRENT_DB_VERSION})`);
     }
 
     // Defensive repairs for columns that may be missing even on higher user_version databases
@@ -111,78 +119,37 @@ class LocalDatabase {
   }
 
   private async runMigrations(fromVersion: number): Promise<void> {
-    await this.ensureReady();
+    const db = await this.ensureReady();
 
-    if (fromVersion < 1) {
-      await this.createInitialSchema();
-    }
+    const steps: Array<{ version: number; fn: () => Promise<void> }> = [
+      { version: 1, fn: () => this.createInitialSchema() },
+      { version: 2, fn: () => this.migrateToVersion2() },
+      { version: 3, fn: () => this.migrateToVersion3() },
+      { version: 4, fn: () => this.migrateToVersion4() },
+      { version: 5, fn: () => this.migrateToVersion5() },
+      { version: 6, fn: () => this.migrateToVersion6() },
+      { version: 7, fn: () => this.migrateToVersion7() },
+      { version: 8, fn: () => this.migrateToVersion8() },
+      { version: 9, fn: () => this.migrateToVersion9() },
+      { version: 10, fn: () => this.migrateToVersion10() },
+      { version: 11, fn: () => this.migrateToVersion11() },
+      { version: 12, fn: () => this.migrateToVersion12() },
+      { version: 13, fn: () => this.migrateToVersion13() },
+      { version: 14, fn: () => this.migrateToVersion14() },
+      { version: 15, fn: () => this.migrateToVersion15() },
+      { version: 16, fn: () => this.migrateToVersion16() },
+      { version: 17, fn: () => this.migrateToVersion17() },
+      { version: 18, fn: () => this.migrateToVersion18() },
+      { version: 19, fn: () => this.migrateToVersion19() },
+    ];
 
-    if (fromVersion < 2) {
-      await this.migrateToVersion2();
-    }
-
-    if (fromVersion < 3) {
-      await this.migrateToVersion3();
-    }
-
-    if (fromVersion < 4) {
-      await this.migrateToVersion4();
-    }
-
-    if (fromVersion < 5) {
-      await this.migrateToVersion5();
-    }
-
-    if (fromVersion < 6) {
-      await this.migrateToVersion6();
-    }
-
-    if (fromVersion < 7) {
-      await this.migrateToVersion7();
-    }
-
-    if (fromVersion < 8) {
-      await this.migrateToVersion8();
-    }
-
-    if (fromVersion < 9) {
-      await this.migrateToVersion9();
-    }
-
-    if (fromVersion < 10) {
-      await this.migrateToVersion10();
-    }
-
-    if (fromVersion < 11) {
-      await this.migrateToVersion11();
-    }
-
-    if (fromVersion < 12) {
-      await this.migrateToVersion12();
-    }
-
-    if (fromVersion < 13) {
-      await this.migrateToVersion13();
-    }
-
-    if (fromVersion < 14) {
-      await this.migrateToVersion14();
-    }
-
-    if (fromVersion < 15) {
-      await this.migrateToVersion15();
-    }
-
-    if (fromVersion < 16) {
-      await this.migrateToVersion16();
-    }
-
-    if (fromVersion < 17) {
-      await this.migrateToVersion17();
-    }
-
-    if (fromVersion < 18) {
-      await this.migrateToVersion18();
+    for (const step of steps) {
+      if (fromVersion < step.version) {
+        await step.fn();
+        // Bump PRAGMA after each successful step so a crash mid-sequence
+        // resumes from the correct point on next launch.
+        await db.execAsync(`PRAGMA user_version = ${step.version}`);
+      }
     }
   }
 
@@ -436,140 +403,91 @@ class LocalDatabase {
       // migration_markers table may not exist yet in edge cases; continue
     }
 
+    // Pre-read all rows OUTSIDE the transaction (reads are safe without a lock).
+    // Encrypt values in JS, then batch-write inside a single transaction so
+    // the DB is never left in a half-encrypted state.
+    const charts = (await db.getAllAsync(
+      'SELECT id, birth_place FROM saved_charts WHERE birth_place IS NOT NULL'
+    )) as any[];
+    const entries = (await db.getAllAsync(
+      'SELECT id, content, title FROM journal_entries WHERE content IS NOT NULL'
+    )) as any[];
+    const rels = (await db.getAllAsync(
+      'SELECT id, birth_place FROM relationship_charts WHERE birth_place IS NOT NULL'
+    )) as any[];
+    const checkins = (await db.getAllAsync(
+      'SELECT id, note, wins, challenges FROM daily_check_ins'
+    )) as any[];
+
+    // Pre-compute encrypted values
+    type RowUpdate = { id: string; table: string; updates: string[]; params: any[] };
+    const pending: RowUpdate[] = [];
     let encrypted = 0;
-    let failures = 0;
 
-    // 1. Encrypt saved_charts.birth_place
-    try {
-      const charts = (await db.getAllAsync(
-        'SELECT id, birth_place FROM saved_charts WHERE birth_place IS NOT NULL'
-      )) as any[];
-      for (const row of charts) {
-        try {
-          if (row.birth_place && !FieldEncryptionService.isEncrypted(row.birth_place)) {
-            const enc = await FieldEncryptionService.encryptField(row.birth_place);
-            await db.runAsync('UPDATE saved_charts SET birth_place = ? WHERE id = ?', [enc, row.id]);
-            encrypted++;
-          }
-        } catch {
-          failures++;
-          logger.error(`[LocalDB] v7: failed to encrypt saved_charts row ${row.id}`);
-        }
+    for (const row of charts) {
+      if (row.birth_place && !FieldEncryptionService.isEncrypted(row.birth_place)) {
+        const enc = await FieldEncryptionService.encryptField(row.birth_place);
+        pending.push({ id: row.id, table: 'saved_charts', updates: ['birth_place = ?'], params: [enc] });
+        encrypted++;
       }
-    } catch (e) {
-      logger.error('[LocalDB] v7: failed to encrypt saved_charts.birth_place', e);
+    }
+    for (const row of entries) {
+      const updates: string[] = [];
+      const params: any[] = [];
+      if (row.content && !FieldEncryptionService.isEncrypted(row.content)) {
+        updates.push('content = ?');
+        params.push(await FieldEncryptionService.encryptField(row.content));
+        encrypted++;
+      }
+      if (row.title && !FieldEncryptionService.isEncrypted(row.title)) {
+        updates.push('title = ?');
+        params.push(await FieldEncryptionService.encryptField(row.title));
+        encrypted++;
+      }
+      if (updates.length > 0) pending.push({ id: row.id, table: 'journal_entries', updates, params });
+    }
+    for (const row of rels) {
+      if (row.birth_place && !FieldEncryptionService.isEncrypted(row.birth_place)) {
+        const enc = await FieldEncryptionService.encryptField(row.birth_place);
+        pending.push({ id: row.id, table: 'relationship_charts', updates: ['birth_place = ?'], params: [enc] });
+        encrypted++;
+      }
+    }
+    for (const row of checkins) {
+      const updates: string[] = [];
+      const params: any[] = [];
+      if (row.note && !FieldEncryptionService.isEncrypted(row.note)) {
+        updates.push('note = ?');
+        params.push(await FieldEncryptionService.encryptField(row.note));
+        encrypted++;
+      }
+      if (row.wins && !FieldEncryptionService.isEncrypted(row.wins)) {
+        updates.push('wins = ?');
+        params.push(await FieldEncryptionService.encryptField(row.wins));
+        encrypted++;
+      }
+      if (row.challenges && !FieldEncryptionService.isEncrypted(row.challenges)) {
+        updates.push('challenges = ?');
+        params.push(await FieldEncryptionService.encryptField(row.challenges));
+        encrypted++;
+      }
+      if (updates.length > 0) pending.push({ id: row.id, table: 'daily_check_ins', updates, params });
     }
 
-    // 2. Encrypt journal_entries.content and title
-    try {
-      const entries = (await db.getAllAsync(
-        'SELECT id, content, title FROM journal_entries WHERE content IS NOT NULL'
-      )) as any[];
-      for (const row of entries) {
-        try {
-          const updates: string[] = [];
-          const params: any[] = [];
-          if (row.content && !FieldEncryptionService.isEncrypted(row.content)) {
-            updates.push('content = ?');
-            params.push(await FieldEncryptionService.encryptField(row.content));
-            encrypted++;
-          }
-          if (row.title && !FieldEncryptionService.isEncrypted(row.title)) {
-            updates.push('title = ?');
-            params.push(await FieldEncryptionService.encryptField(row.title));
-            encrypted++;
-          }
-          if (updates.length > 0) {
-            params.push(row.id);
-            await db.runAsync(`UPDATE journal_entries SET ${updates.join(', ')} WHERE id = ?`, params);
-          }
-        } catch {
-          failures++;
-          logger.error(`[LocalDB] v7: failed to encrypt journal_entries row ${row.id}`);
-        }
+    // Write all encrypted values and the idempotency marker in a single transaction.
+    // If the app crashes mid-write, all changes are rolled back and no data is lost.
+    await db.withTransactionAsync(async () => {
+      for (const p of pending) {
+        p.params.push(p.id);
+        await db.runAsync(`UPDATE ${p.table} SET ${p.updates.join(', ')} WHERE id = ?`, p.params);
       }
-    } catch (e) {
-      logger.error('[LocalDB] v7: failed to encrypt journal_entries', e);
-    }
-
-    // 3. Encrypt relationship_charts.birth_place
-    try {
-      const rels = (await db.getAllAsync(
-        'SELECT id, birth_place FROM relationship_charts WHERE birth_place IS NOT NULL'
-      )) as any[];
-      for (const row of rels) {
-        try {
-          if (row.birth_place && !FieldEncryptionService.isEncrypted(row.birth_place)) {
-            const enc = await FieldEncryptionService.encryptField(row.birth_place);
-            await db.runAsync('UPDATE relationship_charts SET birth_place = ? WHERE id = ?', [
-              enc,
-              row.id,
-            ]);
-            encrypted++;
-          }
-        } catch {
-          failures++;
-          logger.error(`[LocalDB] v7: failed to encrypt relationship_charts row ${row.id}`);
-        }
-      }
-    } catch (e) {
-      logger.error('[LocalDB] v7: failed to encrypt relationship_charts.birth_place', e);
-    }
-
-    // 4. Encrypt daily_check_ins.note, wins, challenges
-    try {
-      const checkins = (await db.getAllAsync(
-        'SELECT id, note, wins, challenges FROM daily_check_ins'
-      )) as any[];
-      for (const row of checkins) {
-        try {
-          const updates: string[] = [];
-          const params: any[] = [];
-          if (row.note && !FieldEncryptionService.isEncrypted(row.note)) {
-            updates.push('note = ?');
-            params.push(await FieldEncryptionService.encryptField(row.note));
-            encrypted++;
-          }
-          if (row.wins && !FieldEncryptionService.isEncrypted(row.wins)) {
-            updates.push('wins = ?');
-            params.push(await FieldEncryptionService.encryptField(row.wins));
-            encrypted++;
-          }
-          if (row.challenges && !FieldEncryptionService.isEncrypted(row.challenges)) {
-            updates.push('challenges = ?');
-            params.push(await FieldEncryptionService.encryptField(row.challenges));
-            encrypted++;
-          }
-          if (updates.length > 0) {
-            params.push(row.id);
-            await db.runAsync(`UPDATE daily_check_ins SET ${updates.join(', ')} WHERE id = ?`, params);
-          }
-        } catch {
-          failures++;
-          logger.error(`[LocalDB] v7: failed to encrypt daily_check_ins row ${row.id}`);
-        }
-      }
-    } catch (e) {
-      logger.error('[LocalDB] v7: failed to encrypt daily_check_ins', e);
-    }
-
-    // Set idempotency marker so this migration won't re-run
-    try {
       await db.runAsync(
         'INSERT OR REPLACE INTO migration_markers (key, completed_at) VALUES (?, ?)',
         [markerKey, new Date().toISOString()]
       );
-    } catch {
-      // Non-fatal: marker table may not exist in edge cases
-    }
+    });
 
-    if (failures > 0) {
-      logger.warn(
-        `[LocalDB] Version 7 migration completed with ${failures} row failures — encrypted ${encrypted} fields`
-      );
-    } else {
-      logger.info(`[LocalDB] Version 7 migration complete — encrypted ${encrypted} fields`);
-    }
+    logger.info(`[LocalDB] Version 7 migration complete — encrypted ${encrypted} fields`);
   }
 
   // ═══════════════════════════════════════════════════
@@ -671,12 +589,16 @@ class LocalDatabase {
     const db = await this.ensureReady();
     logger.info('[LocalDB] Starting version 11 migration — encrypting PII fields...');
 
-    // Encrypt saved_charts PII
+    // Pre-read rows outside transaction, pre-compute encrypted values
     const charts = (await db.getAllAsync('SELECT id, name, birth_date, birth_time FROM saved_charts')) as any[];
+    const rels = (await db.getAllAsync('SELECT id, name, birth_date, birth_time FROM relationship_charts')) as any[];
+
+    type RowUpdate = { id: string; table: string; updates: string[]; values: any[] };
+    const pending: RowUpdate[] = [];
+
     for (const row of charts) {
       const updates: string[] = [];
       const values: any[] = [];
-
       if (row.name && !FieldEncryptionService.isEncrypted(row.name)) {
         updates.push('name = ?');
         values.push(await FieldEncryptionService.encryptField(row.name));
@@ -689,20 +611,12 @@ class LocalDatabase {
         updates.push('birth_time = ?');
         values.push(await FieldEncryptionService.encryptField(row.birth_time));
       }
-
-      if (updates.length > 0) {
-        values.push(row.id);
-        await db.runAsync(`UPDATE saved_charts SET ${updates.join(', ')} WHERE id = ?`, values);
-      }
+      if (updates.length > 0) pending.push({ id: row.id, table: 'saved_charts', updates, values });
     }
-    logger.info(`[LocalDB] Encrypted PII for ${charts.length} saved charts`);
 
-    // Encrypt relationship_charts PII
-    const rels = (await db.getAllAsync('SELECT id, name, birth_date, birth_time FROM relationship_charts')) as any[];
     for (const row of rels) {
       const updates: string[] = [];
       const values: any[] = [];
-
       if (row.name && !FieldEncryptionService.isEncrypted(row.name)) {
         updates.push('name = ?');
         values.push(await FieldEncryptionService.encryptField(row.name));
@@ -715,14 +629,18 @@ class LocalDatabase {
         updates.push('birth_time = ?');
         values.push(await FieldEncryptionService.encryptField(row.birth_time));
       }
-
-      if (updates.length > 0) {
-        values.push(row.id);
-        await db.runAsync(`UPDATE relationship_charts SET ${updates.join(', ')} WHERE id = ?`, values);
-      }
+      if (updates.length > 0) pending.push({ id: row.id, table: 'relationship_charts', updates, values });
     }
-    logger.info(`[LocalDB] Encrypted PII for ${rels.length} relationship charts`);
 
+    // Write all encrypted values atomically
+    await db.withTransactionAsync(async () => {
+      for (const p of pending) {
+        const params = [...p.values, p.id];
+        await db.runAsync(`UPDATE ${p.table} SET ${p.updates.join(', ')} WHERE id = ?`, params);
+      }
+    });
+
+    logger.info(`[LocalDB] Encrypted PII for ${charts.length} saved charts, ${rels.length} relationship charts`);
     logger.info('[LocalDB] Version 11 migration complete');
   }
 
@@ -893,23 +811,41 @@ class LocalDatabase {
     )) as any[];
 
     let encrypted = 0;
-    let failures = 0;
+
+    // Pre-compute encrypted values outside the transaction
+    type InsightUpdate = { id: string; params: any[] };
+    const pending: InsightUpdate[] = [];
 
     for (const row of rows) {
       if (FieldEncryptionService.isEncrypted(row.greeting)) continue;
 
-      try {
-        const encGreeting = await FieldEncryptionService.encryptField(row.greeting);
-        const encLoveHeadline = await FieldEncryptionService.encryptField(row.love_headline);
-        const encLoveMessage = await FieldEncryptionService.encryptField(row.love_message);
-        const encEnergyHeadline = await FieldEncryptionService.encryptField(row.energy_headline);
-        const encEnergyMessage = await FieldEncryptionService.encryptField(row.energy_message);
-        const encGrowthHeadline = await FieldEncryptionService.encryptField(row.growth_headline);
-        const encGrowthMessage = await FieldEncryptionService.encryptField(row.growth_message);
-        const encGentleReminder = await FieldEncryptionService.encryptField(row.gentle_reminder);
-        const encJournalPrompt = await FieldEncryptionService.encryptField(row.journal_prompt);
-        const encSignals = row.signals ? await FieldEncryptionService.encryptField(row.signals) : null;
+      const encGreeting = await FieldEncryptionService.encryptField(row.greeting);
+      const encLoveHeadline = await FieldEncryptionService.encryptField(row.love_headline);
+      const encLoveMessage = await FieldEncryptionService.encryptField(row.love_message);
+      const encEnergyHeadline = await FieldEncryptionService.encryptField(row.energy_headline);
+      const encEnergyMessage = await FieldEncryptionService.encryptField(row.energy_message);
+      const encGrowthHeadline = await FieldEncryptionService.encryptField(row.growth_headline);
+      const encGrowthMessage = await FieldEncryptionService.encryptField(row.growth_message);
+      const encGentleReminder = await FieldEncryptionService.encryptField(row.gentle_reminder);
+      const encJournalPrompt = await FieldEncryptionService.encryptField(row.journal_prompt);
+      const encSignals = row.signals ? await FieldEncryptionService.encryptField(row.signals) : null;
 
+      pending.push({
+        id: row.id,
+        params: [
+          encGreeting, encLoveHeadline, encLoveMessage,
+          encEnergyHeadline, encEnergyMessage,
+          encGrowthHeadline, encGrowthMessage,
+          encGentleReminder, encJournalPrompt, encSignals,
+          row.id,
+        ],
+      });
+      encrypted++;
+    }
+
+    // Write all encrypted values atomically
+    await db.withTransactionAsync(async () => {
+      for (const p of pending) {
         await db.runAsync(
           `UPDATE insight_history SET
              greeting = ?, love_headline = ?, love_message = ?,
@@ -917,34 +853,12 @@ class LocalDatabase {
              growth_headline = ?, growth_message = ?,
              gentle_reminder = ?, journal_prompt = ?, signals = ?
            WHERE id = ?`,
-          [
-            encGreeting,
-            encLoveHeadline,
-            encLoveMessage,
-            encEnergyHeadline,
-            encEnergyMessage,
-            encGrowthHeadline,
-            encGrowthMessage,
-            encGentleReminder,
-            encJournalPrompt,
-            encSignals,
-            row.id,
-          ]
+          p.params,
         );
-        encrypted++;
-      } catch {
-        failures++;
-        logger.error(`[LocalDB] v14: failed to encrypt insight_history row ${row.id}`);
       }
-    }
+    });
 
-    if (failures > 0) {
-      logger.warn(
-        `[LocalDB] Version 14 migration completed with ${failures} failures — encrypted ${encrypted} rows`
-      );
-    } else {
-      logger.info(`[LocalDB] Version 14 migration complete — encrypted ${encrypted} insight rows`);
-    }
+    logger.info(`[LocalDB] Version 14 migration complete — encrypted ${encrypted} insight rows`);
   }
 
   /**
@@ -1039,6 +953,54 @@ class LocalDatabase {
     logger.info('[LocalDB] Version 18 migration complete');
   }
 
+  /**
+   * Version 19 — Encrypt latitude/longitude in saved_charts and relationship_charts.
+   * These are precise birth coordinates (PII when combined with birth date/time).
+   * SQLite uses dynamic typing so REAL columns can store TEXT (encrypted) values.
+   * Idempotent: skips rows that already have ENC2: prefix.
+   */
+  private async migrateToVersion19(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Starting version 19 migration — encrypting lat/lng...');
+
+    // Pre-read and pre-encrypt
+    type CoordUpdate = { id: string; table: string; encLat: string; encLng: string };
+    const pending: CoordUpdate[] = [];
+
+    const charts = (await db.getAllAsync(
+      'SELECT id, latitude, longitude FROM saved_charts WHERE latitude IS NOT NULL'
+    )) as any[];
+    for (const row of charts) {
+      const latStr = String(row.latitude);
+      if (FieldEncryptionService.isEncrypted(latStr)) continue;
+      const encLat = await FieldEncryptionService.encryptField(latStr);
+      const encLng = await FieldEncryptionService.encryptField(String(row.longitude));
+      pending.push({ id: row.id, table: 'saved_charts', encLat, encLng });
+    }
+
+    const rels = (await db.getAllAsync(
+      'SELECT id, latitude, longitude FROM relationship_charts WHERE latitude IS NOT NULL'
+    )) as any[];
+    for (const row of rels) {
+      const latStr = String(row.latitude);
+      if (FieldEncryptionService.isEncrypted(latStr)) continue;
+      const encLat = await FieldEncryptionService.encryptField(latStr);
+      const encLng = await FieldEncryptionService.encryptField(String(row.longitude));
+      pending.push({ id: row.id, table: 'relationship_charts', encLat, encLng });
+    }
+
+    await db.withTransactionAsync(async () => {
+      for (const p of pending) {
+        await db.runAsync(
+          `UPDATE ${p.table} SET latitude = ?, longitude = ? WHERE id = ?`,
+          [p.encLat, p.encLng, p.id],
+        );
+      }
+    });
+
+    logger.info(`[LocalDB] Version 19 migration complete — encrypted ${pending.length} coordinate pairs`);
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1051,6 +1013,8 @@ class LocalDatabase {
     const encName = chart.name ? await FieldEncryptionService.encryptField(chart.name) : null;
     const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
     const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
+    const encLatitude = await FieldEncryptionService.encryptField(String(chart.latitude));
+    const encLongitude = await FieldEncryptionService.encryptField(String(chart.longitude));
 
     await db.runAsync(
       `INSERT OR REPLACE INTO saved_charts
@@ -1063,8 +1027,8 @@ class LocalDatabase {
         encBirthTime,
         chart.hasUnknownTime ? 1 : 0,
         encBirthPlace,
-        chart.latitude,
-        chart.longitude,
+        encLatitude,
+        encLongitude,
         chart.timezone || null,
         chart.houseSystem || null,
         chart.createdAt,
@@ -1083,21 +1047,38 @@ class LocalDatabase {
 
     // Decrypt sensitive fields after reading from SQLite
     return Promise.all(
-      (result as any[]).map(async (row: any) => ({
-        id: row.id,
-        name: row.name ? await FieldEncryptionService.decryptField(row.name) : row.name,
-        birthDate: await FieldEncryptionService.decryptField(row.birth_date),
-        birthTime: row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time,
-        hasUnknownTime: row.has_unknown_time === 1,
-        birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
-        latitude: row.latitude,
-        longitude: row.longitude,
-        timezone: row.timezone || undefined,
-        houseSystem: row.house_system || undefined,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        isDeleted: row.is_deleted === 1,
-      }))
+      (result as any[]).map(async (row: any) => {
+        const latStr = row.latitude != null ? await FieldEncryptionService.decryptField(String(row.latitude)) : '0';
+        const lngStr = row.longitude != null ? await FieldEncryptionService.decryptField(String(row.longitude)) : '0';
+        const decName = row.name ? await FieldEncryptionService.decryptField(row.name) : row.name;
+        const decBirthDate = await FieldEncryptionService.decryptField(row.birth_date);
+        const decBirthTime = row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time;
+        const decBirthPlace = await FieldEncryptionService.decryptField(row.birth_place);
+
+        // Guard against DECRYPTION_FAILED_PLACEHOLDER producing NaN coordinates
+        const safeLat = isDecryptionFailure(latStr) ? 0 : (parseFloat(latStr) || 0);
+        const safeLng = isDecryptionFailure(lngStr) ? 0 : (parseFloat(lngStr) || 0);
+
+        if (isDecryptionFailure(latStr) || isDecryptionFailure(lngStr) || isDecryptionFailure(decBirthPlace)) {
+          logger.error(`[LocalDB] Chart ${row.id} has decryption failures — coordinates or birth place unreadable`);
+        }
+
+        return {
+          id: row.id,
+          name: isDecryptionFailure(decName) ? '' : decName,
+          birthDate: isDecryptionFailure(decBirthDate) ? '' : decBirthDate,
+          birthTime: isDecryptionFailure(decBirthTime) ? undefined : decBirthTime,
+          hasUnknownTime: row.has_unknown_time === 1,
+          birthPlace: isDecryptionFailure(decBirthPlace) ? '' : decBirthPlace,
+          latitude: safeLat,
+          longitude: safeLng,
+          timezone: row.timezone || undefined,
+          houseSystem: row.house_system || undefined,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          isDeleted: row.is_deleted === 1,
+        };
+      })
     );
   }
 
@@ -1679,6 +1660,8 @@ class LocalDatabase {
     const encName = await FieldEncryptionService.encryptField(chart.name);
     const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
     const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
+    const encLatitude = await FieldEncryptionService.encryptField(String(chart.latitude));
+    const encLongitude = await FieldEncryptionService.encryptField(String(chart.longitude));
 
     await db.runAsync(
       `INSERT OR REPLACE INTO relationship_charts 
@@ -1693,8 +1676,8 @@ class LocalDatabase {
         encBirthTime,
         chart.hasUnknownTime ? 1 : 0,
         encBirthPlace,
-        chart.latitude,
-        chart.longitude,
+        encLatitude,
+        encLongitude,
         chart.timezone || null,
         chart.userChartId,
         chart.createdAt,
@@ -1759,16 +1742,30 @@ class LocalDatabase {
   }
 
   private async mapRelationshipRow(row: any): Promise<RelationshipChart> {
+    const decName = await FieldEncryptionService.decryptField(row.name);
+    const decBirthDate = await FieldEncryptionService.decryptField(row.birth_date);
+    const decBirthTime = row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time;
+    const decBirthPlace = await FieldEncryptionService.decryptField(row.birth_place);
+    const latStr = await FieldEncryptionService.decryptField(String(row.latitude));
+    const lngStr = await FieldEncryptionService.decryptField(String(row.longitude));
+
+    const safeLat = isDecryptionFailure(latStr) ? 0 : (parseFloat(latStr) || 0);
+    const safeLng = isDecryptionFailure(lngStr) ? 0 : (parseFloat(lngStr) || 0);
+
+    if (isDecryptionFailure(latStr) || isDecryptionFailure(lngStr) || isDecryptionFailure(decName)) {
+      logger.error(`[LocalDB] Relationship chart ${row.id} has decryption failures`);
+    }
+
     return {
       id: row.id,
-      name: await FieldEncryptionService.decryptField(row.name),
+      name: isDecryptionFailure(decName) ? '' : decName,
       relationship: row.relationship,
-      birthDate: await FieldEncryptionService.decryptField(row.birth_date),
-      birthTime: row.birth_time ? await FieldEncryptionService.decryptField(row.birth_time) : row.birth_time,
+      birthDate: isDecryptionFailure(decBirthDate) ? '' : decBirthDate,
+      birthTime: isDecryptionFailure(decBirthTime) ? undefined : decBirthTime,
       hasUnknownTime: row.has_unknown_time === 1,
-      birthPlace: await FieldEncryptionService.decryptField(row.birth_place),
-      latitude: row.latitude,
-      longitude: row.longitude,
+      birthPlace: isDecryptionFailure(decBirthPlace) ? '' : decBirthPlace,
+      latitude: safeLat,
+      longitude: safeLng,
       timezone: row.timezone,
       userChartId: row.user_chart_id,
       createdAt: row.created_at,

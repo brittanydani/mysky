@@ -7,11 +7,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
-import StarField from '../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
   copper: '#CD7F5D',
@@ -26,7 +26,7 @@ export default function PrivacyPolicyScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={60} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
@@ -48,13 +48,13 @@ export default function PrivacyPolicyScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.lastUpdated}>Last updated: March 3, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
 
           {/* ── Section Wrapper Helper ── */}
           <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassSection}>
             <Text style={styles.sectionTitle}>Our Commitment</Text>
             <Text style={styles.paragraph}>
-              MySky is designed with privacy by design and by default. We do not sell your data, use analytics SDKs, or track you across the web.
+              MySky is designed with privacy by design and by default. We use zero analytics SDKs, collect zero advertising identifiers, and perform zero cross-app or cross-site tracking. Your data is never sold, shared for advertising, or used for AI/ML training.
             </Text>
           </LinearGradient>
 
@@ -63,17 +63,32 @@ export default function PrivacyPolicyScreen() {
             
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Birth Data & Charts</Text>
-              <Text style={styles.paragraph}>Stored exclusively on your device. Used to calculate planetary positions and house systems.</Text>
+              <Text style={styles.paragraph}>Date, time (optional), and place of birth are stored exclusively on your device in a local SQLite database with AES-256-GCM field-level encryption on sensitive fields (birth place, coordinates, name, birth date, and birth time). Used to calculate planetary positions, house systems, and natal chart aspects via on-device Swiss Ephemeris.</Text>
             </View>
 
             <View style={styles.dataBlock}>
-              <Text style={styles.subSectionTitle}>Journal & Check-Ins</Text>
-              <Text style={styles.paragraph}>Free-text content and mood scores are processed entirely on-device via local NLP. Raw text is never transmitted.</Text>
+              <Text style={styles.subSectionTitle}>Daily Check-Ins</Text>
+              <Text style={styles.paragraph}>Mood scores, energy levels, stress levels, influence tags, emotional quality tags, notes, wins, and challenges are all stored locally and encrypted at rest. No raw check-in data is ever transmitted. If you opt in to the Premium AI Reflections feature, only aggregated, non-identifying statistics (trend averages, top tags, correlations) derived from check-in data are sent — never individual entries.</Text>
             </View>
 
             <View style={styles.dataBlock}>
-              <Text style={styles.subSectionTitle}>Premium AI (Optional)</Text>
-              <Text style={styles.paragraph}>Only if you opt-in: aggregated behavioral stats (no raw text) are sent to Supabase and Anthropic to generate reflections.</Text>
+              <Text style={styles.subSectionTitle}>Journal Entries</Text>
+              <Text style={styles.paragraph}>Free-text journal content is processed entirely on-device via local NLP for keyword extraction, emotion tagging, and sentiment reflection. Raw text, titles, and NLP results are encrypted at rest and never transmitted.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Sleep & Dream Logs</Text>
+              <Text style={styles.paragraph}>Sleep data is stored locally on your device. Dream text, dream feelings, dream mood, dream metadata, and notes are encrypted at rest using AES-256-GCM. Sleep quality and duration are stored locally but not encrypted. Dream reflections are generated entirely on-device using symbolic pattern mapping — no AI service is involved.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Relationship Charts</Text>
+              <Text style={styles.paragraph}>Synastry partner data (name, birth data) is stored locally and encrypted. Birth place fields use the same AES-256-GCM encryption as your own data.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Premium AI Reflections (Optional)</Text>
+              <Text style={styles.paragraph}>Only if you opt-in and create an account: aggregated behavioral statistics (mood/stress/energy trends, top tags, correlation data) are sent to a Supabase Edge Function which calls Anthropic Claude. Raw journal text, birth data, dream content, and personal notes are never transmitted. Rate limited to 5 requests per hour.</Text>
             </View>
           </View>
 
@@ -85,16 +100,53 @@ export default function PrivacyPolicyScreen() {
                 <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Encryption at Rest</Text>
               </View>
               <Text style={styles.paragraph}>
-                Sensitive fields use <Text style={styles.highlight}>AES-256-GCM</Text> encryption. Keys are stored in your device’s hardware-backed SecureStore (Keychain/Keystore).
+                Sensitive fields — journal content, titles, birth places, dream text, mood/stress/energy scores, emotional tags, check-in notes, wins, challenges, and NLP results — use <Text style={styles.highlight}>AES-256-GCM</Text> field-level encryption. The data encryption key is stored in your device's hardware-backed SecureStore (iOS Keychain / Android Keystore).
+              </Text>
+            </LinearGradient>
+
+            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(20, 24, 34, 0.6)']} style={[styles.securityCard, { marginTop: 12 }]}>
+              <View style={styles.securityHeader}>
+                <Ionicons name="shield-checkmark" size={18} color={PALETTE.emerald} />
+                <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Tamper Detection</Text>
+              </View>
+              <Text style={styles.paragraph}>
+                SecureStore payloads are protected with <Text style={styles.highlight}>HMAC-SHA256</Text> tamper detection using a device-unique key. Security events are logged in a rolling audit trail for your transparency.
+              </Text>
+            </LinearGradient>
+
+            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(20, 24, 34, 0.6)']} style={[styles.securityCard, { marginTop: 12 }]}>
+              <View style={styles.securityHeader}>
+                <Ionicons name="cloud-offline" size={18} color={PALETTE.emerald} />
+                <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Backup Encryption</Text>
+              </View>
+              <Text style={styles.paragraph}>
+                Encrypted .msky backups use <Text style={styles.highlight}>AES-256-GCM with PBKDF2-SHA256</Text> key derivation (600,000 iterations) from your chosen passphrase. Backups are never uploaded to any server — you control where they go via your device's share sheet.
               </Text>
             </LinearGradient>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Third-Party Services</Text>
-            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>RevenueCat:</Text> Anonymous ID for subscription verification.</Text>
-            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>OpenStreetMap:</Text> City text for geocoding (coordinates only).</Text>
-            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Supabase/Anthropic:</Text> For premium AI insights (if opted-in).</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>RevenueCat:</Text> Anonymous device identifier for subscription and in-app purchase verification. No personal data shared.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>OpenStreetMap Nominatim:</Text> Birth city text sent for geocoding to coordinates. Only the city name string is transmitted.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Supabase:</Text> Optional account creation (email/password) for AI Reflection Insights only. Session managed via AsyncStorage.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Anthropic Claude:</Text> Premium AI reflections via Supabase Edge Function. Receives only aggregated behavioral stats — never raw text, birth data, or personal notes. API key lives exclusively in the Edge Function environment.</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>No Tracking</Text>
+            <Text style={styles.paragraph}>
+              MySky declares NSPrivacyTracking: false with an empty tracking domains list. No analytics SDKs (no Firebase, Amplitude, Mixpanel, Sentry, or Crashlytics) are included. No advertising identifiers are collected. Android explicitly blocks Camera, Microphone, Contacts, Calendar, SMS, Phone, and Location permissions.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Apple Privacy Manifest</Text>
+            <Text style={styles.paragraph}>Data types declared in our Apple Privacy Manifest:</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Coarse Location:</Text> For timezone resolution via on-device tz-lookup (not GPS tracking).</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>User ID:</Text> For optional Supabase authentication only.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Purchases:</Text> For RevenueCat subscription verification.</Text>
+            <Text style={styles.paragraph}>All data types are declared as not linked to identity and not used for tracking.</Text>
           </View>
 
           <View style={styles.section}>
@@ -105,39 +157,46 @@ export default function PrivacyPolicyScreen() {
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right of Access</Text>
-              <Text style={styles.paragraph}>You can view all data MySky holds about you at any time via Privacy Settings.</Text>
+              <Text style={styles.paragraph}>View all data MySky holds about you at any time via Privacy Settings, including a full data inventory, consent status, and recent security events.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right to Data Portability</Text>
-              <Text style={styles.paragraph}>Export your complete data as a structured JSON archive or an encrypted .msky backup from Settings.</Text>
+              <Text style={styles.paragraph}>Export your complete data as a structured, machine-readable JSON archive via Privacy Settings, or as an encrypted .msky backup from the Settings tab (premium).</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right to Erasure</Text>
-              <Text style={styles.paragraph}>Delete all personal data at any time using the "Hard Reset" option in Privacy Settings. Uninstalling the app also erases all locally stored data.</Text>
+              <Text style={styles.paragraph}>Delete all personal data at any time using the "Hard Reset" option in Privacy Settings. This permanently erases all data from SQLite and SecureStore with best-effort secure deletion. Uninstalling the app also erases all locally stored data.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right to Rectification</Text>
-              <Text style={styles.paragraph}>You can update your birth data and edit or delete journal entries at any time directly within the app.</Text>
+              <Text style={styles.paragraph}>Update your birth data, edit or delete journal entries, modify sleep logs, and manage relationship charts at any time directly within the app.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right to Withdraw Consent</Text>
-              <Text style={styles.paragraph}>You may withdraw your data processing consent at any time via Privacy Settings. Existing data is preserved but no new personal data will be collected until consent is restored.</Text>
+              <Text style={styles.paragraph}>Withdraw your data processing consent at any time via Privacy Settings. Existing data is preserved but no new personal data will be collected until consent is restored.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right to Restrict Processing</Text>
-              <Text style={styles.paragraph}>Since all processing happens on-device, you control it entirely. Withdrawing consent effectively restricts all processing of new personal data.</Text>
+              <Text style={styles.paragraph}>Since all core processing happens on-device, you control it entirely. Withdrawing consent blocks all data writes until consent is restored.</Text>
             </View>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Retention</Text>
             <Text style={styles.paragraph}>
-              Your data is stored locally on your device for as long as you keep the app installed. Consent records expire after 365 days and will be re-requested. There is no server-side storage of personal data.
+              Your data is stored locally on your device for as long as you keep the app installed. Consent records expire after 365 days and will be re-requested. There is no server-side storage of personal data beyond optional Supabase authentication credentials.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Children's Privacy</Text>
+            <Text style={styles.paragraph}>
+              MySky is intended for users aged 13 and older. We do not knowingly collect personal information from children under 13.
             </Text>
           </View>
 
@@ -150,6 +209,7 @@ export default function PrivacyPolicyScreen() {
               <Ionicons name="mail-outline" size={20} color={PALETTE.gold} />
               <Text style={styles.contactInfo}>brittanyapps@outlook.com</Text>
             </Pressable>
+            <Text style={[styles.paragraph, { marginTop: 12 }]}>We respond to privacy-related inquiries within 30 days.</Text>
           </View>
 
           <View style={styles.footer}>

@@ -16,7 +16,7 @@ interface NeedsComparisonProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   textMain: '#FDFBF7',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -39,7 +39,7 @@ export default function NeedsComparison({
           style={[styles.column, { borderColor: `${PALETTE.gold}20` }]}
         >
           <View style={styles.nameRow}>
-            <View style={[styles.avatar, { backgroundColor: 'rgba(212, 175, 55, 0.15)' }]}>
+            <View style={[styles.avatar, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
               <Ionicons name="person" size={12} color={PALETTE.gold} />
             </View>
             <Text style={[styles.name, { color: PALETTE.gold }]} numberOfLines={1}>{person1Name}</Text>

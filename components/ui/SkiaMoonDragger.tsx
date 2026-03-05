@@ -21,7 +21,6 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  PanResponder,
   Platform,
 } from 'react-native';
 import {
@@ -42,7 +41,9 @@ import {
   withRepeat,
   withTiming,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 
 const SIZE = 280;
@@ -58,8 +59,8 @@ const COLORS = {
   track: 'rgba(255, 255, 255, 0.04)',
   trackActive: '#8BC4E8',
   trackActiveGlow: 'rgba(139, 196, 232, 0.35)',
-  moon: '#D4AF37',
-  moonGlow: 'rgba(212, 175, 55, 0.4)',
+  moon: '#C5B493',
+  moonGlow: 'rgba(197, 180, 147, 0.4)',
   moonCore: '#FDFBF7',
   mist: 'rgba(139, 196, 232, 0.08)',
   hourMark: 'rgba(253, 251, 247, 0.2)',
@@ -107,34 +108,30 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
   // ── Mist opacity (1 at 0h → 0 at 8h+) ──
   const mistOpacity = Math.max(0, 1 - value / OPTIMAL_HOURS);
 
-  // ── Pan responder for dragging ──
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-      },
-      onPanResponderMove: (_, gs) => {
-        // Calculate angle from center based on gesture position
-        const dx = gs.moveX - SIZE / 2;
-        // Approximate: use the gesture's absolute position relative to center
-        // This is a simplification — in production you'd measure the canvas offset
-        const dy = gs.moveY - SIZE / 2;
-        let angle = Math.atan2(dy, dx);
-        // Shift angle so top = 0
-        angle += Math.PI / 2;
-        if (angle < 0) angle += Math.PI * 2;
-        // Convert to hours
-        const hours = Math.round((angle / (Math.PI * 2)) * MAX_HOURS * 2) / 2; // 0.5h steps
-        const clamped = Math.max(0, Math.min(MAX_HOURS, hours));
-        if (clamped !== valueRef.current) {
-          Haptics.selectionAsync().catch(() => {});
-          onChangeRef.current(clamped);
-        }
-      },
-    }),
-  ).current;
+  const containerRef = useRef<View>(null);
+
+  // ── Gesture handler for dragging (replacing PanResponder) ──
+  const panGesture = useMemo(() => Gesture.Pan()
+    .runOnJS(true)
+    .onStart(() => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    })
+    .onUpdate((e) => {
+      // e.x and e.y are exactly relative to the gesture view (the SIZE x SIZE box)
+      const dx = e.x - SIZE / 2;
+      const dy = e.y - SIZE / 2;
+      let angle = Math.atan2(dy, dx);
+      // Shift angle so top = 0
+      angle += Math.PI / 2;
+      if (angle < 0) angle += Math.PI * 2;
+      // Convert to hours
+      const hours = Math.round((angle / (Math.PI * 2)) * MAX_HOURS * 2) / 2; // 0.5h steps
+      const clamped = Math.max(0, Math.min(MAX_HOURS, hours));
+      if (clamped !== valueRef.current) {
+        Haptics.selectionAsync().catch(() => {});
+        onChangeRef.current(clamped);
+      }
+    }), []);
 
   // ── Arc path for the active portion ──
   const arcPath = useMemo(() => {
@@ -197,12 +194,14 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
 
   return (
     <View
+      ref={containerRef}
       style={localStyles.container}
       accessibilityLabel={`Sleep duration: ${durationLabel}, ${qualityLabel}`}
       accessibilityRole="adjustable"
     >
-      <View style={{ width: SIZE, height: SIZE }} {...panResponder.panHandlers}>
-        <Canvas style={{ width: SIZE, height: SIZE }}>
+      <GestureDetector gesture={panGesture}>
+        <View style={{ width: SIZE, height: SIZE }} collapsable={false}>
+          <Canvas style={{ width: SIZE, height: SIZE }}>
           {/* ── 1. Background track ring ── */}
           <Circle
             cx={CENTER}
@@ -321,7 +320,8 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
             {qualityLabel}
           </Text>
         </View>
-      </View>
+        </View>
+      </GestureDetector>
 
       {/* ── Hour labels around the dial ── */}
       {hourMarkers.map((m, i) => (

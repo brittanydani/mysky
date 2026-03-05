@@ -37,7 +37,7 @@ const RADIUS = GATE_SIZE * 0.4;
 
 export const PALETTE = {
   amethyst: '#9D76C1',
-  gold: '#D4AF37',
+  gold: '#C5B493',
   emerald: '#6EBF8B',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    backgroundColor: 'rgba(197, 180, 147, 0.15)',
     borderWidth: 0.5,
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderColor: 'rgba(197, 180, 147, 0.3)',
   },
   premiumTagText: {
     color: PALETTE.gold,

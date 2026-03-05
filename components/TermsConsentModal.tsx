@@ -10,11 +10,11 @@ import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
-import StarField from './ui/StarField';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   textMain: '#FDFBF7',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -94,7 +94,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
           colors={['#0A0D14', '#07090F']}
           style={StyleSheet.absoluteFill}
         />
-        <StarField starCount={40} />
+        <SkiaDynamicCosmos />
 
         <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
           <Animated.View entering={FadeInDown.duration(600)} style={styles.header}>
@@ -148,7 +148,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
                   onPress={handleAccept}
                 >
                   <LinearGradient
-                    colors={['#FFF4D4', '#D4AF37', '#7A5C13']}
+                    colors={['#FFF4D4', '#C5B493', '#8B6508']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.primaryGradient}
@@ -184,9 +184,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.2)',
+    borderColor: 'rgba(197, 180, 147, 0.2)',
     marginRight: 12,
   },
   appName: { 

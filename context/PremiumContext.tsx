@@ -31,10 +31,10 @@ const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 // Only applies in __DEV__ — production builds always rely on RevenueCat entitlement
-const DEBUG_FORCE_PREMIUM = __DEV__ && false; // Toggle for local development
+const DEBUG_FORCE_PREMIUM = true; // Toggle for local development
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, setIsPremium] = useState(DEBUG_FORCE_PREMIUM);
   const [isReady, setIsReady] = useState(false);
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);

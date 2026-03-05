@@ -128,7 +128,7 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
         />
 
         {/* Specular edge highlight (left accent bar) */}
-        <Rect x={0} y={20} width={2} height={cardH - 40} color="rgba(201, 169, 98, 0.15)">
+        <Rect x={0} y={20} width={2} height={cardH - 40} color="rgba(197, 180, 147, 0.15)">
           <BlurMask blur={3} style="outer" />
         </Rect>
       </Canvas>

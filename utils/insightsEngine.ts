@@ -1440,7 +1440,7 @@ function buildRetrogradeCard(checkIns: DailyCheckIn[]): RetrogradeCard | null {
   let insight: string;
   if (sensitive) {
     const stressNote = stressDiff >= 1.0 ? ` Stress also runs ${stressDiff.toFixed(1)} points higher.` : '';
-    insight = `Your patterns show clear retrograde sensitivity. Mood averages ${moodWith}/10 during retrograde periods vs ${moodWithout}/10 when planets are direct — a ${Math.abs(moodDiff).toFixed(1)}-point difference.${stressNote} This is data, not astrology myth.`;
+    insight = `Your patterns show clear retrograde sensitivity. Mood averages ${moodWith}/9 during retrograde periods vs ${moodWithout}/9 when planets are direct — a ${Math.abs(moodDiff).toFixed(1)}-point difference.${stressNote} This is data, not astrology myth.`;
   } else if (mildEffect) {
     const planetNote = planets.length > 0 ? `${planets.join(' & ')} retrograde periods` : 'Retrograde periods';
     insight = `There's a mild retrograde pattern in your check-ins. ${planetNote} tend to show slightly more internal friction — not dramatic, but worth knowing.`;
@@ -1662,7 +1662,7 @@ function buildNoteThemesCard(checkIns: DailyCheckIn[]): NoteThemesCard | null {
     if (todSpread >= 1.5 && drainEx && lowestTOD.topWords.includes(drainEx)) {
       insight = `Your mood tends to be lowest in the ${lowestTOD.bucket.toLowerCase()} — and words like "${drainEx}" show up in your ${lowestTOD.bucket.toLowerCase()} notes more than any other time. ${highestTOD.bucket} is when you most often describe feeling "${restoreEx ?? 'better'}".`;
     } else if (todSpread >= 1.0) {
-      insight = `Your ${highestTOD.bucket.toLowerCase()} check-ins average ${highestTOD.avgMood}/10, compared to ${lowestTOD.avgMood}/10 in the ${lowestTOD.bucket.toLowerCase()}. Your written notes follow the same pattern.`;
+      insight = `Your ${highestTOD.bucket.toLowerCase()} check-ins average ${highestTOD.avgMood}/9, compared to ${lowestTOD.avgMood}/9 in the ${lowestTOD.bucket.toLowerCase()}. Your written notes follow the same pattern.`;
     } else if (restoreEx) {
       insight = `"${restoreEx}" appears more in your best-day notes. Your ${highestTOD.bucket.toLowerCase()} check-ins have the most positive tone overall.`;
     } else {

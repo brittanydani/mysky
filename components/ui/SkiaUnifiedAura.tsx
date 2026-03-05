@@ -288,24 +288,35 @@ const SkiaUnifiedAura = memo(function SkiaUnifiedAura({
         </Group>
       </Canvas>
 
-      {/* ── Orb Labels (React Native) ── */}
-      <View style={styles.labelLayer}>
-        <View style={[styles.orbLabel, { left: ORB_POSITIONS.mood.x - 30, top: AURA_H - 28 }]}>
-          <Text style={[styles.orbTitle, { color: '#D4AF37' }]}>Mood</Text>
-          <Text style={styles.orbValue}>{moodLabel(m)}</Text>
-        </View>
-        <View style={[styles.orbLabel, { left: ORB_POSITIONS.energy.x - 30, top: AURA_H - 28 }]}>
-          <Text style={[styles.orbTitle, { color: '#6FB3D3' }]}>Energy</Text>
-          <Text style={styles.orbValue}>{energyLabel(e)}</Text>
-        </View>
-        <View style={[styles.orbLabel, { left: ORB_POSITIONS.tension.x - 30, top: AURA_H - 12 }]}>
-          <Text style={[styles.orbTitle, { color: '#E07B7B' }]}>Tension</Text>
-          <Text style={styles.orbValue}>{tensionLabel(t)}</Text>
-        </View>
+      {/* ── Refined Label Row: Prevents text collision ── */}
+      <View style={styles.labelRow}>
+        <MetricLabel 
+          title="MOOD" 
+          value={moodLabel(m)} 
+          color="#C5B493"
+        />
+        <MetricLabel 
+          title="TENSION" 
+          value={tensionLabel(t)} 
+          color="#CD7F5D"
+        />
+        <MetricLabel 
+          title="ENERGY" 
+          value={energyLabel(e)} 
+          color="#6EBF8B"
+        />
       </View>
     </View>
   );
 });
+
+// Sub-component for clean, stacked metrics
+const MetricLabel = ({ title, value, color }: { title: string; value: string; color: string }) => (
+  <View style={styles.metricItem}>
+    <Text style={[styles.metricTitle, { color }]}>{title}</Text>
+    <Text style={styles.metricValue}>{value}</Text>
+  </View>
+);
 
 export default SkiaUnifiedAura;
 
@@ -314,7 +325,7 @@ export default SkiaUnifiedAura;
 const styles = StyleSheet.create({
   wrapper: {
     width: AURA_W,
-    height: AURA_H,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     alignSelf: 'center',
     borderRadius: 16,
     overflow: 'hidden',
@@ -322,28 +333,32 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
+    paddingBottom: 24,
   },
   canvas: {
     width: AURA_W,
     height: AURA_H,
+    marginBottom: 20,
   },
-  labelLayer: {
-    ...StyleSheet.absoluteFillObject,
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 10,
   },
-  orbLabel: {
-    position: 'absolute',
-    width: 60,
+  metricItem: {
     alignItems: 'center',
+    flex: 1, // Ensures equal distribution to prevent overlapping
   },
-  orbTitle: {
+  metricTitle: {
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    marginBottom: 4,
   },
-  orbValue: {
-    color: theme.textMuted,
-    fontSize: 9,
-    marginTop: 1,
+  metricValue: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

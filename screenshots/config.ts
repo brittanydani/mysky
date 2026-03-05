@@ -12,7 +12,7 @@ export const OBSIDIAN_GRADIENT = ['#05060A', '#0B0F1A', '#131A2B'] as const;
 
 // ─── Ambient Nebula Glow Colors ────────────────────────────────────
 export const NEBULA_COLORS = {
-  gold: '#B89B6A',
+  gold: '#C5B493',
   indigo: '#243B6B',
   emerald: '#2E7A68',
   silverBlue: '#8BC4E8',
@@ -78,7 +78,7 @@ export const SCREENSHOTS: ScreenshotConfig[] = [
     slug: 'dashboard',
     step: 'Start Your Day',
     headline: 'Understand Your\nDaily Balance',
-    subtext: 'Track mood, sleep, and reflections in one calming dashboard.',
+    subtext: 'A calm space to track mood, sleep, and reflection.',
     purpose: 'Instantly show what the app does',
     accentColor: NEBULA_COLORS.gold,
     nebulaColors: [NEBULA_COLORS.gold, NEBULA_COLORS.indigo],
@@ -105,7 +105,7 @@ export const SCREENSHOTS: ScreenshotConfig[] = [
     id: 3,
     slug: 'journal',
     step: 'Reflect',
-    headline: 'Journal With\nIntention',
+    headline: 'Pause · Breathe\nReflect',
     subtext: 'Capture thoughts in a quiet space designed for reflection.',
     purpose: 'Show emotional value',
     accentColor: NEBULA_COLORS.indigo,
@@ -119,7 +119,7 @@ export const SCREENSHOTS: ScreenshotConfig[] = [
     id: 4,
     slug: 'sleep',
     step: 'Sleep & Recovery',
-    headline: 'See How Rest\nAffects Your Mood',
+    headline: 'Rest & Recovery\nInsights',
     subtext: 'Explore the relationship between sleep and wellbeing.',
     purpose: 'Show real usefulness',
     accentColor: NEBULA_COLORS.silverBlue,
@@ -133,7 +133,7 @@ export const SCREENSHOTS: ScreenshotConfig[] = [
     id: 5,
     slug: 'patterns',
     step: 'Discover Patterns',
-    headline: 'Find Patterns\nin Your Life',
+    headline: 'Discover\nPatterns',
     subtext: 'Beautiful charts reveal connections between habits and feelings.',
     purpose: 'Show intelligence / analytics',
     accentColor: NEBULA_COLORS.copper,
@@ -147,7 +147,7 @@ export const SCREENSHOTS: ScreenshotConfig[] = [
     id: 6,
     slug: 'personalize',
     step: 'Make It Yours',
-    headline: 'A Space\nDesigned for You',
+    headline: 'Make It\nYour Space',
     subtext: 'Customize the atmosphere for your personal reflection.',
     purpose: 'Show premium experience',
     accentColor: NEBULA_COLORS.rose,
@@ -165,7 +165,7 @@ export const SCREENSHOTS: ScreenshotConfig[] = [
 ];
 
 // ─── Tagline (optional first-screenshot bottom tagline) ────────────
-export const TAGLINE = 'A beautiful space for daily reflection.';
+export const TAGLINE = 'A beautiful space for reflection and emotional awareness.';
 
 // ─── Color Theme Per Screenshot ────────────────────────────────────
 export const SCREENSHOT_COLOR_FLOW = [

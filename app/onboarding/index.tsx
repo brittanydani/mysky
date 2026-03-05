@@ -9,11 +9,11 @@ import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   textMain: '#FDFBF7',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -36,7 +36,7 @@ export default function OnboardingWelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={80} />
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
@@ -87,7 +87,7 @@ export default function OnboardingWelcomeScreen() {
               accessibilityLabel="Get started"
             >
               <LinearGradient
-                colors={['#FFF4D4', '#D4AF37', '#7A5C13']}
+                colors={['#FFF4D4', '#C5B493', '#8B6508']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.ctaGradient}
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    backgroundColor: 'rgba(197, 180, 147, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.2)',
-    backgroundColor: 'rgba(212, 175, 55, 0.05)',
+    borderColor: 'rgba(197, 180, 147, 0.2)',
+    backgroundColor: 'rgba(197, 180, 147, 0.05)',
   },
   secondaryText: { 
     fontSize: 14, 

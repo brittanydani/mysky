@@ -16,6 +16,7 @@ import { View, Text, StyleSheet, Platform, Dimensions } from 'react-native';
 import ScreenshotBackground from './ScreenshotBackground';
 import PhoneFrame from './PhoneFrame';
 import FeatureHighlight from './FeatureHighlight';
+import NebulaArc from './NebulaArc';
 import { SCREENSHOT, TYPOGRAPHY, TAGLINE, type ScreenshotConfig } from './config';
 
 interface Props {
@@ -56,16 +57,27 @@ export default function ScreenshotComposition({
       {/* Background: obsidian gradient + nebula + stars */}
       <ScreenshotBackground width={w} height={h} config={config} />
 
-      {/* Feature highlight glow behind phone area */}
+      {/* Feature highlight glow behind phone area — enhanced gold glow for #1 */}
       <FeatureHighlight
         cx={w / 2}
         cy={phoneZoneTop + phoneHeight * 0.45}
-        radius={phoneWidth * 0.4}
+        radius={config.id === 1 ? phoneWidth * 0.55 : phoneWidth * 0.4}
         color={config.accentColor}
-        opacity={0.2}
+        opacity={config.id === 1 ? 0.15 : 0.2}
         width={w}
         height={h}
       />
+
+      {/* Nebula arc — cinematic framing behind the phone (Screenshot 1 only) */}
+      {config.id === 1 && (
+        <NebulaArc
+          width={w}
+          height={h}
+          phoneCenterY={phoneZoneTop + phoneHeight * 0.45}
+          color={config.accentColor}
+          opacity={0.06}
+        />
+      )}
 
       {/* Headline */}
       <View style={[styles.headlineZone, { height: headlineZoneHeight, paddingTop: h * 0.06 }]}>

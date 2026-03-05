@@ -31,14 +31,14 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
-import StarField from './ui/StarField';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { BirthData, HouseSystem } from '../services/astrology/types';
 import { InputValidator } from '../services/astrology/inputValidator';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -270,7 +270,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={styles.container}>
-        <StarField starCount={40} />
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           
           <View style={styles.header}>
@@ -310,7 +310,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
               
               {!hasUnknownTime && (
                 <Pressable style={styles.pickButton} onPress={() => { setPHour(t12.h); setPMin(t12.m); setPPer(t12.p); setShowTimePicker(true); }}>
-                  <LinearGradient colors={['rgba(212, 175, 55, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.pickGradient}>
+                  <LinearGradient colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.pickGradient}>
                     <Ionicons name="time-outline" size={18} color={PALETTE.gold} />
                     <Text style={styles.pickText}>{time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
                   </LinearGradient>
@@ -345,7 +345,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
             </Animated.View>
 
             <Pressable style={styles.saveBtn} onPress={handleSave}>
-              <LinearGradient colors={['#FFF4D4', '#D4AF37', '#7A5C13']} style={styles.saveGradient}>
+              <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.saveGradient}>
                 <Text style={styles.saveBtnText}>Generate My Chart</Text>
               </LinearGradient>
             </Pressable>
@@ -369,7 +369,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                 </View>
 
                 <Pressable style={styles.saveBtn} onPress={() => { setShowConfirm(false); onSave({ date: toLocalDateString(date), time: hasUnknownTime ? undefined : time.toTimeString().slice(0, 5), hasUnknownTime, place, latitude, longitude, houseSystem }, { chartName }); }}>
-                  <LinearGradient colors={['#FFF4D4', '#D4AF37', '#7A5C13']} style={styles.saveGradient}>
+                  <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.saveGradient}>
                     <Text style={styles.saveBtnText}>Confirm & Secure</Text>
                   </LinearGradient>
                 </Pressable>
@@ -462,5 +462,5 @@ const styles = StyleSheet.create({
   wheelsRow: { flexDirection: 'row', height: PICKER_HEIGHT, paddingHorizontal: 20 },
   wheelSeparator: { justifyContent: 'center', width: 12 },
   sepText: { color: PALETTE.textMain, fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  pickerSelectorOverlay: { position: 'absolute', top: (PICKER_HEIGHT - ITEM_HEIGHT) / 2, left: 0, right: 0, height: ITEM_HEIGHT, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', backgroundColor: 'rgba(212, 175, 55, 0.05)', zIndex: 1 },
+  pickerSelectorOverlay: { position: 'absolute', top: (PICKER_HEIGHT - ITEM_HEIGHT) / 2, left: 0, right: 0, height: ITEM_HEIGHT, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)', backgroundColor: 'rgba(197, 180, 147, 0.05)', zIndex: 1 },
 });

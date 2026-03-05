@@ -137,7 +137,7 @@ const SkiaFallingStarNotification = forwardRef<StarNotificationRef>((_, ref) => 
             <LinearGradient
               start={vec(coords.x1, coords.y1)}
               end={vec(coords.x2, coords.y2)}
-              colors={['transparent', '#D4AF37', '#FDFBF7']}
+              colors={['transparent', '#C5B493', '#FDFBF7']}
             />
             <BlurMask blur={8} style="outer" />
           </Path>
@@ -174,13 +174,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontStyle: 'italic',
-    textShadowColor: 'rgba(212, 175, 55, 0.5)',
+    textShadowColor: 'rgba(197, 180, 147, 0.5)',
     textShadowRadius: 10,
   },
   messageUnderline: {
     height: 1,
     width: 40,
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#C5B493',
     marginTop: 8,
     opacity: 0.6,
   },

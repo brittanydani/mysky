@@ -1,5 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import { hmac } from '@noble/hashes/hmac';
+import { sha256 } from '@noble/hashes/sha2';
+import { bytesToHex } from '@noble/hashes/utils';
 
 export interface EncryptedPayload {
   version: 1;
@@ -40,6 +43,20 @@ export class EncryptionManager {
   }
 
   /**
+   * Compute a real HMAC-SHA256 digest (via @noble/hashes).
+   * The key is stored as a hex string in SecureStore; we convert it to bytes
+   * before feeding it to the HMAC function.
+   */
+  private static hmacSha256(hexKey: string, data: string): string {
+    const keyBytes = new Uint8Array(hexKey.length / 2);
+    for (let i = 0; i < hexKey.length; i += 2) {
+      keyBytes[i / 2] = parseInt(hexKey.substring(i, i + 2), 16);
+    }
+    const dataBytes = new TextEncoder().encode(data);
+    return bytesToHex(hmac(sha256, keyBytes, dataBytes));
+  }
+
+  /**
    * Sign data with HMAC-SHA256 for tamper detection.
    * NOTE: The payload.data field is plaintext JSON — confidentiality
    * relies on SecureStore's OS-level Keychain/Keystore encryption.
@@ -48,11 +65,7 @@ export class EncryptionManager {
   static async signSensitiveData(data: any): Promise<EncryptedPayload> {
     const serialized = JSON.stringify(data);
     const hmacKey = await this.getHmacKey();
-    // HMAC-SHA256: hash the data with the secret key for tamper detection
-    const digest = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      hmacKey + ':' + serialized
-    );
+    const digest = this.hmacSha256(hmacKey, serialized);
 
     return {
       version: 1,
@@ -97,10 +110,7 @@ export class EncryptionManager {
    */
   static async reSignPayload(payload: EncryptedPayload): Promise<EncryptedPayload> {
     const hmacKey = await this.getHmacKey();
-    const digest = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      hmacKey + ':' + payload.data
-    );
+    const digest = this.hmacSha256(hmacKey, payload.data);
     return { ...payload, digest };
   }
 
@@ -122,14 +132,19 @@ export class EncryptionManager {
     if (!payload?.data || !payload?.digest) return false;
     try {
       const hmacKey = await this.getHmacKey();
-      const expectedDigest = await Crypto.digestStringAsync(
+      // Check with proper HMAC-SHA256 first
+      const expectedDigest = this.hmacSha256(hmacKey, payload.data);
+      if (expectedDigest === payload.digest) return true;
+
+      // Backward compat: check legacy SHA256(key + ':' + data) digest.
+      // If it matches, the data is valid but uses the old scheme —
+      // the caller will re-sign it with the real HMAC on next write.
+      const legacyDigest = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
         hmacKey + ':' + payload.data
       );
-      if (expectedDigest === payload.digest) return true;
+      if (legacyDigest === payload.digest) return true;
 
-      // Legacy non-HMAC digests are no longer accepted.
-      // All legacy entries should have been re-signed by now.
       return false;
     } catch {
       return false;

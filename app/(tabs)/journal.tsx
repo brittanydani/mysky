@@ -9,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import PremiumRequiredScreen from '../../components/PremiumRequiredScreen';
 import { localDb } from '../../services/storage/localDb';
 import { JournalEntry, generateId } from '../../services/storage/models';
@@ -30,7 +30,7 @@ const PAGE_SIZE = 30;
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -300,7 +300,7 @@ export default function JournalScreen() {
       {checkIns.length >= 2 && (
         isPremium ? (
           <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
-            <Text style={styles.chartTitle}>7-Day Somatic Trends</Text>
+            <Text style={styles.chartTitle}>7-Day Mood Trends</Text>
             <Text style={styles.checkInTrendSubtitle}>From your daily weather check-ins</Text>
             <CheckInTrendGraph checkIns={checkIns} width={width - 40} />
           </Animated.View>
@@ -308,7 +308,7 @@ export default function JournalScreen() {
           <Pressable onPress={() => setShowPremiumRequired(true)} accessibilityRole="button" accessibilityLabel="Unlock 7-day check-in trends">
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <Text style={styles.chartTitle}>7-Day Somatic Trends</Text>
+                <Text style={styles.chartTitle}>7-Day Mood Trends</Text>
                 <View style={styles.premiumBadge}>
                   <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
@@ -333,7 +333,7 @@ export default function JournalScreen() {
             const isTransit = insight.type === 'transit_correlation';
             const colors = isTransit 
               ? ['rgba(157, 118, 193, 0.15)', 'rgba(74, 53, 89, 0.6)'] // Amethyst tone
-              : ['rgba(212, 175, 55, 0.15)', 'rgba(122, 92, 19, 0.6)']; // Gold tone
+              : ['rgba(197, 180, 147, 0.15)', 'rgba(122, 92, 19, 0.6)']; // Gold tone
 
             return (
               <LinearGradient key={`${insight.title}-${idx}`} colors={colors as any} style={styles.insightCard}>
@@ -355,7 +355,7 @@ export default function JournalScreen() {
       {!isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-            <LinearGradient colors={['rgba(212, 175, 55, 0.12)', 'rgba(20, 24, 34, 0.8)']} style={[styles.insightCard, { borderColor: 'rgba(212, 175, 55, 0.25)' }]}>
+            <LinearGradient colors={['rgba(197, 180, 147, 0.12)', 'rgba(20, 24, 34, 0.8)']} style={[styles.insightCard, { borderColor: 'rgba(197, 180, 147, 0.25)' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Ionicons name="analytics" size={18} color={PALETTE.gold} />
                 <Text style={styles.insightTitle}>Pattern Insights</Text>
@@ -365,7 +365,7 @@ export default function JournalScreen() {
                 </View>
               </View>
               <Text style={styles.insightDescription}>
-                With {totalCount} entries, Deeper Sky can detect which energy cycles lift your mood, when you tend to journal most, and what emotional themes keep appearing.
+                With {totalCount} entries, Deeper Sky can reveal which energy patterns lift your mood, when you tend to journal most, and what emotional themes keep appearing.
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                 <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]}>Reveal your patterns</Text>
@@ -476,7 +476,7 @@ export default function JournalScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={40} />
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
           <FlatList
@@ -515,7 +515,7 @@ export default function JournalScreen() {
             style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}
           >
             <Pressable style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]} onPress={() => void handleAddEntry()} accessibilityRole="button" accessibilityLabel="Add new journal entry">
-              <LinearGradient colors={['#FFF4D4', '#D4AF37', '#7A5C13']} style={styles.fabGradient}>
+              <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.fabGradient}>
                 <Ionicons name="add" size={28} color="#1A1A1A" />
               </LinearGradient>
             </Pressable>
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(212, 175, 55, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   premiumBadgeText: { fontSize: 10, fontWeight: '700', color: PALETTE.gold },
 
   lockBox: {
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   insightTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, flex: 1 },
   confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.08)', marginLeft: 12 },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
-  confidenceSuggested: { backgroundColor: 'rgba(212, 175, 55, 0.15)' },
+  confidenceSuggested: { backgroundColor: 'rgba(197, 180, 147, 0.15)' },
   confidenceText: { fontSize: 10, color: PALETTE.textMain, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
   insightDescription: { fontSize: 15, color: theme.textSecondary, lineHeight: 22, marginBottom: 10 },
   insightEvidence: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic', marginBottom: 8 },
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
 
   fabContainer: { position: 'absolute', right: 20, zIndex: 1000 },
-  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
+  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', shadowColor: '#C5B493', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
   fabPressed: { opacity: 0.9, transform: [{ scale: 0.95 }] },
   fabGradient: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
 });

@@ -37,7 +37,10 @@ function redact(value: unknown): unknown {
         for (const k of Object.keys(obj)) {
           if (SENSITIVE_KEYS.includes(k.toLowerCase())) {
             (obj as Record<string, unknown>)[k] = '[REDACTED]';
-          } else if (typeof (obj as Record<string, unknown>)[k] === 'object' && (obj as Record<string, unknown>)[k] !== null) {
+          } else if (
+            typeof (obj as Record<string, unknown>)[k] === 'object' &&
+            (obj as Record<string, unknown>)[k] !== null
+          ) {
             (obj as Record<string, unknown>)[k] = redact((obj as Record<string, unknown>)[k]);
           }
         }

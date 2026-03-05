@@ -8,7 +8,7 @@
  *
  * Visual Language:
  *   Sleep  → Silver-Blue (#8BC4E8) — restoration layer
- *   Mood   → Gold (#D4AF37) — emotional layer
+ *   Mood   → Gold (#C5B493) — emotional layer
  *   Energy → Emerald (#6EBF8B) — vitality layer
  *
  * The Stability Index (0–100) is derived from the standard deviation across
@@ -68,10 +68,10 @@ interface Props {
 
 const COLORS = {
   sleep: '#8BC4E8',
-  mood: '#D4AF37',
+  mood: '#C5B493',
   energy: '#6EBF8B',
   sleepGlow: 'rgba(139, 196, 232, 0.3)',
-  moodGlow: 'rgba(212, 175, 55, 0.3)',
+  moodGlow: 'rgba(197, 180, 147, 0.3)',
   energyGlow: 'rgba(110, 191, 139, 0.3)',
   grid: 'rgba(255, 255, 255, 0.04)',
   axisText: 'rgba(253, 251, 247, 0.35)',
@@ -123,7 +123,7 @@ function computeStabilityIndex(data: StabilityDataPoint[]): {
 
   if (index >= 80) return { index, label: 'Coherent', color: COLORS.coherent };
   if (index >= 60) return { index, label: 'Aligned', color: COLORS.mood };
-  if (index >= 40) return { index, label: 'Shifting', color: '#E0B07A' };
+  if (index >= 40) return { index, label: 'Shifting', color: '#C5A059' };
   return { index, label: 'Fragmented', color: COLORS.fragmented };
 }
 
@@ -314,7 +314,7 @@ const SkiaStabilityDashboard = memo(function SkiaStabilityDashboard({
       {/* ── Day labels ── */}
       <View style={[localStyles.dayLabels, { width }]}>
         {data.slice(-7).map((d, i) => (
-          <Text key={d.date || i} style={localStyles.dayLabel}>
+          <Text key={`${d.date || 'unknown'}-${i}`} style={localStyles.dayLabel}>
             {d.date
               ? new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'narrow' })
               : ''}
@@ -378,7 +378,7 @@ const localStyles = StyleSheet.create({
   },
   legend: {
     gap: 6,
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     paddingTop: 4,
   },
   legendItem: {

@@ -15,7 +15,7 @@ interface DreamReflectionViewerProps {
 
 const ARCHETYPE_COLORS: Record<DreamArchetype, [string, string]> = {
   Shadow: ['rgba(157, 118, 193, 0.4)', 'rgba(157, 118, 193, 0.05)'], // Amethyst
-  Self: ['rgba(212, 175, 55, 0.4)', 'rgba(212, 175, 55, 0.05)'], // Champagne Gold
+  Self: ['rgba(197, 180, 147, 0.4)', 'rgba(197, 180, 147, 0.05)'], // Champagne Gold
   Threshold: ['rgba(139, 196, 232, 0.4)', 'rgba(139, 196, 232, 0.05)'], // Silver-Blue
   Transformation: ['rgba(205, 127, 93, 0.4)', 'rgba(205, 127, 93, 0.05)'], // Copper
   Integration: ['rgba(64, 224, 208, 0.4)', 'rgba(64, 224, 208, 0.05)'], // Turquoise/Teal

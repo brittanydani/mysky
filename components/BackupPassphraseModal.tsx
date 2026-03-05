@@ -34,7 +34,7 @@ interface BackupPassphraseModalProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   textMain: '#FDFBF7',
@@ -87,7 +87,6 @@ export default function BackupPassphraseModal({
       presentationStyle="pageSheet"
       onRequestClose={onCancel}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
           <SafeAreaView edges={['top']} style={styles.safeArea}>
             
@@ -109,6 +108,7 @@ export default function BackupPassphraseModal({
               <ScrollView 
                 contentContainerStyle={styles.scrollContent}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
               >
                 <Text style={styles.description}>
                   {mode === 'backup'
@@ -164,7 +164,7 @@ export default function BackupPassphraseModal({
                   style={styles.ctaButton}
                 >
                   <LinearGradient
-                    colors={!validation.canSubmit ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#D4AF37', '#7A5C13']}
+                    colors={!validation.canSubmit ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#C5B493', '#8B6508']}
                     style={[styles.ctaGradient, !validation.canSubmit && { borderColor: 'transparent' }]}
                   >
                     <Text style={[styles.ctaText, !validation.canSubmit && { color: theme.textMuted }]}>
@@ -185,7 +185,6 @@ export default function BackupPassphraseModal({
             </KeyboardAvoidingView>
           </SafeAreaView>
         </View>
-      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -264,7 +263,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderColor: 'rgba(197, 180, 147, 0.3)',
   },
   ctaText: {
     fontSize: 16,

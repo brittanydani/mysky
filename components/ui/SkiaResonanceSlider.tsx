@@ -67,7 +67,7 @@ interface Props {
   anchors: [string, string, string];
   /** Min value (default 1) */
   min?: number;
-  /** Max value (default 10) */
+  /** Max value (default 9) */
   max?: number;
 }
 
@@ -80,7 +80,7 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
   color,
   anchors,
   min = 1,
-  max = 10,
+  max = 9,
 }: Props) {
   const [trackWidth, setTrackWidth] = React.useState(0);
   const trackWidthRef = useRef(0);
@@ -106,15 +106,21 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (e) => {
         const tw = trackWidthRef.current;
         if (tw > 0) {
           const pct = Math.min(1, Math.max(0, e.nativeEvent.locationX / tw));
           const tapped = Math.round(min + pct * (max - min));
           startValueRef.current = tapped;
-          onChangeRef.current(tapped);
-          Haptics.selectionAsync().catch(() => {});
+          if (tapped !== valueRef.current) {
+            valueRef.current = tapped;
+            onChangeRef.current(tapped);
+            Haptics.selectionAsync().catch(() => {});
+          }
         } else {
           startValueRef.current = valueRef.current;
         }
@@ -126,6 +132,7 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
         const raw = startValueRef.current + deltaPct * (max - min);
         const clamped = Math.round(Math.min(max, Math.max(min, raw)));
         if (clamped !== valueRef.current) {
+          valueRef.current = clamped;
           Haptics.selectionAsync().catch(() => {});
           onChangeRef.current(clamped);
         }
@@ -179,7 +186,7 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
         {...panResponder.panHandlers}
       >
         {trackWidth > 0 && (
-          <Canvas style={[styles.trackCanvas, { width: trackWidth, height: TRACK_H }]}>
+          <Canvas style={[styles.trackCanvas, { width: trackWidth, height: TRACK_H }]} pointerEvents="none">
             {/* Track background (obsidian glass) */}
             <RoundedRect
               x={0}
@@ -266,9 +273,9 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
 
       {/* Anchors */}
       <View style={styles.anchorRow}>
-        <Text style={styles.anchor}>{anchors[0]}</Text>
-        <Text style={styles.anchor}>{anchors[1]}</Text>
-        <Text style={styles.anchor}>{anchors[2]}</Text>
+        <Text style={[styles.anchor, { textAlign: 'left', flex: 1 }]}>{anchors[0]}</Text>
+        <Text style={[styles.anchor, { textAlign: 'center', flex: 1 }]}>{anchors[1]}</Text>
+        <Text style={[styles.anchor, { textAlign: 'right', flex: 1 }]}>{anchors[2]}</Text>
       </View>
     </View>
   );

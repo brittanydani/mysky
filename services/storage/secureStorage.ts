@@ -199,6 +199,13 @@ class SecureStorageService {
     await this.bestEffortDeleteKey(SecureStorageService.KEYS.CONSENT_HISTORY);
     await this.bestEffortDeleteKey(SecureStorageService.KEYS.PRIVACY_POLICY_VERSION);
     await this.bestEffortDeleteKey(SecureStorageService.KEYS.LAWFUL_BASIS_RECORDS);
+
+    // Also delete terms consent (stored outside the KEYS map, in plaintext SecureStore)
+    try {
+      await SecureStore.deleteItemAsync('terms_consent');
+    } catch {
+      // best-effort
+    }
   }
 
   // Recent security events — a rolling window of the last 20 key operations.
@@ -377,17 +384,11 @@ class SecureStorageService {
       try {
         return await EncryptionManager.verifySensitiveData<T>(parsed.payload);
       } catch {
-        // HMAC verification failed — this commonly happens after a simulator
-        // reset, app reinstall, or device migration where the HMAC key in
-        // SecureStore was regenerated.  Attempt to recover the plaintext data
-        // and re-sign it with the current key so future reads succeed.
-        const recovered = EncryptionManager.tryParseSensitiveData<T>(parsed.payload);
-        if (recovered !== null) {
-          logger.warn(`[SecureStorage] HMAC mismatch for "${key}" — recovered data and re-signed`);
-          await this.setEncryptedItem(key, recovered);
-          return recovered;
-        }
-        logger.error(`[SecureStorage] HMAC integrity check failed for "${key}" and recovery failed — rejecting data`);
+        // HMAC verification failed — reject the data to preserve integrity.
+        // This can happen after a simulator reset / app reinstall / device
+        // migration where the HMAC key in SecureStore was regenerated.
+        // We do NOT silently re-sign because that would bypass tamper detection.
+        logger.error(`[SecureStorage] HMAC integrity check failed for "${key}" — rejecting data`);
         return null;
       }
     }

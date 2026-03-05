@@ -9,7 +9,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
-import StarField from './ui/StarField';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { Image } from 'react-native';
 import BirthDataModal from './BirthDataModal';
 import TermsConsentModal from './TermsConsentModal';
@@ -208,12 +208,17 @@ export default function OnboardingModal({
 
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          <StarField starCount={100} />
+          <SkiaDynamicCosmos />
 
           <SafeAreaView edges={['top']} style={styles.safeArea}>
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+              style={styles.scrollView} 
+              contentContainerStyle={styles.scrollContent} 
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
               {step === 'welcome' && (
                 <>
                   <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.welcomeContainer}>
@@ -359,7 +364,6 @@ export default function OnboardingModal({
             onSave={handleBirthDataComplete}
           />
         </View>
-      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -380,7 +384,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(201, 169, 98, 0.1)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.glow,
@@ -415,7 +419,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(201, 169, 98, 0.1)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,

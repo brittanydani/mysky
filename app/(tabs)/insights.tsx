@@ -19,7 +19,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
@@ -29,7 +29,7 @@ import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/jour
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -160,7 +160,7 @@ export default function InsightsScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={40} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
@@ -195,7 +195,7 @@ export default function InsightsScreen() {
                 </Pressable>
 
                 <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/journal')}>
-                  <LinearGradient colors={['rgba(212, 175, 55, 0.25)', 'rgba(212, 175, 55, 0.1)']} style={styles.promptBtnGradient}>
+                  <LinearGradient colors={['rgba(197, 180, 147, 0.25)', 'rgba(197, 180, 147, 0.1)']} style={styles.promptBtnGradient}>
                     <Ionicons name="create-outline" size={18} color={PALETTE.gold} />
                     <Text style={[styles.promptBtnText, { color: PALETTE.gold }]}>Write Journal</Text>
                   </LinearGradient>
@@ -329,7 +329,7 @@ export default function InsightsScreen() {
 
                   {/* Emotion tone shift */}
                   {enhanced && enhanced.emotionToneShift && (
-                    <LinearGradient colors={['rgba(212, 175, 55, 0.1)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                    <LinearGradient colors={['rgba(197, 180, 147, 0.1)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                       <View style={styles.patternLabelRow}>
                         <Ionicons name="analytics-outline" size={14} color={PALETTE.gold} />
                         <Text style={[styles.patternLabel, { color: PALETTE.gold }]}>EMOTION TONE</Text>
@@ -353,7 +353,7 @@ export default function InsightsScreen() {
               ) : (
                 /* Free teaser */
                 <Pressable onPress={() => nav('/(tabs)/premium')}>
-                  <LinearGradient colors={['rgba(212, 175, 55, 0.1)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                  <LinearGradient colors={['rgba(197, 180, 147, 0.1)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                       <Ionicons name="lock-closed" size={18} color={PALETTE.gold} />
                       <View style={{ flex: 1 }}>
@@ -414,7 +414,7 @@ export default function InsightsScreen() {
 
               <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/chart')}>
                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
-                  <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(212, 175, 55, 0.15)' }]}>
+                  <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
                     <Ionicons name="map-outline" size={20} color={PALETTE.gold} />
                   </View>
                   <View>
@@ -429,7 +429,7 @@ export default function InsightsScreen() {
           {/* ── Section 4: Advanced Astrological Context ── */}
           <Animated.View entering={FadeInDown.delay(380).duration(600)} style={[styles.section, { marginTop: 8 }]}>
             <Pressable onPress={() => nav('/astrology-context')}>
-              <LinearGradient colors={['rgba(212, 175, 55, 0.1)', 'rgba(212, 175, 55, 0.02)']} style={styles.astrologyCard}>
+              <LinearGradient colors={['rgba(197, 180, 147, 0.1)', 'rgba(197, 180, 147, 0.02)']} style={styles.astrologyCard}>
                 <View style={styles.astrologyHeader}>
                   <View style={styles.astrologyIconWrap}>
                     <Ionicons name="planet-outline" size={18} color={PALETTE.gold} />
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   patternTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
   patternBody: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   
-  promptPill: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(212, 175, 55, 0.1)' },
+  promptPill: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(197, 180, 147, 0.1)' },
   promptPillText: { fontSize: 14, color: PALETTE.gold, fontStyle: 'italic', flex: 1 },
   
   liftRow: { marginTop: 6 },
@@ -524,9 +524,9 @@ const styles = StyleSheet.create({
   exploreChipTitle: { color: PALETTE.textMain, fontWeight: '600', fontSize: 15, marginBottom: 2 },
   exploreChipSub: { color: theme.textMuted, fontSize: 12 },
 
-  astrologyCard: { padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)' },
+  astrologyCard: { padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' },
   astrologyHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  astrologyIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(212, 175, 55, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  astrologyIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(197, 180, 147, 0.1)', justifyContent: 'center', alignItems: 'center' },
   astrologyTextWrap: { flex: 1 },
   astrologyTitle: { fontSize: 15, fontWeight: '600', color: PALETTE.gold, marginBottom: 2 },
   astrologySubtitle: { fontSize: 12, color: theme.textMuted },

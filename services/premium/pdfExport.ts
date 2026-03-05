@@ -234,14 +234,14 @@ body {
     radial-gradient(1px 1px at 82% 32%, rgba(255,255,255,0.65), transparent),
     radial-gradient(1.3px 1.3px at 15% 55%, rgba(255,255,255,0.5), transparent),
     radial-gradient(1px 1px at 28% 62%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1.5px 1.5px at 45% 58%, rgba(201,169,98,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 45% 58%, rgba(212, 175, 55,0.5), transparent),
     radial-gradient(1px 1px at 62% 65%, rgba(255,255,255,0.45), transparent),
     radial-gradient(1.1px 1.1px at 78% 52%, rgba(255,255,255,0.6), transparent),
     radial-gradient(1px 1px at 92% 60%, rgba(255,255,255,0.5), transparent),
     radial-gradient(1.2px 1.2px at 5% 75%, rgba(255,255,255,0.55), transparent),
     radial-gradient(1px 1px at 20% 82%, rgba(255,255,255,0.5), transparent),
     radial-gradient(1.4px 1.4px at 38% 78%, rgba(255,255,255,0.65), transparent),
-    radial-gradient(1px 1px at 55% 85%, rgba(201,169,98,0.45), transparent),
+    radial-gradient(1px 1px at 55% 85%, rgba(212, 175, 55,0.45), transparent),
     radial-gradient(1.3px 1.3px at 70% 72%, rgba(255,255,255,0.5), transparent),
     radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.6), transparent),
     radial-gradient(1.1px 1.1px at 10% 92%, rgba(255,255,255,0.5), transparent),
@@ -261,14 +261,14 @@ body {
 .cover {
   text-align: center;
   padding: 56px 0 48px;
-  border-bottom: 1px solid rgba(201,169,98,0.25);
+  border-bottom: 1px solid rgba(212, 175, 55,0.25);
   margin-bottom: 48px;
 }
 .app-name {
   font-size: 11px;
   letter-spacing: 5px;
   text-transform: uppercase;
-  color: rgba(201,169,98,0.65);
+  color: rgba(212, 175, 55,0.65);
   margin-bottom: 28px;
 }
 .cover-title {
@@ -286,7 +286,7 @@ body {
 }
 .birth-card {
   display: inline-block;
-  border: 1px solid rgba(201,169,98,0.2);
+  border: 1px solid rgba(212, 175, 55,0.2);
   border-radius: 12px;
   padding: 18px 32px;
   background: rgba(30,45,71,0.6);
@@ -298,7 +298,7 @@ body {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(201,169,98,0.55);
+  color: rgba(212, 175, 55,0.55);
   width: 52px;
   flex-shrink: 0;
   padding-top: 1px;
@@ -314,7 +314,7 @@ body {
 .big-three-card {
   flex: 1;
   text-align: center;
-  border: 1px solid rgba(201,169,98,0.18);
+  border: 1px solid rgba(212, 175, 55,0.18);
   border-radius: 10px;
   padding: 18px 10px;
   background: rgba(30,45,71,0.5);
@@ -323,12 +323,12 @@ body {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(201,169,98,0.55);
+  color: rgba(212, 175, 55,0.55);
   margin-bottom: 8px;
 }
 .bt-sign {
   font-size: 18px;
-  color: #C9A962;
+  color: #C5B493;
   margin-bottom: 4px;
 }
 .bt-house {
@@ -341,11 +341,11 @@ body {
 .section-title {
   font-size: 17px;
   font-weight: 600;
-  color: #C9A962;
+  color: #C5B493;
   letter-spacing: 0.3px;
   margin-bottom: 14px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(201,169,98,0.15);
+  border-bottom: 1px solid rgba(212, 175, 55,0.15);
 }
 
 /* ── Tables ── */
@@ -357,7 +357,7 @@ th {
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(201,169,98,0.6);
+  color: rgba(212, 175, 55,0.6);
   font-weight: 400;
 }
 td {
@@ -366,7 +366,7 @@ td {
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 tr:last-child td { border-bottom: none; }
-.rx { color: rgba(201,169,98,0.7); font-style: italic; }
+.rx { color: rgba(212, 175, 55,0.7); font-style: italic; }
 
 /* ── Aspects ── */
 .aspect-group {
@@ -386,7 +386,7 @@ tr:last-child td { border-bottom: none; }
 .chapters-header {
   font-size: 22px;
   font-weight: 700;
-  color: #C9A962;
+  color: #C5B493;
   text-align: center;
   margin: 48px 0 32px;
   letter-spacing: 0.3px;
@@ -401,7 +401,7 @@ tr:last-child td { border-bottom: none; }
   font-size: 10px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: rgba(201,169,98,0.5);
+  color: rgba(212, 175, 55,0.5);
   margin-bottom: 6px;
 }
 .chapter-title {
@@ -425,7 +425,7 @@ tr:last-child td { border-bottom: none; }
 }
 .chapter-reflection {
   background: rgba(30,45,71,0.5);
-  border-left: 2px solid rgba(201,169,98,0.35);
+  border-left: 2px solid rgba(212, 175, 55,0.35);
   border-radius: 0 8px 8px 0;
   padding: 13px 15px;
   margin-bottom: 12px;
@@ -442,12 +442,12 @@ tr:last-child td { border-bottom: none; }
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(201,169,98,0.5);
+  color: rgba(212, 175, 55,0.5);
   margin-bottom: 5px;
 }
 .affirmation-text {
   font-style: italic;
-  color: #C9A962;
+  color: #C5B493;
   font-size: 14px;
 }
 

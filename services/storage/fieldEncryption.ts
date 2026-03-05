@@ -216,18 +216,31 @@ class FieldEncryptionServiceClass {
   private dekCache: Uint8Array | null = null;
 
   /**
-   * Initialize the Data Encryption Key
-   * Creates a new DEK if one doesn't exist
+   * Initialize the Data Encryption Key.
+   * Creates a new DEK only on genuine first run (no existing key).
+   * If SecureStore is temporarily unavailable, throws rather than
+   * silently generating a new key (which would orphan encrypted data).
    */
   async initialize(): Promise<void> {
-    const existingDek = await SecureStore.getItemAsync(DEK_KEY);
-    
+    let existingDek: string | null = null;
+    try {
+      existingDek = await SecureStore.getItemAsync(DEK_KEY);
+    } catch (error) {
+      // SecureStore is unavailable (keychain locked, device migration, etc.)
+      // Do NOT generate a new key — that would silently orphan all encrypted data.
+      logger.error('[FieldEncryption] SecureStore unavailable — cannot load or create DEK');
+      throw new Error(
+        'Unable to access your device\u2019s secure storage. ' +
+        'Please restart the app. If the problem persists, your encryption key may need to be restored from a backup.'
+      );
+    }
+
     if (!existingDek) {
-      // Generate new DEK
+      // Genuine first run — no key exists yet
       const newDek = generateRandomBytes(DEK_SIZE);
       await SecureStore.setItemAsync(DEK_KEY, uint8ArrayToBase64(newDek));
       this.dekCache = newDek;
-      logger.info('[FieldEncryption] Generated new DEK');
+      logger.info('[FieldEncryption] Generated new DEK (first run)');
     } else {
       this.dekCache = base64ToUint8Array(existingDek);
       logger.info('[FieldEncryption] Loaded existing DEK');
@@ -235,20 +248,29 @@ class FieldEncryptionServiceClass {
   }
 
   /**
-   * Get the Data Encryption Key (lazily initialized)
+   * Get the Data Encryption Key (lazily initialized).
+   * Throws if SecureStore is unavailable rather than silently
+   * generating a new key.
    */
   private async getDek(): Promise<Uint8Array> {
     if (this.dekCache) {
       return this.dekCache;
     }
 
-    const stored = await SecureStore.getItemAsync(DEK_KEY);
-    
+    let stored: string | null = null;
+    try {
+      stored = await SecureStore.getItemAsync(DEK_KEY);
+    } catch (error) {
+      logger.error('[FieldEncryption] SecureStore unavailable during getDek()');
+      throw new Error('Secure storage unavailable — cannot access encryption key');
+    }
+
     if (!stored) {
+      // Key doesn't exist yet — initialize will create one (first run only)
       await this.initialize();
       return this.dekCache!;
     }
-    
+
     this.dekCache = base64ToUint8Array(stored);
     return this.dekCache;
   }
@@ -450,51 +472,21 @@ class FieldEncryptionServiceClass {
     return result;
   }
 
-  /**
-   * Prepare a new DEK for key rotation.
-   *
-   * Safety: The new DEK is staged in a separate SecureStore key
-   * (`field_encryption_dek_next`) so the old DEK is NOT overwritten
-   * until the caller has re-encrypted every row and calls
-   * `commitRotatedKey()`.  If the app crashes before commit, the
-   * old DEK remains active and no data is lost.
-   */
-  async rotateKey(): Promise<{ staged: true }> {
-    const oldDek = await SecureStore.getItemAsync(DEK_KEY);
-    
-    if (!oldDek) {
-      throw new Error('No existing DEK to rotate');
-    }
-    
-    // Generate new DEK and stage it — do NOT overwrite the active key yet
-    const newDekBytes = generateRandomBytes(DEK_SIZE);
-    const newDekBase64 = uint8ArrayToBase64(newDekBytes);
-    
-    await SecureStore.setItemAsync(`${DEK_KEY}_next`, newDekBase64);
-    
-    logger.warn('[FieldEncryption] New DEK staged — call commitRotatedKey() after re-encrypting all rows');
-    
-    // Do NOT return raw key material — callers should re-encrypt via
-    // encrypt/decrypt methods which internally load the staged key.
-    return { staged: true };
-  }
-
-  /**
-   * Commit a staged key rotation after ALL rows have been re-encrypted.
-   * Moves the staged DEK to the active slot and deletes the staging key.
-   * Only call this once every row has been successfully re-encrypted.
-   */
-  async commitRotatedKey(): Promise<void> {
-    const staged = await SecureStore.getItemAsync(`${DEK_KEY}_next`);
-    if (!staged) {
-      throw new Error('No staged DEK found — call rotateKey() first');
-    }
-
-    await SecureStore.setItemAsync(DEK_KEY, staged);
-    await SecureStore.deleteItemAsync(`${DEK_KEY}_next`);
-    this.dekCache = base64ToUint8Array(staged);
-    logger.info('[FieldEncryption] Rotated DEK committed successfully');
-  }
+  // ── Key Rotation ─────────────────────────────────────────────────────────
+  // Key rotation is NOT yet supported because it requires a full
+  // re-encryption pass across every encrypted field in every table
+  // (saved_charts, journal_entries, daily_check_ins, insight_history,
+  // relationship_charts, sleep_entries).  Implementing rotateKey()
+  // without that re-encryption step would silently destroy all data.
+  //
+  // If key rotation is needed in the future, implement:
+  //   1. rotateKey()          – stage a new DEK in SecureStore
+  //   2. reEncryptAllRows()   – decrypt every field with old key,
+  //                             re-encrypt with new key, inside a
+  //                             single SQLite transaction
+  //   3. commitRotatedKey()   – swap staged DEK to active slot
+  // All three steps MUST succeed atomically or roll back.
+  // ─────────────────────────────────────────────────────────────────────────
 
   /**
    * Export DEK for backup purposes, wrapped with a caller-provided key.

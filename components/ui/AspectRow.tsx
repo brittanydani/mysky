@@ -26,7 +26,7 @@ interface AspectRowProps {
 // Cinematic jewel-tone palette with gradient maps for 3D nodes
 const CATEGORY_CONFIG: Record<AspectCategory, { color: string; gradient: readonly [string, string]; label: string }> = {
   connection: { color: '#D4A3B3', gradient: ['#F2D4DF', '#A86C82'], label: 'Harmony' },
-  chemistry:  { color: '#D4AF37', gradient: ['#FFF0B3', '#9A7B1C'], label: 'Chemistry' },
+  chemistry:  { color: '#C5B493', gradient: ['#FFF0B3', '#9A7B1C'], label: 'Chemistry' },
   growth:     { color: '#8BC4E8', gradient: ['#BEE0F5', '#4A87A8'], label: 'Growth' },
   challenge:  { color: '#C87878', gradient: ['#E8A9A9', '#8A3A3A'], label: 'Challenge' }, // Fixed label
 };
@@ -210,10 +210,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   strongBadge: {
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
-    borderColor: 'rgba(212, 175, 55, 0.25)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    borderColor: 'rgba(197, 180, 147, 0.25)',
   },
   strongBadgeText: {
-    color: '#D4AF37', // Gold
+    color: '#C5B493', // Gold
   },
 });

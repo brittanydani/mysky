@@ -135,7 +135,7 @@ const SkiaConstellationLine = memo(({
   return (
     <Path
       path={path}
-      color="rgba(201, 169, 98, 0.4)" // Soft gold text.primary or theme.primary
+      color="rgba(197, 180, 147, 0.4)" // Soft gold text.primary or theme.primary
       style="stroke"
       strokeWidth={0.8}
       opacity={opacity}

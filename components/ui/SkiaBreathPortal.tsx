@@ -42,7 +42,7 @@ const POINTS = 120;
 
 const PALETTE = {
   emerald: '#6EBF8B',
-  gold: '#D4AF37',
+  gold: '#C5B493',
   glass: 'rgba(255, 255, 255, 0.1)',
 };
 

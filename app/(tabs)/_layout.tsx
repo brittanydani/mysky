@@ -15,7 +15,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: 'transparent',
           borderTopWidth: 1,
-          borderTopColor: 'rgba(201, 169, 98, 0.15)',
+          borderTopColor: 'rgba(197, 180, 147, 0.15)',
           height: Platform.select({
             ios: insets.bottom + 60,
             android: insets.bottom + 60,
@@ -38,11 +38,11 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* ── Visible tabs (exactly 5) — Biometric Wellness Suite ── */}
+      {/* ── Visible tabs (exactly 5) ── */}
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Stability',
+          title: 'Balance',
           tabBarIcon: ({ color }) => <Ionicons name="pulse" size={22} color={color} />,
         }}
       />
@@ -58,7 +58,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="sleep"
         options={{
-          title: 'Restore',
+          title: 'Rest',
           tabBarIcon: ({ color }) => <Ionicons name="moon" size={22} color={color} />,
         }}
       />
@@ -74,7 +74,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Calibrate',
+          title: 'Settings',
           tabBarIcon: ({ color }) => <Ionicons name="options" size={22} color={color} />,
         }}
       />

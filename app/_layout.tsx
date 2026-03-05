@@ -5,7 +5,7 @@ import { Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -42,15 +42,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <View style={styles.errorContainer}>
-          <Ionicons name="warning-outline" size={56} color="#D4AF37" style={{ marginBottom: 20 }} />
+          <Ionicons name="warning-outline" size={56} color="#C5B493" style={{ marginBottom: 20 }} />
           <Text style={styles.errorTitle}>The stars misaligned</Text>
           <Text style={styles.errorBody}>Something unexpected happened. Please close the app and reopen it, or try reloading below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
             <LinearGradient 
-              colors={['rgba(212, 175, 55, 0.15)', 'rgba(212, 175, 55, 0.05)']} 
+              colors={['rgba(197, 180, 147, 0.15)', 'rgba(197, 180, 147, 0.05)']} 
               style={styles.errorButtonGradient}
             >
-              <Ionicons name="refresh" size={16} color="#D4AF37" style={{ marginRight: 8 }} />
+              <Ionicons name="refresh" size={16} color="#C5B493" style={{ marginRight: 8 }} />
               <Text style={styles.errorButtonText}>Reload Experience</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -82,6 +82,7 @@ export default function RootLayout() {
 
   const [checkingConsent, setCheckingConsent] = useState(true);
   const [dbReady, setDbReady] = useState(false);
+  const [initTimedOut, setInitTimedOut] = useState(false);
 
   const [needsPrivacyConsent, setNeedsPrivacyConsent] = useState(false);
   const [needsTermsConsent, setNeedsTermsConsent] = useState(false);
@@ -90,6 +91,7 @@ export default function RootLayout() {
 
   // Prevent double-running the heavy init in edge cases
   const didRunPostConsentInitRef = useRef(false);
+  const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isOnLegalScreen = useMemo(() => {
     return pathname === '/terms' || pathname === '/privacy' || pathname === '/faq';
@@ -146,11 +148,80 @@ export default function RootLayout() {
         setDbReady(true);
       } finally {
         setCheckingConsent(false);
+        if (initTimeoutRef.current) {
+          clearTimeout(initTimeoutRef.current);
+          initTimeoutRef.current = null;
+        }
       }
     };
 
+    // Show retry UI if initialization takes too long (e.g. stuck SecureStore)
+    initTimeoutRef.current = setTimeout(() => {
+      if (checkingConsent || !dbReady) {
+        setInitTimedOut(true);
+        logger.error('App initialization timed out after 15 seconds');
+      }
+    }, 15_000);
+
     initializeApp();
+
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current);
+        initTimeoutRef.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const retryInit = () => {
+    setInitTimedOut(false);
+    setCheckingConsent(true);
+    setDbReady(false);
+    didRunPostConsentInitRef.current = false;
+
+    initTimeoutRef.current = setTimeout(() => {
+      setInitTimedOut(true);
+      logger.error('App initialization retry timed out');
+    }, 15_000);
+
+    const retryInitializeApp = async () => {
+      try {
+        const privacyManager = new PrivacyComplianceManager();
+        const consentStatus = await privacyManager.requestConsent();
+        setNeedsPrivacyConsent(consentStatus.required);
+
+        const termsAccepted = await getTermsConsent();
+        setNeedsTermsConsent(!termsAccepted);
+
+        if (!consentStatus.required) {
+          await runPostPrivacyConsentInit(termsAccepted);
+        } else {
+          setDbReady(true);
+        }
+      } catch (error) {
+        logger.error('Retry initialization failed:', error);
+        setDbReady(true);
+      } finally {
+        setCheckingConsent(false);
+        if (initTimeoutRef.current) {
+          clearTimeout(initTimeoutRef.current);
+          initTimeoutRef.current = null;
+        }
+      }
+    };
+
+    retryInitializeApp();
+  };
+
+  // Listen for consent withdrawal from settings — immediately re-gate the session
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('CONSENT_WITHDRAWN', () => {
+      setNeedsPrivacyConsent(true);
+      setOnboardingComplete(false);
+      logger.info('Consent withdrawn — session re-gated');
+    });
+    return () => sub.remove();
   }, []);
 
   const handlePrivacyConsent = async (granted: boolean) => {
@@ -189,6 +260,24 @@ export default function RootLayout() {
   };
 
   if (checkingConsent || !dbReady) {
+    if (initTimedOut) {
+      return (
+        <View style={styles.errorContainer}>
+          <Ionicons name="hourglass-outline" size={56} color="#C5B493" style={{ marginBottom: 20 }} />
+          <Text style={styles.errorTitle}>Taking longer than expected</Text>
+          <Text style={styles.errorBody}>Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.</Text>
+          <TouchableOpacity activeOpacity={0.8} onPress={retryInit}>
+            <LinearGradient
+              colors={['rgba(197, 180, 147, 0.15)', 'rgba(197, 180, 147, 0.05)']}
+              style={styles.errorButtonGradient}
+            >
+              <Ionicons name="refresh" size={16} color="#C5B493" style={{ marginRight: 8 }} />
+              <Text style={styles.errorButtonText}>Retry</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      );
+    }
     return null;
   }
 
@@ -209,7 +298,8 @@ export default function RootLayout() {
                     animation: 'fade',
                   }}
                 >
-                  <Stack.Screen name="(tabs)" />
+                  {/* Only mount tabs after privacy consent is confirmed */}
+                  {!needsPrivacyConsent && <Stack.Screen name="(tabs)" />}
                   <Stack.Screen name="privacy" />
                   <Stack.Screen name="terms" />
                   <Stack.Screen name="faq" />
@@ -269,10 +359,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14, 
     borderRadius: 20, 
     borderWidth: 1, 
-    borderColor: 'rgba(212, 175, 55, 0.3)' 
+    borderColor: 'rgba(197, 180, 147, 0.3)' 
   },
   errorButtonText: { 
-    color: '#D4AF37', 
+    color: '#C5B493', 
     fontSize: 15, 
     fontWeight: '600' 
   },

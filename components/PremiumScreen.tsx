@@ -8,7 +8,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
-import StarField from './ui/StarField';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import PricingCard from './ui/PricingCard';
 import { usePremium } from '../context/PremiumContext';
 import { config } from '../constants/config';
@@ -121,7 +121,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
   if (isPremium) {
     return (
       <View style={styles.container}>
-        <StarField starCount={30} />
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}>
             <Pressable onPress={safeGoBack} style={styles.backButton}>
@@ -180,7 +180,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={30} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
@@ -414,9 +414,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
   premiumColumn: {
-    backgroundColor: 'rgba(201, 169, 98, 0.08)',
+    backgroundColor: 'rgba(197, 180, 147, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.2)',
+    borderColor: 'rgba(197, 180, 147, 0.2)',
   },
   comparisonHeader: {
     fontSize: 14,

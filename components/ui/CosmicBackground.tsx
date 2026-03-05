@@ -99,7 +99,7 @@ function CosmicBackground() {
           <RadialGradient
             c={vec(W * 0.2, H * 0.8)}
             r={radius * 0.6}
-            colors={["rgba(212, 175, 55, 0.05)", "rgba(100, 80, 40, 0.02)", "transparent"]}
+            colors={["rgba(197, 180, 147, 0.05)", "rgba(100, 80, 40, 0.02)", "transparent"]}
           />
         </Rect>
 

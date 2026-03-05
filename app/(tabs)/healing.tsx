@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import InsightCard from '../../components/ui/InsightCard';
 import ShadowQuoteCard from '../../components/ui/ShadowQuoteCard';
 import { HealingInsightsGenerator, HealingInsights } from '../../services/premium/healingInsights';
@@ -20,7 +20,7 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -135,7 +135,7 @@ export default function HealingScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={40} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
@@ -145,9 +145,9 @@ export default function HealingScreen() {
         >
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Healing Insights</Text>
+            <Text style={styles.title}>Growth Insights</Text>
             <Text style={styles.headerSub}>
-              Explore emotional patterns, inner needs, and pathways to growth — grounded in your psychological blueprint.
+              Explore emotional patterns, inner needs, and pathways to growth — grounded in your personal blueprint.
             </Text>
           </Animated.View>
 
@@ -158,7 +158,7 @@ export default function HealingScreen() {
                 <Ionicons name="heart-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyTitle}>No chart yet</Text>
                 <Text style={styles.emptySubtitle}>
-                  Create your chart to unlock personalized healing insights.
+                  Create your chart to unlock personalized growth insights.
                 </Text>
                 <Pressable
                   onPress={() => router.push('/(tabs)/chart' as Href)}
@@ -248,7 +248,7 @@ export default function HealingScreen() {
                   <DetailRow label="DESCRIPTION" text={healingData.attachment.description} color={PALETTE.gold} />
                   <DetailRow label="WHERE IT CAME FROM" text={healingData.attachment.origins} color={PALETTE.gold} />
                   <DetailRow label="IN RELATIONSHIPS" text={healingData.attachment.inRelationships} color={PALETTE.gold} />
-                  <DetailRow label="HEALING PATH" text={healingData.attachment.healingPath} color={PALETTE.gold} />
+                  <DetailRow label="GROWTH PATH" text={healingData.attachment.healingPath} color={PALETTE.gold} />
                   <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.gold }]}>
                     <Text style={[styles.affirmationText, { color: PALETTE.gold }]}>"{healingData.attachment.affirmation}"</Text>
                   </View>
@@ -269,23 +269,23 @@ export default function HealingScreen() {
           {/* ── Safety & Nervous System ── */}
           {healingData && (
             <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Safety & Nervous System</Text>
+              <Text style={styles.sectionTitle}>Safety & Emotional Patterns</Text>
               {isPremium ? (
-                <DeepCard icon="moon" title="Regulation" color={PALETTE.silverBlue}>
+                <DeepCard icon="moon" title="Emotional Regulation" color={PALETTE.silverBlue}>
                   <Text style={styles.deepCardMain}>{healingData.safety.whatFeelsSafe}</Text>
                   <View style={styles.deepDivider} />
                   <DetailRow label="WHAT FEELS UNSAFE" text={healingData.safety.whatFeelsUnsafe} color={PALETTE.silverBlue} />
-                  <DetailRow label="NERVOUS SYSTEM TENDENCY" text={healingData.safety.nervousSystemTendency} color={PALETTE.silverBlue} />
+                  <DetailRow label="EMOTIONAL TENDENCY" text={healingData.safety.nervousSystemTendency} color={PALETTE.silverBlue} />
                   <ToolList label="SELF-SOOTHING TOOLS" items={healingData.safety.selfSoothingTools} color={PALETTE.silverBlue} />
                   <DetailRow label="BOUNDARY NEEDS" text={healingData.safety.boundaryNeeds} color={PALETTE.silverBlue} />
                 </DeepCard>
               ) : (
                 <InsightCard
                   title="Safety & Regulation"
-                  content="Your nervous system has a specific definition of safety — your chart reveals what it is."
+                  content="Your inner landscape has a specific definition of safety — your chart reveals what it is."
                   icon="moon"
                   locked
-                  lockedHint="Discover what your body needs to feel safe →"
+                  lockedHint="Discover what you need to feel safe →"
                   onPress={goToPremium}
                 />
               )}
@@ -392,12 +392,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   emptyButton: {
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    backgroundColor: 'rgba(197, 180, 147, 0.15)',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderColor: 'rgba(197, 180, 147, 0.3)',
   },
   emptyButtonText: { color: PALETTE.gold, fontWeight: '700', fontSize: 15 },
 

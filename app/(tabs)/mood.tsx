@@ -1,7 +1,7 @@
 // File: app/(tabs)/mood.tsx
 // MySky — Mood Tab: slider check-in + pattern graphs
 
-import React, { useCallback, useEffect, useMemo, useState, memo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, memo, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Canvas,
   Path as SkiaPath,
@@ -32,7 +33,7 @@ import {
 } from '@shopify/react-native-skia';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import NebulaBackground from '../../components/ui/NebulaBackground';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -41,6 +42,7 @@ import { usePremium } from '../../context/PremiumContext';
 import { CheckInService, CheckInInput, TIME_OF_DAY_LABELS, TIME_OF_DAY_ORDER } from '../../services/patterns/checkInService';
 import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../../services/patterns/types';
 import { logger } from '../../utils/logger';
+import { toLocalDateString } from '../../utils/dateUtils';
 import type { TimeOfDayMetricInsight, TimeOfDayBucket } from '../../utils/insightsEngine';
 import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
 import SkiaResonanceSlider from '../../components/ui/SkiaResonanceSlider';
@@ -99,7 +101,7 @@ const ALL_TAG_LABELS: Record<string, string> = {
 };
 
 const COLORS = {
-  mood: '#c9a962',
+  mood: '#C5B493',
   energy: '#6fb3d3',
   stress: '#e07b7b',
 };
@@ -356,6 +358,9 @@ export default function MoodScreen() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
 
+  const [isEditingUnlocked, setIsEditingUnlocked] = useState(false);
+  const draftCacheRef = useRef<Record<string, any>>({});
+
   useEffect(() => {
     if (!loading && !hasChart) {
       // If user somehow hits Mood with no chart, send them to chart creation
@@ -395,9 +400,24 @@ export default function MoodScreen() {
           const existing = await CheckInService.getTodayCheckInForSlot(cId, CheckInService.getCurrentTimeSlot());
           setTodayCheckIn(existing);
           if (existing) {
+            const todayStr = toLocalDateString(new Date());
+            let cachedExactStr = await AsyncStorage.getItem(`exact_${todayStr}_${existing.timeOfDay}`);
+            if (!cachedExactStr) {
+               const fallbackStr = new Date().toISOString().slice(0, 10);
+               cachedExactStr = await AsyncStorage.getItem(`exact_${fallbackStr}_${existing.timeOfDay}`);
+            }
+            let exactE = levelToNum(existing.energyLevel);
+            let exactS = levelToNum(existing.stressLevel);
+            if (cachedExactStr) {
+               try { 
+                 const parsed = JSON.parse(cachedExactStr);
+                 exactE = parsed.energy;
+                 exactS = parsed.stress;
+               } catch(e) {}
+            }
             setMoodSlider(existing.moodScore);
-            setEnergySlider(levelToNum(existing.energyLevel));
-            setStressSlider(levelToNum(existing.stressLevel));
+            setEnergySlider(exactE);
+            setStressSlider(exactS);
             const restoredTags = existing.tags ?? [];
             const eqTag = restoredTags.find((t: string) => t.startsWith('eq_')) as ThemeTag | undefined;
             setSelectedQuality(eqTag ?? null);
@@ -450,8 +470,16 @@ export default function MoodScreen() {
       };
 
       const result = await CheckInService.saveCheckIn(input, userChart, chartId);
+      
+      const todayStr = toLocalDateString(new Date());
+      await AsyncStorage.setItem(`exact_${todayStr}_${selectedTimeSlot}`, JSON.stringify({
+         energy: energySlider,
+         stress: stressSlider
+      }));
+
       setTodayCheckIn(result);
       setSavedAt(new Date());
+      setIsEditingUnlocked(false);
 
       // Refresh today's check-ins and completed slots
       const todayAll = await CheckInService.getTodayCheckIns(chartId);
@@ -600,7 +628,7 @@ export default function MoodScreen() {
     return (
       <View style={styles.container}>
         <NebulaBackground mood={5} />
-        <StarField starCount={28} />
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.flex}>
           <View style={styles.centered}>
             <Ionicons name="sparkles" size={28} color={theme.primary} />
@@ -622,7 +650,7 @@ export default function MoodScreen() {
     return (
       <View style={styles.container}>
         <NebulaBackground mood={3} />
-        <StarField starCount={28} />
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.flex}>
           <View style={styles.centered}>
             <Ionicons name="cloud-offline-outline" size={36} color="#E85D75" />
@@ -639,24 +667,25 @@ export default function MoodScreen() {
   // ── Main render ───────────────────────────────────────────────────────────
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <NebulaBackground mood={moodSlider} />
-        <StarField starCount={60} />
-        <SafeAreaView edges={['top']} style={styles.flex}>
-          {/* Header */}
-          <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Internal Weather</Text>
-            <Text style={styles.subtitle}>
-              Somatic check-in · {formatToday()}
-            </Text>
-          </Animated.View>
+    <View style={styles.container}>
+      <NebulaBackground mood={moodSlider} />
+      <SkiaDynamicCosmos />
+      <SafeAreaView edges={['top']} style={styles.flex}>
+        {/* Header */}
+        <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
+          <Text style={styles.title}>Internal Weather</Text>
+          <Text style={styles.subtitle}>
+            Daily check-in · {formatToday()}
+          </Text>
+        </Animated.View>
 
-          <ScrollView
-            style={styles.flex}
-            contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
-            showsVerticalScrollIndicator={false}
-          >
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
             {/* Streak row */}
             {currentStreak > 0 && (
               <Animated.View entering={FadeInDown.delay(80).duration(500)} style={styles.streakRow}>
@@ -716,16 +745,39 @@ export default function MoodScreen() {
                           isSelected && styles.timeSlotChipOn,
                           isCompleted && !isSelected && styles.timeSlotChipDone,
                         ]}
-                        onPress={() => {
+                        onPress={async () => {
                           Haptics.selectionAsync().catch(() => {});
-                          setSelectedTimeSlot(slot);
+                          if (slot !== selectedTimeSlot) {
+                            draftCacheRef.current[selectedTimeSlot] = {
+                              moodSlider, energySlider, stressSlider,
+                              selectedTags, selectedQuality,
+                              showCustomInput, customInputText
+                            };
+                            setSelectedTimeSlot(slot);
+                            setIsEditingUnlocked(false);
 
-                          // Load existing data for this slot if it exists
+                            // Load existing data for this slot if it exists
                           const existing = todayCheckIns.find(c => c.timeOfDay === slot);
                           if (existing) {
+                            const todayStr = toLocalDateString(new Date());
+                            let cachedExactStr = await AsyncStorage.getItem(`exact_${todayStr}_${existing.timeOfDay}`);
+                            if (!cachedExactStr) {
+                               const fallbackStr = new Date().toISOString().slice(0, 10);
+                               cachedExactStr = await AsyncStorage.getItem(`exact_${fallbackStr}_${existing.timeOfDay}`);
+                            }
+                            let exactE = levelToNum(existing.energyLevel);
+                            let exactS = levelToNum(existing.stressLevel);
+                            if (cachedExactStr) {
+                               try { 
+                                 const parsed = JSON.parse(cachedExactStr);
+                                 exactE = parsed.energy;
+                                 exactS = parsed.stress;
+                               } catch(e) {}
+                            }
+
                             setMoodSlider(existing.moodScore);
-                            setEnergySlider(levelToNum(existing.energyLevel));
-                            setStressSlider(levelToNum(existing.stressLevel));
+                            setEnergySlider(exactE);
+                            setStressSlider(exactS);
 
                             const restoredTags = existing.tags ?? [];
                             const eqTag = restoredTags.find((t: string) => t.startsWith('eq_')) as ThemeTag | undefined;
@@ -736,17 +788,18 @@ export default function MoodScreen() {
                             setCustomInputText('');
                             setTodayCheckIn(existing);
                           } else {
-                            // Reset form for new time slot
-                            setMoodSlider(5);
-                            setEnergySlider(5);
-                            setStressSlider(5);
-                            setSelectedTags([]);
-                            setSelectedQuality(null);
-                            setShowCustomInput(false);
-                            setCustomInputText('');
+                            const draft = draftCacheRef.current[slot as TimeOfDay];
+                            setMoodSlider(draft ? draft.moodSlider : 5);
+                            setEnergySlider(draft ? draft.energySlider : 5);
+                            setStressSlider(draft ? draft.stressSlider : 5);
+                            setSelectedTags(draft ? draft.selectedTags : []);
+                            setSelectedQuality(draft ? draft.selectedQuality : null);
+                            setShowCustomInput(draft ? draft.showCustomInput : false);
+                            setCustomInputText(draft ? draft.customInputText : '');
                             setTodayCheckIn(null);
                           }
-                        }}
+                        }
+                      }}
                         accessibilityRole="button"
                         accessibilityLabel={`${info.label} check-in${isCompleted ? ' (completed)' : ''}`}
                         accessibilityState={{ selected: isSelected }}
@@ -789,13 +842,16 @@ export default function MoodScreen() {
                   </View>
                 )}
 
-                {/* Sliders — Resonance-enhanced */}
+                <View pointerEvents={(completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 'none' : 'auto'} style={{ opacity: (completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 0.7 : 1 }}>
+                  {/* Sliders — Resonance-enhanced */}
                 <SkiaResonanceSlider
                   question="How are you feeling emotionally?"
                   value={moodSlider}
                   onChange={setMoodSlider}
                   color={COLORS.mood}
                   anchors={['Very low', 'Neutral', 'Excellent']}
+                  min={1}
+                  max={9}
                 />
                 <SkiaResonanceSlider
                   question="How is your energy right now?"
@@ -803,6 +859,8 @@ export default function MoodScreen() {
                   onChange={setEnergySlider}
                   color={COLORS.energy}
                   anchors={['Exhausted', 'Steady', 'Energized']}
+                  min={1}
+                  max={9}
                 />
                 <SkiaResonanceSlider
                   question="How activated or stressed do you feel?"
@@ -810,6 +868,8 @@ export default function MoodScreen() {
                   onChange={setStressSlider}
                   color={COLORS.stress}
                   anchors={['Calm', 'Alert', 'Overwhelmed']}
+                  min={1}
+                  max={9}
                 />
 
                 {/* Influence tags */}
@@ -931,14 +991,32 @@ export default function MoodScreen() {
                   </>
                 )}
 
-                {/* Somatic Pulse Monitor — Hold to confirm presence */}
-                <View style={styles.pulseSection}>
-                  <Text style={styles.pulseLabel}>Hold to sync your check-in</Text>
-                  <Text style={styles.pulseHint}>3 seconds of presence to confirm</Text>
-                  <SkiaPulseMonitor onSyncComplete={handleSave} />
-                </View>
+                </View>{/* end of locked inputs view */}
 
-                <Text style={styles.hint}>Somatic sync — up to 4× daily. Morning, afternoon, evening, night.</Text>
+                {/* Somatic Pulse Monitor / Action Area */}
+                {completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked ? (
+                  <View style={[styles.pulseSection, { paddingVertical: 24 }]}>
+                    <Text style={[styles.pulseLabel, { color: theme.energy, marginBottom: 16 }]}>
+                      Check-in sealed for {TIME_OF_DAY_LABELS[selectedTimeSlot].label.toLowerCase()}{' '}
+                      {TIME_OF_DAY_LABELS[selectedTimeSlot].emoji}
+                    </Text>
+                    <Pressable 
+                      style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: '#333842', alignSelf: 'center' }}
+                      onPress={() => { Haptics.selectionAsync().catch(()=>{}); setIsEditingUnlocked(true); }}
+                    >
+                      <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '600' }}>Edit Entry</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.pulseSection}>
+                      <Text style={styles.pulseLabel}>Hold to sync your {TIME_OF_DAY_LABELS[selectedTimeSlot].label.toLowerCase()} check-in</Text>
+                      <Text style={styles.pulseHint}>Hold to seal and confirm</Text>
+                      <SkiaPulseMonitor onSyncComplete={handleSave} />
+                    </View>
+                    <Text style={styles.hint}>Daily sync — up to 4× daily. Morning, afternoon, evening, night.</Text>
+                  </>
+                )}
 
                 {/* Save error banner */}
                 {saveError && (
@@ -957,7 +1035,7 @@ export default function MoodScreen() {
               </LinearGradient>
             </Animated.View>
 
-            {/* ═══ Biometric Scatter — mood vs energy correlation ═══ */}
+            {/* ═══ Mood Scatter — mood vs energy connection ═══ */}
             {allCheckIns.length >= 3 && (
               <Animated.View entering={FadeInDown.delay(180).duration(600)}>
                 <LinearGradient
@@ -965,13 +1043,18 @@ export default function MoodScreen() {
                   style={styles.card}
                 >
                   <View style={styles.scatterSection}>
-                    <Text style={styles.scatterTitle}>Mood × Energy Correlation</Text>
+                    <Text style={styles.scatterTitle}>Mood × Energy Connection</Text>
                     <Text style={styles.scatterHint}>Each point maps one check-in — clusters reveal your baseline patterns</Text>
                     <SkiaBiometricScatter
                       points={allCheckIns.slice(0, 30).map(c => ({
                         x: c.moodScore / 10,
                         y: c.energyLevel === 'high' ? 0.85 : c.energyLevel === 'medium' ? 0.5 : 0.2,
                       }))}
+                      title="Mental State Correlation"
+                      subtitle="Emotional Mood vs. Physical Energy"
+                      xAxisLabel="High Mood"
+                      yAxisLabel="High Energy"
+                      insight="Your energy levels and mood scores tend to move together. Focus on physical recharge to boost emotional state."
                     />
                   </View>
                 </LinearGradient>
@@ -1187,11 +1270,11 @@ export default function MoodScreen() {
                   accessibilityLabel="Unlock Patterns"
                 >
                   <LinearGradient
-                    colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']}
-                    style={[styles.card, { borderColor: 'rgba(201,169,98,0.2)' }]}
+                    colors={['rgba(197, 180, 147,0.10)', 'rgba(197, 180, 147,0.03)']}
+                    style={[styles.card, { borderColor: 'rgba(197, 180, 147,0.2)' }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(201,169,98,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(197, 180, 147,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
                         <Ionicons name="sparkles" size={10} color={theme.primary} />
                         <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
                       </View>
@@ -1244,7 +1327,6 @@ export default function MoodScreen() {
           </ScrollView>
         </SafeAreaView>
       </View>
-    </TouchableWithoutFeedback>
   );
 }
 
@@ -1354,7 +1436,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.10)',
   },
   timeSlotChipOn: {
-    backgroundColor: 'rgba(201,169,98,0.18)',
+    backgroundColor: 'rgba(197, 180, 147,0.18)',
     borderColor: theme.primary,
   },
   timeSlotChipDone: {
@@ -1393,7 +1475,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.12)',
   },
   tagChipOn: {
-    backgroundColor: 'rgba(201,169,98,0.18)',
+    backgroundColor: 'rgba(197, 180, 147,0.18)',
     borderColor: theme.primary,
   },
   tagTxt: { color: theme.textSecondary, fontSize: 13, fontWeight: '600' },
@@ -1454,7 +1536,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: 'rgba(201,169,98,0.22)',
+    borderColor: 'rgba(197, 180, 147,0.22)',
     borderRadius: theme.borderRadius.sm,
   },
   saveBtnTxt: { color: theme.primary, fontSize: 15, fontWeight: '800' },
@@ -1490,7 +1572,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
   rangeBtnOn: {
-    backgroundColor: 'rgba(201,169,98,0.18)',
+    backgroundColor: 'rgba(197, 180, 147,0.18)',
     borderColor: theme.primary,
   },
   rangeTxt: { color: theme.textMuted, fontSize: 12, fontWeight: '700' },
@@ -1575,11 +1657,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.3,
+    textAlign: 'center',
   },
   pulseHint: {
     color: theme.textMuted,
     fontSize: 12,
     fontStyle: 'italic',
+    textAlign: 'center',
   },
 
   // Biometric scatter

@@ -8,7 +8,7 @@ import { applyStoryLabels } from '../../constants/storyLabels';
 
 // Mappings for Archetypal Forces to their corresponding aura colors
 const FORCE_COLORS: Record<string, string> = {
-  'Core vitality': '#D4AF37',       // Champagne Gold (Sun)
+  'Core vitality': '#C5B493',       // Champagne Gold (Sun)
   'Emotional body': '#8BC4E8',      // Silver-Blue (Moon)
   'Activating force': '#CD7F5D',    // Copper (Mars)
   'Relational force': '#F4C2C2',    // Soft Pink (Venus)
@@ -36,7 +36,7 @@ interface ChapterCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   textMain: '#FDFBF7',
@@ -193,12 +193,12 @@ const styles = StyleSheet.create({
   lockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    backgroundColor: 'rgba(197, 180, 147, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.2)',
+    borderColor: 'rgba(197, 180, 147, 0.2)',
   },
   lockBadgeText: {
     fontSize: 10,

@@ -16,7 +16,7 @@ interface PricingCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   textMain: '#FDFBF7',
@@ -47,7 +47,7 @@ function PricingCard({
       {popular && (
         <View style={styles.popularBadgeContainer}>
           <LinearGradient
-            colors={['#FFF4D4', '#D4AF37']}
+            colors={['#FFF4D4', '#C5B493']}
             style={styles.popularBadge}
           >
             <Ionicons name="sparkles" size={10} color="#1A1A1A" />
@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   selectedContainer: {
-    borderColor: 'rgba(212, 175, 55, 0.3)',
-    borderTopColor: 'rgba(212, 175, 55, 0.5)',
+    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderTopColor: 'rgba(197, 180, 147, 0.5)',
     borderWidth: 1.5,
   },
   pressed: {

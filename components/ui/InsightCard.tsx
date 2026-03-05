@@ -17,7 +17,7 @@ interface InsightCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   textMain: '#FDFBF7',

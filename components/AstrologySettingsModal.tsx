@@ -34,7 +34,7 @@ import { logger } from '../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   textMain: '#FDFBF7',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -208,7 +208,7 @@ export default function AstrologySettingsModal({
                 disabled={!hasChanges || saving}
               >
                 <LinearGradient 
-                  colors={!hasChanges ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#D4AF37', '#7A5C13']} 
+                  colors={!hasChanges ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#C5B493', '#8B6508']} 
                   style={styles.saveBtnGradient}
                 >
                   {saving ? (
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
   },
-  cardSelected: { backgroundColor: 'rgba(212, 175, 55, 0.08)', borderColor: 'rgba(212, 175, 55, 0.3)' },
+  cardSelected: { backgroundColor: 'rgba(197, 180, 147, 0.08)', borderColor: 'rgba(197, 180, 147, 0.3)' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   optionTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
   optionSub: { fontSize: 12, color: theme.textMuted, lineHeight: 18 },

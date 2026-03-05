@@ -41,7 +41,7 @@ const { width: SCREEN_W } = Dimensions.get('window');
 // ─── Palette ───────────────────────────────────────────────────────────────────
 
 const COLORS = {
-  ripple: 'rgba(212, 175, 55, 0.08)',
+  ripple: 'rgba(197, 180, 147, 0.08)',
   rippleEdge: 'rgba(139, 196, 232, 0.05)',
   specular: 'rgba(255, 255, 255, 0.03)',
   surface: 'rgba(7, 9, 15, 0.4)',
@@ -146,7 +146,7 @@ const SkiaObsidianInk = memo(function SkiaObsidianInk({
           c={vec(width / 2, height / 2)}
           r={80 + glowIntensity * 40}
           colors={[
-            `rgba(212, 175, 55, ${(0.03 + glowIntensity * 0.05).toFixed(3)})`,
+            `rgba(197, 180, 147, ${(0.03 + glowIntensity * 0.05).toFixed(3)})`,
             'transparent',
           ]}
         />

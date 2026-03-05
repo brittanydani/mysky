@@ -28,7 +28,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
-import StarField from './ui/StarField';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import ShadowQuoteCard, { ShadowQuoteInline } from './ui/ShadowQuoteCard';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
@@ -43,7 +43,7 @@ import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   textMain: '#FDFBF7',
@@ -192,9 +192,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
-          <StarField starCount={40} />
+          <SkiaDynamicCosmos />
           <SafeAreaView edges={['top']} style={styles.safeArea}>
             
             {/* Header */}
@@ -285,7 +284,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
                   {showCloseQuote && closeQuote && <ShadowQuoteCard quote={closeQuote} variant="footer" isCloseQuote />}
                   <Pressable style={styles.saveBtn} onPress={handleSave}>
-                    <LinearGradient colors={['#FFF4D4', '#D4AF37', '#7A5C13']} style={styles.saveGradient}>
+                    <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.saveGradient}>
                       <Text style={styles.saveBtnText}>{initialData ? 'Secure Changes' : 'Secure Entry'}</Text>
                     </LinearGradient>
                   </Pressable>
@@ -305,7 +304,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             </KeyboardAvoidingView>
           </SafeAreaView>
         </View>
-      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -337,7 +335,7 @@ const styles = StyleSheet.create({
   
   promptZone: { marginBottom: 20 },
   transitContext: { fontSize: 13, color: PALETTE.silverBlue, fontStyle: 'italic', marginBottom: 12, textAlign: 'center' },
-  primaryPromptCard: { backgroundColor: 'rgba(212, 175, 55, 0.08)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)' },
+  primaryPromptCard: { backgroundColor: 'rgba(197, 180, 147, 0.08)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' },
   promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
   primaryPromptText: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontStyle: 'italic', lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },

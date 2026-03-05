@@ -24,7 +24,7 @@ interface ShadowQuoteCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -40,8 +40,8 @@ const TONE_CONFIG: Record<ShadowTone, { colors: [string, string]; highlight: str
     highlight: 'rgba(157, 118, 193, 0.3)' 
   },
   protective: { 
-    colors: ['rgba(212, 175, 55, 0.12)', 'rgba(20, 24, 34, 0.6)'], // Gold
-    highlight: 'rgba(212, 175, 55, 0.3)' 
+    colors: ['rgba(197, 180, 147, 0.12)', 'rgba(20, 24, 34, 0.6)'], // Gold
+    highlight: 'rgba(197, 180, 147, 0.3)' 
   },
   tension: { 
     colors: ['rgba(205, 127, 93, 0.15)', 'rgba(20, 24, 34, 0.6)'], // Copper

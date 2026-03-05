@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
 import { BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -15,7 +15,7 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   textMain: '#FDFBF7',
 };
 
@@ -57,7 +57,7 @@ export default function OnboardingBirthScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={80} />
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <Ionicons name="sparkles" size={20} color={PALETTE.gold} />

@@ -24,6 +24,8 @@ import {
   useFont,
   vec,
   Shadow,
+  Paint,
+  BlurMask,
 } from '@shopify/react-native-skia';
 
 import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
@@ -53,7 +55,7 @@ const R_DOT_RING_2 = R_ASPECT_RING + 10;
 const RIM_W = 3.5;
 const RIM_INSET = 2;
 
-const PLANET_R = 8.5;
+const PLANET_R = 13.5;
 const HILITE_R = 1.8;
 
 const MAX_ASPECTS = 30;
@@ -105,99 +107,115 @@ const PLANET_SYMBOLS: Record<string, string> = {
   Midheaven: 'MC',
 };
 
-// Champagne / antique gold palette
+// ── User Color Palette ──
+const USER_COLORS = [
+  '#C5B493', // User0 (Owner) - Champagne Gold
+  '#C8CCD4', // User1 - Silver / Platinum
+  '#D4B26A', // User2 - Warm Gold
+  '#D2B6A4', // User3 - Rose Gold
+];
+
 const PLANET_COLORS: Record<string, string> = {
-  Sun: '#B89B6A',
-  Moon: '#B6BDC8',
-  Mercury: '#AEB7C5',
-  Venus: '#B89B6A',
-  Mars: '#A46A54',
-  Jupiter: '#B89B6A',
-  Saturn: '#9BA3B2',
-  Uranus: '#8FA7B4',
-  Neptune: '#8C9DB8',
-  Pluto: '#8D7AA8',
-  Ascendant: '#B89B6A',
-  Midheaven: '#B89B6A',
+  Sun: '#C5B493',
+  Moon: '#B8C2D0',
+  Mercury: '#86BCEC',
+  Venus: '#D07E9E',
+  Mars: '#D07E7E',
+  Jupiter: '#C5B493',
+  Saturn: '#8484A0',
+  Uranus: '#6CBEC4',
+  Neptune: '#7C8CD0',
+  Pluto: '#9068BC',
+  Ascendant: '#C5B493',
+  Midheaven: '#C5B493',
 };
 
-// Gradient highlight (inner sphere catch-light)
 const PLANET_GRADIENT_INNER: Record<string, string> = {
-  Sun: '#E2D0A8',
-  Jupiter: '#E2D0A8',
-  Ascendant: '#E2D0A8',
-  Midheaven: '#E2D0A8',
-  Moon: '#D0D8E4',
-  Mercury: '#C8D4E0',
-  Venus: '#E2D0A8',
-  Mars: '#D4A090',
-  Saturn: '#C0C8D4',
-  Uranus: '#B8CED8',
-  Neptune: '#B4C4D8',
-  Pluto: '#C0B4D4',
+  Sun: '#E8D7A6',
+  Jupiter: '#E8D7A6',
+  Ascendant: '#E8D7A6',
+  Midheaven: '#E8D7A6',
+  Moon: '#D4DDE8',
+  Mercury: '#B8D4F0',
+  Venus: '#EAB8C8',
+  Mars: '#E8B4B4',
+  Saturn: '#B0B0C8',
+  Uranus: '#A8DAE0',
+  Neptune: '#B0BCEC',
+  Pluto: '#C8B4E4',
 };
 
-// Gradient shadow (outer sphere depth)
 const PLANET_GRADIENT_OUTER: Record<string, string> = {
-  Sun: '#6C5428',
-  Jupiter: '#6C5428',
-  Ascendant: '#6C5428',
-  Midheaven: '#6C5428',
-  Moon: '#686E7A',
-  Mercury: '#606874',
-  Venus: '#6C5428',
-  Mars: '#6A3828',
-  Saturn: '#585E6A',
-  Uranus: '#4A6070',
-  Neptune: '#485870',
-  Pluto: '#504468',
+  Sun: '#7E6330',
+  Jupiter: '#7E6330',
+  Ascendant: '#7E6330',
+  Midheaven: '#7E6330',
+  Moon: '#748098',
+  Mercury: '#44849C',
+  Venus: '#9C4C6C',
+  Mars: '#9C4C4C',
+  Saturn: '#505070',
+  Uranus: '#348490',
+  Neptune: '#44549C',
+  Pluto: '#5E4088',
 };
 
-// Cooler soft indigo-violet for overlay/partner planets
 const OVERLAY_PLANET_COLORS: Record<string, string> = {
-  Sun: '#9C8FD2',
-  Moon: '#8D86C8',
-  Mercury: '#8290C7',
-  Venus: '#A08BD0',
-  Mars: '#9A82BE',
-  Jupiter: '#9C8FD2',
-  Saturn: '#7F7BB4',
-  Uranus: '#7F93C8',
-  Neptune: '#7887BE',
-  Pluto: '#8B79C4',
-  Ascendant: '#9C8FD2',
-  Midheaven: '#9C8FD2',
+  Sun: '#8C7CCF',
+  Moon: '#7C70C0',
+  Mercury: '#7080C4',
+  Venus: '#9878C8',
+  Mars: '#9870B8',
+  Jupiter: '#8C7CCF',
+  Saturn: '#6864A8',
+  Uranus: '#7090C8',
+  Neptune: '#6878C0',
+  Pluto: '#8068C0',
+  Ascendant: '#8C7CCF',
+  Midheaven: '#8C7CCF',
 };
 
 const OVERLAY_GRADIENT_INNER: Record<string, string> = {
-  Sun: '#C8C0F0',
-  Moon: '#BCB6EC',
-  Mercury: '#B8C4EC',
-  Venus: '#CCC0F4',
-  Mars: '#C8B8EC',
-  Jupiter: '#C8C0F0',
-  Saturn: '#B0B0E0',
-  Uranus: '#B8C8EC',
-  Neptune: '#B0C0E8',
-  Pluto: '#C4B8EC',
-  Ascendant: '#C8C0F0',
-  Midheaven: '#C8C0F0',
+  Sun: '#C4B8F0',
+  Moon: '#B8ACEC',
+  Mercury: '#B0BCEC',
+  Venus: '#C8B0F0',
+  Mars: '#C4ACEC',
+  Jupiter: '#C4B8F0',
+  Saturn: '#A8A4DC',
+  Uranus: '#B0C0EC',
+  Neptune: '#A8B8E8',
+  Pluto: '#C0AEE8',
+  Ascendant: '#C4B8F0',
+  Midheaven: '#C4B8F0',
 };
 
 const OVERLAY_GRADIENT_OUTER: Record<string, string> = {
-  Sun: '#302060',
-  Moon: '#2A2060',
-  Mercury: '#263268',
-  Venus: '#3A2860',
-  Mars: '#382460',
-  Jupiter: '#302060',
-  Saturn: '#222068',
-  Uranus: '#263068',
-  Neptune: '#222A60',
-  Pluto: '#302068',
-  Ascendant: '#302060',
-  Midheaven: '#302060',
+  Sun: '#2E2550',
+  Moon: '#28205C',
+  Mercury: '#243060',
+  Venus: '#38285C',
+  Mars: '#3C2858',
+  Jupiter: '#2E2550',
+  Saturn: '#20205C',
+  Uranus: '#243060',
+  Neptune: '#202858',
+  Pluto: '#2E2060',
+  Ascendant: '#2E2550',
+  Midheaven: '#2E2550',
 };
+
+// ── 4 User Metallic Gradation Palettes ──
+// Generates the 3D polished sphere gradient per-user
+function getPremiumGoldGradient(userIndex: number): string[] {
+  const baseTints = [
+      ['#FFF4D6', '#E9D9B8', '#C5B493', '#9A8661', '#6E5E40'], // User 1 - Champagne Gold
+      ['#FFFFFF', '#E4E7EC', '#C8CCD4', '#8E97A3', '#5E6875'], // User 2 - Silver / Platinum
+      ['#FFF2C9', '#E6C98A', '#D4B26A', '#9F7E3E', '#6B5325'], // User 3 - Warm Gold
+      ['#FFEDE3', '#E8CFC1', '#D2B6A4', '#A88E7C', '#6E5E40']  // User 4 - Rose Gold
+  ];
+  return baseTints[userIndex % 4] || baseTints[0];
+}
 
 
 // Muted, jewel-tone aspect colors matching reference palette
@@ -402,8 +420,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   const symbolFont = null; // Removed to rely purely on matchFont fallbacks which are safer than bundled ttf
 
   // Fonts — system fonts via matchFont (no TTF files required)
+  const serif16 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 16, fontWeight: '600' }), []);
+  const serif14 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 14, fontWeight: '600' }), []);
   const serif12 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 12, fontWeight: '600' }), []);
   const serif10 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 10, fontWeight: '600' }), []);
+  const sans10 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 10, fontWeight: '600' }), []);
   const sans9 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '600' }), []);
   const sans8 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 8, fontWeight: '600' }), []);
   const zodiac16 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 16, fontWeight: '400' }), []);
@@ -411,6 +432,12 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   const zodiac12 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 12, fontWeight: '400' }), []);
   const zodiac10 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 10, fontWeight: '400' }), []);
 
+  const sans11Heavy = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 11, fontWeight: '900' }), []);
+  const sans9Heavy = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '900' }), []);
+  
+  const zodiacMain = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 24, fontWeight: '900' }), []);
+  const zodiacOverlay = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 18, fontWeight: '900' }), []);
+  
   // ── Prepare natal planets ──
   const placedPlanets = useMemo(() => {
     const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
@@ -494,60 +521,66 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
   // ── Precompute drawable aspect lines for Skia ──
   const aspectLines = useMemo(() => {
-    const lines: Array<{
+    const lines: {
       x1: number;
       y1: number;
       x2: number;
       y2: number;
       color: string;
-      strokeWidth: number;
-      dashed: boolean;
-    }> = [];
+        glowColor: string;
+        strokeWidth: number;
+        dashed: boolean;
+      }[] = [];
 
-    for (const asp of visibleAspects) {
-      const p1Name = normalizePlanetName((asp as any)?.planet1?.name);
-      const p2Name = normalizePlanetName((asp as any)?.planet2?.name);
-      const lon1 = planetLongitudes[p1Name];
-      const lon2 = planetLongitudes[p2Name];
-      if (lon1 === undefined || lon2 === undefined) continue;
+      for (const asp of visibleAspects) {
+        const p1Name = normalizePlanetName((asp as any)?.planet1?.name);
+        const p2Name = normalizePlanetName((asp as any)?.planet2?.name);
+        const lon1 = planetLongitudes[p1Name];
+        const lon2 = planetLongitudes[p2Name];
+        if (lon1 === undefined || lon2 === undefined) continue;
 
-      const angle1 = astroToAngle(lon1, ascLongitude);
-      const angle2 = astroToAngle(lon2, ascLongitude);
-      const p1 = polarToXY(angle1, R_ASPECT_RING);
-      const p2 = polarToXY(angle2, R_ASPECT_RING);
+        const angle1 = astroToAngle(lon1, ascLongitude);
+        const angle2 = astroToAngle(lon2, ascLongitude);
+        const p1 = polarToXY(angle1, R_ASPECT_RING);
+        const p2 = polarToXY(angle2, R_ASPECT_RING);
 
-      const isTight = (asp.orb ?? 99) < 3;
-      // Use major aspect color if available, else fallback to old color
-      const typeName = ((asp as any)?.type?.name ?? '').toLowerCase();
-      const color = ASPECT_COLOR[typeName] || (
-        isTight
-          ? ASPECT_STRONG_COLORS[((asp as any)?.type?.nature ?? 'Neutral') as string] ?? ASPECT_STRONG_COLORS.Neutral
-          : ASPECT_LINE_COLORS[((asp as any)?.type?.nature ?? 'Neutral') as string] ?? ASPECT_LINE_COLORS.Neutral
-      );
+        const orb = asp.orb ?? 99;
+        const typeName = ((asp as any)?.type?.name ?? '').toLowerCase();
 
-      lines.push({
-        x1: p1.x,
-        y1: p1.y,
-        x2: p2.x,
-        y2: p2.y,
-        color,
-        strokeWidth: isTight ? 1.0 : 0.45,
-        dashed: typeName !== 'trine' && typeName !== 'sextile' && typeName !== 'conjunction',
-      });
-    }
+        // New hierarchy mapping for delicate premium lines
+        let topAlpha = 0.35;
+        let glowAlpha = 0.15;
+        if (orb < 3) {
+            topAlpha = 0.55; 
+            glowAlpha = 0.25; 
+        } else if (orb >= 6) { 
+            topAlpha = 0.18; 
+            glowAlpha = 0.08; 
+        }
 
-    return lines;
-  }, [visibleAspects, planetLongitudes, ascLongitude]);
+        lines.push({
+          x1: p1.x,
+          y1: p1.y,
+          x2: p2.x,
+          y2: p2.y,
+          color: `rgba(197,180,147,${topAlpha})`, // #C5B493 in rgb
+          glowColor: `rgba(233,217,184,${glowAlpha})`, // #e9d9b8 in rgb
+          strokeWidth: 1.0,
+          dashed: typeName !== 'trine' && typeName !== 'sextile' && typeName !== 'conjunction',
+        });
+      }
 
+      return lines;
+    }, [visibleAspects, planetLongitudes, ascLongitude]);
   const crossLines = useMemo(() => {
-    const lines: Array<{
+    const lines: {
       x1: number;
       y1: number;
       x2: number;
       y2: number;
       thread: string;
       tight: boolean;
-    }> = [];
+    }[] = [];
     for (const ca of crossAspects) {
       const angle1 = astroToAngle(ca.lon1, ascLongitude);
       const angle2 = astroToAngle(ca.lon2, ascLongitude);
@@ -596,71 +629,91 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           />
         </Circle>
 
-        {/* ── Metal rim — outer bloom glow + base + specular ── */}
+        {/* ── Outer Zodiac Border (Major Ring) ── */}
         <Group>
-          {/* Outer bloom */}
-          <Circle cx={CX} cy={CY} r={R_OUTER} style="stroke" strokeWidth={14} color="rgba(184,155,106,0.06)" />
-          {/* Warm gold base */}
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={R_OUTER - RIM_INSET}
-            style="stroke"
-            strokeWidth={RIM_W}
-            color="rgba(184,155,106,0.28)"
-          />
-          {/* Specular sweep — two bright peaks */}
-          <Circle cx={CX} cy={CY} r={R_OUTER - RIM_INSET} style="stroke" strokeWidth={RIM_W}>
+          {/* Underglow */}
+          <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color="rgba(201,169,98,0.25)">
+            <BlurMask blur={4} style="normal" />
+          </Circle>
+          
+          {/* Outer edge of bezel */}
+          <Circle cx={CX} cy={CY} r={R_OUTER + 45} style="stroke" strokeWidth={1} opacity={0.9}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
-                'rgba(255,244,220,0.00)',
-                'rgba(255,236,195,0.35)',
-                'rgba(255,244,220,0.05)',
-                'rgba(255,244,220,0.00)',
-                'rgba(255,236,195,0.28)',
-                'rgba(255,244,220,0.00)',
+                '#3A2E1C', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#B39D7D', '#FDF5E6', '#D4C4A3', '#1A1208', 
+                '#F8E8C9', '#3A2E1C'
               ]}
-              positions={[0.0, 0.08, 0.18, 0.55, 0.62, 1.0]}
+              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.65, 0.78, 0.88, 0.95, 1.0]}
+              transform={[{ rotate: -0.1 }]}
+            />
+          </Circle>
+
+          {/* Inner edge of bezel */}
+          <Circle cx={CX} cy={CY} r={R_OUTER + 43} style="stroke" strokeWidth={1} opacity={0.9}>
+            <SweepGradient
+              c={vec(CX, CY)}
+              colors={[
+                '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
+                '#C5B493', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#FFF4D6', '#4A3728'
+              ]}
+              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
+              transform={[{ rotate: 0.15 }]} // Offset rotation for highly reflective interplay
+            />
+          </Circle>
+        </Group>
+
+        {/* ── Main Rim: Double Bezel Ring ── */}
+        <Group>
+          {/* 1. Outer Gold Bezel */}
+          {/* Glow layer */}
+          <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color="rgba(201,169,98,0.25)">
+            <BlurMask blur={3} style="normal" />
+          </Circle>
+          
+          {/* Outer edge */}
+          <Circle cx={CX} cy={CY} r={R_OUTER + 3} style="stroke" strokeWidth={1} opacity={0.9}>
+            <SweepGradient
+              c={vec(CX, CY)}
+              colors={[
+                '#3A2E1C', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#B39D7D', '#FDF5E6', '#D4C4A3', '#1A1208', 
+                '#F8E8C9', '#3A2E1C'
+              ]}
+              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.65, 0.78, 0.88, 0.95, 1.0]}
+              transform={[{ rotate: -0.05 }]}
+            />
+          </Circle>
+
+          {/* Inner edge */}
+          <Circle cx={CX} cy={CY} r={R_OUTER + 1} style="stroke" strokeWidth={1} opacity={0.9}>
+            <SweepGradient
+              c={vec(CX, CY)}
+              colors={[
+                '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
+                '#C5B493', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#FFF4D6', '#4A3728'
+              ]}
+              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
+              transform={[{ rotate: 0.2 }]}
+            />
+          </Circle>
+
+          {/* 2. Inner Soft Gold Ring */}
+          <Circle cx={CX} cy={CY} r={R_OUTER - 2} style="stroke" strokeWidth={0.8} opacity={0.9}>
+             <SweepGradient
+              c={vec(CX, CY)}
+              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C5B493', '#FFFFFF', '#3A2E1C', '#8A734D']}
+              positions={[0.0, 0.15, 0.35, 0.5, 0.7, 0.85, 1.0]}
+              transform={[{ rotate: -0.3 }]}
             />
           </Circle>
         </Group>
 
         {/* ── Zodiac sign medallions (outside the rim, double-circle border) ── */}
         
-        {/* Outermost rim enclosing the zodiac signs */}
-        <Group>
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={R_OUTER + 44}
-            style="stroke"
-            strokeWidth={1}
-            color="rgba(184,155,106,0.35)"
-          />
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={R_OUTER + 44}
-            style="stroke"
-            strokeWidth={0.5}
-            color="rgba(255,255,255,0.15)"
-          />
-        </Group>
-
-        {/* Inner rim bounding the zodiac signs (just outside the main wheel) */}
-        <Group>
-          <Circle
-            cx={CX}
-            cy={CY}
-            r={R_OUTER + 2}
-            style="stroke"
-            strokeWidth={1}
-            color="rgba(184,155,106,0.35)"
-          />
-        </Group>
-
-
         {ZODIAC_SIGNS.map((sign, i) => {
           const midAngle = astroToAngle(i * 30 + 15, ascLongitude);
           const tc = polarToXY(midAngle, R_OUTER + 24);
@@ -702,31 +755,33 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           const inner = polarToXY(angle, R_INNER);
 
           const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
-          const strokeW = isAngular ? 1.0 : 0.4;
-          const strokeColor = isAngular ? 'rgba(184,155,106,0.22)' : 'rgba(255,255,255,0.06)';
+          const strokeW = isAngular ? 1.0 : 0.8;
+          const strokeColor = isAngular ? 'rgba(201,169,98,0.7)' : 'rgba(201,169,98,0.45)';
 
           const cusps = chart.houseCusps ?? [];
           const nextHouse = cusps.find((c: HouseCusp) => (c as any).house === (((cusp as any).house % 12) + 1));
-          let midLon = (cusp as any).longitude;
+          let midLon = (cusp as any).longitude + 15; // default fallback
           if (nextHouse) {
             let diff = (nextHouse as any).longitude - (cusp as any).longitude;
-            if (diff < 0) diff += 360;
+            if (diff < 0) diff += 360; // handle wrap around 360 to 0 (Aries point)
             midLon = (cusp as any).longitude + diff / 2;
-            if (midLon >= 360) midLon -= 360;
+            if (midLon >= 360) midLon -= 360; // Normalize back to 0-359
           }
           const midAngle = astroToAngle(midLon, ascLongitude);
           const numPos = polarToXY(midAngle, R_HOUSE_INNER);
+          const houseText = String((cusp as any).house);
+          const tw = sans9 ? sans9.getTextWidth(houseText) : 7;
 
           return (
             <Group key={`house-${(cusp as any).house}`}>
               <Line p1={vec(outer.x, outer.y)} p2={vec(inner.x, inner.y)} color={strokeColor} strokeWidth={strokeW} />
               {sans9 && (
                 <SkiaText
-                  x={numPos.x - 3.5}
-                  y={numPos.y + 3}
-                  text={String((cusp as any).house)}
+                  x={numPos.x - tw / 2}
+                  y={numPos.y + 3.5}
+                  text={houseText}
                   font={sans9}
-                  color="rgba(255,255,255,0.18)"
+                  color="rgba(220,215,205,0.7)"
                 />
               )}
             </Group>
@@ -734,13 +789,13 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         })}
 
         {/* ── House ring border ── */}
-        <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.5} color="rgba(255,255,255,0.05)" />
+        <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.6} color="rgba(197,180,147,0.25)" opacity={0.35} />
 
         {/* ── Dotted astronomy diagram rings ── */}
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.6} color="rgba(255,255,255,0.08)">
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.6} color="rgba(197,180,147,0.25)" opacity={0.25}>
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.6} color="rgba(255,255,255,0.08)">
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.6} color="rgba(197,180,147,0.25)" opacity={0.25}>
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
 
@@ -753,10 +808,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 key={`asp-glow-${i}`}
                 p1={vec(a.x1, a.y1)}
                 p2={vec(a.x2, a.y2)}
-                color={a.color}
-                strokeWidth={a.strokeWidth * (a.dashed ? 2.2 : 2.6)}
-                opacity={0.18}
-              />
+                color={a.glowColor}
+                strokeWidth={2}
+              >
+                <BlurMask blur={2} style="normal" />
+              </Line>
             ))}
             {/* Main aspect line */}
             {aspectLines.map((a, i) => (
@@ -811,9 +867,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           const outerColor = PLANET_GRADIENT_OUTER[planet.label] || baseColor;
 
           const glyph = planet.symbol;
-          const glyphFont = glyph.length > 1 ? sans8 : zodiac12;
-          const glyphOffsetX = glyph.length > 1 ? 5.0 : 4.5;
-          const glyphOffsetY = glyph.length > 1 ? 3.0 : 4.0;
+          const glyphFont = glyph.length > 1 ? sans11Heavy : zodiacMain;
+          const glyphWidth = glyphFont ? glyphFont.getTextWidth(glyph) : 12;
+          const fontSize = glyphFont ? glyphFont.getSize() : 12;
+          const glyphOffsetX = glyphWidth / 2;
+          const glyphOffsetY = fontSize * 0.35; // visually center baseline
 
 
           return (
@@ -828,21 +886,44 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               />
 
               {/* Glow halos (stronger) */}
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={11} color={baseColor} opacity={0.14} />
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={9} color={baseColor} opacity={0.09} />
+              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 3} color={baseColor} opacity={0.14} />
+              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 1} color={baseColor} opacity={0.09} />
 
               {/* Soft shadow ring for dimensional pop */}
               <Shadow dx={0} dy={0} blur={10} color={`${baseColor}44`} />
 
-              {/* Sphere */}
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R}>
-                <RadialGradient
-                  c={vec(glyphPos.x - PLANET_R * 0.35, glyphPos.y - PLANET_R * 0.45)}
-                  r={PLANET_R * 1.5}
-                  colors={["#ffffff", innerColor, outerColor]}
-                  positions={[0, 0.4, 1]}
+{/* Base sphere gradient (the metal body) */}
+                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R}>
+                  <RadialGradient
+                    c={vec(glyphPos.x - PLANET_R * 0.3, glyphPos.y - PLANET_R * 0.3)}
+                    r={PLANET_R * 1.5}
+                    colors={getPremiumGoldGradient(0)}
+                    positions={[0, 0.25, 0.5, 0.75, 1]}
+                  />
+                </Circle>
+                
+                {/* Secondary reflection band */}
+                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R} color="rgba(255,255,255,0.18)">
+                  <BlurMask blur={2} style="inner" />
+                </Circle>
+
+                {/* Specular highlight (small bright spot) */}
+                <Circle 
+                  cx={glyphPos.x - PLANET_R * 0.3} 
+                  cy={glyphPos.y - PLANET_R * 0.3} 
+                  r={PLANET_R * 0.2} 
+                  color="rgba(255,255,255,0.65)" 
                 />
-              </Circle>
+
+                {/* Rim highlight */}
+                <Circle 
+                  cx={glyphPos.x} 
+                  cy={glyphPos.y} 
+                  r={PLANET_R} 
+                  style="stroke" 
+                  strokeWidth={0.6} 
+                  color="rgba(255,255,255,0.15)" 
+                />
 
               {/* Glyph */}
               {symbolFont ? (
@@ -851,7 +932,9 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                   y={glyphPos.y + 6}
                   text={glyph}
                   font={symbolFont}
-                  color="#ffffff"
+                  color="#000000"
+                  style="stroke"
+                  strokeWidth={1.5}
                 />
               ) : glyphFont && (
                 <SkiaText
@@ -859,7 +942,9 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                   y={glyphPos.y + glyphOffsetY}
                   text={glyph}
                   font={glyphFont}
-                  color={baseColor}
+                  color="#000000"
+                  style="stroke"
+                  strokeWidth={1.5}
                 />
               )}
 
@@ -888,9 +973,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           const outerColor = OVERLAY_GRADIENT_OUTER[planet.label] || baseColor;
 
           const glyph = planet.symbol;
-          const glyphFont = glyph.length > 1 ? sans8 : zodiac10;
-          const glyphOffsetX = glyph.length > 1 ? 4.5 : 4.0;
-          const glyphOffsetY = glyph.length > 1 ? 3.0 : 3.6;
+          const glyphFont = glyph.length > 1 ? sans9Heavy : zodiacOverlay;
+          const glyphWidth = glyphFont ? glyphFont.getTextWidth(glyph) : 10;
+          const fontSize = glyphFont ? glyphFont.getSize() : 10;
+          const glyphOffsetX = glyphWidth / 2;
+          const glyphOffsetY = fontSize * 0.35; // visually center baseline
 
 
           return (
@@ -907,8 +994,8 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               </Line>
 
               {/* Glow halos (stronger, matches natal) */}
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={11} color={baseColor} opacity={0.14} />
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={9} color={baseColor} opacity={0.09} />
+              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 3} color={baseColor} opacity={0.14} />
+              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 1} color={baseColor} opacity={0.09} />
 
               {/* Soft shadow ring for dimensional pop */}
               <Circle
@@ -921,23 +1008,45 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               />
 
               {/* Sphere (dashed border, smaller) */}
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={7.8} style="stroke" strokeWidth={0.9} color={baseColor} opacity={0.85}>
+              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75} style="stroke" strokeWidth={0.9} color={baseColor} opacity={0.85}>
                 <DashPathEffect intervals={[3, 2]} />
               </Circle>
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={7.8}>
-                <RadialGradient
-                  c={vec(glyphPos.x - 7.8 * 0.35, glyphPos.y - 7.8 * 0.45)}
-                  r={7.8 * 1.2}
-                  colors={[innerColor, outerColor]}
-                />
-              </Circle>
+{/* Base sphere gradient (the metal body) */}
+                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75}>
+                  <RadialGradient
+                    c={vec(glyphPos.x - (PLANET_R * 0.75) * 0.3, glyphPos.y - (PLANET_R * 0.75) * 0.3)}
+                    r={(PLANET_R * 0.75) * 1.5}
+                    colors={getPremiumGoldGradient(1)}
+                    positions={[0, 0.25, 0.5, 0.75, 1]}
+                  />
+                </Circle>
+                
+                {/* Secondary reflection band */}
+                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75} color="rgba(255,255,255,0.18)">
+                  <BlurMask blur={2} style="inner" />
+                </Circle>
 
-              {/* Specular catch-light */}
-              <Circle cx={glyphPos.x - 7.8 * 0.38} cy={glyphPos.y - 7.8 * 0.42} r={1.6} color="rgba(255,255,255,0.18)" />
+                {/* Specular highlight */}
+                <Circle 
+                  cx={glyphPos.x - (PLANET_R * 0.75) * 0.3} 
+                  cy={glyphPos.y - (PLANET_R * 0.75) * 0.3} 
+                  r={(PLANET_R * 0.75) * 0.2} 
+                  color="rgba(255,255,255,0.65)" 
+                />
+
+                {/* Rim highlight */}
+                <Circle 
+                  cx={glyphPos.x} 
+                  cy={glyphPos.y} 
+                  r={PLANET_R * 0.75} 
+                  style="stroke" 
+                  strokeWidth={0.6} 
+                  color="rgba(255,255,255,0.15)" 
+                />
 
               {/* Glyph */}
               {glyphFont && (
-                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color={baseColor} />
+                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color="#000000" style="stroke" strokeWidth={1.2} />
               )}
 
               {/* Retrograde mark */}
@@ -948,14 +1057,29 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           );
         })}
 
-        {/* ── ASC / MC axis labels ── */}
+        {/* ── ASC / MC axis labels (Strictly Inside text) ── */}
         {(chart as any).ascendant &&
           (() => {
             const lon = getLongitude((chart as any).ascendant);
             if (lon === null) return null;
             const ang = astroToAngle(lon, ascLongitude);
-            const pos = polarToXY(ang, R_OUTER - 12);
-            return sans8 ? <SkiaText x={pos.x - 7} y={pos.y + 3} text="ASC" font={sans8} color={theme.primary} /> : null;
+            
+            // Inner text position (just inside the inner rim where house numbers are)
+            const textPosInner = polarToXY(ang, R_INNER + 20); 
+            
+            return (
+              <Group key="asc-label">
+                {sans8 && (
+                   <SkiaText 
+                     x={textPosInner.x - 8} 
+                     y={textPosInner.y + 3} 
+                     text="ASC" 
+                     font={sans8} 
+                     color="rgba(220,215,205,0.9)" 
+                   />
+                )}
+              </Group>
+            );
           })()}
 
         {(chart as any).midheaven &&
@@ -963,8 +1087,22 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             const lon = getLongitude((chart as any).midheaven);
             if (lon === null) return null;
             const ang = astroToAngle(lon, ascLongitude);
-            const pos = polarToXY(ang, R_OUTER - 12);
-            return sans8 ? <SkiaText x={pos.x - 6} y={pos.y + 3} text="MC" font={sans8} color={theme.primary} /> : null;
+            
+            const textPosInner = polarToXY(ang, R_INNER + 20);
+
+            return (
+              <Group key="mc-label">
+                {sans8 && (
+                   <SkiaText 
+                     x={textPosInner.x - 6} 
+                     y={textPosInner.y + 3} 
+                     text="MC" 
+                     font={sans8} 
+                     color="rgba(220,215,205,0.9)" 
+                   />
+                )}
+              </Group>
+            );
           })()}
 
         {/* ── Center hub — deep navy core ── */}
@@ -994,36 +1132,83 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           />
         </Circle>
 
-        {/* Metallic ring */}
-        <Circle cx={CX} cy={CY} r={R_INNER + 0.5} style="stroke" strokeWidth={1.2} color="#2A3848" opacity={0.7} />
-        {/* Champagne rim highlight */}
-        <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={0.7} color="rgba(184,155,106,0.22)" />
-        {/* Inner white rim (subtle) */}
-        <Circle cx={CX} cy={CY} r={R_INNER - 1} style="stroke" strokeWidth={1.0} color="rgba(255,255,255,0.08)" />
-        {/* Inner shadow */}
-        <Circle cx={CX} cy={CY} r={R_INNER - 2} style="stroke" strokeWidth={1.5} color="rgba(0,0,0,0.22)" />
+        {/* ── Center Hub: Inner Bezel ── */}
+        <Group>
+          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} color="rgba(201,169,98,0.25)">
+            <BlurMask blur={2} style="normal" />
+          </Circle>
+          
+          {/* Outer edge of inner hub */}
+          <Circle cx={CX} cy={CY} r={R_INNER + 1} style="stroke" strokeWidth={1} opacity={0.9}>
+            <SweepGradient
+              c={vec(CX, CY)}
+              colors={[
+                '#3A2E1C', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#B39D7D', '#FDF5E6', '#D4C4A3', '#1A1208', 
+                '#F8E8C9', '#3A2E1C'
+              ]}
+              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.65, 0.78, 0.88, 0.95, 1.0]}
+              transform={[{ rotate: -0.15 }]}
+            />
+          </Circle>
+
+          {/* Inner edge of inner hub */}
+          <Circle cx={CX} cy={CY} r={R_INNER - 1} style="stroke" strokeWidth={1} opacity={0.9}>
+            <SweepGradient
+              c={vec(CX, CY)}
+              colors={[
+                '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
+                '#C5B493', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#FFF4D6', '#4A3728'
+              ]}
+              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
+              transform={[{ rotate: 0.1 }]}
+            />
+          </Circle>
+        </Group>
+
+        <Circle cx={CX} cy={CY} r={R_INNER - 3} style="stroke" strokeWidth={0.8} opacity={0.9}>
+           <SweepGradient
+              c={vec(CX, CY)}
+              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C5B493', '#FFFFFF', '#3A2E1C', '#8A734D']}
+              positions={[0.0, 0.15, 0.35, 0.5, 0.7, 0.85, 1.0]}
+              transform={[{ rotate: -0.2 }]}
+            />
+        </Circle>
 
         {/* ── Synastry label inside center hub ── */}
         {overlayChart && overlayName && (
           <Group>
-            {sans8 && (
-              <SkiaText
-                x={CX - 26}
-                y={CY - 6}
-                text="SYNASTRY"
-                font={sans8}
-                color="rgba(255,255,255,0.55)"
-              />
-            )}
-            {serif10 && (
-              <SkiaText
-                x={CX - 20}
-                y={CY + 10}
-                text={overlayName.length > 9 ? overlayName.slice(0, 9) + '…' : overlayName}
-                font={serif10}
-                color="rgba(184,155,106,0.85)"
-              />
-            )}
+            {sans10 && (() => {
+              const text = "SYNASTRY";
+              const tw = sans10.getTextWidth(text);
+              return (
+                <SkiaText
+                  x={CX - tw / 2}
+                  y={CY - 10}
+                  text={text}
+                  font={sans10}
+                  color="rgba(255,255,255,0.7)"
+                />
+              );
+            })()}
+            {serif16 && serif14 && serif12 && (() => {
+               // dynamically choose smaller font if name is very long
+              let useFont = serif16;
+              if (overlayName.length > 8) useFont = serif14;
+              if (overlayName.length > 12) useFont = serif12;
+              const text = overlayName.length > 16 ? overlayName.slice(0, 15) + '…' : overlayName;
+              const tw = useFont.getTextWidth(text);
+              return (
+                <SkiaText
+                  x={CX - tw / 2}
+                  y={CY + 14}
+                  text={text}
+                  font={useFont}
+                  color="rgba(184,155,106,0.95)"
+                />
+              );
+            })()}
           </Group>
         )}
 

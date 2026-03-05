@@ -27,7 +27,7 @@ import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import { applyEnergyLabels } from '../../constants/storyLabels';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { usePremium } from '../../context/PremiumContext';
@@ -180,7 +180,7 @@ export default function EnergyScreen() {
   if (!loading && !hasChart) {
     return (
       <View style={styles.container}>
-        <StarField starCount={28} />
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
@@ -218,7 +218,7 @@ export default function EnergyScreen() {
   if (loading || !snapshot) {
     return (
       <View style={styles.container}>
-        <StarField starCount={28} />
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.loadingContainer}>
             <Ionicons name="sparkles" size={28} color={theme.primary} />
@@ -234,7 +234,7 @@ export default function EnergyScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={80} />
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
@@ -343,7 +343,7 @@ export default function EnergyScreen() {
                 )}
               </>
             ) : (
-              <LinearGradient colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(201,169,98,0.2)' }]}>
+              <LinearGradient colors={['rgba(197, 180, 147,0.10)', 'rgba(197, 180, 147,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(197, 180, 147,0.2)' }]}>
                 <View style={styles.lockBanner}>
                   <Ionicons name="sparkles" size={14} color={theme.primary} />
                   <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
@@ -452,7 +452,7 @@ export default function EnergyScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Unlock full energy guidance"
                   >
-                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'rgba(201,169,98,0.08)', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
+                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'rgba(197, 180, 147,0.08)', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
                       <Ionicons name="sparkles" size={14} color={theme.primary} />
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.lockText, { fontWeight: '600' }]}>Full guidance includes:</Text>
@@ -766,9 +766,9 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(201,169,98,0.12)',
+    backgroundColor: 'rgba(197, 180, 147,0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(201,169,98,0.22)',
+    borderColor: 'rgba(197, 180, 147,0.22)',
     marginTop: 10,
   },
   primaryBtnText: {
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(201,169,98,0.25)',
+    borderColor: 'rgba(197, 180, 147,0.25)',
   },
   wheelTooltipText: {
     color: theme.textPrimary,
@@ -853,7 +853,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(201,169,98,0.10)',
+    backgroundColor: 'rgba(197, 180, 147,0.10)',
   },
   domainName: {
     color: theme.textPrimary,

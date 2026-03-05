@@ -66,7 +66,7 @@ const PALETTE = {
   textPrompt: 'rgba(253, 251, 247, 0.85)',
   textHint: 'rgba(255, 255, 255, 0.35)',
   breathGlow: 'rgba(110, 191, 139, 0.15)',
-  cursorLine: 'rgba(201, 169, 98, 0.5)',
+  cursorLine: 'rgba(197, 180, 147, 0.5)',
 };
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   divider: {
     width: 40,
     height: 1,
-    backgroundColor: 'rgba(201, 169, 98, 0.25)',
+    backgroundColor: 'rgba(197, 180, 147, 0.25)',
     alignSelf: 'center',
     marginBottom: 16,
   },

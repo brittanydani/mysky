@@ -18,18 +18,19 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaReflectionMirror from '../../components/ui/SkiaReflectionMirror';
 import { localDb } from '../../services/storage/localDb';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { TAG_LABELS } from '../../utils/tagAnalytics';
 import { generateReflectionInsights, ReflectionInsightsResponse, ReflectionInsightsPayload } from '../../services/premium/reflectionInsights';
 import { useAuth } from '../../context/AuthContext';
+import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 // ── Cinematic Color Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   copper: '#CD7F5D',
@@ -184,6 +185,7 @@ function scoreToPercent(score: number | null): number {
 export default function ReflectScreen() {
   const router = useRouter();
   const { session } = useAuth();
+  const { isPremium } = usePremium();
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasChart, setHasChart] = useState(false);
@@ -320,7 +322,7 @@ export default function ReflectScreen() {
   }, [checkIns]);
 
   useEffect(() => {
-    if (checkIns.length < 7 || !session?.access_token) return;
+    if (checkIns.length < 7 || !session?.access_token || !isPremium) return;
     let cancelled = false;
 
     const payload: ReflectionInsightsPayload = {
@@ -365,7 +367,7 @@ export default function ReflectScreen() {
     });
 
     return () => { cancelled = true; };
-  }, [checkIns, session?.access_token]);
+  }, [checkIns, session?.access_token, isPremium]);
 
   const trendIcon = (dir: 'up' | 'down' | 'flat', inverse = false) => {
     const isPositive = inverse ? dir === 'down' : dir === 'up';
@@ -378,7 +380,7 @@ export default function ReflectScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <StarField starCount={40} />
+        <SkiaDynamicCosmos />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
@@ -387,7 +389,7 @@ export default function ReflectScreen() {
   if (!hasChart) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <StarField starCount={40} />
+        <SkiaDynamicCosmos />
         <Ionicons name="journal-outline" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
         <Text style={styles.emptyTitle}>Your Reflection Space</Text>
         <Text style={styles.emptySubtitle}>
@@ -402,7 +404,7 @@ export default function ReflectScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={60} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -438,7 +440,7 @@ export default function ReflectScreen() {
                 </Pressable>
 
                 <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/journal')}>
-                  <LinearGradient colors={['rgba(212, 175, 55, 0.25)', 'rgba(212, 175, 55, 0.1)']} style={styles.promptBtnGradient}>
+                  <LinearGradient colors={['rgba(197, 180, 147, 0.25)', 'rgba(197, 180, 147, 0.1)']} style={styles.promptBtnGradient}>
                     <Ionicons name="create-outline" size={18} color={PALETTE.gold} />
                     <Text style={[styles.promptBtnText, { color: PALETTE.gold }]}>Write Journal</Text>
                   </LinearGradient>
@@ -607,7 +609,7 @@ export default function ReflectScreen() {
               {aiInsights && (
                 <Animated.View entering={FadeInDown.delay(310).duration(600)} style={styles.section}>
                   <Text style={styles.sectionTitle}>Synthesis</Text>
-                  <LinearGradient colors={['rgba(212, 175, 55, 0.08)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                  <LinearGradient colors={['rgba(197, 180, 147, 0.08)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
                     {aiInsights.insights.map((line, i) => (
                       <Text key={i} style={styles.insightLine}>{line}</Text>
                     ))}
@@ -658,7 +660,7 @@ export default function ReflectScreen() {
           {/* ── Astrology Context (Secondary Hook) ── */}
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={[styles.section, { marginTop: 16 }]}>
             <Pressable onPress={() => nav('/astrology-context')}>
-              <LinearGradient colors={['rgba(212, 175, 55, 0.1)', 'rgba(212, 175, 55, 0.02)']} style={styles.astroContextCard}>
+              <LinearGradient colors={['rgba(197, 180, 147, 0.1)', 'rgba(197, 180, 147, 0.02)']} style={styles.astroContextCard}>
                 <View style={styles.astroIconWrap}>
                   <Ionicons name="planet-outline" size={18} color={PALETTE.gold} />
                 </View>
@@ -691,7 +693,7 @@ const styles = StyleSheet.create({
 
   emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 12 },
   emptySubtitle: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 32, marginBottom: 32 },
-  ctaButton: { backgroundColor: 'rgba(212, 175, 55, 0.15)', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)' },
+  ctaButton: { backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)' },
   ctaText: { color: PALETTE.gold, fontWeight: '700', fontSize: 16 },
 
   section: { marginBottom: 24 },
@@ -734,12 +736,12 @@ const styles = StyleSheet.create({
   restorativeMain: { fontSize: 16, color: PALETTE.textMain, textAlign: 'center', lineHeight: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   restorativeSub: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', fontStyle: 'italic', lineHeight: 20, marginBottom: 12 },
 
-  astroContextCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', gap: 16 },
-  astroIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(212, 175, 55, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  astroContextCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)', gap: 16 },
+  astroIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(197, 180, 147, 0.1)', justifyContent: 'center', alignItems: 'center' },
   astroContextTitle: { fontSize: 15, fontWeight: '600', color: PALETTE.gold, marginBottom: 2 },
   astroContextSub: { fontSize: 12, color: theme.textMuted },
   
   emptyCardText: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, marginVertical: 20 },
-  inlineCtaButton: { backgroundColor: 'rgba(212, 175, 55, 0.15)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)' },
+  inlineCtaButton: { backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)' },
   inlineCtaText: { color: PALETTE.gold, fontWeight: '600', fontSize: 14 },
 });

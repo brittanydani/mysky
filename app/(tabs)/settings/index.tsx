@@ -12,7 +12,7 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../../constants/theme';
-import StarField from '../../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import NebulaBackground from '../../../components/ui/NebulaBackground';
 import BackupPassphraseModal from '../../../components/BackupPassphraseModal';
 import PrivacySettingsModal from '../../../components/PrivacySettingsModal';
@@ -388,7 +388,7 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <NebulaBackground mood={5} energy={3} />
-      <StarField starCount={25} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
@@ -400,9 +400,12 @@ export default function SettingsScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: Math.max(insets.bottom, theme.spacing.lg) },
+            { paddingBottom: insets.bottom + 100 },
           ]}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
+          bounces={true}
+          keyboardShouldPersistTaps="handled"
         >
           {encryptionKeyLost && (
             <Animated.View entering={FadeInDown.duration(500)} style={styles.keyLossBanner}>
@@ -541,7 +544,7 @@ export default function SettingsScreen() {
 
           {/* ── Calibration (Celestial Toggles) ── */}
           <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Calibration" subtitle="Fine-tune your experience">
+            <ObsidianSettingsGroup title="Personalization" subtitle="Fine-tune your experience">
               <Pressable
                 style={{ paddingHorizontal: 16, paddingVertical: 12 }}
                 onPress={async () => {
@@ -549,16 +552,16 @@ export default function SettingsScreen() {
                   router.push('/(tabs)/settings/calibration' as Href);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Somatic resonance calibration"
+                accessibilityLabel="Visual atmosphere customization"
               >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
                       <Ionicons name="color-filter" size={20} color={theme.primary} />
-                      <Text style={styles.settingTitle}>Somatic Resonance</Text>
+                      <Text style={styles.settingTitle}>Visual Atmosphere</Text>
                     </View>
                     <Text style={styles.settingDescription}>
-                      Calibrate your biometric color-frequency mapping using the GPU shader console
+                      Customize your visual atmosphere using the color console
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
@@ -575,15 +578,15 @@ export default function SettingsScreen() {
               <SkiaCelestialToggle
                 value={dailyReminderEnabled}
                 onToggle={(v) => togglePref('pref_daily_reminder', v, setDailyReminderEnabled)}
-                label="Somatic Check-in Reminder"
+                label="Daily Check-in Reminder"
                 description="Daily nudge to log your internal weather"
               />
               <ObsidianDivider />
               <SkiaCelestialToggle
                 value={moodInsightsEnabled}
                 onToggle={(v) => togglePref('pref_mood_insights', v, setMoodInsightsEnabled)}
-                label="Somatic Pattern Insights"
-                description="Surface recurring patterns in your biometric check-ins"
+                label="Mood Pattern Insights"
+                description="Surface recurring patterns in your daily check-ins"
               />
               <ObsidianDivider />
               <SkiaCelestialToggle
@@ -781,8 +784,8 @@ export default function SettingsScreen() {
                 accessibilityLabel="Learn about premium features"
               >
                 <LinearGradient
-                  colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
+                  colors={['rgba(197, 180, 147, 0.12)', 'rgba(197, 180, 147, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' }]}
                 >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
@@ -828,8 +831,8 @@ export default function SettingsScreen() {
                 accessibilityLabel="Manage your subscription"
               >
                 <LinearGradient
-                  colors={['rgba(201, 169, 98, 0.12)', 'rgba(201, 169, 98, 0.04)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(201, 169, 98, 0.2)' }]}
+                  colors={['rgba(197, 180, 147, 0.12)', 'rgba(197, 180, 147, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' }]}
                 >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
@@ -847,8 +850,6 @@ export default function SettingsScreen() {
               </Pressable>
             </Animated.View>
           )}
-
-          <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
 
           {__DEV__ && (
             <Animated.View entering={FadeInDown.delay(775).duration(600)} style={styles.section}>
@@ -886,6 +887,7 @@ export default function SettingsScreen() {
         </ScrollView>
       </SafeAreaView>
 
+      <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
       <PrivacySettingsModal visible={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
 
       <BackupPassphraseModal
@@ -970,7 +972,7 @@ const styles = StyleSheet.create({
   settingTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm, flex: 1 },
 
   premiumBadge: {
-    backgroundColor: 'rgba(201, 169, 98, 0.2)',
+    backgroundColor: 'rgba(197, 180, 147, 0.2)',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
     borderRadius: theme.borderRadius.sm,
@@ -987,7 +989,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: 'rgba(201, 169, 98, 0.1)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
     borderRadius: theme.borderRadius.sm,
   },
   syncButtonDisabled: { opacity: 0.6 },
@@ -997,14 +999,14 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.3)',
+    borderColor: 'rgba(197, 180, 147, 0.3)',
   },
   premiumContent: { flexDirection: 'row', alignItems: 'center' },
   premiumIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(201, 169, 98, 0.2)',
+    backgroundColor: 'rgba(197, 180, 147, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
@@ -1031,7 +1033,7 @@ const styles = StyleSheet.create({
 
   chartSettingsSummary: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
   settingTag: {
-    backgroundColor: 'rgba(201, 169, 98, 0.15)',
+    backgroundColor: 'rgba(197, 180, 147, 0.15)',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 4,
     borderRadius: theme.borderRadius.sm,
@@ -1087,7 +1089,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: 'rgba(201, 169, 98, 0.1)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
     borderRadius: theme.borderRadius.sm,
   },
   keyLossBannerButtonDestructive: {

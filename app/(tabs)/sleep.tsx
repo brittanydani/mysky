@@ -31,7 +31,7 @@ import { useRouter, Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaRestorationField from '../../components/ui/SkiaRestorationField';
 import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 import { localDb } from '../../services/storage/localDb';
@@ -61,7 +61,7 @@ const SCREEN_W = Dimensions.get('window').width;
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -237,7 +237,19 @@ export default function SleepScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const today = new Date().toISOString().split('T')[0];
+  const [isEditingUnlocked, setIsEditingUnlocked] = useState(false);
+
+  // Logical "today": reset for the next day at 6:00 AM local time
+  const today = useMemo(() => {
+    const now = new Date();
+    if (now.getHours() < 6) {
+      now.setDate(now.getDate() - 1);
+    }
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -279,6 +291,7 @@ export default function SleepScreen() {
   const applyEntryToForm = useCallback((entry: SleepEntry | undefined) => {
     if (entry) {
       setEditingEntryId(entry.id);
+      setIsEditingUnlocked(false);
       setEditingDate(entry.date);
       setQuality(entry.quality ?? 0);
       if (entry.durationHours != null) {
@@ -309,6 +322,7 @@ export default function SleepScreen() {
       setShowMetadata(false);
     } else {
       setEditingEntryId(null);
+      setIsEditingUnlocked(false);
       setEditingDate(null);
       setQuality(0);
       setDurationHours(7.5);
@@ -526,9 +540,8 @@ export default function SleepScreen() {
   }, [entries]);
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
-      <StarField starCount={40} />
+      <SkiaDynamicCosmos />
       <SkiaRestorationField quality={quality || 3} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -538,11 +551,12 @@ export default function SleepScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Restoration</Text>
-            <Text style={styles.subtitle}>Circadian field · Rest architecture</Text>
+            <Text style={styles.title}>Rest & Sleep</Text>
+            <Text style={styles.subtitle}>Sleep quality · Dream journal</Text>
           </Animated.View>
 
           {/* ── Log Form (Cinematic Glass) ── */}
@@ -550,11 +564,19 @@ export default function SleepScreen() {
             <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.formCard}>
               <View style={styles.formTitleRow}>
                 <Text style={styles.formTitle}>
-                  {editingEntryId ? editingDate === today ? "Update tonight's entry" : `Edit ${formatDate(editingDate!)}` : 'How was last night?'}
+                  {editingEntryId ? editingDate === today ? (isEditingUnlocked ? "Editing tonight's entry" : "Tonight's rest log") : `Edit ${formatDate(editingDate!)}` : 'How was last night?'}
                 </Text>
-                {editingEntryId && editingDate !== today && (
+                {editingEntryId && (editingDate !== today || isEditingUnlocked) && (
                   <Pressable
-                    onPress={() => { Haptics.selectionAsync().catch(() => {}); applyEntryToForm(entries.find(e => e.date === today)); }}
+                    onPress={() => { 
+                      Haptics.selectionAsync().catch(() => {});
+                      if (editingDate === today) {
+                        setIsEditingUnlocked(false);
+                        applyEntryToForm(entries.find(e => e.date === today));
+                      } else {
+                        applyEntryToForm(entries.find(e => e.date === today));
+                      }
+                    }}
                     style={styles.cancelEditBtn}
                   >
                     <Ionicons name="close-circle" size={16} color={theme.textMuted} />
@@ -563,6 +585,7 @@ export default function SleepScreen() {
                 )}
               </View>
 
+              <View pointerEvents={(editingEntryId && !isEditingUnlocked) ? 'none' : 'auto'} style={{ opacity: (editingEntryId && !isEditingUnlocked) ? 0.7 : 1 }}>
               {/* Quality rating */}
               <Text style={styles.fieldLabel}>How rested do you feel?</Text>
               <View style={styles.qualityRow}>
@@ -629,7 +652,7 @@ export default function SleepScreen() {
                 />
               ) : (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                  <LinearGradient colors={['rgba(212, 175, 55, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={styles.dreamLock}>
+                  <LinearGradient colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={styles.dreamLock}>
                     <Ionicons name="lock-closed" size={16} color={PALETTE.gold} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.dreamLockTitle}>Dream journal — Deeper Sky</Text>
@@ -825,12 +848,26 @@ export default function SleepScreen() {
                 </>
               )}
 
-              {/* Somatic Pulse Monitor — Hold to confirm */}
-              <View style={styles.pulseSection}>
-                <Text style={styles.pulseLabel}>Hold to seal your rest data</Text>
-                <Text style={styles.pulseHint}>3 seconds of stillness to confirm</Text>
-                <SkiaPulseMonitor onSyncComplete={handleSave} />
               </View>
+
+              {/* Somatic Pulse Monitor / Action Area */}
+              {editingEntryId && !isEditingUnlocked ? (
+                <View style={styles.pulseSection}>
+                  <Text style={[styles.pulseLabel, { color: PALETTE.emerald, marginBottom: 12 }]}>Rest data sealed softly 🌙</Text>
+                  <Pressable 
+                    style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignSelf: 'center' }}
+                    onPress={() => { Haptics.selectionAsync().catch(()=>{}); setIsEditingUnlocked(true); }}
+                  >
+                    <Text style={{ color: PALETTE.textMain, fontSize: 14, fontWeight: '600' }}>Edit Entry</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.pulseSection}>
+                  <Text style={styles.pulseLabel}>Hold to seal your rest data</Text>
+                  <Text style={styles.pulseHint}>Hold to seal and confirm</Text>
+                  <SkiaPulseMonitor onSyncComplete={handleSave} />
+                </View>
+              )}
 
               {saveError && (
                 <View style={styles.errorBanner}>
@@ -888,10 +925,10 @@ export default function SleepScreen() {
             </Animated.View>
           )}
 
-          {/* ── Restoration Cycle Graph ── */}
+          {/* ── Sleep Cycle Graph ── */}
           {historicalSleep.length >= 2 && (
             <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Restoration Cycle</Text>
+              <Text style={styles.sectionTitle}>Sleep Trends</Text>
               <LinearGradient
                 colors={['rgba(15, 18, 28, 0.85)', 'rgba(10, 13, 22, 0.95)']}
                 style={styles.obsidianCard}
@@ -912,7 +949,7 @@ export default function SleepScreen() {
                 </View>
               </LinearGradient>
 
-              {/* ── Restoration Insight: Sleep Quality vs Morning Mood ── */}
+              {/* ── Sleep Insight: Sleep Quality vs Morning Mood ── */}
               {recentCheckIns.length >= 2 && isPremium && (
                 <View style={{ marginTop: 16 }}>
                   <SkiaRestorationInsight
@@ -926,7 +963,7 @@ export default function SleepScreen() {
                         moodScore: ci?.moodScore ?? 5,
                       };
                     })}
-                    title="Restoration vs. Morning Mood"
+                    title="Sleep Quality vs. Morning Mood"
                   />
                 </View>
               )}
@@ -1022,7 +1059,6 @@ export default function SleepScreen() {
         </ScrollView>
       </SafeAreaView>
     </View>
-    </TouchableWithoutFeedback>
   );
 }
 
@@ -1076,7 +1112,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
     marginBottom: 8,
   },
-  dreamLock: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.2)', padding: 16, marginBottom: 8 },
+  dreamLock: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)', padding: 16, marginBottom: 8 },
   dreamLockTitle: { fontSize: 14, fontWeight: '600', color: PALETTE.gold, marginBottom: 4 },
   dreamLockSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
 
@@ -1135,14 +1171,14 @@ const styles = StyleSheet.create({
   saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 24 },
   saveBtnDisabled: { opacity: 0.5 },
   saveBtnPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.3)', borderRadius: 16 },
+  saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)', borderRadius: 16 },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: PALETTE.gold },
   saveBtnTextDisabled: { color: theme.textMuted },
 
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(205, 127, 93, 0.15)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 14, marginTop: 16 },
   errorBannerText: { flex: 1, color: PALETTE.copper, fontSize: 14, lineHeight: 20 },
 
-  // Obsidian card (Restoration Cycle)
+  // Obsidian card (Sleep Trends)
   obsidianCard: {
     borderRadius: 20,
     padding: 20,
@@ -1216,6 +1252,6 @@ const styles = StyleSheet.create({
 
   // Pulse monitor
   pulseSection: { alignItems: 'center', paddingVertical: 20, gap: 10 },
-  pulseLabel: { color: PALETTE.textMain, fontSize: 15, fontWeight: '700', letterSpacing: 0.3 },
-  pulseHint: { color: theme.textMuted, fontSize: 12, fontStyle: 'italic' },
+  pulseLabel: { color: PALETTE.textMain, fontSize: 15, fontWeight: '700', letterSpacing: 0.3, textAlign: 'center' },
+  pulseHint: { color: theme.textMuted, fontSize: 12, fontStyle: 'italic', textAlign: 'center' },
 });

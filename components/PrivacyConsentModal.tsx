@@ -9,12 +9,12 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
-import StarField from './ui/StarField';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { logger } from '../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
   textMain: '#FDFBF7',
@@ -55,7 +55,7 @@ export default function PrivacyConsentModal({
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen">
       <View style={styles.container}>
-        <StarField starCount={60} />
+        <SkiaDynamicCosmos />
 
         <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
           <ScrollView
@@ -115,7 +115,7 @@ export default function PrivacyConsentModal({
                       onPress={handleAccept}
                     >
                       <LinearGradient
-                        colors={['#FFF4D4', '#D4AF37', '#7A5C13']}
+                        colors={['#FFF4D4', '#C5B493', '#8B6508']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.btnGradient}
@@ -197,12 +197,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 24,
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    backgroundColor: 'rgba(197, 180, 147, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.2)',
+    borderColor: 'rgba(197, 180, 147, 0.2)',
   },
   title: { 
     fontSize: 30, 

@@ -8,11 +8,11 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
-import StarField from '../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   textMain: '#FDFBF7',
@@ -26,7 +26,7 @@ export default function TermsOfServiceScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={60} />
+      <SkiaDynamicCosmos />
       
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
@@ -53,31 +53,36 @@ export default function TermsOfServiceScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
 
-            <Text style={styles.lastUpdated}>Last updated: March 3, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
 
             <Text style={styles.sectionTitle}>Acceptance of Terms</Text>
             <Text style={styles.paragraph}>
-              By downloading or using MySky, you agree to these Terms and our Privacy Policy. All data is stored locally with <Text style={styles.highlight}>AES-256-GCM encryption</Text>.
+              By downloading or using MySky, you agree to these Terms and our Privacy Policy. All personal data is stored locally on your device with <Text style={styles.highlight}>AES-256-GCM field-level encryption</Text> and hardware-backed key storage.
             </Text>
 
             <Text style={styles.sectionTitle}>Service Description</Text>
             <Text style={styles.paragraph}>
-              MySky provides a personalized framework for growth, including mood tracking, journaling, and astrological insights. It is intended for users aged 13 and older.
+              MySky provides a local-first personal framework for growth, self-reflection, and astrological insight. It is intended for users aged 13 and older. Core features work fully offline without an account.
             </Text>
 
             <View style={styles.glassCard}>
               <Text style={[styles.subHeader, { color: PALETTE.gold }]}>Free & Premium Features</Text>
               <Text style={styles.paragraph}>
-                <Text style={styles.boldText}>Free:</Text> Natal Chart, Big Three, Daily check-ins, and basic guidance.
+                <Text style={styles.boldText}>Free:</Text> Natal chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily astrological context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal, symbolic reflections, relationship depth mapping, and full behavioral trend analysis.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship synastry, all 10 personal story chapters, growth and attachment reflections, full 7-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, Chiron and Node depth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
               </Text>
             </View>
 
             <Text style={styles.sectionTitle}>Subscriptions & Payments</Text>
             <Text style={styles.paragraph}>
-              Premium access is available via auto-renewing subscriptions or lifetime purchase. Manage cancellations via your device App Store settings at least 24 hours before renewal.
+              Premium access ("Deeper Sky") is available via auto-renewing subscriptions (monthly or yearly) or a one-time lifetime purchase, managed through RevenueCat. Manage cancellations via your device's App Store or Google Play settings at least 24 hours before renewal. Access continues through the end of your current billing period. Purchases can be restored at any time.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Accounts</Text>
+            <Text style={styles.paragraph}>
+              Account creation is entirely optional and required only for the AI Reflection Insights feature. Accounts are managed via Supabase Auth (email and password). All other features work without an account.
             </Text>
 
             <LinearGradient 
@@ -89,18 +94,28 @@ export default function TermsOfServiceScreen() {
                 <Text style={[styles.subHeader, { color: PALETTE.copper, marginBottom: 0 }]}>Not Medical Advice</Text>
               </View>
               <Text style={styles.paragraph}>
-                MySky does not provide medical or psychological therapy. Our content is for self-reflection only. If in crisis, please contact emergency services.
+                MySky does not provide medical, psychological, or therapeutic advice. Astrological content, dream reflections, growth insights, attachment awareness, and all other features are for self-reflection purposes only. If you are in crisis, please contact emergency services immediately.
               </Text>
             </LinearGradient>
 
             <Text style={styles.sectionTitle}>Intellectual Property</Text>
             <Text style={styles.paragraph}>
-              You retain ownership of your personal journal entries and check-ins. MySky owns the app code, design, and generalized interpretations.
+              You retain full ownership of your personal data, including journal entries, check-ins, sleep logs, and dream content. MySky owns the app code, design, generalized interpretations, symbolic pattern mappings, and all generated astrological content.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Data & Privacy</Text>
+            <Text style={styles.paragraph}>
+              All core data is stored locally on your device. Sensitive fields are encrypted with AES-256-GCM. No analytics SDKs, advertising identifiers, or cross-app tracking are used. For full details, see our Privacy Policy.
             </Text>
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
             <Text style={styles.paragraph}>
-              MySky is provided "as is." We are not liable for incidental damages or choices made based on generalized reflective prompts.
+              MySky is provided "as is" without warranties of any kind. We are not liable for incidental, consequential, or indirect damages, or for any decisions or choices made based on astrological content, reflective prompts, dream interpretations, or behavioral insights provided by the app.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Termination</Text>
+            <Text style={styles.paragraph}>
+              You may stop using MySky at any time by uninstalling the app, which permanently erases all locally stored data. If you created an account for AI Reflection Insights, you may request account deletion by contacting support.
             </Text>
 
             <View style={styles.contactCard}>

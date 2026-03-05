@@ -6,11 +6,11 @@
 **MySky: Personal Reflection**
 
 ## Subtitle (30 chars max)
-**Mood Tracker & Mindful Journal**
+**Mood Journal & Daily Reflection**
 
 ## Category
-**Primary:** Health & Fitness  
-**Secondary:** Lifestyle
+**Primary:** Lifestyle  
+**Secondary:** Health & Fitness
 
 ---
 
@@ -18,9 +18,9 @@
 
 MySky: Personal Reflection
 
-**A High-Fidelity Mirror for Your Daily Wellbeing**
+**A Personal Mirror for Daily Reflection**
 
-MySky is a premium personal reflection tool designed to help you understand patterns in your emotional landscape. Through mindful journaling, mood tracking, and sleep insights, MySky provides a beautiful and focused environment for self-awareness and personal growth.
+MySky is a premium personal reflection tool designed to help you understand patterns in your emotional landscape. Through mindful journaling, mood logging, and sleep insights, MySky provides a beautiful and focused environment for self-awareness and personal growth.
 
 **ELEVATED REFLECTION**
 
@@ -36,9 +36,9 @@ Explore elegant dashboards that highlight relationships between mood, sleep, and
 **Atmospheric Visual Environment**
 MySky features a unique visual interface powered by advanced graphics technology that provides artistic visual feedback based on your reflections.
 
-**INTEGRATED WELLNESS**
+**DESIGNED FOR REFLECTION**
 
-MySky optionally integrates with Apple Health to help you visualize how movement and rest relate to your personal wellbeing patterns.
+All mood, sleep, and energy data is self-reported through beautiful interactive check-ins. MySky helps you notice patterns in your personal reflections over time.
 
 **DESIGNED FOR REFLECTION**
 
@@ -51,12 +51,12 @@ All data encrypted at rest with AES-256-GCM. Keys stored in your device's secure
 ---
 
 ## Keywords (100 chars max)
-`mood,tracker,journal,mindfulness,habit,sleep,wellbeing,gratitude,mental,reflection,daily,emotion`
+`mood,journal,reflection,mindfulness,habit,sleep,gratitude,self-awareness,daily,emotion,personal,growth`
 
 ---
 
 ## Promotional Text (170 chars max)
-A high-fidelity mirror for your daily wellbeing. Track mood, sleep, and reflections in a beautiful visual environment. Discover your patterns. Privacy-first.
+A personal mirror for daily reflection. Log mood, sleep, and thoughts in a beautiful visual environment. Discover your patterns. Privacy-first.
 
 ---
 
@@ -67,13 +67,13 @@ New Balance Dashboard with 7-day mood and sleep trends. Mindful check-in with ha
 
 ## App Review Notes
 
-MySky is a personal wellness app designed for mood tracking, sleep logging, and guided journaling.
+MySky is a personal reflection app designed for mood logging, sleep journaling, and guided self-reflection.
 
 The app uses the Shopify Skia graphics engine to create high-quality visual feedback that responds to user-entered reflections.
 
-The app includes optional breathing exercises and visual dashboards that help users explore patterns in their wellbeing.
+The app includes optional breathing exercises and visual dashboards that help users explore patterns in their reflections.
 
-MySky optionally integrates with Apple Health to visualize activity and rest data alongside user reflections.
+All mood, sleep, and energy data is manually entered by the user through interactive check-ins. No biometric sensors, no HealthKit data, and no automated health measurements are used.
 
 Astrology elements are used only as optional thematic storytelling and do not provide predictions or medical advice. All visual effects are artistic representations of user-inputted data.
 
@@ -86,7 +86,7 @@ Core functionality:
 1. **Daily mood check-ins** (mood 1–10, energy, stress, up to 4×/day) with mindful confirmation
 2. **Sleep tracking** (quality, duration, trend graphs, optional dream journaling)
 3. **Guided journaling** with optional breathing exercise before writing
-4. **Pattern insights** (trend visualizations, 7-day balance summary, Apple Health step/sleep data)
+4. **Pattern insights** (trend visualizations, 7-day balance summary of self-reported data)
 5. **Personalized visual themes** — artistic atmospheric shaders, not diagnostic tools
 6. **Privacy-first architecture** (AES-256-GCM encryption, no cloud storage, no analytics SDKs)
 
@@ -100,7 +100,7 @@ The app contains no user-generated content, no social features, no location trac
 
 | Data Type | Collected | Linked to Identity | Tracking |
 |---|---|---|---|
-| Health & Fitness (Mood, Sleep) | Yes — device only | No | No |
+| User Content (Mood, Sleep, Journal) | Yes — device only | No | No |
 | User Content (Journal) | Yes — device only | No | No |
 | Diagnostics | No | No | No |
 | Location | No | No | No |
@@ -112,63 +112,80 @@ The app contains no user-generated content, no social features, no location trac
 
 ## Screenshots — App Store Submission
 
-### Screenshot 1: Home — Balance Dashboard (THE HOOK)
-**Visual Focus:** Skia aura orb, dashboard metrics, nebula background. Must show mood, sleep, journaling, and patterns. Avoid overly cosmic/astrology-heavy visuals.
+### Screenshot 1: Home — Balance Dashboard (THE HERO)
+**Visual Focus:** Skia aura orb (hero element), stability graph card, wellness insight card, quick-action row. Nebula arc framing the phone. Gold radial glow behind the device.
 
-**Main Caption:** PERSONAL BALANCE DASHBOARD
+**Headline:** UNDERSTAND YOUR DAILY BALANCE
 
-**Sub-Caption:** "An elegant visual summary of your mood, sleep, and daily reflections."
+**Subtext:** "A calm space to track mood, sleep, and reflection."
 
-> **Note:** This is the most important screenshot — ~70% of downloads are determined by it. It must instantly communicate: "This app helps me understand myself."
+**Tagline (bottom):** "A beautiful space for reflection and emotional awareness."
+
+**Accent Glow:** Gold `#B89B6A` at 15% opacity, 300px blur
+
+> **Note:** This is the most critical screenshot — ~70% of downloads are decided by it. Within 1–2 seconds the user should understand: what the app does, why it helps them, that it feels premium. The visual should communicate: "This app helps me understand my emotional life."
 
 ---
 
 ### Screenshot 2: Mood — Daily Check-In
-**Visual Focus:** Mood orb, color-changing environment, finger interaction.
+**Visual Focus:** Aura orb (smaller), three Skia sliders (mood/energy/stress), time-of-day pills, influence tag chips, trend graph.
 
-**Main Caption:** DYNAMIC MOOD CHECK-IN
+**Headline:** LOG YOUR MOOD IN SECONDS
 
-**Sub-Caption:** "Pause and reflect with an interactive mood entry that visually responds to your state of mind."
+**Subtext:** "A simple daily check-in helps build awareness."
+
+**Accent Glow:** Emerald `#2E7A68`
 
 ---
 
 ### Screenshot 3: Journal — Breath & Reflect
-**Visual Focus:** Skia breath portal, journal entry UI, glowing nebula.
+**Visual Focus:** Skia breathing portal (indigo/rose gradient ring), journal entry cards with mood dots, 7-day mood trend graph, gold FAB button.
 
-**Main Caption:** PAUSE • BREATHE • REFLECT
+**Headline:** PAUSE · BREATHE · REFLECT
 
-**Sub-Caption:** "Begin journaling with a calming breathing guide designed to help you focus."
+**Subtext:** "Capture thoughts in a quiet space designed for reflection."
+
+**Accent Glow:** Indigo `#243B6B`
 
 ---
 
 ### Screenshot 4: Sleep — Recovery Insights
-**Visual Focus:** Moon dragger, sleep graph, silver-blue palette.
+**Visual Focus:** Moon quality rating (5 moons), Skia radial moon dragger dial, duration stepper, dream journal area, sleep trend graph.
 
-**Main Caption:** REST & RECOVERY INSIGHTS
+**Headline:** REST & RECOVERY INSIGHTS
 
-**Sub-Caption:** "Explore how your sleep patterns relate to your overall sense of wellbeing."
+**Subtext:** "Explore the relationship between sleep and how you feel."
+
+**Accent Glow:** Silver Blue `#8BC4E8`
 
 ---
 
 ### Screenshot 5: Insights — Pattern Discovery
-**Visual Focus:** Correlation chart, scatter plot, elegant Skia graphs.
+**Visual Focus:** Reflection prompt card (serif text), three metric snapshot cards (mood/stress/logged), Skia scatter plot, pattern insight cards with color indicators.
 
-**Main Caption:** PATTERN DISCOVERY
+**Headline:** DISCOVER PATTERNS
 
-**Sub-Caption:** "See relationships between activity, sleep, and emotional trends."
+**Subtext:** "Beautiful charts reveal connections between habits and feelings."
+
+**Accent Glow:** Copper `#A46B4C`
 
 ---
 
 ### Screenshot 6: Settings — Personalization
-**Visual Focus:** Shader customization, environment color tuning, settings UI.
+**Visual Focus:** Multi-color atmosphere orb (spectrum), 6 color swatches, visual theme selector (Nebula/Minimal/Aurora), experience toggle settings.
 
-**Main Caption:** TAILORED VISUAL EXPERIENCE
+**Headline:** MAKE IT YOUR SPACE
 
-**Sub-Caption:** "Customize the atmospheric visuals to create a personal reflection space."
+**Subtext:** "Customize the atmosphere for your personal reflection."
+
+**Accent Glow:** Multicolor spectrum (Rose/Gold/Emerald/Amethyst)
 
 ---
 
 ## Screenshot Design System (High-Conversion Layout)
+
+### Implementation
+All screenshot components are implemented in `screenshots/` and can be previewed on-device at `/screenshots`.
 
 ### Target Size
 For iPhone 6.7-inch screenshots (most important): **1290 × 2796 px**
@@ -176,76 +193,107 @@ Scale down later for 6.5".
 
 ### Visual Style Rules
 
-**Background**
+**Background (Obsidian Glass)**
 - Dark obsidian gradient with subtle nebula texture
-- Gradient: `#05060A` → `#0B0F1A` → `#131A2B`
+- Three-stop gradient: `#05060A` → `#0B0F1A` → `#131A2B`
+- "Polished obsidian glass with subtle nebula light"
 
-**Accent Colors (from UI)**
-| Color | Hex |
-|---|---|
-| Gold | `#B89B6A` |
-| Indigo | `#1B2A4A` |
-| Emerald | `#2E7A68` |
-| Copper | `#A46B4C` |
+**Ambient Nebula Layer**
+- Soft atmospheric glow blobs behind the phone
+- Opacity: 8–15%, Blur radius: 260–340px
+- Color varies per screenshot (see accent glow above)
 
-**Fonts**
-- **Headline:** Elegant serif (Playfair Display, Canela, or DM Serif)
-- **Body text:** Inter
+**Starfield Layer**
+- Size: 1–2px, Opacity: 10–20%, Very low density
+- Subtle and minimal — not a space wallpaper
 
-### Layout Template
-Each screenshot follows this exact hierarchy:
+**Phone Frame (iPhone 15 Pro)**
+- Black frame, centered, 65–70% screenshot height
+- Dynamic Island notch
+- Drop shadow: blur 40, opacity 30%, y-offset 20px
+
+**Headline Typography**
+- Font: Georgia (Playfair Display for final export)
+- Size: 110–130px, Tracking: +4
+- Color: `#F3F4F6`, Luxury accent: `#D6C39A`
+
+**Subtext Typography**
+- Font: Inter Medium
+- Size: 46–56px, Color: `#C9CDD6` (80% white)
+- Max 12 words per line
+
+**Accent Colors per Screenshot**
+| # | Screenshot | Accent Color | Hex |
+|---|---|---|---|
+| 1 | Dashboard | Gold | `#B89B6A` |
+| 2 | Mood | Emerald | `#2E7A68` |
+| 3 | Journal | Indigo | `#243B6B` |
+| 4 | Sleep | Silver Blue | `#8BC4E8` |
+| 5 | Patterns | Copper | `#A46B4C` |
+| 6 | Personalize | Multicolor | spectrum |
+
+**Feature Highlight (Per Screenshot)**
+- A soft radial glow behind the key visual element
+- Three-layer: outer bloom → inner glow → bright core
+- Guides the viewer's eye to the most important feature
+
+**Screenshot 1 Special: Nebula Arc**
+- A faint curved arc behind the phone frame
+- Cinematic framing — makes the phone appear as the light source
+- Gold color at 6–8% opacity with 50px blur
+
+### Layout Template (Three Elements Only)
 ```
 --------------------------------
       [ HEADLINE ]
 --------------------------------
 
       [ iPhone Frame ]
-      [ showing feature ]
+      [ with feature glow ]
 
 --------------------------------
-  [ One sentence explanation ]
+  [ One sentence benefit ]
+  [ (tagline on #1 only) ]
 --------------------------------
 ```
 
-**Phone Frame Style:** Black iPhone frame, slight shadow, centered. Angle: straight or slight tilt.
+### Screenshot Narrative Flow (User Journey)
+```
+Understand yourself  →  Check in  →  Reflect  →  Rest  →  See insights  →  Make it yours
+```
+This narrative sells the app emotionally, not just technically.
 
 ### Animation Tip (Preview Video)
 For the App Store preview video, animate:
-- Nebula shifting
-- Aura orb reacting
+- Nebula shifting slowly
+- Aura orb responding to mood
 - Breathing portal expanding
-- Charts animating
+- Charts animating into place
 
-Just 10–15 seconds. Apps with motion previews get ~20–30% more installs.
+Length: 12–15 seconds. Apps with motion previews get ~20–30% more installs.
 
-### Screenshot Order (Mirrors User Journey)
-1. Balance Dashboard (The Hook)
-2. Mood Check-In (Daily habit)
-3. Journaling (Mindfulness + reflection)
-4. Sleep (Recovery)
-5. Pattern Discovery (Data intelligence)
-6. Personalization (Customization)
+### Screenshot Order (Mirrors User Journey — Micro-Story)
+1. **Understand Your Daily Balance** — The Hook (dashboard, aura orb, stability graph)
+2. **Log Your Mood in Seconds** — Daily Habit (mood check-in, 3 sliders, tags)
+3. **Pause · Breathe · Reflect** — Emotional Depth (breathing portal, journal entries)
+4. **Rest & Recovery Insights** — Health Angle (moon dial, sleep trends)
+5. **Discover Patterns** — Intelligence (scatter plots, metric cards, insights)
+6. **Make It Your Space** — Premium Experience (color spectrum, theme customization)
 
 ---
 
 ### Submission Checklist
 - [x] Visual dashboards (artistic Skia-rendered trend data)
 - [x] Mindful breathing exercise before journaling
-- [x] Pattern insights with Apple HealthKit integration
+- [x] Pattern insights using self-reported check-in data only
 - [x] Premium visual design throughout
 - [x] No medical/biometric claims — all visuals are artistic representations of manual input
-- [x] HealthKit permissions request only after explaining user benefit
 - [x] "Not Medical Advice" disclaimer in app footer
-- [x] Privacy policy states health data is never sold or shared
+- [x] Privacy policy states data is never sold or shared
 
 ---
 
-## HealthKit Permission Strings
-
-| Data Type | Usage Description (shown to user) |
-|---|---|
-| **Steps (Read)** | "MySky uses your step count to show you how daily movement relates to your mood and energy trends." |
-| **Sleep Analysis (Read)** | "MySky uses your sleep data to help you explore how rest patterns connect to your daily wellbeing." |
+<!-- HealthKit integration is NOT implemented. Do NOT claim HealthKit support. -->
 
 ---
 
@@ -275,4 +323,4 @@ MySky competes in the same space as:
 | **Daylio** | Micro mood diary | Richer visualizations, pattern insights, journaling depth |
 | **Stoic** | CBT + journaling | More beautiful UI, sleep integration, personality framework |
 | **Journey** | Cross-platform journal | Privacy-first (no cloud), haptic check-ins, trend analysis |
-| **Mindsera** | AI journaling | Fully on-device, no AI dependency, Apple Health integration |
+| **Mindsera** | AI journaling | Fully on-device, no AI dependency, privacy-first architecture |

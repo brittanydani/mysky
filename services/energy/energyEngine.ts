@@ -126,7 +126,7 @@ const QUICK_MEANINGS: Record<string, string> = {
 
 const CHAKRA_DEFS = [
   { name: 'Root',        emoji: '🔴', color: '#E07A7A' },
-  { name: 'Sacral',      emoji: '🟠', color: '#E0B07A' },
+  { name: 'Sacral',      emoji: '🟠', color: '#C5A059' },
   { name: 'Solar Plexus', emoji: '🟡', color: '#E0D07A' },
   { name: 'Heart',       emoji: '🟢', color: '#6EBF8B' },
   { name: 'Throat',      emoji: '🔵', color: '#7AA8E0' },

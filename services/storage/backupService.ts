@@ -26,6 +26,7 @@ type BackupPayload = {
   relationshipCharts: RelationshipChart[];
   insightHistory: SavedInsight[];
   sleepEntries: SleepEntry[];
+  checkIns?: import('../patterns/types').DailyCheckIn[];
   settings: AppSettings | null;
 };
 
@@ -218,6 +219,7 @@ export class BackupService {
     const relationshipCharts: RelationshipChart[] = [];
     const insightHistory: SavedInsight[] = [];
     const sleepEntries: SleepEntry[] = [];
+    const checkIns: import('../patterns/types').DailyCheckIn[] = [];
     for (const chart of charts) {
       const rels = await localDb.getRelationshipCharts(chart.id);
       relationshipCharts.push(...rels);
@@ -225,6 +227,8 @@ export class BackupService {
       insightHistory.push(...insights);
       const sleep = await localDb.getSleepEntries(chart.id, 10000);
       sleepEntries.push(...sleep);
+      const dailyCheckIns = await localDb.getCheckIns(chart.id, 10000);
+      checkIns.push(...dailyCheckIns);
     }
 
     // Refuse to proceed if any decrypted field returned the failure placeholder.
@@ -234,6 +238,7 @@ export class BackupService {
       ...journalEntries.map(e => [e.content, e.title]),
       ...relationshipCharts.map(r => [r.name, r.birthPlace, r.birthDate, r.birthTime]),
       ...insightHistory.map(i => [i.greeting, i.loveMessage, i.energyMessage]),
+      ...checkIns.map(c => [c.note, c.wins, c.challenges]),
     ].flat();
     if (allEntities.some(v => isDecryptionFailure(v))) {
       throw new Error(
@@ -250,6 +255,7 @@ export class BackupService {
       relationshipCharts,
       insightHistory,
       sleepEntries,
+      checkIns,
       settings,
     };
 
@@ -363,6 +369,7 @@ export class BackupService {
     // Validate backup has actual data before clearing existing data
     const hasData = (payload.charts?.length ?? 0) > 0 ||
                     (payload.journalEntries?.length ?? 0) > 0 ||
+                    (payload.checkIns?.length ?? 0) > 0 ||
                     payload.settings !== null;
     if (!hasData) {
       throw new Error('Backup file contains no data to restore.');
@@ -387,6 +394,10 @@ export class BackupService {
 
     for (const entry of payload.sleepEntries ?? []) {
       await localDb.saveSleepEntry(entry);
+    }
+
+    for (const checkIn of payload.checkIns ?? []) {
+      await localDb.saveCheckIn(checkIn);
     }
 
     if (payload.settings) {

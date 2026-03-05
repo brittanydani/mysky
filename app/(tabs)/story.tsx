@@ -9,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import { applyStoryLabels } from '../../constants/storyLabels';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import ChapterCard from '../../components/ui/ChapterCard';
 import SkiaStoryGate, { CHAPTER_COLORS } from '../../components/ui/SkiaStoryGate';
 import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
@@ -23,7 +23,7 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -34,7 +34,7 @@ const PALETTE = {
 };
 
 const FORCE_COLORS_MAP: Record<string, string> = {
-  'Sun': '#D4AF37',
+  'Sun': '#C5B493',
   'Moon': '#8BC4E8',
   'Mars': '#CD7F5D',
   'Venus': '#F4C2C2',
@@ -48,7 +48,7 @@ const FORCE_COLORS_MAP: Record<string, string> = {
   'Taurus': '#6EBF8B',
   'Gemini': '#FFEA70',
   'Cancer': '#8BC4E8',
-  'Leo': '#D4AF37',
+  'Leo': '#C5B493',
   'Virgo': '#A9A9A9',
   'Libra': '#F4C2C2',
   'Scorpio': '#9D76C1',
@@ -176,7 +176,7 @@ export default function StoryScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <StarField starCount={40} />
+        <SkiaDynamicCosmos />
         <ActivityIndicator size="large" color={PALETTE.gold} style={{ marginBottom: 16 }} />
         <Text style={styles.loadingText}>Mapping your architecture...</Text>
       </View>
@@ -187,7 +187,7 @@ export default function StoryScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={40} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
@@ -216,7 +216,7 @@ export default function StoryScreen() {
                 accessibilityLabel="Export chart as PDF"
               >
                 <LinearGradient
-                  colors={['rgba(212, 175, 55, 0.25)', 'rgba(212, 175, 55, 0.1)']}
+                  colors={['rgba(197, 180, 147, 0.25)', 'rgba(197, 180, 147, 0.1)']}
                   style={styles.exportBtnGradient}
                 >
                   {isExporting ? (
@@ -234,9 +234,9 @@ export default function StoryScreen() {
 
           {/* Radar Chart */}
           {chart && chapters.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(150).duration(600)}>
-              <Text style={[styles.title, { fontSize: 22, marginTop: 10, marginBottom: -10 }]}>Core Force Map</Text>
-              <PsychologicalForcesRadar forces={calculateForces(chart)} />
+            <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ alignItems: 'center' }}>
+              <Text style={[styles.title, { fontSize: 22, marginTop: 10, marginBottom: -10, alignSelf: 'flex-start', marginLeft: 20 }]}>Core Force Map</Text>
+              <PsychologicalForcesRadar forces={calculateForces(chart)} size={350} />
             </Animated.View>
           )}
 
@@ -292,7 +292,7 @@ export default function StoryScreen() {
                 accessibilityLabel="Unlock all chapters"
               >
                 <LinearGradient
-                  colors={['rgba(212, 175, 55, 0.15)', 'rgba(20, 24, 34, 0.8)']}
+                  colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.8)']}
                   style={styles.upsellGradient}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderColor: 'rgba(197, 180, 147, 0.3)',
   },
   exportButtonText: {
     fontSize: 14,
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.2)',
+    borderColor: 'rgba(197, 180, 147, 0.2)',
     marginTop: 16,
   },
   upsellTitle: {
@@ -431,12 +431,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyButton: {
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    backgroundColor: 'rgba(197, 180, 147, 0.15)',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderColor: 'rgba(197, 180, 147, 0.3)',
   },
   emptyButtonText: {
     color: PALETTE.gold,

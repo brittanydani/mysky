@@ -76,9 +76,9 @@ function moodToPalette(mood: number): MoodPalette {
   }
   // High — warm gold, soft rose
   return {
-    primary: 'rgba(212, 175, 55, ALPHA)',
+    primary: 'rgba(197, 180, 147, ALPHA)',
     secondary: 'rgba(220, 120, 150, ALPHA)',
-    tertiary: 'rgba(201, 169, 98, 0.06)',
+    tertiary: 'rgba(197, 180, 147, 0.06)',
     primaryAlpha: 0.13,
     secondaryAlpha: 0.09,
   };

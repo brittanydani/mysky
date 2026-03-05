@@ -26,7 +26,7 @@ import { useRouter } from 'expo-router';
 
 import { theme } from '../../constants/theme';
 import { supabase } from '../../lib/supabase';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -77,7 +77,7 @@ export default function SignInScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <SafeAreaView style={styles.container}>
-      <StarField starCount={25} />
+      <SkiaDynamicCosmos />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

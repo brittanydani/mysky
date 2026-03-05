@@ -9,7 +9,7 @@ import { useLocalSearchParams, useRouter, Href } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { PrivacyComplianceManager } from '../../services/privacy/privacyComplianceManager';
 import { logger } from '../../utils/logger';
 
@@ -18,7 +18,7 @@ const TERMS_VERSION = '2026-03-03';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   textMain: '#FDFBF7',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
@@ -73,7 +73,7 @@ export default function OnboardingConsentScreen() {
 
   return (
     <View style={styles.container}>
-      <StarField starCount={60} />
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         
         {/* Header */}
@@ -147,7 +147,7 @@ export default function OnboardingConsentScreen() {
               accessibilityState={{ disabled: !checked || saving }}
             >
               <LinearGradient 
-                colors={['#FFF4D4', '#D4AF37', '#7A5C13']} 
+                colors={['#FFF4D4', '#C5B493', '#8B6508']} 
                 start={{ x: 0, y: 0 }} 
                 end={{ x: 1, y: 1 }} 
                 style={styles.ctaGradient}
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     gap: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
+    borderColor: 'rgba(197, 180, 147, 0.4)',
     borderRadius: 16,
   },
   ctaText: { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },

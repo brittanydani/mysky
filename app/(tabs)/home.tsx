@@ -1,9 +1,8 @@
 // File: app/(tabs)/home.tsx
-// MySky — The Stability Dashboard
+// MySky — The Balance Dashboard
 //
-// Command center for the Biometric Wellness Suite. Focuses on the
-// Stability Index — a proprietary wellness metric measuring how
-// synchronised your Sleep, Mood, and Energy signals are.
+// Daily reflection dashboard. Shows a Balance Score derived from
+// self-reported Sleep, Mood, and Energy check-ins.
 //
 // Layers:
 //   1. NebulaBackground — atmospheric shader driven by energy & transits
@@ -32,7 +31,7 @@ import { theme } from '../../constants/theme';
 
 // ── Custom Skia Suite ──
 import NebulaBackground from '../../components/ui/NebulaBackground';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
 import SkiaStabilityDashboard, { computeStabilityIndex } from '../../components/ui/SkiaStabilityDashboard';
 import type { StabilityDataPoint } from '../../components/ui/SkiaStabilityDashboard';
@@ -45,6 +44,7 @@ import { NatalChart, BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { CheckInService } from '../../services/patterns/checkInService';
+import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
 import { config } from '../../constants/config';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
@@ -54,7 +54,7 @@ const { width } = Dimensions.get('window');
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -83,39 +83,9 @@ function generateInsight(
     return `Your stability is ${stabilityIndex}% today. Your energy signal is low — consider gentle movement or sunlight exposure to restore your baseline.`;
   }
   if (mood < 4) {
-    return `Your stability is ${stabilityIndex}% today. Your emotional weather is heavy. A somatic breath session could help re-center your internal landscape.`;
+    return `Your stability is ${stabilityIndex}% today. Your emotional weather is heavy. A gentle breathing pause could help re-center your inner landscape.`;
   }
   return `Your stability is ${stabilityIndex}% today. Small adjustments to rest and movement could shift your coherence toward alignment.`;
-}
-
-// ── Quick Action Card ───────────────────────────────────────────────────────
-
-function QuickActionCard({
-  icon,
-  label,
-  sublabel,
-  accentColor,
-  onPress,
-  delay,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  sublabel: string;
-  accentColor: string;
-  onPress: () => void;
-  delay: number;
-}) {
-  return (
-    <Animated.View entering={FadeInDown.delay(delay)} style={{ flex: 1 }}>
-      <Pressable onPress={onPress} style={styles.actionCard}>
-        <View style={[styles.actionIconCircle, { backgroundColor: `${accentColor}15` }]}>
-          <Ionicons name={icon} size={20} color={accentColor} />
-        </View>
-        <Text style={styles.actionLabel}>{label}</Text>
-        <Text style={styles.actionSublabel}>{sublabel}</Text>
-      </Pressable>
-    </Animated.View>
-  );
 }
 
 // ── Home Screen ─────────────────────────────────────────────────────────────
@@ -137,6 +107,9 @@ export default function HomeScreen() {
   // Stability data — last 7 days of combined metrics
   const [stabilityData, setStabilityData] = useState<StabilityDataPoint[]>([]);
   const [latestSleep, setLatestSleep] = useState(7);
+
+  // Daily loop — streak, weekly summary, insights, nudge
+  const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
 
   // ── Chart Loading ──
 
@@ -207,6 +180,14 @@ export default function HomeScreen() {
             }
           } catch {
             // Silently fall back to defaults
+          }
+
+          // Hydrate daily loop (streak, weekly summary, insights)
+          try {
+            const loopData = await getDailyLoopData(chart.id);
+            setDailyLoop(loopData);
+          } catch (err) {
+            logger.error('Daily loop data failed:', err);
           }
         } else {
           setUserChart(null);
@@ -280,10 +261,22 @@ export default function HomeScreen() {
 
   // ── Stability computation ──
   const stability = useMemo(() => computeStabilityIndex(stabilityData), [stabilityData]);
-  const insightText = useMemo(
-    () => generateInsight(stability.index, mood, energy, latestSleep),
-    [stability.index, mood, energy, latestSleep],
-  );
+
+  // Prefer daily loop insight; fall back to legacy insight engine
+  const insightText = useMemo(() => {
+    if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
+    return generateInsight(stability.index, mood, energy, latestSleep);
+  }, [dailyLoop, stability.index, mood, energy, latestSleep]);
+
+  const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
+  const ACCENT_MAP: Record<string, string> = {
+    gold: PALETTE.gold,
+    emerald: PALETTE.emerald,
+    silverBlue: PALETTE.silverBlue,
+    copper: PALETTE.copper,
+    rose: PALETTE.rose,
+  };
+  const insightAccent = ACCENT_MAP[dailyLoop?.todayInsight?.accentColor ?? 'emerald'] ?? PALETTE.emerald;
 
   // ── Loading / Onboarding Gates ──
 
@@ -291,8 +284,8 @@ export default function HomeScreen() {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <NebulaBackground mood={5} />
-        <StarField starCount={40} />
-        <Text style={styles.loadingText}>Calibrating your signals...</Text>
+        <SkiaDynamicCosmos />
+        <Text style={styles.loadingText}>Preparing your reflections...</Text>
       </View>
     );
   }
@@ -301,7 +294,7 @@ export default function HomeScreen() {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <NebulaBackground mood={3} />
-        <StarField starCount={40} />
+        <SkiaDynamicCosmos />
         <Text style={styles.loadingText}>Preparing onboarding…</Text>
       </View>
     );
@@ -314,8 +307,8 @@ export default function HomeScreen() {
       {/* LAYER 1: Atmospheric Shader — turbulence driven by energy, color by transits */}
       <NebulaBackground mood={mood} energy={energy} />
 
-      {/* LAYER 2: Particle depth field */}
-      <StarField starCount={60} />
+      {/* REPLACEMENT: Subtle, drifting cosmic field */}
+      <SkiaDynamicCosmos />
 
       {/* LAYER 3: Interactive UI */}
       <SafeAreaView style={styles.safeArea}>
@@ -337,17 +330,51 @@ export default function HomeScreen() {
                 })}
               </Text>
             </View>
-            <Pressable
-              onPress={() => router.push('/settings' as Href)}
-              style={styles.profileBtn}
-            >
-              <Ionicons
-                name="settings-outline"
-                size={24}
-                color={theme.textMuted}
-              />
-            </Pressable>
           </Animated.View>
+
+          {/* ── Streak Row ── */}
+          {dailyLoop && dailyLoop.streak.current > 0 && (
+            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.streakRow}>
+              <View style={styles.streakPill}>
+                <Ionicons name="flame" size={16} color={PALETTE.gold} />
+                <Text style={styles.streakCount}>{dailyLoop.streak.current}</Text>
+                <Text style={styles.streakLabel}>day streak</Text>
+              </View>
+              {dailyLoop.streak.milestone && (
+                <View style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}18` }]}>
+                  <Ionicons name="trophy" size={14} color={PALETTE.gold} />
+                  <Text style={[styles.streakLabel, { color: PALETTE.gold }]}>Milestone!</Text>
+                </View>
+              )}
+              {dailyLoop.streak.checkedInToday && (
+                <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
+                  <Ionicons name="checkmark-circle" size={14} color={PALETTE.emerald} />
+                  <Text style={[styles.streakLabel, { color: PALETTE.emerald }]}>Today</Text>
+                </View>
+              )}
+            </Animated.View>
+          )}
+
+          {/* ── Return Nudge ── */}
+          {dailyLoop?.returnNudge && (
+            <Animated.View entering={FadeInDown.delay(250).duration(600)}>
+              <Pressable
+                onPress={() => router.push(dailyLoop.returnNudge!.ctaRoute as Href)}
+                style={[
+                  styles.nudgeCard,
+                  dailyLoop.returnNudge.urgency === 'motivating' && { borderColor: `${PALETTE.gold}30` },
+                ]}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.nudgeText}>{dailyLoop.returnNudge.text}</Text>
+                </View>
+                <View style={styles.nudgeCta}>
+                  <Text style={styles.nudgeCtaText}>{dailyLoop.returnNudge.ctaLabel}</Text>
+                  <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                </View>
+              </Pressable>
+            </Animated.View>
+          )}
 
           {/* ── Unified Aura — Fluid Mood/Energy/Tension Signature ── */}
           <Animated.View
@@ -372,43 +399,94 @@ export default function HomeScreen() {
               style={styles.insightGradient}
             >
               <View style={styles.insightHeader}>
-                <Ionicons name="analytics" size={16} color={PALETTE.emerald} />
-                <Text style={styles.insightEyebrow}>WELLNESS INSIGHT</Text>
+                <Ionicons name={insightIcon as any} size={16} color={insightAccent} />
+                <Text style={[styles.insightEyebrow, { color: insightAccent }]}>
+                  {dailyLoop?.todayInsight?.type === 'milestone'
+                    ? 'MILESTONE'
+                    : dailyLoop?.todayInsight?.type === 'sleep-mood'
+                      ? 'SLEEP–MOOD LINK'
+                      : dailyLoop?.todayInsight?.type === 'pattern'
+                        ? 'PATTERN NOTICED'
+                        : 'DAILY REFLECTION'}
+                </Text>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
             </LinearGradient>
           </Animated.View>
 
-          {/* ── Biometric Quick Actions ── */}
-          <Animated.View entering={FadeInDown.delay(850).duration(600)}>
-            <Text style={styles.sectionTitle}>Daily Rituals</Text>
-          </Animated.View>
-          <View style={styles.actionRow}>
-            <QuickActionCard
-              icon="cloudy"
-              label="Weather"
-              sublabel="Check in"
-              accentColor={PALETTE.gold}
-              onPress={() => router.push('/(tabs)/mood' as Href)}
-              delay={900}
-            />
-            <QuickActionCard
-              icon="moon"
-              label="Restore"
-              sublabel="Log sleep"
-              accentColor={PALETTE.silverBlue}
-              onPress={() => router.push('/(tabs)/sleep' as Href)}
-              delay={950}
-            />
-            <QuickActionCard
-              icon="document-text"
-              label="Archive"
-              sublabel="Reflect"
-              accentColor={PALETTE.rose}
-              onPress={() => router.push('/(tabs)/journal' as Href)}
-              delay={1000}
-            />
-          </View>
+          {/* ── Weekly Reflection ── */}
+          {dailyLoop?.weeklyReflection?.hasEnoughData && (
+            <Animated.View
+              entering={FadeInDown.delay(800).duration(600)}
+              style={styles.weeklyCard}
+            >
+              <LinearGradient
+                colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                style={styles.weeklyGradient}
+              >
+                <View style={styles.insightHeader}>
+                  <Ionicons name="calendar-outline" size={16} color={PALETTE.silverBlue} />
+                  <Text style={[styles.insightEyebrow, { color: PALETTE.silverBlue }]}>THIS WEEK</Text>
+                  {dailyLoop.weeklyReflection.moodDirection === 'up' && (
+                    <View style={styles.trendBadge}>
+                      <Ionicons name="trending-up" size={12} color={PALETTE.emerald} />
+                    </View>
+                  )}
+                  {dailyLoop.weeklyReflection.moodDirection === 'down' && (
+                    <View style={styles.trendBadge}>
+                      <Ionicons name="trending-down" size={12} color={PALETTE.copper} />
+                    </View>
+                  )}
+                </View>
+
+                <Text style={styles.weeklySummaryText}>
+                  {dailyLoop.weeklyReflection.summary}
+                </Text>
+
+                {/* Metric chips */}
+                <View style={styles.weeklyMetrics}>
+                  <View style={styles.metricChip}>
+                    <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.avgMood.toFixed(1)}</Text>
+                    <Text style={styles.metricLabel}>Mood</Text>
+                  </View>
+                  {dailyLoop.weeklyReflection.avgSleep > 0 && (
+                    <View style={styles.metricChip}>
+                      <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.avgSleep.toFixed(1)}h</Text>
+                      <Text style={styles.metricLabel}>Sleep</Text>
+                    </View>
+                  )}
+                  <View style={styles.metricChip}>
+                    <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.checkInCount}</Text>
+                    <Text style={styles.metricLabel}>Check-ins</Text>
+                  </View>
+                  {dailyLoop.weeklyReflection.journalCount > 0 && (
+                    <View style={styles.metricChip}>
+                      <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.journalCount}</Text>
+                      <Text style={styles.metricLabel}>Journals</Text>
+                    </View>
+                  )}
+                </View>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── Gentle CTA when not enough data ── */}
+          {dailyLoop && !dailyLoop.weeklyReflection.hasEnoughData && dailyLoop.weeklyReflection.checkInCount > 0 && (
+            <Animated.View entering={FadeInDown.delay(800).duration(600)} style={styles.weeklyCard}>
+              <LinearGradient
+                colors={['rgba(35, 40, 55, 0.3)', 'rgba(20, 24, 34, 0.5)']}
+                style={styles.weeklyGradient}
+              >
+                <View style={styles.insightHeader}>
+                  <Ionicons name="sparkles-outline" size={16} color={PALETTE.gold} />
+                  <Text style={[styles.insightEyebrow, { color: PALETTE.gold }]}>WEEKLY REFLECTION</Text>
+                </View>
+                <Text style={styles.weeklySummaryText}>
+                  {dailyLoop.weeklyReflection.summary}
+                </Text>
+              </LinearGradient>
+            </Animated.View>
+          )}
 
           {/* ── Explore Cards ── */}
           <Animated.View
@@ -425,11 +503,11 @@ export default function HomeScreen() {
                   colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
                   style={styles.quickLinkGradient}
                 >
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(212, 175, 55, 0.15)' }]}>
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
                     <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Architecture</Text>
+                    <Text style={styles.quickLinkTitle}>Story</Text>
                     <Text style={styles.quickLinkSub}>Your framework</Text>
                   </View>
                 </LinearGradient>
@@ -448,7 +526,7 @@ export default function HomeScreen() {
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
                     <Text style={styles.quickLinkTitle}>Patterns</Text>
-                    <Text style={styles.quickLinkSub}>Track correlations</Text>
+                    <Text style={styles.quickLinkSub}>Explore connections</Text>
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -483,17 +561,17 @@ export default function HomeScreen() {
                 >
                   <View style={styles.premiumPreviewHeader}>
                     <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
-                    <Text style={styles.premiumPreviewLabel}>Deeper Wellness</Text>
+                    <Text style={styles.premiumPreviewLabel}>Deeper Insight</Text>
                   </View>
                   <Text style={styles.premiumPreviewTitle}>
-                    Unlock the full Biometric Correlation Engine
+                    Unlock the full Personal Reflection Engine
                   </Text>
                   <Text style={styles.premiumPreviewSub}>
-                    Advanced pattern analysis, behavioral correlations, somatic breath journaling, and full restoration field analytics.
+                    Extended pattern reflections, personal connections, guided breath journaling, and full sleep pattern insights.
                   </Text>
                   <View style={styles.premiumPreviewCta}>
                     <Text style={[styles.premiumPreviewCtaText, { color: PALETTE.gold }]}>
-                      Explore Deeper Wellness
+                      Explore Deeper Insight
                     </Text>
                     <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
                   </View>
@@ -560,7 +638,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  profileBtn: { opacity: 0.8 },
 
   // Aura
   auraContainer: {
@@ -597,29 +674,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
-
-  // Quick Actions
-  actionRow: { flexDirection: 'row', gap: 12, marginBottom: 32 },
-  actionCard: {
-    flex: 1,
-    height: 100,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  actionIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionLabel: { color: '#FDFBF7', fontSize: 12, fontWeight: '600' },
-  actionSublabel: { color: theme.textMuted, fontSize: 10 },
 
   // Sections
   sectionBlock: { marginBottom: 32 },
@@ -696,5 +750,117 @@ const styles = StyleSheet.create({
   },
   premiumPreviewCta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   premiumPreviewCtaText: { fontSize: 14, fontWeight: '600' },
+
+  // Streak
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
+  streakPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  streakCount: {
+    color: PALETTE.gold,
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+  streakLabel: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // Return nudge
+  nudgeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 16,
+    gap: 12,
+  },
+  nudgeText: {
+    color: PALETTE.textMain,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  nudgeCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: `${PALETTE.gold}15`,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  nudgeCtaText: {
+    color: PALETTE.gold,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  // Weekly reflection
+  weeklyCard: { marginBottom: 28 },
+  weeklyGradient: {
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
+  },
+  weeklySummaryText: {
+    color: PALETTE.textMain,
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+  weeklyMetrics: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  metricChip: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  metricValue: {
+    color: PALETTE.textMain,
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+  metricLabel: {
+    color: theme.textMuted,
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  trendBadge: {
+    marginLeft: 'auto',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 4,
+  },
 });
 

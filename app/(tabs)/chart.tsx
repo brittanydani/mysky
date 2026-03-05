@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import StarField from '../../components/ui/StarField';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
 import BirthDataModal from '../../components/BirthDataModal';
@@ -65,7 +65,7 @@ const SIGN_LOOKUP: Record<string, { symbol: string; element: string }> = {
 const ASPECT_NATURE_COLORS: Record<string, string> = {
   Harmonious: '#6EBF8B',
   Challenging: '#E07A7A',
-  Neutral: '#C9A962',
+  Neutral: '#C5B493',
 };
 
 // ── Multi-character planet symbols that need smaller font in aspects tab ──
@@ -155,8 +155,9 @@ export default function ChartScreen() {
   // Multi-chart state
   const [savedUserChartId, setSavedUserChartId] = useState<string | null>(null);
   const [people, setPeople] = useState<RelationshipChart[]>([]);
-  const [overlayPerson, setOverlayPerson] = useState<RelationshipChart | null>(null);
-  const [overlayChart, setOverlayChart] = useState<NatalChart | null>(null);
+  const [activeOverlays, setActiveOverlays] = useState<Array<{person: RelationshipChart, chart: NatalChart, theme: 'silver'|'roseGold'|'iceBlue'}>>([]);
+  const overlayPerson = activeOverlays.length > 0 ? activeOverlays[0].person : null;
+  const overlayChart = activeOverlays.length > 0 ? activeOverlays[0].chart : null;
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRelTypePicker, setShowRelTypePicker] = useState(false);
   const [addingRelationType, setAddingRelationType] = useState<RelationshipType>('friend');
@@ -233,11 +234,18 @@ export default function ChartScreen() {
   // ── Overlay handlers ──
   const handleSelectOverlay = useCallback(
     (person: RelationshipChart) => {
-      if (overlayPerson?.id === person.id) {
+      // Find if already active
+      const isActive = activeOverlays.some((o) => o.person.id === person.id);
+      
+      if (isActive) {
         // Toggle off
-        setOverlayPerson(null);
-        setOverlayChart(null);
+        setActiveOverlays((prev) => prev.filter((o) => o.person.id !== person.id));
         Haptics.selectionAsync().catch(() => {});
+        return;
+      }
+
+      if (activeOverlays.length >= 2) {
+        Alert.alert('Too many overlays', 'You can only overlay up to 2 charts.');
         return;
       }
 
@@ -253,15 +261,20 @@ export default function ChartScreen() {
         };
         const chart = AstrologyCalculator.generateNatalChart(birthData);
         (chart as any).name = person.name;
-        setOverlayPerson(person);
-        setOverlayChart(chart);
+        
+        // Pick a theme based on existing
+        const usedThemes = activeOverlays.map(o => o.theme);
+        const availableThemes: ('silver'|'roseGold'|'iceBlue')[] = ['silver', 'roseGold', 'iceBlue'];
+        const chosenTheme = availableThemes.find(t => !usedThemes.includes(t)) || 'silver';
+
+        setActiveOverlays((prev) => [...prev, { person, chart, theme: chosenTheme }]);
         Haptics.selectionAsync().catch(() => {});
       } catch (e) {
         logger.error('Failed to generate overlay chart:', e);
         Alert.alert('Error', 'Could not generate chart for this person.');
       }
     },
-    [overlayPerson]
+    [activeOverlays]
   );
 
   const handleAddPerson = useCallback((type: RelationshipType) => {
@@ -317,10 +330,7 @@ export default function ChartScreen() {
             try {
               await localDb.deleteRelationshipChart(person.id);
               setPeople((prev) => prev.filter((p) => p.id !== person.id));
-              if (overlayPerson?.id === person.id) {
-                setOverlayPerson(null);
-                setOverlayChart(null);
-              }
+              setActiveOverlays((prev) => prev.filter(o => o.person.id !== person.id));
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
             } catch (e) {
               logger.error('Failed to delete relationship chart:', e);
@@ -329,7 +339,7 @@ export default function ChartScreen() {
         },
       ]);
     },
-    [overlayPerson]
+    []
   );
 
   // The chart whose details are displayed below the wheel
@@ -523,7 +533,7 @@ export default function ChartScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <StarField starCount={30} />
+        <SkiaDynamicCosmos />
         <Text style={styles.loadingText}>Loading natal chart…</Text>
       </View>
     );
@@ -532,7 +542,7 @@ export default function ChartScreen() {
   if (!userChart) {
     return (
       <View style={[styles.container, styles.center]}>
-        <StarField starCount={30} />
+        <SkiaDynamicCosmos />
         <Text style={styles.loadingText}>No chart found. Create your chart from Home.</Text>
         <Pressable
           style={styles.goHomeBtn}
@@ -561,7 +571,7 @@ export default function ChartScreen() {
   return (
     <View style={styles.container}>
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <StarField starCount={30} />
+        <SkiaDynamicCosmos />
       </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -572,13 +582,17 @@ export default function ChartScreen() {
         >
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>{overlayChart ? 'Relationship Chart' : 'Your Chart'}</Text>
+            <Text style={styles.title}>
+              {activeOverlays.length > 0 
+                ? (activeOverlays.length > 1 ? 'Group Dynamic' : 'Relationship Chart') 
+                : 'Your Chart'}
+            </Text>
             <Text style={styles.subtitle}>
-              {overlayChart
-                ? `${(userChart as any).name || 'You'} + ${overlayPerson?.name || 'Overlay'}`
+              {activeOverlays.length > 0
+                ? `${(userChart as any).name || 'You'} + ${activeOverlays.length > 1 ? `${activeOverlays.length} Others` : activeOverlays[0].person.name}`
                 : `${(userChart as any).name || 'Your Chart'}${birthDateStr ? ` · Born ${birthDateStr}` : ''}`}
             </Text>
-            {!overlayChart && (
+            {activeOverlays.length === 0 && (
               <Text style={styles.headerFrame}>
                 Your chart personalizes your reflection and growth prompts throughout MySky.
               </Text>
@@ -591,78 +605,106 @@ export default function ChartScreen() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleBar}>
                 {/* Your chart chip (always first) */}
                 <Pressable
-                  style={[styles.personChip, !overlayPerson && styles.personChipActive]}
                   onPress={() => {
-                    setOverlayPerson(null);
-                    setOverlayChart(null);
+                    setActiveOverlays([]);
                     Haptics.selectionAsync().catch(() => {});
                   }}
                   accessibilityRole="button"
                   accessibilityLabel="Your chart"
                   accessibilityState={{ selected: !overlayPerson }}
                 >
-                  <Ionicons name="person" size={14} color={!overlayPerson ? theme.primary : theme.textMuted} />
-                  <Text style={[styles.personChipText, !overlayPerson && styles.personChipTextActive]}>You</Text>
+                  {!overlayPerson ? (
+                    <View style={[styles.personChip, styles.personChipActive]}>
+                      <Ionicons name="person" size={14} color="#C5B493" />
+                      <Text style={[styles.personChipText, { color: '#C5B493', fontWeight: '700' }]}>You</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.personChip}>
+                      <Ionicons name="person" size={14} color={theme.textMuted} />
+                      <Text style={styles.personChipText}>You</Text>
+                    </View>
+                  )}
                 </Pressable>
 
                 {/* People chips */}
-                {people.map((person) => (
+                {people.map((person) => {
+                  const isActive = overlayPerson?.id === person.id;
+                  return (
                   <Pressable
                     key={person.id}
-                    style={[styles.personChip, overlayPerson?.id === person.id && styles.personChipActive]}
                     onPress={() => handleSelectOverlay(person)}
                     onLongPress={() => handleDeletePerson(person)}
                     accessibilityRole="button"
                     accessibilityLabel={`${person.name} overlay chart`}
                     accessibilityHint="Long press to remove"
-                    accessibilityState={{ selected: overlayPerson?.id === person.id }}
+                    accessibilityState={{ selected: isActive }}
                   >
-                    <Ionicons
-                      name="layers-outline"
-                      size={14}
-                      color={overlayPerson?.id === person.id ? '#C8D0E0' : theme.textMuted}
-                    />
-                    <Text
-                      style={[styles.personChipText, overlayPerson?.id === person.id && { color: '#C8D0E0' }]}
-                      numberOfLines={1}
-                    >
-                      {person.name}
-                    </Text>
-                    <Text style={styles.personChipRelation}>
-                      {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
-                    </Text>
+                    {isActive ? (
+                      <View style={[styles.personChip, styles.personChipActive]}>
+                        <Ionicons name="layers-outline" size={14} color="#C5B493" />
+                        <Text style={[styles.personChipText, { color: '#C5B493', fontWeight: '700' }]} numberOfLines={1}>
+                          {person.name}
+                        </Text>
+                        <Text style={[styles.personChipRelation, { color: '#C5B493', opacity: 0.8 }]}>
+                          {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.personChip}>
+                        <Ionicons name="layers-outline" size={14} color={theme.textMuted} />
+                        <Text style={styles.personChipText} numberOfLines={1}>
+                          {person.name}
+                        </Text>
+                        <Text style={styles.personChipRelation}>
+                          {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
+                        </Text>
+                      </View>
+                    )}
                   </Pressable>
-                ))}
+                )})}
 
                 {/* Add person button */}
                 <Pressable
-                  style={styles.addPersonChip}
                   onPress={() => setShowRelTypePicker(true)}
                   accessibilityRole="button"
                   accessibilityLabel="Add person"
                 >
-                  <Ionicons name="add" size={16} color={theme.primary} />
-                  <Text style={styles.addPersonText}>Add</Text>
+                  <LinearGradient
+                    colors={['#6E5E40', '#B8A27A', '#C5B493', '#E9D9B8', '#8A7A5A']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.addPersonChip}
+                  >
+                    <Ionicons name="add" size={16} color="#141222" />
+                    <Text style={[styles.addPersonText, { color: "#141222", fontWeight: "700" }]}>Add</Text>
+                  </LinearGradient>
                 </Pressable>
               </ScrollView>
 
               {/* Overlay legend when active — luxury pill tags */}
-              {overlayChart && (
+              {activeOverlays.length > 0 && (
                 <View style={styles.overlayLegend}>
                   <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: '#D4B46A' }]} />
-                    <Text style={[styles.legendPillText, { color: '#D4B46A' }]}>Your planets</Text>
+                    <View style={[styles.legendPillDot, { backgroundColor: '#E6D5B8' }]} />
+                    <Text style={[styles.legendPillText, { color: '#E6D5B8' }]}>Your planets</Text>
                   </View>
-                  <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: '#C8D0E0' }]} />
-                    <Text style={[styles.legendPillText, { color: '#C8D0E0' }]}> 
-                      {overlayPerson?.name}'s planets
-                    </Text>
-                  </View>
-                  <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: 'rgba(180,200,210,0.7)' }]} />
-                    <Text style={[styles.legendPillText, { color: 'rgba(200,210,220,0.8)' }]}>Cross-aspects</Text>
-                  </View>
+                  {activeOverlays.map(overlay => {
+                    const activeColor = overlay.theme === 'roseGold' ? '#E8C2CA' : overlay.theme === 'iceBlue' ? '#C4D2FA' : '#D1D5DB';
+                    return (
+                      <View key={`legend-${overlay.person.id}`} style={styles.legendPill}>
+                        <View style={[styles.legendPillDot, { backgroundColor: activeColor }]} />
+                        <Text style={[styles.legendPillText, { color: activeColor }]}>
+                          {overlay.person.name}'s planets
+                        </Text>
+                      </View>
+                    );
+                  })}
+                  {activeOverlays.length === 1 && (
+                    <View style={styles.legendPill}>
+                      <View style={[styles.legendPillDot, { backgroundColor: '#C3CAD6' }]} />
+                      <Text style={[styles.legendPillText, { color: '#C3CAD6' }]}>Cross-aspects</Text>
+                    </View>
+                  )}
                 </View>
               )}
             </Animated.View>
@@ -711,8 +753,8 @@ export default function ChartScreen() {
                 <NatalChartWheel
                   chart={userChart}
                   showAspects={true}
-                  overlayChart={overlayChart ?? undefined}
-                  overlayName={overlayPerson?.name}
+                  overlayChart={activeOverlays.length > 0 ? activeOverlays[0].chart : undefined}
+                  overlayName={activeOverlays.length > 0 ? activeOverlays[0].person.name : undefined}
                 />
               </View>
             </View>
@@ -787,9 +829,9 @@ export default function ChartScreen() {
                   {sensitivePoints.map((pt) => (
                     <View key={pt.label} style={styles.sensitiveItem}>
                       <View style={{ marginBottom: 4 }}>
-                        {pt.label === 'Chiron' && <ChironIcon size={20} color={theme.primary} />}
-                        {pt.label === 'North Node' && <NorthNodeIcon size={20} color={theme.primary} />}
-                        {pt.label === 'South Node' && <SouthNodeIcon size={20} color={theme.primary} />}
+                        {pt.label === 'Chiron' && <ChironIcon size={20} color="#141222" />}
+                        {pt.label === 'North Node' && <NorthNodeIcon size={20} color="#141222" />}
+                        {pt.label === 'South Node' && <SouthNodeIcon size={20} color="#141222" />}
                       </View>
                       <Text style={styles.sensitiveName}>{pt.label}</Text>
                       <Text
@@ -927,9 +969,9 @@ export default function ChartScreen() {
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
                         <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
-                          {pt.label === 'Chiron' && <ChironIcon size={18} color={theme.primary} />}
-                          {pt.label === 'North Node' && <NorthNodeIcon size={18} color={theme.primary} />}
-                          {pt.label === 'South Node' && <SouthNodeIcon size={18} color={theme.primary} />}
+                          {pt.label === 'Chiron' && <ChironIcon size={18} color="#141222" />}
+                          {pt.label === 'North Node' && <NorthNodeIcon size={18} color="#141222" />}
+                          {pt.label === 'South Node' && <SouthNodeIcon size={18} color="#141222" />}
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
@@ -1076,21 +1118,21 @@ export default function ChartScreen() {
                       if (planet.name === 'Chiron') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <ChironIcon size={18} color={theme.primary} />
+                            <ChironIcon size={18} color="#141222" />
                           </View>
                         );
                       }
                       if (planet.name === 'North Node') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <NorthNodeIcon size={18} color={theme.primary} />
+                            <NorthNodeIcon size={18} color="#141222" />
                           </View>
                         );
                       }
                       if (planet.name === 'South Node') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <SouthNodeIcon size={18} color={theme.primary} />
+                            <SouthNodeIcon size={18} color="#141222" />
                           </View>
                         );
                       }
@@ -1170,7 +1212,7 @@ export default function ChartScreen() {
                       <Text style={styles.legendText}>Challenging (squares, oppositions)</Text>
                     </View>
                     <View style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: '#C9A962' }]} />
+                      <View style={[styles.legendDot, { backgroundColor: '#C5B493' }]} />
                       <Text style={styles.legendText}>Neutral (conjunctions)</Text>
                     </View>
                     <Text style={styles.legendNote}>Tighter orbs (lower numbers) = stronger influence</Text>
@@ -1182,12 +1224,12 @@ export default function ChartScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Unlock more aspects"
                     >
-                      <LinearGradient colors={['rgba(201,169,98,0.1)', 'rgba(201,169,98,0.05)']} style={styles.aspectUpsell}>
-                        <Ionicons name="sparkles" size={16} color={theme.primary} />
+                      <LinearGradient colors={['rgba(197, 180, 147,0.1)', 'rgba(197, 180, 147,0.05)']} style={styles.aspectUpsell}>
+                        <Ionicons name="sparkles" size={16} color="#141222" />
                         <Text style={styles.aspectUpsellText}>
                           {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
                         </Text>
-                        <Ionicons name="chevron-forward" size={16} color={theme.primary} />
+                        <Ionicons name="chevron-forward" size={16} color="#141222" />
                       </LinearGradient>
                     </Pressable>
                   )}
@@ -1201,7 +1243,7 @@ export default function ChartScreen() {
             <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
               {/* Chart Ruler */}
               {chartPatterns.chartRuler && (
-                <LinearGradient colors={['rgba(201,169,98,0.15)', 'rgba(30,45,71,0.6)']} style={styles.patternCard}>
+                <LinearGradient colors={['rgba(197, 180, 147,0.15)', 'rgba(30,45,71,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={[styles.patternIcon, { marginTop: -7 }]}>👑</Text>
                     <Text style={styles.patternTitle}>Chart Ruler</Text>
@@ -1227,7 +1269,7 @@ export default function ChartScreen() {
               {isPremium && partOfFortune && (
                 <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="sunny-outline" size={20} color={theme.primary} style={{ marginRight: 10 }} />
+                    <Ionicons name="sunny-outline" size={20} color="#141222" style={{ marginRight: 10 }} />
                     <Text style={styles.patternTitle}>Point of Flow</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1275,18 +1317,18 @@ export default function ChartScreen() {
               {!isPremium && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock pattern depth">
                   <LinearGradient
-                    colors={['rgba(201,169,98,0.10)', 'rgba(201,169,98,0.03)']}
-                    style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(201,169,98,0.18)' }]}
+                    colors={['rgba(197, 180, 147,0.10)', 'rgba(197, 180, 147,0.03)']}
+                    style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(197, 180, 147,0.18)' }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="lock-closed" size={16} color={theme.primary} />
+                      <Ionicons name="lock-closed" size={16} color="#141222" />
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 14, fontWeight: '600', color: theme.primary }}>More patterns in your chart</Text>
                         <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
                           Stelliums, conjunction clusters, element & modality balance, retrograde emphasis, and Point of Flow
                         </Text>
                       </View>
-                      <Ionicons name="arrow-forward" size={16} color={theme.primary} />
+                      <Ionicons name="arrow-forward" size={16} color="#141222" />
                     </View>
                   </LinearGradient>
                 </Pressable>
@@ -1297,7 +1339,7 @@ export default function ChartScreen() {
                 chartPatterns.stelliums.map((stellium, idx) => (
                   <LinearGradient
                     key={`stellium-${idx}`}
-                    colors={['rgba(201,169,98,0.12)', 'rgba(30,45,71,0.7)']}
+                    colors={['rgba(197, 180, 147,0.12)', 'rgba(30,45,71,0.7)']}
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
@@ -1455,18 +1497,18 @@ export default function ChartScreen() {
                 accessibilityLabel="Unlock Deeper Sky premium features"
               >
                 <LinearGradient
-                  colors={['rgba(201,169,98,0.12)', 'rgba(201,169,98,0.04)']}
-                  style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(201,169,98,0.2)' }]}
+                  colors={['rgba(197, 180, 147,0.12)', 'rgba(197, 180, 147,0.04)']}
+                  style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(197, 180, 147,0.2)' }]}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="sparkles" size={16} color={theme.primary} />
+                    <Ionicons name="sparkles" size={16} color="#141222" />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.overlayUpsellText, { fontWeight: '600' }]}>Your chart has more to say</Text>
                       <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
                         Chiron sensitivity, Node axis depth, chart overlays, and minor aspects
                       </Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={16} color={theme.primary} />
+                    <Ionicons name="arrow-forward" size={16} color="#141222" />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -1485,7 +1527,7 @@ export default function ChartScreen() {
                 <View style={styles.chartSettingsRow}>
                   <View style={{ flex: 1, marginRight: theme.spacing.md }}>
                     <View style={styles.chartSettingsHeader}>
-                      <Ionicons name="planet" size={20} color={theme.primary} />
+                      <Ionicons name="planet" size={20} color="#141222" />
                       <Text style={styles.chartSettingsTitle}>Chart Settings</Text>
                     </View>
                     <Text style={styles.chartSettingsDescription}>House system, aspect orbs, and calculation preferences</Text>
@@ -1581,7 +1623,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(201,169,98,0.15)',
+    backgroundColor: 'rgba(197, 180, 147,0.15)',
   },
   goHomeText: { color: theme.primary, fontWeight: '700' },
   safeArea: { flex: 1 },
@@ -1718,7 +1760,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(201,169,98,0.15)',
+    borderBottomColor: 'rgba(197, 180, 147,0.15)',
   },
   pointsLabel: {
     color: theme.textMuted,
@@ -1738,7 +1780,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
-  tabBtnActive: { backgroundColor: 'rgba(201,169,98,0.2)' },
+  tabBtnActive: { backgroundColor: 'rgba(197, 180, 147,0.2)' },
   tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
   tabTextActive: { color: theme.primary },
 
@@ -1747,7 +1789,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(201,169,98,0.15)',
+    borderBottomColor: 'rgba(197, 180, 147,0.15)',
     width: '100%',
   },
   th: {
@@ -1867,7 +1909,7 @@ const styles = StyleSheet.create({
   patternIcon: { fontSize: 20, marginRight: 10 },
   patternTitle: { color: theme.textPrimary, fontWeight: '700', fontSize: 17, textAlign: 'center' },
   patternHighlight: {
-    backgroundColor: 'rgba(201,169,98,0.12)',
+    backgroundColor: 'rgba(197, 180, 147,0.12)',
     borderRadius: theme.borderRadius.md,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -1899,8 +1941,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   personChipActive: {
-    backgroundColor: 'rgba(201,169,98,0.15)',
-    borderColor: 'rgba(201,169,98,0.4)',
+    backgroundColor: 'transparent',
+    borderColor: '#C5B493',
+    borderWidth: 1,
+    shadowColor: '#C5B493',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 2,
   },
   personChipText: {
     color: theme.textMuted,
@@ -1914,14 +1962,19 @@ const styles = StyleSheet.create({
   addPersonChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(201,169,98,0.08)',
+    backgroundColor: 'transparent',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 4,
     borderWidth: 1,
-    borderColor: 'rgba(201,169,98,0.2)',
+    borderColor: '#C5B493', /* Richer metallic contrast */
     borderStyle: 'dashed',
+    shadowColor: '#E9D9B8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 2,
   },
   addPersonText: { color: theme.primary, fontSize: 13, fontWeight: '600' },
 
@@ -1984,7 +2037,7 @@ const styles = StyleSheet.create({
   chartSettingsTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm },
   chartSettingsDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
   chartSettingsTags: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
-  settingTag: { backgroundColor: 'rgba(201, 169, 98, 0.15)', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
+  settingTag: { backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
   settingTagText: { fontSize: 11, color: theme.primary, fontWeight: '500' },
 
   // ── Chart Glossary ──

@@ -51,25 +51,30 @@ export default function SkiaPulseMonitor({
   const scale = useSharedValue(1);
 
   const tapGesture = Gesture.LongPress()
-    .minDuration(3000)
-    .onStart(() => {
+    .minDuration(1500)
+    .maxDistance(50)
+    .onBegin(() => {
       'worklet';
-      scale.value = withTiming(1.2, { duration: 3000 });
+      scale.value = withTiming(1.2, { duration: 1500 });
       progress.value = withTiming(1, {
-        duration: 3000,
+        duration: 1500,
         easing: Easing.linear,
       });
       runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
     })
-    .onEnd((_e, success) => {
+    .onStart(() => {
       'worklet';
-      if (success) {
-        runOnJS(setComplete)(true);
-        runOnJS(Haptics.notificationAsync)(
-          Haptics.NotificationFeedbackType.Success,
-        );
-        runOnJS(onSyncComplete)();
-      } else {
+      // They held it for 3000ms, gesture recognized.
+      runOnJS(setComplete)(true);
+      runOnJS(Haptics.notificationAsync)(
+        Haptics.NotificationFeedbackType.Success,
+      );
+      runOnJS(onSyncComplete)();
+    })
+    .onFinalize((e, success) => {
+      'worklet';
+      if (!success) {
+        // Did not reach 3 seconds or gesture was cancelled/failed
         scale.value = withTiming(1, { duration: 300 });
         progress.value = withTiming(0, { duration: 300 });
       }
@@ -107,7 +112,7 @@ export default function SkiaPulseMonitor({
                 r={38}
                 style="stroke"
                 strokeWidth={2}
-                color={complete ? '#6EBF8B' : '#D4AF37'}
+                color={complete ? '#6EBF8B' : '#C5B493'}
               />
 
               {/* 3. The Progress "Fluid" — fills the orb as sync completes */}
@@ -115,7 +120,7 @@ export default function SkiaPulseMonitor({
                 cx={CENTER}
                 cy={CENTER}
                 r={fluidRadius}
-                color={complete ? '#6EBF8B' : '#D4AF37'}
+                color={complete ? '#6EBF8B' : '#C5B493'}
                 opacity={0.3}
               />
             </Group>
@@ -144,5 +149,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 2,
     opacity: 0.6,
+    textAlign: 'center',
   },
 });

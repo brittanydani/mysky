@@ -73,20 +73,20 @@ const PLANET_SYMBOLS: Record<string, string> = {
   Midheaven: 'MC',
 };
 
-// Champagne metal palette — #C2A65A core
+// Champagne metal palette — #C5B493 core
 const PLANET_COLORS: Record<string, string> = {
-  Sun: '#C2A65A',
+  Sun: '#C5B493',
   Moon: '#B8C2D0',
   Mercury: '#86BCEC',
   Venus: '#D07E9E',
   Mars: '#D07E7E',
-  Jupiter: '#C2A65A',
+  Jupiter: '#C5B493',
   Saturn: '#8484A0',
   Uranus: '#6CBEC4',
   Neptune: '#7C8CD0',
   Pluto: '#9068BC',
-  Ascendant: '#C2A65A',
-  Midheaven: '#C2A65A',
+  Ascendant: '#C5B493',
+  Midheaven: '#C5B493',
 };
 
 // Gradient highlight (inner sphere catch-light)
@@ -510,9 +510,9 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
           {/* Center champagne outer glow */}
           <RadialGradient id="centerOuterGlow" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor="#C2A65A" stopOpacity="0.10" />
-            <Stop offset="55%" stopColor="#C2A65A" stopOpacity="0.04" />
-            <Stop offset="100%" stopColor="#C2A65A" stopOpacity="0" />
+            <Stop offset="0%" stopColor="#C5B493" stopOpacity="0.10" />
+            <Stop offset="55%" stopColor="#C5B493" stopOpacity="0.04" />
+            <Stop offset="100%" stopColor="#C5B493" stopOpacity="0" />
           </RadialGradient>
 
           {/* Natal planet sphere gradients */}
@@ -715,7 +715,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           const glyphPos = polarToXY(planet.displayAngle, R_PLANET_RING);
           const tickOuter = polarToXY(planet.originalAngle, R_ZODIAC_INNER - 1);
           const tickInner = polarToXY(planet.originalAngle, R_PLANET_RING + 10);
-          const baseColor = PLANET_COLORS[planet.label] || '#C2A65A';
+          const baseColor = PLANET_COLORS[planet.label] || '#C5B493';
           const gradId = PLANET_GRADIENT_INNER[planet.label] ? `url(#pGrad_${planet.label})` : baseColor;
 
           return (

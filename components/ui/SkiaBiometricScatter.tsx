@@ -1,12 +1,6 @@
-/**
- * SkiaBiometricScatter
- * Advanced scientific correlation mapping for wellness.
- * Correlates lifestyle habits (e.g., Movement) with internal states (e.g., Energy).
- *
- * Renders a Resonance Map — each dot represents a day where two metrics
- * intersected. A Skia BlurMask creates a heatmap glow effect: areas where
- * high energy correlates with high steps "ignite" with emerald/gold luminance.
- */
+// Advanced scientific correlation mapping for wellness.
+// Correlates lifestyle habits (e.g., Movement) with internal states (e.g., Energy).
+// Renders a Resonance Map with a grid and data clusters
 
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
@@ -17,37 +11,87 @@ import {
   BlurMask,
   Path,
   Skia,
+  LinearGradient as SkiaGradient,
+  vec,
 } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const CHART_SIZE = width - 60;
-const PAD = 40;
-const PLOT_AREA = CHART_SIZE - PAD;
+const PAD_LEFT = 40;
+const PAD_BOTTOM = 40;
+const PLOT_W = CHART_SIZE - PAD_LEFT - 20; // Leave 20px padding on right
+const PLOT_H = CHART_SIZE - PAD_BOTTOM - 20; // Leave 20px padding on top
+const ORIGIN_Y = CHART_SIZE - PAD_BOTTOM;
 
 interface DataPoint {
-  x: number; // e.g., Steps (normalized 0-1)
-  y: number; // e.g., Mood (normalized 0-1)
+  x: number; // normalized 0-1
+  y: number; // normalized 0-1
 }
 
 const PALETTE = {
-  axis: 'rgba(255, 255, 255, 0.1)',
+  axis: 'rgba(255, 255, 255, 0.15)',
+  grid: 'rgba(255, 255, 255, 0.05)',
   point: '#6EBF8B', // Emerald
-  highlight: '#D4AF37', // Gold
-  text: 'rgba(255, 255, 255, 0.4)',
+  highlight: '#C5B493', // Gold
+  text: 'rgba(255, 255, 255, 0.6)',
+  glow: '#6EBF8B',
 };
 
-export default function SkiaBiometricScatter({ points }: { points: DataPoint[] }) {
+export default function SkiaBiometricScatter({ 
+  points,
+  title = "Behavioral Correlation",
+  subtitle = "Movement vs. Vitality",
+  xAxisLabel = "High Movement",
+  yAxisLabel = "High Vitality",
+  insight = "A 15% increase in movement correlates with a 2-point rise in emotional mood."
+}: { 
+  points: DataPoint[];
+  title?: string;
+  subtitle?: string;
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  insight?: string;
+}) {
 
-  // Build the axis grid as an SkPath (Skia Path requires an object, not a string)
+  // Build the axis and grid lines
   const axisPath = useMemo(() => {
     const p = Skia.Path.Make();
     // Y-axis
-    p.moveTo(PAD, 0);
-    p.lineTo(PAD, PLOT_AREA);
+    p.moveTo(PAD_LEFT, 10);
+    p.lineTo(PAD_LEFT, ORIGIN_Y);
     // X-axis
-    p.moveTo(PAD, PLOT_AREA);
-    p.lineTo(CHART_SIZE, PLOT_AREA);
+    p.moveTo(PAD_LEFT, ORIGIN_Y);
+    p.lineTo(CHART_SIZE - 5, ORIGIN_Y);
+
+    // Arrows
+    // Y arrow
+    p.moveTo(PAD_LEFT - 4, 18);
+    p.lineTo(PAD_LEFT, 10);
+    p.lineTo(PAD_LEFT + 4, 18);
+    // X arrow
+    p.moveTo(CHART_SIZE - 13, ORIGIN_Y - 4);
+    p.lineTo(CHART_SIZE - 5, ORIGIN_Y);
+    p.lineTo(CHART_SIZE - 13, ORIGIN_Y + 4);
+
+    return p;
+  }, []);
+
+  const gridPath = useMemo(() => {
+    const p = Skia.Path.Make();
+    const steps = 4;
+    // Vertical grid lines
+    for (let i = 1; i <= steps; i++) {
+        const x = PAD_LEFT + (i / steps) * PLOT_W;
+        p.moveTo(x, 20);
+        p.lineTo(x, ORIGIN_Y - 2);
+    }
+    // Horizontal grid lines
+    for (let i = 1; i <= steps; i++) {
+        const y = ORIGIN_Y - (i / steps) * PLOT_H;
+        p.moveTo(PAD_LEFT + 2, y);
+        p.lineTo(PAD_LEFT + PLOT_W, y);
+    }
     return p;
   }, []);
 
@@ -55,9 +99,9 @@ export default function SkiaBiometricScatter({ points }: { points: DataPoint[] }
   const heatmapPath = useMemo(() => {
     const path = Skia.Path.Make();
     points.forEach((p) => {
-      const cx = PAD + p.x * (PLOT_AREA - PAD);
-      const cy = PLOT_AREA - p.y * (PLOT_AREA - PAD);
-      path.addCircle(cx, cy, 15);
+      const cx = PAD_LEFT + p.x * PLOT_W;
+      const cy = ORIGIN_Y - p.y * PLOT_H;
+      path.addCircle(cx, cy, 22);
     });
     return path;
   }, [points]);
@@ -65,51 +109,49 @@ export default function SkiaBiometricScatter({ points }: { points: DataPoint[] }
   return (
     <View style={styles.obsidianCard}>
       <View style={styles.header}>
-        <Text style={styles.title}>Behavioral Correlation</Text>
-        <Text style={styles.subtitle}>Movement vs. Vitality</Text>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
 
       <View style={styles.canvasContainer}>
+        {/* Y Axis Label (positioned manually instead of matrix transform origin issues) */}
+        <Text style={[styles.axisLabel, styles.yAxis]}>{yAxisLabel}</Text>
+        
         <Canvas style={{ width: CHART_SIZE, height: CHART_SIZE }}>
-          {/* 1. The Grid System */}
-          <Group>
-            <Path
-              path={axisPath}
-              color={PALETTE.axis}
-              style="stroke"
-              strokeWidth={1}
-            />
-          </Group>
+          {/* 0. Grid */}
+          <Path path={gridPath} color={PALETTE.grid} style="stroke" strokeWidth={1} />
+          
+          {/* 1. Axis System */}
+          <Path path={axisPath} color={PALETTE.axis} style="stroke" strokeWidth={1.5} />
 
-          {/* 2. The Correlation Heatmap (Glows where data clusters) */}
-          <Path path={heatmapPath} color={PALETTE.point} opacity={0.1}>
-            <BlurMask blur={20} style="normal" />
+          {/* 2. Heatmap */}
+          <Path path={heatmapPath} color={PALETTE.glow} opacity={0.15}>
+            <BlurMask blur={15} style="normal" />
           </Path>
 
-          {/* 3. The Individual Data Nodes */}
+          {/* 3. Data Nodes */}
           {points.map((p, i) => {
-            const cx = PAD + p.x * (PLOT_AREA - PAD);
-            const cy = PLOT_AREA - p.y * (PLOT_AREA - PAD);
+            const cx = PAD_LEFT + p.x * PLOT_W;
+            const cy = ORIGIN_Y - p.y * PLOT_H;
             return (
               <Group key={i}>
-                <Circle cx={cx} cy={cy} r={3} color={PALETTE.point}>
-                  <BlurMask blur={4} style="outer" />
+                <Circle cx={cx} cy={cy} r={4.5} color={PALETTE.point}>
+                  <BlurMask blur={3} style="outer" />
                 </Circle>
-                <Circle cx={cx} cy={cy} r={1.5} color="#FDFBF7" />
+                <Circle cx={cx} cy={cy} r={2} color="#FDFBF7" />
               </Group>
             );
           })}
         </Canvas>
 
-        {/* Axis Labels */}
-        <Text style={[styles.axisLabel, styles.yAxis]}>High Vitality</Text>
-        <Text style={[styles.axisLabel, styles.xAxis]}>High Movement</Text>
+        {/* X Axis Label */}
+        <Text style={[styles.axisLabel, styles.xAxis]}>{xAxisLabel}</Text>
       </View>
 
       <View style={styles.insightBox}>
-        <Ionicons name="stats-chart" size={14} color={PALETTE.highlight} />
+        <Ionicons name="sparkles" size={16} color={PALETTE.highlight} />
         <Text style={styles.insightText}>
-          A 15% increase in movement correlates with a 2-point rise in emotional mood.
+          {insight}
         </Text>
       </View>
     </View>
@@ -119,57 +161,63 @@ export default function SkiaBiometricScatter({ points }: { points: DataPoint[] }
 const styles = StyleSheet.create({
   obsidianCard: {
     padding: 24,
-    borderRadius: 28,
+    borderRadius: 24,
     backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
-  header: { marginBottom: 20 },
+  header: { marginBottom: 12 },
   title: {
     color: '#FDFBF7',
     fontSize: 18,
     fontWeight: '700',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    marginBottom: 4,
   },
   subtitle: {
     color: PALETTE.highlight,
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
+    opacity: 0.9,
   },
   canvasContainer: {
     height: CHART_SIZE,
     width: CHART_SIZE,
     position: 'relative',
+    marginTop: 10,
   },
   axisLabel: {
     position: 'absolute',
     color: PALETTE.text,
-    fontSize: 9,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   yAxis: {
-    left: 0,
-    top: 0,
-    transform: [{ rotate: '-90deg' }],
-    transformOrigin: 'left top',
+    left: PAD_LEFT + 8,
+    top: -5,
   },
-  xAxis: { right: 0, bottom: -10 },
+  xAxis: { 
+    right: 5, 
+    bottom: PAD_BOTTOM - 20, 
+  },
   insightBox: {
-    marginTop: 24,
+    marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 12,
+    gap: 12,
+    padding: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(212, 175, 55, 0.08)',
+    backgroundColor: 'rgba(197, 180, 147, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(197, 180, 147, 0.15)',
   },
   insightText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    lineHeight: 18,
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13,
+    lineHeight: 20,
     flex: 1,
   },
 });

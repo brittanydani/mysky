@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View, Platform } from 'react-native';
+import { Alert, DeviceEventEmitter, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
-import StarField from './ui/StarField';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { secureStorage } from '../services/storage/secureStorage';
 import { localDb } from '../services/storage/localDb';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
@@ -21,7 +21,7 @@ import { logger } from '../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4AF37',
+  gold: '#C5B493',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   textMain: '#FDFBF7',
@@ -91,7 +91,9 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
             try {
               await compliance.withdrawConsent();
               await loadPrivacyInfo();
-              Alert.alert('Consent Withdrawn', 'Your data processing consent has been revoked.');
+              // Close modal and force the root layout to re-gate the session
+              onClose();
+              DeviceEventEmitter.emit('CONSENT_WITHDRAWN');
             } catch (error) {
               Alert.alert('Error', 'Could not withdraw consent. Please try again.');
             }
@@ -130,7 +132,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={styles.container}>
-        <StarField starCount={40} />
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           
           {/* Header */}
