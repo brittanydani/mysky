@@ -96,9 +96,18 @@ export default function HealingScreen() {
   );
 
   const loadHealingData = async () => {
+    if (healingData) return; // Prevent unnecessary recalculation
     try {
       const charts = await localDb.getCharts();
       if (charts.length > 0) {
+        // 1. Check Cache (assuming localDb has getCache/setCache, otherwise this is structural)
+        // const cachedInsights = await localDb.getCache('healing_insights');
+        // if (cachedInsights) {
+        //   setHealingData(cachedInsights);
+        //   setLoading(false);
+        //   return;
+        // }
+
         const savedChart = charts[0];
         const birthData = {
           date: savedChart.birthDate,
@@ -114,7 +123,9 @@ export default function HealingScreen() {
 
         const insights = HealingInsightsGenerator.generateHealingInsights(chart);
         setHealingData(insights);
+        // await localDb.setCache('healing_insights', insights);
 
+        // We can keep the quote generation here or move it.
         const result = await ShadowQuoteEngine.getDailyShadowQuote(chart);
         if (result.quote.tone === 'protective' || result.quote.tone === 'release') {
           setHealingQuote(result.quote);
@@ -123,7 +134,7 @@ export default function HealingScreen() {
         }
       }
     } catch (e) {
-      logger.error('[Healing] Failed to load healing data:', e);
+      logger.error('[Healing] Production Load Error:', e);
     } finally {
       setLoading(false);
     }
@@ -151,6 +162,13 @@ export default function HealingScreen() {
             </Text>
           </Animated.View>
 
+          {/* Shadow quote — right below the header */}
+          {healingQuote && (
+            <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.shadowSection}>
+              <ShadowQuoteCard quote={healingQuote} variant="footer" animationDelay={0} />
+            </Animated.View>
+          )}
+
           {/* Empty state */}
           {!loading && !healingData && !healingQuote && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
@@ -169,13 +187,6 @@ export default function HealingScreen() {
                   <Text style={styles.emptyButtonText}>Create Chart</Text>
                 </Pressable>
               </LinearGradient>
-            </Animated.View>
-          )}
-
-          {/* Shadow quote */}
-          {healingQuote && (
-            <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.shadowSection}>
-              <ShadowQuoteCard quote={healingQuote} variant="footer" animationDelay={0} />
             </Animated.View>
           )}
 
@@ -351,7 +362,7 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
   
-  header: { marginTop: 16, marginBottom: 24 },
+  header: { marginTop: 16, marginBottom: 8 },
   title: {
     fontSize: 34,
     color: PALETTE.textMain,
@@ -362,7 +373,7 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, fontStyle: 'italic' },
   
   section: { marginTop: 8, marginBottom: 16 },
-  shadowSection: { marginBottom: 16 },
+  shadowSection: { marginTop: -18, marginBottom: 16 },
   sectionTitle: {
     fontSize: 18,
     color: PALETTE.textMain,

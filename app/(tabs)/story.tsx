@@ -103,6 +103,7 @@ export default function StoryScreen() {
   const [chart, setChart] = useState<NatalChart | null>(null);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
 
   const loadStoryData = useCallback(async () => {
     try {
@@ -275,9 +276,24 @@ export default function StoryScreen() {
                     isPremium={isPremium}
                     accentColor={CHAPTER_COLORS[index]}
                     onPress={() => {
-                      if (isLocked) router.push('/(tabs)/premium' as Href);
+                      if (isLocked) {
+                        router.push('/(tabs)/premium' as Href);
+                      } else {
+                        setExpandedChapterId(prev => prev === chapter.id ? null : chapter.id);
+                      }
                     }}
                   />
+                  {!isLocked && expandedChapterId === chapter.id && (
+                    <Animated.View entering={FadeInDown.duration(400)}>
+                      <ChapterCard
+                        chapter={`Chapter ${index + 1}`}
+                        title={applyStoryLabels(chapter.title)}
+                        content={chapter.content}
+                        reflection={chapter.reflection}
+                        affirmation={chapter.affirmation}
+                      />
+                    </Animated.View>
+                  )}
                 </Animated.View>
               );
             })

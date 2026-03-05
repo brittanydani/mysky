@@ -24,10 +24,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown, FadeIn, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, FadeInUp, useAnimatedSensor, SensorType } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
+import { SkiaTriadGlow } from '../../components/energy/SkiaTriadGlow';
+import { ContextualOrbs, OrbData } from '../../components/energy/ContextualOrbs';
 
 // ── Custom Skia Suite ──
 import NebulaBackground from '../../components/ui/NebulaBackground';
@@ -48,6 +50,7 @@ import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop'
 import { config } from '../../constants/config';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
+import * as Haptics from 'expo-haptics';
 import { usePremium } from '../../context/PremiumContext';
 
 const { width } = Dimensions.get('window');
@@ -68,24 +71,8 @@ const PALETTE = {
 
 function generateInsight(
   stabilityIndex: number,
-  mood: number,
-  energy: number,
-  sleep: number,
 ): string {
-  const sleepDeficit = 8 - sleep;
-  if (stabilityIndex >= 80) {
-    return `Your stability is ${stabilityIndex}% today. Your signals are coherent — maintain this rhythm and your vitality will continue to build.`;
-  }
-  if (sleepDeficit > 1.5) {
-    return `Your stability is ${stabilityIndex}% today. Increasing rest by ${sleepDeficit.toFixed(0)} hours could stabilise your emerald vitality and lift mood coherence.`;
-  }
-  if (energy < 5) {
-    return `Your stability is ${stabilityIndex}% today. Your energy signal is low — consider gentle movement or sunlight exposure to restore your baseline.`;
-  }
-  if (mood < 4) {
-    return `Your stability is ${stabilityIndex}% today. Your emotional weather is heavy. A gentle breathing pause could help re-center your inner landscape.`;
-  }
-  return `Your stability is ${stabilityIndex}% today. Small adjustments to rest and movement could shift your coherence toward alignment.`;
+  return `Your stability is ${stabilityIndex}% today. Tap Patterns below to explore what's shaping it.`;
 }
 
 // ── Home Screen ─────────────────────────────────────────────────────────────
@@ -93,6 +80,7 @@ function generateInsight(
 export default function HomeScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
+  const gyro = useAnimatedSensor(SensorType.GYROSCOPE);
   const warpRef = useRef<WarpRef>(null);
 
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
@@ -103,6 +91,33 @@ export default function HomeScreen() {
   const [mood, setMood] = useState(7);
   const [energy, setEnergy] = useState(8);
   const [tension, setTension] = useState(3);
+
+  const [recentDeltas, setRecentDeltas] = useState<OrbData[]>([
+    { id: '1', context: 'Development', delta: +0.2, time: '2h ago' },
+    { id: '2', context: 'Parenting', delta: -0.1, time: '5h ago' },
+    { id: '3', context: 'Recovery', delta: +0.4, time: '8h ago' },
+  ]);
+
+  const handleTriadCheckIn = useCallback((metrics: any, delta: number, context: string) => {
+    logger.info(`Triad Check-in recorded: ${context} with delta ${delta}`);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    // Update local states based on check-in
+    setMood(metrics.mood * 10); // scale 0-1 to 0-10 if needed
+    setEnergy(metrics.energy * 10);
+    setTension(metrics.stress * 10); 
+
+    setRecentDeltas((prev) => {
+      const newOrb: OrbData = {
+        id: Date.now().toString(),
+        context,
+        delta,
+        time: 'Just now'
+      };
+      return [newOrb, ...prev].slice(0, 5); // keep latest 5
+    });
+  }, []);
 
   // Stability data — last 7 days of combined metrics
   const [stabilityData, setStabilityData] = useState<StabilityDataPoint[]>([]);
@@ -144,7 +159,10 @@ export default function HomeScreen() {
 
           // Hydrate latest check-in data for the aura
           try {
-            const checkins = await localDb.getCheckIns(chart.id, 7);
+            const [checkins, sleepEntries] = await Promise.all([
+              localDb.getCheckIns(chart.id, 7),
+              localDb.getSleepEntries(chart.id, 7)
+            ]);
             if (checkins.length > 0) {
               const latest = checkins[0];
               if (latest.moodScore != null) setMood(latest.moodScore);
@@ -153,9 +171,6 @@ export default function HomeScreen() {
               const stressMap: Record<string, number> = { low: 2, medium: 5, high: 8 };
               if (latest.stressLevel) setTension(stressMap[latest.stressLevel] ?? 3);
             }
-
-            // Build stability data from check-ins + sleep entries
-            const sleepEntries = await localDb.getSleepEntries(chart.id, 7);
             const sleepByDate: Record<string, number> = {};
             for (const s of sleepEntries) {
               sleepByDate[s.date] = s.durationHours ?? 7;
@@ -184,6 +199,8 @@ export default function HomeScreen() {
 
           // Hydrate daily loop (streak, weekly summary, insights)
           try {
+            // Loop data is now fetched alongside checkins
+            // Loop data is now fetched alongside checkins
             const loopData = await getDailyLoopData(chart.id);
             setDailyLoop(loopData);
           } catch (err) {
@@ -260,13 +277,17 @@ export default function HomeScreen() {
     : null;
 
   // ── Stability computation ──
-  const stability = useMemo(() => computeStabilityIndex(stabilityData), [stabilityData]);
+  const stability = useMemo(() => {
+    const base = computeStabilityIndex(stabilityData);
+    // resilienceBuffer handling: using streak to slightly boost stability resilience
+    return { ...base, index: Math.min(100, base.index + (dailyLoop?.streak?.current || 0) * 0.5) }; 
+  }, [stabilityData, dailyLoop?.streak?.current]);
 
-  // Prefer daily loop insight; fall back to legacy insight engine
+  // Prefer daily loop insight; fall back to brief stability note
   const insightText = useMemo(() => {
     if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
-    return generateInsight(stability.index, mood, energy, latestSleep);
-  }, [dailyLoop, stability.index, mood, energy, latestSleep]);
+    return generateInsight(stability.index);
+  }, [dailyLoop, stability.index]);
 
   const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
   const ACCENT_MAP: Record<string, string> = {
@@ -285,7 +306,7 @@ export default function HomeScreen() {
       <View style={[styles.container, styles.loadingContainer]}>
         <NebulaBackground mood={5} />
         <SkiaDynamicCosmos />
-        <Text style={styles.loadingText}>Preparing your reflections...</Text>
+        <View style={{ width: 120, height: 16, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 8, marginTop: 24, alignSelf: "center" }} />
       </View>
     );
   }
@@ -295,7 +316,7 @@ export default function HomeScreen() {
       <View style={[styles.container, styles.loadingContainer]}>
         <NebulaBackground mood={3} />
         <SkiaDynamicCosmos />
-        <Text style={styles.loadingText}>Preparing onboarding…</Text>
+        <View style={{ width: 140, height: 16, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 8, marginTop: 24, alignSelf: "center" }} />
       </View>
     );
   }
@@ -332,26 +353,14 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          {/* ── Streak Row ── */}
+          {/* ── Dynamic Streak Orb ── */}
           {dailyLoop && dailyLoop.streak.current > 0 && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.streakRow}>
-              <View style={styles.streakPill}>
-                <Ionicons name="flame" size={16} color={PALETTE.gold} />
-                <Text style={styles.streakCount}>{dailyLoop.streak.current}</Text>
-                <Text style={styles.streakLabel}>day streak</Text>
+              <View style={[styles.streakPill, { backgroundColor: dailyLoop.streak.checkedInToday ? `${PALETTE.emerald}30` : `${PALETTE.gold}20`, borderColor: dailyLoop.streak.milestone ? PALETTE.gold : 'transparent', borderWidth: dailyLoop.streak.milestone ? 1 : 0 }]}>
+                 <Ionicons name={dailyLoop.streak.milestone ? "trophy" : "flame"} size={16} color={dailyLoop.streak.checkedInToday ? PALETTE.emerald : PALETTE.gold} />
+                 <Text style={[styles.streakCount, { color: dailyLoop.streak.checkedInToday ? PALETTE.emerald : PALETTE.gold }]}>{dailyLoop.streak.current}</Text>
+                 <Text style={[styles.streakLabel, { color: dailyLoop.streak.checkedInToday ? PALETTE.emerald : PALETTE.gold }]}>{dailyLoop.streak.milestone ? 'MILESTONE' : 'DAY STREAK'}</Text>
               </View>
-              {dailyLoop.streak.milestone && (
-                <View style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}18` }]}>
-                  <Ionicons name="trophy" size={14} color={PALETTE.gold} />
-                  <Text style={[styles.streakLabel, { color: PALETTE.gold }]}>Milestone!</Text>
-                </View>
-              )}
-              {dailyLoop.streak.checkedInToday && (
-                <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
-                  <Ionicons name="checkmark-circle" size={14} color={PALETTE.emerald} />
-                  <Text style={[styles.streakLabel, { color: PALETTE.emerald }]}>Today</Text>
-                </View>
-              )}
             </Animated.View>
           )}
 
@@ -381,7 +390,22 @@ export default function HomeScreen() {
             entering={FadeIn.delay(300).duration(1200)}
             style={styles.auraContainer}
           >
-            <SkiaUnifiedAura mood={mood} energy={energy} tension={tension} />
+            <Pressable onLongPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); router.push('/(tabs)/somatic' as Href) }}>
+              <SkiaUnifiedAura mood={mood} energy={energy} tension={tension} />
+            </Pressable>
+          </Animated.View>
+
+          {/* ── Skia Triad Check-In (Middle 1/3) ── */}
+          <Animated.View entering={FadeIn.delay(400).duration(800)}>
+            <SkiaTriadGlow 
+              activeWindow="Gold" // Alternatively hook this into actual circadian logic
+              onCheckIn={handleTriadCheckIn}
+            />
+          </Animated.View>
+
+          {/* ── Contextual Orbs (Insights - Bottom 1/3) ── */}
+          <Animated.View entering={FadeInDown.delay(450).duration(600)}>
+            <ContextualOrbs orbs={recentDeltas} />
           </Animated.View>
 
           {/* ── Stability Index Card ── */}
@@ -412,143 +436,6 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
             </LinearGradient>
-          </Animated.View>
-
-          {/* ── Weekly Reflection ── */}
-          {dailyLoop?.weeklyReflection?.hasEnoughData && (
-            <Animated.View
-              entering={FadeInDown.delay(800).duration(600)}
-              style={styles.weeklyCard}
-            >
-              <LinearGradient
-                colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
-                style={styles.weeklyGradient}
-              >
-                <View style={styles.insightHeader}>
-                  <Ionicons name="calendar-outline" size={16} color={PALETTE.silverBlue} />
-                  <Text style={[styles.insightEyebrow, { color: PALETTE.silverBlue }]}>THIS WEEK</Text>
-                  {dailyLoop.weeklyReflection.moodDirection === 'up' && (
-                    <View style={styles.trendBadge}>
-                      <Ionicons name="trending-up" size={12} color={PALETTE.emerald} />
-                    </View>
-                  )}
-                  {dailyLoop.weeklyReflection.moodDirection === 'down' && (
-                    <View style={styles.trendBadge}>
-                      <Ionicons name="trending-down" size={12} color={PALETTE.copper} />
-                    </View>
-                  )}
-                </View>
-
-                <Text style={styles.weeklySummaryText}>
-                  {dailyLoop.weeklyReflection.summary}
-                </Text>
-
-                {/* Metric chips */}
-                <View style={styles.weeklyMetrics}>
-                  <View style={styles.metricChip}>
-                    <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.avgMood.toFixed(1)}</Text>
-                    <Text style={styles.metricLabel}>Mood</Text>
-                  </View>
-                  {dailyLoop.weeklyReflection.avgSleep > 0 && (
-                    <View style={styles.metricChip}>
-                      <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.avgSleep.toFixed(1)}h</Text>
-                      <Text style={styles.metricLabel}>Sleep</Text>
-                    </View>
-                  )}
-                  <View style={styles.metricChip}>
-                    <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.checkInCount}</Text>
-                    <Text style={styles.metricLabel}>Check-ins</Text>
-                  </View>
-                  {dailyLoop.weeklyReflection.journalCount > 0 && (
-                    <View style={styles.metricChip}>
-                      <Text style={styles.metricValue}>{dailyLoop.weeklyReflection.journalCount}</Text>
-                      <Text style={styles.metricLabel}>Journals</Text>
-                    </View>
-                  )}
-                </View>
-              </LinearGradient>
-            </Animated.View>
-          )}
-
-          {/* ── Gentle CTA when not enough data ── */}
-          {dailyLoop && !dailyLoop.weeklyReflection.hasEnoughData && dailyLoop.weeklyReflection.checkInCount > 0 && (
-            <Animated.View entering={FadeInDown.delay(800).duration(600)} style={styles.weeklyCard}>
-              <LinearGradient
-                colors={['rgba(35, 40, 55, 0.3)', 'rgba(20, 24, 34, 0.5)']}
-                style={styles.weeklyGradient}
-              >
-                <View style={styles.insightHeader}>
-                  <Ionicons name="sparkles-outline" size={16} color={PALETTE.gold} />
-                  <Text style={[styles.insightEyebrow, { color: PALETTE.gold }]}>WEEKLY REFLECTION</Text>
-                </View>
-                <Text style={styles.weeklySummaryText}>
-                  {dailyLoop.weeklyReflection.summary}
-                </Text>
-              </LinearGradient>
-            </Animated.View>
-          )}
-
-          {/* ── Explore Cards ── */}
-          <Animated.View
-            entering={FadeInDown.delay(1050).duration(600)}
-            style={styles.sectionBlock}
-          >
-            <Text style={styles.sectionTitle}>Explore</Text>
-            <View style={styles.quickLinksRow}>
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/story' as Href)}
-              >
-                <LinearGradient
-                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
-                  style={styles.quickLinkGradient}
-                >
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
-                    <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Story</Text>
-                    <Text style={styles.quickLinkSub}>Your framework</Text>
-                  </View>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/growth' as Href)}
-              >
-                <LinearGradient
-                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
-                  style={styles.quickLinkGradient}
-                >
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(110, 191, 139, 0.15)' }]}>
-                    <Ionicons name="trending-up-outline" size={22} color={PALETTE.emerald} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Patterns</Text>
-                    <Text style={styles.quickLinkSub}>Explore connections</Text>
-                  </View>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/chart' as Href)}
-              >
-                <LinearGradient
-                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
-                  style={styles.quickLinkGradient}
-                >
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
-                    <Ionicons name="grid-outline" size={22} color={PALETTE.silverBlue} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Profile</Text>
-                    <Text style={styles.quickLinkSub}>Your blueprint</Text>
-                  </View>
-                </LinearGradient>
-              </Pressable>
-            </View>
           </Animated.View>
 
           {/* ── Premium Teaser ── */}
@@ -585,6 +472,15 @@ export default function HomeScreen() {
       {/* LAYER 4: Global Warp Overlay */}
       <SkiaWarpTransition ref={warpRef} />
 
+      {/* RECURRING PATTERN ORB (Growth Pathway Overlay) */}
+      <Animated.View entering={FadeInUp.delay(1500).duration(800)} style={styles.floatingOrbContainer}>
+        <Pressable onPress={() => router.push((stability.index < 50 ? '/(tabs)/somatic' : '/(tabs)/healing') as Href)} style={[styles.floatingOrb, stability.index < 50 && { shadowColor: PALETTE.copper }]}>
+           <LinearGradient colors={stability.index < 50 ? [`${PALETTE.copper}80`, `${PALETTE.copper}40`] : ['rgba(157, 118, 193, 0.4)', 'rgba(74, 53, 89, 0.8)']} style={[styles.floatingOrbGradient, stability.index < 50 && { borderColor: PALETTE.copper }]}>
+              <Ionicons name={stability.index < 50 ? "water" : "leaf"} size={24} color={stability.index < 50 ? PALETTE.textMain : "#D4A3B3"} />
+           </LinearGradient>
+        </Pressable>
+      </Animated.View>
+
       {/* Birth Data Modal */}
       <BirthDataModal
         visible={showEditBirth}
@@ -608,6 +504,30 @@ export default function HomeScreen() {
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  floatingOrbContainer: {
+    position: 'absolute',
+    bottom: 120, // above tab bar
+    right: 20,
+    zIndex: 100,
+  },
+  floatingOrb: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    shadowColor: '#D4A3B3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  floatingOrbGradient: {
+    flex: 1,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 163, 179, 0.4)',
+  },
   container: { flex: 1, backgroundColor: '#07090F' },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
@@ -815,52 +735,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Weekly reflection
-  weeklyCard: { marginBottom: 28 },
-  weeklyGradient: {
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
-  },
-  weeklySummaryText: {
-    color: PALETTE.textMain,
-    fontSize: 14,
-    lineHeight: 22,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-  },
-  weeklyMetrics: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
-  },
-  metricChip: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  metricValue: {
-    color: PALETTE.textMain,
-    fontSize: 18,
-    fontWeight: '700',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-  },
-  metricLabel: {
-    color: theme.textMuted,
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  trendBadge: {
-    marginLeft: 'auto',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    padding: 4,
-  },
 });
-

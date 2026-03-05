@@ -170,6 +170,10 @@ interface Props {
   onLongPress?: () => void;
   /** Word count to display */
   wordCount?: number;
+  /** numeric Stability Delta (+/-) */
+  stabilityDelta?: number;
+  /** Thumbnail of painted silhouette mock color */
+  somaticSnapshotColor?: string;
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -184,6 +188,8 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   onPress,
   onLongPress,
   wordCount,
+  stabilityDelta,
+  somaticSnapshotColor,
 }: Props) {
   const tone = toneFromMood(mood);
   const accent = toneColor(tone);
@@ -340,11 +346,26 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
 
         {/* Footer */}
         <View style={styles.footer}>
-          {wordCount != null && (
-            <Text style={styles.footerMeta}>
-              {wordCount} words
-            </Text>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {wordCount != null && (
+              <Text style={styles.footerMeta}>
+                {wordCount} words
+              </Text>
+            )}
+            
+            {stabilityDelta !== undefined && (
+              <View style={[styles.toneBadge, { backgroundColor: stabilityDelta >= 0 ? 'rgba(110, 191, 139, 0.15)' : 'rgba(205, 127, 93, 0.15)' }]}>
+                <Text style={[styles.toneBadgeText, { color: stabilityDelta >= 0 ? '#6EBF8B' : '#CD7F5D' }]}>
+                  {stabilityDelta > 0 ? '+' : ''}{stabilityDelta} Stability
+                </Text>
+              </View>
+            )}
+            
+            {somaticSnapshotColor && (
+              <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: somaticSnapshotColor, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }} />
+            )}
+          </View>
+          
           <View style={[styles.toneBadge, { backgroundColor: accent + '20' }]}>
             <Text style={[styles.toneBadgeText, { color: accent }]}>
               {tone}

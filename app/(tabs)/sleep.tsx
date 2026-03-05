@@ -11,7 +11,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from '
 import {
   Alert,
   Dimensions,
-  FlatList,
   Keyboard,
   Pressable,
   ScrollView,
@@ -732,13 +731,12 @@ export default function SleepScreen() {
 
                       {/* Feeling list */}
                       {selectedTier && filteredFeelings.length > 0 && (
-                        <FlatList
-                          data={filteredFeelings}
-                          keyExtractor={item => item.id}
-                          renderItem={({ item: feel }) => {
+                        <ScrollView style={{ maxHeight: 320 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                          {filteredFeelings.map(feel => {
                             const existing = selectedFeelings.find(f => f.id === feel.id);
                             return (
                               <FeelingItem
+                                key={feel.id}
                                 feel={feel}
                                 isSelected={!!existing}
                                 intensity={existing?.intensity ?? 0}
@@ -746,15 +744,8 @@ export default function SleepScreen() {
                                 onIntensityChange={handleIntensityChange}
                               />
                             );
-                          }}
-                          initialNumToRender={10}
-                          maxToRenderPerBatch={10}
-                          windowSize={5}
-                          style={{ maxHeight: 320 }}
-                          nestedScrollEnabled
-                          keyboardShouldPersistTaps="handled"
-                          ListEmptyComponent={<Text style={styles.tierHint}>No feelings match your search</Text>}
-                        />
+                          })}
+                        </ScrollView>
                       )}
 
                       {selectedTier && filteredFeelings.length === 0 && debouncedSearch.length > 0 && (

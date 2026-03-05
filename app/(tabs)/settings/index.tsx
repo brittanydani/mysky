@@ -444,6 +444,42 @@ export default function SettingsScreen() {
             </Animated.View>
           )}
 
+          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.section}>
+            <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 4 }}>
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => router.push('/(tabs)/chart' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="View Personal Blueprint"
+              >
+                <LinearGradient
+                  colors={['rgba(197, 180, 147, 0.12)', 'rgba(197, 180, 147, 0.02)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.25)', height: 110, justifyContent: 'center', alignItems: 'center' }]}
+                >
+                  <Ionicons name="planet-outline" size={28} color={theme.primary} style={{ marginBottom: 8 }} />
+                  <Text style={[styles.settingTitle, { fontSize: 16, textAlign: 'center' }]}>Personal Blueprint</Text>
+                  <Text style={[styles.settingDescription, { textAlign: 'center', fontSize: 12, marginTop: 4 }]}>Natal Chart</Text>
+                </LinearGradient>
+              </Pressable>
+
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => router.push('/(tabs)/story' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="View Life Architecture"
+              >
+                <LinearGradient
+                  colors={['rgba(139, 196, 232, 0.12)', 'rgba(139, 196, 232, 0.02)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(139, 196, 232, 0.25)', height: 110, justifyContent: 'center', alignItems: 'center' }]}
+                >
+                  <Ionicons name="map-outline" size={28} color="#8BC4E8" style={{ marginBottom: 8 }} />
+                  <Text style={[styles.settingTitle, { fontSize: 16, textAlign: 'center' }]}>Life Architecture</Text>
+                  <Text style={[styles.settingDescription, { textAlign: 'center', fontSize: 12, marginTop: 4 }]}>Story Modules</Text>
+                </LinearGradient>
+              </Pressable>
+            </View>
+          </Animated.View>
+
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key">
                 <View style={{ paddingHorizontal: 16 }}>

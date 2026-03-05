@@ -16,10 +16,12 @@ import CosmicBackground from '../components/ui/CosmicBackground';
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
+import { SomaticProvider } from '../context/SomaticContext';
 
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
+import { requestNotificationPermissions } from '../services/energy/ResilienceAlertService';
 import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 
@@ -105,6 +107,7 @@ export default function RootLayout() {
       // DB migration + settings should only happen once consent is granted
       await MigrationService.performMigrationIfNeeded();
       await AstrologySettingsService.getSettings();
+      await requestNotificationPermissions();
 
       // If they already accepted terms previously, see if onboarding can be skipped
       if (termsAccepted) {
@@ -115,7 +118,7 @@ export default function RootLayout() {
             setOnboardingComplete(true);
           }
         } catch (e) {
-          logger.error('Failed to check existing charts:', e);
+          logger.error('Failed to check existing charts or request permissions:', e);
         }
       }
     } catch (error) {
@@ -285,8 +288,9 @@ export default function RootLayout() {
     <ErrorBoundary>
       <AuthProvider>
         <PremiumProvider>
-          <StarNotificationProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
+          <SomaticProvider>
+            <StarNotificationProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
             <View style={{ flex: 1, position: 'relative' }}>
               <CosmicBackground />
               <SafeAreaProvider>
@@ -323,6 +327,7 @@ export default function RootLayout() {
             </View>
           </GestureHandlerRootView>
           </StarNotificationProvider>
+          </SomaticProvider>
         </PremiumProvider>
       </AuthProvider>
     </ErrorBoundary>
