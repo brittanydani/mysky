@@ -39,3 +39,33 @@ claude-test.js
 
 # Supabase temp
 supabase/.temp/
+
+# temp dev scripts / scratch
+fix_*
+patch_*
+replace_*
+rewrite_*
+dump_*
+test_*
+*.py
+*.txt
+w
+You
+
+# --- Local scratch / one-off scripts ---
+You
+w
+dump_*
+fix_*
+patch_*
+replace_*
+rewrite_*
+test_*
+update_*.py
+*.py
+*.txt
+
+# --- Node / Expo ---
+node_modules
+.expo
+.expo-shared
