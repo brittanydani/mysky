@@ -101,7 +101,7 @@ const ALL_TAG_LABELS: Record<string, string> = {
 };
 
 const COLORS = {
-  mood: '#C5B493',
+  mood: '#C9AE78',
   energy: '#6fb3d3',
   stress: '#e07b7b',
 };
@@ -715,7 +715,7 @@ export default function MoodScreen() {
             <SectionLabel icon="heart-outline" title="Quick Check-In" delay={100} />
             <Animated.View entering={FadeInDown.delay(120).duration(600)}>
               <LinearGradient
-                colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
+                colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
                 style={styles.card}
               >
                 {/* Save confirmation */}
@@ -1039,7 +1039,7 @@ export default function MoodScreen() {
             {allCheckIns.length >= 3 && (
               <Animated.View entering={FadeInDown.delay(180).duration(600)}>
                 <LinearGradient
-                  colors={['rgba(25,38,60,0.50)', 'rgba(20,32,50,0.35)']}
+                  colors={['rgba(14, 24, 48,0.50)', 'rgba(10, 18, 36,0.35)']}
                   style={styles.card}
                 >
                   <View style={styles.scatterSection}>
@@ -1069,7 +1069,7 @@ export default function MoodScreen() {
                 accessibilityLabel="Energy Reading"
               >
                 <LinearGradient
-                  colors={['rgba(25,38,60,0.50)', 'rgba(20,32,50,0.35)']}
+                  colors={['rgba(14, 24, 48,0.50)', 'rgba(10, 18, 36,0.35)']}
                   style={[styles.card, { padding: theme.spacing.md }]}
                 >
                   <View style={styles.linkRow}>
@@ -1092,7 +1092,7 @@ export default function MoodScreen() {
             {isPremium ? (
               <Animated.View entering={FadeInDown.delay(220).duration(600)}>
                 <LinearGradient
-                  colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
+                  colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
                   style={styles.card}
                 >
                   {/* Time range selector */}
@@ -1270,11 +1270,11 @@ export default function MoodScreen() {
                   accessibilityLabel="Unlock Patterns"
                 >
                   <LinearGradient
-                    colors={['rgba(197, 180, 147,0.10)', 'rgba(197, 180, 147,0.03)']}
-                    style={[styles.card, { borderColor: 'rgba(197, 180, 147,0.2)' }]}
+                    colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']}
+                    style={[styles.card, { borderColor: 'rgba(232,214,174,0.18)' }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(197, 180, 147,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(232, 214, 174,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
                         <Ionicons name="sparkles" size={10} color={theme.primary} />
                         <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
                       </View>
@@ -1436,7 +1436,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.10)',
   },
   timeSlotChipOn: {
-    backgroundColor: 'rgba(197, 180, 147,0.18)',
+    backgroundColor: 'rgba(232, 214, 174,0.18)',
     borderColor: theme.primary,
   },
   timeSlotChipDone: {
@@ -1475,7 +1475,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.12)',
   },
   tagChipOn: {
-    backgroundColor: 'rgba(197, 180, 147,0.18)',
+    backgroundColor: 'rgba(232, 214, 174,0.18)',
     borderColor: theme.primary,
   },
   tagTxt: { color: theme.textSecondary, fontSize: 13, fontWeight: '600' },
@@ -1536,7 +1536,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147,0.22)',
+    borderColor: 'rgba(232, 214, 174,0.22)',
     borderRadius: theme.borderRadius.sm,
   },
   saveBtnTxt: { color: theme.primary, fontSize: 15, fontWeight: '800' },
@@ -1572,7 +1572,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
   rangeBtnOn: {
-    backgroundColor: 'rgba(197, 180, 147,0.18)',
+    backgroundColor: 'rgba(232, 214, 174,0.18)',
     borderColor: theme.primary,
   },
   rangeTxt: { color: theme.textMuted, fontSize: 12, fontWeight: '700' },

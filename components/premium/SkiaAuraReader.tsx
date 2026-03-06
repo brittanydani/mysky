@@ -90,9 +90,9 @@ export default function SkiaAuraReader({ mood, energy, tension }: AuraProps) {
 
   // ── Dynamic Color Mapping ──
   const colors = useMemo(() => {
-    if (mood > 7) return ['#C5B493', '#E9D9B8', '#C5B493']; // Radiant Gold
+    if (mood > 7) return ['#C9AE78', '#E9D9B8', '#C9AE78']; // Radiant Gold
     if (mood < 4) return ['#4A3B6B', '#8BC4E8', '#4A3B6B']; // Deep Indigo
-    return ['#6EBF8B', '#C5B493', '#6EBF8B'];               // Balanced Emerald/Gold
+    return ['#6EBF8B', '#C9AE78', '#6EBF8B'];               // Balanced Emerald/Gold
   }, [mood]);
 
   // ── Animated Transform ──
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   auraType: {
-    color: '#C5B493',
+    color: '#C9AE78',
     fontSize: 18,
     fontFamily: 'serif',
     fontWeight: '700',

@@ -42,7 +42,7 @@ const POINTS = 120;
 
 const PALETTE = {
   emerald: '#6EBF8B',
-  gold: '#C5B493',
+  gold: '#C9AE78',
   glass: 'rgba(255, 255, 255, 0.1)',
 };
 
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   instructionText: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 12,
     fontWeight: '800',
     textTransform: 'uppercase',

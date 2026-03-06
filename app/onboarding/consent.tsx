@@ -18,8 +18,8 @@ const TERMS_VERSION = '2026-03-03';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
-  textMain: '#FDFBF7',
+  gold: '#C9AE78',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -97,7 +97,7 @@ export default function OnboardingConsentScreen() {
         >
           {/* Glassmorphic Card */}
           <LinearGradient 
-            colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} 
+            colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} 
             style={styles.card}
           >
             <Text style={styles.title}>Accept Terms & Privacy</Text>
@@ -131,7 +131,7 @@ export default function OnboardingConsentScreen() {
               accessibilityState={{ checked }}
             >
               <View style={[styles.checkbox, checked && styles.checkboxOn]}>
-                {checked && <Ionicons name="checkmark" size={16} color="#1A1A1A" />}
+                {checked && <Ionicons name="checkmark" size={16} color="#0B1220" />}
               </View>
               <Text style={styles.checkText}>
                 I agree to the Terms of Service and Privacy Policy.
@@ -147,13 +147,13 @@ export default function OnboardingConsentScreen() {
               accessibilityState={{ disabled: !checked || saving }}
             >
               <LinearGradient 
-                colors={['#FFF4D4', '#C5B493', '#8B6508']} 
+                colors={['#FFF4D6', '#C9AE78', '#6B532E']} 
                 start={{ x: 0, y: 0 }} 
                 end={{ x: 1, y: 1 }} 
                 style={styles.ctaGradient}
               >
                 <Text style={styles.ctaText}>{saving ? 'Saving...' : 'Accept & Continue'}</Text>
-                {!saving && <Ionicons name="arrow-forward" size={18} color="#1A1A1A" />}
+                {!saving && <Ionicons name="arrow-forward" size={18} color="#0B1220" />}
               </LinearGradient>
             </Pressable>
 
@@ -168,7 +168,7 @@ export default function OnboardingConsentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   
   headerBar: {
@@ -257,10 +257,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     gap: 10,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.4)',
+    borderColor: 'rgba(232, 214, 174, 0.4)',
     borderRadius: 16,
   },
-  ctaText: { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
+  ctaText: { fontSize: 16, fontWeight: '700', color: '#020817' },
   
   note: { marginTop: 20, textAlign: 'center', color: theme.textMuted, fontSize: 12, fontStyle: 'italic' },
 });

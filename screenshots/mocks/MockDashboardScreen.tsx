@@ -29,10 +29,10 @@ const PALETTE = {
   emerald: '#6EBF8B',
   copper: '#CD7F5D',
   rose: '#D4A3B3',
-  text: '#FDFBF7',
+  text: '#F8FAFC',
   textMuted: 'rgba(255,255,255,0.5)',
-  surface: '#1E2D47',
-  bg: '#0D1421',
+  surface: '#0E1830',
+  bg: '#020817',
   glassBorder: 'rgba(255,255,255,0.06)',
 };
 
@@ -144,7 +144,7 @@ export default function MockDashboardScreen({ width, height }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     paddingHorizontal: 16,
     paddingTop: 20,
   },

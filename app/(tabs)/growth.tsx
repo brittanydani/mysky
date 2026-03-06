@@ -30,14 +30,14 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Color Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.15)',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
 };
 
 // ── Rotating daily reflection prompts (non-astrological) ──
@@ -417,7 +417,7 @@ export default function ReflectScreen() {
 
           {/* ── Daily Reflection Prompt (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(120).duration(600)} style={styles.section}>
-            <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.glassCard}>
+            <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.50)']} style={styles.glassCard}>
               <View style={styles.promptLabelRow}>
                 <Ionicons name="sparkles" size={14} color={PALETTE.silverBlue} />
                 <Text style={[styles.promptLabel, { color: PALETTE.silverBlue }]}>PROMPT FOR TODAY</Text>
@@ -440,7 +440,7 @@ export default function ReflectScreen() {
                 </Pressable>
 
                 <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/journal')}>
-                  <LinearGradient colors={['rgba(197, 180, 147, 0.25)', 'rgba(197, 180, 147, 0.1)']} style={styles.promptBtnGradient}>
+                  <LinearGradient colors={['rgba(232,214,174,0.18)', 'rgba(232, 214, 174, 0.1)']} style={styles.promptBtnGradient}>
                     <Ionicons name="create-outline" size={18} color={PALETTE.gold} />
                     <Text style={[styles.promptBtnText, { color: PALETTE.gold }]}>Write Journal</Text>
                   </LinearGradient>
@@ -464,7 +464,7 @@ export default function ReflectScreen() {
 
           {/* ── Weekly Intention (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.section}>
-            <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.glassCard}>
+            <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(2,8,23,0.50)']} style={styles.glassCard}>
               <View style={styles.promptLabelRow}>
                 <Ionicons name="leaf-outline" size={14} color={PALETTE.emerald} />
                 <Text style={[styles.promptLabel, { color: PALETTE.emerald }]}>THIS WEEK'S INTENTION</Text>
@@ -475,7 +475,7 @@ export default function ReflectScreen() {
 
           {checkIns.length === 0 ? (
             <Animated.View entering={FadeInDown.delay(160).duration(600)}>
-              <LinearGradient colors={['rgba(35, 40, 55, 0.5)', 'rgba(20, 24, 34, 0.8)']} style={styles.glassCardEmpty}>
+              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCardEmpty}>
                 <Ionicons name="pulse" size={32} color={theme.textMuted} />
                 <Text style={styles.emptyCardText}>No data yet. Log your mood daily to unlock trend analysis.</Text>
                 <Pressable style={styles.inlineCtaButton} onPress={() => nav('/(tabs)/mood')}>
@@ -490,7 +490,7 @@ export default function ReflectScreen() {
                 <Text style={styles.sectionTitle}>30-Day Overview</Text>
                 <View style={styles.trendCards}>
                   {/* Mood Widget */}
-                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.trendCard}>
+                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(2,8,23,0.60)']} style={styles.trendCard}>
                     <View style={styles.trendCardHeader}>
                       <Text style={[styles.trendCardLabel, { color: PALETTE.silverBlue }]}>MOOD</Text>
                       <Ionicons name={trendIcon(moodTrend).name} size={16} color={trendIcon(moodTrend).color} />
@@ -500,7 +500,7 @@ export default function ReflectScreen() {
                   </LinearGradient>
 
                   {/* Energy Widget */}
-                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.trendCard}>
+                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(2,8,23,0.60)']} style={styles.trendCard}>
                     <View style={styles.trendCardHeader}>
                       <Text style={[styles.trendCardLabel, { color: PALETTE.gold }]}>ENERGY</Text>
                       <Ionicons name={trendIcon(energyTrend).name} size={16} color={trendIcon(energyTrend).color} />
@@ -510,7 +510,7 @@ export default function ReflectScreen() {
                   </LinearGradient>
 
                   {/* Stress Widget */}
-                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.trendCard}>
+                  <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(2,8,23,0.60)']} style={styles.trendCard}>
                     <View style={styles.trendCardHeader}>
                       <Text style={[styles.trendCardLabel, { color: PALETTE.copper }]}>STRESS</Text>
                       <Ionicons name={trendIcon(stressTrend, true).name} size={16} color={trendIcon(stressTrend, true).color} />
@@ -525,7 +525,7 @@ export default function ReflectScreen() {
               {buckets.some(b => b.avgMood != null) && (
                 <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.section}>
                   <Text style={styles.sectionTitle}>Mood by Week</Text>
-                  <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                  <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                     {buckets.map((bucket, i) => (
                       bucket.count > 0 ? (
                         <View key={i} style={styles.barRow}>
@@ -550,7 +550,7 @@ export default function ReflectScreen() {
               {checkIns.length >= 7 && !session && (
                 <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
                   <Pressable onPress={() => nav('/(auth)/sign-in')}>
-                    <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={[styles.glassCard, { flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
+                    <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.60)']} style={[styles.glassCard, { flexDirection: 'row', alignItems: 'center', gap: 16 }]}>
                       <Ionicons name="sparkles-outline" size={24} color={PALETTE.silverBlue} />
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.sectionTitle, { marginBottom: 4, color: PALETTE.silverBlue }]}>Unlock AI Reflections</Text>
@@ -565,7 +565,7 @@ export default function ReflectScreen() {
               {/* ── Observations (Raw Data) ── */}
               <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>Observations</Text>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   {checkIns.length >= 7 ? (
                     aiInsights ? (
                       aiInsights.observations.map((line, i) => (
@@ -609,7 +609,7 @@ export default function ReflectScreen() {
               {aiInsights && (
                 <Animated.View entering={FadeInDown.delay(310).duration(600)} style={styles.section}>
                   <Text style={styles.sectionTitle}>Synthesis</Text>
-                  <LinearGradient colors={['rgba(197, 180, 147, 0.08)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                  <LinearGradient colors={['rgba(232,214,174,0.08)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                     {aiInsights.insights.map((line, i) => (
                       <Text key={i} style={styles.insightLine}>{line}</Text>
                     ))}
@@ -620,7 +620,7 @@ export default function ReflectScreen() {
               {/* ── What Restores You ── */}
               <Animated.View entering={FadeInDown.delay(340).duration(600)} style={styles.section}>
                 <Text style={styles.sectionTitle}>What Restores You</Text>
-                <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                <LinearGradient colors={['rgba(110, 191, 139, 0.12)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   {aiInsights ? (
                     <>
                       <Text style={styles.insightHighlight}>{aiInsights.micro_line}</Text>
@@ -660,7 +660,7 @@ export default function ReflectScreen() {
           {/* ── Astrology Context (Secondary Hook) ── */}
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={[styles.section, { marginTop: 16 }]}>
             <Pressable onPress={() => nav('/astrology-context')}>
-              <LinearGradient colors={['rgba(197, 180, 147, 0.1)', 'rgba(197, 180, 147, 0.02)']} style={styles.astroContextCard}>
+              <LinearGradient colors={['rgba(232, 214, 174, 0.1)', 'rgba(232, 214, 174, 0.02)']} style={styles.astroContextCard}>
                 <View style={styles.astroIconWrap}>
                   <Ionicons name="planet-outline" size={18} color={PALETTE.gold} />
                 </View>
@@ -680,7 +680,7 @@ export default function ReflectScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
 
   emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 12 },
   emptySubtitle: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 32, marginBottom: 32 },
-  ctaButton: { backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)' },
+  ctaButton: { backgroundColor: 'rgba(232, 214, 174, 0.15)', paddingHorizontal: 32, paddingVertical: 14, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(232,214,174,0.25)' },
   ctaText: { color: PALETTE.gold, fontWeight: '700', fontSize: 16 },
 
   section: { marginBottom: 24 },
@@ -736,12 +736,12 @@ const styles = StyleSheet.create({
   restorativeMain: { fontSize: 16, color: PALETTE.textMain, textAlign: 'center', lineHeight: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   restorativeSub: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', fontStyle: 'italic', lineHeight: 20, marginBottom: 12 },
 
-  astroContextCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)', gap: 16 },
-  astroIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(197, 180, 147, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  astroContextCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', gap: 16 },
+  astroIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(232, 214, 174, 0.1)', justifyContent: 'center', alignItems: 'center' },
   astroContextTitle: { fontSize: 15, fontWeight: '600', color: PALETTE.gold, marginBottom: 2 },
   astroContextSub: { fontSize: 12, color: theme.textMuted },
   
   emptyCardText: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, marginVertical: 20 },
-  inlineCtaButton: { backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)' },
+  inlineCtaButton: { backgroundColor: 'rgba(232, 214, 174, 0.15)', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.25)' },
   inlineCtaText: { color: PALETTE.gold, fontWeight: '600', fontSize: 14 },
 });

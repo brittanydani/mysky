@@ -37,7 +37,7 @@ const RADIUS = GATE_SIZE * 0.4;
 
 export const PALETTE = {
   amethyst: '#9D76C1',
-  gold: '#C5B493',
+  gold: '#C9AE78',
   emerald: '#6EBF8B',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   chapterTitle: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 20,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     fontWeight: '600',
@@ -274,9 +274,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: 'rgba(197, 180, 147, 0.15)',
+    backgroundColor: 'rgba(232, 214, 174, 0.15)',
     borderWidth: 0.5,
-    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderColor: 'rgba(232,214,174,0.25)',
   },
   premiumTagText: {
     color: PALETTE.gold,

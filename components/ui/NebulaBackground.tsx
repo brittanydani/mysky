@@ -76,9 +76,9 @@ function moodToPalette(mood: number): MoodPalette {
   }
   // High — warm gold, soft rose
   return {
-    primary: 'rgba(197, 180, 147, ALPHA)',
+    primary: 'rgba(232, 214, 174, ALPHA)',
     secondary: 'rgba(220, 120, 150, ALPHA)',
-    tertiary: 'rgba(197, 180, 147, 0.06)',
+    tertiary: 'rgba(232, 214, 174, 0.06)',
     primaryAlpha: 0.13,
     secondaryAlpha: 0.09,
   };
@@ -219,7 +219,7 @@ function NebulaBackground({ mood = 5, energy = 5 }: NebulaBackgroundProps) {
   return (
     <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* Base deep space layer */}
-      <Rect x={0} y={0} width={W} height={H} color="#07090F" />
+      <Rect x={0} y={0} width={W} height={H} color="#020817" />
 
       {/* Subtle radial depth gradient */}
       <Rect x={0} y={0} width={W} height={H}>

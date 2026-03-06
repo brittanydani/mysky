@@ -20,12 +20,12 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -68,7 +68,7 @@ function DeepCard({
 }) {
   return (
     <LinearGradient
-      colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+      colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
       style={styles.deepCard}
     >
       <View style={styles.deepCardHeader}>
@@ -172,7 +172,7 @@ export default function HealingScreen() {
           {/* Empty state */}
           {!loading && !healingData && !healingQuote && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
-              <LinearGradient colors={['rgba(35, 40, 55, 0.5)', 'rgba(20, 24, 34, 0.8)']} style={styles.emptyCard}>
+              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
                 <Ionicons name="heart-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyTitle}>No chart yet</Text>
                 <Text style={styles.emptySubtitle}>
@@ -309,7 +309,7 @@ export default function HealingScreen() {
               <Text style={styles.sectionTitle}>This Week's Reflection</Text>
               {isPremium ? (
                 <LinearGradient
-                  colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.6)']}
+                  colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.50)']}
                   style={styles.weeklyCard}
                 >
                   <Ionicons name="telescope-outline" size={24} color={PALETTE.silverBlue} style={{ marginBottom: 12 }} />
@@ -357,7 +357,7 @@ export default function HealingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
@@ -403,12 +403,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   emptyButton: {
-    backgroundColor: 'rgba(197, 180, 147, 0.15)',
+    backgroundColor: 'rgba(232, 214, 174, 0.15)',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderColor: 'rgba(232,214,174,0.25)',
   },
   emptyButtonText: { color: PALETTE.gold, fontWeight: '700', fontSize: 15 },
 

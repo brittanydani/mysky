@@ -39,8 +39,8 @@ const GROUP_W = SCREEN_W - 32;
 
 const GLASS = {
   surface: 'rgba(15, 18, 25, 0.88)',
-  border: 'rgba(255, 255, 255, 0.06)',
-  specularTop: 'rgba(255, 255, 255, 0.06)',
+  border: 'rgba(255,255,255,0.06)',
+  specularTop: 'rgba(255,255,255,0.06)',
   specularBot: 'rgba(255, 255, 255, 0.0)',
   divider: 'rgba(255, 255, 255, 0.04)',
   nebulaHint: 'rgba(100, 70, 160, 0.04)',
@@ -128,7 +128,7 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
         />
 
         {/* Specular edge highlight (left accent bar) */}
-        <Rect x={0} y={20} width={2} height={cardH - 40} color="rgba(197, 180, 147, 0.15)">
+        <Rect x={0} y={20} width={2} height={cardH - 40} color="rgba(232, 214, 174, 0.15)">
           <BlurMask blur={3} style="outer" />
         </Rect>
       </Canvas>
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 14,
     fontWeight: '700',
     fontFamily: SERIF,

@@ -68,16 +68,16 @@ interface Props {
 
 const COLORS = {
   sleep: '#8BC4E8',
-  mood: '#C5B493',
+  mood: '#C9AE78',
   energy: '#6EBF8B',
   sleepGlow: 'rgba(139, 196, 232, 0.3)',
-  moodGlow: 'rgba(197, 180, 147, 0.3)',
+  moodGlow: 'rgba(232,214,174,0.25)',
   energyGlow: 'rgba(110, 191, 139, 0.3)',
   grid: 'rgba(255, 255, 255, 0.04)',
-  axisText: 'rgba(253, 251, 247, 0.35)',
+  axisText: 'rgba(240, 234, 214, 0.35)',
   coherent: '#6EBF8B',
   fragmented: '#CD7F5D',
-  indexBg: 'rgba(15, 18, 25, 0.85)',
+  indexBg: 'rgba(255,255,255,0.03)',
 };
 
 // ─── Stability Computation ─────────────────────────────────────────────────────
@@ -333,10 +333,10 @@ export { computeStabilityIndex };
 const localStyles = StyleSheet.create({
   card: {
     borderRadius: 20,
-    backgroundColor: 'rgba(15, 18, 25, 0.85)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
     padding: 0,
   },
@@ -348,7 +348,7 @@ const localStyles = StyleSheet.create({
     paddingBottom: 8,
   },
   eyebrow: {
-    color: 'rgba(253, 251, 247, 0.5)',
+    color: 'rgba(240, 234, 214, 0.5)',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 2,
@@ -392,7 +392,7 @@ const localStyles = StyleSheet.create({
     borderRadius: 4,
   },
   legendLabel: {
-    color: 'rgba(253, 251, 247, 0.5)',
+    color: 'rgba(240, 234, 214, 0.5)',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -403,12 +403,12 @@ const localStyles = StyleSheet.create({
     paddingBottom: 12,
   },
   dayLabel: {
-    color: 'rgba(253, 251, 247, 0.35)',
+    color: 'rgba(240, 234, 214, 0.35)',
     fontSize: 10,
     fontWeight: '600',
   },
   emptyText: {
-    color: 'rgba(253, 251, 247, 0.5)',
+    color: 'rgba(240, 234, 214, 0.5)',
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,

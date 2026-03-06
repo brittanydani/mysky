@@ -43,10 +43,10 @@ import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -212,7 +212,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
                   <Text style={styles.sectionLabel}>Timeline</Text>
                   <Pressable style={styles.glassInteractive} onPress={() => setShowDatePicker(true)}>
-                    <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(20, 24, 34, 0.6)']} style={styles.innerGradient}>
+                    <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(2,8,23,0.50)']} style={styles.innerGradient}>
                       <Ionicons name="calendar-outline" size={18} color={PALETTE.silverBlue} />
                       <Text style={styles.interactiveText}>{formatDate(date)}</Text>
                     </LinearGradient>
@@ -284,7 +284,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
                   {showCloseQuote && closeQuote && <ShadowQuoteCard quote={closeQuote} variant="footer" isCloseQuote />}
                   <Pressable style={styles.saveBtn} onPress={handleSave}>
-                    <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.saveGradient}>
+                    <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.saveGradient}>
                       <Text style={styles.saveBtnText}>{initialData ? 'Secure Changes' : 'Secure Entry'}</Text>
                     </LinearGradient>
                   </Pressable>
@@ -310,7 +310,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   headerTitle: { fontSize: 18, color: PALETTE.textMain, fontWeight: '600', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   
   promptZone: { marginBottom: 20 },
   transitContext: { fontSize: 13, color: PALETTE.silverBlue, fontStyle: 'italic', marginBottom: 12, textAlign: 'center' },
-  primaryPromptCard: { backgroundColor: 'rgba(197, 180, 147, 0.08)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' },
+  primaryPromptCard: { backgroundColor: 'rgba(232,214,174,0.08)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
   promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
   primaryPromptText: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontStyle: 'italic', lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
@@ -346,5 +346,5 @@ const styles = StyleSheet.create({
   footer: { marginTop: 24 },
   saveBtn: { borderRadius: 16, overflow: 'hidden', shadowColor: PALETTE.gold, shadowOpacity: 0.2, shadowRadius: 12 },
   saveGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
-  saveBtnText: { color: '#1A1A1A', fontSize: 17, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  saveBtnText: { color: '#020817', fontSize: 17, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
 });

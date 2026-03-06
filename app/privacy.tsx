@@ -11,11 +11,11 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
   copper: '#CD7F5D',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -51,7 +51,7 @@ export default function PrivacyPolicyScreen() {
           <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
 
           {/* ── Section Wrapper Helper ── */}
-          <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassSection}>
+          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassSection}>
             <Text style={styles.sectionTitle}>Our Commitment</Text>
             <Text style={styles.paragraph}>
               MySky is designed with privacy by design and by default. We use zero analytics SDKs, collect zero advertising identifiers, and perform zero cross-app or cross-site tracking. Your data is never sold, shared for advertising, or used for AI/ML training.
@@ -94,7 +94,7 @@ export default function PrivacyPolicyScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Security</Text>
-            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(20, 24, 34, 0.6)']} style={styles.securityCard}>
+            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(2,8,23,0.50)']} style={styles.securityCard}>
               <View style={styles.securityHeader}>
                 <Ionicons name="lock-closed" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Encryption at Rest</Text>
@@ -104,7 +104,7 @@ export default function PrivacyPolicyScreen() {
               </Text>
             </LinearGradient>
 
-            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(20, 24, 34, 0.6)']} style={[styles.securityCard, { marginTop: 12 }]}>
+            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(2,8,23,0.50)']} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <Ionicons name="shield-checkmark" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Tamper Detection</Text>
@@ -114,7 +114,7 @@ export default function PrivacyPolicyScreen() {
               </Text>
             </LinearGradient>
 
-            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(20, 24, 34, 0.6)']} style={[styles.securityCard, { marginTop: 12 }]}>
+            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(2,8,23,0.50)']} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <Ionicons name="cloud-offline" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Backup Encryption</Text>
@@ -222,7 +222,7 @@ export default function PrivacyPolicyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   headerBar: {
     flexDirection: 'row',

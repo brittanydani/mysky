@@ -15,8 +15,8 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
-  textMain: '#FDFBF7',
+  gold: '#C9AE78',
+  textMain: '#F0EAD6',
 };
 
 export default function OnboardingBirthScreen() {
@@ -81,7 +81,7 @@ export default function OnboardingBirthScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#07090F' 
+    backgroundColor: '#020817' 
   },
   safeArea: { 
     flex: 1 

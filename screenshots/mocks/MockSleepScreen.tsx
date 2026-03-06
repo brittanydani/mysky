@@ -24,7 +24,7 @@ const PALETTE = {
   amethyst: '#9D76C1',
   gold: '#D8C39A',
   emerald: '#6EBF8B',
-  text: '#FDFBF7',
+  text: '#F8FAFC',
   textMuted: 'rgba(255,255,255,0.5)',
   glassBorder: 'rgba(255,255,255,0.06)',
   surface: 'rgba(30, 45, 71, 0.5)',
@@ -177,7 +177,7 @@ export default function MockSleepScreen({ width, height }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     paddingHorizontal: 16,
     paddingTop: 20,
   },

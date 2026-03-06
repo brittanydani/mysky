@@ -42,15 +42,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <View style={styles.errorContainer}>
-          <Ionicons name="warning-outline" size={56} color="#C5B493" style={{ marginBottom: 20 }} />
+          <Ionicons name="warning-outline" size={56} color="#C9AE78" style={{ marginBottom: 20 }} />
           <Text style={styles.errorTitle}>The stars misaligned</Text>
           <Text style={styles.errorBody}>Something unexpected happened. Please close the app and reopen it, or try reloading below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
             <LinearGradient 
-              colors={['rgba(197, 180, 147, 0.15)', 'rgba(197, 180, 147, 0.05)']} 
+              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']} 
               style={styles.errorButtonGradient}
             >
-              <Ionicons name="refresh" size={16} color="#C5B493" style={{ marginRight: 8 }} />
+              <Ionicons name="refresh" size={16} color="#C9AE78" style={{ marginRight: 8 }} />
               <Text style={styles.errorButtonText}>Reload Experience</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -263,15 +263,15 @@ export default function RootLayout() {
     if (initTimedOut) {
       return (
         <View style={styles.errorContainer}>
-          <Ionicons name="hourglass-outline" size={56} color="#C5B493" style={{ marginBottom: 20 }} />
+          <Ionicons name="hourglass-outline" size={56} color="#C9AE78" style={{ marginBottom: 20 }} />
           <Text style={styles.errorTitle}>Taking longer than expected</Text>
           <Text style={styles.errorBody}>Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={retryInit}>
             <LinearGradient
-              colors={['rgba(197, 180, 147, 0.15)', 'rgba(197, 180, 147, 0.05)']}
+              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']}
               style={styles.errorButtonGradient}
             >
-              <Ionicons name="refresh" size={16} color="#C5B493" style={{ marginRight: 8 }} />
+              <Ionicons name="refresh" size={16} color="#C9AE78" style={{ marginRight: 8 }} />
               <Text style={styles.errorButtonText}>Retry</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -332,13 +332,13 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   errorContainer: { 
     flex: 1, 
-    backgroundColor: '#07090F', 
+    backgroundColor: '#020817', 
     alignItems: 'center', 
     justifyContent: 'center', 
     padding: 32 
   },
   errorTitle: { 
-    color: '#FDFBF7', 
+    color: '#F0EAD6', 
     fontSize: 26, 
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), 
     marginBottom: 12,
@@ -359,10 +359,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14, 
     borderRadius: 20, 
     borderWidth: 1, 
-    borderColor: 'rgba(197, 180, 147, 0.3)' 
+    borderColor: 'rgba(232,214,174,0.25)' 
   },
   errorButtonText: { 
-    color: '#C5B493', 
+    color: '#C9AE78', 
     fontSize: 15, 
     fontWeight: '600' 
   },

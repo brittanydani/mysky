@@ -24,7 +24,7 @@ const PALETTE = {
   rose: '#D4A3B3',
   amethyst: '#9D76C1',
   silverBlue: '#8BC4E8',
-  text: '#FDFBF7',
+  text: '#F8FAFC',
   textMuted: 'rgba(255,255,255,0.5)',
   glassBorder: 'rgba(255,255,255,0.06)',
   surface: 'rgba(30, 45, 71, 0.5)',
@@ -100,7 +100,7 @@ export default function MockJournalScreen({ width, height }: Props) {
             />
             <BlurMask blur={4} style="solid" />
           </Circle>
-          <Circle cx={portalCenter} cy={portalCenter} r={portalSize * 0.18} color="#07090F" />
+          <Circle cx={portalCenter} cy={portalCenter} r={portalSize * 0.18} color="#020817" />
           <Circle cx={portalCenter} cy={portalCenter} r={portalSize * 0.1} color={PALETTE.amethyst} opacity={0.15}>
             <BlurMask blur={10} style="normal" />
           </Circle>
@@ -197,7 +197,7 @@ const entryStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     paddingHorizontal: 16,
     paddingTop: 20,
   },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   fabIcon: {
-    color: '#1A1A1A',
+    color: '#0B1220',
     fontSize: 28,
     fontWeight: '300',
     marginTop: -2,

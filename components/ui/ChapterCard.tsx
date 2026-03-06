@@ -8,7 +8,7 @@ import { applyStoryLabels } from '../../constants/storyLabels';
 
 // Mappings for Archetypal Forces to their corresponding aura colors
 const FORCE_COLORS: Record<string, string> = {
-  'Core vitality': '#C5B493',       // Champagne Gold (Sun)
+  'Core vitality': '#C9AE78',       // Champagne Gold (Sun)
   'Emotional body': '#8BC4E8',      // Silver-Blue (Moon)
   'Activating force': '#CD7F5D',    // Copper (Mars)
   'Relational force': '#F4C2C2',    // Soft Pink (Venus)
@@ -36,10 +36,10 @@ interface ChapterCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -85,7 +85,7 @@ function ChapterCard({
         colors={
           isLocked
             ? ['rgba(25, 30, 45, 0.4)', 'rgba(15, 20, 30, 0.6)'] // Deeper cool for locked
-            : ['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']  // Frosted for unlocked
+            : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']  // Frosted for unlocked
         }
         style={styles.gradient}
       >
@@ -193,12 +193,12 @@ const styles = StyleSheet.create({
   lockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(197, 180, 147, 0.15)',
+    backgroundColor: 'rgba(232, 214, 174, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)',
+    borderColor: 'rgba(232,214,174,0.18)',
   },
   lockBadgeText: {
     fontSize: 10,

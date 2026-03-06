@@ -414,9 +414,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
   premiumColumn: {
-    backgroundColor: 'rgba(197, 180, 147, 0.08)',
+    backgroundColor: 'rgba(232,214,174,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)',
+    borderColor: 'rgba(232,214,174,0.18)',
   },
   comparisonHeader: {
     fontSize: 14,

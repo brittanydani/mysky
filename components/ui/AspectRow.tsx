@@ -26,7 +26,7 @@ interface AspectRowProps {
 // Cinematic jewel-tone palette with gradient maps for 3D nodes
 const CATEGORY_CONFIG: Record<AspectCategory, { color: string; gradient: readonly [string, string]; label: string }> = {
   connection: { color: '#D4A3B3', gradient: ['#F2D4DF', '#A86C82'], label: 'Harmony' },
-  chemistry:  { color: '#C5B493', gradient: ['#FFF0B3', '#9A7B1C'], label: 'Chemistry' },
+  chemistry:  { color: '#C9AE78', gradient: ['#FFF0B3', '#9A7B1C'], label: 'Chemistry' },
   growth:     { color: '#8BC4E8', gradient: ['#BEE0F5', '#4A87A8'], label: 'Growth' },
   challenge:  { color: '#C87878', gradient: ['#E8A9A9', '#8A3A3A'], label: 'Challenge' }, // Fixed label
 };
@@ -64,7 +64,7 @@ export default function AspectRow({
       {/* ── Glassmorphic Content Card ── */}
       <View style={styles.cardContainer}>
         <LinearGradient
-          colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.cardGlow}
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontSize: 18,
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     marginBottom: 6,
     letterSpacing: 0.2,
   },
@@ -210,10 +210,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   strongBadge: {
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
-    borderColor: 'rgba(197, 180, 147, 0.25)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
+    borderColor: 'rgba(232,214,174,0.18)',
   },
   strongBadgeText: {
-    color: '#C5B493', // Gold
+    color: '#C9AE78', // Gold
   },
 });

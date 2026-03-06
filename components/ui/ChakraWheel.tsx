@@ -44,22 +44,22 @@ export const CHAKRA_COLORS: Record<string, { core: string; glow: string; deep: s
   'Third Eye':    { core: '#6A7391', glow: '#8BC4E8', deep: '#2C365E' }, // Indigo/Silver
   Throat:         { core: '#5C89A6', glow: '#BEE0F5', deep: '#26466D' }, // Sapphire
   Heart:          { core: '#6EBF8B', glow: '#A8E6B6', deep: '#2A5C3D' }, // Emerald
-  'Solar Plexus': { core: '#C5B493', glow: '#FFF4D4', deep: '#8B6508' }, // Champagne Gold
+  'Solar Plexus': { core: '#C9AE78', glow: '#FFF4D6', deep: '#6B532E' }, // Champagne Gold
   Sacral:         { core: '#CD7F5D', glow: '#E8A98C', deep: '#6B3A26' }, // Copper
   Root:           { core: '#C87878', glow: '#E8A9A9', deep: '#6A2B2B' }, // Garnet
 };
 
 // Elegant Champagne Gold Base
 export const GOLD = {
-  main: 'rgba(197, 180, 147, 0.4)',
-  highlight: '#C5B493',
-  glow: 'rgba(197, 180, 147, 0.8)',
-  dark: '#8B6508',
-  aura: 'rgba(253, 251, 247, 0.15)',
+  main: 'rgba(232, 214, 174, 0.4)',
+  highlight: '#C9AE78',
+  glow: 'rgba(232, 214, 174, 0.8)',
+  dark: '#6B532E',
+  aura: 'rgba(240, 234, 214, 0.15)',
 };
 
 const STATE_COLORS: Record<ChakraState, string> = {
-  Flowing: '#C5B493',             // Gold
+  Flowing: '#C9AE78',             // Gold
   Sensitive: '#8BC4E8',           // Silver/Blue
   'Grounding Needed': '#CD7F5D',  // Copper
   Quiet: 'rgba(255,255,255,0.3)', // Frosted Glass
@@ -200,7 +200,7 @@ export default function ChakraWheel({
 
         {/* Dust Particles */}
         {cosmicDust.map((d, i) => (
-          <Circle key={`dust-${i}`} cx={d.x} cy={d.y} r={d.r} color="#FDFBF7" opacity={d.o} />
+          <Circle key={`dust-${i}`} cx={d.x} cy={d.y} r={d.r} color="#F8FAFC" opacity={d.o} />
         ))}
 
         {/* Animated Center Halo (Real-Time Skia Glow) */}
@@ -265,7 +265,7 @@ export default function ChakraWheel({
 export function ChakraLegend() {
   const states: ChakraState[] = ['Flowing', 'Sensitive', 'Grounding Needed', 'Quiet'];
   const dotColors: Record<ChakraState, string> = {
-    Flowing: '#C5B493',             // Gold
+    Flowing: '#C9AE78',             // Gold
     Sensitive: '#8BC4E8',           // Silver/Blue
     'Grounding Needed': '#CD7F5D',  // Copper
     Quiet: 'rgba(255,255,255,0.3)', // Frosted
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   centerName: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1.5,

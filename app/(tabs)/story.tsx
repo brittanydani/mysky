@@ -23,18 +23,18 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
 const FORCE_COLORS_MAP: Record<string, string> = {
-  'Sun': '#C5B493',
+  'Sun': '#C9AE78',
   'Moon': '#8BC4E8',
   'Mars': '#CD7F5D',
   'Venus': '#F4C2C2',
@@ -48,7 +48,7 @@ const FORCE_COLORS_MAP: Record<string, string> = {
   'Taurus': '#6EBF8B',
   'Gemini': '#FFEA70',
   'Cancer': '#8BC4E8',
-  'Leo': '#C5B493',
+  'Leo': '#C9AE78',
   'Virgo': '#A9A9A9',
   'Libra': '#F4C2C2',
   'Scorpio': '#9D76C1',
@@ -217,7 +217,7 @@ export default function StoryScreen() {
                 accessibilityLabel="Export chart as PDF"
               >
                 <LinearGradient
-                  colors={['rgba(197, 180, 147, 0.25)', 'rgba(197, 180, 147, 0.1)']}
+                  colors={['rgba(232,214,174,0.18)', 'rgba(232, 214, 174, 0.1)']}
                   style={styles.exportBtnGradient}
                 >
                   {isExporting ? (
@@ -244,7 +244,7 @@ export default function StoryScreen() {
           {/* Chapters */}
           {chapters.length === 0 ? (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
-              <LinearGradient colors={['rgba(35, 40, 55, 0.5)', 'rgba(20, 24, 34, 0.8)']} style={styles.emptyCard}>
+              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
                 <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyTitle}>Your architecture awaits</Text>
                 <Text style={styles.emptySubtitle}>
@@ -308,7 +308,7 @@ export default function StoryScreen() {
                 accessibilityLabel="Unlock all chapters"
               >
                 <LinearGradient
-                  colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.8)']}
+                  colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']}
                   style={styles.upsellGradient}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -338,7 +338,7 @@ export default function StoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderColor: 'rgba(232,214,174,0.25)',
   },
   exportButtonText: {
     fontSize: 14,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)',
+    borderColor: 'rgba(232,214,174,0.18)',
     marginTop: 16,
   },
   upsellTitle: {
@@ -447,12 +447,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyButton: {
-    backgroundColor: 'rgba(197, 180, 147, 0.15)',
+    backgroundColor: 'rgba(232, 214, 174, 0.15)',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderColor: 'rgba(232,214,174,0.25)',
   },
   emptyButtonText: {
     color: PALETTE.gold,

@@ -25,14 +25,14 @@ const PALETTE = {
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',
   rose: '#D4A3B3',
-  text: '#FDFBF7',
+  text: '#F8FAFC',
   textMuted: 'rgba(255,255,255,0.5)',
   glassBorder: 'rgba(255,255,255,0.06)',
   surface: 'rgba(30, 45, 71, 0.5)',
 };
 
 const ATMOSPHERE_COLORS = [
-  { name: 'Golden Dusk', colors: ['#FFF4D6', '#E9D9B8', '#C5B493', '#9A8661', '#6E5E40'] },
+  { name: 'Golden Dusk', colors: ['#FFF4D6', '#E9D9B8', '#C9AE78', '#9B7A46', '#6B532E'] },
   { name: 'Ocean Calm', colors: ['#8BC4E8', '#243B6B', '#1B2A4A'] },
   { name: 'Forest Deep', colors: ['#6EBF8B', '#2E7A68', '#1A4A3A'] },
   { name: 'Amethyst', colors: ['#9D76C1', '#4A3B6B', '#3D2952'] },
@@ -141,7 +141,7 @@ export default function MockPersonalizeScreen({ width, height }: Props) {
         <View style={styles.themeRow}>
           {['Nebula', 'Minimal', 'Aurora'].map((theme, i) => (
             <View key={theme} style={[styles.themeOption, i === 0 && styles.themeActive]}>
-              <View style={[styles.themePreview, { backgroundColor: i === 0 ? '#1A2740' : '#0D1421' }]}>
+              <View style={[styles.themePreview, { backgroundColor: i === 0 ? '#0E1830' : '#020817' }]}>
                 <Canvas style={{ width: 48, height: 48 }}>
                   <Circle cx={24} cy={24} r={12} color={ATMOSPHERE_COLORS[i].colors[0]} opacity={0.4}>
                     <BlurMask blur={8} style="normal" />
@@ -214,7 +214,7 @@ const toggleStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     paddingHorizontal: 16,
     paddingTop: 20,
   },

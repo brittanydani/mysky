@@ -21,10 +21,10 @@ import { logger } from '../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -149,7 +149,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
               {/* Privacy Status Grid */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>System Integrity</Text>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   {[
                     { label: 'Architecture', val: 'Local-First', icon: 'server-outline', color: PALETTE.silverBlue },
                     { label: 'Encryption', val: 'AES-256-GCM', icon: 'lock-closed-outline', color: PALETTE.silverBlue },
@@ -169,7 +169,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
               {/* Consent Status */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Consent Record</Text>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
                     <View style={styles.rowLead}>
                       <Ionicons name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
@@ -271,7 +271,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   headerTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },

@@ -16,11 +16,11 @@ import { parseLocalDate } from '../../utils/dateUtils';
 
 /* ── Cinematic Palette ── */
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
 };
 

@@ -1,62 +1,83 @@
 import React, { memo, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { Canvas, Circle, Group, RadialGradient, Rect, vec, Blur, BlurMask } from '@shopify/react-native-skia';
+import {
+  Canvas,
+  Circle,
+  Group,
+  LinearGradient as SkiaLinearGradient,
+  Rect,
+  vec,
+} from '@shopify/react-native-skia';
 import {
   useSharedValue,
   useDerivedValue,
   useFrameCallback,
 } from 'react-native-reanimated';
+import { MYSTIC } from '../../constants/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-// Three layers of stars for a parallax depth effect
-const LAYER_CONFIG = [
-  { count: 60, size: [0.4, 0.8], alpha: [0.05, 0.15], speed: 1.2 }, // Distance
-  { count: 50, size: [0.8, 1.4], alpha: [0.15, 0.30], speed: 1.8 }, // Mid-ground
-  { count: 20, size: [1.4, 2.2], alpha: [0.30, 0.50], speed: 2.4 }, // Foreground
-];
+// ── Star field: ~50 total stars, ~10 twinkle ──────
+const STATIC_COUNT = 40;
+const TWINKLE_COUNT = 10;
 
-type Star = { x: number; y: number; r: number; a: number; phase: number; layerSpeed: number };
+interface Star {
+  x: number;
+  y: number;
+  r: number;
+  baseAlpha: number;
+}
 
-function makeStars(): Star[] {
+interface TwinkleStar extends Star {
+  phase: number;
+  speed: number;
+}
+
+function makeStaticStars(): Star[] {
   const stars: Star[] = [];
-  LAYER_CONFIG.forEach((layer) => {
-    for (let i = 0; i < layer.count; i++) {
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: layer.size[0] + Math.random() * (layer.size[1] - layer.size[0]),
-        a: layer.alpha[0] + Math.random() * (layer.alpha[1] - layer.alpha[0]),
-        phase: Math.random() * Math.PI * 2,
-        layerSpeed: layer.speed,
-      });
-    }
-  });
+  for (let i = 0; i < STATIC_COUNT; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 0.4 + Math.random() * 1.0,
+      baseAlpha: 0.25 + Math.random() * 0.55,
+    });
+  }
   return stars;
 }
 
-// Individual star component using Skia-driven animation (no React re-renders)
-const CosmicStar = memo(({ star, time }: { star: Star; time: any }) => {
+function makeTwinkleStars(): TwinkleStar[] {
+  const stars: TwinkleStar[] = [];
+  for (let i = 0; i < TWINKLE_COUNT; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 0.6 + Math.random() * 1.2,
+      baseAlpha: 0.5 + Math.random() * 0.45,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.6 + Math.random() * 1.2,
+    });
+  }
+  return stars;
+}
+
+// Twinkling star — driven by shared value, zero React re-renders
+const TwinklingStarComp = memo(({ star, time }: { star: TwinkleStar; time: any }) => {
   const opacity = useDerivedValue(() => {
-    const twinkle = 0.8 + 0.2 * Math.sin((time.value / 1000) * star.layerSpeed + star.phase);
-    return Math.min(1, star.a * twinkle);
+    const t = time.value / 1000;
+    const pulse = 0.55 + 0.45 * Math.sin(t * star.speed + star.phase);
+    return star.baseAlpha * pulse;
   });
 
   return (
-    <Circle
-      cx={star.x}
-      cy={star.y}
-      r={star.r}
-      color="#FDFBF7"
-      opacity={opacity}
-    />
+    <Circle cx={star.x} cy={star.y} r={star.r} color={MYSTIC.star} opacity={opacity} />
   );
 });
 
 function CosmicBackground() {
-  const stars = useMemo(() => makeStars(), []);
+  const staticStars = useMemo(() => makeStaticStars(), []);
+  const twinkleStars = useMemo(() => makeTwinkleStars(), []);
 
-  // High-performance frame loop — updates a shared value, no React state
   const time = useSharedValue(0);
   useFrameCallback((frameInfo) => {
     if (frameInfo.timeSinceFirstFrame !== undefined) {
@@ -64,59 +85,46 @@ function CosmicBackground() {
     }
   });
 
-  const center = vec(W / 2, H / 2);
-  const nebulaCenter = vec(W * 0.7, H * 0.2); // Top right offset for visual interest
-  const radius = Math.max(W, H);
-
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Canvas style={StyleSheet.absoluteFill}>
-        {/* Base Obsidian Layer */}
-        <Rect x={0} y={0} width={W} height={H} color="#05070A" />
-
-        {/* Deep Space Radial Depth */}
+        {/* Dark navy-black gradient base */}
         <Rect x={0} y={0} width={W} height={H}>
-          <RadialGradient
-            c={center}
-            r={radius}
-            colors={["#0D1526", "#070B12", "#020305"]}
-            positions={[0, 0.5, 1]}
+          <SkiaLinearGradient
+            start={vec(0, 0)}
+            end={vec(0, H)}
+            colors={[MYSTIC.bgTop, MYSTIC.bgBottom]}
           />
         </Rect>
 
-        {/* Primary Nebula (Amethyst/Midnight) */}
-        <Rect x={0} y={0} width={W} height={H}>
-          <RadialGradient
-            c={nebulaCenter}
-            r={radius * 0.8}
-            colors={["rgba(100, 70, 180, 0.12)", "rgba(50, 60, 120, 0.04)", "transparent"]}
-          />
-          <Blur blur={40} />
-        </Rect>
-
-        {/* Secondary Dust Cloud (Copper/Gold Tint) */}
-        <Rect x={0} y={0} width={W} height={H}>
-          <RadialGradient
-            c={vec(W * 0.2, H * 0.8)}
-            r={radius * 0.6}
-            colors={["rgba(197, 180, 147, 0.05)", "rgba(100, 80, 40, 0.02)", "transparent"]}
-          />
-        </Rect>
-
-        {/* Twinkling Stars with Multilayer Depth — driven by shared value, zero re-renders */}
+        {/* Static stars — constant brightness */}
         <Group>
-          {stars.map((s, i) => (
-            <CosmicStar key={`cosmic-star-${i}`} star={s} time={time} />
+          {staticStars.map((s, i) => (
+            <Circle
+              key={`s-${i}`}
+              cx={s.x}
+              cy={s.y}
+              r={s.r}
+              color={MYSTIC.starDim}
+              opacity={s.baseAlpha}
+            />
           ))}
         </Group>
 
-        {/* Final Cinematic Vignette */}
+        {/* Twinkling stars — subtle animated opacity */}
+        <Group>
+          {twinkleStars.map((s, i) => (
+            <TwinklingStarComp key={`t-${i}`} star={s} time={time} />
+          ))}
+        </Group>
+
+        {/* Soft bottom vignette */}
         <Rect x={0} y={0} width={W} height={H}>
-          <RadialGradient
-            c={center}
-            r={radius * 1.1}
-            colors={["transparent", "transparent", "rgba(0,0,0,0.8)"]}
-            positions={[0, 0.4, 1]}
+          <SkiaLinearGradient
+            start={vec(0, 0)}
+            end={vec(0, H)}
+            colors={['transparent', 'transparent', 'rgba(0,0,0,0.35)']}
+            positions={[0, 0.6, 1]}
           />
         </Rect>
       </Canvas>
@@ -125,3 +133,4 @@ function CosmicBackground() {
 }
 
 export default memo(CosmicBackground);
+

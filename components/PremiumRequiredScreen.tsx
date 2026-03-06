@@ -13,9 +13,9 @@ interface PremiumRequiredScreenProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -60,7 +60,7 @@ export default function PremiumRequiredScreen({
       {/* Glassmorphic Perks Card */}
       <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.perksCard}>
         <LinearGradient 
-          colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} 
+          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} 
           style={styles.perksGradient}
         >
           {PREVIEW_PERKS.map((perk, i) => (
@@ -86,13 +86,13 @@ export default function PremiumRequiredScreen({
           accessibilityRole="button"
         >
           <LinearGradient
-            colors={['#FFF4D4', '#C5B493', '#8B6508']}
+            colors={['#FFF4D6', '#C9AE78', '#6B532E']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.ctaGradient}
           >
             <Text style={styles.ctaText}>View Subscription Plans</Text>
-            <Ionicons name="arrow-forward" size={18} color="#1A1A1A" />
+            <Ionicons name="arrow-forward" size={18} color="#0B1220" />
           </LinearGradient>
         </Pressable>
 
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     padding: 24,
   },
   heroSection: {
@@ -137,9 +137,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 24,
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.25)',
+    borderColor: 'rgba(232,214,174,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   ctaText: {
-    color: '#1A1A1A',
+    color: '#020817',
     fontWeight: '700',
     fontSize: 16,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),

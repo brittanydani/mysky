@@ -30,12 +30,12 @@ const PAGE_SIZE = 30;
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -314,7 +314,7 @@ export default function JournalScreen() {
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
                 </View>
               </View>
-              <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.lockBox}>
+              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.lockBox}>
                 <Ionicons name="trending-up" size={36} color={PALETTE.gold} style={{ marginBottom: 8 }} />
                 <Text style={styles.lockTitle}>Your trends are ready</Text>
                 <Text style={styles.lockSubtitle}>See how your mood, energy, and stress shift across the week</Text>
@@ -333,7 +333,7 @@ export default function JournalScreen() {
             const isTransit = insight.type === 'transit_correlation';
             const colors = isTransit 
               ? ['rgba(157, 118, 193, 0.15)', 'rgba(74, 53, 89, 0.6)'] // Amethyst tone
-              : ['rgba(197, 180, 147, 0.15)', 'rgba(122, 92, 19, 0.6)']; // Gold tone
+              : ['rgba(232, 214, 174, 0.15)', 'rgba(122, 92, 19, 0.6)']; // Gold tone
 
             return (
               <LinearGradient key={`${insight.title}-${idx}`} colors={colors as any} style={styles.insightCard}>
@@ -355,7 +355,7 @@ export default function JournalScreen() {
       {!isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-            <LinearGradient colors={['rgba(197, 180, 147, 0.12)', 'rgba(20, 24, 34, 0.8)']} style={[styles.insightCard, { borderColor: 'rgba(197, 180, 147, 0.25)' }]}>
+            <LinearGradient colors={['rgba(232, 214, 174, 0.12)', 'rgba(2,8,23,0.60)']} style={[styles.insightCard, { borderColor: 'rgba(232,214,174,0.18)' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Ionicons name="analytics" size={18} color={PALETTE.gold} />
                 <Text style={styles.insightTitle}>Pattern Insights</Text>
@@ -410,7 +410,7 @@ export default function JournalScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.emptyCard}>
+        <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
           <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>Start Your Journey</Text>
           <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
@@ -515,8 +515,8 @@ export default function JournalScreen() {
             style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}
           >
             <Pressable style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]} onPress={() => void handleAddEntry()} accessibilityRole="button" accessibilityLabel="Add new journal entry">
-              <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.fabGradient}>
-                <Ionicons name="add" size={28} color="#1A1A1A" />
+              <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.fabGradient}>
+                <Ionicons name="add" size={28} color="#0B1220" />
               </LinearGradient>
             </Pressable>
           </Animated.View>
@@ -534,7 +534,7 @@ export default function JournalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
 
   header: { paddingVertical: 16, marginBottom: 8 },
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(232, 214, 174, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   premiumBadgeText: { fontSize: 10, fontWeight: '700', color: PALETTE.gold },
 
   lockBox: {
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   insightTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, flex: 1 },
   confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.08)', marginLeft: 12 },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
-  confidenceSuggested: { backgroundColor: 'rgba(197, 180, 147, 0.15)' },
+  confidenceSuggested: { backgroundColor: 'rgba(232, 214, 174, 0.15)' },
   confidenceText: { fontSize: 10, color: PALETTE.textMain, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
   insightDescription: { fontSize: 15, color: theme.textSecondary, lineHeight: 22, marginBottom: 10 },
   insightEvidence: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic', marginBottom: 8 },
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
 
   fabContainer: { position: 'absolute', right: 20, zIndex: 1000 },
-  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', shadowColor: '#C5B493', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
+  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', shadowColor: '#C9AE78', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
   fabPressed: { opacity: 0.9, transform: [{ scale: 0.95 }] },
   fabGradient: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
 });

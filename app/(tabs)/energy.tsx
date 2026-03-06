@@ -192,7 +192,7 @@ export default function EnergyScreen() {
             showsVerticalScrollIndicator={false}
           >
             <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-              <LinearGradient colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']} style={[styles.card, styles.cardPad]}>
+              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
                 <Ionicons name="sparkles" size={32} color={theme.primary} style={{ marginBottom: 12 }} />
                 <Text style={styles.heroToneText}>Energy needs your birth info</Text>
                 <Text style={[styles.body, { marginTop: 8 }]}>
@@ -247,7 +247,7 @@ export default function EnergyScreen() {
           {/* ═══ S1 — ENERGY SNAPSHOT ═══ */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
             <LinearGradient
-              colors={['rgba(30,45,71,0.65)', 'rgba(26,39,64,0.45)']}
+              colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
               style={[styles.card, { paddingHorizontal: 18, paddingVertical: 14 }]}
             >
               <View style={styles.toneBadge}>
@@ -335,7 +335,7 @@ export default function EnergyScreen() {
                 )}
               </>
             ) : (
-              <LinearGradient colors={['rgba(197, 180, 147,0.10)', 'rgba(197, 180, 147,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(197, 180, 147,0.2)' }]}>
+              <LinearGradient colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(232,214,174,0.18)' }]}>
                 <View style={styles.lockBanner}>
                   <Ionicons name="sparkles" size={14} color={theme.primary} />
                   <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
@@ -372,8 +372,8 @@ export default function EnergyScreen() {
                 >
                   <LinearGradient
                     colors={isLocked
-                      ? ['rgba(20,30,46,0.5)', 'rgba(13,20,33,0.5)']
-                      : ['rgba(30,45,71,0.60)', 'rgba(26,39,64,0.40)']
+                      ? ['rgba(10, 18, 36,0.5)', 'rgba(13,20,33,0.5)']
+                      : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']
                     }
                     style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
                   >
@@ -419,7 +419,7 @@ export default function EnergyScreen() {
           {/* ═══ S5 — ENERGY GUIDANCE ═══ */}
           <SectionHeader icon="compass-outline" title="Energy Guidance" delay={400} />
           <Animated.View entering={FadeInDown.delay(420).duration(600)}>
-            <LinearGradient colors={['rgba(30,45,71,0.60)', 'rgba(26,39,64,0.40)']} style={[styles.card, styles.cardPad]}>
+            <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
               {isPremium ? (
                 <>
                   <GuidanceBlock icon="arrow-up-outline" label="Lean into" text={snapshot.guidance.leanInto} context={snapshot.guidance.leanIntoContext} color={theme.energy} />
@@ -444,7 +444,7 @@ export default function EnergyScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Unlock full energy guidance"
                   >
-                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'rgba(197, 180, 147,0.08)', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
+                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'rgba(232, 214, 174,0.08)', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
                       <Ionicons name="sparkles" size={14} color={theme.primary} />
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.lockText, { fontWeight: '600' }]}>Full guidance includes:</Text>
@@ -494,7 +494,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
   if (resolvedRole === 'background') {
     return (
       <LinearGradient
-        colors={['rgba(25,38,58,0.40)', 'rgba(20,32,50,0.25)']}
+        colors={['rgba(14, 24, 48,0.40)', 'rgba(10, 18, 36,0.25)']}
         style={[styles.card, { padding: 14, marginBottom: 6 }]}
       >
         <View style={styles.chakraHeader}>
@@ -515,7 +515,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
   if (resolvedRole === 'secondary') {
     return (
       <LinearGradient
-        colors={['rgba(30,45,71,0.50)', 'rgba(26,39,64,0.30)']}
+        colors={['rgba(14, 24, 48,0.50)', 'rgba(10, 18, 36,0.30)']}
         style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
       >
         <View style={styles.chakraHeader}>
@@ -547,7 +547,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 
   return (
     <LinearGradient
-      colors={['rgba(40,55,85,0.75)', 'rgba(30,45,71,0.55)']}
+      colors={['rgba(18, 32, 64,0.75)', 'rgba(14, 24, 48,0.55)']}
       style={[styles.card, styles.cardPad, { marginBottom: 10 }]}
     >
       <Text style={styles.focusRoleLabel}>Primary Focus Today</Text>
@@ -758,9 +758,9 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(197, 180, 147,0.12)',
+    backgroundColor: 'rgba(232, 214, 174,0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147,0.22)',
+    borderColor: 'rgba(232, 214, 174,0.22)',
     marginTop: 10,
   },
   primaryBtnText: {
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147,0.25)',
+    borderColor: 'rgba(232,214,174,0.18)',
   },
   wheelTooltipText: {
     color: theme.textPrimary,
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(197, 180, 147,0.10)',
+    backgroundColor: 'rgba(232,214,174,0.08)',
   },
   domainName: {
     color: theme.textPrimary,

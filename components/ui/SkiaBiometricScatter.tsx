@@ -33,7 +33,7 @@ const PALETTE = {
   axis: 'rgba(255, 255, 255, 0.15)',
   grid: 'rgba(255, 255, 255, 0.05)',
   point: '#6EBF8B', // Emerald
-  highlight: '#C5B493', // Gold
+  highlight: '#C9AE78', // Gold
   text: 'rgba(255, 255, 255, 0.6)',
   glow: '#6EBF8B',
 };
@@ -138,7 +138,7 @@ export default function SkiaBiometricScatter({
                 <Circle cx={cx} cy={cy} r={4.5} color={PALETTE.point}>
                   <BlurMask blur={3} style="outer" />
                 </Circle>
-                <Circle cx={cx} cy={cy} r={2} color="#FDFBF7" />
+                <Circle cx={cx} cy={cy} r={2} color="#F8FAFC" />
               </Group>
             );
           })}
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   header: { marginBottom: 12 },
   title: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 18,
     fontWeight: '700',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
@@ -210,9 +210,9 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(197, 180, 147, 0.08)',
+    backgroundColor: 'rgba(232,214,174,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.15)',
+    borderColor: 'rgba(232, 214, 174, 0.15)',
   },
   insightText: {
     color: 'rgba(255,255,255,0.8)',

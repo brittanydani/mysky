@@ -23,7 +23,7 @@ const PALETTE = {
   gold: '#D8C39A',
   energy: '#6FB3D3',
   stress: '#E07B7B',
-  text: '#FDFBF7',
+  text: '#F8FAFC',
   textMuted: 'rgba(255,255,255,0.5)',
   glassBorder: 'rgba(255,255,255,0.06)',
   surface: 'rgba(30, 45, 71, 0.5)',
@@ -213,7 +213,7 @@ const sliderStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     paddingHorizontal: 16,
     paddingTop: 20,
   },
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    color: '#FDFBF7',
+    color: '#F8FAFC',
     fontSize: 20,
     fontWeight: '700',
     fontFamily: 'Georgia',
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardTitle: {
-    color: '#FDFBF7',
+    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: '600',
     fontFamily: 'Georgia',
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveText: {
-    color: '#1A1A1A',
+    color: '#0B1220',
     fontSize: 13,
     fontWeight: '700',
   },

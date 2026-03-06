@@ -16,9 +16,9 @@ interface NeedsComparisonProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -35,11 +35,11 @@ export default function NeedsComparison({
         
         {/* Person 1 - Gold Profile */}
         <LinearGradient
-          colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
           style={[styles.column, { borderColor: `${PALETTE.gold}20` }]}
         >
           <View style={styles.nameRow}>
-            <View style={[styles.avatar, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
+            <View style={[styles.avatar, { backgroundColor: 'rgba(232, 214, 174, 0.15)' }]}>
               <Ionicons name="person" size={12} color={PALETTE.gold} />
             </View>
             <Text style={[styles.name, { color: PALETTE.gold }]} numberOfLines={1}>{person1Name}</Text>
@@ -65,7 +65,7 @@ export default function NeedsComparison({
 
         {/* Person 2 - Silver/Blue Profile */}
         <LinearGradient
-          colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
           style={[styles.column, { borderColor: `${PALETTE.silverBlue}20` }]}
         >
           <View style={styles.nameRow}>

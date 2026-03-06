@@ -172,7 +172,7 @@ export const SkiaChakraNode = ({ name, color, stateColor, intensity, size, clock
         <LinearGradient
           start={specularPos}
           end={vec(size, size)}
-          colors={['#FFFFFF', color.glow, color.core, color.deep, '#07090F']}
+          colors={['#FFFFFF', color.glow, color.core, color.deep, '#020817']}
           positions={[0, 0.2, 0.5, 0.85, 1]}
         />
       </Circle>

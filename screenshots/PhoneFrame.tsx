@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    backgroundColor: '#0D1421',
+    backgroundColor: '#020817',
     overflow: 'hidden',
     alignItems: 'center',
   },

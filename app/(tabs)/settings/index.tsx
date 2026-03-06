@@ -453,8 +453,8 @@ export default function SettingsScreen() {
                 accessibilityLabel="View Personal Blueprint"
               >
                 <LinearGradient
-                  colors={['rgba(197, 180, 147, 0.12)', 'rgba(197, 180, 147, 0.02)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.25)', height: 110, justifyContent: 'center', alignItems: 'center' }]}
+                  colors={['rgba(232, 214, 174, 0.12)', 'rgba(232, 214, 174, 0.02)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', height: 110, justifyContent: 'center', alignItems: 'center' }]}
                 >
                   <Ionicons name="planet-outline" size={28} color={theme.primary} style={{ marginBottom: 8 }} />
                   <Text style={[styles.settingTitle, { fontSize: 16, textAlign: 'center' }]}>Personal Blueprint</Text>
@@ -689,7 +689,7 @@ export default function SettingsScreen() {
             {showFaq && (
               <View style={styles.settingCard}>
                 <LinearGradient
-                  colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']}
+                  colors={['rgba(14, 24, 48, 0.6)', 'rgba(10, 18, 36, 0.4)']}
                   style={styles.glossaryGradient}
                 >
                   {FAQ.map((item, index) => (
@@ -820,8 +820,8 @@ export default function SettingsScreen() {
                 accessibilityLabel="Learn about premium features"
               >
                 <LinearGradient
-                  colors={['rgba(197, 180, 147, 0.12)', 'rgba(197, 180, 147, 0.04)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' }]}
+                  colors={['rgba(232, 214, 174, 0.12)', 'rgba(232, 214, 174, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
                 >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
@@ -867,8 +867,8 @@ export default function SettingsScreen() {
                 accessibilityLabel="Manage your subscription"
               >
                 <LinearGradient
-                  colors={['rgba(197, 180, 147, 0.12)', 'rgba(197, 180, 147, 0.04)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' }]}
+                  colors={['rgba(232, 214, 174, 0.12)', 'rgba(232, 214, 174, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
                 >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
@@ -1008,7 +1008,7 @@ const styles = StyleSheet.create({
   settingTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm, flex: 1 },
 
   premiumBadge: {
-    backgroundColor: 'rgba(197, 180, 147, 0.2)',
+    backgroundColor: 'rgba(232,214,174,0.18)',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
     borderRadius: theme.borderRadius.sm,
@@ -1025,7 +1025,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
     borderRadius: theme.borderRadius.sm,
   },
   syncButtonDisabled: { opacity: 0.6 },
@@ -1035,14 +1035,14 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderColor: 'rgba(232,214,174,0.25)',
   },
   premiumContent: { flexDirection: 'row', alignItems: 'center' },
   premiumIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(197, 180, 147, 0.2)',
+    backgroundColor: 'rgba(232,214,174,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
@@ -1069,7 +1069,7 @@ const styles = StyleSheet.create({
 
   chartSettingsSummary: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
   settingTag: {
-    backgroundColor: 'rgba(197, 180, 147, 0.15)',
+    backgroundColor: 'rgba(232, 214, 174, 0.15)',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 4,
     borderRadius: theme.borderRadius.sm,
@@ -1125,7 +1125,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
     borderRadius: theme.borderRadius.sm,
   },
   keyLossBannerButtonDestructive: {

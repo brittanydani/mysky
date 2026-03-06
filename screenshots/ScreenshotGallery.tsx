@@ -47,7 +47,7 @@ function getMockContent(slug: string, width: number, height: number) {
     case 'personalize':
       return <MockPersonalizeScreen width={width} height={height} />;
     default:
-      return <View style={{ flex: 1, backgroundColor: '#0D1421' }} />;
+      return <View style={{ flex: 1, backgroundColor: '#020817' }} />;
   }
 }
 
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   titleText: {
-    color: '#FDFBF7',
+    color: '#F8FAFC',
     fontSize: 18,
     fontWeight: '700',
     fontFamily: 'Georgia',

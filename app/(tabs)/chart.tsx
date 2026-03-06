@@ -65,7 +65,7 @@ const SIGN_LOOKUP: Record<string, { symbol: string; element: string }> = {
 const ASPECT_NATURE_COLORS: Record<string, string> = {
   Harmonious: '#6EBF8B',
   Challenging: '#E07A7A',
-  Neutral: '#C5B493',
+  Neutral: '#C9AE78',
 };
 
 // ── Multi-character planet symbols that need smaller font in aspects tab ──
@@ -618,8 +618,8 @@ export default function ChartScreen() {
                 >
                   {!overlayPerson ? (
                     <View style={[styles.personChip, styles.personChipActive]}>
-                      <Ionicons name="person" size={14} color="#C5B493" />
-                      <Text style={[styles.personChipText, { color: '#C5B493', fontWeight: '700' }]}>You</Text>
+                      <Ionicons name="person" size={14} color="#C9AE78" />
+                      <Text style={[styles.personChipText, { color: '#C9AE78', fontWeight: '700' }]}>You</Text>
                     </View>
                   ) : (
                     <View style={styles.personChip}>
@@ -644,11 +644,11 @@ export default function ChartScreen() {
                   >
                     {isActive ? (
                       <View style={[styles.personChip, styles.personChipActive]}>
-                        <Ionicons name="layers-outline" size={14} color="#C5B493" />
-                        <Text style={[styles.personChipText, { color: '#C5B493', fontWeight: '700' }]} numberOfLines={1}>
+                        <Ionicons name="layers-outline" size={14} color="#C9AE78" />
+                        <Text style={[styles.personChipText, { color: '#C9AE78', fontWeight: '700' }]} numberOfLines={1}>
                           {person.name}
                         </Text>
-                        <Text style={[styles.personChipRelation, { color: '#C5B493', opacity: 0.8 }]}>
+                        <Text style={[styles.personChipRelation, { color: '#C9AE78', opacity: 0.8 }]}>
                           {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
                         </Text>
                       </View>
@@ -673,7 +673,7 @@ export default function ChartScreen() {
                   accessibilityLabel="Add person"
                 >
                   <LinearGradient
-                    colors={['#6E5E40', '#B8A27A', '#C5B493', '#E9D9B8', '#8A7A5A']}
+                    colors={['#6B532E', '#B8A27A', '#C9AE78', '#E9D9B8', '#8A7A5A']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.addPersonChip}
@@ -688,8 +688,8 @@ export default function ChartScreen() {
               {activeOverlays.length > 0 && (
                 <View style={styles.overlayLegend}>
                   <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: '#E6D5B8' }]} />
-                    <Text style={[styles.legendPillText, { color: '#E6D5B8' }]}>Your planets</Text>
+                    <View style={[styles.legendPillDot, { backgroundColor: '#E8D6AE' }]} />
+                    <Text style={[styles.legendPillText, { color: '#E8D6AE' }]}>Your planets</Text>
                   </View>
                   {activeOverlays.map(overlay => {
                     const activeColor = overlay.theme === 'roseGold' ? '#E8C2CA' : overlay.theme === 'iceBlue' ? '#C4D2FA' : '#D1D5DB';
@@ -914,8 +914,8 @@ export default function ChartScreen() {
                     key={row.label}
                     colors={
                       idx % 2 === 0
-                        ? ['rgba(30,45,71,0.5)', 'rgba(26,39,64,0.3)']
-                        : ['rgba(26,39,64,0.4)', 'rgba(20,30,46,0.3)']
+                        ? ['rgba(14, 24, 48,0.5)', 'rgba(10, 18, 36,0.3)']
+                        : ['rgba(10, 18, 36,0.4)', 'rgba(10, 18, 36,0.3)']
                     }
                     style={styles.tableRow}
                   >
@@ -965,8 +965,8 @@ export default function ChartScreen() {
                       key={pt.label}
                       colors={
                         idx % 2 === 0
-                          ? ['rgba(30,45,71,0.5)', 'rgba(26,39,64,0.3)']
-                          : ['rgba(26,39,64,0.4)', 'rgba(20,30,46,0.3)']
+                          ? ['rgba(14, 24, 48,0.5)', 'rgba(10, 18, 36,0.3)']
+                          : ['rgba(10, 18, 36,0.4)', 'rgba(10, 18, 36,0.3)']
                       }
                       style={styles.tableRow}
                     >
@@ -1064,8 +1064,8 @@ export default function ChartScreen() {
                         key={cusp.house}
                         colors={
                           idx % 2 === 0
-                            ? ['rgba(30,45,71,0.5)', 'rgba(26,39,64,0.3)']
-                            : ['rgba(26,39,64,0.4)', 'rgba(20,30,46,0.3)']
+                            ? ['rgba(14, 24, 48,0.5)', 'rgba(10, 18, 36,0.3)']
+                            : ['rgba(10, 18, 36,0.4)', 'rgba(10, 18, 36,0.3)']
                         }
                         style={styles.tableRow}
                       >
@@ -1150,8 +1150,8 @@ export default function ChartScreen() {
                         key={`${asp.planet1.name}-${asp.type.name}-${asp.planet2.name}-${idx}`}
                         colors={
                           idx % 2 === 0
-                            ? ['rgba(30,45,71,0.5)', 'rgba(26,39,64,0.3)']
-                            : ['rgba(26,39,64,0.4)', 'rgba(20,30,46,0.3)']
+                            ? ['rgba(14, 24, 48,0.5)', 'rgba(10, 18, 36,0.3)']
+                            : ['rgba(10, 18, 36,0.4)', 'rgba(10, 18, 36,0.3)']
                         }
                         style={styles.tableRow}
                       >
@@ -1215,7 +1215,7 @@ export default function ChartScreen() {
                       <Text style={styles.legendText}>Challenging (squares, oppositions)</Text>
                     </View>
                     <View style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: '#C5B493' }]} />
+                      <View style={[styles.legendDot, { backgroundColor: '#C9AE78' }]} />
                       <Text style={styles.legendText}>Neutral (conjunctions)</Text>
                     </View>
                     <Text style={styles.legendNote}>Tighter orbs (lower numbers) = stronger influence</Text>
@@ -1227,7 +1227,7 @@ export default function ChartScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Unlock more aspects"
                     >
-                      <LinearGradient colors={['rgba(197, 180, 147,0.1)', 'rgba(197, 180, 147,0.05)']} style={styles.aspectUpsell}>
+                      <LinearGradient colors={['rgba(232, 214, 174,0.1)', 'rgba(232, 214, 174,0.05)']} style={styles.aspectUpsell}>
                         <Ionicons name="sparkles" size={16} color="#141222" />
                         <Text style={styles.aspectUpsellText}>
                           {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
@@ -1246,7 +1246,7 @@ export default function ChartScreen() {
             <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
               {/* Chart Ruler */}
               {chartPatterns.chartRuler && (
-                <LinearGradient colors={['rgba(197, 180, 147,0.15)', 'rgba(30,45,71,0.6)']} style={styles.patternCard}>
+                <LinearGradient colors={['rgba(232, 214, 174,0.15)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={[styles.patternIcon, { marginTop: -7 }]}>👑</Text>
                     <Text style={styles.patternTitle}>Chart Ruler</Text>
@@ -1270,7 +1270,7 @@ export default function ChartScreen() {
 
               {/* Part of Fortune (premium) */}
               {isPremium && partOfFortune && (
-                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Ionicons name="sunny-outline" size={20} color="#141222" style={{ marginRight: 10 }} />
                     <Text style={styles.patternTitle}>Point of Flow</Text>
@@ -1294,7 +1294,7 @@ export default function ChartScreen() {
 
               {/* Dominant Planet (free) */}
               {dominantPlanet && (
-                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>🌟</Text>
                     <Text style={styles.patternTitle}>Dominant Planet</Text>
@@ -1320,8 +1320,8 @@ export default function ChartScreen() {
               {!isPremium && (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="Unlock pattern depth">
                   <LinearGradient
-                    colors={['rgba(197, 180, 147,0.10)', 'rgba(197, 180, 147,0.03)']}
-                    style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(197, 180, 147,0.18)' }]}
+                    colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']}
+                    style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(232, 214, 174,0.18)' }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="lock-closed" size={16} color="#141222" />
@@ -1342,7 +1342,7 @@ export default function ChartScreen() {
                 chartPatterns.stelliums.map((stellium, idx) => (
                   <LinearGradient
                     key={`stellium-${idx}`}
-                    colors={['rgba(197, 180, 147,0.12)', 'rgba(30,45,71,0.7)']}
+                    colors={['rgba(232, 214, 174,0.12)', 'rgba(14, 24, 48,0.7)']}
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
@@ -1381,7 +1381,7 @@ export default function ChartScreen() {
                 chartPatterns.conjunctionClusters.map((cluster, idx) => (
                   <LinearGradient
                     key={`cluster-${idx}`}
-                    colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']}
+                    colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']}
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
@@ -1401,7 +1401,7 @@ export default function ChartScreen() {
 
               {/* Retrograde Emphasis (premium) */}
               {isPremium && chartPatterns.retrogradeEmphasis.count >= 3 && (
-                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>℞</Text>
                     <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
@@ -1417,7 +1417,7 @@ export default function ChartScreen() {
 
               {/* Element Balance (premium) */}
               {isPremium && chartPatterns.elementBalance && (
-                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>🜂</Text>
                     <Text style={styles.patternTitle}>Element Balance</Text>
@@ -1450,7 +1450,7 @@ export default function ChartScreen() {
 
               {/* Modality Balance (premium) */}
               {isPremium && chartPatterns.modalityBalance && (
-                <LinearGradient colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.6)']} style={styles.patternCard}>
+                <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>⚖</Text>
                     <Text style={styles.patternTitle}>Modality Balance</Text>
@@ -1500,8 +1500,8 @@ export default function ChartScreen() {
                 accessibilityLabel="Unlock Deeper Sky premium features"
               >
                 <LinearGradient
-                  colors={['rgba(197, 180, 147,0.12)', 'rgba(197, 180, 147,0.04)']}
-                  style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(197, 180, 147,0.2)' }]}
+                  colors={['rgba(232, 214, 174,0.12)', 'rgba(232, 214, 174,0.04)']}
+                  style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="sparkles" size={16} color="#141222" />
@@ -1526,7 +1526,7 @@ export default function ChartScreen() {
               accessibilityRole="button"
               accessibilityLabel="Chart settings"
             >
-              <LinearGradient colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']} style={styles.chartSettingsGradient}>
+              <LinearGradient colors={['rgba(14, 24, 48, 0.6)', 'rgba(10, 18, 36, 0.4)']} style={styles.chartSettingsGradient}>
                 <View style={styles.chartSettingsRow}>
                   <View style={{ flex: 1, marginRight: theme.spacing.md }}>
                     <View style={styles.chartSettingsHeader}>
@@ -1568,7 +1568,7 @@ export default function ChartScreen() {
 
             {showGlossary && (
               <View style={styles.glossaryCard}>
-                <LinearGradient colors={['rgba(30, 45, 71, 0.6)', 'rgba(26, 39, 64, 0.4)']} style={styles.glossaryGradient}>
+                <LinearGradient colors={['rgba(14, 24, 48, 0.6)', 'rgba(10, 18, 36, 0.4)']} style={styles.glossaryGradient}>
                   {GLOSSARY.map((item, index) => (
                     <Pressable
                       key={item.term}
@@ -1630,7 +1630,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(197, 180, 147,0.15)',
+    backgroundColor: 'rgba(232, 214, 174,0.15)',
   },
   goHomeText: { color: theme.primary, fontWeight: '700' },
   safeArea: { flex: 1 },
@@ -1767,7 +1767,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(197, 180, 147,0.15)',
+    borderBottomColor: 'rgba(232, 214, 174,0.15)',
   },
   pointsLabel: {
     color: theme.textMuted,
@@ -1782,12 +1782,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
-    backgroundColor: 'rgba(26,39,64,0.5)',
+    backgroundColor: 'rgba(10, 18, 36,0.5)',
     padding: 4,
     width: '100%',
   },
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
-  tabBtnActive: { backgroundColor: 'rgba(197, 180, 147,0.2)' },
+  tabBtnActive: { backgroundColor: 'rgba(232,214,174,0.18)' },
   tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
   tabTextActive: { color: theme.primary },
 
@@ -1796,7 +1796,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(197, 180, 147,0.15)',
+    borderBottomColor: 'rgba(232, 214, 174,0.15)',
     width: '100%',
   },
   th: {
@@ -1881,7 +1881,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
-    backgroundColor: 'rgba(26,39,64,0.4)',
+    backgroundColor: 'rgba(10, 18, 36,0.4)',
     alignItems: 'center',
   },
   legendTitle: {
@@ -1916,7 +1916,7 @@ const styles = StyleSheet.create({
   patternIcon: { fontSize: 20, marginRight: 10 },
   patternTitle: { color: theme.textPrimary, fontWeight: '700', fontSize: 17, textAlign: 'center' },
   patternHighlight: {
-    backgroundColor: 'rgba(197, 180, 147,0.12)',
+    backgroundColor: 'rgba(232, 214, 174,0.12)',
     borderRadius: theme.borderRadius.md,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -1949,9 +1949,9 @@ const styles = StyleSheet.create({
   },
   personChipActive: {
     backgroundColor: 'transparent',
-    borderColor: '#C5B493',
+    borderColor: '#C9AE78',
     borderWidth: 1,
-    shadowColor: '#C5B493',
+    shadowColor: '#C9AE78',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 3,
@@ -1975,7 +1975,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 4,
     borderWidth: 1,
-    borderColor: '#C5B493', /* Richer metallic contrast */
+    borderColor: '#C9AE78', /* Richer metallic contrast */
     borderStyle: 'dashed',
     shadowColor: '#E9D9B8',
     shadowOffset: { width: 0, height: 0 },
@@ -2044,7 +2044,7 @@ const styles = StyleSheet.create({
   chartSettingsTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm },
   chartSettingsDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
   chartSettingsTags: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
-  settingTag: { backgroundColor: 'rgba(197, 180, 147, 0.15)', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
+  settingTag: { backgroundColor: 'rgba(232, 214, 174, 0.15)', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
   settingTagText: { fontSize: 11, color: theme.primary, fontWeight: '500' },
 
   // ── Chart Glossary ──

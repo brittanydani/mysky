@@ -55,9 +55,9 @@ const COLORS = {
   moonlightBright: 'rgba(139, 196, 232, 0.45)',
   moonlightDim: 'rgba(74, 59, 107, 0.20)',
   /** Terminal node inner color */
-  moonCore: '#FDFBF7',
+  moonCore: '#F0EAD6',
   /** Axis text */
-  axisText: 'rgba(253, 251, 247, 0.35)',
+  axisText: 'rgba(240, 234, 214, 0.35)',
   /** Grid lines */
   gridLine: 'rgba(255, 255, 255, 0.04)',
 };
@@ -281,7 +281,7 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   emptyText: {
-    color: 'rgba(253, 251, 247, 0.4)',
+    color: 'rgba(240, 234, 214, 0.4)',
     fontSize: 13,
     fontStyle: 'italic',
     textAlign: 'center',

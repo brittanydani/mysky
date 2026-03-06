@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // Using the obsidian base color for the modal background
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
   },
   content: {
     flex: 1,

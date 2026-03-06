@@ -54,12 +54,12 @@ const { width } = Dimensions.get('window');
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -395,7 +395,7 @@ export default function HomeScreen() {
             style={styles.insightCard}
           >
             <LinearGradient
-              colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+              colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
               style={styles.insightGradient}
             >
               <View style={styles.insightHeader}>
@@ -421,7 +421,7 @@ export default function HomeScreen() {
               style={styles.weeklyCard}
             >
               <LinearGradient
-                colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
                 style={styles.weeklyGradient}
               >
                 <View style={styles.insightHeader}>
@@ -500,10 +500,10 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/story' as Href)}
               >
                 <LinearGradient
-                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                  colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
                   style={styles.quickLinkGradient}
                 >
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(232, 214, 174, 0.15)' }]}>
                     <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -518,7 +518,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/growth' as Href)}
               >
                 <LinearGradient
-                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                  colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
                   style={styles.quickLinkGradient}
                 >
                   <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(110, 191, 139, 0.15)' }]}>
@@ -536,7 +536,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/chart' as Href)}
               >
                 <LinearGradient
-                  colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']}
+                  colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
                   style={styles.quickLinkGradient}
                 >
                   <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
@@ -556,7 +556,7 @@ export default function HomeScreen() {
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                 <LinearGradient
-                  colors={[`${PALETTE.gold}15`, 'rgba(20, 24, 34, 0.8)']}
+                  colors={[`${PALETTE.gold}15`, 'rgba(2,8,23,0.60)']}
                   style={styles.premiumPreviewCard}
                 >
                   <View style={styles.premiumPreviewHeader}>
@@ -608,7 +608,7 @@ export default function HomeScreen() {
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: theme.textSecondary,
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   greeting: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 24,
     fontWeight: '700',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),

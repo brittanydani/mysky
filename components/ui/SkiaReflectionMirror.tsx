@@ -63,10 +63,10 @@ const PALETTE = {
   frostDeep: 'rgba(120, 140, 170, 0.08)',
   glass: 'rgba(15, 18, 25, 0.92)',
   border: 'rgba(255, 255, 255, 0.04)',
-  textPrompt: 'rgba(253, 251, 247, 0.85)',
+  textPrompt: 'rgba(240, 234, 214, 0.85)',
   textHint: 'rgba(255, 255, 255, 0.35)',
   breathGlow: 'rgba(110, 191, 139, 0.15)',
-  cursorLine: 'rgba(197, 180, 147, 0.5)',
+  cursorLine: 'rgba(232, 214, 174, 0.5)',
 };
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -279,13 +279,13 @@ const styles = StyleSheet.create({
   divider: {
     width: 40,
     height: 1,
-    backgroundColor: 'rgba(197, 180, 147, 0.25)',
+    backgroundColor: 'rgba(232,214,174,0.18)',
     alignSelf: 'center',
     marginBottom: 16,
   },
   textInput: {
     flex: 1,
-    color: 'rgba(253, 251, 247, 0.9)',
+    color: 'rgba(240, 234, 214, 0.9)',
     fontSize: 15,
     fontFamily: SERIF,
     lineHeight: 24,

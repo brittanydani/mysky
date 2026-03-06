@@ -59,14 +59,14 @@ const COLORS = {
   track: 'rgba(255, 255, 255, 0.04)',
   trackActive: '#8BC4E8',
   trackActiveGlow: 'rgba(139, 196, 232, 0.35)',
-  moon: '#C5B493',
-  moonGlow: 'rgba(197, 180, 147, 0.4)',
-  moonCore: '#FDFBF7',
+  moon: '#C9AE78',
+  moonGlow: 'rgba(232, 214, 174, 0.4)',
+  moonCore: '#F0EAD6',
   mist: 'rgba(139, 196, 232, 0.08)',
-  hourMark: 'rgba(253, 251, 247, 0.2)',
+  hourMark: 'rgba(240, 234, 214, 0.2)',
   hourMarkActive: 'rgba(139, 196, 232, 0.6)',
-  text: '#FDFBF7',
-  textMuted: 'rgba(253, 251, 247, 0.5)',
+  text: '#F0EAD6',
+  textMuted: 'rgba(240, 234, 214, 0.5)',
 };
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
@@ -272,7 +272,7 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
               cx={handleX + 5}
               cy={handleY - 3}
               r={HANDLE_RADIUS - 4}
-              color="#07090F"
+              color="#020817"
             />
             {/* Inner glow point */}
             <Circle cx={handleX - 4} cy={handleY + 2} r={3} color={COLORS.moonCore}>
@@ -366,7 +366,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
   },
   durationText: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 36,
     fontWeight: '800',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
@@ -384,7 +384,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
   },
   hourLabelText: {
-    color: 'rgba(253, 251, 247, 0.3)',
+    color: 'rgba(240, 234, 214, 0.3)',
     fontSize: 10,
     fontWeight: '600',
   },

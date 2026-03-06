@@ -37,13 +37,13 @@ import NatalChartWheel from '../../components/ui/NatalChartWheel';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#E6D5B8',         // Champagne gold
+  gold: '#E8D6AE',         // Champagne gold
   silverBlue: '#D1D5DB',   // Silver
   platinum: '#C3CAD6',     // Cross-aspects
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -439,7 +439,7 @@ export default function RelationshipsScreen() {
 
             {/* Summary Bar */}
             {summaryChart && (
-              <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.summaryBar}>
+              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.summaryBar}>
                 <View style={styles.summaryCol}>
                   <Text style={styles.summaryIcon}>☉ Sun</Text>
                   <Text style={styles.summarySign}>{(summaryChart as any).sun?.sign?.name ?? '—'}</Text>
@@ -483,7 +483,7 @@ export default function RelationshipsScreen() {
 
             {activeTab === 'overview' && (
               <Animated.View entering={FadeInDown.duration(400)}>
-                <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(20, 24, 34, 0.7)']} style={styles.insightCardGradient}>
+                <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <Ionicons name="heart" size={20} color={PALETTE.emerald} />
                     <Text style={styles.insightCardTitle}>Your Connection</Text>
@@ -491,7 +491,7 @@ export default function RelationshipsScreen() {
                   <Text style={styles.insightCardText}>{synastryReport.primaryConnection}</Text>
                 </LinearGradient>
 
-                <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.7)']} style={styles.insightCardGradient}>
+                <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <Ionicons name="trending-up" size={20} color={PALETTE.silverBlue} />
                     <Text style={styles.insightCardTitle}>Your Growth Edge</Text>
@@ -499,7 +499,7 @@ export default function RelationshipsScreen() {
                   <Text style={styles.insightCardText}>{synastryReport.primaryChallenge}</Text>
                 </LinearGradient>
 
-                <LinearGradient colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.7)']} style={styles.insightCardGradient}>
+                <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                     <Ionicons name="pulse" size={20} color={PALETTE.gold} />
                     <Text style={styles.insightCardTitle}>Overall Dynamic</Text>
@@ -519,7 +519,7 @@ export default function RelationshipsScreen() {
 
                 {!isPremium && (
                   <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                    <LinearGradient colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={styles.upsellGradient}>
+                    <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
                         <Text style={styles.upsellTitle}>There's more between you</Text>
@@ -544,7 +544,7 @@ export default function RelationshipsScreen() {
 
                 {!isPremium && synastryReport.aspects.length > 4 && (
                   <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                    <LinearGradient colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={styles.upsellGradient}>
+                    <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
                       <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 4} more planetary connections</Text>
                       <Text style={styles.upsellText}>Deeper aspects reveal hidden dynamics — the subtle threads that make this relationship unique.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
@@ -559,18 +559,18 @@ export default function RelationshipsScreen() {
 
             {activeTab === 'dynamics' && relationshipInsight && (
               <Animated.View entering={FadeInDown.duration(400)}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.dynamicCard}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
                   <Text style={styles.dynamicLabel}>How You Show Love</Text>
                   <Text style={styles.dynamicText}>{relationshipInsight.dynamics.howYouShowLove}</Text>
                 </LinearGradient>
 
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.dynamicCard}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
                   <Text style={styles.dynamicLabel}>How {selectedRelationship.name} Feels Safe</Text>
                   <Text style={styles.dynamicText}>{relationshipInsight.dynamics.howTheyFeelSafe}</Text>
                 </LinearGradient>
 
                 {relationshipInsight.dynamics.whereYouMisreadEachOther.length > 0 && (
-                  <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.dynamicCard}>
+                  <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
                     <Text style={styles.dynamicLabel}>Where You Might Misread Each Other</Text>
                     {relationshipInsight.dynamics.whereYouMisreadEachOther.map((item, i) => (
                       <View key={i} style={styles.bulletItem}>
@@ -581,12 +581,12 @@ export default function RelationshipsScreen() {
                   </LinearGradient>
                 )}
 
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.dynamicCard}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
                   <Text style={styles.dynamicLabel}>How to Repair After Conflict</Text>
                   <Text style={styles.dynamicText}>{relationshipInsight.dynamics.howToRepairConflict}</Text>
                 </LinearGradient>
 
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.dynamicCard}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
                   <Text style={styles.dynamicLabel}>Emotional Pacing</Text>
                   <Text style={styles.dynamicText}>{relationshipInsight.dynamics.differentEmotionalPacing}</Text>
                 </LinearGradient>
@@ -594,7 +594,7 @@ export default function RelationshipsScreen() {
                 {isPremium && comparison && (
                   <>
                     <Text style={styles.sectionHeader}>Communication Styles</Text>
-                    <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.dynamicCard}>
+                    <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
                       <Text style={styles.dynamicLabel}>Your Style</Text>
                       <Text style={styles.dynamicText}>{comparison.communicationDynamics.person1Style}</Text>
                       <Text style={[styles.dynamicLabel, { marginTop: 16 }]}>Their Style</Text>
@@ -639,7 +639,7 @@ export default function RelationshipsScreen() {
                 const preview = synastryPreviews[rel.id];
                 return (
                   <Pressable key={rel.id} onPress={() => handleSelectRelationship(rel)} onLongPress={() => handleLongPressRelationship(rel)}>
-                    <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.relationshipCardGradient}>
+                    <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.relationshipCardGradient}>
                       <View style={styles.cardHeaderRow}>
                         <View style={styles.relationshipIcon}>
                           <Ionicons name={RELATIONSHIP_ICONS[rel.relationship]} size={22} color={PALETTE.gold} />
@@ -704,7 +704,7 @@ export default function RelationshipsScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInUp.delay(300).duration(400)} style={{ marginTop: 32 }}>
-            <LinearGradient colors={['rgba(35, 40, 55, 0.3)', 'rgba(20, 24, 34, 0.6)']} style={styles.discoverSection}>
+            <LinearGradient colors={['rgba(35, 40, 55, 0.3)', 'rgba(2,8,23,0.50)']} style={styles.discoverSection}>
               <Text style={styles.discoverTitle}>What You'll Discover</Text>
               
               <View style={styles.discoverItem}>
@@ -755,7 +755,7 @@ export default function RelationshipsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
   loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15, fontStyle: 'italic' },
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
   
   relationshipCardGradient: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center' },
-  relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(197, 180, 147, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(232, 214, 174, 0.1)', justifyContent: 'center', alignItems: 'center' },
   relationshipInfo: { flex: 1, marginLeft: 16 },
   relationshipName: { fontSize: 18, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 2 },
   relationshipType: { fontSize: 13, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
   typeIconContainer: { borderRadius: 16, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder },
   typeLabel: { marginTop: 10, fontSize: 13, color: theme.textSecondary, textAlign: 'center', fontWeight: '500' },
   
-  limitIndicator: { marginTop: 20, padding: 16, backgroundColor: 'rgba(197, 180, 147, 0.1)', borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' },
+  limitIndicator: { marginTop: 20, padding: 16, backgroundColor: 'rgba(232, 214, 174, 0.1)', borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
   limitText: { fontSize: 13, color: PALETTE.gold, textAlign: 'center', fontWeight: '600' },
   
   discoverSection: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
@@ -834,10 +834,10 @@ const styles = StyleSheet.create({
   insightCardText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   sectionHeader: { fontSize: 18, color: PALETTE.textMain, marginTop: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
-  reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'rgba(197, 180, 147, 0.08)', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: PALETTE.gold },
+  reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'rgba(232,214,174,0.08)', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: PALETTE.gold },
   reminderText: { fontSize: 16, color: PALETTE.textMain, fontStyle: 'italic', lineHeight: 24, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
-  upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)', marginTop: 24 },
+  upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
   upsellTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.gold },
   upsellText: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', marginTop: 10, lineHeight: 20 },
 
@@ -847,11 +847,11 @@ const styles = StyleSheet.create({
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },
   bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: PALETTE.gold, marginTop: 8, marginRight: 12 },
   bulletText: { flex: 1, fontSize: 15, color: theme.textSecondary, lineHeight: 22 },
-  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'rgba(197, 180, 147, 0.1)', borderRadius: 16, padding: 20, marginBottom: 16 },
+  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'rgba(232, 214, 174, 0.1)', borderRadius: 16, padding: 20, marginBottom: 16 },
   tipText: { flex: 1, fontSize: 15, color: PALETTE.textMain, marginLeft: 16, lineHeight: 22 },
 
   previewSection: { marginTop: 6 },
-  previewDivider: { height: 1, backgroundColor: 'rgba(197, 180, 147, 0.15)', marginVertical: 12 },
+  previewDivider: { height: 1, backgroundColor: 'rgba(232, 214, 174, 0.15)', marginVertical: 12 },
   previewAspectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
   previewDot: { width: 6, height: 6, borderRadius: 3, marginRight: 10 },
   previewPlanets: { flex: 1, fontSize: 13, color: theme.textSecondary, fontWeight: '500' },

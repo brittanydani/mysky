@@ -54,7 +54,7 @@ export default function SkiaOrbitalButton({
   label,
   loading,
   onPress,
-  accentColor = '#C5B493',
+  accentColor = '#C9AE78',
 }: Props) {
   // ── Animation Values (Reanimated) ──
   const rotation = useSharedValue(0);
@@ -93,7 +93,7 @@ export default function SkiaOrbitalButton({
     <Pressable onPress={onPress} disabled={loading} style={styles.container}>
       <View style={styles.buttonFrame}>
         <LinearGradient
-          colors={['#FFF4D4', accentColor, '#8B6508']}
+          colors={['#FFF4D6', accentColor, '#6B532E']}
           style={styles.innerGradient}
         >
           <Text style={styles.label}>{loading ? '' : label}</Text>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   label: {
-    color: '#1A1A1A',
+    color: '#020817',
     fontSize: 17,
     fontWeight: '800',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),

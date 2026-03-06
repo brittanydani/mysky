@@ -109,25 +109,25 @@ const PLANET_SYMBOLS: Record<string, string> = {
 
 // ── User Color Palette ──
 const USER_COLORS = [
-  '#C5B493', // User0 (Owner) - Champagne Gold
+  '#C9AE78', // User0 (Owner) - Champagne Gold
   '#C8CCD4', // User1 - Silver / Platinum
   '#D4B26A', // User2 - Warm Gold
   '#D2B6A4', // User3 - Rose Gold
 ];
 
 const PLANET_COLORS: Record<string, string> = {
-  Sun: '#C5B493',
+  Sun: '#C9AE78',
   Moon: '#B8C2D0',
   Mercury: '#86BCEC',
   Venus: '#D07E9E',
   Mars: '#D07E7E',
-  Jupiter: '#C5B493',
+  Jupiter: '#C9AE78',
   Saturn: '#8484A0',
   Uranus: '#6CBEC4',
   Neptune: '#7C8CD0',
   Pluto: '#9068BC',
-  Ascendant: '#C5B493',
-  Midheaven: '#C5B493',
+  Ascendant: '#C9AE78',
+  Midheaven: '#C9AE78',
 };
 
 const PLANET_GRADIENT_INNER: Record<string, string> = {
@@ -209,10 +209,10 @@ const OVERLAY_GRADIENT_OUTER: Record<string, string> = {
 // Generates the 3D polished sphere gradient per-user
 function getPremiumGoldGradient(userIndex: number): string[] {
   const baseTints = [
-      ['#FFF4D6', '#E9D9B8', '#C5B493', '#9A8661', '#6E5E40'], // User 1 - Champagne Gold
+      ['#FFF4D6', '#E9D9B8', '#C9AE78', '#9B7A46', '#6B532E'], // User 1 - Champagne Gold
       ['#FFFFFF', '#E4E7EC', '#C8CCD4', '#8E97A3', '#5E6875'], // User 2 - Silver / Platinum
       ['#FFF2C9', '#E6C98A', '#D4B26A', '#9F7E3E', '#6B5325'], // User 3 - Warm Gold
-      ['#FFEDE3', '#E8CFC1', '#D2B6A4', '#A88E7C', '#6E5E40']  // User 4 - Rose Gold
+      ['#FFEDE3', '#E8CFC1', '#D2B6A4', '#A88E7C', '#6B532E']  // User 4 - Rose Gold
   ];
   return baseTints[userIndex % 4] || baseTints[0];
 }
@@ -563,7 +563,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           y1: p1.y,
           x2: p2.x,
           y2: p2.y,
-          color: `rgba(197,180,147,${topAlpha})`, // #C5B493 in rgb
+          color: `rgba(232, 214, 174,${topAlpha})`, // #C5B493 in rgb
           glowColor: `rgba(233,217,184,${glowAlpha})`, // #e9d9b8 in rgb
           strokeWidth: 1.0,
           dashed: typeName !== 'trine' && typeName !== 'sextile' && typeName !== 'conjunction',
@@ -621,9 +621,9 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             c={vec(CX, CY)}
             r={R_OUTER + 26}
             colors={[
-              'rgba(201,169,98,0.18)',  // champagne glow
-              'rgba(201,169,98,0.06)',
-              'rgba(201,169,98,0.00)'
+              'rgba(232, 214, 174,0.18)',  // champagne glow
+              'rgba(232, 214, 174,0.06)',
+              'rgba(232, 214, 174,0.00)'
             ]}
             positions={[0, 0.55, 1]}
           />
@@ -632,7 +632,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         {/* ── Outer Zodiac Border (Major Ring) ── */}
         <Group>
           {/* Underglow */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color="rgba(201,169,98,0.25)">
+          <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.25)">
             <BlurMask blur={4} style="normal" />
           </Circle>
           
@@ -656,7 +656,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               c={vec(CX, CY)}
               colors={[
                 '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
-                '#C5B493', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
               positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
@@ -669,7 +669,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         <Group>
           {/* 1. Outer Gold Bezel */}
           {/* Glow layer */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color="rgba(201,169,98,0.25)">
+          <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.25)">
             <BlurMask blur={3} style="normal" />
           </Circle>
           
@@ -693,7 +693,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               c={vec(CX, CY)}
               colors={[
                 '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
-                '#C5B493', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
               positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
@@ -705,7 +705,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           <Circle cx={CX} cy={CY} r={R_OUTER - 2} style="stroke" strokeWidth={0.8} opacity={0.9}>
              <SweepGradient
               c={vec(CX, CY)}
-              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C5B493', '#FFFFFF', '#3A2E1C', '#8A734D']}
+              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C9AE78', '#FFFFFF', '#3A2E1C', '#8A734D']}
               positions={[0.0, 0.15, 0.35, 0.5, 0.7, 0.85, 1.0]}
               transform={[{ rotate: -0.3 }]}
             />
@@ -740,7 +740,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                   y={tc.y + 8}
                   text={sign.symbol}
                   font={zodiac24}
-                  color="rgba(220,215,205,0.7)"
+                  color="rgba(240, 234, 214,0.7)"
                 />
               )}
             </Group>
@@ -756,7 +756,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
           const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
           const strokeW = isAngular ? 1.0 : 0.8;
-          const strokeColor = isAngular ? 'rgba(201,169,98,0.7)' : 'rgba(201,169,98,0.45)';
+          const strokeColor = isAngular ? 'rgba(232, 214, 174,0.7)' : 'rgba(232, 214, 174,0.45)';
 
           const cusps = chart.houseCusps ?? [];
           const nextHouse = cusps.find((c: HouseCusp) => (c as any).house === (((cusp as any).house % 12) + 1));
@@ -781,7 +781,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                   y={numPos.y + 3.5}
                   text={houseText}
                   font={sans9}
-                  color="rgba(220,215,205,0.7)"
+                  color="rgba(240, 234, 214,0.7)"
                 />
               )}
             </Group>
@@ -789,13 +789,13 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         })}
 
         {/* ── House ring border ── */}
-        <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.6} color="rgba(197,180,147,0.25)" opacity={0.35} />
+        <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.6} color="rgba(232, 214, 174,0.25)" opacity={0.35} />
 
         {/* ── Dotted astronomy diagram rings ── */}
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.6} color="rgba(197,180,147,0.25)" opacity={0.25}>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.6} color="rgba(232, 214, 174,0.25)" opacity={0.25}>
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.6} color="rgba(197,180,147,0.25)" opacity={0.25}>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.6} color="rgba(232, 214, 174,0.25)" opacity={0.25}>
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
 
@@ -1075,7 +1075,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                      y={textPosInner.y + 3} 
                      text="ASC" 
                      font={sans8} 
-                     color="rgba(220,215,205,0.9)" 
+                     color="rgba(240, 234, 214,0.9)" 
                    />
                 )}
               </Group>
@@ -1098,7 +1098,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                      y={textPosInner.y + 3} 
                      text="MC" 
                      font={sans8} 
-                     color="rgba(220,215,205,0.9)" 
+                     color="rgba(240, 234, 214,0.9)" 
                    />
                 )}
               </Group>
@@ -1124,7 +1124,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             c={vec(CX - 10, CY - 12)}
             r={R_INNER * 1.8}
             colors={[
-              '#1A2740',   // faint inner glow
+              '#0E1830',   // faint inner glow
               '#0D1626',   // mid depth
               '#05080F'    // deep center
             ]}
@@ -1134,7 +1134,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
         {/* ── Center Hub: Inner Bezel ── */}
         <Group>
-          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} color="rgba(201,169,98,0.25)">
+          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} color="rgba(232, 214, 174,0.25)">
             <BlurMask blur={2} style="normal" />
           </Circle>
           
@@ -1158,7 +1158,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               c={vec(CX, CY)}
               colors={[
                 '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
-                '#C5B493', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
               positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
@@ -1170,7 +1170,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         <Circle cx={CX} cy={CY} r={R_INNER - 3} style="stroke" strokeWidth={0.8} opacity={0.9}>
            <SweepGradient
               c={vec(CX, CY)}
-              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C5B493', '#FFFFFF', '#3A2E1C', '#8A734D']}
+              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C9AE78', '#FFFFFF', '#3A2E1C', '#8A734D']}
               positions={[0.0, 0.15, 0.35, 0.5, 0.7, 0.85, 1.0]}
               transform={[{ rotate: -0.2 }]}
             />

@@ -34,9 +34,9 @@ import { logger } from '../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -123,7 +123,7 @@ export default function AstrologySettingsModal({
         <Pressable style={styles.dismissArea} onPress={onClose} />
 
         <View style={styles.modalContainer}>
-          <LinearGradient colors={['rgba(30, 35, 50, 0.98)', '#07090F']} style={styles.modalContent}>
+          <LinearGradient colors={['rgba(30, 35, 50, 0.98)', '#020817']} style={styles.modalContent}>
             
             {/* Header */}
             <View style={styles.header}>
@@ -208,11 +208,11 @@ export default function AstrologySettingsModal({
                 disabled={!hasChanges || saving}
               >
                 <LinearGradient 
-                  colors={!hasChanges ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#C5B493', '#8B6508']} 
+                  colors={!hasChanges ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D6', '#C9AE78', '#6B532E']} 
                   style={styles.saveBtnGradient}
                 >
                   {saving ? (
-                    <ActivityIndicator color="#1A1A1A" size="small" />
+                    <ActivityIndicator color="#0B1220" size="small" />
                   ) : (
                     <Text style={[styles.saveBtnText, !hasChanges && { color: theme.textMuted }]}>Apply Changes</Text>
                   )}
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
   },
-  cardSelected: { backgroundColor: 'rgba(197, 180, 147, 0.08)', borderColor: 'rgba(197, 180, 147, 0.3)' },
+  cardSelected: { backgroundColor: 'rgba(232,214,174,0.08)', borderColor: 'rgba(232,214,174,0.25)' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   optionTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
   optionSub: { fontSize: 12, color: theme.textMuted, lineHeight: 18 },
@@ -289,5 +289,5 @@ const styles = StyleSheet.create({
   saveBtn: { borderRadius: 16, overflow: 'hidden' },
   saveBtnDisabled: { opacity: 0.5 },
   saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  saveBtnText: { color: '#1A1A1A', fontSize: 16, fontWeight: '700' },
+  saveBtnText: { color: '#020817', fontSize: 16, fontWeight: '700' },
 });

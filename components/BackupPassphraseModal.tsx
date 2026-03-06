@@ -34,10 +34,10 @@ interface BackupPassphraseModalProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -164,7 +164,7 @@ export default function BackupPassphraseModal({
                   style={styles.ctaButton}
                 >
                   <LinearGradient
-                    colors={!validation.canSubmit ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D4', '#C5B493', '#8B6508']}
+                    colors={!validation.canSubmit ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D6', '#C9AE78', '#6B532E']}
                     style={[styles.ctaGradient, !validation.canSubmit && { borderColor: 'transparent' }]}
                   >
                     <Text style={[styles.ctaText, !validation.canSubmit && { color: theme.textMuted }]}>
@@ -191,7 +191,7 @@ export default function BackupPassphraseModal({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -263,12 +263,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderColor: 'rgba(232,214,174,0.25)',
   },
   ctaText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: '#020817',
   },
   securityNote: {
     flexDirection: 'row',

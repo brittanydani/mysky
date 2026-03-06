@@ -282,7 +282,7 @@ export default function OnboardingModal({
                         style={styles.ctaGradient}
                       >
                         <Text style={styles.ctaText}>Get Started</Text>
-                        <Ionicons name="arrow-forward" size={20} color="#1A1A1A" />
+                        <Ionicons name="arrow-forward" size={20} color="#0B1220" />
                       </LinearGradient>
                     </Pressable>
 
@@ -340,7 +340,7 @@ export default function OnboardingModal({
                       style={styles.ctaGradient}
                     >
                       <Text style={styles.ctaText}>Restore</Text>
-                      <Ionicons name="cloud-download" size={20} color="#1A1A1A" />
+                      <Ionicons name="cloud-download" size={20} color="#0B1220" />
                     </LinearGradient>
                   </Pressable>
 
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     ...theme.shadows.glow,
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   ctaButton: { width: '100%', borderRadius: theme.borderRadius.lg, overflow: 'hidden', marginBottom: theme.spacing.md, ...theme.shadows.glow },
   ctaPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl },
-  ctaText: { fontSize: 18, fontWeight: '700', color: '#0D1421', fontFamily: 'serif', marginRight: theme.spacing.sm },
+  ctaText: { fontSize: 18, fontWeight: '700', color: '#020817', fontFamily: 'serif', marginRight: theme.spacing.sm },
   restoreButton: {
     flexDirection: 'row',
     alignItems: 'center',

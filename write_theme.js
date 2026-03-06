@@ -1,4 +1,6 @@
-// MySky Unified Theme
+// write_theme.js — Writes the unified MYSTIC + theme constants
+const fs = require('fs');
+const content = `// MySky Unified Theme
 // Premium celestial app — dark obsidian + champagne-gold visual system
 
 import { Platform } from 'react-native';
@@ -226,3 +228,7 @@ export const theme = {
   obsidianGradient: ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)'] as const,
   amethystGradient: ['rgba(40, 30, 60, 0.25)', 'rgba(2,8,23,0.50)'] as const,
 } as const;
+`;
+
+fs.writeFileSync('constants/theme.ts', content, 'utf8');
+console.log('Theme written:', fs.statSync('constants/theme.ts').size, 'bytes');

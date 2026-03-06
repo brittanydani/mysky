@@ -53,7 +53,7 @@ const RING_RADIUS = CENTER - 20;
 
 /** Colors that map to the sweep gradient stops on the spectrum ring */
 const SPECTRUM_COLORS = [
-  '#C5B493', // Gold
+  '#C9AE78', // Gold
   '#CD7F5D', // Amber
   '#E07A7A', // Rose
   '#C97BBF', // Orchid
@@ -63,7 +63,7 @@ const SPECTRUM_COLORS = [
   '#6EBF8B', // Emerald
   '#A4C97B', // Sage
   '#E8D38B', // Champagne
-  '#C5B493', // Gold (wraps)
+  '#C9AE78', // Gold (wraps)
 ];
 
 const STORAGE_KEY = 'visual_calibration_profiles';  // stores all categories
@@ -143,7 +143,7 @@ function getCalibrationProfile(
 
   if (hue < 0.10) {
     label = 'Gold';
-    color = '#C5B493';
+    color = '#C9AE78';
   } else if (hue < 0.20) {
     label = 'Amber';
     color = '#CD7F5D';
@@ -380,7 +380,7 @@ export default function VisualCalibration() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color="#FDFBF7" />
+          <Ionicons name="chevron-back" size={24} color="#F8FAFC" />
         </Pressable>
 
         <ScrollView
@@ -414,14 +414,14 @@ export default function VisualCalibration() {
                   accessibilityRole="button"
                   accessibilityLabel={`Edit ${cat.label} color`}
                 >
-                  <Ionicons name={cat.icon} size={16} color={isCurrent ? '#C5B493' : 'rgba(255,255,255,0.4)'} />
+                  <Ionicons name={cat.icon} size={16} color={isCurrent ? '#C9AE78' : 'rgba(255,255,255,0.4)'} />
                   <Text style={[styles.summaryLabel, isCurrent && styles.summaryLabelActive]}>
                     {cat.label}
                   </Text>
                   <View style={[styles.summaryChip, { backgroundColor: prof.color }]} />
                   <Text style={[styles.summaryValue, isCurrent && styles.summaryValueActive]}>{prof.label}</Text>
                   {isCurrent && (
-                    <Ionicons name="pencil" size={12} color="#C5B493" style={{ marginLeft: 4 }} />
+                    <Ionicons name="pencil" size={12} color="#C9AE78" style={{ marginLeft: 4 }} />
                   )}
                 </Pressable>
               );
@@ -431,7 +431,7 @@ export default function VisualCalibration() {
           {/* ── Active category prompt ── */}
           <Animated.View key={activeCat.id} entering={FadeIn.duration(300)} style={styles.promptBox}>
             <View style={styles.promptHeader}>
-              <Ionicons name={activeCat.icon} size={16} color="#C5B493" />
+              <Ionicons name={activeCat.icon} size={16} color="#C9AE78" />
               <Text style={styles.promptTitle}>{activeCat.label}</Text>
             </View>
             <Text style={styles.promptText}>{activeCat.prompt}</Text>
@@ -499,7 +499,7 @@ export default function VisualCalibration() {
             <Ionicons
               name="checkmark-circle"
               size={20}
-              color={hasUnsavedChanges ? '#07090F' : 'rgba(7,9,15,0.4)'}
+              color={hasUnsavedChanges ? '#020817' : 'rgba(7,9,15,0.4)'}
             />
             <Text
               style={[
@@ -534,7 +534,7 @@ export default function VisualCalibration() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#07090F',
+    backgroundColor: '#020817',
     padding: 24,
   },
   safe: {
@@ -554,14 +554,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   eyebrow: {
-    color: '#C5B493',
+    color: '#C9AE78',
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 2,
   },
   title: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 32,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginTop: 8,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   promptTitle: {
-    color: '#C5B493',
+    color: '#C9AE78',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   cardLabel: {
-    color: '#C5B493',
+    color: '#C9AE78',
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   profileText: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   summaryRowActive: {
-    backgroundColor: 'rgba(197, 180, 147, 0.06)',
+    backgroundColor: 'rgba(232, 214, 174, 0.06)',
     marginHorizontal: -12,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryLabelActive: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontWeight: '600',
   },
   summaryChip: {
@@ -702,13 +702,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 14,
     borderRadius: 16,
-    backgroundColor: '#C5B493',
+    backgroundColor: '#C9AE78',
   },
   saveButtonDisabled: {
-    backgroundColor: 'rgba(197, 180, 147, 0.25)',
+    backgroundColor: 'rgba(232,214,174,0.18)',
   },
   saveButtonText: {
-    color: '#07090F',
+    color: '#020817',
     fontSize: 16,
     fontWeight: '700',
   },

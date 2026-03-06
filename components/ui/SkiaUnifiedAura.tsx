@@ -176,7 +176,7 @@ const SkiaUnifiedAura = memo(function SkiaUnifiedAura({
           y={0}
           width={AURA_W}
           height={AURA_H}
-          color="rgba(15, 18, 25, 0.85)"
+          color="rgba(255,255,255,0.03)"
         />
 
         {/* ── Unified atmosphere glow ── */}
@@ -293,7 +293,7 @@ const SkiaUnifiedAura = memo(function SkiaUnifiedAura({
         <MetricLabel 
           title="MOOD" 
           value={moodLabel(m)} 
-          color="#C5B493"
+          color="#C9AE78"
         />
         <MetricLabel 
           title="TENSION" 
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     position: 'relative',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255,255,255,0.06)',
     paddingBottom: 24,
   },
   canvas: {

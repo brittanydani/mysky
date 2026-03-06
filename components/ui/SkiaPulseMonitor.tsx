@@ -103,7 +103,7 @@ export default function SkiaPulseMonitor({
               </Circle>
 
               {/* 2. The Core Sensor Orb */}
-              <Circle cx={CENTER} cy={CENTER} r={40} color="#07090F">
+              <Circle cx={CENTER} cy={CENTER} r={40} color="#020817">
                 <BlurMask blur={5} style="inner" />
               </Circle>
               <Circle
@@ -112,7 +112,7 @@ export default function SkiaPulseMonitor({
                 r={38}
                 style="stroke"
                 strokeWidth={2}
-                color={complete ? '#6EBF8B' : '#C5B493'}
+                color={complete ? '#6EBF8B' : '#C9AE78'}
               />
 
               {/* 3. The Progress "Fluid" — fills the orb as sync completes */}
@@ -120,7 +120,7 @@ export default function SkiaPulseMonitor({
                 cx={CENTER}
                 cy={CENTER}
                 r={fluidRadius}
-                color={complete ? '#6EBF8B' : '#C5B493'}
+                color={complete ? '#6EBF8B' : '#C9AE78'}
                 opacity={0.3}
               />
             </Group>
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   label: {
     marginTop: 10,
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 2,

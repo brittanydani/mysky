@@ -17,10 +17,10 @@ interface InsightCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -53,10 +53,10 @@ function InsightCard({
       <LinearGradient
         colors={
           locked
-            ? ['rgba(40, 30, 60, 0.4)', 'rgba(20, 24, 34, 0.7)'] // Amethyst obsidian for locked
+            ? ['rgba(40, 30, 60, 0.4)', 'rgba(2,8,23,0.60)'] // Amethyst obsidian for locked
             : isFeatured
-            ? ['rgba(50, 45, 30, 0.5)', 'rgba(20, 24, 34, 0.8)']  // Gold obsidian for featured
-            : ['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']   // Standard frosted glass
+            ? ['rgba(50, 45, 30, 0.5)', 'rgba(2,8,23,0.60)']  // Gold obsidian for featured
+            : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']   // Standard frosted glass
         }
         style={styles.gradient}
       >

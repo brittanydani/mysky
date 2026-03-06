@@ -14,7 +14,7 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 // ── Cinematic Palette ──
 export const COLORS = {
   bg: '#020817',
-  heading: '#F8FAFC',
+  heading: '#F0EAD6',
   body: 'rgba(226,232,240,0.78)',
 
   goldBright: '#FDF3D7',
@@ -28,7 +28,7 @@ export const COLORS = {
   goldGradient4: '#9B7A46',
   goldGradient5: '#6B532E',
 
-  buttonText: '#0B1220',
+  buttonText: '#020817',
 
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
@@ -81,7 +81,7 @@ export default function OnboardingWelcomeScreen() {
 
           <Animated.View entering={FadeInUp.delay(240).duration(650)} style={styles.featuresContainer}>
             <LinearGradient 
-              colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} 
+              colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} 
               style={styles.featuresGlass}
             >
               {[
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(216, 195, 154, 0.2)',
+    borderColor: 'rgba(232,214,174,0.18)',
     backgroundColor: 'rgba(216, 195, 154, 0.05)',
   },
   secondaryText: { 

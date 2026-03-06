@@ -14,7 +14,7 @@ export interface AstrologyIconProps {
  * Chiron (⚷) — The Wounded Healer
  * Styled with elegant angles and perfect circle anchoring.
  */
-export function ChironIcon({ size = 24, color = '#C5B493', glow = true }: AstrologyIconProps) {
+export function ChironIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
   const elements = (
     <>
       <Circle cx="12" cy="18.5" r="3.5" fill="none" />
@@ -44,7 +44,7 @@ export function ChironIcon({ size = 24, color = '#C5B493', glow = true }: Astrol
  * North Node (☊) — Ascending Node / True Node
  * Features a perfectly swept bezier arch and hollow anchors.
  */
-export function NorthNodeIcon({ size = 24, color = '#C5B493', glow = true }: AstrologyIconProps) {
+export function NorthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
   const elements = (
     <>
       {/* Left and Right Anchors */}
@@ -73,7 +73,7 @@ export function NorthNodeIcon({ size = 24, color = '#C5B493', glow = true }: Ast
  * South Node (☋) — Descending Node
  * Inverted arch with hollow anchors at the top.
  */
-export function SouthNodeIcon({ size = 24, color = '#C5B493', glow = true }: AstrologyIconProps) {
+export function SouthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
   const elements = (
     <>
       {/* Left and Right Anchors */}
@@ -102,7 +102,7 @@ export function SouthNodeIcon({ size = 24, color = '#C5B493', glow = true }: Ast
  * Lilith (⚸) — Black Moon
  * Elegant intersecting curves forming the crescent, anchored by a structural cross.
  */
-export function LilithIcon({ size = 24, color = '#C5B493', glow = true }: AstrologyIconProps) {
+export function LilithIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
   const elements = (
     <>
       {/* Crescent */}
@@ -132,7 +132,7 @@ export function LilithIcon({ size = 24, color = '#C5B493', glow = true }: Astrol
  * Part of Fortune (⊗) — Pars Fortunae
  * A perfect circle enclosing an intersecting cross.
  */
-export function PartOfFortuneIcon({ size = 24, color = '#C5B493', glow = true }: AstrologyIconProps) {
+export function PartOfFortuneIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
   const elements = (
     <>
       <Circle cx="12" cy="12" r="7.5" fill="none" />
@@ -159,7 +159,7 @@ export function PartOfFortuneIcon({ size = 24, color = '#C5B493', glow = true }:
  * Vertex (Vx) — Point of Destiny
  * A beautifully woven, continuous-feeling typography piece.
  */
-export function VertexIcon({ size = 24, color = '#C5B493', glow = true }: AstrologyIconProps) {
+export function VertexIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
   const elements = (
     <>
       {/* The 'V' */}

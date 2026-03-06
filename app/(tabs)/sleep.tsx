@@ -60,12 +60,12 @@ const SCREEN_W = Dimensions.get('window').width;
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -560,7 +560,7 @@ export default function SleepScreen() {
 
           {/* ── Log Form (Cinematic Glass) ── */}
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.section}>
-            <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.formCard}>
+            <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.formCard}>
               <View style={styles.formTitleRow}>
                 <Text style={styles.formTitle}>
                   {editingEntryId ? editingDate === today ? (isEditingUnlocked ? "Editing tonight's entry" : "Tonight's rest log") : `Edit ${formatDate(editingDate!)}` : 'How was last night?'}
@@ -651,7 +651,7 @@ export default function SleepScreen() {
                 />
               ) : (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                  <LinearGradient colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.8)']} style={styles.dreamLock}>
+                  <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.dreamLock}>
                     <Ionicons name="lock-closed" size={16} color={PALETTE.gold} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.dreamLockTitle}>Dream journal — Deeper Sky</Text>
@@ -877,7 +877,7 @@ export default function SleepScreen() {
             if (!isPremium || !todayEntry?.dreamText || !todayInterp) return null;
             return (
               <Animated.View entering={FadeInDown.delay(180).duration(600)} style={styles.section}>
-                <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(20, 24, 34, 0.7)']} style={styles.todayInterpretCard}>
+                <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.todayInterpretCard}>
                   <View style={styles.todayInterpretHeader}>
                     <Ionicons name="sparkles" size={18} color={PALETTE.amethyst} />
                     <Text style={styles.todayInterpretTitle}>Your Dream Reflection</Text>
@@ -897,17 +897,17 @@ export default function SleepScreen() {
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Last 7 Days</Text>
               <View style={styles.statsRow}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.statCard}>
+                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(2,8,23,0.60)']} style={styles.statCard}>
                   <Text style={[styles.statLabel, { color: PALETTE.silverBlue }]}>NIGHTS</Text>
                   <Text style={styles.statValue}>{stats.count}</Text>
                   <Text style={styles.statSub}>logged</Text>
                 </LinearGradient>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.statCard}>
+                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(2,8,23,0.60)']} style={styles.statCard}>
                   <Text style={[styles.statLabel, { color: PALETTE.gold }]}>AVG SLEEP</Text>
                   <Text style={styles.statValue}>{stats.avgDuration != null ? formatDuration(stats.avgDuration) : '—'}</Text>
                   <Text style={styles.statSub}>per night</Text>
                 </LinearGradient>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(20, 24, 34, 0.8)']} style={styles.statCard}>
+                <LinearGradient colors={['rgba(35, 40, 55, 0.6)', 'rgba(2,8,23,0.60)']} style={styles.statCard}>
                   <Text style={[styles.statLabel, { color: PALETTE.emerald }]}>AVG REST</Text>
                   <Text style={styles.statValue}>{stats.avgQuality != null ? `${stats.avgQuality.toFixed(1)}/5` : '—'}</Text>
                   <Text style={styles.statSub}>quality</Text>
@@ -974,7 +974,7 @@ export default function SleepScreen() {
                       onPress={() => { Haptics.selectionAsync().catch(() => {}); applyEntryToForm(entry); scrollRef.current?.scrollTo({ y: 0, animated: true }); }}
                       onLongPress={() => handleDelete(entry.id)}
                     >
-                      <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.entryCardInner}>
+                      <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.entryCardInner}>
                         <View style={styles.entryHeader}>
                           <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
                           <View style={styles.entryMeta}>
@@ -1016,7 +1016,7 @@ export default function SleepScreen() {
 
                     {isExpanded && interp && (
                       <Animated.View entering={FadeInDown.duration(400)}>
-                        <LinearGradient colors={['rgba(157, 118, 193, 0.1)', 'rgba(20, 24, 34, 0.6)']} style={styles.interpretCard}>
+                        <LinearGradient colors={['rgba(157, 118, 193, 0.1)', 'rgba(2,8,23,0.50)']} style={styles.interpretCard}>
                           <Text style={styles.interpretBody}>{interp.paragraph}</Text>
                           <View style={styles.sitWithBox}>
                             <Text style={styles.sitWithLabel}>A question to sit with</Text>
@@ -1054,7 +1054,7 @@ export default function SleepScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
@@ -1103,7 +1103,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
     marginBottom: 8,
   },
-  dreamLock: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)', padding: 16, marginBottom: 8 },
+  dreamLock: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', padding: 16, marginBottom: 8 },
   dreamLockTitle: { fontSize: 14, fontWeight: '600', color: PALETTE.gold, marginBottom: 4 },
   dreamLockSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
 
@@ -1124,7 +1124,7 @@ const styles = StyleSheet.create({
   tierDot: { width: 8, height: 8, borderRadius: 4 },
   tierPillText: { color: theme.textSecondary, fontSize: 14, fontWeight: '600' },
   tierBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
-  tierBadgeText: { color: '#07090F', fontSize: 11, fontWeight: '700' },
+  tierBadgeText: { color: '#020817', fontSize: 11, fontWeight: '700' },
   tierHint: { color: theme.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16, fontStyle: 'italic' },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.02)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
@@ -1162,7 +1162,7 @@ const styles = StyleSheet.create({
   saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 24 },
   saveBtnDisabled: { opacity: 0.5 },
   saveBtnPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)', borderRadius: 16 },
+  saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(232,214,174,0.25)', borderRadius: 16 },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: PALETTE.gold },
   saveBtnTextDisabled: { color: theme.textMuted },
 
@@ -1199,7 +1199,7 @@ const styles = StyleSheet.create({
   },
   obsidianCardFooterText: {
     fontSize: 11,
-    color: 'rgba(253, 251, 247, 0.3)',
+    color: 'rgba(240, 234, 214, 0.3)',
     fontStyle: 'italic',
     textAlign: 'center',
   },

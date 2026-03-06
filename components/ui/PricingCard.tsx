@@ -16,10 +16,10 @@ interface PricingCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -47,10 +47,10 @@ function PricingCard({
       {popular && (
         <View style={styles.popularBadgeContainer}>
           <LinearGradient
-            colors={['#FFF4D4', '#C5B493']}
+            colors={['#FFF4D6', '#C9AE78']}
             style={styles.popularBadge}
           >
-            <Ionicons name="sparkles" size={10} color="#1A1A1A" />
+            <Ionicons name="sparkles" size={10} color="#0B1220" />
             <Text style={styles.popularText}>Most Popular</Text>
           </LinearGradient>
         </View>
@@ -59,8 +59,8 @@ function PricingCard({
       <LinearGradient
         colors={
           selected
-            ? ['rgba(50, 45, 30, 0.5)', 'rgba(20, 24, 34, 0.8)'] // Gold obsidian
-            : ['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']  // Standard frosted
+            ? ['rgba(50, 45, 30, 0.5)', 'rgba(2,8,23,0.60)'] // Gold obsidian
+            : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']  // Standard frosted
         }
         style={styles.gradient}
       >
@@ -68,7 +68,7 @@ function PricingCard({
           <Text style={[styles.name, selected && styles.selectedName]}>{name}</Text>
           {selected && (
             <View style={styles.checkmark}>
-              <Ionicons name="checkmark" size={14} color="#1A1A1A" />
+              <Ionicons name="checkmark" size={14} color="#0B1220" />
             </View>
           )}
         </View>
@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   selectedContainer: {
-    borderColor: 'rgba(197, 180, 147, 0.3)',
-    borderTopColor: 'rgba(197, 180, 147, 0.5)',
+    borderColor: 'rgba(232,214,174,0.25)',
+    borderTopColor: 'rgba(232, 214, 174, 0.5)',
     borderWidth: 1.5,
   },
   pressed: {
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   popularText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: '#020817',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },

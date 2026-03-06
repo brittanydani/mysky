@@ -64,7 +64,7 @@ const ARCHETYPE_CONFIG: Record<DreamArchetype, { color: string; path: string }> 
 
   // ── Self ── perfect circle
   Self: {
-    color: '#C5B493', // Gold
+    color: '#C9AE78', // Gold
     path: circlePath(CENTER, CENTER, 30),
   },
 

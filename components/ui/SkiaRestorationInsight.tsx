@@ -90,7 +90,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
           width={CARD_W}
           height={CARD_H}
           r={16}
-          color="rgba(15, 18, 25, 0.85)"
+          color="rgba(255,255,255,0.03)"
         />
         <RoundedRect
           x={0.5}
@@ -100,7 +100,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
           r={16}
           style="stroke"
           strokeWidth={1}
-          color="rgba(255, 255, 255, 0.06)"
+          color="rgba(255,255,255,0.06)"
         />
 
         {/* Horizon bars */}
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 15,
     fontWeight: '600',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),

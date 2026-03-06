@@ -12,10 +12,10 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -86,7 +86,7 @@ export default function TermsOfServiceScreen() {
             </Text>
 
             <LinearGradient 
-              colors={['rgba(205, 127, 93, 0.1)', 'rgba(20, 24, 34, 0.6)']} 
+              colors={['rgba(205, 127, 93, 0.1)', 'rgba(2,8,23,0.50)']} 
               style={styles.disclaimerCard}
             >
               <View style={styles.disclaimerHeader}>
@@ -132,7 +132,7 @@ export default function TermsOfServiceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   headerBar: {
     flexDirection: 'row',

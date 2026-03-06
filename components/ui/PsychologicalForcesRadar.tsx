@@ -167,7 +167,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
               cy={y}
               r="4"
               fill={force.color}
-              stroke="#07090F"
+              stroke="#020817"
               strokeWidth="1"
             />
           );

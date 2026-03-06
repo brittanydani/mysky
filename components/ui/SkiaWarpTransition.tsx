@@ -147,7 +147,7 @@ const SkiaWarpTransition = forwardRef<WarpRef>(function SkiaWarpTransition(
             <Path
               key={i}
               path={path}
-              color="rgba(197, 180, 147, 0.7)"
+              color="rgba(232, 214, 174, 0.7)"
               style="fill"
             >
               <BlurMask blur={2} style="normal" />
@@ -171,7 +171,7 @@ const SkiaWarpTransition = forwardRef<WarpRef>(function SkiaWarpTransition(
           cx={CX}
           cy={CY}
           r={ringRadius}
-          color="#C5B493"
+          color="#C9AE78"
           style="stroke"
           strokeWidth={1.5}
           opacity={ringOpacity}

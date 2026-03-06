@@ -50,7 +50,7 @@ function getMoonPhase(date: Date): { name: string; emoji: string; message: strin
 // ── Intensity glow colors ──
 const INTENSITY_COLORS: Record<string, string> = {
   calm: 'rgba(139, 196, 232, 0.08)',
-  moderate: 'rgba(197, 180, 147, 0.10)',
+  moderate: 'rgba(232,214,174,0.08)',
   intense: 'rgba(224, 122, 152, 0.12)',
 };
 
@@ -61,7 +61,7 @@ const DOMAIN_HIGHLIGHT: Record<string, string> = {
   growth: 'rgba(139, 196, 232, 0.25)',
   focus: 'rgba(139, 196, 232, 0.25)',
   mood: 'rgba(122, 139, 224, 0.25)',
-  direction: 'rgba(197, 180, 147, 0.25)',
+  direction: 'rgba(232,214,174,0.18)',
   home: 'rgba(110, 191, 139, 0.25)',
 };
 
@@ -378,7 +378,7 @@ export default function AstrologyContextScreen() {
           {/* ── 1. Cosmic Weather Summary ── */}
           <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.section}>
             <LinearGradient
-              colors={[INTENSITY_COLORS[intensity] || INTENSITY_COLORS.calm, 'rgba(26, 39, 64, 0.4)']}
+              colors={[INTENSITY_COLORS[intensity] || INTENSITY_COLORS.calm, 'rgba(10, 18, 36, 0.4)']}
               style={styles.cosmicWeatherCard}
             >
               <View style={styles.cosmicWeatherHeader}>
@@ -438,7 +438,7 @@ export default function AstrologyContextScreen() {
               accessibilityLabel={showMoonWeek ? 'Collapse moon week view' : 'Expand moon week view'}
             >
               <LinearGradient
-                colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
+                colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.5)']}
                 style={styles.moonPhaseCard}
               >
                 <View style={styles.moonPhaseContent}>
@@ -498,7 +498,7 @@ export default function AstrologyContextScreen() {
           {yesterdayInsight && (
             <Animated.View entering={FadeInDown.delay(195).duration(600)} style={styles.section}>
               <LinearGradient
-                colors={['rgba(30, 45, 71, 0.5)', 'rgba(26, 39, 64, 0.3)']}
+                colors={['rgba(14, 24, 48, 0.5)', 'rgba(10, 18, 36, 0.3)']}
                 style={styles.yesterdayCard}
               >
                 <View style={styles.yesterdayHeader}>
@@ -626,7 +626,7 @@ export default function AstrologyContextScreen() {
           {/* ── 9. Daily Affirmation Card ── */}
           <Animated.View entering={FadeInDown.delay(440).duration(600)} style={styles.section}>
             <LinearGradient
-              colors={['rgba(30,45,71,0.6)', 'rgba(26,39,64,0.35)']}
+              colors={['rgba(14, 24, 48,0.6)', 'rgba(10, 18, 36,0.35)']}
               style={styles.affirmationCard}
             >
               <Ionicons name="sparkles" size={18} color={theme.primary} style={{ marginBottom: 8 }} />
@@ -651,7 +651,7 @@ export default function AstrologyContextScreen() {
                   accessibilityLabel="Write in journal"
                 >
                   <LinearGradient
-                    colors={['rgba(197, 180, 147, 0.2)', 'rgba(197, 180, 147, 0.1)']}
+                    colors={['rgba(232,214,174,0.18)', 'rgba(232, 214, 174, 0.1)']}
                     style={styles.journalGradient}
                   >
                     <Ionicons name="create-outline" size={18} color={theme.primary} />
@@ -671,7 +671,7 @@ export default function AstrologyContextScreen() {
                 accessibilityLabel="Why this insight"
               >
                 <LinearGradient
-                  colors={['rgba(197, 180, 147, 0.1)', 'rgba(197, 180, 147, 0.05)']}
+                  colors={['rgba(232, 214, 174, 0.1)', 'rgba(232,214,174,0.05)']}
                   style={styles.whyThisCard}
                 >
                   <View style={styles.whyThisHeader}>
@@ -780,7 +780,7 @@ export default function AstrologyContextScreen() {
                 accessibilityLabel="Map"
               >
                 <LinearGradient
-                  colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
+                  colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.5)']}
                   style={styles.exploreCardGradient}
                 >
                   <Ionicons name="planet-outline" size={22} color={theme.primary} />
@@ -796,7 +796,7 @@ export default function AstrologyContextScreen() {
                 accessibilityLabel="My Story"
               >
                 <LinearGradient
-                  colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
+                  colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.5)']}
                   style={styles.exploreCardGradient}
                 >
                   <Ionicons name="book-outline" size={22} color={theme.primary} />
@@ -812,7 +812,7 @@ export default function AstrologyContextScreen() {
                 accessibilityLabel="Healing"
               >
                 <LinearGradient
-                  colors={['rgba(30,45,71,0.8)', 'rgba(26,39,64,0.5)']}
+                  colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.5)']}
                   style={styles.exploreCardGradient}
                 >
                   <Ionicons name="heart-outline" size={22} color={theme.primary} />
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(197, 180, 147, 0.10)',
+    borderBottomColor: 'rgba(232,214,174,0.08)',
   },
   backBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'flex-start' },
   navTitle: {
@@ -864,12 +864,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md, textAlign: 'center',
   },
   createChartButton: {
-    backgroundColor: 'rgba(197, 180, 147, 0.2)',
+    backgroundColor: 'rgba(232,214,174,0.18)',
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.3)',
+    borderColor: 'rgba(232,214,174,0.25)',
   },
   createChartText: { color: theme.primary, fontWeight: '600', fontSize: 16 },
 
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
 
   cosmicWeatherCard: {
     borderRadius: theme.borderRadius.xl, padding: theme.spacing.xl, borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.15)',
+    borderColor: 'rgba(232, 214, 174, 0.15)',
   },
   cosmicWeatherHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
   cosmicWeatherLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 2, color: theme.primary, marginLeft: theme.spacing.sm },
@@ -929,7 +929,7 @@ const styles = StyleSheet.create({
   // ── Moon Phase ──
   moonPhaseCard: {
     borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg, borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   moonPhaseContent: { flexDirection: 'row', alignItems: 'center' },
   moonEmoji: { fontSize: 36, marginRight: theme.spacing.md },
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
   // ── Yesterday Thread ──
   yesterdayCard: {
     borderRadius: theme.borderRadius.lg, padding: theme.spacing.md, borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   yesterdayHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs },
   yesterdayLabel: {
@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
   cardLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 2, marginLeft: theme.spacing.sm },
   strongestBadge: {
-    marginLeft: 'auto', backgroundColor: 'rgba(197, 180, 147, 0.12)',
+    marginLeft: 'auto', backgroundColor: 'rgba(232, 214, 174, 0.12)',
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: theme.borderRadius.sm,
   },
   strongestBadgeText: { fontSize: 8, fontWeight: '600', color: theme.primary, letterSpacing: 0.2, textTransform: 'uppercase' },
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
   // ── Daily Affirmation ──
   affirmationCard: {
     borderRadius: theme.borderRadius.xl, padding: theme.spacing.xl,
-    alignItems: 'center' as const, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.1)',
+    alignItems: 'center' as const, borderWidth: 1, borderColor: 'rgba(232, 214, 174, 0.1)',
   },
   affirmationText: {
     color: theme.primary, fontSize: 16, fontStyle: 'italic' as const,
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
   // ── Evening Reflection ──
   reminderCard: {
     borderRadius: theme.borderRadius.xl, padding: theme.spacing.xl, borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)', alignItems: 'center',
+    borderColor: 'rgba(232,214,174,0.18)', alignItems: 'center',
   },
   promptLabel: {
     fontSize: 12, fontWeight: '600', color: theme.textMuted,
@@ -1036,7 +1036,7 @@ const styles = StyleSheet.create({
   // ── Why This? ──
   whyThisCard: {
     borderRadius: theme.borderRadius.xl, padding: theme.spacing.lg, borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)',
+    borderColor: 'rgba(232,214,174,0.18)',
   },
   whyThisHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   whyThisLeft: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147,0.15)',
+    borderColor: 'rgba(232, 214, 174,0.15)',
   },
   exploreCardGradient: {
     alignItems: 'center',

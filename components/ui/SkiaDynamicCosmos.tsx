@@ -73,7 +73,7 @@ export const SkiaDynamicCosmos = () => {
               cx={star.x} 
               cy={star.y} 
               r={star.baseR} 
-              color="#FDFBF7" 
+              color="#F8FAFC" 
             />
           ))}
         </Group>

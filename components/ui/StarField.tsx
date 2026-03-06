@@ -31,7 +31,7 @@ interface Star {
   starColor: string;
 }
 
-const STAR_PALETTE = ['#FFFFFF', '#FDFBF7', '#E8F4FF', '#FFF4D4'];
+const STAR_PALETTE = ['#FFFFFF', '#F0EAD6', '#E8F4FF', '#FFF4D6'];
 
 function splitmix32(seed: number): () => number {
   let s = seed | 0;
@@ -135,7 +135,7 @@ const SkiaConstellationLine = memo(({
   return (
     <Path
       path={path}
-      color="rgba(197, 180, 147, 0.4)" // Soft gold text.primary or theme.primary
+      color="rgba(232, 214, 174, 0.4)" // Soft gold text.primary or theme.primary
       style="stroke"
       strokeWidth={0.8}
       opacity={opacity}

@@ -62,12 +62,12 @@ const PAL = {
   dormant: '#2A3B52',                   // Deep Space Indigo (Singularity)
   trackOff: 'rgba(20, 25, 40, 0.92)',
   trackOn: 'rgba(30, 50, 45, 0.95)',
-  starCore: '#FDFBF7',                  // Core Light
+  starCore: '#F0EAD6',                  // Core Light
   starGlow: 'rgba(110, 191, 139, 0.5)', // Emerald glow
   starFlare: 'rgba(110, 191, 139, 0.25)',
   voidColor: 'rgba(42, 59, 82, 0.4)',
   specular: 'rgba(255, 255, 255, 0.08)',
-  border: 'rgba(255, 255, 255, 0.06)',
+  border: 'rgba(255,255,255,0.06)',
 };
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   label: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 15,
     fontWeight: '500',
   },

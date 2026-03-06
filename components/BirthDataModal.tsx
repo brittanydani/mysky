@@ -38,11 +38,11 @@ import { AstrologySettingsService } from '../services/astrology/astrologySetting
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -294,7 +294,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
 
               <Text style={styles.sectionLabel}>Birth Date</Text>
               <Pressable style={styles.pickButton} onPress={() => setShowDatePicker(true)}>
-                <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.pickGradient}>
+                <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.50)']} style={styles.pickGradient}>
                   <Ionicons name="calendar-outline" size={18} color={PALETTE.silverBlue} />
                   <Text style={styles.pickText}>{date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
                 </LinearGradient>
@@ -310,7 +310,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
               
               {!hasUnknownTime && (
                 <Pressable style={styles.pickButton} onPress={() => { setPHour(t12.h); setPMin(t12.m); setPPer(t12.p); setShowTimePicker(true); }}>
-                  <LinearGradient colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.6)']} style={styles.pickGradient}>
+                  <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.50)']} style={styles.pickGradient}>
                     <Ionicons name="time-outline" size={18} color={PALETTE.gold} />
                     <Text style={styles.pickText}>{time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</Text>
                   </LinearGradient>
@@ -345,7 +345,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
             </Animated.View>
 
             <Pressable style={styles.saveBtn} onPress={handleSave}>
-              <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.saveGradient}>
+              <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.saveGradient}>
                 <Text style={styles.saveBtnText}>Generate My Chart</Text>
               </LinearGradient>
             </Pressable>
@@ -356,7 +356,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
         {/* --- Confirmation "Seal" Overlay --- */}
         {showConfirm && (
           <View style={StyleSheet.absoluteFill}>
-            <LinearGradient colors={['rgba(7, 9, 15, 0.95)', '#07090F']} style={styles.confirmOverlay}>
+            <LinearGradient colors={['rgba(7, 9, 15, 0.95)', '#020817']} style={styles.confirmOverlay}>
               <Animated.View entering={FadeInUp} style={styles.confirmCard}>
                 <Ionicons name="shield-checkmark" size={48} color={PALETTE.gold} style={{ marginBottom: 16 }} />
                 <Text style={styles.confirmTitle}>Verify Your Details</Text>
@@ -369,7 +369,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                 </View>
 
                 <Pressable style={styles.saveBtn} onPress={() => { setShowConfirm(false); onSave({ date: toLocalDateString(date), time: hasUnknownTime ? undefined : time.toTimeString().slice(0, 5), hasUnknownTime, place, latitude, longitude, houseSystem }, { chartName }); }}>
-                  <LinearGradient colors={['#FFF4D4', '#C5B493', '#8B6508']} style={styles.saveGradient}>
+                  <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.saveGradient}>
                     <Text style={styles.saveBtnText}>Confirm & Secure</Text>
                   </LinearGradient>
                 </Pressable>
@@ -412,7 +412,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   headerTitle: { fontSize: 18, color: PALETTE.textMain, fontWeight: '600', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
 
   saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 32, shadowColor: PALETTE.gold, shadowOpacity: 0.2, shadowRadius: 10 },
   saveGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
-  saveBtnText: { color: '#1A1A1A', fontSize: 17, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  saveBtnText: { color: '#020817', fontSize: 17, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   privacyNote: { textAlign: 'center', color: theme.textMuted, fontSize: 12, marginTop: 16, fontStyle: 'italic' },
 
   confirmOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
@@ -462,5 +462,5 @@ const styles = StyleSheet.create({
   wheelsRow: { flexDirection: 'row', height: PICKER_HEIGHT, paddingHorizontal: 20 },
   wheelSeparator: { justifyContent: 'center', width: 12 },
   sepText: { color: PALETTE.textMain, fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  pickerSelectorOverlay: { position: 'absolute', top: (PICKER_HEIGHT - ITEM_HEIGHT) / 2, left: 0, right: 0, height: ITEM_HEIGHT, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(197, 180, 147, 0.3)', backgroundColor: 'rgba(197, 180, 147, 0.05)', zIndex: 1 },
+  pickerSelectorOverlay: { position: 'absolute', top: (PICKER_HEIGHT - ITEM_HEIGHT) / 2, left: 0, right: 0, height: ITEM_HEIGHT, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(232,214,174,0.25)', backgroundColor: 'rgba(232,214,174,0.05)', zIndex: 1 },
 });

@@ -14,10 +14,10 @@ import { logger } from '../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -115,7 +115,7 @@ export default function PrivacyConsentModal({
                       onPress={handleAccept}
                     >
                       <LinearGradient
-                        colors={['#FFF4D4', '#C5B493', '#8B6508']}
+                        colors={['#FFF4D6', '#C9AE78', '#6B532E']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.btnGradient}
@@ -186,7 +186,7 @@ export default function PrivacyConsentModal({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 40 },
@@ -197,12 +197,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 24,
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)',
+    borderColor: 'rgba(232,214,174,0.18)',
   },
   title: { 
     fontSize: 30, 
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   footerActions: { marginTop: 24, gap: 16 },
   acceptBtn: { borderRadius: 16, overflow: 'hidden', elevation: 4 },
   btnGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
-  acceptBtnText: { fontSize: 17, fontWeight: '700', color: '#1A1A1A', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  acceptBtnText: { fontSize: 17, fontWeight: '700', color: '#020817', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },
   declineBtnText: { fontSize: 14, color: theme.textMuted, fontWeight: '600', textDecorationLine: 'underline' },
 

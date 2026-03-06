@@ -24,31 +24,31 @@ interface ShadowQuoteCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
 const TONE_CONFIG: Record<ShadowTone, { colors: [string, string]; highlight: string }> = {
   awareness: { 
-    colors: ['rgba(157, 118, 193, 0.15)', 'rgba(20, 24, 34, 0.6)'], // Amethyst
+    colors: ['rgba(157, 118, 193, 0.15)', 'rgba(2,8,23,0.50)'], // Amethyst
     highlight: 'rgba(157, 118, 193, 0.3)' 
   },
   protective: { 
-    colors: ['rgba(197, 180, 147, 0.12)', 'rgba(20, 24, 34, 0.6)'], // Gold
-    highlight: 'rgba(197, 180, 147, 0.3)' 
+    colors: ['rgba(232, 214, 174, 0.12)', 'rgba(2,8,23,0.50)'], // Gold
+    highlight: 'rgba(232,214,174,0.25)' 
   },
   tension: { 
-    colors: ['rgba(205, 127, 93, 0.15)', 'rgba(20, 24, 34, 0.6)'], // Copper
+    colors: ['rgba(205, 127, 93, 0.15)', 'rgba(2,8,23,0.50)'], // Copper
     highlight: 'rgba(205, 127, 93, 0.3)' 
   },
   release: { 
-    colors: ['rgba(110, 191, 139, 0.12)', 'rgba(20, 24, 34, 0.6)'], // Emerald
+    colors: ['rgba(110, 191, 139, 0.12)', 'rgba(2,8,23,0.50)'], // Emerald
     highlight: 'rgba(110, 191, 139, 0.3)' 
   },
 };

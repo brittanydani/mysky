@@ -53,13 +53,13 @@ const BORDER_R = 16;
 // ── Obsidian Glass Palette ──────────────────────────────────────────────────
 
 const GLASS = {
-  surface: 'rgba(15, 18, 25, 0.85)',
-  border: 'rgba(255, 255, 255, 0.06)',
-  highlight: 'rgba(255, 255, 255, 0.12)',
+  surface: 'rgba(255,255,255,0.03)',
+  border: 'rgba(255,255,255,0.06)',
+  highlight: 'rgba(255,255,255,0.08)',
   specularTop: 'rgba(255, 255, 255, 0.08)',
   specularBot: 'rgba(255, 255, 255, 0.0)',
-  inkRipple: 'rgba(197, 180, 147, 0.15)',
-  gold: '#C5B493',
+  inkRipple: 'rgba(232, 214, 174, 0.15)',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dateText: {
-    color: '#FDFBF7',
+    color: '#F0EAD6',
     fontSize: 13,
     fontWeight: '600',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),

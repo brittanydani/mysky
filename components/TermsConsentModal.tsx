@@ -14,9 +14,9 @@ import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
-  textMain: '#FDFBF7',
+  textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -91,7 +91,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
     >
       <View style={styles.container}>
         <LinearGradient
-          colors={['#0A0D14', '#07090F']}
+          colors={['#0A0D14', '#020817']}
           style={StyleSheet.absoluteFill}
         />
         <SkiaDynamicCosmos />
@@ -148,7 +148,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
                   onPress={handleAccept}
                 >
                   <LinearGradient
-                    colors={['#FFF4D4', '#C5B493', '#8B6508']}
+                    colors={['#FFF4D6', '#C9AE78', '#6B532E']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.primaryGradient}
@@ -168,7 +168,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
 
   header: {
@@ -184,9 +184,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(197, 180, 147, 0.1)',
+    backgroundColor: 'rgba(232, 214, 174, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)',
+    borderColor: 'rgba(232,214,174,0.18)',
     marginRight: 12,
   },
   appName: { 
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     borderTopColor: PALETTE.glassHighlight,
-    backgroundColor: 'rgba(15, 18, 25, 0.85)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     overflow: 'hidden',
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 30, shadowOffset: { width: 0, height: 20 } },
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
 
   primaryBtn: { flex: 1.4, borderRadius: 16, overflow: 'hidden' },
   primaryGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { color: '#1A1A1A', fontSize: 16, fontWeight: '800', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  primaryText: { color: '#020817', fontSize: 16, fontWeight: '800', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
 
   footnote: { color: theme.textMuted, fontSize: 12, textAlign: 'center', fontStyle: 'italic' },
 

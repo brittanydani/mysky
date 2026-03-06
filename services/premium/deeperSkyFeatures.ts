@@ -187,10 +187,10 @@ export const PREMIUM_THEMES: PremiumTheme[] = [
     name: 'Midnight Sky',
     description: 'The classic MySky experience',
     colors: {
-      background: '#0D1421',
-      backgroundSecondary: '#141E2E',
+      background: '#020817',
+      backgroundSecondary: '#0A1224',
       primary: '#D8C39A',
-      accent: '#1A2740',
+      accent: '#0E1830',
     },
     isPremium: false,
   },
