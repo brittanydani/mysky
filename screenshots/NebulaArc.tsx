@@ -26,7 +26,7 @@ export default function NebulaArc({
   width,
   height,
   phoneCenterY,
-  color = '#C5B493',
+  color = '#D8C39A',
   opacity = 0.08,
 }: Props) {
   const arcPath = useMemo(() => {

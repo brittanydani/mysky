@@ -12,7 +12,7 @@ export const OBSIDIAN_GRADIENT = ['#05060A', '#0B0F1A', '#131A2B'] as const;
 
 // ─── Ambient Nebula Glow Colors ────────────────────────────────────
 export const NEBULA_COLORS = {
-  gold: '#C5B493',
+  gold: '#D8C39A',
   indigo: '#243B6B',
   emerald: '#2E7A68',
   silverBlue: '#8BC4E8',

@@ -18,7 +18,7 @@ import {
 } from '@shopify/react-native-skia';
 
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#D8C39A',
   goldLight: '#F3E5AB',
   indigo: '#2D3A5C',
   rose: '#D4A3B3',

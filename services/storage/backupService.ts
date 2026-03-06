@@ -312,12 +312,12 @@ export class BackupService {
     }
 
     // File size guard — reject backups > 50 MB to prevent OOM
-    const fileInfo = await FileSystem.getInfoAsync(uri, { size: true });
+    const fileInfo = await FileSystem.getInfoAsync(uri);
     if (!fileInfo.exists) {
       throw new Error('Backup file does not exist');
     }
     const MAX_BACKUP_SIZE = 50 * 1024 * 1024; // 50 MB
-    if ((fileInfo as any).size > MAX_BACKUP_SIZE) {
+    if (fileInfo.exists && (fileInfo as any).size > MAX_BACKUP_SIZE) {
       throw new Error('Backup file is too large (max 50 MB)');
     }
 

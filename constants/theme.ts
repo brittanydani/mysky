@@ -6,9 +6,9 @@ import { Platform } from 'react-native';
 
 export const theme = {
   // Primary Colors - Shiny premium gold
-  primary: '#C5B493', // Bright shiny gold
+  primary: '#D8C39A', // Bright shiny gold
   primaryLight: '#E9D9B8',
-  primaryDark: '#8A7A5A',
+  primaryDark: '#D8C39A',
 
   // Background Colors - Deep velvet night sky
   background: '#0D1421', // Deep midnight
@@ -30,29 +30,29 @@ export const theme = {
   growth: '#8BC4E8', // Soft blue for growth/expansion
   calm: '#6EBF8B',
   soft: '#8BC4E8',
-  okay: '#C5B493',
-  heavy: '#C5A059',
+  okay: '#D8C39A',
+  heavy: '#D8C39A',
   stormy: '#E07A7A',
 
   // Text Colors
   textPrimary: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.7)',
   textMuted: 'rgba(255, 255, 255, 0.5)',
-  textGold: '#C5B493',
+  textGold: '#D8C39A',
 
   // Semantic Colors
   success: '#6EBF8B',
   error: '#E07A7A',
-  warning: '#C5A059',
+  warning: '#D8C39A',
 
   // Card Colors
   cardGradientStart: '#1A2740',
   cardGradientEnd: '#0D1421',
-  cardBorder: 'rgba(197, 180, 147, 0.2)',
+  cardBorder: 'rgba(216, 195, 154, 0.2)',
 
   // Locked/Premium
   lockedOverlay: 'rgba(13, 20, 33, 0.7)',
-  premiumGlow: 'rgba(197, 180, 147, 0.3)',
+  premiumGlow: 'rgba(216, 195, 154, 0.3)',
 
   // Spacing
   spacing: {
@@ -119,8 +119,8 @@ export const theme = {
   },
 
   // Gold gradient (used for CTAs / premium buttons)
-  goldGradient: ['#E8D5A8', '#C5B493', '#B8994F'] as const,
-  ctaGradient: ['#FFF4D4', '#C5B493', '#8B6508'] as const,
+  goldGradient: ['#FFF4D6', '#E9D9B8', '#C5B493', '#9A8661', '#6E5E40'] as const,
+  ctaGradient: ['#FFF4D6', '#E9D9B8', '#C5B493', '#9A8661', '#6E5E40'] as const,
   ctaTextDark: '#1A1A1A', // Dark text on gold CTA buttons
 
   // Shadows
@@ -133,7 +133,7 @@ export const theme = {
       elevation: 4,
     },
     glow: {
-      shadowColor: '#C5B493',
+      shadowColor: '#D8C39A',
       shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0.3,
       shadowRadius: 12,
@@ -151,14 +151,14 @@ export const theme = {
   // Archetypal mapping for dynamic card styling
   archetypes: {
     shadow: { main: '#9D76C1', glow: 'rgba(157, 118, 193, 0.2)' }, // Amethyst
-    self: { main: '#C5B493', glow: 'rgba(197, 180, 147, 0.2)' },   // gold
+    self: { main: '#D8C39A', glow: 'rgba(216, 195, 154, 0.2)' },   // gold
     threshold: { main: '#8BC4E8', glow: 'rgba(139, 196, 232, 0.2)' }, // SilverBlue
     transform: { main: '#CD7F5D', glow: 'rgba(205, 127, 93, 0.2)' }, // Copper
   },
 
   // Cinematic palette — shared accent colors used across screens
   cinematic: {
-    gold: '#C5B493',
+    gold: '#D8C39A',
     silverBlue: '#8BC4E8',
     copper: '#CD7F5D',
     emerald: '#6EBF8B',

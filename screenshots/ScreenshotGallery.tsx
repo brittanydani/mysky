@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   dotActive: {
-    backgroundColor: '#C5B493',
+    backgroundColor: '#D8C39A',
     width: 20,
   },
   infoBar: {

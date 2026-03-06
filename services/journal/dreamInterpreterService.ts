@@ -71,7 +71,7 @@ export class DreamInterpreterService {
     } else if (extractedSymbols.some(s => s.id === 'shadow' || s.id === 'threshold')) {
         color = '#9D76C1'; // Saturn Amethyst
     } else if (profile.coreMotivation) { // Sun element as secondary fallback if needed
-        color = '#C5B493'; // Champagne Gold aura
+        color = '#D8C39A'; // Champagne Gold aura
     }
 
     return color;

@@ -18,7 +18,7 @@ import {
 } from '@shopify/react-native-skia';
 
 const PALETTE = {
-  gold: '#C5B493',
+  gold: '#D8C39A',
   goldLight: '#F3E5AB',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
@@ -32,7 +32,7 @@ const PALETTE = {
 };
 
 const ATMOSPHERE_COLORS = [
-  { name: 'Golden Dusk', colors: ['#C5B493', '#C5B493', '#8B7A3E'] },
+  { name: 'Golden Dusk', colors: ['#FFF4D6', '#E9D9B8', '#C5B493', '#9A8661', '#6E5E40'] },
   { name: 'Ocean Calm', colors: ['#8BC4E8', '#243B6B', '#1B2A4A'] },
   { name: 'Forest Deep', colors: ['#6EBF8B', '#2E7A68', '#1A4A3A'] },
   { name: 'Amethyst', colors: ['#9D76C1', '#4A3B6B', '#3D2952'] },

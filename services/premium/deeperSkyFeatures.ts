@@ -189,7 +189,7 @@ export const PREMIUM_THEMES: PremiumTheme[] = [
     colors: {
       background: '#0D1421',
       backgroundSecondary: '#141E2E',
-      primary: '#C5B493',
+      primary: '#D8C39A',
       accent: '#1A2740',
     },
     isPremium: false,

@@ -328,7 +328,7 @@ body {
 }
 .bt-sign {
   font-size: 18px;
-  color: #C5B493;
+  color: #D8C39A;
   margin-bottom: 4px;
 }
 .bt-house {
@@ -341,7 +341,7 @@ body {
 .section-title {
   font-size: 17px;
   font-weight: 600;
-  color: #C5B493;
+  color: #D8C39A;
   letter-spacing: 0.3px;
   margin-bottom: 14px;
   padding-bottom: 8px;
@@ -386,7 +386,7 @@ tr:last-child td { border-bottom: none; }
 .chapters-header {
   font-size: 22px;
   font-weight: 700;
-  color: #C5B493;
+  color: #D8C39A;
   text-align: center;
   margin: 48px 0 32px;
   letter-spacing: 0.3px;
@@ -447,7 +447,7 @@ tr:last-child td { border-bottom: none; }
 }
 .affirmation-text {
   font-style: italic;
-  color: #C5B493;
+  color: #D8C39A;
   font-size: 14px;
 }
 

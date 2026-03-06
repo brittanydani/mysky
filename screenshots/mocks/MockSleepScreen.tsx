@@ -22,7 +22,7 @@ const PALETTE = {
   silverBlue: '#8BC4E8',
   silverBlueDim: 'rgba(139,196,232,0.2)',
   amethyst: '#9D76C1',
-  gold: '#C5B493',
+  gold: '#D8C39A',
   emerald: '#6EBF8B',
   text: '#FDFBF7',
   textMuted: 'rgba(255,255,255,0.5)',

@@ -12,12 +12,33 @@ import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#C5B493',
-  silverBlue: '#8BC4E8',
-  textMain: '#FDFBF7',
+export const COLORS = {
+  bg: '#020817',
+  heading: '#F8FAFC',
+  body: 'rgba(226,232,240,0.78)',
+
+  goldBright: '#FDF3D7',
+  goldText: '#E8D6AE',
+  goldIcon: '#E3CFA4',
+  goldMuted: '#D8C39A',
+
+  goldGradient1: '#FFF4D6',
+  goldGradient2: '#E9D9B8',
+  goldGradient3: '#C9AE78',
+  goldGradient4: '#9B7A46',
+  goldGradient5: '#6B532E',
+
+  buttonText: '#0B1220',
+
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
+};
+
+const PALETTE = {
+  gold: COLORS.goldMuted,
+  textMain: COLORS.heading,
+  glassBorder: COLORS.glassBorder,
+  glassHighlight: COLORS.glassHighlight,
 };
 
 export default function OnboardingWelcomeScreen() {
@@ -71,7 +92,7 @@ export default function OnboardingWelcomeScreen() {
               ].map((f, idx) => (
                 <View key={idx} style={[styles.featureRow, idx === 3 && { marginBottom: 0 }]}>
                   <View style={styles.featureIcon}>
-                    <Ionicons name={f.icon as any} size={20} color={PALETTE.gold} />
+                    <Ionicons name={f.icon as any} size={20} color={COLORS.goldIcon} />
                   </View>
                   <Text style={styles.featureText}>{f.text}</Text>
                 </View>
@@ -87,13 +108,14 @@ export default function OnboardingWelcomeScreen() {
               accessibilityLabel="Get started"
             >
               <LinearGradient
-                colors={['#FFF4D4', '#C5B493', '#8B6508']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                colors={[COLORS.goldGradient1, COLORS.goldGradient2, COLORS.goldGradient3, COLORS.goldGradient4, COLORS.goldGradient5]}
+                start={{ x: 0, y: 0.2 }}
+                end={{ x: 1, y: 0.8 }}
                 style={styles.ctaGradient}
               >
+                <View style={styles.ctaHighlight} />
                 <Text style={styles.ctaText}>Get Started</Text>
-                <Ionicons name="arrow-forward" size={20} color="#1A1A1A" />
+                <Ionicons name="arrow-forward" size={20} color={COLORS.buttonText} />
               </LinearGradient>
             </Pressable>
 
@@ -103,7 +125,7 @@ export default function OnboardingWelcomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Restore from backup"
             >
-              <Ionicons name="cloud-download-outline" size={16} color={PALETTE.gold} />
+              <Ionicons name="cloud-download-outline" size={16} color={COLORS.goldMuted} />
               <Text style={styles.secondaryText}>Restore from Backup</Text>
             </Pressable>
           </Animated.View>
@@ -114,7 +136,7 @@ export default function OnboardingWelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07090F' },
+  container: { flex: 1, backgroundColor: COLORS.bg },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: {
@@ -134,14 +156,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: '700',
-    color: PALETTE.textMain,
+    color: COLORS.heading,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: PALETTE.gold,
+    color: COLORS.goldText,
     fontStyle: 'italic',
     marginTop: 8,
     marginBottom: 24,
@@ -160,8 +182,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: COLORS.glassBorder,
+    borderTopColor: COLORS.glassHighlight,
   },
   featureRow: {
     flexDirection: 'row',
@@ -172,7 +194,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(197, 180, 147, 0.15)',
+    backgroundColor: 'rgba(227, 207, 164, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -187,16 +209,21 @@ const styles = StyleSheet.create({
   cta: { alignItems: 'center' },
   ctaButton: {
     width: '100%',
-    borderRadius: 16,
+    borderRadius: 9999,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: PALETTE.gold,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 4,
+    borderColor: 'rgba(255, 244, 214, 0.32)',
+    borderWidth: 1,
   },
   ctaPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
+  ctaHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+  },
   ctaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -207,7 +234,7 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: COLORS.buttonText,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginRight: 8,
   },
@@ -219,13 +246,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(197, 180, 147, 0.2)',
-    backgroundColor: 'rgba(197, 180, 147, 0.05)',
+    borderColor: 'rgba(216, 195, 154, 0.2)',
+    backgroundColor: 'rgba(216, 195, 154, 0.05)',
   },
   secondaryText: { 
     fontSize: 14, 
     fontWeight: '600',
-    color: PALETTE.gold, 
+    color: COLORS.goldMuted,
     marginLeft: 8,
   },
 });
