@@ -1103,7 +1103,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   ferry: 'vehicle', yacht: 'vehicle', canoe: 'vehicle', raft: 'vehicle',
   kayak: 'vehicle', subway: 'vehicle', metro: 'vehicle', trolley: 'vehicle',
   ambulance: 'vehicle', engine: 'vehicle', steering: 'vehicle',
-  passenger: 'vehicle', backseat: 'vehicle', highway: 'path',
+  passenger: 'vehicle', backseat: 'vehicle',
   speeding: 'vehicle', brakes: 'vehicle', accelerating: 'vehicle',
   wreck: 'vehicle', collision: 'vehicle', swerving: 'vehicle',
 
@@ -1172,7 +1172,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   // Stairs / elevator
   stairs: 'stairs', staircase: 'stairs', stairway: 'stairs',
   steps: 'stairs', elevator: 'stairs', escalator: 'stairs',
-  ascending: 'stairs', descending: 'stairs',
+  ascending: 'stairs',
   upstairs: 'stairs', downstairs: 'stairs',
   floor: 'stairs', floors: 'stairs', level: 'stairs', levels: 'stairs',
   penthouse: 'stairs', storey: 'stairs', story: 'stairs',
@@ -1193,7 +1193,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   meal: 'food', dinner: 'food', lunch: 'food', breakfast: 'food',
   feast: 'food', banquet: 'food', hungry: 'food', hunger: 'food',
   starving: 'food', appetite: 'food', cooking: 'food', cook: 'food',
-  baking: 'food', bake: 'food', recipe: 'food', kitchen: 'house',
+  baking: 'food', bake: 'food', recipe: 'food',
   restaurant: 'food', cafe: 'food', table: 'food', plate: 'food',
   bowl: 'food', serving: 'food', nourishment: 'food', nourish: 'food',
   fruit: 'food', apple: 'food', bread: 'food', cake: 'food',
@@ -1212,7 +1212,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   shirt: 'clothing', pants: 'clothing', shoes: 'clothing', shoe: 'clothing',
   boots: 'clothing', hat: 'clothing', crown: 'clothing', veil: 'clothing',
   scarf: 'clothing', gloves: 'clothing', armor: 'clothing',
-  wardrobe: 'clothing', closet: 'house', fitting: 'clothing',
+  wardrobe: 'clothing', fitting: 'clothing',
   tailored: 'clothing', fabric: 'clothing', thread: 'clothing',
   sewn: 'clothing', sewing: 'clothing', stitching: 'clothing',
   cape: 'clothing', apron: 'clothing', tuxedo: 'clothing',
@@ -1248,7 +1248,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   crying: 'crying', cry: 'crying', cried: 'crying', tears: 'crying',
   tear: 'crying', weeping: 'crying', weep: 'crying', wept: 'crying',
   sobbing: 'crying', sob: 'crying', grief: 'crying', grieving: 'crying',
-  mourning: 'death', sadness: 'crying', sad: 'crying', sorrow: 'crying',
+  sadness: 'crying', sad: 'crying', sorrow: 'crying',
   sorrowful: 'crying', heartbreak: 'crying', heartbroken: 'crying',
   anguish: 'crying', despair: 'crying', despairing: 'crying',
   devastated: 'crying', lonely: 'crying', loneliness: 'crying',
@@ -1269,7 +1269,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   pills: 'hospital', sick: 'hospital', illness: 'hospital', ill: 'hospital',
   disease: 'hospital', diagnosis: 'hospital', cure: 'hospital',
   healing: 'hospital', healer: 'hospital', heal: 'hospital',
-  ambulance: 'vehicle', emergency: 'hospital',
+  emergency: 'hospital',
   clinic: 'hospital', therapy: 'hospital', therapist: 'hospital',
   operation: 'hospital', recovery: 'hospital', recovering: 'hospital',
   fever: 'hospital', pain: 'hospital', painful: 'hospital',
@@ -1281,7 +1281,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   prison: 'prison', jail: 'prison', cell: 'prison', imprisoned: 'prison',
   captive: 'prison', captivity: 'prison', chains: 'prison', chained: 'prison',
   shackles: 'prison', handcuffs: 'prison', bars: 'prison',
-  confined: 'prison', confinement: 'prison', cage: 'bird',
+  confined: 'prison', confinement: 'prison',
   stuck: 'prison', suffocating: 'prison', suffocate: 'prison',
   claustrophobic: 'prison', claustrophobia: 'prison',
   restraint: 'prison', restrained: 'prison', bound: 'prison',
@@ -1305,7 +1305,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   ringing: 'phone', ring: 'ring',
   email: 'phone', letter: 'phone', letters: 'phone',
   mail: 'phone', postcard: 'phone', signal: 'phone',
-  reception: 'wedding', disconnect: 'phone', disconnected: 'phone',
+  disconnect: 'phone', disconnected: 'phone',
   conversation: 'phone', talking: 'phone', talk: 'phone',
   talked: 'phone', spoke: 'phone', speaking: 'phone', speak: 'phone',
   whisper: 'phone', whispering: 'phone', whispered: 'phone',
@@ -1342,7 +1342,6 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   climbing: 'climbing', climb: 'climbing', climbed: 'climbing',
   clambering: 'climbing', scrambling: 'climbing', scramble: 'climbing',
   scaling: 'climbing', scale: 'climbing',
-  summit: 'nature', peak: 'nature',
   rope: 'climbing', ladder: 'climbing', ledge: 'climbing',
 
   // Fog / mist
@@ -1362,7 +1361,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
 
   // Gate / fence
   gate: 'gate', gates: 'gate', fence: 'gate', fences: 'gate',
-  wall: 'gate', walls: 'house', barrier: 'gate', barriers: 'gate',
+  wall: 'gate', barrier: 'gate', barriers: 'gate',
   boundary: 'gate', boundaries: 'gate', border: 'gate',
   threshold: 'gate', entrance: 'gate', exit: 'gate',
   forbidden: 'gate', restricted: 'gate', trespassing: 'gate',
@@ -1400,11 +1399,11 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   warmth: 'sun', warm: 'sun', golden: 'sun',
 
   // Ring / circle
-  ring: 'ring', rings: 'ring', circle: 'ring', circles: 'ring',
+  rings: 'ring', circle: 'ring', circles: 'ring',
   circular: 'ring', spiral: 'ring', spiraling: 'ring',
   loop: 'ring', looping: 'ring', orbit: 'ring', orbiting: 'ring',
   cycle: 'ring', cycling: 'ring', wheel: 'ring', revolving: 'ring',
-  spinning: 'spider', rotation: 'ring',
+  rotation: 'ring',
 
   // Weapon / sharp object
   weapon: 'weapon', weapons: 'weapon', sharp: 'weapon',
@@ -1418,7 +1417,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   twirling: 'dance', twirl: 'dance', pirouette: 'dance',
   choreography: 'dance', performance: 'dance', performing: 'dance',
   stage: 'dance', theater: 'dance', theatre: 'dance',
-  audience: 'dance', applause: 'dance', spotlight: 'light',
+  audience: 'dance', applause: 'dance',
 
   // Anger / rage
   anger: 'anger', angry: 'anger', rage: 'anger', furious: 'anger',
@@ -1428,7 +1427,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   outrage: 'anger', indignant: 'anger', hostile: 'anger',
   hostility: 'anger', temper: 'anger', tantrum: 'anger',
   explosive: 'anger', erupting: 'anger', seething: 'anger',
-  bitter: 'food', vengeful: 'anger', revenge: 'anger',
+  vengeful: 'anger', revenge: 'anger',
   hatred: 'anger', hate: 'anger', loathing: 'anger',
 
   // Old school / familiar place
@@ -1448,23 +1447,23 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   desert: 'desert', sand: 'desert', sandy: 'desert', dune: 'desert',
   dunes: 'desert', barren: 'desert', arid: 'desert', drought: 'desert',
   dry: 'desert', dusty: 'desert', dust: 'desert', wasteland: 'desert',
-  desolate: 'desert', wilderness: 'nature', empty: 'desert',
+  desolate: 'desert', empty: 'desert',
   emptiness: 'desert', vacant: 'desert', scorched: 'desert', oasis: 'desert',
 
   // Snow / ice
   snow: 'snow', snowy: 'snow', snowfall: 'snow', snowflake: 'snow',
   snowflakes: 'snow', blizzard: 'snow', ice: 'snow', icy: 'snow',
-  frozen: 'prison', freezing: 'snow', frost: 'snow', frosty: 'snow',
+  freezing: 'snow', frost: 'snow', frosty: 'snow',
   cold: 'snow', chill: 'snow', chilly: 'snow', frigid: 'snow',
   glacier: 'snow', iceberg: 'snow', sleet: 'snow', icicle: 'snow',
   icicles: 'snow', winter: 'snow', wintry: 'snow',
 
   // Crowd
   crowd: 'crowd', crowds: 'crowd', crowded: 'crowd',
-  mob: 'crowd', herd: 'crowd', swarm: 'insects',
+  mob: 'crowd', herd: 'crowd',
   throng: 'crowd', multitude: 'crowd', masses: 'crowd',
   gathering: 'crowd', assembly: 'crowd', congregation: 'crowd',
-  audience: 'dance', spectators: 'crowd', bystanders: 'crowd',
+  spectators: 'crowd', bystanders: 'crowd',
   onlookers: 'crowd', strangers: 'stranger', people: 'crowd',
   population: 'crowd', public: 'crowd', society: 'crowd',
   community: 'crowd', group: 'crowd', groups: 'crowd',
@@ -1481,10 +1480,10 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   clutch: 'hands', clutching: 'hands', squeeze: 'hands', squeezing: 'hands',
 
   // Voice / unable to speak
-  voice: 'voice', voices: 'voice', mute: 'music', silent: 'music',
-  speechless: 'voice', voiceless: 'voice', screaming: 'fight',
-  scream: 'fight', screamed: 'voice', yelling: 'fight',
-  yelled: 'voice', shouting: 'fight', whisper: 'phone',
+  voice: 'voice', voices: 'voice',
+  speechless: 'voice', voiceless: 'voice',
+  screamed: 'voice',
+  yelled: 'voice',
   unable: 'voice', cannot: 'voice',
 
   // Rabbit
@@ -1523,7 +1522,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   book: 'book', books: 'book', library: 'book', reading: 'book',
   read: 'book', wrote: 'book', writing: 'book', write: 'book',
   written: 'book', page: 'book', pages: 'book', chapter: 'book',
-  story: 'book', novel: 'book', scroll: 'book', manuscript: 'book',
+  novel: 'book', scroll: 'book', manuscript: 'book',
   journal: 'book', diary: 'book', notebook: 'book', pen: 'book',
   pencil: 'book', ink: 'book', words: 'book', script: 'book',
   poem: 'book', poetry: 'book', literature: 'book',
@@ -1532,13 +1531,13 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   // Box / container
   box: 'box', boxes: 'box', container: 'box', crate: 'box',
   trunk: 'box', drawer: 'box', drawers: 'box', cabinet: 'box',
-  locker: 'test', vault: 'box', safe: 'box', jar: 'box',
+  vault: 'box', safe: 'box', jar: 'box',
   bottle: 'box', envelope: 'box', suitcase: 'box', luggage: 'box',
   baggage: 'box', bag: 'box', bags: 'box', backpack: 'box',
-  purse: 'money', package: 'gift', storage: 'box', attic: 'house',
+  storage: 'box',
   packed: 'box', packing: 'box', unpacking: 'box', unpack: 'box',
   opened: 'box', opening: 'box', closed: 'box', closing: 'box',
-  sealed: 'box', hidden: 'chase', buried: 'box', burying: 'box',
+  sealed: 'box', buried: 'box', burying: 'box',
 
   // ─── Emotion / State Keywords ──────────────────────────────────────────────
 
@@ -1567,7 +1566,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   intimate: 'wedding', intimacy: 'wedding',
   passion: 'wedding', passionate: 'wedding',
   longing: 'wedding', yearning: 'wedding', desire: 'wedding',
-  desire: 'wedding', attracted: 'wedding', attraction: 'wedding',
+  attracted: 'wedding', attraction: 'wedding',
   crush: 'wedding', infatuation: 'wedding',
   sex: 'wedding', sexual: 'wedding', erotic: 'wedding',
   seduction: 'wedding', seduced: 'wedding',
@@ -1575,7 +1574,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   friend: 'wedding', friends: 'wedding', friendship: 'wedding',
 
   // Confusion / disorientation (maps to fog)
-  confused: 'lost', confusion: 'fog', disoriented: 'lost',
+  confusion: 'fog',
   uncertain: 'fog', uncertainty: 'fog', doubt: 'fog', doubtful: 'fog',
   indecisive: 'fog', undecided: 'fog', unsure: 'fog',
   puzzled: 'fog', perplexed: 'fog', baffled: 'fog',
@@ -1591,11 +1590,11 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   champion: 'climbing', conquer: 'climbing', conquering: 'climbing',
 
   // Shame / guilt (maps to naked — vulnerability/exposure)
-  guilt: 'naked', guilty: 'naked', regret: 'crying',
+  guilt: 'naked', guilty: 'naked',
   worthless: 'naked', inadequate: 'naked', inferior: 'naked',
   failure: 'naked', failed: 'naked', failing: 'naked',
   rejected: 'naked', rejection: 'naked', outcast: 'naked',
-  betrayed: 'naked', betrayal: 'naked', abandoned: 'island',
+  betrayed: 'naked', betrayal: 'naked',
   abandonment: 'island',
 
   // Transformation
@@ -1618,7 +1617,7 @@ export const DREAM_KEYWORDS: Record<string, string> = {
   dragon: 'snake', unicorn: 'horse', pegasus: 'flying',
   monster: 'stranger', creature: 'stranger', beast: 'bear',
   animal: 'nature', animals: 'nature', pet: 'dog', pets: 'dog',
-  zoo: 'nature', aquarium: 'fish', wildlife: 'nature',
+  zoo: 'nature', wildlife: 'nature',
 };
 
 // ─── Extraction Function ──────────────────────────────────────────────────────

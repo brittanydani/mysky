@@ -1,0 +1,462 @@
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, Href } from 'expo-router';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/core';
+
+import { theme } from '../../constants/theme';
+import { applyStoryLabels } from '../../constants/storyLabels';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import ChapterCard from '../../components/ui/ChapterCard';
+import SkiaStoryGate, { CHAPTER_COLORS } from '../../components/ui/SkiaStoryGate';
+import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
+import { localDb } from '../../services/storage/localDb';
+import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { FullNatalStoryGenerator, GeneratedChapter } from '../../services/premium/fullNatalStory';
+import { exportChartToPdf } from '../../services/premium/pdfExport';
+import { NatalChart } from '../../services/astrology/types';
+import { usePremium } from '../../context/PremiumContext';
+import { logger } from '../../utils/logger';
+
+// ── Cinematic Palette ──
+const PALETTE = {
+  gold: '#C5B493',
+  silverBlue: '#8BC4E8',
+  copper: '#CD7F5D',
+  emerald: '#6EBF8B',
+  rose: '#D4A3B3',
+  textMain: '#FDFBF7',
+  glassBorder: 'rgba(255,255,255,0.06)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
+};
+
+const FORCE_COLORS_MAP: Record<string, string> = {
+  'Sun': '#C5B493',
+  'Moon': '#8BC4E8',
+  'Mars': '#CD7F5D',
+  'Venus': '#F4C2C2',
+  'Saturn': '#A9A9A9',
+  'Jupiter': '#9370DB',
+  'Mercury': '#FFEA70',
+  'Pluto': '#9D76C1',
+  'Neptune': '#48D1CC',
+  'Uranus': '#FF8C00',
+  'Aries': '#CD7F5D',
+  'Taurus': '#6EBF8B',
+  'Gemini': '#FFEA70',
+  'Cancer': '#8BC4E8',
+  'Leo': '#C5B493',
+  'Virgo': '#A9A9A9',
+  'Libra': '#F4C2C2',
+  'Scorpio': '#9D76C1',
+  'Sagittarius': '#9370DB',
+  'Capricorn': '#A9A9A9',
+  'Aquarius': '#48D1CC',
+  'Pisces': '#8BC4E8'
+};
+
+function calculateForces(chart: NatalChart | null) {
+  if (!chart || !chart.placements) return [];
+  
+  const scores: Record<string, { label: string, val: number, color: string }> = {};
+  
+  const addScore = (key: string, points: number) => {
+    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || PALETTE.gold };
+    scores[key].val += points;
+  };
+
+  chart.placements.forEach(p => {
+    const isLuminary = ['Sun', 'Moon'].includes(p.planet.name);
+    const isPersonal = ['Mercury', 'Venus', 'Mars'].includes(p.planet.name);
+    const points = isLuminary ? 30 : isPersonal ? 20 : 10;
+    
+    addScore(p.planet.name, points);
+    if (p.sign && p.sign.name) {
+      addScore(p.sign.name, points);
+    }
+  });
+
+  if (chart.risingSign) {
+    addScore(chart.risingSign.name, 30);
+  }
+
+  // Find top 6 forces
+  const topForces = Object.values(scores)
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 6)
+    .map(f => ({
+      label: f.label, // applyStoryLabels will run inside the radar chart on these technical names
+      value: Math.min(100, (f.val / 60) * 100), // Normalize a bit so it maxes near 100
+      color: f.color
+    }));
+
+  return topForces;
+}
+
+export default function StoryScreen() {
+  const router = useRouter();
+  const { isPremium } = usePremium();
+  const [chapters, setChapters] = useState<GeneratedChapter[]>([]);
+  const [chart, setChart] = useState<NatalChart | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
+
+  const loadStoryData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const charts = await localDb.getCharts();
+      if (charts.length === 0) {
+        setChapters([]);
+        return;
+      }
+
+      const savedChart = charts[0];
+      const birthData = {
+        date: savedChart.birthDate,
+        time: savedChart.birthTime,
+        hasUnknownTime: savedChart.hasUnknownTime,
+        place: savedChart.birthPlace,
+        latitude: savedChart.latitude,
+        longitude: savedChart.longitude,
+        timezone: savedChart.timezone,
+        houseSystem: savedChart.houseSystem,
+      };
+
+      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      const story = FullNatalStoryGenerator.generateFullStory(chart, isPremium);
+
+      setChart(chart);
+      setChapters(story.chapters);
+    } catch (error) {
+      logger.error('Failed to load story data:', error);
+      setChapters([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isPremium]);
+
+  const handleExportPdf = useCallback(async () => {
+    if (!isPremium) {
+      router.push('/(tabs)/premium' as Href);
+      return;
+    }
+    if (!chart || chapters.length === 0) return;
+    if (isExporting) return;
+
+    setIsExporting(true);
+    try {
+      await exportChartToPdf(chart, chapters);
+    } catch (err) {
+      logger.error('PDF export failed:', err);
+      Alert.alert('Export failed', 'Something went wrong generating the PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [isPremium, chart, chapters, isExporting, router]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      (async () => {
+        if (!isActive) return;
+        await loadStoryData();
+      })();
+
+      return () => {
+        isActive = false;
+      };
+    }, [loadStoryData])
+  );
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <SkiaDynamicCosmos />
+        <ActivityIndicator size="large" color={PALETTE.gold} style={{ marginBottom: 16 }} />
+        <Text style={styles.loadingText}>Mapping your architecture...</Text>
+      </View>
+    );
+  }
+
+  const unlockedCount = chapters.filter(c => !c.isPremium || isPremium).length;
+
+  return (
+    <View style={styles.container}>
+      <SkiaDynamicCosmos />
+
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+            <Text style={styles.title}>Architecture</Text>
+            <Text style={styles.headerSub}>
+              Your personal blueprint — a structured framework of behavioral patterns, core drives, and growth vectors derived from your unique data.
+            </Text>
+            {chapters.length > 0 && (
+              <Text style={styles.subtitle}>
+                {chapters.length} dimensions — {unlockedCount} mapped
+              </Text>
+            )}
+            
+            {chapters.length > 0 && (
+              <Pressable
+                onPress={handleExportPdf}
+                disabled={isExporting}
+                style={({ pressed }) => [styles.exportButton, pressed && { opacity: 0.8 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Export chart as PDF"
+              >
+                <LinearGradient
+                  colors={['rgba(197, 180, 147, 0.25)', 'rgba(197, 180, 147, 0.1)']}
+                  style={styles.exportBtnGradient}
+                >
+                  {isExporting ? (
+                    <ActivityIndicator size="small" color={PALETTE.gold} />
+                  ) : (
+                    <>
+                      <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
+                      <Text style={styles.exportButtonText}>Export PDF</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </Pressable>
+            )}
+          </Animated.View>
+
+          {/* Radar Chart */}
+          {chart && chapters.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ alignItems: 'center' }}>
+              <Text style={[styles.title, { fontSize: 22, marginTop: 10, marginBottom: -10, alignSelf: 'flex-start', marginLeft: 20 }]}>Core Force Map</Text>
+              <PsychologicalForcesRadar forces={calculateForces(chart)} size={350} />
+            </Animated.View>
+          )}
+
+          {/* Chapters */}
+          {chapters.length === 0 ? (
+            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
+              <LinearGradient colors={['rgba(35, 40, 55, 0.5)', 'rgba(20, 24, 34, 0.8)']} style={styles.emptyCard}>
+                <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>Your architecture awaits</Text>
+                <Text style={styles.emptySubtitle}>
+                  Enter your birth details to build a personalized blueprint of behavioral patterns, drives, and growth directions.
+                </Text>
+                <Pressable
+                  onPress={() => router.push('/(tabs)/chart' as Href)}
+                  style={styles.emptyButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Build your blueprint"
+                >
+                  <Text style={styles.emptyButtonText}>Build Your Blueprint</Text>
+                </Pressable>
+              </LinearGradient>
+            </Animated.View>
+          ) : (
+            chapters.map((chapter, index) => {
+              const isLocked = !isPremium && chapter.isPremium;
+
+              return (
+                <Animated.View
+                  key={chapter.id}
+                  entering={FadeInDown.delay(200 + index * 80).duration(500)}
+                >
+                  <SkiaStoryGate
+                    index={index}
+                    title={applyStoryLabels(chapter.title)}
+                    isUnlocked={!isLocked}
+                    isPremium={isPremium}
+                    accentColor={CHAPTER_COLORS[index]}
+                    onPress={() => {
+                      if (isLocked) {
+                        router.push('/(tabs)/premium' as Href);
+                      } else {
+                        setExpandedChapterId(prev => prev === chapter.id ? null : chapter.id);
+                      }
+                    }}
+                  />
+                  {!isLocked && expandedChapterId === chapter.id && (
+                    <Animated.View entering={FadeInDown.duration(400)}>
+                      <ChapterCard
+                        chapter={`Chapter ${index + 1}`}
+                        title={applyStoryLabels(chapter.title)}
+                        content={chapter.content}
+                        reflection={chapter.reflection}
+                        affirmation={chapter.affirmation}
+                      />
+                    </Animated.View>
+                  )}
+                </Animated.View>
+              );
+            })
+          )}
+
+          {/* Unlock prompt */}
+          {!isPremium && chapters.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(200 + chapters.length * 80).duration(500)}>
+              <Pressable
+                onPress={() => router.push('/(tabs)/premium' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="Unlock all chapters"
+              >
+                <LinearGradient
+                  colors={['rgba(197, 180, 147, 0.15)', 'rgba(20, 24, 34, 0.8)']}
+                  style={styles.upsellGradient}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                    <Text style={styles.upsellTitle}>
+                      7 more dimensions to explore
+                    </Text>
+                  </View>
+
+                  <Text style={styles.upsellText}>
+                    Attachment Style · Conflict Resolution · Inner Child Patterns · Shadow Integration · Growth Vectors — and more.
+                  </Text>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+                    <Text style={styles.unlockText}>Expand your blueprint</Text>
+                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          )}
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#07090F' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  safeArea: { flex: 1 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20 },
+  
+  loadingText: {
+    color: theme.textSecondary,
+    fontStyle: 'italic',
+    fontSize: 15,
+  },
+  
+  header: {
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 34,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  headerSub: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 16,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: theme.textMuted,
+    marginTop: 12,
+    fontStyle: 'italic',
+    letterSpacing: 0.5,
+  },
+
+  exportButton: {
+    marginTop: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  exportBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 180, 147, 0.3)',
+  },
+  exportButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: PALETTE.gold,
+  },
+
+  upsellGradient: {
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 180, 147, 0.2)',
+    marginTop: 16,
+  },
+  upsellTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+  upsellText: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    lineHeight: 22,
+  },
+  unlockText: {
+    fontSize: 14,
+    color: PALETTE.gold,
+    fontWeight: '600',
+  },
+
+  emptyStateContainer: { marginTop: 32 },
+  emptyCard: {
+    borderRadius: 20,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    borderTopColor: PALETTE.glassHighlight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    fontSize: 24,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    marginBottom: 12,
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: 'rgba(197, 180, 147, 0.15)',
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 180, 147, 0.3)',
+  },
+  emptyButtonText: {
+    color: PALETTE.gold,
+    fontWeight: '700',
+    fontSize: 15,
+  },
+});
