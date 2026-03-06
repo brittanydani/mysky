@@ -26,6 +26,18 @@ export const METALLIC_GOLD = {
   ] as const,
 } as const;
 
+// ── Solid gold text colors for body / label text ────────────────────
+// Use these for non-gradient gold text (RN <Text> components).
+// For gradient metallic headlines, use LuxuryGoldTextSkia instead.
+export const GOLD_TEXT = {
+  /** Primary gold — headings, prominent labels */
+  primary: '#E8D6AE',
+  /** Secondary gold — subtitles, descriptions */
+  secondary: '#D8C39A',
+  /** Bright gold — small accents, tags, badges */
+  bright: '#F3E6C5',
+} as const;
+
 // ── Single source of truth for the MySky visual system ──────────────
 export const MYSTIC = {
   // ─ Backgrounds ─

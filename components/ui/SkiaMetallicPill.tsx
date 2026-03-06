@@ -2,14 +2,15 @@
  * SkiaMetallicPill
  *
  * A true reflective-metallic CTA button rendered entirely with Skia.
- * Replicates the MySky logo gold look via 6 layered passes:
+ * Replicates the MySky logo gold look via 7 layered passes:
  *
- *   1. dark under-glow shadow
- *   2. base metallic 6-stop gradient
- *   3. narrow reflection bands (bright highlights)
- *   4. top gloss strip (white → transparent)
- *   5. subtle bottom shade (dark → transparent)
- *   6. thin bright rim stroke
+ *   1. Outer glow (BlurMask)
+ *   2. Base metallic 6-stop gradient with position control
+ *   3. Horizontal reflection bands (8-stop) — the key to "metal" feel
+ *   4. Top gloss strip (inset from edges)
+ *   5. Bottom shadow (3-stop, covers full rect)
+ *   6. Outer rim light
+ *   7. Inner lower rim
  *
  * Drop-in replacement for all expo-linear-gradient CTA buttons.
  */
@@ -21,7 +22,7 @@ import {
   RoundedRect,
   LinearGradient,
   Group,
-  BoxShadow,
+  BlurMask,
   vec,
 } from '@shopify/react-native-skia';
 import { METALLIC_GOLD } from '../../constants/theme';
@@ -83,76 +84,78 @@ function SkiaMetallicPill({
       {/* Skia canvas fills the entire pill */}
       {w > 0 && (
       <Canvas style={[StyleSheet.absoluteFillObject, { borderRadius: r }]}>  
-        {/* ── 1. Dark under-glow shadow ───────────────────────── */}
-        <Group>
-          <RoundedRect x={0} y={2} width={w} height={height} r={r}>
-            <BoxShadow dx={0} dy={4} blur={12} color="rgba(0,0,0,0.45)" />
-          </RoundedRect>
-        </Group>
+        {/* ── 1. Outer glow ───────────────────────────────────── */}
+        <RoundedRect x={1} y={2} width={w - 2} height={height - 2} r={r}>
+          <LinearGradient
+            start={vec(0, 0)}
+            end={vec(w, height)}
+            colors={[
+              'rgba(247,231,194,0.00)',
+              METALLIC_GOLD.glow,
+              'rgba(247,231,194,0.00)',
+            ]}
+          />
+          <BlurMask blur={10} style="solid" />
+        </RoundedRect>
 
         {/* ── 2. Base metallic gradient ───────────────────────── */}
         <RoundedRect x={0} y={0} width={w} height={height} r={r}>
           <LinearGradient
-            start={vec(0.05 * w, 0.15 * height)}
-            end={vec(0.95 * w, 0.85 * height)}
+            start={vec(w * 0.05, height * 0.15)}
+            end={vec(w * 0.95, height * 0.85)}
             colors={[...METALLIC_GOLD.pillGradient]}
+            positions={[0, 0.16, 0.34, 0.56, 0.78, 1]}
           />
         </RoundedRect>
 
-        {/* ── 3. Narrow reflection band — bright strip near top ── */}
-        <Group
-          clip={{ x: 0, y: 0, width: w, height: height }}
-        >
-          <RoundedRect
-            x={0}
-            y={height * 0.08}
-            width={w}
-            height={height * 0.18}
-            r={r}
-          >
-            <LinearGradient
-              start={vec(0, height * 0.08)}
-              end={vec(0, height * 0.26)}
-              colors={[
-                'rgba(255,255,255,0.00)',
-                'rgba(255,248,227,0.32)',
-                'rgba(255,255,255,0.00)',
-              ]}
-            />
-          </RoundedRect>
-        </Group>
-
-        {/* ── 4. Top gloss strip — white fade from very top ───── */}
-        <RoundedRect x={0} y={0} width={w} height={height * 0.42} r={r}>
+        {/* ── 3. Reflection bands — these make it feel metallic ── */}
+        <RoundedRect x={0} y={0} width={w} height={height} r={r}>
           <LinearGradient
             start={vec(0, 0)}
-            end={vec(0, height * 0.42)}
+            end={vec(w, 0)}
             colors={[
-              METALLIC_GOLD.gloss,  // rgba(255,255,255,0.18)
-              'rgba(255,255,255,0.02)',
+              'rgba(255,255,255,0.00)',
+              'rgba(255,255,255,0.10)',
+              'rgba(255,248,220,0.38)',
+              'rgba(255,255,255,0.12)',
+              'rgba(255,255,255,0.00)',
+              'rgba(111,85,46,0.06)',
+              'rgba(255,248,220,0.28)',
+              'rgba(255,255,255,0.00)',
             ]}
+            positions={[0, 0.08, 0.18, 0.28, 0.40, 0.58, 0.78, 1]}
           />
         </RoundedRect>
 
-        {/* ── 5. Subtle bottom shade — darker at lower edge ───── */}
-        <RoundedRect
-          x={0}
-          y={height * 0.6}
-          width={w}
-          height={height * 0.4}
-          r={r}
-        >
+        {/* ── 4. Top gloss strip ──────────────────────────────── */}
+        <RoundedRect x={6} y={4} width={w - 12} height={height * 0.36} r={r}>
           <LinearGradient
-            start={vec(0, height * 0.6)}
+            start={vec(0, 0)}
+            end={vec(0, height * 0.36)}
+            colors={[
+              'rgba(255,255,255,0.24)',
+              'rgba(255,255,255,0.10)',
+              'rgba(255,255,255,0.00)',
+            ]}
+            positions={[0, 0.45, 1]}
+          />
+        </RoundedRect>
+
+        {/* ── 5. Bottom shadow ────────────────────────────────── */}
+        <RoundedRect x={0} y={0} width={w} height={height} r={r}>
+          <LinearGradient
+            start={vec(0, height * 0.55)}
             end={vec(0, height)}
             colors={[
               'rgba(0,0,0,0.00)',
-              'rgba(78,58,31,0.28)', // METALLIC_GOLD.deepShadow tinted
+              'rgba(78,58,31,0.06)',
+              'rgba(78,58,31,0.16)',
             ]}
+            positions={[0, 0.55, 1]}
           />
         </RoundedRect>
 
-        {/* ── 6. Thin bright rim stroke ───────────────────────── */}
+        {/* ── 6. Outer rim light ──────────────────────────────── */}
         <RoundedRect
           x={0.5}
           y={0.5}
@@ -162,6 +165,18 @@ function SkiaMetallicPill({
           style="stroke"
           strokeWidth={1}
           color={METALLIC_GOLD.rim}
+        />
+
+        {/* ── 7. Inner lower rim ──────────────────────────────── */}
+        <RoundedRect
+          x={1.5}
+          y={1.5}
+          width={w - 3}
+          height={height - 3}
+          r={r}
+          style="stroke"
+          strokeWidth={1}
+          color="rgba(111,85,46,0.18)"
         />
       </Canvas>
       )}
