@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import PremiumRequiredScreen from '../../components/PremiumRequiredScreen';
 import { localDb } from '../../services/storage/localDb';
 import { JournalEntry, generateId } from '../../services/storage/models';
@@ -515,9 +516,14 @@ export default function JournalScreen() {
             style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}
           >
             <Pressable style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]} onPress={() => void handleAddEntry()} accessibilityRole="button" accessibilityLabel="Add new journal entry">
-              <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.fabGradient}>
-                <Ionicons name="add" size={28} color="#0B1220" />
-              </LinearGradient>
+              <SkiaMetallicPill
+                label=""
+                onPress={() => void handleAddEntry()}
+                height={60}
+                borderRadius={30}
+                icon={<Ionicons name="add" size={28} color="#020817" />}
+                style={{ width: 60 }}
+              />
             </Pressable>
           </Animated.View>
         )}

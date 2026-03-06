@@ -11,6 +11,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -143,19 +144,13 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
                   <Text style={styles.secondaryText}>Not now</Text>
                 </Pressable>
 
-                <Pressable
-                  style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.9 }]}
-                  onPress={handleAccept}
-                >
-                  <LinearGradient
-                    colors={['#FFF4D6', '#C9AE78', '#6B532E']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.primaryGradient}
-                  >
-                    <Text style={styles.primaryText}>I Agree</Text>
-                  </LinearGradient>
-                </Pressable>
+                <View style={styles.primaryBtn}>
+                  <SkiaMetallicPill
+                    label="I Agree"
+                    onPress={handleAccept}
+                    borderRadius={16}
+                  />
+                </View>
               </View>
 
               <Text style={styles.footnote}>You can view these anytime in Settings.</Text>

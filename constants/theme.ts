@@ -3,6 +3,29 @@
 
 import { Platform } from 'react-native';
 
+// ── Metallic gold palette — matches MySky logo reflective look ──────
+export const METALLIC_GOLD = {
+  highlight1: '#FFF8E3',
+  highlight2: '#F7E7C2',
+  light: '#EED9A7',
+  mid: '#CFAE73',
+  shadow1: '#9B7A46',
+  shadow2: '#6F552E',
+  deepShadow: '#4E3A1F',
+  rim: 'rgba(255,248,220,0.60)',
+  glow: 'rgba(247,231,194,0.22)',
+  gloss: 'rgba(255,255,255,0.18)',
+  /** 6-stop pill gradient from bright highlight to deep shadow */
+  pillGradient: [
+    '#FFF8E3',
+    '#F7E7C2',
+    '#EED9A7',
+    '#CFAE73',
+    '#9B7A46',
+    '#6F552E',
+  ] as const,
+} as const;
+
 // ── Single source of truth for the MySky visual system ──────────────
 export const MYSTIC = {
   // ─ Backgrounds ─

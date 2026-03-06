@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
 import { useRouter, Href } from 'expo-router';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
 
 interface PremiumRequiredScreenProps {
   feature?: string;
@@ -80,21 +81,11 @@ export default function PremiumRequiredScreen({
 
       {/* CTA Section */}
       <Animated.View entering={FadeInDown.delay(700).duration(600)} style={styles.ctaSection}>
-        <Pressable
+        <SkiaMetallicPill
+          label="View Subscription Plans"
           onPress={() => router.push('/(tabs)/premium' as Href)}
-          style={({ pressed }) => [styles.ctaButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-          accessibilityRole="button"
-        >
-          <LinearGradient
-            colors={['#FFF4D6', '#C9AE78', '#6B532E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.ctaGradient}
-          >
-            <Text style={styles.ctaText}>View Subscription Plans</Text>
-            <Ionicons name="arrow-forward" size={18} color="#0B1220" />
-          </LinearGradient>
-        </Pressable>
+          icon={<Ionicons name="arrow-forward" size={18} color="#020817" />}
+        />
 
         <Text style={styles.priceHint}>From $4.99/mo • Private & Secure</Text>
 

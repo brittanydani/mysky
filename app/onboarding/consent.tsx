@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { PrivacyComplianceManager } from '../../services/privacy/privacyComplianceManager';
 import { logger } from '../../utils/logger';
 
@@ -138,24 +139,12 @@ export default function OnboardingConsentScreen() {
               </Text>
             </Pressable>
 
-            <Pressable
+            <SkiaMetallicPill
+              label={saving ? 'Saving...' : 'Accept & Continue'}
               onPress={accept}
               disabled={!checked || saving}
-              style={[styles.ctaButton, (!checked || saving) && { opacity: 0.5 }]}
-              accessibilityRole="button"
-              accessibilityLabel="Accept and continue"
-              accessibilityState={{ disabled: !checked || saving }}
-            >
-              <LinearGradient 
-                colors={['#FFF4D6', '#C9AE78', '#6B532E']} 
-                start={{ x: 0, y: 0 }} 
-                end={{ x: 1, y: 1 }} 
-                style={styles.ctaGradient}
-              >
-                <Text style={styles.ctaText}>{saving ? 'Saving...' : 'Accept & Continue'}</Text>
-                {!saving && <Ionicons name="arrow-forward" size={18} color="#0B1220" />}
-              </LinearGradient>
-            </Pressable>
+              icon={!saving ? <Ionicons name="arrow-forward" size={18} color="#020817" /> : undefined}
+            />
 
             <Text style={styles.note}>
               Last updated: March 3, 2026

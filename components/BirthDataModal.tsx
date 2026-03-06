@@ -32,6 +32,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import { BirthData, HouseSystem } from '../services/astrology/types';
 import { InputValidator } from '../services/astrology/inputValidator';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
@@ -344,11 +345,11 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
               )}
             </Animated.View>
 
-            <Pressable style={styles.saveBtn} onPress={handleSave}>
-              <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.saveGradient}>
-                <Text style={styles.saveBtnText}>Generate My Chart</Text>
-              </LinearGradient>
-            </Pressable>
+            <SkiaMetallicPill
+              label="Generate My Chart"
+              onPress={handleSave}
+              borderRadius={16}
+            />
             <Text style={styles.privacyNote}>Encrypted locally. Private by design.</Text>
           </ScrollView>
         </SafeAreaView>
@@ -368,11 +369,11 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
                   <View style={styles.sealRow}><Text style={styles.sealLabel}>PLACE</Text><Text style={styles.sealValue} numberOfLines={1}>{place.split(',')[0]}</Text></View>
                 </View>
 
-                <Pressable style={styles.saveBtn} onPress={() => { setShowConfirm(false); onSave({ date: toLocalDateString(date), time: hasUnknownTime ? undefined : time.toTimeString().slice(0, 5), hasUnknownTime, place, latitude, longitude, houseSystem }, { chartName }); }}>
-                  <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.saveGradient}>
-                    <Text style={styles.saveBtnText}>Confirm & Secure</Text>
-                  </LinearGradient>
-                </Pressable>
+                <SkiaMetallicPill
+                  label="Confirm & Secure"
+                  onPress={() => { setShowConfirm(false); onSave({ date: toLocalDateString(date), time: hasUnknownTime ? undefined : time.toTimeString().slice(0, 5), hasUnknownTime, place, latitude, longitude, houseSystem }, { chartName }); }}
+                  borderRadius={16}
+                />
                 <Pressable onPress={() => setShowConfirm(false)} style={{ marginTop: 20 }}><Text style={styles.backBtnText}>Edit Details</Text></Pressable>
               </Animated.View>
             </LinearGradient>

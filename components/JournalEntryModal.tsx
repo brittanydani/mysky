@@ -29,6 +29,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import ShadowQuoteCard, { ShadowQuoteInline } from './ui/ShadowQuoteCard';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
@@ -283,11 +284,11 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Footer / Save */}
                 <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
                   {showCloseQuote && closeQuote && <ShadowQuoteCard quote={closeQuote} variant="footer" isCloseQuote />}
-                  <Pressable style={styles.saveBtn} onPress={handleSave}>
-                    <LinearGradient colors={['#FFF4D6', '#C9AE78', '#6B532E']} style={styles.saveGradient}>
-                      <Text style={styles.saveBtnText}>{initialData ? 'Secure Changes' : 'Secure Entry'}</Text>
-                    </LinearGradient>
-                  </Pressable>
+                  <SkiaMetallicPill
+                    label={initialData ? 'Secure Changes' : 'Secure Entry'}
+                    onPress={handleSave}
+                    borderRadius={16}
+                  />
                 </Animated.View>
 
               </ScrollView>

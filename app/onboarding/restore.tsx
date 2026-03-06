@@ -9,6 +9,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { BackupService } from '../../services/storage/backupService';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -141,22 +142,12 @@ export default function OnboardingRestoreScreen() {
                 returnKeyType="done"
               />
 
-              <Pressable
-                style={[styles.ctaButton, (!backupUri || busy) && { opacity: 0.5 }]}
+              <SkiaMetallicPill
+                label={busy ? 'Restoring...' : 'Restore Data'}
                 onPress={restore}
                 disabled={!backupUri || busy}
-                accessibilityRole="button"
-              >
-                <LinearGradient 
-                  colors={['#FFF4D6', '#C9AE78', '#6B532E']} 
-                  start={{ x: 0, y: 0 }} 
-                  end={{ x: 1, y: 1 }} 
-                  style={styles.ctaGradient}
-                >
-                  <Text style={styles.ctaText}>{busy ? 'Restoring...' : 'Restore Data'}</Text>
-                  {!busy && <Ionicons name="arrow-forward" size={18} color="#0B1220" />}
-                </LinearGradient>
-              </Pressable>
+                icon={!busy ? <Ionicons name="arrow-forward" size={18} color="#020817" /> : undefined}
+              />
 
               <Text style={styles.note}>
                 Your backup is decrypted entirely on your device.

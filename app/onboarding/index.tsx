@@ -10,6 +10,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 
 // ── Cinematic Palette ──
 export const COLORS = {
@@ -101,23 +102,12 @@ export default function OnboardingWelcomeScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInUp.delay(380).duration(650)} style={styles.cta}>
-            <Pressable
-              style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]}
+            <SkiaMetallicPill
+              label="Get Started"
               onPress={goNext}
-              accessibilityRole="button"
-              accessibilityLabel="Get started"
-            >
-              <LinearGradient
-                colors={[COLORS.goldGradient1, COLORS.goldGradient2, COLORS.goldGradient3, COLORS.goldGradient4, COLORS.goldGradient5]}
-                start={{ x: 0, y: 0.2 }}
-                end={{ x: 1, y: 0.8 }}
-                style={styles.ctaGradient}
-              >
-                <View style={styles.ctaHighlight} />
-                <Text style={styles.ctaText}>Get Started</Text>
-                <Ionicons name="arrow-forward" size={20} color={COLORS.buttonText} />
-              </LinearGradient>
-            </Pressable>
+              icon={<Ionicons name="arrow-forward" size={20} color={COLORS.buttonText} />}
+              style={{ marginBottom: 16 }}
+            />
 
             <Pressable
               style={styles.secondaryButton}
