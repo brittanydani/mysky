@@ -36,17 +36,7 @@ import AspectRow from '../../components/ui/AspectRow';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 
 // ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#E8D6AE',         // Champagne gold
-  silverBlue: '#D1D5DB',   // Silver
-  platinum: '#C3CAD6',     // Cross-aspects
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  rose: '#D4A3B3',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
-};
+
 
 type ViewMode = 'list' | 'detail';
 type RelationshipType = 'partner' | 'ex' | 'child' | 'parent' | 'friend' | 'sibling' | 'other';
@@ -336,7 +326,7 @@ export default function RelationshipsScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <View style={StyleSheet.absoluteFill} pointerEvents="none"><SkiaDynamicCosmos /></View>
-        <ActivityIndicator size="large" color={PALETTE.gold} />
+        <ActivityIndicator size="large" color={theme.textGold} />
         <Text style={styles.loadingText}>Loading relationships...</Text>
       </View>
     );
@@ -365,14 +355,14 @@ export default function RelationshipsScreen() {
           
           <View style={styles.detailHeader}>
             <Pressable onPress={handleBack} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color={PALETTE.textMain} />
+              <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
             </Pressable>
             <View style={styles.detailHeaderCenter}>
               <Text style={styles.detailTitle}>Relationship Chart</Text>
               <Text style={styles.detailSubtitle}>{userName} + {selectedRelationship.name}</Text>
             </View>
             <Pressable onPress={handleDeleteRelationship} style={styles.deleteButton}>
-              <Ionicons name="trash-outline" size={22} color={PALETTE.copper} />
+              <Ionicons name="trash-outline" size={22} color={'#CD7F5D'} />
             </Pressable>
           </View>
 
@@ -381,19 +371,19 @@ export default function RelationshipsScreen() {
             {/* Person selector */}
             <View style={styles.personSelectorRow}>
               <Pressable
-                style={[styles.personPill, summaryPerson === 'you' && { borderColor: `${PALETTE.gold}60`, backgroundColor: `${PALETTE.gold}15` }]}
+                style={[styles.personPill, summaryPerson === 'you' && { borderColor: `${theme.textGold}60`, backgroundColor: `${theme.textGold}15` }]}
                 onPress={() => { setSummaryPerson('you'); Haptics.selectionAsync().catch(() => {}); }}
               >
-                <Ionicons name="person" size={13} color={summaryPerson === 'you' ? PALETTE.gold : theme.textMuted} />
-                <Text style={[styles.personPillText, summaryPerson === 'you' && { color: PALETTE.gold }]}>{userName}</Text>
+                <Ionicons name="person" size={13} color={summaryPerson === 'you' ? theme.textGold : theme.textMuted} />
+                <Text style={[styles.personPillText, summaryPerson === 'you' && { color: theme.textGold }]}>{userName}</Text>
               </Pressable>
 
               <Pressable
-                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${PALETTE.silverBlue}60`, backgroundColor: `${PALETTE.silverBlue}15` }]}
+                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#8BC4E8'}60`, backgroundColor: `${'#8BC4E8'}15` }]}
                 onPress={() => { setSummaryPerson('them'); Haptics.selectionAsync().catch(() => {}); }}
               >
-                <Ionicons name="layers-outline" size={13} color={summaryPerson === 'them' ? PALETTE.silverBlue : theme.textMuted} />
-                <Text style={[styles.personPillText, summaryPerson === 'them' && { color: PALETTE.silverBlue }]}>{selectedRelationship.name}</Text>
+                <Ionicons name="layers-outline" size={13} color={summaryPerson === 'them' ? '#8BC4E8' : theme.textMuted} />
+                <Text style={[styles.personPillText, summaryPerson === 'them' && { color: '#8BC4E8' }]}>{selectedRelationship.name}</Text>
                 <Text style={styles.personPillType}>{RELATIONSHIP_LABELS[selectedRelationship.relationship]}</Text>
               </Pressable>
 
@@ -405,9 +395,9 @@ export default function RelationshipsScreen() {
             {/* Filter pills */}
             <View style={styles.filterRow}>
               {([
-                { key: 'person1' as const, label: 'Your planets', activeColor: PALETTE.gold },
-                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: PALETTE.silverBlue },
-                { key: 'cross' as const, label: 'Cross-aspects', activeColor: PALETTE.platinum },
+                { key: 'person1' as const, label: 'Your planets', activeColor: theme.textGold },
+                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#8BC4E8' },
+                { key: 'cross' as const, label: 'Cross-aspects', activeColor: '#E5E4E2' },
               ] as const).map(pill => {
                 const active = filterMode[pill.key];
                 return (
@@ -485,7 +475,7 @@ export default function RelationshipsScreen() {
               <Animated.View entering={FadeInDown.duration(400)}>
                 <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Ionicons name="heart" size={20} color={PALETTE.emerald} />
+                    <Ionicons name="heart" size={20} color={'#6EBF8B'} />
                     <Text style={styles.insightCardTitle}>Your Connection</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryConnection}</Text>
@@ -493,7 +483,7 @@ export default function RelationshipsScreen() {
 
                 <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Ionicons name="trending-up" size={20} color={PALETTE.silverBlue} />
+                    <Ionicons name="trending-up" size={20} color={'#8BC4E8'} />
                     <Text style={styles.insightCardTitle}>Your Growth Edge</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryChallenge}</Text>
@@ -501,7 +491,7 @@ export default function RelationshipsScreen() {
 
                 <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Ionicons name="pulse" size={20} color={PALETTE.gold} />
+                    <Ionicons name="pulse" size={20} color={theme.textGold} />
                     <Text style={styles.insightCardTitle}>Overall Dynamic</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.overallDynamic}</Text>
@@ -521,13 +511,13 @@ export default function RelationshipsScreen() {
                   <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                     <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                        <Ionicons name="sparkles" size={18} color={theme.textGold} />
                         <Text style={styles.upsellTitle}>There's more between you</Text>
                       </View>
                       <Text style={styles.upsellText}>Communication styles, emotional needs comparison, and healing paths for this relationship — with Deeper Sky.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: PALETTE.gold }}>See the full picture</Text>
-                        <Ionicons name="arrow-forward" size={16} color={PALETTE.gold} />
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textGold }}>See the full picture</Text>
+                        <Ionicons name="arrow-forward" size={16} color={theme.textGold} />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -548,8 +538,8 @@ export default function RelationshipsScreen() {
                       <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 4} more planetary connections</Text>
                       <Text style={styles.upsellText}>Deeper aspects reveal hidden dynamics — the subtle threads that make this relationship unique.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: PALETTE.gold }}>Unlock all aspects</Text>
-                        <Ionicons name="arrow-forward" size={16} color={PALETTE.gold} />
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textGold }}>Unlock all aspects</Text>
+                        <Ionicons name="arrow-forward" size={16} color={theme.textGold} />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -605,7 +595,7 @@ export default function RelationshipsScreen() {
 
                     <Text style={styles.sectionHeader}>Tips for Connection</Text>
                     <View style={styles.tipCard}>
-                      <Ionicons name="bulb" size={20} color={PALETTE.gold} />
+                      <Ionicons name="bulb" size={20} color={theme.textGold} />
                       <Text style={styles.tipText}>{comparison.communicationDynamics.tipForPerson1}</Text>
                     </View>
                   </>
@@ -642,7 +632,7 @@ export default function RelationshipsScreen() {
                     <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.relationshipCardGradient}>
                       <View style={styles.cardHeaderRow}>
                         <View style={styles.relationshipIcon}>
-                          <Ionicons name={RELATIONSHIP_ICONS[rel.relationship]} size={22} color={PALETTE.gold} />
+                          <Ionicons name={RELATIONSHIP_ICONS[rel.relationship]} size={22} color={theme.textGold} />
                         </View>
                         <View style={styles.relationshipInfo}>
                           <Text style={styles.relationshipName}>{rel.name}</Text>
@@ -655,7 +645,7 @@ export default function RelationshipsScreen() {
                         <View style={styles.previewSection}>
                           <View style={styles.previewDivider} />
                           {preview.aspects.map((aspect, i) => {
-                            const catColors: Record<string, string> = { connection: PALETTE.emerald, chemistry: PALETTE.rose, growth: PALETTE.silverBlue, challenge: PALETTE.copper };
+                            const catColors: Record<string, string> = { connection: '#6EBF8B', chemistry: '#D4A3B3', growth: '#8BC4E8', challenge: '#CD7F5D' };
                             const catColor = catColors[aspect.category] || theme.textMuted;
                             return (
                               <View key={i} style={styles.previewAspectRow}>
@@ -684,7 +674,7 @@ export default function RelationshipsScreen() {
               {(['partner', 'parent', 'child', 'friend', 'sibling', 'other'] as RelationshipType[]).map(type => (
                 <Pressable key={type} style={styles.typeButton} onPress={() => handleAddRelationship(type)}>
                   <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={styles.typeIconContainer}>
-                    <Ionicons name={RELATIONSHIP_ICONS[type]} size={24} color={PALETTE.silverBlue} />
+                    <Ionicons name={RELATIONSHIP_ICONS[type]} size={24} color={'#8BC4E8'} />
                   </LinearGradient>
                   <Text style={styles.typeLabel}>{RELATIONSHIP_LABELS[type]}</Text>
                 </Pressable>
@@ -694,7 +684,7 @@ export default function RelationshipsScreen() {
             {!isPremium && (
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                 <View style={styles.limitIndicator}>
-                  <Ionicons name="sparkles" size={14} color={PALETTE.gold} />
+                  <Ionicons name="sparkles" size={14} color={theme.textGold} />
                   <Text style={styles.limitText}>
                     {relationships.length === 0 ? 'Free includes 1 relationship chart · Deeper Sky unlocks unlimited' : 'Deeper Sky unlocks unlimited charts'}
                   </Text>
@@ -708,7 +698,7 @@ export default function RelationshipsScreen() {
               <Text style={styles.discoverTitle}>What You'll Discover</Text>
               
               <View style={styles.discoverItem}>
-                <Ionicons name="chatbubbles" size={20} color={PALETTE.silverBlue} />
+                <Ionicons name="chatbubbles" size={20} color={'#8BC4E8'} />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Communication Styles</Text>
                   <Text style={styles.discoverItemText}>How you each process and express</Text>
@@ -716,7 +706,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <Ionicons name="heart" size={20} color={PALETTE.rose} />
+                <Ionicons name="heart" size={20} color={'#D4A3B3'} />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Emotional Needs</Text>
                   <Text style={styles.discoverItemText}>What makes each person feel safe</Text>
@@ -724,7 +714,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <Ionicons name="git-merge" size={20} color={PALETTE.copper} />
+                <Ionicons name="git-merge" size={20} color={'#CD7F5D'} />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Sources of Ease & Tension</Text>
                   <Text style={styles.discoverItemText}>Where you flow and where you grow</Text>
@@ -732,7 +722,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <Ionicons name="refresh" size={20} color={PALETTE.emerald} />
+                <Ionicons name="refresh" size={20} color={'#6EBF8B'} />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Repair Strategies</Text>
                   <Text style={styles.discoverItemText}>How to reconnect after conflict</Text>
@@ -759,96 +749,96 @@ const styles = StyleSheet.create({
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
   loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15, fontStyle: 'italic' },
-  emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '600', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
   
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
+  title: { fontSize: 34, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
   subtitle: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic', marginTop: 6 },
   scrollView: { flex: 1, paddingHorizontal: 20 },
   
-  listSectionTitle: { fontSize: 22, color: PALETTE.textMain, marginTop: 24, marginBottom: 6, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  listSectionTitle: { fontSize: 22, color: theme.textPrimary, marginTop: 24, marginBottom: 6, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   listSectionSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20 },
   
-  relationshipCardGradient: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, marginBottom: 12 },
+  relationshipCardGradient: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center' },
   relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(232, 214, 174, 0.1)', justifyContent: 'center', alignItems: 'center' },
   relationshipInfo: { flex: 1, marginLeft: 16 },
-  relationshipName: { fontSize: 18, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 2 },
+  relationshipName: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 2 },
   relationshipType: { fontSize: 13, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
   
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
   typeButton: { width: '33.33%', padding: 6 },
-  typeIconContainer: { borderRadius: 16, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  typeIconContainer: { borderRadius: 16, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder },
   typeLabel: { marginTop: 10, fontSize: 13, color: theme.textSecondary, textAlign: 'center', fontWeight: '500' },
   
   limitIndicator: { marginTop: 20, padding: 16, backgroundColor: 'rgba(232, 214, 174, 0.1)', borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
-  limitText: { fontSize: 13, color: PALETTE.gold, textAlign: 'center', fontWeight: '600' },
+  limitText: { fontSize: 13, color: theme.textGold, textAlign: 'center', fontWeight: '600' },
   
-  discoverSection: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  discoverTitle: { fontSize: 20, color: PALETTE.textMain, marginBottom: 20, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  discoverSection: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder },
+  discoverTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 20, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   discoverItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 20 },
   discoverContent: { flex: 1, marginLeft: 16 },
-  discoverItemTitle: { fontSize: 15, fontWeight: '600', color: PALETTE.textMain, marginBottom: 4 },
+  discoverItemTitle: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, marginBottom: 4 },
   discoverItemText: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
 
   // Detail view styles
   detailHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   backButton: { padding: 8 },
   detailHeaderCenter: { flex: 1, alignItems: 'center' },
-  detailTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  detailTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   detailSubtitle: { fontSize: 13, color: theme.textSecondary, marginTop: 4, fontStyle: 'italic' },
   deleteButton: { padding: 8 },
   detailScroll: { flex: 1 },
   detailScrollContent: { paddingHorizontal: 20, paddingTop: 16 },
 
   personSelectorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  personPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
+  personPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
   personPillPartner: { flex: 1 },
   personPillActive: { borderColor: 'rgba(230, 213, 184, 0.4)', backgroundColor: 'rgba(230, 213, 184, 0.1)' },
   personPillText: { fontSize: 14, fontWeight: '600', color: theme.textMuted },
   personPillType: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic', marginLeft: 4 },
   personPillAdd: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(230, 213, 184, 0.3)', borderStyle: 'dashed' },
-  personPillAddText: { fontSize: 14, fontWeight: '600', color: PALETTE.gold },
+  personPillAddText: { fontSize: 14, fontWeight: '600', color: theme.textGold },
 
   filterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginVertical: 16 },
-  filterPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
+  filterPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
   filterDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.2)' },
   filterPillText: { fontSize: 12, color: theme.textMuted, fontWeight: '600' },
 
-  summaryBar: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, paddingVertical: 20, paddingHorizontal: 12, marginTop: 12, marginBottom: 24 },
+  summaryBar: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, paddingVertical: 20, paddingHorizontal: 12, marginTop: 12, marginBottom: 24 },
   summaryCol: { flex: 1, alignItems: 'center', gap: 4 },
   summarySep: { width: 1, height: 48, backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'center' },
   summaryIcon: { fontSize: 11, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
-  summarySign: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  summarySign: { fontSize: 16, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   summaryDetail: { fontSize: 12, color: theme.textSecondary },
 
-  tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: PALETTE.glassBorder, marginBottom: 16 },
+  tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.cardBorder, marginBottom: 16 },
   tab: { paddingVertical: 14, paddingHorizontal: 16, marginRight: 8 },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: PALETTE.gold },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: theme.textGold },
   tabText: { fontSize: 15, color: theme.textMuted, fontWeight: '600' },
-  tabTextActive: { color: PALETTE.gold },
+  tabTextActive: { color: theme.textGold },
   
-  insightCardGradient: { padding: 24, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, marginBottom: 16 },
-  insightCardTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  insightCardGradient: { padding: 24, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
+  insightCardTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   insightCardText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
-  sectionHeader: { fontSize: 18, color: PALETTE.textMain, marginTop: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  sectionHeader: { fontSize: 18, color: theme.textPrimary, marginTop: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
-  reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'rgba(232,214,174,0.08)', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: PALETTE.gold },
-  reminderText: { fontSize: 16, color: PALETTE.textMain, fontStyle: 'italic', lineHeight: 24, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'rgba(232,214,174,0.08)', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: theme.textGold },
+  reminderText: { fontSize: 16, color: theme.textPrimary, fontStyle: 'italic', lineHeight: 24, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
   upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
-  upsellTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.gold },
+  upsellTitle: { fontSize: 16, fontWeight: '600', color: theme.textGold },
   upsellText: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', marginTop: 10, lineHeight: 20 },
 
-  dynamicCard: { borderRadius: 20, padding: 20, marginBottom: 12, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
-  dynamicLabel: { fontSize: 12, fontWeight: '700', color: PALETTE.gold, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
+  dynamicCard: { borderRadius: 20, padding: 20, marginBottom: 12, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight },
+  dynamicLabel: { fontSize: 12, fontWeight: '700', color: theme.textGold, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
   dynamicText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: PALETTE.gold, marginTop: 8, marginRight: 12 },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.textGold, marginTop: 8, marginRight: 12 },
   bulletText: { flex: 1, fontSize: 15, color: theme.textSecondary, lineHeight: 22 },
   tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'rgba(232, 214, 174, 0.1)', borderRadius: 16, padding: 20, marginBottom: 16 },
-  tipText: { flex: 1, fontSize: 15, color: PALETTE.textMain, marginLeft: 16, lineHeight: 22 },
+  tipText: { flex: 1, fontSize: 15, color: theme.textPrimary, marginLeft: 16, lineHeight: 22 },
 
   previewSection: { marginTop: 6 },
   previewDivider: { height: 1, backgroundColor: 'rgba(232, 214, 174, 0.15)', marginVertical: 12 },
