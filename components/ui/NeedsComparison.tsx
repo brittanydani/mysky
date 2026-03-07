@@ -3,9 +3,8 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
 
 interface NeedsComparisonProps {
   person1Name: string;
@@ -34,10 +33,14 @@ export default function NeedsComparison({
       <View style={styles.columns}>
         
         {/* Person 1 - Gold Profile */}
-        <LinearGradient
-          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-          style={[styles.column, { borderColor: `${PALETTE.gold}20` }]}
-        >
+        <View style={[styles.column, { borderColor: `${PALETTE.gold}20` }]}>
+          <View style={[StyleSheet.absoluteFillObject, { borderRadius: 20, overflow: 'hidden' }]} pointerEvents="none">
+            <Canvas style={StyleSheet.absoluteFillObject}>
+              <RoundedRect x={0} y={0} width={400} height={600} r={20}>
+                <LinearGradient start={vec(0, 0)} end={vec(0, 600)} colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} />
+              </RoundedRect>
+            </Canvas>
+          </View>
           <View style={styles.nameRow}>
             <View style={[styles.avatar, { backgroundColor: 'rgba(232, 214, 174, 0.15)' }]}>
               <Ionicons name="person" size={12} color={PALETTE.gold} />
@@ -45,14 +48,18 @@ export default function NeedsComparison({
             <Text style={[styles.name, { color: PALETTE.gold }]} numberOfLines={1}>{person1Name}</Text>
           </View>
           <View style={styles.needsList}>
-            {person1Needs.slice(0, 3).map((need, i) => (
-              <View key={i} style={styles.needRow}>
-                <View style={[styles.needDot, { backgroundColor: PALETTE.gold }]} />
-                <Text style={styles.needText}>{need}</Text>
-              </View>
-            ))}
+            {person1Needs.slice(0, 3).length > 0 ? (
+              person1Needs.slice(0, 3).map((need, i) => (
+                <View key={i} style={styles.needRow}>
+                  <View style={[styles.needDot, { backgroundColor: PALETTE.gold }]} />
+                  <Text style={styles.needText}>{need}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>Needs still unfolding</Text>
+            )}
           </View>
-        </LinearGradient>
+        </View>
 
         {/* Floating Connection Centerpiece */}
         <View style={styles.dividerContainer}>
@@ -64,10 +71,14 @@ export default function NeedsComparison({
         </View>
 
         {/* Person 2 - Silver/Blue Profile */}
-        <LinearGradient
-          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-          style={[styles.column, { borderColor: `${PALETTE.silverBlue}20` }]}
-        >
+        <View style={[styles.column, { borderColor: `${PALETTE.silverBlue}20` }]}>
+          <View style={[StyleSheet.absoluteFillObject, { borderRadius: 20, overflow: 'hidden' }]} pointerEvents="none">
+            <Canvas style={StyleSheet.absoluteFillObject}>
+              <RoundedRect x={0} y={0} width={400} height={600} r={20}>
+                <LinearGradient start={vec(0, 0)} end={vec(0, 600)} colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} />
+              </RoundedRect>
+            </Canvas>
+          </View>
           <View style={styles.nameRow}>
             <View style={[styles.avatar, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
               <Ionicons name="person" size={12} color={PALETTE.silverBlue} />
@@ -77,14 +88,18 @@ export default function NeedsComparison({
             </Text>
           </View>
           <View style={styles.needsList}>
-            {person2Needs.slice(0, 3).map((need, i) => (
-              <View key={i} style={styles.needRow}>
-                <View style={[styles.needDot, { backgroundColor: PALETTE.silverBlue }]} />
-                <Text style={styles.needText}>{need}</Text>
-              </View>
-            ))}
+            {person2Needs.slice(0, 3).length > 0 ? (
+              person2Needs.slice(0, 3).map((need, i) => (
+                <View key={i} style={styles.needRow}>
+                  <View style={[styles.needDot, { backgroundColor: PALETTE.silverBlue }]} />
+                  <Text style={styles.needText}>{need}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>Needs still unfolding</Text>
+            )}
           </View>
-        </LinearGradient>
+        </View>
 
       </View>
     </View>
@@ -105,21 +120,22 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderTopColor: PALETTE.glassHighlight,
+    minHeight: 150,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   avatar: {
-    width: 24,
-    height: 24,
+    width: 26,
+    height: 26,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   name: {
     fontSize: 14,
@@ -128,7 +144,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   needsList: {
-    gap: 12,
+    gap: 10,
   },
   needRow: {
     flexDirection: 'row',
@@ -145,14 +161,21 @@ const styles = StyleSheet.create({
   },
   needText: {
     fontSize: 13,
-    color: theme.textSecondary,
-    lineHeight: 18,
+    color: 'rgba(226,232,240,0.82)',
+    lineHeight: 19,
     flex: 1,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: 'rgba(240, 234, 214, 0.45)',
+    fontStyle: 'italic',
+    lineHeight: 18,
   },
   dividerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 12,
+    width: 18,
+    marginHorizontal: 4,
   },
   dividerLine: {
     flex: 1,
@@ -160,14 +183,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
   },
   dividerIcon: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.28)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 4,
+    marginVertical: 6,
   },
 });

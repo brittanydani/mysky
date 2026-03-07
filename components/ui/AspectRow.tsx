@@ -3,11 +3,11 @@
 // High-end, glassmorphic synastry aspect row for MySky.
 // Upgraded with subtle gradients, glowing nodes, and cinematic typography hierarchy.
 // 
-// Requires: expo-linear-gradient
+// Uses: @shopify/react-native-skia directly, NO expo-linear-gradient.
 
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
 
 export type AspectCategory = 'connection' | 'chemistry' | 'growth' | 'challenge';
@@ -46,29 +46,39 @@ export default function AspectRow({
       <View style={styles.timelineColumn}>
         {/* Glowing Node */}
         <View style={[styles.glowHalo, { backgroundColor: `${cfg.color}30` }]}>
-          <LinearGradient
-            colors={cfg.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.nodeCore}
-          />
+          <View style={[styles.nodeCore, { overflow: 'hidden' }]}>
+              <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+                <Canvas style={StyleSheet.absoluteFillObject}>
+                  <RoundedRect x={0} y={0} width={8} height={8} r={4}>
+                    <LinearGradient start={vec(0, 0)} end={vec(8, 8)} colors={cfg.gradient.map(String)} />
+                  </RoundedRect>
+                </Canvas>
+              </View>
+            </View>
         </View>
         
         {/* Fading Connector Line */}
-        <LinearGradient
-          colors={[`${cfg.color}80`, 'rgba(255,255,255,0)']}
-          style={styles.connector}
-        />
+        <View style={[styles.connector, { overflow: 'hidden' }]}>
+          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+            <Canvas style={StyleSheet.absoluteFillObject}>
+              <RoundedRect x={0} y={0} width={1.5} height={100} r={1}>
+                <LinearGradient start={vec(0, 0)} end={vec(0, 100)} colors={[`${cfg.color}80`, 'rgba(255,255,255,0)']} />
+              </RoundedRect>
+            </Canvas>
+          </View>
+        </View>
       </View>
 
       {/* ── Glassmorphic Content Card ── */}
       <View style={styles.cardContainer}>
-        <LinearGradient
-          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.cardGlow}
-        >
+        <View style={styles.cardGlow}>
+          <View style={[StyleSheet.absoluteFillObject, { borderRadius: 16, overflow: 'hidden' }]} pointerEvents="none">
+            <Canvas style={StyleSheet.absoluteFillObject}>
+              <RoundedRect x={0} y={0} width={400} height={600} r={16}>
+                <LinearGradient start={vec(0, 0)} end={vec(0, 600)} colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} />
+              </RoundedRect>
+            </Canvas>
+          </View>
           {/* Card Border Highlight (Top/Left light catch) */}
           <View style={styles.cardInner}>
             
@@ -99,7 +109,7 @@ export default function AspectRow({
             </View>
 
           </View>
-        </LinearGradient>
+        </View>
       </View>
     </View>
   );

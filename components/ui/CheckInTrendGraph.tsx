@@ -1,14 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Dimensions, Platform } from 'react-native';
-import Svg, {
-  Path,
-  Defs,
-  LinearGradient as SvgGradient,
-  Stop,
-  Circle,
-  Text as SvgText,
-  Line,
-} from 'react-native-svg';
+import { Canvas, Path, Circle, LinearGradient as SkiaGradient, vec, Line as SkiaLine } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { DailyCheckIn } from '../../services/patterns/types';
@@ -125,30 +117,49 @@ export default function CheckInTrendGraph({
 
       {/* Chart Panel */}
       <View style={styles.chartContainer}>
-        <Svg width={width} height={height}>
-          <Defs>
-            <SvgGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0%" stopColor={metric.color} stopOpacity={0.3} />
-              <Stop offset="100%" stopColor={metric.color} stopOpacity={0} />
-            </SvgGradient>
-          </Defs>
-
+        <Canvas style={{ width, height }}>
           {/* Guidelines */}
           {[0, 0.5, 1].map(p => (
-            <Line key={p} x1={padding.left} y1={padding.top + p * chartH} x2={padding.left + chartW} y2={padding.top + p * chartH} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+            <SkiaLine 
+              key={p} 
+              p1={vec(padding.left, padding.top + p * chartH)} 
+              p2={vec(padding.left + chartW, padding.top + p * chartH)} 
+              color="rgba(255,255,255,0.06)" 
+              strokeWidth={1} 
+            />
           ))}
 
-          <Path d={areaPath} fill="url(#areaFill)" />
-          <Path d={linePath} stroke={metric.color} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+          <Path path={areaPath} style="fill">
+            <SkiaGradient
+              start={vec(0, padding.top)}
+              end={vec(0, padding.top + chartH)}
+              colors={[`${metric.color}4D`, `${metric.color}00`]} 
+            />
+          </Path>
+          <Path path={linePath} color={metric.color} style="stroke" strokeWidth={2.5} strokeJoin="round" />
 
           {points.map((pt, i) => (
-            <Circle key={i} cx={pt.x} cy={pt.y} r={3.5} fill={metric.color} stroke={theme.backgroundDeep} strokeWidth={1.5} />
+            <Circle key={i} cx={pt.x} cy={pt.y} r={3.5} color={metric.color} />
           ))}
+        </Canvas>
 
-          {points.map((pt, i) => (
-            <SvgText key={`l-${i}`} x={pt.x} y={height - 10} textAnchor="middle" fontSize={10} fill={theme.textMuted} fontWeight="600">{pt.label}</SvgText>
-          ))}
-        </Svg>
+        {points.map((pt, i) => (
+          <Text 
+            key={`l-${i}`} 
+            style={{
+              position: 'absolute',
+              left: pt.x - 15,
+              top: padding.top + chartH + 10,
+              width: 30,
+              textAlign: 'center',
+              fontSize: 10,
+              color: theme.textMuted,
+              fontWeight: '600'
+            }}
+          >
+            {pt.label}
+          </Text>
+        ))}
 
         <View style={styles.yAxis}>
           {metric.yLabels.map((l, i) => <Text key={i} style={styles.yLabel}>{l}</Text>)}

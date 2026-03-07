@@ -11,7 +11,6 @@ import {
   BlurMask,
   Path,
   Skia,
-  LinearGradient as SkiaGradient,
   vec,
 } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,8 +19,10 @@ const { width } = Dimensions.get('window');
 const CHART_SIZE = width - 60;
 const PAD_LEFT = 40;
 const PAD_BOTTOM = 40;
-const PLOT_W = CHART_SIZE - PAD_LEFT - 20; // Leave 20px padding on right
-const PLOT_H = CHART_SIZE - PAD_BOTTOM - 20; // Leave 20px padding on top
+const PAD_RIGHT = 20;
+const PAD_TOP = 20;
+const PLOT_W = CHART_SIZE - PAD_LEFT - PAD_RIGHT;
+const PLOT_H = CHART_SIZE - PAD_BOTTOM - PAD_TOP;
 const ORIGIN_Y = CHART_SIZE - PAD_BOTTOM;
 
 interface DataPoint {
@@ -62,7 +63,7 @@ export default function SkiaBiometricScatter({
     p.lineTo(PAD_LEFT, ORIGIN_Y);
     // X-axis
     p.moveTo(PAD_LEFT, ORIGIN_Y);
-    p.lineTo(CHART_SIZE - 5, ORIGIN_Y);
+    p.lineTo(PAD_LEFT + PLOT_W, ORIGIN_Y);
 
     // Arrows
     // Y arrow
@@ -70,9 +71,10 @@ export default function SkiaBiometricScatter({
     p.lineTo(PAD_LEFT, 10);
     p.lineTo(PAD_LEFT + 4, 18);
     // X arrow
-    p.moveTo(CHART_SIZE - 13, ORIGIN_Y - 4);
-    p.lineTo(CHART_SIZE - 5, ORIGIN_Y);
-    p.lineTo(CHART_SIZE - 13, ORIGIN_Y + 4);
+    const xArrow = PAD_LEFT + PLOT_W;
+    p.moveTo(xArrow - 8, ORIGIN_Y - 4);
+    p.lineTo(xArrow, ORIGIN_Y);
+    p.lineTo(xArrow - 8, ORIGIN_Y + 4);
 
     return p;
   }, []);
@@ -99,12 +101,30 @@ export default function SkiaBiometricScatter({
   const heatmapPath = useMemo(() => {
     const path = Skia.Path.Make();
     points.forEach((p) => {
-      const cx = PAD_LEFT + p.x * PLOT_W;
-      const cy = ORIGIN_Y - p.y * PLOT_H;
+      const clampedX = Math.max(0, Math.min(1, p.x));
+      const clampedY = Math.max(0, Math.min(1, p.y));
+      const cx = PAD_LEFT + clampedX * PLOT_W;
+      const cy = ORIGIN_Y - clampedY * PLOT_H;
       path.addCircle(cx, cy, 22);
     });
     return path;
   }, [points]);
+
+  if (!points || points.length === 0) {
+    return (
+      <View style={styles.obsidianCard}>
+        <View style={styles.header}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
+        </View>
+
+        <View style={styles.emptyState}>
+          <Ionicons name="analytics-outline" size={28} color={PALETTE.text} />
+          <Text style={styles.emptyStateText}>More check-ins are needed to reveal correlations.</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.obsidianCard}>
@@ -131,8 +151,10 @@ export default function SkiaBiometricScatter({
 
           {/* 3. Data Nodes */}
           {points.map((p, i) => {
-            const cx = PAD_LEFT + p.x * PLOT_W;
-            const cy = ORIGIN_Y - p.y * PLOT_H;
+            const clampedX = Math.max(0, Math.min(1, p.x));
+            const clampedY = Math.max(0, Math.min(1, p.y));
+            const cx = PAD_LEFT + clampedX * PLOT_W;
+            const cy = ORIGIN_Y - clampedY * PLOT_H;
             return (
               <Group key={i}>
                 <Circle cx={cx} cy={cy} r={4.5} color={PALETTE.point}>
@@ -165,6 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: 'rgba(255,255,255,0.10)',
   },
   header: { marginBottom: 12 },
   title: {
@@ -196,12 +219,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   yAxis: {
-    left: PAD_LEFT + 8,
-    top: -5,
+    left: 2,
+    top: 16,
+    maxWidth: 54,
   },
   xAxis: { 
-    right: 5, 
-    bottom: PAD_BOTTOM - 20, 
+    right: 8,
+    bottom: PAD_BOTTOM - 18,
+    textAlign: 'right',
+    maxWidth: 96,
   },
   insightBox: {
     marginTop: 10,
@@ -215,9 +241,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(232, 214, 174, 0.15)',
   },
   insightText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.82)',
     fontSize: 13,
-    lineHeight: 20,
+    lineHeight: 19,
     flex: 1,
+  },
+  emptyState: {
+    height: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  emptyStateText: {
+    color: PALETTE.text,
+    fontSize: 13,
+    textAlign: 'center',
+    maxWidth: 220,
+    lineHeight: 18,
   },
 });

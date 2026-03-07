@@ -21,7 +21,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, FadeInUp } from 'react-native-reanimated';
@@ -537,7 +537,7 @@ export default function HomeScreen() {
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                <View style={styles.premiumCard}>
+                <View style={styles.premiumPreviewCard}>
                   <View style={styles.premiumPreviewHeader}>
                     <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
                     <Text style={styles.premiumPreviewLabel}>Deeper Insight</Text>
@@ -554,22 +554,7 @@ export default function HomeScreen() {
                     </Text>
                     <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
                   </View>
-                </Viewes" size={18} color={PALETTE.gold} />
-                    <Text style={styles.premiumPreviewLabel}>Deeper Insight</Text>
-                  </View>
-                  <Text style={styles.premiumPreviewTitle}>
-                    Unlock the full Personal Reflection Engine
-                  </Text>
-                  <Text style={styles.premiumPreviewSub}>
-                    Extended pattern reflections, personal connections, guided breath journaling, and full sleep pattern insights.
-                  </Text>
-                  <View style={styles.premiumPreviewCta}>
-                    <Text style={[styles.premiumPreviewCtaText, { color: PALETTE.gold }]}>
-                      Explore Deeper Insight
-                    </Text>
-                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
-                  </View>
-                </LinearGradient>
+                </View>
               </Pressable>
             </Animated.View>
           )}

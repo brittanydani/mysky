@@ -1,7 +1,8 @@
-import React, { memo } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { memo, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
+import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
+import { luxuryTheme } from '../../constants/luxuryTheme';
 import { theme } from '../../constants/theme';
 
 interface InsightCardProps {
@@ -15,14 +16,11 @@ interface InsightCardProps {
   variant?: 'default' | 'featured';
 }
 
-// ── Cinematic Palette ──
 const PALETTE = {
-  gold: theme.textGold,
-  silverBlue: theme.growth,
-  amethyst: theme.archetypes.shadow.main,
-  textMain: theme.textPrimary,
-  glassBorder: theme.cardBorder,
-  glassHighlight: theme.glass.highlight,
+  gold: luxuryTheme.text.goldPrimary,
+  silverBlue: luxuryTheme.accents.silverBlue,
+  amethyst: luxuryTheme.accents.amethyst,
+  textMain: luxuryTheme.text.white,
 };
 
 function InsightCard({
@@ -36,13 +34,27 @@ function InsightCard({
   variant = 'default',
 }: InsightCardProps) {
   const isFeatured = variant === 'featured';
+  const [w, setW] = useState(0);
+  const [h, setH] = useState(0);
 
-  // Determine accent color based on state
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    setW(e.nativeEvent.layout.width);
+    setH(e.nativeEvent.layout.height);
+  }, []);
+
   const accentColor = locked ? PALETTE.amethyst : isFeatured ? PALETTE.gold : PALETTE.silverBlue;
+
+  // Determine gradients directly inside Skia
+  const gradientColors = locked
+    ? ['rgba(157, 118, 193, 0.12)', 'rgba(2,8,23,0.80)']
+    : isFeatured
+    ? ['rgba(232,214,174,0.15)', 'rgba(2,8,23,0.80)']
+    : ['rgba(255,255,255,0.035)', 'rgba(255,255,255,0.01)'];
 
   return (
     <Pressable
       onPress={onPress}
+      onLayout={onLayout}
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.container,
@@ -50,24 +62,25 @@ function InsightCard({
         pressed && styles.pressed,
       ]}
     >
-      <LinearGradient
-        colors={
-          locked
-            ? [...theme.amethystGradient]
-            : isFeatured
-            ? ['rgba(232,214,174,0.10)', 'rgba(2,8,23,0.60)']
-            : [...theme.obsidianGradient]
-        }
-        style={styles.gradient}
-      >
+      {w > 0 && h > 0 && (
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+          <Canvas style={StyleSheet.absoluteFillObject}>
+            <RoundedRect x={0} y={0} width={w} height={h} r={20}>
+              <LinearGradient
+                start={vec(0, 0)}
+                end={vec(0, h)}
+                colors={gradientColors}
+              />
+            </RoundedRect>
+          </Canvas>
+        </View>
+      )}
+
+      <View style={styles.gradient}>
         <View style={styles.header}>
           {icon && (
             <View style={[styles.iconContainer, { backgroundColor: `${accentColor}15`, borderColor: `${accentColor}30` }]}>
-              <Ionicons
-                name={icon}
-                size={18}
-                color={accentColor}
-              />
+              <Ionicons name={icon} size={18} color={accentColor} />
             </View>
           )}
 
@@ -87,12 +100,12 @@ function InsightCard({
           {locked ? (
             <Ionicons name="lock-closed-outline" size={16} color={PALETTE.amethyst} style={styles.lockIcon} />
           ) : (
-            <Ionicons name="chevron-forward" size={16} color={theme.textMuted} />
+            <Ionicons name="chevron-forward" size={16} color={luxuryTheme.text.muted} />
           )}
         </View>
 
         <Text 
-          style={[styles.content, locked && styles.lockedContent]} 
+          style={[styles.content, locked && styles.lockedContent]}
           numberOfLines={locked ? 2 : undefined}
         >
           {content}
@@ -106,7 +119,7 @@ function InsightCard({
             <Ionicons name="arrow-forward" size={12} color={PALETTE.amethyst} />
           </View>
         )}
-      </LinearGradient>
+      </View>
     </Pressable>
   );
 }
@@ -118,9 +131,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
+    borderColor: luxuryTheme.card.border,
+    borderTopColor: luxuryTheme.card.borderTop,
     marginBottom: 16,
+    position: 'relative',
     backgroundColor: 'transparent',
   },
   lockedContainer: {
@@ -168,7 +182,7 @@ const styles = StyleSheet.create({
   },
   lockedText: {
     fontSize: 10,
-    color: PALETTE.amethyst,
+    color: `${luxuryTheme.accents.amethyst}`,
     marginLeft: 5,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -176,11 +190,11 @@ const styles = StyleSheet.create({
   },
   content: {
     fontSize: 15,
-    color: theme.textSecondary,
+    color: luxuryTheme.text.dim,
     lineHeight: 24,
   },
   lockedContent: {
-    color: theme.textMuted,
+    color: luxuryTheme.text.dim,
     fontStyle: 'italic',
     opacity: 0.82,
   },
@@ -192,7 +206,7 @@ const styles = StyleSheet.create({
   },
   lockedHintText: {
     fontSize: 13,
-    color: PALETTE.amethyst,
+    color: `${luxuryTheme.accents.amethyst}`,
     fontWeight: '600',
   },
 });

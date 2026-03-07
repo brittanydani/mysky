@@ -102,9 +102,11 @@ export default function SkiaStoryGate({
     if (isUnlocked) {
       pulse.value = withRepeat(
         withTiming(1.1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
-        -1,  // infinite
-        true, // reverse each cycle
+        -1,
+        true,
       );
+    } else {
+      pulse.value = 1;
     }
   }, [rotation, pulse, index, isUnlocked]);
 
@@ -136,7 +138,10 @@ export default function SkiaStoryGate({
   }, []);
 
   return (
-    <Pressable onPress={onPress} style={styles.gateWrapper}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.gateWrapper, pressed && styles.pressed]}
+    >
       <View style={styles.canvasContainer}>
         <Canvas style={{ width: GATE_SIZE, height: GATE_SIZE }}>
           <Group
@@ -165,18 +170,24 @@ export default function SkiaStoryGate({
 
             {/* 3. The Core Light — only when chapter is unlocked */}
             {isUnlocked && (
-              <Circle
-                cx={GATE_SIZE / 2}
-                cy={GATE_SIZE / 2}
-                r={RADIUS * 0.3}
-                color={accentColor}
-              >
-                <BlurMask blur={15} style="solid" />
-                <SweepGradient
-                  c={vec(GATE_SIZE / 2, GATE_SIZE / 2)}
-                  colors={[accentColor, 'transparent', accentColor]}
+              <>
+                <Circle
+                  cx={GATE_SIZE / 2}
+                  cy={GATE_SIZE / 2}
+                  r={RADIUS * 0.34}
+                  color={accentColor}
+                  opacity={0.22}
+                >
+                  <BlurMask blur={15} style="solid" />
+                </Circle>
+
+                <Circle
+                  cx={GATE_SIZE / 2}
+                  cy={GATE_SIZE / 2}
+                  r={RADIUS * 0.18}
+                  color={accentColor}
                 />
-              </Circle>
+              </>
             )}
           </Group>
 
@@ -225,6 +236,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingRight: 20,
   },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }],
+  },
   canvasContainer: {
     width: GATE_SIZE,
     height: GATE_SIZE,
@@ -266,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   lockedText: {
-    opacity: 0.35,
+    opacity: 0.5,
   },
   premiumTag: {
     alignSelf: 'flex-start',

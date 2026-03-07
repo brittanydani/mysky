@@ -24,7 +24,7 @@ import {
 import { logger } from '../utils/logger';
 import { toLocalDateString } from '../utils/dateUtils';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';

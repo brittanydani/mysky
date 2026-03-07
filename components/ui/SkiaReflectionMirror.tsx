@@ -20,7 +20,7 @@
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
  */
 
-import React, { memo, useEffect, useState, useCallback } from 'react';
+import React, { memo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,6 @@ import {
   StyleSheet,
   Dimensions,
   Platform,
-  Pressable,
 } from 'react-native';
 import {
   Canvas,
@@ -48,7 +47,6 @@ import {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { theme } from '../../constants/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 const MIRROR_W = W - 32;
@@ -101,7 +99,6 @@ const SkiaReflectionMirror = memo(function SkiaReflectionMirror({
 }: Props) {
   // ── Internal breath timer (if no external provided) ──
   const internalBreath = useSharedValue(0);
-  const [isBreathing, setIsBreathing] = useState(false);
 
   useEffect(() => {
     if (!externalBreath) {

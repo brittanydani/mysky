@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 
 import OnboardingModal from '../components/OnboardingModal';

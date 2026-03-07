@@ -17,7 +17,6 @@ import { View, StyleSheet, Dimensions, Text } from 'react-native';
 import {
   Canvas,
   Path,
-  Skia,
   BlurMask,
   Group,
   Circle,
@@ -27,7 +26,6 @@ import {
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
-  useDerivedValue,
   withRepeat,
   withTiming,
   Easing,
@@ -64,9 +62,10 @@ export default function SkiaBreathPortal() {
   // read breathValue.value and rebuilds the SkPath every animation frame.
   const path = usePathValue((p) => {
     'worklet';
+    p.reset();
     const bv = breathValue.value;
-    const radius = SIZE * 0.3 + bv * 40;      // Expand radius on inhale
-    const harmony = 2 + bv * 0.5;             // Morph the "clover" shape
+    const radius = SIZE * 0.3 + bv * 28;      // Expand radius on inhale
+    const harmony = 2 + bv * 0.35;             // Morph the "clover" shape
 
     for (let i = 0; i <= POINTS; i++) {
       const angle = (i / POINTS) * Math.PI * 2;
@@ -81,17 +80,6 @@ export default function SkiaBreathPortal() {
     p.close();
   });
 
-  // ── Derived animated values ──
-  const glowOpacity = useDerivedValue(() => {
-    'worklet';
-    return 0.3 + breathValue.value * 0.5;
-  });
-
-  const innerRadius = useDerivedValue(() => {
-    'worklet';
-    return 10 + breathValue.value * 15;
-  });
-
   // ── Instruction label (bridge worklet → React state) ──
   const [instruction, setInstruction] = useState('Inhale');
   const updateInstruction = useCallback(
@@ -102,8 +90,8 @@ export default function SkiaBreathPortal() {
   useAnimatedReaction(
     () => breathValue.value,
     (bv, prev) => {
-      const label = bv > 0.5 ? 'Exhale' : 'Inhale';
-      const prevLabel = (prev ?? 0) > 0.5 ? 'Exhale' : 'Inhale';
+      const label = bv >= 0.5 ? 'Exhale' : 'Inhale';
+      const prevLabel = (prev ?? 0) >= 0.5 ? 'Exhale' : 'Inhale';
       if (label !== prevLabel) {
         runOnJS(updateInstruction)(label);
       }
@@ -118,7 +106,7 @@ export default function SkiaBreathPortal() {
           <Path
             path={path}
             color={PALETTE.emerald}
-            opacity={glowOpacity}
+            opacity={0.55}
             style="stroke"
             strokeWidth={4}
           >
@@ -144,7 +132,7 @@ export default function SkiaBreathPortal() {
           <Circle
             cx={CENTER}
             cy={CENTER}
-            r={innerRadius}
+            r={18}
             color="white"
             opacity={0.1}
           >
@@ -155,6 +143,7 @@ export default function SkiaBreathPortal() {
 
       <View style={styles.labelContainer} pointerEvents="none">
         <Text style={styles.instructionText}>{instruction}</Text>
+        <Text style={styles.subInstructionText}>4 seconds</Text>
       </View>
     </View>
   );
@@ -164,7 +153,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 40,
+    marginVertical: 32,
   },
   labelContainer: {
     position: 'absolute',
@@ -176,6 +165,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 4,
-    opacity: 0.6,
+    opacity: 0.72,
+  },
+  subInstructionText: {
+    color: 'rgba(240, 234, 214, 0.45)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+    marginTop: 6,
   },
 });

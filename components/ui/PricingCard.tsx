@@ -1,8 +1,9 @@
-import React, { memo } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { memo, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
+import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
+import { luxuryTheme } from '../../constants/luxuryTheme';
+import { SkiaGlassSurface } from './skia/SkiaGlassSurface';
 
 interface PricingCardProps {
   name: string;
@@ -14,16 +15,6 @@ interface PricingCardProps {
   onPress?: () => void;
 }
 
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: theme.textGold,
-  silverBlue: theme.growth,
-  amethyst: theme.archetypes.shadow.main,
-  textMain: theme.textPrimary,
-  glassBorder: theme.cardBorder,
-  glassHighlight: theme.glass.highlight,
-};
-
 function PricingCard({
   name,
   price,
@@ -33,6 +24,14 @@ function PricingCard({
   selected = false,
   onPress,
 }: PricingCardProps) {
+  const [w, setW] = useState(0);
+  const [h, setH] = useState(0);
+
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    setW(e.nativeEvent.layout.width);
+    setH(e.nativeEvent.layout.height);
+  }, []);
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -41,34 +40,54 @@ function PricingCard({
         pressed && styles.pressed,
       ]}
       onPress={onPress}
+      onLayout={onLayout}
       accessibilityRole="button"
       accessibilityState={{ selected }}
     >
-      {popular && (
-        <View style={styles.popularBadgeContainer}>
-          <LinearGradient
-            colors={[...theme.goldGradient]}
-            style={styles.popularBadge}
-          >
-            <Ionicons name="sparkles" size={10} color="#0B1220" />
-            <Text style={styles.popularText}>Most Popular</Text>
-          </LinearGradient>
+      {w > 0 && h > 0 && (
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+          {selected ? (
+            <Canvas style={StyleSheet.absoluteFillObject}>
+              <RoundedRect x={0} y={0} width={w} height={h} r={20}>
+                <LinearGradient
+                  start={vec(0, 0)}
+                  end={vec(0, h)}
+                  colors={['rgba(232,214,174,0.15)', 'rgba(2,8,23,0.80)']}
+                />
+              </RoundedRect>
+            </Canvas>
+          ) : (
+            <SkiaGlassSurface width={w} height={h} borderRadius={20} />
+          )}
         </View>
       )}
 
-      <LinearGradient
-        colors={
-          selected
-            ? ['rgba(232,214,174,0.10)', 'rgba(2,8,23,0.60)']
-            : [...theme.obsidianGradient]
-        }
-        style={styles.gradient}
-      >
+      {popular && (
+        <View style={styles.popularBadgeContainer}>
+          <View style={styles.popularBadge}>
+            <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+              <Canvas style={StyleSheet.absoluteFillObject}>
+                <RoundedRect x={0} y={0} width={120} height={30} r={0}>
+                  <LinearGradient
+                    start={vec(0, 0)}
+                    end={vec(120, 30)}
+                    colors={luxuryTheme.gradients.goldSoft}
+                  />
+                </RoundedRect>
+              </Canvas>
+            </View>
+            <Ionicons name="sparkles" size={10} color={luxuryTheme.text.onGold} />
+            <Text style={styles.popularText}>Most Popular</Text>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.content}>
         <View style={styles.header}>
           <Text style={[styles.name, selected && styles.selectedName]}>{name}</Text>
           {selected && (
             <View style={styles.checkmark}>
-              <Ionicons name="checkmark" size={14} color="#0B1220" />
+              <Ionicons name="checkmark" size={14} color={luxuryTheme.text.onGold} />
             </View>
           )}
         </View>
@@ -79,7 +98,7 @@ function PricingCard({
         </View>
 
         <Text style={styles.description}>{description}</Text>
-      </LinearGradient>
+      </View>
     </Pressable>
   );
 }
@@ -91,8 +110,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
+    borderColor: luxuryTheme.card.border,
+    borderTopColor: luxuryTheme.card.borderTop,
     marginBottom: 16,
     position: 'relative',
     backgroundColor: 'transparent',
@@ -111,19 +130,19 @@ const styles = StyleSheet.create({
     top: 0,
     right: 20,
     zIndex: 2,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    overflow: 'hidden',
   },
   popularBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    shadowColor: PALETTE.gold,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    minHeight: 26,
+    minWidth: 110,
   },
   popularText: {
     fontSize: 10,
@@ -131,8 +150,9 @@ const styles = StyleSheet.create({
     color: '#020817',
     textTransform: 'uppercase',
     letterSpacing: 1,
+    zIndex: 1,
   },
-  gradient: {
+  content: {
     padding: 20,
   },
   header: {
@@ -144,21 +164,21 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.textSecondary,
+    color: luxuryTheme.text.muted,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
   selectedName: {
-    color: PALETTE.gold,
+    color: luxuryTheme.text.goldPrimary,
   },
   checkmark: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: PALETTE.gold,
+    backgroundColor: luxuryTheme.text.goldPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: PALETTE.gold,
+    shadowColor: luxuryTheme.shadow.glowGold,
     shadowOpacity: 0.4,
     shadowRadius: 5,
   },
@@ -169,22 +189,22 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 32,
-    color: PALETTE.textMain,
+    color: luxuryTheme.text.white,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     fontWeight: '700',
   },
   selectedPrice: {
-    color: PALETTE.textMain,
+    color: luxuryTheme.text.white,
   },
   period: {
     fontSize: 15,
-    color: theme.textMuted,
+    color: luxuryTheme.text.dim,
     marginLeft: 6,
     fontStyle: 'italic',
   },
   description: {
     fontSize: 14,
-    color: theme.textSecondary,
+    color: luxuryTheme.text.muted,
     lineHeight: 21,
   },
 });

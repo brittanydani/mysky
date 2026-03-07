@@ -20,7 +20,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { toLocalDateString } from '../utils/dateUtils';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';

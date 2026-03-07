@@ -2,7 +2,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter, Href } from 'expo-router';
@@ -229,14 +229,6 @@ const styles = StyleSheet.create({
   },
   checkboxOn: { backgroundColor: theme.textGold, borderColor: theme.textGold },
   checkText: { flex: 1, color: theme.textPrimary, fontSize: 15, lineHeight: 22 },
-  
-   
-    shadowOpacity: 0.2, 
-    shadowRadius: 12, 
-    elevation: 4 
-  },
-  
-  
   
   note: { marginTop: 20, textAlign: 'center', color: theme.textMuted, fontSize: 12, fontStyle: 'italic' },
 });

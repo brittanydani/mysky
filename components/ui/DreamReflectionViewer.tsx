@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { 
   DREAM_SYMBOLS, 
   extractSymbols, 
@@ -49,12 +49,14 @@ export default function DreamReflectionViewer({ dreamText, entryId }: DreamRefle
 
         return (
           <View key={`${reflection.label}-${index}`} style={styles.cardWrapper}>
-            <LinearGradient
-              colors={colors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientBorder}
-            >
+            <View style={styles.gradientBorder}>
+              <View style={[StyleSheet.absoluteFillObject, { borderRadius: 16, overflow: 'hidden' }]} pointerEvents="none">
+                <Canvas style={StyleSheet.absoluteFillObject}>
+                  <RoundedRect x={0} y={0} width={600} height={400} r={16}>
+                    <LinearGradient start={vec(0, 0)} end={vec(600, 400)} colors={colors} />
+                  </RoundedRect>
+                </Canvas>
+              </View>
               <View style={styles.glassCard}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.symbolLabel}>{reflection.label}</Text>
@@ -69,7 +71,7 @@ export default function DreamReflectionViewer({ dreamText, entryId }: DreamRefle
                   {reflection.interpretation}
                 </Text>
               </View>
-            </LinearGradient>
+            </View>
           </View>
         );
       })}

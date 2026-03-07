@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { router, Href } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { theme } from '../constants/theme';

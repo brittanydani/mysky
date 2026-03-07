@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';

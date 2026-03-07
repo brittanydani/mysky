@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';

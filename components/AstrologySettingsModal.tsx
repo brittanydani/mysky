@@ -16,7 +16,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 

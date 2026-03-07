@@ -2,7 +2,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Alert, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';

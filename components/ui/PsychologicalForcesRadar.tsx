@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Text, Platform } from 'react-native';
-import Svg, { Polygon, Line, Circle, Text as SvgText, TSpan, Defs, RadialGradient, Stop } from 'react-native-svg';
+import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
 import { applyStoryLabels } from '../../constants/storyLabels';
 
@@ -75,16 +75,22 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
     return forces.reduce((prev, current) => (prev.value > current.value ? prev : current)).color;
   }, [forces]);
 
+  // Map valid polygon points for Skia Path
+  const skiaPath = useMemo(() => {
+    if (forces.length === 0) return '';
+    const points = forces.map((f, i) => getCoordinates(f.value, i));
+    const start = points[0];
+    let path = `M${start.x},${start.y}`;
+    for (let i = 1; i < points.length; i++) {
+      path += ` L${points[i].x},${points[i].y}`;
+    }
+    path += ' Z';
+    return path;
+  }, [forces, center, radius]);
+
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      <Svg width={size} height={size}>
-        <Defs>
-          <RadialGradient id="radarFill" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={dominantForce} stopOpacity="0.4" />
-            <Stop offset="100%" stopColor={dominantForce} stopOpacity="0.05" />
-          </RadialGradient>
-        </Defs>
-
+      <Canvas style={{ width: size, height: size, position: 'absolute' }}>
         {/* Draw concentric grid circles */}
         {Array.from({ length: steps }).map((_, i) => {
           const r = radius * ((i + 1) / steps);
@@ -94,68 +100,36 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
               cx={center}
               cy={center}
               r={r}
-              stroke="rgba(255, 255, 255, 0.1)"
-              strokeWidth="1"
-              fill="none"
-              strokeDasharray={i === steps - 1 ? 'none' : '4 4'}
+              color="rgba(255, 255, 255, 0.1)"
+              style="stroke"
+              strokeWidth={1}
             />
           );
         })}
 
-        {/* Draw axes and labels */}
+        {/* Draw axes */}
         {forces.map((force, i) => {
           const outerPoint = getCoordinates(100, i);
-          const labelPoint = getCoordinates(100, i, true);
-          
           return (
-            <React.Fragment key={`axis-${i}`}>
-              <Line
-                x1={center}
-                y1={center}
-                x2={outerPoint.x}
-                y2={outerPoint.y}
-                stroke="rgba(255, 255, 255, 0.15)"
-                strokeWidth="1"
-              />
-              <SvgText
-                x={labelPoint.x}
-                y={labelPoint.y}
-                fill={force.color}
-                fontSize="12"
-                fontWeight="600"
-                textAnchor={
-                  Math.abs(labelPoint.x - center) < 10 
-                    ? "middle" 
-                    : labelPoint.x < center 
-                      ? "end" 
-                      : "start"
-                }
-                alignmentBaseline="middle"
-                fontFamily={Platform.select({ ios: 'Georgia', android: 'serif' })}
-              >
-                {/* Fallback to original story labels if it's not mapped, slicing cleanly if we ever bypass it */}
-                {(SHORT_FORCE_LABELS[force.label] ? SHORT_FORCE_LABELS[force.label] : applyStoryLabels(force.label)).split(' ').map((word, wIdx, arr) => (
-                  <TSpan
-                    key={wIdx}
-                    x={labelPoint.x}
-                    dy={wIdx === 0 ? `-${(arr.length - 1) * 0.5}em` : '1.2em'}
-                  >
-                    {word.substring(0, 10)}
-                  </TSpan>
-                ))}
-              </SvgText>
-            </React.Fragment>
+            <SkiaLine
+              key={`axis-${i}`}
+              p1={vec(center, center)}
+              p2={vec(outerPoint.x, outerPoint.y)}
+              color="rgba(255, 255, 255, 0.15)"
+              strokeWidth={1}
+            />
           );
         })}
 
         {/* The Data Polygon */}
-        <Polygon
-          points={polygonPoints}
-          fill="url(#radarFill)"
-          stroke={dominantForce}
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
+        <Path path={skiaPath} style="fill">
+          <SkiaRadialGradient
+            c={vec(center, center)}
+            r={radius}
+            colors={[`${dominantForce}66`, `${dominantForce}0D`]}
+          />
+        </Path>
+        <Path path={skiaPath} color={dominantForce} style="stroke" strokeWidth={2} strokeJoin="round" />
         
         {/* Force Points */}
         {forces.map((force, i) => {
@@ -165,14 +139,47 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
               key={`point-${i}`}
               cx={x}
               cy={y}
-              r="4"
-              fill={force.color}
-              stroke="#020817"
-              strokeWidth="1"
+              r={4}
+              color={force.color}
             />
           );
         })}
-      </Svg>
+      </Canvas>
+
+      {/* HTML absolute text for labels */}
+      {forces.map((force, i) => {
+        const labelPoint = getCoordinates(100, i, true);
+        const txtAlign = Math.abs(labelPoint.x - center) < 10 ? 'center' : (labelPoint.x < center ? 'right' : 'left');
+        const offset = Math.abs(labelPoint.x - center) < 10 ? -25 : (labelPoint.x < center ? -55 : 5);
+        const topOffset = txtAlign === 'center' && labelPoint.y < center ? -20 : -10;
+
+        const textLines = (SHORT_FORCE_LABELS[force.label] ? SHORT_FORCE_LABELS[force.label] : applyStoryLabels(force.label)).split(' ');
+
+        return (
+          <View 
+            key={`text-${i}`} 
+            style={{ 
+              position: 'absolute', 
+              top: labelPoint.y + topOffset, 
+              left: labelPoint.x + offset, 
+              width: 50, 
+              alignItems: txtAlign === 'center' ? 'center' : (txtAlign === 'right' ? 'flex-end' : 'flex-start')
+            }}>
+            {textLines.map((word, wIdx) => (
+              <Text 
+                key={wIdx} 
+                style={{ 
+                  color: force.color, 
+                  fontSize: 12, 
+                  fontWeight: '600', 
+                  fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) 
+                }}>
+                {word.substring(0, 10)}
+              </Text>
+            ))}
+          </View>
+        );
+      })}
     </View>
   );
 };

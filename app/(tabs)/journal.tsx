@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
