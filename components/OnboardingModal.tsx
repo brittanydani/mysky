@@ -1,7 +1,7 @@
 // File: components/OnboardingModal.tsx
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -241,28 +241,28 @@ export default function OnboardingModal({
                   <Animated.View entering={FadeInUp.delay(400).duration(600)} style={styles.featuresContainer}>
                     <View style={styles.feature}>
                       <View style={styles.featureIcon}>
-                        <Ionicons name="pencil" size={20} color={theme.primary} />
+                        <Ionicons name="pencil" size={20} color={theme.textGold} />
                       </View>
                       <Text style={styles.featureText}>Daily journaling & guided reflection</Text>
                     </View>
 
                     <View style={styles.feature}>
                       <View style={styles.featureIcon}>
-                        <Ionicons name="pulse" size={20} color={theme.primary} />
+                        <Ionicons name="pulse" size={20} color={theme.textGold} />
                       </View>
                       <Text style={styles.featureText}>Mood, sleep & energy tracking</Text>
                     </View>
 
                     <View style={styles.feature}>
                       <View style={styles.featureIcon}>
-                        <Ionicons name="analytics" size={20} color={theme.primary} />
+                        <Ionicons name="analytics" size={20} color={theme.textGold} />
                       </View>
                       <Text style={styles.featureText}>Pattern insights drawn from your own data</Text>
                     </View>
 
                     <View style={styles.feature}>
                       <View style={styles.featureIcon}>
-                        <Ionicons name="lock-closed" size={20} color={theme.primary} />
+                        <Ionicons name="lock-closed" size={20} color={theme.textGold} />
                       </View>
                       <Text style={styles.featureText}>Private & encrypted — only on your device</Text>
                     </View>
@@ -287,7 +287,7 @@ export default function OnboardingModal({
                     </Pressable>
 
                     <Pressable style={styles.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button" accessibilityLabel="Restore from backup">
-                      <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
+                      <Ionicons name="cloud-download-outline" size={16} color={theme.textGold} />
                       <Text style={styles.restoreText}>Restore from Backup</Text>
                     </Pressable>
                   </Animated.View>
@@ -297,7 +297,7 @@ export default function OnboardingModal({
               {step === 'generating' && (
                 <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.generatingContainer}>
                   <View style={styles.generatingIcon}>
-                    <Ionicons name="sparkles" size={48} color={theme.primary} />
+                    <Ionicons name="sparkles" size={48} color={theme.textGold} />
                   </View>
 
                   <Text style={styles.generatingTitle}>Setting Up Your Profile</Text>
@@ -314,7 +314,7 @@ export default function OnboardingModal({
               {step === 'passphrase' && (
                 <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.generatingContainer}>
                   <View style={styles.generatingIcon}>
-                    <Ionicons name="lock-closed" size={48} color={theme.primary} />
+                    <Ionicons name="lock-closed" size={48} color={theme.textGold} />
                   </View>
 
                   <Text style={styles.generatingTitle}>Enter Backup Passphrase</Text>
@@ -369,7 +369,7 @@ export default function OnboardingModal({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: 'transparent' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: {
@@ -380,28 +380,20 @@ const styles = StyleSheet.create({
   },
   welcomeContainer: { alignItems: 'center', marginBottom: theme.spacing.xl },
   logoContainer: { marginBottom: 0 },
-  logoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(232, 214, 174, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...theme.shadows.glow,
-  },
-  logoText: { fontSize: 48 },
+  
+  
   welcomeTitle: {
     fontSize: 32,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: 'serif',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
     marginTop: -64,
   },
   welcomeSubtitle: {
     fontSize: 18,
-    color: theme.primary,
+    color: theme.textGold,
     fontStyle: 'italic',
     marginBottom: theme.spacing.lg,
     textAlign: 'center',
@@ -419,17 +411,25 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(232, 214, 174, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
   },
   featureText: { fontSize: 16, color: theme.textSecondary, flex: 1 },
   ctaContainer: { alignItems: 'center' },
-  ctaButton: { width: '100%', borderRadius: theme.borderRadius.lg, overflow: 'hidden', marginBottom: theme.spacing.md, ...theme.shadows.glow },
+  ctaButton: {
+    width: '100%',
+    borderRadius: theme.borderRadius.full,
+    overflow: 'hidden',
+    marginBottom: theme.spacing.md,
+    ...theme.shadows.glow,
+  },
   ctaPressed: { opacity: 0.9, transform: [{ scale: 0.98 }] },
   ctaGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.lg, paddingHorizontal: theme.spacing.xl },
-  ctaText: { fontSize: 18, fontWeight: '700', color: '#020817', fontFamily: 'serif', marginRight: theme.spacing.sm },
+  ctaText: { fontSize: 18, fontWeight: '700', color: '#020817', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginRight: theme.spacing.sm },
   restoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -439,24 +439,24 @@ const styles = StyleSheet.create({
   },
   restoreText: {
     fontSize: 14,
-    color: theme.primary,
+    color: theme.textGold,
     marginLeft: theme.spacing.sm,
   },
-  privacyText: { fontSize: 12, color: theme.textMuted, textAlign: 'center', paddingHorizontal: theme.spacing.lg },
+  
   generatingContainer: { alignItems: 'center', justifyContent: 'center', flex: 1 },
   generatingIcon: { marginBottom: theme.spacing.xl },
-  generatingTitle: { fontSize: 24, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', marginBottom: theme.spacing.sm, textAlign: 'center' },
+  generatingTitle: { fontSize: 24, fontWeight: '700', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: theme.spacing.sm, textAlign: 'center' },
   generatingSubtitle: { fontSize: 16, color: theme.textSecondary, textAlign: 'center', marginBottom: theme.spacing.xl, paddingHorizontal: theme.spacing.lg },
   loadingDots: { flexDirection: 'row', alignItems: 'center' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.primary, marginHorizontal: 4 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.textGold, marginHorizontal: 4 },
   dot1: { opacity: 0.4 },
   dot2: { opacity: 0.7 },
   dot3: { opacity: 1 },
   passphraseInput: {
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: theme.cardBorder,
     borderRadius: theme.borderRadius.md,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,

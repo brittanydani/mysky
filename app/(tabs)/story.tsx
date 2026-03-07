@@ -22,16 +22,7 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  rose: '#D4A3B3',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
-};
+
 
 const FORCE_COLORS_MAP: Record<string, string> = {
   'Sun': '#C9AE78',
@@ -64,7 +55,7 @@ function calculateForces(chart: NatalChart | null) {
   const scores: Record<string, { label: string, val: number, color: string }> = {};
   
   const addScore = (key: string, points: number) => {
-    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || PALETTE.gold };
+    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || theme.textGold };
     scores[key].val += points;
   };
 
@@ -178,7 +169,7 @@ export default function StoryScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <SkiaDynamicCosmos />
-        <ActivityIndicator size="large" color={PALETTE.gold} style={{ marginBottom: 16 }} />
+        <ActivityIndicator size="large" color={theme.textGold} style={{ marginBottom: 16 }} />
         <Text style={styles.loadingText}>Mapping your architecture...</Text>
       </View>
     );
@@ -221,10 +212,10 @@ export default function StoryScreen() {
                   style={styles.exportBtnGradient}
                 >
                   {isExporting ? (
-                    <ActivityIndicator size="small" color={PALETTE.gold} />
+                    <ActivityIndicator size="small" color={theme.textGold} />
                   ) : (
                     <>
-                      <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
+                      <Ionicons name="share-outline" size={16} color={theme.textGold} />
                       <Text style={styles.exportButtonText}>Export PDF</Text>
                     </>
                   )}
@@ -312,7 +303,7 @@ export default function StoryScreen() {
                   style={styles.upsellGradient}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                    <Ionicons name="sparkles" size={18} color={theme.textGold} />
                     <Text style={styles.upsellTitle}>
                       7 more dimensions to explore
                     </Text>
@@ -324,7 +315,7 @@ export default function StoryScreen() {
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                     <Text style={styles.unlockText}>Expand your blueprint</Text>
-                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                    <Ionicons name="arrow-forward" size={14} color={theme.textGold} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -357,7 +348,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 34,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -396,7 +387,7 @@ const styles = StyleSheet.create({
   exportButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: PALETTE.gold,
+    color: theme.textGold,
   },
 
   upsellGradient: {
@@ -409,7 +400,7 @@ const styles = StyleSheet.create({
   upsellTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   upsellText: {
@@ -419,7 +410,7 @@ const styles = StyleSheet.create({
   },
   unlockText: {
     fontSize: 14,
-    color: PALETTE.gold,
+    color: theme.textGold,
     fontWeight: '600',
   },
 
@@ -428,14 +419,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 32,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyTitle: {
     fontSize: 24,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginBottom: 12,
   },
@@ -455,7 +446,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(232,214,174,0.25)',
   },
   emptyButtonText: {
-    color: PALETTE.gold,
+    color: theme.textGold,
     fontWeight: '700',
     fontSize: 15,
   },

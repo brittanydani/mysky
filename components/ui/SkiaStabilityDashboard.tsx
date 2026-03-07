@@ -17,7 +17,7 @@
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
  */
 
-import React, { memo, useMemo, useEffect } from 'react';
+import React, { memo, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import {
   Canvas,
@@ -28,17 +28,7 @@ import {
   BlurMask,
   Group,
   Circle,
-  RoundedRect,
-  Rect,
 } from '@shopify/react-native-skia';
-import {
-  useSharedValue,
-  useDerivedValue,
-  withRepeat,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
-import { theme } from '../../constants/theme';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -92,7 +82,7 @@ function computeStabilityIndex(data: StabilityDataPoint[]): {
   // Normalise each metric to 0–1
   const normMood = data.map(d => d.mood / 10);
   const normEnergy = data.map(d => d.energy / 10);
-  const normSleep = data.map(d => Math.min(d.sleep / 8, 1)); // 8h = full rest
+  const normSleep = data.map(d => Math.min(d.sleep / 10, 1));
 
   // Per-day deviation across the three signals
   const deviations = data.map((_, i) => {
@@ -123,7 +113,7 @@ function computeStabilityIndex(data: StabilityDataPoint[]): {
 
   if (index >= 80) return { index, label: 'Coherent', color: COLORS.coherent };
   if (index >= 60) return { index, label: 'Aligned', color: COLORS.mood };
-  if (index >= 40) return { index, label: 'Shifting', color: '#C5A059' };
+  if (index >= 40) return { index, label: 'Shifting', color: COLORS.mood };
   return { index, label: 'Fragmented', color: COLORS.fragmented };
 }
 
@@ -167,17 +157,7 @@ const SkiaStabilityDashboard = memo(function SkiaStabilityDashboard({
   const graphW = width - MARGIN.left - MARGIN.right;
   const graphH = height - MARGIN.top - MARGIN.bottom;
 
-  // ── Pulse animation ──
-  const pulse = useSharedValue(0);
-  useEffect(() => {
-    pulse.value = withRepeat(
-      withTiming(1, { duration: 2500, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
-    );
-  }, [pulse]);
 
-  const pulseOpacity = useDerivedValue(() => 0.4 + pulse.value * 0.3);
 
   // ── Stability computation ──
   const stability = useMemo(() => computeStabilityIndex(data), [data]);
@@ -215,7 +195,7 @@ const SkiaStabilityDashboard = memo(function SkiaStabilityDashboard({
   // ── Empty state ──
   if (data.length < 2) {
     return (
-      <View style={[localStyles.card, { width, height: 120 }]}>
+      <View style={[localStyles.card, { width, minHeight: 120, justifyContent: 'center' }]}>
         <Text style={localStyles.emptyText}>
           Log 2+ days of mood, energy, and sleep to see your Stability Index
         </Text>
@@ -260,7 +240,7 @@ const SkiaStabilityDashboard = memo(function SkiaStabilityDashboard({
       </View>
 
       {/* ── Skia Graph ── */}
-      <Canvas style={{ width, height: height - 60 }}>
+      <Canvas style={{ width, height: graphH + MARGIN.top + 8 }}>
         {/* Grid */}
         <Path path={gridPath} color={COLORS.grid} style="stroke" strokeWidth={1} />
 
@@ -300,15 +280,18 @@ const SkiaStabilityDashboard = memo(function SkiaStabilityDashboard({
           const sleepY = MARGIN.top + graphH - (Math.min(data[lastIdx].sleep, 12) / 12) * graphH;
           return (
             <Group>
-              <Circle cx={lastX} cy={sleepY} r={4} color={COLORS.sleep} />
-              <Circle cx={lastX} cy={moodY} r={4} color={COLORS.mood} />
-              <Circle cx={lastX} cy={energyY} r={4} color={COLORS.energy} />
+              <Circle cx={lastX} cy={sleepY} r={5} color={COLORS.sleepGlow} />
+              <Circle cx={lastX} cy={moodY} r={5} color={COLORS.moodGlow} />
+              <Circle cx={lastX} cy={energyY} r={5} color={COLORS.energyGlow} />
+
+              <Circle cx={lastX} cy={sleepY} r={3} color={COLORS.sleep} />
+              <Circle cx={lastX} cy={moodY} r={3} color={COLORS.mood} />
+              <Circle cx={lastX} cy={energyY} r={3} color={COLORS.energy} />
             </Group>
           );
         })()}
 
-        {/* Background card */}
-        <RoundedRect x={0} y={0} width={width} height={height - 60} r={20} color="transparent" />
+
       </Canvas>
 
       {/* ── Day labels ── */}
@@ -333,10 +316,10 @@ export { computeStabilityIndex };
 const localStyles = StyleSheet.create({
   card: {
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
-    borderTopColor: 'rgba(255,255,255,0.08)',
+    borderTopColor: 'rgba(255,255,255,0.1)',
     overflow: 'hidden',
     padding: 0,
   },
@@ -345,7 +328,7 @@ const localStyles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     padding: 20,
-    paddingBottom: 8,
+    paddingBottom: 12,
   },
   eyebrow: {
     color: 'rgba(240, 234, 214, 0.5)',
@@ -392,7 +375,7 @@ const localStyles = StyleSheet.create({
     borderRadius: 4,
   },
   legendLabel: {
-    color: 'rgba(240, 234, 214, 0.5)',
+    color: 'rgba(240, 234, 214, 0.6)',
     fontSize: 10,
     fontWeight: '600',
   },
@@ -403,7 +386,7 @@ const localStyles = StyleSheet.create({
     paddingBottom: 12,
   },
   dayLabel: {
-    color: 'rgba(240, 234, 214, 0.35)',
+    color: 'rgba(240, 234, 214, 0.42)',
     fontSize: 10,
     fontWeight: '600',
   },

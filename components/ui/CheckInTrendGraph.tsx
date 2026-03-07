@@ -16,12 +16,12 @@ import { parseLocalDate } from '../../utils/dateUtils';
 
 /* ── Cinematic Palette ── */
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
+  gold: theme.textGold,
+  silverBlue: theme.growth,
+  copper: theme.cinematic.copper,
+  emerald: theme.energy,
+  textMain: theme.textPrimary,
+  glassBorder: theme.cardBorder,
 };
 
 const TIME_OF_DAY_ORDER: Record<string, number> = {
@@ -100,7 +100,7 @@ export default function CheckInTrendGraph({
   if (checkIns.length < 2) {
     return (
       <View style={[styles.emptyCard, { width }]}>
-        <Ionicons name="pulse" size={32} color={theme.textMuted} />
+        <Ionicons name="pulse" size={32} color={theme.textSecondary} />
         <Text style={styles.emptyText}>Add more check-ins to reveal trends</Text>
       </View>
     );
@@ -111,7 +111,13 @@ export default function CheckInTrendGraph({
       {/* Metric Tabs */}
       <View style={styles.tabBar}>
         {METRICS.map(m => (
-          <Pressable key={m.key} onPress={() => setActiveMetric(m.key)} style={[styles.tab, activeMetric === m.key && { backgroundColor: `${m.color}15`, borderColor: `${m.color}40` }]}>
+          <Pressable key={m.key} onPress={() => setActiveMetric(m.key)} style={[
+            styles.tab,
+            activeMetric === m.key && {
+              backgroundColor: `${m.color}18`,
+              borderColor: `${m.color}55`,
+            },
+          ]}>
             <Text style={[styles.tabText, activeMetric === m.key && { color: m.color }]}>{m.label}</Text>
           </Pressable>
         ))}
@@ -129,14 +135,14 @@ export default function CheckInTrendGraph({
 
           {/* Guidelines */}
           {[0, 0.5, 1].map(p => (
-            <Line key={p} x1={padding.left} y1={padding.top + p * chartH} x2={padding.left + chartW} y2={padding.top + p * chartH} stroke="rgba(255,255,255,0.05)" strokeWidth={1} />
+            <Line key={p} x1={padding.left} y1={padding.top + p * chartH} x2={padding.left + chartW} y2={padding.top + p * chartH} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
           ))}
 
           <Path d={areaPath} fill="url(#areaFill)" />
-          <Path d={linePath} stroke={metric.color} strokeWidth={3} fill="none" strokeLinecap="round" />
+          <Path d={linePath} stroke={metric.color} strokeWidth={2.5} fill="none" strokeLinecap="round" />
 
           {points.map((pt, i) => (
-            <Circle key={i} cx={pt.x} cy={pt.y} r={4} fill={metric.color} stroke={theme.background} strokeWidth={1.5} />
+            <Circle key={i} cx={pt.x} cy={pt.y} r={3.5} fill={metric.color} stroke={theme.backgroundDeep} strokeWidth={1.5} />
           ))}
 
           {points.map((pt, i) => (
@@ -154,17 +160,42 @@ export default function CheckInTrendGraph({
 
 const styles = StyleSheet.create({
   tabBar: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 12, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  tabText: { fontSize: 13, fontWeight: '600', color: theme.textMuted },
-  chartContainer: { 
-    borderRadius: 20, 
-    backgroundColor: 'rgba(0,0,0,0.2)', 
-    borderWidth: 1, 
-    borderColor: PALETTE.glassBorder,
-    overflow: 'hidden'
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.textSecondary,
+  },
+  chartContainer: {
+    borderRadius: 20,
+    backgroundColor: 'rgba(14,24,48,0.32)',
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    overflow: 'hidden',
   },
   yAxis: { position: 'absolute', right: 10, top: padding.top, height: 145, justifyContent: 'space-between', alignItems: 'flex-end' },
-  yLabel: { fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase' },
-  emptyCard: { height: 160, justifyContent: 'center', alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
+  yLabel: {
+    fontSize: 9,
+    color: theme.textMuted,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  emptyCard: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    backgroundColor: 'rgba(14,24,48,0.32)',
+  },
   emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, fontStyle: 'italic' },
 });

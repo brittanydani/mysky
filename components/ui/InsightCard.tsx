@@ -17,12 +17,12 @@ interface InsightCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
-  amethyst: '#9D76C1',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
+  gold: theme.textGold,
+  silverBlue: theme.growth,
+  amethyst: theme.archetypes.shadow.main,
+  textMain: theme.textPrimary,
+  glassBorder: theme.cardBorder,
+  glassHighlight: theme.glass.highlight,
 };
 
 function InsightCard({
@@ -53,10 +53,10 @@ function InsightCard({
       <LinearGradient
         colors={
           locked
-            ? ['rgba(40, 30, 60, 0.4)', 'rgba(2,8,23,0.60)'] // Amethyst obsidian for locked
+            ? [...theme.amethystGradient]
             : isFeatured
-            ? ['rgba(50, 45, 30, 0.5)', 'rgba(2,8,23,0.60)']  // Gold obsidian for featured
-            : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']   // Standard frosted glass
+            ? ['rgba(232,214,174,0.10)', 'rgba(2,8,23,0.60)']
+            : [...theme.obsidianGradient]
         }
         style={styles.gradient}
       >
@@ -87,7 +87,7 @@ function InsightCard({
           {locked ? (
             <Ionicons name="lock-closed-outline" size={16} color={PALETTE.amethyst} style={styles.lockIcon} />
           ) : (
-            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.2)" />
+            <Ionicons name="chevron-forward" size={16} color={theme.textMuted} />
           )}
         </View>
 
@@ -118,14 +118,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     marginBottom: 16,
     backgroundColor: 'transparent',
   },
   lockedContainer: {
-    borderColor: 'rgba(157, 118, 193, 0.2)',
-    borderTopColor: 'rgba(157, 118, 193, 0.4)',
+    borderColor: 'rgba(157, 118, 193, 0.22)',
+    borderTopColor: 'rgba(157, 118, 193, 0.38)',
   },
   pressed: {
     opacity: 0.9,
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.3,
   },
   lockIcon: {
@@ -177,12 +177,12 @@ const styles = StyleSheet.create({
   content: {
     fontSize: 15,
     color: theme.textSecondary,
-    lineHeight: 23,
+    lineHeight: 24,
   },
   lockedContent: {
     color: theme.textMuted,
     fontStyle: 'italic',
-    opacity: 0.7,
+    opacity: 0.82,
   },
   lockedHintRow: {
     flexDirection: 'row',
@@ -193,6 +193,6 @@ const styles = StyleSheet.create({
   lockedHintText: {
     fontSize: 13,
     color: PALETTE.amethyst,
-    fontWeight: '700',
+    fontWeight: '600',
   },
 });

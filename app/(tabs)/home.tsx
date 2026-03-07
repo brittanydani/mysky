@@ -394,10 +394,7 @@ export default function HomeScreen() {
             entering={FadeInDown.delay(700).duration(600)}
             style={styles.insightCard}
           >
-            <LinearGradient
-              colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-              style={styles.insightGradient}
-            >
+            <View style={styles.insightGradient}>
               <View style={styles.insightHeader}>
                 <Ionicons name={insightIcon as any} size={16} color={insightAccent} />
                 <Text style={[styles.insightEyebrow, { color: insightAccent }]}>
@@ -411,7 +408,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
-            </LinearGradient>
+            </View>
           </Animated.View>
 
           {/* ── Weekly Reflection ── */}
@@ -420,10 +417,7 @@ export default function HomeScreen() {
               entering={FadeInDown.delay(800).duration(600)}
               style={styles.weeklyCard}
             >
-              <LinearGradient
-                colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-                style={styles.weeklyGradient}
-              >
+              <View style={styles.weeklyGradient}>
                 <View style={styles.insightHeader}>
                   <Ionicons name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                   <Text style={[styles.insightEyebrow, { color: PALETTE.silverBlue }]}>THIS WEEK</Text>
@@ -466,17 +460,14 @@ export default function HomeScreen() {
                     </View>
                   )}
                 </View>
-              </LinearGradient>
+              </View>
             </Animated.View>
           )}
 
           {/* ── Gentle CTA when not enough data ── */}
           {dailyLoop && !dailyLoop.weeklyReflection.hasEnoughData && dailyLoop.weeklyReflection.checkInCount > 0 && (
             <Animated.View entering={FadeInDown.delay(800).duration(600)} style={styles.weeklyCard}>
-              <LinearGradient
-                colors={['rgba(35, 40, 55, 0.3)', 'rgba(20, 24, 34, 0.5)']}
-                style={styles.weeklyGradient}
-              >
+              <View style={styles.weeklyGradient}>
                 <View style={styles.insightHeader}>
                   <Ionicons name="sparkles-outline" size={16} color={PALETTE.gold} />
                   <Text style={[styles.insightEyebrow, { color: PALETTE.gold }]}>WEEKLY REFLECTION</Text>
@@ -484,7 +475,7 @@ export default function HomeScreen() {
                 <Text style={styles.weeklySummaryText}>
                   {dailyLoop.weeklyReflection.summary}
                 </Text>
-              </LinearGradient>
+              </View>
             </Animated.View>
           )}
 
@@ -499,28 +490,22 @@ export default function HomeScreen() {
                 style={styles.quickLink}
                 onPress={() => router.push('/(tabs)/story' as Href)}
               >
-                <LinearGradient
-                  colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-                  style={styles.quickLinkGradient}
-                >
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(232, 214, 174, 0.15)' }]}>
+                <View style={styles.quickLinkGradient}>
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
                     <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
                     <Text style={styles.quickLinkTitle}>Story</Text>
                     <Text style={styles.quickLinkSub}>Your framework</Text>
                   </View>
-                </LinearGradient>
+                </View>
               </Pressable>
 
               <Pressable
                 style={styles.quickLink}
                 onPress={() => router.push('/(tabs)/growth' as Href)}
               >
-                <LinearGradient
-                  colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-                  style={styles.quickLinkGradient}
-                >
+                <View style={styles.quickLinkGradient}>
                   <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(110, 191, 139, 0.15)' }]}>
                     <Ionicons name="trending-up-outline" size={22} color={PALETTE.emerald} />
                   </View>
@@ -528,17 +513,14 @@ export default function HomeScreen() {
                     <Text style={styles.quickLinkTitle}>Patterns</Text>
                     <Text style={styles.quickLinkSub}>Explore connections</Text>
                   </View>
-                </LinearGradient>
+                </View>
               </Pressable>
 
               <Pressable
                 style={styles.quickLink}
                 onPress={() => router.push('/(tabs)/chart' as Href)}
               >
-                <LinearGradient
-                  colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
-                  style={styles.quickLinkGradient}
-                >
+                <View style={styles.quickLinkGradient}>
                   <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
                     <Ionicons name="grid-outline" size={22} color={PALETTE.silverBlue} />
                   </View>
@@ -546,7 +528,7 @@ export default function HomeScreen() {
                     <Text style={styles.quickLinkTitle}>Profile</Text>
                     <Text style={styles.quickLinkSub}>Your blueprint</Text>
                   </View>
-                </LinearGradient>
+                </View>
               </Pressable>
             </View>
           </Animated.View>
@@ -555,12 +537,24 @@ export default function HomeScreen() {
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                <LinearGradient
-                  colors={[`${PALETTE.gold}15`, 'rgba(2,8,23,0.60)']}
-                  style={styles.premiumPreviewCard}
-                >
+                <View style={styles.premiumCard}>
                   <View style={styles.premiumPreviewHeader}>
                     <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                    <Text style={styles.premiumPreviewLabel}>Deeper Insight</Text>
+                  </View>
+                  <Text style={styles.premiumPreviewTitle}>
+                    Unlock the full Personal Reflection Engine
+                  </Text>
+                  <Text style={styles.premiumPreviewSub}>
+                    Extended pattern reflections, personal connections, guided breath journaling, and full sleep pattern insights.
+                  </Text>
+                  <View style={styles.premiumPreviewCta}>
+                    <Text style={[styles.premiumPreviewCtaText, { color: PALETTE.gold }]}>
+                      Explore Deeper Insight
+                    </Text>
+                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                  </View>
+                </Viewes" size={18} color={PALETTE.gold} />
                     <Text style={styles.premiumPreviewLabel}>Deeper Insight</Text>
                   </View>
                   <Text style={styles.premiumPreviewTitle}>
@@ -863,4 +857,3 @@ const styles = StyleSheet.create({
     padding: 4,
   },
 });
-

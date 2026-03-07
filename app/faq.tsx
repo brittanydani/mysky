@@ -11,10 +11,10 @@ import { theme } from '../constants/theme';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: theme.textGold,
   silverBlue: '#8BC4E8',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
+  textMain: theme.textPrimary,
+  glassBorder: theme.cardBorder,
 };
 
 export default function FAQScreen() {
@@ -34,7 +34,7 @@ export default function FAQScreen() {
             accessibilityRole="button"
             accessibilityLabel="Back"
           >
-            <Ionicons name="chevron-back" size={24} color={PALETTE.textMain} />
+            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
 
           <Text style={styles.headerTitle}>FAQ</Text>
@@ -53,6 +53,7 @@ export default function FAQScreen() {
           <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
 
           <View style={styles.faqSection}>
+            <View style={styles.faqCard}>
             <Text style={styles.question}>Do I need an account to use MySky?</Text>
             <Text style={styles.answer}>
               No. All core features work fully offline and do not require an account. You can track your mood, energy, stress, sleep, journal, view your natal chart, explore relationships, and use all privacy features without ever creating an account or providing an email address. An account is only needed for the optional AI Reflection Insights feature.
@@ -123,6 +124,7 @@ export default function FAQScreen() {
             <Text style={styles.answer}>
               Email <Text style={styles.highlight}>brittanyapps@outlook.com</Text>. We respond to privacy-related inquiries within 30 days.
             </Text>
+              </View>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -152,8 +154,8 @@ const styles = StyleSheet.create({
   headerTitle: { 
     fontSize: 18, 
     fontWeight: '600', 
-    color: PALETTE.textMain, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) 
+    color: theme.textPrimary, 
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
   },
 
   scrollView: { flex: 1 },
@@ -169,11 +171,19 @@ const styles = StyleSheet.create({
   faqSection: {
     gap: 8,
   },
+  faqCard: {
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
+  },
   question: {
     fontSize: 19,
     fontWeight: '700',
-    color: PALETTE.gold,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    color: theme.textGold,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginTop: 24,
     marginBottom: 8,
     lineHeight: 26,

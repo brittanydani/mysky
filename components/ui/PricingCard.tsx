@@ -16,12 +16,12 @@ interface PricingCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
-  amethyst: '#9D76C1',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
+  gold: theme.textGold,
+  silverBlue: theme.growth,
+  amethyst: theme.archetypes.shadow.main,
+  textMain: theme.textPrimary,
+  glassBorder: theme.cardBorder,
+  glassHighlight: theme.glass.highlight,
 };
 
 function PricingCard({
@@ -47,7 +47,7 @@ function PricingCard({
       {popular && (
         <View style={styles.popularBadgeContainer}>
           <LinearGradient
-            colors={['#FFF4D6', '#C9AE78']}
+            colors={[...theme.goldGradient]}
             style={styles.popularBadge}
           >
             <Ionicons name="sparkles" size={10} color="#0B1220" />
@@ -59,8 +59,8 @@ function PricingCard({
       <LinearGradient
         colors={
           selected
-            ? ['rgba(50, 45, 30, 0.5)', 'rgba(2,8,23,0.60)'] // Gold obsidian
-            : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']  // Standard frosted
+            ? ['rgba(232,214,174,0.10)', 'rgba(2,8,23,0.60)']
+            : [...theme.obsidianGradient]
         }
         style={styles.gradient}
       >
@@ -91,15 +91,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     marginBottom: 16,
     position: 'relative',
     backgroundColor: 'transparent',
   },
   selectedContainer: {
-    borderColor: 'rgba(232,214,174,0.25)',
-    borderTopColor: 'rgba(232, 214, 174, 0.5)',
+    borderColor: 'rgba(232,214,174,0.28)',
+    borderTopColor: 'rgba(255,248,220,0.42)',
     borderWidth: 1.5,
   },
   pressed: {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.textMuted,
+    color: theme.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 32,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     fontWeight: '700',
   },
   selectedPrice: {
@@ -178,13 +178,13 @@ const styles = StyleSheet.create({
   },
   period: {
     fontSize: 15,
-    color: theme.textSecondary,
+    color: theme.textMuted,
     marginLeft: 6,
     fontStyle: 'italic',
   },
   description: {
     fontSize: 14,
-    color: theme.textMuted,
-    lineHeight: 20,
+    color: theme.textSecondary,
+    lineHeight: 21,
   },
 });

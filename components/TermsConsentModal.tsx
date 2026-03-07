@@ -15,11 +15,11 @@ import SkiaMetallicPill from './ui/SkiaMetallicPill';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
+  gold: theme.textGold,
+  silverBlue: theme.growth,
+  textMain: theme.textPrimary,
+  glassBorder: theme.cardBorder,
+  glassHighlight: theme.glass.highlight,
 };
 
 interface TermsConsentModalProps {
@@ -92,7 +92,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
     >
       <View style={styles.container}>
         <LinearGradient
-          colors={['#0A0D14', '#020817']}
+          colors={[theme.backgroundSecondary, theme.background]}
           style={StyleSheet.absoluteFill}
         />
         <SkiaDynamicCosmos />
@@ -131,7 +131,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
                       </View>
                     </View>
 
-                    <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.2)" />
+                    <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
                   </Pressable>
                 ))}
               </View>
@@ -163,7 +163,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   safeArea: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
 
   header: {
@@ -179,9 +179,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(232, 214, 174, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.18)',
+    borderColor: theme.cardBorder,
     marginRight: 12,
   },
   appName: { 
@@ -189,14 +189,14 @@ const styles = StyleSheet.create({
     fontSize: 18, 
     fontWeight: '700', 
     letterSpacing: 0.5,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
 
   card: {
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     backgroundColor: 'rgba(255,255,255,0.03)',
     overflow: 'hidden',
     ...Platform.select({
@@ -211,12 +211,12 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     textAlign: 'center',
     marginBottom: 12,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.3,
   },
   body: {
     fontSize: 15,
-    lineHeight: 22,
+    lineHeight: 24,
     color: theme.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.cardBorder,
     backgroundColor: 'rgba(255,255,255,0.03)',
     padding: 14,
     flexDirection: 'row',
@@ -240,15 +240,15 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: 'rgba(139, 196, 232, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(139, 196, 232, 0.15)',
+    borderColor: theme.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   linkTextWrap: { flex: 1 },
-  linkTitle: { color: PALETTE.textMain, fontSize: 16, fontWeight: '700', marginBottom: 2 },
+  linkTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 2 },
   linkSubtitle: { color: theme.textMuted, fontSize: 13 },
 
   buttonRow: { width: '100%', flexDirection: 'row', gap: 14, marginTop: 8, marginBottom: 16 },
@@ -256,17 +256,15 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.cardBorder,
     backgroundColor: 'rgba(255,255,255,0.05)',
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  secondaryText: { color: theme.textSecondary, fontSize: 15, fontWeight: '700' },
+  secondaryText: { color: theme.textPrimary, fontSize: 15, fontWeight: '700' },
 
   primaryBtn: { flex: 1.4, borderRadius: 16, overflow: 'hidden' },
-  primaryGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { color: '#020817', fontSize: 16, fontWeight: '800', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
 
   footnote: { color: theme.textMuted, fontSize: 12, textAlign: 'center', fontStyle: 'italic' },
 

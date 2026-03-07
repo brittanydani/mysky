@@ -11,13 +11,13 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: theme.textGold,
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
   copper: '#CD7F5D',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
+  textMain: theme.textPrimary,
+  glassBorder: theme.cardBorder,
+  glassHighlight: theme.glass.highlight,
 };
 
 export default function PrivacyPolicyScreen() {
@@ -37,7 +37,7 @@ export default function PrivacyPolicyScreen() {
             accessibilityRole="button"
             accessibilityLabel="Back"
           >
-            <Ionicons name="chevron-back" size={24} color={PALETTE.textMain} />
+            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>Privacy Policy</Text>
           <View style={styles.backButton} />
@@ -51,7 +51,7 @@ export default function PrivacyPolicyScreen() {
           <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
 
           {/* ── Section Wrapper Helper ── */}
-          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassSection}>
+          <LinearGradient colors={[theme.cardGradientStart, theme.cardGradientEnd]} style={styles.glassSection}>
             <Text style={styles.sectionTitle}>Our Commitment</Text>
             <Text style={styles.paragraph}>
               MySky is designed with privacy by design and by default. We use zero analytics SDKs, collect zero advertising identifiers, and perform zero cross-app or cross-site tracking. Your data is never sold, shared for advertising, or used for AI/ML training.
@@ -94,7 +94,7 @@ export default function PrivacyPolicyScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Security</Text>
-            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(2,8,23,0.50)']} style={styles.securityCard}>
+            <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={styles.securityCard}>
               <View style={styles.securityHeader}>
                 <Ionicons name="lock-closed" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Encryption at Rest</Text>
@@ -104,7 +104,7 @@ export default function PrivacyPolicyScreen() {
               </Text>
             </LinearGradient>
 
-            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(2,8,23,0.50)']} style={[styles.securityCard, { marginTop: 12 }]}>
+            <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <Ionicons name="shield-checkmark" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Tamper Detection</Text>
@@ -114,7 +114,7 @@ export default function PrivacyPolicyScreen() {
               </Text>
             </LinearGradient>
 
-            <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(2,8,23,0.50)']} style={[styles.securityCard, { marginTop: 12 }]}>
+            <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <Ionicons name="cloud-offline" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Backup Encryption</Text>
@@ -206,7 +206,7 @@ export default function PrivacyPolicyScreen() {
               style={styles.contactCard}
               onPress={() => Linking.openURL('mailto:brittanyapps@outlook.com?subject=MySky%20Privacy%20Inquiry')}
             >
-              <Ionicons name="mail-outline" size={20} color={PALETTE.gold} />
+              <Ionicons name="mail-outline" size={20} color={theme.textGold} />
               <Text style={styles.contactInfo}>brittanyapps@outlook.com</Text>
             </Pressable>
             <Text style={[styles.paragraph, { marginTop: 12 }]}>We respond to privacy-related inquiries within 30 days.</Text>
@@ -237,8 +237,8 @@ const styles = StyleSheet.create({
   headerTitle: { 
     fontSize: 18, 
     fontWeight: '600', 
-    color: PALETTE.textMain, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) 
+    color: theme.textPrimary, 
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 20 },
@@ -249,22 +249,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: PALETTE.gold,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    color: theme.textGold,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 16,
     paddingLeft: 4,
   },
   subSectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     marginBottom: 8,
   },
   paragraph: {
@@ -287,13 +287,13 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   highlight: { color: PALETTE.silverBlue, fontWeight: '600' },
-  boldText: { color: PALETTE.textMain, fontWeight: '600' },
+  boldText: { color: theme.textPrimary, fontWeight: '600' },
   
   securityCard: {
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(110, 191, 139, 0.2)',
+    borderColor: 'rgba(110,191,139,0.20)',
   },
   securityHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   securityTitle: { fontSize: 15, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -306,9 +306,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
   },
-  contactInfo: { fontSize: 16, color: PALETTE.gold, fontWeight: '600' },
+  contactInfo: { fontSize: 16, color: theme.textGold, fontWeight: '600' },
   
   footer: {
     alignItems: 'center',

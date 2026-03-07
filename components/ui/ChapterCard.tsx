@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
-
-import { applyStoryLabels } from '../../constants/storyLabels';
 
 // Mappings for Archetypal Forces to their corresponding aura colors
 const FORCE_COLORS: Record<string, string> = {
@@ -55,16 +53,20 @@ function ChapterCard({
   onPress,
   style,
 }: ChapterCardProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const displayText = isLocked ? preview ?? '' : content ?? '';
   const isLong = !isLocked && !!content && content.length > 200;
 
   // Determine the dominant force to set the specular edge color
-  let dominantColor = PALETTE.glassBorder; 
+  let dominantColor = PALETTE.gold; 
+  const titleLower = title?.toLowerCase() ?? '';
+  const displayLower = displayText?.toLowerCase() ?? '';
+
   for (const [force, auraColor] of Object.entries(FORCE_COLORS)) {
-    if (title?.includes(force) || displayText?.includes(force)) {
+    const forceLower = force.toLowerCase();
+    if (titleLower.includes(forceLower) || displayLower.includes(forceLower)) {
       dominantColor = auraColor;
-      break; // Pick the first matched force
+      break;
     }
   }
 
@@ -79,13 +81,26 @@ function ChapterCard({
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [styles.container, { shadowColor: dominantColor, elevation: 8, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, borderColor: dominantColor, borderTopColor: dominantColor }, style, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.container,
+        {
+          shadowColor: dominantColor,
+          elevation: 6,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.22,
+          shadowRadius: 10,
+          borderColor: `${dominantColor}55`,
+          borderTopColor: `${dominantColor}88`,
+        },
+        style,
+        pressed && styles.pressed,
+      ]}
     >
       <LinearGradient
         colors={
           isLocked
             ? ['rgba(25, 30, 45, 0.4)', 'rgba(15, 20, 30, 0.6)'] // Deeper cool for locked
-            : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']  // Frosted for unlocked
+            : ['rgba(18,32,64,0.48)', 'rgba(2,8,23,0.66)']
         }
         style={styles.gradient}
       >
@@ -108,7 +123,7 @@ function ChapterCard({
         {/* Main Content */}
         <Text
           style={[styles.content, isLocked && styles.lockedContent]}
-          numberOfLines={isLocked ? 3 : undefined}
+          numberOfLines={isLocked ? 3 : isLong && !expanded ? 5 : undefined}
         >
           {displayText}
         </Text>
@@ -143,7 +158,7 @@ function ChapterCard({
         {isLong && (
           <View style={styles.readMoreRow}>
             <Text style={styles.readMoreText}>
-              {expanded ? 'Show less' : 'Continue reading...'}
+              {expanded ? 'Show less' : 'Continue reading'}
             </Text>
             <Ionicons 
               name={expanded ? 'chevron-up' : 'chevron-down'} 
@@ -158,7 +173,7 @@ function ChapterCard({
   );
 }
 
-export default ChapterCard;
+export default memo(ChapterCard);
 
 const styles = StyleSheet.create({
   container: {
@@ -193,12 +208,12 @@ const styles = StyleSheet.create({
   lockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(232, 214, 174, 0.15)',
+    backgroundColor: 'rgba(232,214,174,0.12)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.18)',
+    borderColor: 'rgba(232,214,174,0.24)',
   },
   lockBadgeText: {
     fontSize: 10,
@@ -208,15 +223,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   title: {
-    fontSize: 22,
+    fontSize: 21,
     color: PALETTE.textMain,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginBottom: 16,
-    lineHeight: 28,
+    lineHeight: 27,
   },
   lockedTitle: {
     color: theme.textSecondary,
-    opacity: 0.8,
+    opacity: 0.72,
   },
   content: {
     fontSize: 15,
@@ -226,6 +241,7 @@ const styles = StyleSheet.create({
   lockedContent: {
     color: theme.textMuted,
     fontStyle: 'italic',
+    opacity: 0.9,
   },
   lockedCta: {
     flexDirection: 'row',
@@ -245,9 +261,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderLeftWidth: 3,
     borderLeftColor: PALETTE.gold,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   reflectionHeader: {
     flexDirection: 'row',
@@ -272,7 +290,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
   },
   affirmationText: {

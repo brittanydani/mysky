@@ -20,7 +20,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   Platform,
 } from 'react-native';
 import {
@@ -32,7 +31,6 @@ import {
   BlurMask,
   RadialGradient,
   vec,
-  RoundedRect,
   LinearGradient,
 } from '@shopify/react-native-skia';
 import {
@@ -41,10 +39,10 @@ import {
   withRepeat,
   withTiming,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
+import { theme } from '../../constants/theme';
 
 const SIZE = 280;
 const CENTER = SIZE / 2;
@@ -56,17 +54,16 @@ const OPTIMAL_HOURS = 8;
 // ─── Palette ───────────────────────────────────────────────────────────────────
 
 const COLORS = {
-  track: 'rgba(255, 255, 255, 0.04)',
+  track: 'rgba(255,255,255,0.05)',
   trackActive: '#8BC4E8',
-  trackActiveGlow: 'rgba(139, 196, 232, 0.35)',
-  moon: '#C9AE78',
-  moonGlow: 'rgba(232, 214, 174, 0.4)',
-  moonCore: '#F0EAD6',
-  mist: 'rgba(139, 196, 232, 0.08)',
-  hourMark: 'rgba(240, 234, 214, 0.2)',
-  hourMarkActive: 'rgba(139, 196, 232, 0.6)',
-  text: '#F0EAD6',
-  textMuted: 'rgba(240, 234, 214, 0.5)',
+  trackActiveGlow: 'rgba(139,196,232,0.32)',
+  moon: theme.textGold,
+  moonGlow: 'rgba(232,214,174,0.32)',
+  moonCore: theme.textPrimary,
+  hourMark: 'rgba(240,234,214,0.18)',
+  hourMarkActive: 'rgba(139,196,232,0.58)',
+  text: theme.textPrimary,
+  textMuted: theme.textMuted,
 };
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
@@ -108,9 +105,8 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
   // ── Mist opacity (1 at 0h → 0 at 8h+) ──
   const mistOpacity = Math.max(0, 1 - value / OPTIMAL_HOURS);
 
-  const containerRef = useRef<View>(null);
 
-  // ── Gesture handler for dragging (replacing PanResponder) ──
+  // ── Gesture handler for dragging ──
   const panGesture = useMemo(() => Gesture.Pan()
     .runOnJS(true)
     .onStart(() => {
@@ -194,7 +190,6 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
 
   return (
     <View
-      ref={containerRef}
       style={localStyles.container}
       accessibilityLabel={`Sleep duration: ${durationLabel}, ${qualityLabel}`}
       accessibilityRole="adjustable"
@@ -218,7 +213,7 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
               <Path
                 path={arcPath}
                 style="stroke"
-                strokeWidth={8}
+                strokeWidth={7}
                 strokeCap="round"
               >
                 <LinearGradient
@@ -231,7 +226,7 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
               <Path
                 path={arcPath}
                 style="stroke"
-                strokeWidth={4}
+                strokeWidth={3.5}
                 strokeCap="round"
                 color={COLORS.trackActive}
               />
@@ -245,12 +240,12 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
                 c={vec(CENTER, CENTER)}
                 r={TRACK_RADIUS}
                 colors={[
-                  `rgba(139, 196, 232, ${(0.12 * mistOpacity).toFixed(2)})`,
-                  `rgba(74, 59, 107, ${(0.08 * mistOpacity).toFixed(2)})`,
+                  `rgba(139, 196, 232, ${(0.10 * mistOpacity).toFixed(2)})`,
+                  `rgba(74, 59, 107, ${(0.06 * mistOpacity).toFixed(2)})`,
                   'transparent',
                 ]}
               />
-              <BlurMask blur={20 * mistOpacity} style="normal" />
+              <BlurMask blur={16 * mistOpacity} style="normal" />
             </Circle>
           )}
 
@@ -272,7 +267,7 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
               cx={handleX + 5}
               cy={handleY - 3}
               r={HANDLE_RADIUS - 4}
-              color="#020817"
+              color={theme.backgroundDeep}
             />
             {/* Inner glow point */}
             <Circle cx={handleX - 4} cy={handleY + 2} r={3} color={COLORS.moonCore}>
@@ -356,8 +351,8 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    width: SIZE + 48,
-    height: SIZE + 48,
+    width: SIZE + 40,
+    height: SIZE + 40,
     alignSelf: 'center',
   },
   centerOverlay: {
@@ -366,16 +361,16 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
   },
   durationText: {
-    color: '#F0EAD6',
+    color: theme.textPrimary,
     fontSize: 36,
     fontWeight: '800',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   qualityText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     marginTop: 4,
   },
   hourLabel: {
@@ -384,7 +379,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
   },
   hourLabelText: {
-    color: 'rgba(240, 234, 214, 0.3)',
+    color: theme.textMuted,
     fontSize: 10,
     fontWeight: '600',
   },

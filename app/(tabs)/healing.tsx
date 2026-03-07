@@ -20,14 +20,14 @@ import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: theme.textGold,
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
+  textMain: theme.textPrimary,
+  glassBorder: theme.cardBorder,
+  glassHighlight: theme.glass.highlight,
 };
 
 // ── Shared sub-components ──
@@ -68,11 +68,11 @@ function DeepCard({
 }) {
   return (
     <LinearGradient
-      colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
+      colors={[theme.cardGradientStart, theme.cardGradientEnd]}
       style={styles.deepCard}
     >
       <View style={styles.deepCardHeader}>
-        <View style={[styles.deepCardIcon, { backgroundColor: `${color}15` }]}>
+        <View style={[styles.deepCardIcon, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
           <Ionicons name={icon} size={18} color={color} />
         </View>
         <Text style={styles.deepCardTitle}>{title}</Text>
@@ -172,7 +172,7 @@ export default function HealingScreen() {
           {/* Empty state */}
           {!loading && !healingData && !healingQuote && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
-              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
+              <LinearGradient colors={[theme.cardGradientStart, theme.cardGradientEnd]} style={styles.emptyCard}>
                 <Ionicons name="heart-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyTitle}>No chart yet</Text>
                 <Text style={styles.emptySubtitle}>
@@ -365,19 +365,19 @@ const styles = StyleSheet.create({
   header: { marginTop: 16, marginBottom: 8 },
   title: {
     fontSize: 34,
-    color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.5,
     marginBottom: 6,
   },
-  headerSub: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, fontStyle: 'italic' },
+  headerSub: { fontSize: 14, color: theme.textGold, lineHeight: 22, fontStyle: 'italic' },
   
   section: { marginTop: 8, marginBottom: 16 },
   shadowSection: { marginTop: -18, marginBottom: 16 },
   sectionTitle: {
     fontSize: 18,
-    color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 12,
     letterSpacing: 0.3,
     paddingLeft: 4,
@@ -388,12 +388,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 32,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 12 },
+  emptyTitle: { fontSize: 24, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 12 },
   emptySubtitle: {
     fontSize: 15,
     color: theme.textSecondary,
@@ -403,14 +403,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   emptyButton: {
-    backgroundColor: 'rgba(232, 214, 174, 0.15)',
+    backgroundColor: 'rgba(232, 214, 174, 0.12)',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(232,214,174,0.25)',
   },
-  emptyButtonText: { color: PALETTE.gold, fontWeight: '700', fontSize: 15 },
+  emptyButtonText: { color: theme.textGold, fontWeight: '700', fontSize: 15 },
 
   // ── Deep Card (Cinematic Glass) ──
   deepCard: {
@@ -418,8 +418,8 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
   },
   deepCardHeader: {
     flexDirection: 'row',
@@ -436,8 +436,8 @@ const styles = StyleSheet.create({
   },
   deepCardTitle: {
     fontSize: 20,
-    color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   deepCardMain: {
     fontSize: 15,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     marginBottom: 6,
   },
-  detailText: { fontSize: 15, color: PALETTE.textMain, lineHeight: 22, fontWeight: '500' },
+  detailText: { fontSize: 15, color: theme.textPrimary, lineHeight: 22, fontWeight: '500' },
   
   toolItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 6, gap: 10 },
   toolDot: {
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     marginTop: 8,
   },
-  toolText: { flex: 1, fontSize: 15, color: PALETTE.textMain, lineHeight: 22, fontWeight: '500' },
+  toolText: { flex: 1, fontSize: 15, color: theme.textPrimary, lineHeight: 22, fontWeight: '500' },
   
   affirmationBox: {
     backgroundColor: 'rgba(255,255,255,0.03)',
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontStyle: 'italic',
     lineHeight: 24,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   
   promptBox: {
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   promptBoxText: {
     fontSize: 15,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     lineHeight: 22,
     fontStyle: 'italic',
   },
@@ -510,17 +510,17 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     marginBottom: 8,
   },
   weeklyText: {
     fontSize: 17,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     lineHeight: 26,
     textAlign: 'center',
     fontStyle: 'italic',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
 });
 
