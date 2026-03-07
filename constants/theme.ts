@@ -30,12 +30,9 @@ export const METALLIC_GOLD = {
 // Use these for non-gradient gold text (RN <Text> components).
 // For gradient metallic headlines, use LuxuryGoldTextSkia instead.
 export const GOLD_TEXT = {
-  /** Primary gold — headings, prominent labels */
-  primary: '#E8D6AE',
-  /** Secondary gold — subtitles, descriptions */
-  secondary: '#D8C39A',
-  /** Bright gold — small accents, tags, badges */
-  bright: '#F3E6C5',
+  primary: '#FFFFFF',
+  secondary: '#FFFFFF',
+  bright: '#FFFFFF',
 } as const;
 
 // ── Single source of truth for the MySky visual system ──────────────
@@ -51,8 +48,8 @@ export const MYSTIC = {
   muted: 'rgba(226,232,240,0.45)',
 
   // ─ Champagne-gold accents ─
-  subtitleGold: '#E8D6AE',
-  restoreGold: '#D8C39A',
+  subtitleGold: '#FFFFFF',
+  restoreGold: '#FFFFFF',
   featureIconGold: '#E3CFA4',
 
   // ─ CTA / premium button surface ─

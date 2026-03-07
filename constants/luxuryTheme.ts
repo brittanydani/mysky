@@ -12,13 +12,13 @@ export const luxuryTheme = {
 
   text: {
     white: '#F8FAFC',
-    heading: '#F0EAD6',
+    heading: '#FFFFFF',
     body: 'rgba(226,232,240,0.78)',
     muted: 'rgba(226,232,240,0.58)',
     dim: 'rgba(226,232,240,0.42)',
-    goldPrimary: '#E8D6AE',
-    goldSecondary: '#D8C39A',
-    goldBright: '#F3E6C5',
+    goldPrimary: '#FFFFFF',
+    goldSecondary: '#FFFFFF',
+    goldBright: '#FFFFFF',
     onDark: '#F8FAFC',
     onGold: '#0B1220',
   },

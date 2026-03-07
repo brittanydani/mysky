@@ -554,14 +554,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   eyebrow: {
-    color: '#C9AE78',
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 2,
   },
   title: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 32,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginTop: 8,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   promptTitle: {
-    color: '#C9AE78',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
   },
   cardLabel: {
-    color: '#C9AE78',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   profileText: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryLabelActive: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   summaryChip: {
@@ -702,7 +702,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 14,
     borderRadius: 16,
-    backgroundColor: '#C9AE78',
+    backgroundcolor: '#FFFFFF',
   },
   saveButtonDisabled: {
     backgroundColor: 'rgba(232,214,174,0.18)',

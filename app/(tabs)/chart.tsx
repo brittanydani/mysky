@@ -177,6 +177,10 @@ export default function ChartScreen() {
 
   const loadChart = async () => {
     try {
+      const astroSettings = await AstrologySettingsService.getSettings();
+      setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(astroSettings.houseSystem));
+      setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(astroSettings.orbPreset));
+
       const charts = await localDb.getCharts();
       if (charts.length > 0) {
         const saved = charts[0];
@@ -188,7 +192,7 @@ export default function ChartScreen() {
           latitude: saved.latitude,
           longitude: saved.longitude,
           timezone: saved.timezone,
-          houseSystem: saved.houseSystem,
+          houseSystem: astroSettings.houseSystem,
         };
 
         const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -222,13 +226,6 @@ export default function ChartScreen() {
       setLoading(false);
     }
 
-    try {
-      const astroSettings = await AstrologySettingsService.getSettings();
-      setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(astroSettings.houseSystem));
-      setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(astroSettings.orbPreset));
-    } catch (e) {
-      logger.error('Failed to load astrology settings:', e);
-    }
   };
 
   // ── Overlay handlers ──
@@ -619,7 +616,7 @@ export default function ChartScreen() {
                   {!overlayPerson ? (
                     <View style={[styles.personChip, styles.personChipActive]}>
                       <Ionicons name="person" size={14} color="#C9AE78" />
-                      <Text style={[styles.personChipText, { color: '#C9AE78', fontWeight: '700' }]}>You</Text>
+                      <Text style={[styles.personChipText, { color: '#FFFFFF', fontWeight: '700' }]}>You</Text>
                     </View>
                   ) : (
                     <View style={styles.personChip}>
@@ -645,10 +642,10 @@ export default function ChartScreen() {
                     {isActive ? (
                       <View style={[styles.personChip, styles.personChipActive]}>
                         <Ionicons name="layers-outline" size={14} color="#C9AE78" />
-                        <Text style={[styles.personChipText, { color: '#C9AE78', fontWeight: '700' }]} numberOfLines={1}>
+                        <Text style={[styles.personChipText, { color: '#FFFFFF', fontWeight: '700' }]} numberOfLines={1}>
                           {person.name}
                         </Text>
-                        <Text style={[styles.personChipRelation, { color: '#C9AE78', opacity: 0.8 }]}>
+                        <Text style={[styles.personChipRelation, { color: '#FFFFFF', opacity: 0.8 }]}>
                           {RELATIONSHIP_LABELS[person.relationship as RelationshipType] || ''}
                         </Text>
                       </View>
@@ -678,7 +675,7 @@ export default function ChartScreen() {
                     end={{ x: 1, y: 1 }}
                     style={styles.addPersonChip}
                   >
-                    <Ionicons name="add" size={16} color="#141222" />
+                    <Ionicons name="add" size={16} color={theme.textPrimary} />
                     <Text style={[styles.addPersonText, { color: "#141222", fontWeight: "700" }]}>Add</Text>
                   </LinearGradient>
                 </Pressable>
@@ -688,8 +685,8 @@ export default function ChartScreen() {
               {activeOverlays.length > 0 && (
                 <View style={styles.overlayLegend}>
                   <View style={styles.legendPill}>
-                    <View style={[styles.legendPillDot, { backgroundColor: '#E8D6AE' }]} />
-                    <Text style={[styles.legendPillText, { color: '#E8D6AE' }]}>Your planets</Text>
+                    <View style={[styles.legendPillDot, { backgroundColor: '#FFFFFF' }]} />
+                    <Text style={[styles.legendPillText, { color: '#FFFFFF' }]}>Your planets</Text>
                   </View>
                   {activeOverlays.map(overlay => {
                     const activeColor = overlay.theme === 'roseGold' ? '#E8C2CA' : overlay.theme === 'iceBlue' ? '#C4D2FA' : '#D1D5DB';
@@ -771,10 +768,10 @@ export default function ChartScreen() {
               <View style={styles.bigThreeRow}>
                 <View style={styles.bigThreeItem}>
                   <Text style={styles.bigThreeLabel}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY }}>☉</Text> Sun
+                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>☉</Text> Sun
                   </Text>
                   <Text style={styles.bigThreeSign}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY }}>{activeChart!.sun.sign.symbol}</Text> {activeChart!.sun.sign.name}
+                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.sun.sign.symbol}</Text> {activeChart!.sun.sign.name}
                   </Text>
                   <Text style={styles.bigThreeDeg}>
                     {activeChart!.sun.degree}°{String(activeChart!.sun.minute).padStart(2, '0')}' · House{' '}
@@ -784,10 +781,10 @@ export default function ChartScreen() {
 
                 <View style={styles.bigThreeItem}>
                   <Text style={styles.bigThreeLabel}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY }}>☽</Text> Moon
+                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>☽</Text> Moon
                   </Text>
                   <Text style={styles.bigThreeSign}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY }}>{activeChart!.moon.sign.symbol}</Text> {activeChart!.moon.sign.name}
+                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.moon.sign.symbol}</Text> {activeChart!.moon.sign.name}
                   </Text>
                   <Text style={styles.bigThreeDeg}>
                     {activeChart!.moon.degree}°{String(activeChart!.moon.minute).padStart(2, '0')}' · House{' '}
@@ -799,7 +796,7 @@ export default function ChartScreen() {
                   <View style={styles.bigThreeItem}>
                     <Text style={styles.bigThreeLabel}>AC Rising</Text>
                     <Text style={styles.bigThreeSign}>
-                      <Text style={{ fontFamily: ZODIAC_FAMILY }}>{activeChart!.ascendant.sign.symbol}</Text> {activeChart!.ascendant.sign.name}
+                      <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.ascendant.sign.symbol}</Text> {activeChart!.ascendant.sign.name}
                     </Text>
                     <Text style={styles.bigThreeDeg}>
                       {activeChart!.ascendant.degree}°{String(activeChart!.ascendant.minute).padStart(2, '0')}'
@@ -812,7 +809,7 @@ export default function ChartScreen() {
                 <View style={styles.mcRow}>
                   <Text style={styles.mcLabel}>MC Midheaven</Text>
                   <Text style={styles.mcSign}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY }}>{activeChart!.midheaven.sign.symbol}</Text> {activeChart!.midheaven.sign.name}
+                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.midheaven.sign.symbol}</Text> {activeChart!.midheaven.sign.name}
                   </Text>
                   <Text style={styles.mcDeg}>
                     {activeChart!.midheaven.degree}°{String(activeChart!.midheaven.minute).padStart(2, '0')}'
@@ -832,9 +829,9 @@ export default function ChartScreen() {
                   {sensitivePoints.map((pt) => (
                     <View key={pt.label} style={styles.sensitiveItem}>
                       <View style={{ marginBottom: 4 }}>
-                        {pt.label === 'Chiron' && <ChironIcon size={20} color="#141222" />}
-                        {pt.label === 'North Node' && <NorthNodeIcon size={20} color="#141222" />}
-                        {pt.label === 'South Node' && <SouthNodeIcon size={20} color="#141222" />}
+                        {pt.label === 'Chiron' && <ChironIcon size={20} color={'#E8D6AE'} />}
+                        {pt.label === 'North Node' && <NorthNodeIcon size={20} color={'#E8D6AE'} />}
+                        {pt.label === 'South Node' && <SouthNodeIcon size={20} color={'#E8D6AE'} />}
                       </View>
                       <Text style={styles.sensitiveName}>{pt.label}</Text>
                       <Text
@@ -843,7 +840,7 @@ export default function ChartScreen() {
                           { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
                         ]}
                       >
-                        <Text style={{ fontFamily: ZODIAC_FAMILY }}>{pt.signSymbol}</Text> {pt.sign}
+                        <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{pt.signSymbol}</Text> {pt.sign}
                       </Text>
                       <Text style={styles.sensitiveDeg}>
                         {pt.degree}°{String(pt.minute).padStart(2, '0')}'{pt.house ? ` · H${pt.house}` : ''}
@@ -932,7 +929,7 @@ export default function ChartScreen() {
                     </View>
 
                     <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                      <Text style={[styles.signSymbol, { color: elColor }]}>{row.p.sign.symbol}</Text>
+                      <Text style={[styles.signSymbol, { color: '#E8D6AE' }]}>{row.p.sign.symbol}</Text>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.signName, { color: elColor }]}>{row.p.sign.name}</Text>
                         <Text style={styles.elementLabel}>
@@ -972,9 +969,9 @@ export default function ChartScreen() {
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
                         <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
-                          {pt.label === 'Chiron' && <ChironIcon size={18} color="#141222" />}
-                          {pt.label === 'North Node' && <NorthNodeIcon size={18} color="#141222" />}
-                          {pt.label === 'South Node' && <SouthNodeIcon size={18} color="#141222" />}
+                          {pt.label === 'Chiron' && <ChironIcon size={18} color={'#E8D6AE'} />}
+                          {pt.label === 'North Node' && <NorthNodeIcon size={18} color={'#E8D6AE'} />}
+                          {pt.label === 'South Node' && <SouthNodeIcon size={18} color={'#E8D6AE'} />}
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
@@ -1074,7 +1071,7 @@ export default function ChartScreen() {
                         </View>
 
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                          <Text style={[styles.signSymbol, { color: elColor }]}>{cusp.sign.symbol}</Text>
+                          <Text style={[styles.signSymbol, { color: '#E8D6AE' }]}>{cusp.sign.symbol}</Text>
                           <View style={{ flex: 1 }}>
                             <Text style={[styles.signName, { color: elColor }]}>{cusp.sign.name}</Text>
                           </View>
@@ -1121,21 +1118,21 @@ export default function ChartScreen() {
                       if (planet.name === 'Chiron') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <ChironIcon size={18} color="#141222" />
+                            <ChironIcon size={18} color={'#E8D6AE'} />
                           </View>
                         );
                       }
                       if (planet.name === 'North Node') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <NorthNodeIcon size={18} color="#141222" />
+                            <NorthNodeIcon size={18} color={'#E8D6AE'} />
                           </View>
                         );
                       }
                       if (planet.name === 'South Node') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <SouthNodeIcon size={18} color="#141222" />
+                            <SouthNodeIcon size={18} color={'#E8D6AE'} />
                           </View>
                         );
                       }
@@ -1169,7 +1166,7 @@ export default function ChartScreen() {
                         </View>
 
                         <View style={[styles.td, { flex: 2, alignItems: 'center' }]}>
-                          <Text style={[styles.aspectSymbol, { color: natureColor }]}>{asp.type.symbol}</Text>
+                          <Text style={[styles.aspectSymbol, { color: '#E8D6AE' }]}>{asp.type.symbol}</Text>
                           <Text style={[styles.aspectName, { color: natureColor }]}>{asp.type.name}</Text>
                           <Text style={[styles.aspectNature, { color: natureColor }]}>{asp.type.nature}</Text>
                         </View>
@@ -1215,7 +1212,7 @@ export default function ChartScreen() {
                       <Text style={styles.legendText}>Challenging (squares, oppositions)</Text>
                     </View>
                     <View style={styles.legendRow}>
-                      <View style={[styles.legendDot, { backgroundColor: '#C9AE78' }]} />
+                      <View style={[styles.legendDot, { backgroundColor: '#FFFFFF' }]} />
                       <Text style={styles.legendText}>Neutral (conjunctions)</Text>
                     </View>
                     <Text style={styles.legendNote}>Tighter orbs (lower numbers) = stronger influence</Text>
@@ -1228,11 +1225,11 @@ export default function ChartScreen() {
                       accessibilityLabel="Unlock more aspects"
                     >
                       <LinearGradient colors={['rgba(232, 214, 174,0.1)', 'rgba(232, 214, 174,0.05)']} style={styles.aspectUpsell}>
-                        <Ionicons name="sparkles" size={16} color="#141222" />
+                        <Ionicons name="sparkles" size={16} color={theme.textPrimary} />
                         <Text style={styles.aspectUpsellText}>
                           {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
                         </Text>
-                        <Ionicons name="chevron-forward" size={16} color="#141222" />
+                        <Ionicons name="chevron-forward" size={16} color={theme.textPrimary} />
                       </LinearGradient>
                     </Pressable>
                   )}
@@ -1253,7 +1250,7 @@ export default function ChartScreen() {
                   </View>
                   <View style={styles.patternHighlight}>
                     <Text style={styles.patternHighlightText}>
-                      <Text style={{ fontFamily: ZODIAC_FAMILY }}>{chartPatterns.chartRuler.planetSymbol}</Text> {chartPatterns.chartRuler.planet} in <Text style={{ fontFamily: ZODIAC_FAMILY }}>{chartPatterns.chartRuler.rulerSignSymbol}</Text>{' '}
+                      <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{chartPatterns.chartRuler.planetSymbol}</Text> {chartPatterns.chartRuler.planet} in <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{chartPatterns.chartRuler.rulerSignSymbol}</Text>{' '}
                       {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}
                     </Text>
                   </View>
@@ -1261,7 +1258,7 @@ export default function ChartScreen() {
                   <View style={styles.tooltipBox}>
                     <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
                     <Text style={styles.tooltipText}>
-                      Your chart ruler is the planet that rules your rising sign (<Text style={{ fontFamily: ZODIAC_FAMILY }}>{chartPatterns.chartRuler.risingSymbol}</Text>{' '}
+                      Your chart ruler is the planet that rules your rising sign (<Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{chartPatterns.chartRuler.risingSymbol}</Text>{' '}
                       {chartPatterns.chartRuler.risingSign}). Its placement colors your entire life path.
                     </Text>
                   </View>
@@ -1272,12 +1269,12 @@ export default function ChartScreen() {
               {isPremium && partOfFortune && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="sunny-outline" size={20} color="#141222" style={{ marginRight: 10 }} />
+                    <Ionicons name="sunny-outline" size={20} color={theme.textPrimary} style={{ marginRight: 10 }} />
                     <Text style={styles.patternTitle}>Point of Flow</Text>
                   </View>
                   <View style={styles.patternHighlight}>
                     <Text style={styles.patternHighlightText}>
-                      <Text style={{ fontFamily: ZODIAC_FAMILY }}>{partOfFortune.sign?.symbol}</Text> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°
+                      <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{partOfFortune.sign?.symbol}</Text> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°
                       {partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}
                     </Text>
                   </View>
@@ -1324,14 +1321,14 @@ export default function ChartScreen() {
                     style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(232, 214, 174,0.18)' }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="lock-closed" size={16} color="#141222" />
+                      <Ionicons name="lock-closed" size={16} color={theme.textPrimary} />
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 14, fontWeight: '600', color: theme.primary }}>More patterns in your chart</Text>
                         <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
                           Stelliums, conjunction clusters, element & modality balance, retrograde emphasis, and Point of Flow
                         </Text>
                       </View>
-                      <Ionicons name="arrow-forward" size={16} color="#141222" />
+                      <Ionicons name="arrow-forward" size={16} color={theme.textPrimary} />
                     </View>
                   </LinearGradient>
                 </Pressable>
@@ -1354,6 +1351,9 @@ export default function ChartScreen() {
                     </View>
                     <Text style={styles.patternDesc}>{stellium.subtitle}</Text>
                     <Text style={[styles.patternDesc, { marginTop: 8 }]}>{stellium.description}</Text>
+                    {stellium.narrative ? (
+                      <Text style={[styles.patternDesc, { marginTop: 10, lineHeight: 22 }]}>{stellium.narrative}</Text>
+                    ) : null}
                     {stellium.planetMixNote && (
                       <Text style={[styles.patternDesc, { marginTop: 6, fontStyle: 'italic', opacity: 0.8 }]}>{stellium.planetMixNote}</Text>
                     )}
@@ -1504,14 +1504,14 @@ export default function ChartScreen() {
                   style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="sparkles" size={16} color="#141222" />
+                    <Ionicons name="sparkles" size={16} color={theme.textPrimary} />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.overlayUpsellText, { fontWeight: '600' }]}>Your chart has more to say</Text>
                       <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
                         Chiron sensitivity, Node axis depth, chart overlays, and minor aspects
                       </Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={16} color="#141222" />
+                    <Ionicons name="arrow-forward" size={16} color={theme.textPrimary} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -1530,7 +1530,7 @@ export default function ChartScreen() {
                 <View style={styles.chartSettingsRow}>
                   <View style={{ flex: 1, marginRight: theme.spacing.md }}>
                     <View style={styles.chartSettingsHeader}>
-                      <Ionicons name="planet" size={20} color="#141222" />
+                      <Ionicons name="planet" size={20} color={'#E8D6AE'} />
                       <Text style={styles.chartSettingsTitle}>Chart Settings</Text>
                     </View>
                     <Text style={styles.chartSettingsDescription}>House system, aspect orbs, and calculation preferences</Text>
@@ -1543,7 +1543,6 @@ export default function ChartScreen() {
                       </View>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                 </View>
               </LinearGradient>
             </Pressable>
@@ -1759,7 +1758,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: 'center',
   },
-  insightTitle: { color: theme.primary, fontSize: 15, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
+  insightTitle: { color: '#E8D6AE', fontSize: 15, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
   insightText: { color: theme.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center' },
 
   pointsDivider: {
@@ -1847,10 +1846,10 @@ const styles = StyleSheet.create({
 
   td: { justifyContent: 'center', alignItems: 'center' },
 
-  planetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 20, color: theme.primary, marginRight: 10, width: 28, textAlign: 'center' },
-  signSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, marginRight: 6, width: 24, textAlign: 'center' },
+  planetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', marginRight: 10, width: 28, textAlign: 'center' },
+  signSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', marginRight: 6, width: 24, textAlign: 'center' },
   planetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
-  retroLabel: { color: theme.warning, fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  retroLabel: { color: '#E8D6AE', fontSize: 10, fontWeight: '700', textAlign: 'center' },
   signName: { fontWeight: '600', fontSize: 12, textAlign: 'center' },
   elementLabel: { color: theme.textMuted, fontSize: 10, textAlign: 'center' },
   degreeText: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
@@ -1868,10 +1867,10 @@ const styles = StyleSheet.create({
   houseNumLarge: { color: theme.primary, fontWeight: '700', fontSize: 18, textAlign: 'center' },
   houseTheme: { color: theme.textSecondary, fontSize: 12, lineHeight: 16, textAlign: 'center' },
 
-  aspectPlanetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 16, color: theme.primary, marginRight: 6, width: 24, textAlign: 'center' },
+  aspectPlanetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', marginRight: 6, width: 24, textAlign: 'center' },
   aspectIconWrap: { width: 24, marginRight: 6, alignItems: 'center', justifyContent: 'center' },
   aspectPlanetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 13, textAlign: 'center' },
-  aspectSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  aspectSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', fontWeight: '700', textAlign: 'center' },
   aspectName: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
   aspectNature: { fontSize: 9, fontStyle: 'italic', textAlign: 'center' },
   orbText: { fontWeight: '700', fontSize: 14, textAlign: 'center' },
@@ -1949,9 +1948,9 @@ const styles = StyleSheet.create({
   },
   personChipActive: {
     backgroundColor: 'transparent',
-    borderColor: '#C9AE78',
+    borderColor: '#FFFFFF',
     borderWidth: 1,
-    shadowColor: '#C9AE78',
+    shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 3,
@@ -1975,9 +1974,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 4,
     borderWidth: 1,
-    borderColor: '#C9AE78', /* Richer metallic contrast */
+    borderColor: '#FFFFFF', /* Richer metallic contrast */
     borderStyle: 'dashed',
-    shadowColor: '#E9D9B8',
+    shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 3,
@@ -2045,7 +2044,7 @@ const styles = StyleSheet.create({
   chartSettingsDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
   chartSettingsTags: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
   settingTag: { backgroundColor: 'rgba(232, 214, 174, 0.15)', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
-  settingTagText: { fontSize: 11, color: theme.primary, fontWeight: '500' },
+  settingTagText: { fontSize: 11, color: '#E8D6AE', fontWeight: '500' },
 
   // ── Chart Glossary ──
   glossarySection: { alignSelf: 'stretch', marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.xl },
@@ -2057,5 +2056,5 @@ const styles = StyleSheet.create({
   glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
-  glossaryDefinition: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs },
+  glossaryDefinition: { fontSize: 14, color: '#E8D6AE', lineHeight: 20, marginTop: theme.spacing.xs },
 });

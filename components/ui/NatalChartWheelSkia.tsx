@@ -20,12 +20,16 @@ import {
   matchFont,
   RadialGradient,
   SweepGradient,
+  LinearGradient,
   Text as SkiaText,
   useFont,
   vec,
   Shadow,
   Paint,
   BlurMask,
+  Path,
+  Skia,
+  Oval,
 } from '@shopify/react-native-skia';
 
 import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
@@ -58,8 +62,19 @@ const RIM_INSET = 2;
 const PLANET_R = 13.5;
 const HILITE_R = 1.8;
 
-const MAX_ASPECTS = 30;
-const MAX_CROSS_ASPECTS = 28;
+// Glass reflection helpers
+function makeArcPath(
+  cx: number, cy: number, r: number,
+  startDeg: number, sweepDeg: number,
+): ReturnType<typeof Skia.Path.Make> {
+  const path = Skia.Path.Make();
+  const rect = { x: cx - r, y: cy - r, width: r * 2, height: r * 2 };
+  path.addArc(rect, startDeg, sweepDeg);
+  return path;
+}
+
+const MAX_ASPECTS = 100;
+const MAX_CROSS_ASPECTS = 100;
 
 // ── System font families ──
 const SERIF_FAMILY = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' })!;
@@ -103,6 +118,9 @@ const PLANET_SYMBOLS: Record<string, string> = {
   Uranus: '♅',
   Neptune: '♆',
   Pluto: '♇',
+  'North Node': '☊',
+  'South Node': '☋',
+  Chiron: '⚷',
   Ascendant: 'AC',
   Midheaven: 'MC',
 };
@@ -126,6 +144,9 @@ const PLANET_COLORS: Record<string, string> = {
   Uranus: '#6CBEC4',
   Neptune: '#7C8CD0',
   Pluto: '#9068BC',
+  'North Node': '#A0A0B0',
+  'South Node': '#A0A0B0',
+  Chiron: '#98FB98',
   Ascendant: '#C9AE78',
   Midheaven: '#C9AE78',
 };
@@ -143,6 +164,9 @@ const PLANET_GRADIENT_INNER: Record<string, string> = {
   Uranus: '#A8DAE0',
   Neptune: '#B0BCEC',
   Pluto: '#C8B4E4',
+  'North Node': '#CECEE0',
+  'South Node': '#CECEE0',
+  Chiron: '#D0FBD0',
 };
 
 const PLANET_GRADIENT_OUTER: Record<string, string> = {
@@ -158,6 +182,9 @@ const PLANET_GRADIENT_OUTER: Record<string, string> = {
   Uranus: '#348490',
   Neptune: '#44549C',
   Pluto: '#5E4088',
+  'North Node': '#606070',
+  'South Node': '#606070',
+  Chiron: '#509950',
 };
 
 const OVERLAY_PLANET_COLORS: Record<string, string> = {
@@ -171,6 +198,9 @@ const OVERLAY_PLANET_COLORS: Record<string, string> = {
   Uranus: '#7090C8',
   Neptune: '#6878C0',
   Pluto: '#8068C0',
+  'North Node': '#808090',
+  'South Node': '#808090',
+  Chiron: '#80C080',
   Ascendant: '#8C7CCF',
   Midheaven: '#8C7CCF',
 };
@@ -186,6 +216,9 @@ const OVERLAY_GRADIENT_INNER: Record<string, string> = {
   Uranus: '#B0C0EC',
   Neptune: '#A8B8E8',
   Pluto: '#C0AEE8',
+  'North Node': '#B0B0C0',
+  'South Node': '#B0B0C0',
+  Chiron: '#B0E0B0',
   Ascendant: '#C4B8F0',
   Midheaven: '#C4B8F0',
 };
@@ -201,6 +234,9 @@ const OVERLAY_GRADIENT_OUTER: Record<string, string> = {
   Uranus: '#243060',
   Neptune: '#202858',
   Pluto: '#2E2060',
+  'North Node': '#303040',
+  'South Node': '#303040',
+  Chiron: '#305030',
   Ascendant: '#2E2550',
   Midheaven: '#2E2550',
 };
@@ -321,6 +357,9 @@ function normalizePlanetName(name: unknown): string {
   if (low === 'uranus') return 'Uranus';
   if (low === 'neptune') return 'Neptune';
   if (low === 'pluto') return 'Pluto';
+  if (low === 'chiron') return 'Chiron';
+  if (low === 'north node' || low === 'northnode' || low === 'true node') return 'North Node';
+  if (low === 'south node' || low === 'southnode') return 'South Node';
 
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -440,7 +479,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   
   // ── Prepare natal planets ──
   const placedPlanets = useMemo(() => {
-    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron', 'North Node', 'South Node'];
     const raw: { label: string; longitude: number; isRetrograde: boolean }[] = [];
     for (const label of labels) {
       const obj = getChartPlanet(chart, label);
@@ -457,14 +496,21 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
     placedPlanets.forEach((p) => {
       map[p.label] = p.longitude;
     });
+
+    const asc = getLongitude(getChartPlanet(chart, 'Ascendant'));
+    if (asc !== null) map['Ascendant'] = asc;
+
+    const mc = getLongitude(getChartPlanet(chart, 'Midheaven'));
+    if (mc !== null) map['Midheaven'] = mc;
+
     return map;
-  }, [placedPlanets]);
+  }, [placedPlanets, chart]);
 
   // ── Overlay planets (second person / synastry) ──
   const R_OVERLAY_RING = R_PLANET_RING - 8;
   const placedOverlayPlanets = useMemo(() => {
     if (!overlayChart) return [];
-    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron', 'North Node', 'South Node'];
     const raw: { label: string; longitude: number; isRetrograde: boolean }[] = [];
     for (const label of labels) {
       const obj = getChartPlanet(overlayChart, label);
@@ -789,13 +835,85 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         })}
 
         {/* ── House ring border ── */}
-        <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.6} color="rgba(232, 214, 174,0.25)" opacity={0.35} />
+        <Group>
+          <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.8} opacity={0.5}>
+            <SweepGradient
+              c={vec(CX, CY)}
+              colors={[
+                'rgba(232, 214, 174, 0.1)', 
+                'rgba(255, 255, 255, 0.6)', 
+                'rgba(232, 214, 174, 0.1)', 
+                'rgba(255, 255, 255, 0.3)', 
+                'rgba(232, 214, 174, 0.1)'
+              ]}
+              positions={[0, 0.25, 0.5, 0.75, 1]}
+              transform={[{rotate: -0.3}]}
+            />
+          </Circle>
+        </Group>
+
+        {/* ── Glass reflection highlights on the wheel face ── */}
+        <Group opacity={0.12}>
+          {/* Upper-left broad specular highlight arc */}
+          <Path
+            path={makeArcPath(CX, CY, (R_OUTER + R_INNER) / 2, -160, 80)}
+            style="stroke"
+            strokeWidth={(R_OUTER - R_INNER) * 0.55}
+            strokeCap="round"
+          >
+            <LinearGradient
+              start={vec(CX - R_OUTER * 0.6, CY - R_OUTER * 0.7)}
+              end={vec(CX + R_OUTER * 0.1, CY - R_OUTER * 0.1)}
+              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0)']}
+              positions={[0, 0.45, 1]}
+            />
+            <BlurMask blur={6} style="normal" />
+          </Path>
+          {/* Lower-right subtle counter-reflection */}
+          <Path
+            path={makeArcPath(CX, CY, (R_OUTER + R_INNER) / 2, 30, 50)}
+            style="stroke"
+            strokeWidth={(R_OUTER - R_INNER) * 0.35}
+            strokeCap="round"
+          >
+            <LinearGradient
+              start={vec(CX + R_OUTER * 0.3, CY + R_OUTER * 0.4)}
+              end={vec(CX + R_OUTER * 0.7, CY + R_OUTER * 0.6)}
+              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.35)', 'rgba(255,255,255,0)']}
+              positions={[0, 0.5, 1]}
+            />
+            <BlurMask blur={8} style="normal" />
+          </Path>
+        </Group>
+
+        {/* Thin specular edge catch — top of wheel */}
+        <Path
+          path={makeArcPath(CX, CY, R_OUTER - 1, -140, 100)}
+          style="stroke"
+          strokeWidth={1.2}
+          strokeCap="round"
+          color="rgba(255,255,255,0.10)"
+        >
+          <BlurMask blur={1.5} style="normal" />
+        </Path>
 
         {/* ── Dotted astronomy diagram rings ── */}
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.6} color="rgba(232, 214, 174,0.25)" opacity={0.25}>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.8} opacity={0.4}>
+          <SweepGradient
+              c={vec(CX, CY)}
+              colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+              positions={[0, 0.25, 0.5, 0.75, 1]}
+              transform={[{rotate: -0.3}]}
+            />
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.6} color="rgba(232, 214, 174,0.25)" opacity={0.25}>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.8} opacity={0.4}>
+          <SweepGradient
+              c={vec(CX, CY)}
+              colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+              positions={[0, 0.25, 0.5, 0.75, 1]}
+              transform={[{rotate: -0.3}]}
+            />
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
 
@@ -1132,9 +1250,55 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           />
         </Circle>
 
+        {/* ── Glass reflections on center hub ── */}
+        {/* Primary crescent highlight — upper-left */}
+        <Oval
+          x={CX - R_INNER * 0.72}
+          y={CY - R_INNER * 0.78}
+          width={R_INNER * 1.1}
+          height={R_INNER * 0.55}
+        >
+          <RadialGradient
+            c={vec(CX - R_INNER * 0.2, CY - R_INNER * 0.5)}
+            r={R_INNER * 0.65}
+            colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0)']}
+            positions={[0, 0.5, 1]}
+          />
+        </Oval>
+        {/* Secondary subtle reflection — lower-right */}
+        <Oval
+          x={CX - R_INNER * 0.1}
+          y={CY + R_INNER * 0.15}
+          width={R_INNER * 0.65}
+          height={R_INNER * 0.35}
+        >
+          <RadialGradient
+            c={vec(CX + R_INNER * 0.2, CY + R_INNER * 0.35)}
+            r={R_INNER * 0.4}
+            colors={['rgba(255,255,255,0.07)', 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0)']}
+            positions={[0, 0.5, 1]}
+          />
+        </Oval>
+        {/* Tiny specular dot — simulates point light catch */}
+        <Circle cx={CX - R_INNER * 0.25} cy={CY - R_INNER * 0.35} r={3} color="rgba(255,255,255,0.18)">
+          <BlurMask blur={2} style="normal" />
+        </Circle>
+
         {/* ── Center Hub: Inner Bezel ── */}
         <Group>
-          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} color="rgba(232, 214, 174,0.25)">
+          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} opacity={0.65}>
+            <SweepGradient
+              c={vec(CX, CY)}
+              colors={[
+                'rgba(232, 214, 174, 0.25)', 
+                'rgba(255, 255, 255, 0.8)', 
+                'rgba(232, 214, 174, 0.25)', 
+                'rgba(255, 255, 255, 0.4)', 
+                'rgba(232, 214, 174, 0.25)'
+              ]}
+              positions={[0, 0.15, 0.5, 0.65, 1]}
+              transform={[{rotate: 0.1}]}
+            />
             <BlurMask blur={2} style="normal" />
           </Circle>
           

@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     maxWidth: '90%',
   },
   text: {
-    color: '#D8C39A',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',

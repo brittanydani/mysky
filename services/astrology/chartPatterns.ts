@@ -16,7 +16,7 @@ import { ZODIAC_SIGNS } from './constants';
 export interface Stellium {
   type: 'sign' | 'house' | 'combined';
   label: string;          // e.g. "Leo" or "1st House" or "Leo in House 5"
-  cardTitle: string;      // e.g. "Sign Emphasis: Leo" or "Focused Concentration: Leo in House 5"
+  cardTitle: string;      // e.g. "Stellium: Leo" or "Stellium: Leo in House 5"
   planets: string[];      // ["Sun", "Mercury", "Venus"]
   description: string;    // universal base description for Home screen
   narrative: string;      // full rich narrative for detail views
@@ -137,7 +137,7 @@ function detectStelliums(chart: NatalChart): { stelliums: Stellium[]; overflow: 
         const combined: Stellium = {
           type: 'combined',
           label: `${sign} in House ${house}`,
-          cardTitle: `Focused Concentration: ${sign} in House ${house}`,
+          cardTitle: `Stellium: ${sign} in House ${house}`,
           planets: names,
           description: 'Several planets gather in both the same sign and life area, creating a focused channel of experience.\n\nThis kind of concentration often brings depth rather than intensity — inviting you to develop familiarity, nuance, and self-awareness around these themes over time.',
           subtitle: signFlavor.subtitle,
@@ -164,7 +164,7 @@ function detectStelliums(chart: NatalChart): { stelliums: Stellium[]; overflow: 
     const s: Stellium = {
       type: 'sign',
       label: sign,
-      cardTitle: `Sign Emphasis: ${sign}`,
+      cardTitle: `Stellium: ${sign}`,
       planets: names,
       description: 'Several planets gather in this sign, suggesting that its themes tend to be emphasized in how you experience and interpret life.\n\nThis doesn\'t mean this energy is louder than everything else — it means it often becomes a reference point, especially during moments of growth, stress, or decision-making.',
       subtitle: flavor.subtitle,
@@ -187,7 +187,7 @@ function detectStelliums(chart: NatalChart): { stelliums: Stellium[]; overflow: 
     const s: Stellium = {
       type: 'house',
       label: `${ordinal(house)} House`,
-      cardTitle: `House Emphasis: ${ordinal(house)} House`,
+      cardTitle: `Stellium: ${ordinal(house)} House`,
       planets: names,
       description: 'Multiple planets concentrate in this area of your chart, suggesting that the themes of this life area often carry extra attention or learning.\n\nThis doesn\'t mean other areas are less important — it means this space may become especially active during transitions or periods of reflection.',
       subtitle: flavor.subtitle,
@@ -484,24 +484,23 @@ function detectChartRuler(chart: NatalChart): ChartRuler | null {
 }
 
 function getChartRulerDescription(planet: string, sign: string, house: number): string {
-  return `The planet guiding how you move through the world and initiate experience. ` +
-    `Placed in ${sign}, House ${house}, ` +
-    `this suggests where your life's overall direction tends to express itself. ` +
+  return `Your chart ruler is the planet that sets the tone for your entire birth chart — it shapes how you naturally move through the world, what draws your attention, and where your life tends to find its rhythm. ` +
+    `Placed in ${sign}, House ${house}, it carries a specific flavor that influences how you approach new experiences and express your core energy. ` +
     `${getChartRulerFlavor(planet)}`;
 }
 
 function getChartRulerFlavor(planet: string): string {
   const flavors: Record<string, string> = {
-    Sun: 'Expression and authenticity tend to be central to how you find stability.',
-    Moon: 'Emotional attunement and care may be guiding forces in how you navigate life.',
-    Mercury: 'Communication and curiosity tend to shape how you make sense of your experience.',
-    Venus: 'Connection, beauty, and what you value may be threads that give your life meaning.',
-    Mars: 'Taking action and pursuing what matters tends to be how you find your way.',
-    Jupiter: 'Growth, meaning-making, and expanding your perspective may feel especially natural.',
-    Saturn: 'Structure, responsibility, and building something enduring tend to shape your path.',
-    Uranus: 'Independence and doing things your own way may be part of how you move through the world.',
-    Neptune: 'Imagination, sensitivity, and spiritual openness may guide your experience.',
-    Pluto: 'Depth, transformation, and inner strength tend to be recurring themes in your journey.',
+    Sun: 'With the Sun as your chart ruler, self-expression and authenticity aren\'t optional — they\'re how you orient your entire life. You may feel most grounded when you\'re visible, creative, and living in alignment with who you truly are.',
+    Moon: 'With the Moon as your chart ruler, emotional intelligence and care are woven into everything you do. Your instincts are powerful navigational tools, and your ability to attune to the emotional undercurrents around you shapes how you move through the world.',
+    Mercury: 'With Mercury as your chart ruler, your mind is the engine that drives your life forward. Communication, curiosity, and the desire to understand are central to your identity — you make sense of the world by naming it, questioning it, and connecting its pieces.',
+    Venus: 'With Venus as your chart ruler, connection, beauty, and values are not just preferences — they\'re how you find meaning. Your life naturally gravitates toward harmony, relationships, and creating something that reflects what you love.',
+    Mars: 'With Mars as your chart ruler, action is your language. You find your way by moving, choosing, and pursuing what matters with directness and courage. Waiting for life to happen isn\'t your style — you\'re built to initiate.',
+    Jupiter: 'With Jupiter as your chart ruler, growth and meaning-making aren\'t side projects — they\'re the throughline of your entire life. You\'re naturally drawn to expansion, whether through learning, travel, philosophy, or simply seeing more of what\'s possible.',
+    Saturn: 'With Saturn as your chart ruler, structure and responsibility aren\'t burdens — they\'re how you build a life that lasts. You have a natural ability to commit deeply, develop mastery over time, and create something of enduring value through patience and discipline.',
+    Uranus: 'With Uranus as your chart ruler, independence and originality aren\'t rebellion for its own sake — they\'re your authentic mode of being. You may feel most alive when you\'re breaking new ground, questioning conventions, and living on your own terms.',
+    Neptune: 'With Neptune as your chart ruler, imagination and spiritual sensitivity color your entire life experience. You may sense things others miss, feel drawn to creative or healing work, and navigate by an inner compass that doesn\'t always follow logic but rarely leads you wrong.',
+    Pluto: 'With Pluto as your chart ruler, depth and transformation are recurring themes in your life — not because you seek intensity, but because you\'re built for it. You have a quiet inner strength that allows you to navigate change, shed what no longer serves you, and emerge renewed.',
   };
   return flavors[planet] || '';
 }
@@ -575,21 +574,22 @@ function detectConjunctionClusters(chart: NatalChart): ConjunctionCluster[] {
 function getClusterDescription(planets: string[], tightestOrb: number): string {
   if (planets.length >= 3) {
     return `${planets.join(', ')} are tightly clustered (${tightestOrb.toFixed(1)}° orb). ` +
-      `These planets often work as a unit — influencing one another and shaping how this part of your experience unfolds.`;
+      `These planets don't operate independently — they form a concentrated channel of energy that colors a significant part of your personality. ` +
+      `You may notice their themes blending together in ways that feel natural to you but distinctive to others.`;
   }
 
   const [a, b] = planets;
   const pairDescriptions: Record<string, string> = {
-    'Sun-Moon': 'Your identity and emotions tend to be closely linked — what you want and what you need may naturally align.',
-    'Sun-Mercury': 'Your mind and identity tend to be fused — you may think your way through who you are.',
-    'Sun-Venus': 'Your sense of self may be intertwined with love, beauty, and what you value.',
-    'Sun-Mars': 'Your identity tends to be action-oriented — you may define yourself through what you do.',
-    'Moon-Mercury': 'Thinking and feeling may merge — your mind processes emotions in real-time.',
-    'Moon-Venus': 'Emotional comfort and love tend to be deeply connected for you.',
-    'Moon-Mars': 'Your emotions and drive may be linked — feelings can quickly become action.',
-    'Mercury-Venus': 'Communication and charm tend to blend naturally — words may come with grace.',
-    'Mercury-Mars': 'Your thinking tends to be sharp and direct — mental energy may run hot.',
-    'Venus-Mars': 'Desire and attraction are closely woven — passion may be a recurring theme.',
+    'Sun-Moon': 'Your conscious identity and emotional instincts are fused — what you want and what you need tend to speak in the same voice. This can feel like a deep sense of inner alignment, as though your heart and your purpose are pulling in the same direction. Others may experience you as emotionally transparent and authentically present.',
+    'Sun-Mercury': 'Your sense of self and how you communicate are closely linked — you may express who you are primarily through ideas, conversation, and how you frame your experience. Your mind and identity don\'t operate separately; thinking is how you become yourself. You may find that articulating something is what makes it real for you.',
+    'Sun-Venus': 'Your identity is woven into what you love, what you find beautiful, and what you value most deeply. You may feel most like yourself when you\'re creating harmony, nurturing a relationship, or surrounded by aesthetics that resonate. This isn\'t superficial — your sense of worth and your sense of self are genuinely intertwined.',
+    'Sun-Mars': 'Your identity and your drive are one and the same — you may define yourself through action, courage, and the willingness to go after what matters. Sitting still for too long can feel like losing yourself. You come alive through movement, challenge, and the freedom to assert who you are without apology.',
+    'Moon-Mercury': 'Your thinking and feeling processes are deeply merged — emotions arrive as thoughts and thoughts carry emotional weight. You may process feelings by talking or writing them out, and your inner dialogue is likely more emotionally textured than most people realize. This gives you a rare ability to name what others can only feel.',
+    'Moon-Venus': 'Emotional comfort and love are deeply intertwined for you — you may feel most secure when surrounded by beauty, affection, and genuine connection. Your emotional world has a natural warmth and softness that draws others in. What you need to feel safe and what you need to feel loved are often the same thing.',
+    'Moon-Mars': 'Your emotions and your drive are wired together — when you feel something, it moves you to act. This can make you deeply passionate and protective, especially of the people and things that matter most. You don\'t sit with feelings passively; they become fuel, and that intensity is both your strength and your edge.',
+    'Mercury-Venus': 'Your mind and your sense of beauty work in harmony — communication comes with a natural grace and social intelligence. You may have a gift for saying the right thing, finding the elegant solution, or making complex ideas feel approachable. Words are a form of connection for you, not just information.',
+    'Mercury-Mars': 'Your thinking is sharp, fast, and direct — your mind runs with an intensity that can cut through confusion quickly. You may be drawn to debate, problem-solving, or any space where mental agility matters. This gives you intellectual courage, but you may also need to watch for mental restlessness or a tendency to argue before listening.',
+    'Venus-Mars': 'Desire and attraction are closely woven into how you experience life — you tend to pursue what you love with energy and directness. There\'s a magnetic quality to how you engage with relationships, creativity, and pleasure. Passion isn\'t something you turn on; it\'s a current that runs through everything you care about.',
   };
 
   const key1 = `${a}-${b}`;
@@ -598,8 +598,8 @@ function getClusterDescription(planets: string[], tightestOrb: number): string {
 
   if (specific) return specific;
 
-  return `${a} and ${b} sit closely together (${tightestOrb.toFixed(1)}° apart), suggesting a shared channel of focus or expression. ` +
-    `These planets often work as a unit — influencing one another and shaping how this part of your experience unfolds.`;
+  return `${a} and ${b} sit closely together (${tightestOrb.toFixed(1)}° apart), suggesting their energies blend into a single, unified expression. ` +
+    `Rather than experiencing these as separate parts of yourself, their themes are likely woven together in a way that feels instinctive and natural to you.`;
 }
 
 // ══════════════════════════════════════════════════
@@ -617,16 +617,16 @@ function detectRetrogradeEmphasis(chart: NatalChart): RetrogradeEmphasis {
 
   let description = '';
   if (names.length === 0) {
-    description = 'No natal retrogrades — your planetary energies tend to express outwardly and directly.';
+    description = 'No natal retrogrades — your planetary energies tend to express outwardly and directly. You may find it natural to externalize your thoughts, desires, and experiences without needing extended periods of private processing first.';
   } else if (names.length === 1) {
-    description = `You were born with ${names[0]} retrograde — reflection and private processing play a key role in how you work with its themes. ` +
+    description = `You were born with ${names[0]} retrograde — this planet's energy turns inward, asking you to develop a more personal, reflective relationship with its themes before expressing them outwardly. ` +
       getRetrogradeFlavor(names[0]);
   } else if (names.length <= 3) {
     description = `${names.join(' and ')} were retrograde at birth. ` +
-      `Internalization and inner dialogue may play a key role in how you understand these parts of yourself.`;
+      `These areas of your life may develop on a more reflective, internal timeline — you process their themes privately before sharing them with the world. This isn't a limitation; it's depth. You develop genuine understanding rather than surface-level familiarity.`;
   } else {
     description = `${names.length} planets were retrograde at birth (${names.join(', ')}). ` +
-      `You may notice a rich inner life — processing, reflecting, and developing your own understanding before sharing it outwardly.`;
+      `You carry a rich and complex inner world — much of your most important work happens beneath the surface, through reflection, private processing, and developing your own relationship with experience before expressing it outwardly. Others may underestimate the depth of what's happening inside you.`;
   }
 
   return { planets: names, count: names.length, description };
@@ -634,14 +634,14 @@ function detectRetrogradeEmphasis(chart: NatalChart): RetrogradeEmphasis {
 
 function getRetrogradeFlavor(planet: string): string {
   const flavors: Record<string, string> = {
-    Mercury: 'Inner dialogue and reflective thinking may play a key role in how you understand yourself.',
-    Venus: 'You may notice that love and values develop privately first, before being expressed.',
-    Mars: 'Your drive may work quietly — building momentum internally before moving outward.',
-    Jupiter: 'Growth and meaning may come through inner exploration and personal reflection.',
-    Saturn: 'You may notice you develop your own standards through internal rather than external authority.',
-    Uranus: 'Your sense of independence may process privately — rethinking norms on your own terms.',
-    Neptune: 'Your creative and spiritual life may be deeply personal and not easily put into words.',
-    Pluto: 'Transformation tends to happen at a deep, private level — inner strength is a quiet resource.',
+    Mercury: 'Your mind works in a more internal, contemplative way — you may process thoughts deeply before speaking, rethink past conversations, and develop insights through private reflection rather than real-time discussion. Your inner dialogue is rich, and your best ideas often emerge after careful consideration.',
+    Venus: 'Your relationship with love, beauty, and self-worth develops privately — you may take longer to open up emotionally, but when you do, the connection runs deep. Past relationships and unresolved feelings may resurface periodically as part of your ongoing process of understanding what you truly value.',
+    Mars: 'Your drive and assertiveness work in less obvious ways — rather than charging forward, you build momentum internally and act with deliberate intention. You may feel frustrated when pushed to act before you\'re ready, but when you do move, it comes from a grounded, purposeful place.',
+    Jupiter: 'Your relationship with growth and meaning is deeply personal — you may develop your own philosophy of life through quiet reflection rather than external seeking. Spiritual or intellectual expansion happens on an inward journey, and your sense of faith or optimism is earned through lived experience.',
+    Saturn: 'You may have developed your own internal standards and sense of discipline independently of external authority. Structure and responsibility are things you define on your own terms, and you may have felt the weight of maturity early in life — building resilience that others develop much later.',
+    Uranus: 'Your sense of individuality and need for freedom process quietly — you may rethink societal norms, question inherited beliefs, and develop your own unconventional perspective privately before expressing it. Your independence is deeply considered, not reactive.',
+    Neptune: 'Your creative and spiritual life may be profoundly interior — rich with imagination, dreams, and intuitive knowing that doesn\'t always translate easily into words. You may feel things on a level that\'s hard to share with others, and your inner world may be more vivid and meaningful than your outer circumstances suggest.',
+    Pluto: 'Transformation happens at a deep, private level for you — you process power dynamics, emotional intensity, and personal evolution internally. You may have a quiet resilience that others don\'t see, and your ability to regenerate from difficult experiences is a significant but often invisible strength.',
   };
   return flavors[planet] || '';
 }
@@ -672,20 +672,20 @@ function analyzeElementBalance(chart: NatalChart): ElementBalance {
 
 function getElementDescription(element: string, count: number): string {
   const descriptions: Record<string, string> = {
-    Fire: `There's an emphasis on Fire in your chart — action, expression, and momentum tend to stand out. You may notice you lead with enthusiasm and initiative.`,
-    Earth: `There's an emphasis on Earth in your chart — practicality, stability, and tangible results tend to matter. You may notice a drive to build things that last.`,
-    Air: `There's an emphasis on Air in your chart — ideas, communication, and social connection tend to stand out. Your mind may be one of your most active channels.`,
-    Water: `There's an emphasis on Water in your chart — emotional depth, intuition, and empathy tend to run strong. You may notice you feel your way through experience.`,
+    Fire: `Fire is your chart's dominant element — action, self-expression, and forward momentum are central to how you experience life. You naturally lead with enthusiasm, inspiration, and a willingness to take risks. There's an instinctive confidence in you that draws others in and sets things in motion. You come alive through creative expression, spontaneous action, and the freedom to follow what excites you.`,
+    Earth: `Earth is your chart's dominant element — practicality, reliability, and tangible results are deeply important to you. You have a natural ability to build things that endure, whether that's a career, a relationship, or a sense of inner stability. Your presence is grounding, and others may rely on your steadiness more than you realize. You find meaning in what you can see, touch, and sustain over time.`,
+    Air: `Air is your chart's dominant element — ideas, communication, and social connection are the currents that energize your life. Your mind is one of your most powerful tools, and you may process experience primarily through thinking, talking, and making intellectual connections. You have a natural gift for seeing things from multiple perspectives and translating complex ideas into something others can understand.`,
+    Water: `Water is your chart's dominant element — emotional depth, intuition, and empathy run through everything you do. You feel your way through experience with a sensitivity that most people don't fully see. Your inner world is rich and nuanced, and your ability to read emotional undercurrents — in yourself and others — is a form of intelligence that shapes your relationships, creativity, and sense of meaning.`,
   };
   return descriptions[element] || '';
 }
 
 function getMissingElementNote(element: string): string {
   const notes: Record<string, string> = {
-    Fire: 'spontaneity and self-assertion may be quieter — not absent, just something that develops in its own way.',
-    Earth: 'grounding and practical routines may take more conscious effort — this is a growth edge, not a flaw.',
-    Air: 'intellectual detachment may be less automatic — you may process through other channels first.',
-    Water: 'emotional processing may be quieter or more private — not absent, just internal.',
+    Fire: 'spontaneity, bold self-assertion, and raw enthusiasm may not come as naturally — but this doesn\'t mean they\'re absent. You develop these qualities in your own way and on your own timeline, often with more intention and depth than those who rely on them instinctively.',
+    Earth: 'grounding routines, long-term planning, and practical follow-through may require more conscious effort — but this is a growth edge, not a flaw. You may find alternative ways to create stability that are uniquely your own.',
+    Air: 'intellectual distance and objective analysis may not be your default mode — you tend to process through other channels first, like emotion, intuition, or direct experience. This gives your understanding a different kind of depth.',
+    Water: 'emotional vulnerability and intuitive processing may operate more quietly or privately. This doesn\'t mean you lack depth — rather, your emotional life may express through action, thought, or practical care rather than overt feeling.',
   };
   return notes[element] || '';
 }
@@ -706,9 +706,9 @@ function analyzeModalityBalance(chart: NatalChart): ModalityBalance {
   const dominant = sorted[0][0];
 
   const descriptions: Record<string, string> = {
-    Cardinal: `Cardinal energy dominates (${counts.Cardinal} planets) — you are an initiator. You start things, set direction, and feel most alive at the beginning of new chapters.`,
-    Fixed: `Fixed energy dominates (${counts.Fixed} planets) — you are a sustainer. Once committed, you hold steady with deep determination and follow-through.`,
-    Mutable: `Mutable energy dominates (${counts.Mutable} planets) — you are an adapter. Flexibility, versatility, and responsiveness to change come naturally.`,
+    Cardinal: `Cardinal energy dominates your chart (${counts.Cardinal} planets) — you are a natural initiator. You feel most alive at the beginning of new chapters, when there's a vision to set in motion and a direction to claim. Starting things, setting the tone, and leading by example come instinctively to you. Others may look to you to make the first move, and you're often the one who turns an idea into something real.`,
+    Fixed: `Fixed energy dominates your chart (${counts.Fixed} planets) — you are a natural sustainer. Once you commit to something, you hold steady with a quiet determination that few can match. Loyalty, persistence, and depth of focus are your strengths. While others may shift directions with changing winds, you have the rare ability to stay the course and see things through to completion — building something of lasting value.`,
+    Mutable: `Mutable energy dominates your chart (${counts.Mutable} planets) — you are a natural adapter. Flexibility, versatility, and the ability to read a room and adjust come naturally to you. You thrive in changing environments and can hold multiple perspectives at once without losing your footing. Where others may resist change, you flow with it — finding creative solutions and new possibilities in every shift.`,
   };
 
   return { dominant, counts, description: descriptions[dominant] || '' };

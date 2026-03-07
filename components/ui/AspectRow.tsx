@@ -26,9 +26,26 @@ interface AspectRowProps {
 // Cinematic jewel-tone palette with gradient maps for 3D nodes
 const CATEGORY_CONFIG: Record<AspectCategory, { color: string; gradient: readonly [string, string]; label: string }> = {
   connection: { color: '#D4A3B3', gradient: ['#F2D4DF', '#A86C82'], label: 'Harmony' },
-  chemistry:  { color: '#C9AE78', gradient: ['#FFF0B3', '#9A7B1C'], label: 'Chemistry' },
+  chemistry:  { color: '#FFFFFF', gradient: ['#FFF0B3', '#9A7B1C'], label: 'Chemistry' },
   growth:     { color: '#8BC4E8', gradient: ['#BEE0F5', '#4A87A8'], label: 'Growth' },
   challenge:  { color: '#C87878', gradient: ['#E8A9A9', '#8A3A3A'], label: 'Challenge' }, // Fixed label
+};
+
+
+const renderZodiacText = (text: string) => {
+  const ZODIAC_FAMILY = Platform.select({ ios: 'Apple Symbols', android: 'Noto Sans Symbols 2', default: 'Zodiac' });
+  if (typeof text !== 'string') return text;
+  const RE_ZODIAC = /([☉☽☿♀♂♃♄♅♆♇☊☋⚷☌☍△▢⚹⚸]+)/g;
+  return text.split(RE_ZODIAC).map((part, i) => {
+    if (i % 2 === 1) {
+      return (
+        <Text key={i} style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>
+          {part}
+        </Text>
+      );
+    }
+    return <Text key={i}>{part}</Text>;
+  });
 };
 
 export default function AspectRow({
@@ -83,7 +100,7 @@ export default function AspectRow({
           <View style={styles.cardInner}>
             
             {/* Aspect Formula */}
-            <Text style={styles.formula}>{description}</Text>
+            <Text style={styles.formula}>{renderZodiacText(description)}</Text>
 
             {/* Title */}
             <Text style={styles.title}>{title}</Text>
@@ -190,7 +207,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontSize: 18,
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     marginBottom: 6,
     letterSpacing: 0.2,
   },
@@ -224,6 +241,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(232,214,174,0.18)',
   },
   strongBadgeText: {
-    color: '#C9AE78', // Gold
+    color: '#FFFFFF', // Gold
   },
 });

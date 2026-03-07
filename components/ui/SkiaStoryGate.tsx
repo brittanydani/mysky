@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   chapterTitle: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 20,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     fontWeight: '600',

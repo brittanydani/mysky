@@ -959,9 +959,9 @@ const styles = StyleSheet.create({
   },
   retrogradeHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs },
   retrogradeIcon: { fontSize: 16, marginRight: theme.spacing.sm },
-  retrogradeLabel: { fontSize: 13, fontWeight: '700', color: theme.warning, flex: 1 },
+  retrogradeLabel: { fontSize: 13, fontWeight: '700', color: '#E8D6AE', flex: 1 },
   retrogradeBadge: { backgroundColor: 'rgba(224, 176, 122, 0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  retrogradeBadgeText: { fontSize: 11, fontWeight: '700', color: theme.warning },
+  retrogradeBadgeText: { fontSize: 11, fontWeight: '700', color: '#E8D6AE' },
   retrogradeNote: { fontSize: 13, color: theme.textSecondary, lineHeight: 19 },
 
   // ── Yesterday Thread ──

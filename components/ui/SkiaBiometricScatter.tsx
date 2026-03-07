@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   header: { marginBottom: 12 },
   title: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),

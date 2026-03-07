@@ -29,15 +29,15 @@ export const mySkyText = {
 
   // ── Gold accents — use sparingly ─────────────────────────────────────────
   /** Active tab labels, premium badges, feature highlights */
-  goldAccent: '#E8D6AE',
+  goldAccent: '#FFFFFF',
   /** Softer gold for secondary accents */
-  goldMuted:  '#C9AE78',
+  goldMuted: '#FFFFFF',
   /** Very small CAPS labels: PREMIUM, TODAY, FEATURED */
-  goldCaps:   '#D4B87A',
+  goldCaps: '#FFFFFF',
 
   // ── Tab bar ──────────────────────────────────────────────────────────────
   /** Active tab label */
   tabActive:   '#FFFFFF',
   /** Inactive tab label — muted champagne, not bright white */
-  tabInactive: 'rgba(185, 155, 95, 0.65)',
+  tabInactive: 'rgba(255, 255, 255, 0.65)',
 } as const;

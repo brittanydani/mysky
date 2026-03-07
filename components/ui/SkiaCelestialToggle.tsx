@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   label: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '500',
   },

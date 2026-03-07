@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
     fontFamily: SERIF,

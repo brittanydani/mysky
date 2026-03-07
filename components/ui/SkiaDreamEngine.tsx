@@ -64,7 +64,7 @@ const ARCHETYPE_CONFIG: Record<DreamArchetype, { color: string; path: string }> 
 
   // ── Self ── perfect circle
   Self: {
-    color: '#C9AE78', // Gold
+    color: '#FFFFFF', // Gold
     path: circlePath(CENTER, CENTER, 30),
   },
 
@@ -109,7 +109,7 @@ const ARCHETYPE_CONFIG: Record<DreamArchetype, { color: string; path: string }> 
 
   // ── Integration ── convergent diagonals
   Integration: {
-    color: '#E9D9B8', // Warm Gold
+    color: '#FFFFFF', // Warm Gold
     path: `M ${CENTER - 20} ${CENTER - 20} L ${CENTER + 20} ${CENTER + 20} M ${CENTER + 20} ${CENTER - 20} L ${CENTER - 20} ${CENTER + 20}`,
   },
 };

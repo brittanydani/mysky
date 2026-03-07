@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     padding: 32 
   },
   errorTitle: { 
-    color: '#F0EAD6', 
+    color: '#FFFFFF', 
     fontSize: 26, 
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), 
     marginBottom: 12,
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(232,214,174,0.25)' 
   },
   errorButtonText: { 
-    color: '#C9AE78', 
+    color: '#FFFFFF', 
     fontSize: 15, 
     fontWeight: '600' 
   },

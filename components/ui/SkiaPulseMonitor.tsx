@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   label: {
     marginTop: 10,
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 2,

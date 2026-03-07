@@ -28,7 +28,7 @@ const MySkyShieldSkia = memo(function MySkyShieldSkia({ size = 512, style }: Pro
     // Top-left
     p.moveTo(cx - bodyW / 2, bodyY);
     // Top edge (slight dip in middle)
-    p.quadraticTo(cx, bodyY + size * 0.05, cx + bodyW / 2, bodyY);
+    p.quadTo(cx, bodyY + size * 0.05, cx + bodyW / 2, bodyY);
     // Right curve down to point
     p.cubicTo(
       cx + bodyW / 2, bodyY + bodyH * 0.5,

@@ -478,7 +478,7 @@ export default function BirthDataModal({
             <LinearGradient colors={['rgba(7, 9, 15, 0.95)', '#020817']} style={styles.confirmOverlay}>
               <Animated.View entering={FadeInUp} style={styles.confirmCard}>
                 <MySkyShieldSkia 
-                  size={48} 
+                  size={64} 
                   style={{ marginBottom: 16 }} 
                 />
 
