@@ -77,6 +77,17 @@ export const HALL_VAN_DE_CASTLE_FRAMEWORK: DreamCodingFramework = {
         being_blocked: []
       }
     },
+    good_fortunes: {
+      description: 'Positive events, successes, lucky breaks, blessings, or sudden windfalls.',
+      subcategories: {
+        success: [],
+        luck: [],
+        blessing: [],
+        reward: [],
+        discovery: [],
+        celebration: []
+      }
+    },
     misfortunes: {
       description: "Accidents, losses, injuries, dangers, bad luck, threats, or harm.",
       subcategories: {

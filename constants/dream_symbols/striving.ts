@@ -261,4 +261,536 @@ export const striving_symbols: SingleWordSymbol[] = [
   { symbol: "sketching", category: "striving" },
   { symbol: "grabbing", category: "striving" },
   { symbol: "locking", category: "striving" },
+  {
+    symbol: "chasing",
+    category: "striving",
+  },
+  {
+    symbol: "looking",
+    category: "striving",
+  },
+  {
+    symbol: "exploring",
+    category: "striving",
+  },
+  {
+    symbol: "finding",
+    category: "striving",
+  },
+  {
+    symbol: "descending",
+    category: "striving",
+  },
+  {
+    symbol: "jumping",
+    category: "striving",
+  },
+  {
+    symbol: "leaping",
+    category: "striving",
+  },
+  {
+    symbol: "running",
+    category: "striving",
+  },
+  {
+    symbol: "racing",
+    category: "striving",
+  },
+  {
+    symbol: "wrestling",
+    category: "striving",
+  },
+  {
+    symbol: "constructing",
+    category: "striving",
+  },
+  {
+    symbol: "inventing",
+    category: "striving",
+  },
+  {
+    symbol: "figuring",
+    category: "striving",
+  },
+  {
+    symbol: "navigating",
+    category: "striving",
+  },
+  {
+    symbol: "controlling",
+    category: "striving",
+  },
+  {
+    symbol: "judging",
+    category: "striving",
+  },
+  {
+    symbol: "testing",
+    category: "striving",
+  },
+  {
+    symbol: "presenting",
+    category: "striving",
+  },
+  {
+    symbol: "explaining",
+    category: "striving",
+  },
+  {
+    symbol: "teaching",
+    category: "striving",
+  },
+  {
+    symbol: "influencing",
+    category: "striving",
+  },
+  {
+    symbol: "helping",
+    category: "striving",
+  },
+  {
+    symbol: "assisting",
+    category: "striving",
+  },
+  {
+    symbol: "adapting",
+    category: "striving",
+  },
+  {
+    symbol: "evolving",
+    category: "striving",
+  },
+  {
+    symbol: "reinforcing",
+    category: "striving",
+  },
+  {
+    symbol: "triggering",
+    category: "striving",
+  },
+  {
+    symbol: "advancingforward",
+    category: "striving",
+  },
+  {
+    symbol: "pressingforward",
+    category: "striving",
+  },
+  {
+    symbol: "forgingahead",
+    category: "striving",
+  },
+  {
+    symbol: "pushingforward",
+    category: "striving",
+  },
+  {
+    symbol: "breakingthrough",
+    category: "striving",
+  },
+  {
+    symbol: "breakingfree",
+    category: "striving",
+  },
+  {
+    symbol: "overcomingobstacles",
+    category: "striving",
+  },
+  {
+    symbol: "climbinghigher",
+    category: "striving",
+  },
+  {
+    symbol: "reachingtop",
+    category: "striving",
+  },
+  {
+    symbol: "focusing",
+    category: "striving",
+  },
+  {
+    symbol: "concentrating",
+    category: "striving",
+  },
+  {
+    symbol: "dedicating",
+    category: "striving",
+  },
+  {
+    symbol: "enduringhardship",
+    category: "striving",
+  },
+  {
+    symbol: "persistinglong",
+    category: "striving",
+  },
+  {
+    symbol: "strivingharder",
+    category: "striving",
+  },
+  {
+    symbol: "pursuinggoals",
+    category: "striving",
+  },
+  {
+    symbol: "achievingdreams",
+    category: "striving",
+  },
+  {
+    symbol: "winningchallenge",
+    category: "striving",
+  },
+  {
+    symbol: "beatingcompetition",
+    category: "striving",
+  },
+  {
+    symbol: "conqueringfear",
+    category: "striving",
+  },
+  {
+    symbol: "provingability",
+    category: "striving",
+  },
+  {
+    symbol: "demonstratingstrength",
+    category: "striving",
+  },
+  {
+    symbol: "overcomingbarrier",
+    category: "striving",
+  },
+  {
+    symbol: "achievingsuccess",
+    category: "striving",
+  },
+  {
+    symbol: "accomplishinggoal",
+    category: "striving",
+  },
+  {
+    symbol: "completingtask",
+    category: "striving",
+  },
+  {
+    symbol: "finishingwork",
+    category: "striving",
+  },
+  {
+    symbol: "fulfillingduty",
+    category: "striving",
+  },
+  {
+    symbol: "attainingtarget",
+    category: "striving",
+  },
+  {
+    symbol: "reachinggoal",
+    category: "striving",
+  },
+  {
+    symbol: "securingvictory",
+    category: "striving",
+  },
+  {
+    symbol: "claimingreward",
+    category: "striving",
+  },
+  {
+    symbol: "earningrespect",
+    category: "striving",
+  },
+  {
+    symbol: "gainingconfidence",
+    category: "striving",
+  },
+  {
+    symbol: "gainingpower",
+    category: "striving",
+  },
+  {
+    symbol: "gainingcontrol",
+    category: "striving",
+  },
+  {
+    symbol: "gainingknowledge",
+    category: "striving",
+  },
+  {
+    symbol: "gainingexperience",
+    category: "striving",
+  },
+  {
+    symbol: "improvingability",
+    category: "striving",
+  },
+  {
+    symbol: "masteringskill",
+    category: "striving",
+  },
+  {
+    symbol: "strengtheningresolve",
+    category: "striving",
+  },
+  {
+    symbol: "maintainingeffort",
+    category: "striving",
+  },
+  {
+    symbol: "sustainingfocus",
+    category: "striving",
+  },
+  {
+    symbol: "continuingeffort",
+    category: "striving",
+  },
+  {
+    symbol: "persistingforward",
+    category: "striving",
+  },
+  {
+    symbol: "enduringchallenge",
+    category: "striving",
+  },
+  {
+    symbol: "survivingtrial",
+    category: "striving",
+  },
+  {
+    symbol: "conqueringdifficulty",
+    category: "striving",
+  },
+  {
+    symbol: "overcomingfailure",
+    category: "striving",
+  },
+  {
+    symbol: "rebounding",
+    category: "striving",
+  },
+  {
+    symbol: "recoveringstrength",
+    category: "striving",
+  },
+  {
+    symbol: "rebuildingconfidence",
+    category: "striving",
+  },
+  {
+    symbol: "renewingeffort",
+    category: "striving",
+  },
+  {
+    symbol: "reattempting",
+    category: "striving",
+  },
+  {
+    symbol: "reevaluating",
+    category: "striving",
+  },
+  {
+    symbol: "redirecting",
+    category: "striving",
+  },
+  {
+    symbol: "refocusing",
+    category: "striving",
+  },
+  {
+    symbol: "recalculating",
+    category: "striving",
+  },
+  {
+    symbol: "rethinking",
+    category: "striving",
+  },
+  {
+    symbol: "reorganizing",
+    category: "striving",
+  },
+  {
+    symbol: "redefining",
+    category: "striving",
+  },
+  {
+    symbol: "reimagining",
+    category: "striving",
+  },
+  {
+    symbol: "reinventing",
+    category: "striving",
+  },
+  {
+    symbol: "evolvingforward",
+    category: "striving",
+  },
+  {
+    symbol: "progressingforward",
+    category: "striving",
+  },
+  {
+    symbol: "growingstronger",
+    category: "striving",
+  },
+  {
+    symbol: "expandingability",
+    category: "striving",
+  },
+  {
+    symbol: "strengtheningmind",
+    category: "striving",
+  },
+  {
+    symbol: "strengtheningbody",
+    category: "striving",
+  },
+  {
+    symbol: "strengtheningskill",
+    category: "striving",
+  },
+  {
+    symbol: "sharpeningfocus",
+    category: "striving",
+  },
+  {
+    symbol: "sharpeningmind",
+    category: "striving",
+  },
+  {
+    symbol: "buildingmomentum",
+    category: "striving",
+  },
+  {
+    symbol: "generatingeffort",
+    category: "striving",
+  },
+  {
+    symbol: "producingresults",
+    category: "striving",
+  },
+  {
+    symbol: "deliveringperformance",
+    category: "striving",
+  },
+  {
+    symbol: "meetingchallenge",
+    category: "striving",
+  },
+  {
+    symbol: "answeringchallenge",
+    category: "striving",
+  },
+  {
+    symbol: "facingchallenge",
+    category: "striving",
+  },
+  {
+    symbol: "confrontingfear",
+    category: "striving",
+  },
+  {
+    symbol: "facingdifficulty",
+    category: "striving",
+  },
+  {
+    symbol: "confrontingobstacle",
+    category: "striving",
+  },
+  {
+    symbol: "challenginglimits",
+    category: "striving",
+  },
+  {
+    symbol: "pushinglimits",
+    category: "striving",
+  },
+  {
+    symbol: "exceedinglimits",
+    category: "striving",
+  },
+  {
+    symbol: "surpassinglimits",
+    category: "striving",
+  },
+  {
+    symbol: "breakingrecords",
+    category: "striving",
+  },
+  {
+    symbol: "settingrecords",
+    category: "striving",
+  },
+  {
+    symbol: "establishingleadership",
+    category: "striving",
+  },
+  {
+    symbol: "claimingleadership",
+    category: "striving",
+  },
+  {
+    symbol: "gainingadvantage",
+    category: "striving",
+  },
+  {
+    symbol: "gainingposition",
+    category: "striving",
+  },
+  {
+    symbol: "securingposition",
+    category: "striving",
+  },
+  {
+    symbol: "achievingmastery",
+    category: "striving",
+  },
+  {
+    symbol: "reachingpeak",
+    category: "striving",
+  },
+  {
+    symbol: "achievingpeak",
+    category: "striving",
+  },
+  {
+    symbol: "attainingmastery",
+    category: "striving",
+  },
+  {
+    symbol: "earningvictory",
+    category: "striving",
+  },
+  {
+    symbol: "achievingdominance",
+    category: "striving",
+  },
+  {
+    symbol: "securingwin",
+    category: "striving",
+  },
+  {
+    symbol: "finishingrace",
+    category: "striving",
+  },
+  {
+    symbol: "completingmission",
+    category: "striving",
+  },
+  {
+    symbol: "accomplishingobjective",
+    category: "striving",
+  },
+  {
+    symbol: "fulfillingpurpose",
+    category: "striving",
+  },
+  {
+    symbol: "achievingprogress",
+    category: "striving",
+  },
+  {
+    symbol: "reachingdestination",
+    category: "striving",
+  },
 ];

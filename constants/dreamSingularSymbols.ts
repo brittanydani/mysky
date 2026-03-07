@@ -16,7 +16,6 @@ import { striving_symbols } from "./dream_symbols/striving";
 
 import { good_fortunes_symbols } from "./dream_symbols/good_fortunes";
 
-import { bad_fortunes_symbols } from "./dream_symbols/bad_fortunes";
 
 import { emotions_symbols } from "./dream_symbols/emotions";
 
@@ -63,7 +62,6 @@ export const DREAM_SINGLE_WORD_SYMBOLS: SingleWordSymbol[] = [
   ...striving_symbols,
   ...social_interactions_symbols,
   ...good_fortunes_symbols,
-  ...bad_fortunes_symbols,
   ...settings_symbols,
   ...general_objects_symbols,
   ...weapons_symbols,
