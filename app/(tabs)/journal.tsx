@@ -30,16 +30,6 @@ const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
 
 // ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  rose: '#D4A3B3',
-  textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
-};
 
 // ─── Memoized entry card ───────────────────────────────────────────────────────
 
@@ -311,12 +301,12 @@ export default function JournalScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <Text style={styles.chartTitle}>7-Day Mood Trends</Text>
                 <View style={styles.premiumBadge}>
-                  <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
+                  <Ionicons name="sparkles" size={10} color={theme.textGold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
                 </View>
               </View>
               <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.lockBox}>
-                <Ionicons name="trending-up" size={36} color={PALETTE.gold} style={{ marginBottom: 8 }} />
+                <Ionicons name="trending-up" size={36} color={theme.textGold} style={{ marginBottom: 8 }} />
                 <Text style={styles.lockTitle}>Your trends are ready</Text>
                 <Text style={styles.lockSubtitle}>See how your mood, energy, and stress shift across the week</Text>
               </LinearGradient>
@@ -346,7 +336,7 @@ export default function JournalScreen() {
                 </View>
                 <Text style={styles.insightDescription}>{insight.description}</Text>
                 {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
-                {!!insight.actionable && <Text style={[styles.insightActionable, { color: isTransit ? PALETTE.rose : PALETTE.gold }]}>{insight.actionable}</Text>}
+                {!!insight.actionable && <Text style={[styles.insightActionable, { color: isTransit ? '#D4A3B3' : theme.textGold }]}>{insight.actionable}</Text>}
               </LinearGradient>
             );
           })}
@@ -356,12 +346,12 @@ export default function JournalScreen() {
       {!isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-            <LinearGradient colors={['rgba(232, 214, 174, 0.12)', 'rgba(2,8,23,0.60)']} style={[styles.insightCard, { borderColor: 'rgba(232,214,174,0.18)' }]}>
+            <LinearGradient colors={['rgba(232, 214, 174, 0.10)', theme.cardGradientEnd]} style={[styles.insightCard, { borderColor: 'rgba(232, 214, 174, 0.18)', borderTopColor: theme.glass.highlight }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Ionicons name="analytics" size={18} color={PALETTE.gold} />
+                <Ionicons name="analytics" size={18} color={theme.textGold} />
                 <Text style={styles.insightTitle}>Pattern Insights</Text>
                 <View style={[styles.premiumBadge, { marginLeft: 'auto' }]}>
-                  <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
+                  <Ionicons name="sparkles" size={10} color={theme.textGold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
                 </View>
               </View>
@@ -369,8 +359,8 @@ export default function JournalScreen() {
                 With {totalCount} entries, Deeper Sky can reveal which energy patterns lift your mood, when you tend to journal most, and what emotional themes keep appearing.
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]}>Reveal your patterns</Text>
-                <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                <Text style={[styles.insightActionable, { marginTop: 0, color: theme.textGold }]}>Reveal your patterns</Text>
+                <Ionicons name="arrow-forward" size={14} color={theme.textGold} />
               </View>
             </LinearGradient>
           </Pressable>
@@ -545,8 +535,8 @@ const styles = StyleSheet.create({
 
   header: { paddingVertical: 16, marginBottom: 8 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
-  subtitle: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic', marginTop: 4, letterSpacing: 0.3 },
+  title: { fontSize: 34, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), letterSpacing: 0.5 },
+  subtitle: { fontSize: 15, color: theme.textGold, fontStyle: 'italic', marginTop: 4, letterSpacing: 0.3 },
   poeticIntro: {
     fontSize: 15,
     color: theme.textSecondary,
@@ -556,8 +546,8 @@ const styles = StyleSheet.create({
 
   chartTitle: {
     fontSize: 20,
-    color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 4,
   },
   checkInTrendSection: { marginBottom: 32 },
@@ -568,8 +558,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(232, 214, 174, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  premiumBadgeText: { fontSize: 10, fontWeight: '700', color: PALETTE.gold },
+  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(232, 214, 174, 0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  premiumBadgeText: { fontSize: 10, fontWeight: '700', color: theme.textGold },
 
   lockBox: {
     height: 140,
@@ -577,59 +567,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
   },
-  lockTitle: { color: PALETTE.gold, marginTop: 12, fontWeight: '600', fontSize: 16 },
+  lockTitle: { color: theme.textGold, marginTop: 12, fontWeight: '600', fontSize: 16 },
   lockSubtitle: { color: theme.textSecondary, fontSize: 14, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
 
   insightsSection: { marginBottom: 32 },
-  insightsTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 4 },
+  insightsTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 4 },
   insightsSubtitle: { fontSize: 13, color: theme.textSecondary, fontStyle: 'italic', marginBottom: 20 },
 
   insightCard: {
     padding: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.glass.highlight,
     marginBottom: 12,
   },
   insightHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  insightTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, flex: 1 },
+  insightTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, flex: 1 },
   confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.08)', marginLeft: 12 },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
-  confidenceSuggested: { backgroundColor: 'rgba(232, 214, 174, 0.15)' },
-  confidenceText: { fontSize: 10, color: PALETTE.textMain, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
+  confidenceSuggested: { backgroundColor: 'rgba(232, 214, 174, 0.12)' },
+  confidenceText: { fontSize: 10, color: theme.textPrimary, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
   insightDescription: { fontSize: 15, color: theme.textSecondary, lineHeight: 22, marginBottom: 10 },
   insightEvidence: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic', marginBottom: 8 },
   insightActionable: { fontSize: 14, fontWeight: '600', marginTop: 4 },
 
   entriesSection: { marginBottom: 16 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  sectionTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) },
   entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic' },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
   loadingText: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic' },
 
   emptyContainer: { paddingVertical: 32 },
-  emptyCard: { borderRadius: 20, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
-  emptyTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  emptyCard: { borderRadius: 20, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight },
+  emptyTitle: { fontSize: 22, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 8 },
   emptyDescription: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22 },
 
-  entryCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, marginBottom: 16 },
+  entryCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
   entryGradient: { padding: 20 },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  entryDate: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
+  entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
   entryTime: { fontSize: 12, color: theme.textMuted },
 
-  entryTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  entryTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 8 },
   entryContent: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
 
   fabContainer: { position: 'absolute', right: 20, zIndex: 1000 },
-  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', shadowColor: '#C9AE78', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
+  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', shadowColor: theme.textGold, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
   fabPressed: { opacity: 0.9, transform: [{ scale: 0.95 }] },
   fabGradient: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
 });
