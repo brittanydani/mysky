@@ -614,7 +614,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
   return (
     <View style={styles.container} accessible accessibilityRole="image" accessibilityLabel={accessibilitySummary}>
-      <Canvas style={{ width: SIZE_CANVAS, height: SIZE_CANVAS, backgroundColor: 'transparent' }} mode="continuous">
+      <Canvas style={{ width: SIZE_CANVAS, height: SIZE_CANVAS, backgroundColor: 'transparent' }}>
         {/* ── Subtle wheel glow (champagne halo) ── */}
         <Circle cx={CX} cy={CY} r={R_OUTER + 26} opacity={1}>
           <RadialGradient

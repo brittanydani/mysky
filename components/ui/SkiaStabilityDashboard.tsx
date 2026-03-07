@@ -240,7 +240,7 @@ const SkiaStabilityDashboard = memo(function SkiaStabilityDashboard({
       </View>
 
       {/* ── Skia Graph ── */}
-      <Canvas style={{ width, height: graphH + MARGIN.top + 8 }} mode="continuous">
+      <Canvas style={{ width, height: graphH + MARGIN.top + 8 }}>
         {/* Grid */}
         <Path path={gridPath} color={COLORS.grid} style="stroke" strokeWidth={1} />
 

@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaReflectionMirror from '../../components/ui/SkiaReflectionMirror';
 import { localDb } from '../../services/storage/localDb';
@@ -395,9 +396,11 @@ export default function ReflectScreen() {
         <Text style={styles.emptySubtitle}>
           Log a few mood check-ins and journal entries to uncover your hidden patterns and emotional rhythms.
         </Text>
-        <Pressable style={styles.ctaButton} onPress={() => nav('/(tabs)/mood')}>
-          <Text style={styles.ctaText}>Log Your First Mood</Text>
-        </Pressable>
+        <SkiaMetallicPill
+          label="Log Your First Mood"
+          onPress={() => nav('/(tabs)/mood')}
+          style={{ marginTop: 24 }}
+        />
       </View>
     );
   }
@@ -478,9 +481,12 @@ export default function ReflectScreen() {
               <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCardEmpty}>
                 <Ionicons name="pulse" size={32} color={theme.textMuted} />
                 <Text style={styles.emptyCardText}>No data yet. Log your mood daily to unlock trend analysis.</Text>
-                <Pressable style={styles.inlineCtaButton} onPress={() => nav('/(tabs)/mood')}>
-                  <Text style={styles.inlineCtaText}>Log Mood Now</Text>
-                </Pressable>
+                <SkiaMetallicPill
+                  label="Log Mood Now"
+                  onPress={() => nav('/(tabs)/mood')}
+                  style={{ marginTop: 16 }}
+                  labelStyle={{ fontSize: 15 }}
+                />
               </LinearGradient>
             </Animated.View>
           ) : (

@@ -20,10 +20,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
 
 interface BackupPassphraseModalProps {
   visible: boolean;
@@ -158,20 +158,11 @@ export default function BackupPassphraseModal({
                   </View>
                 )}
 
-                <Pressable
+                <SkiaMetallicPill
+                  label={submitting ? 'Processing…' : mode === 'backup' ? 'Confirm & Backup' : 'Confirm & Restore'}
                   onPress={handleSubmit}
-                  disabled={!validation.canSubmit}
-                  style={styles.ctaButton}
-                >
-                  <LinearGradient
-                    colors={!validation.canSubmit ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D6', '#C9AE78', '#6B532E']}
-                    style={[styles.ctaGradient, !validation.canSubmit && { borderColor: 'transparent' }]}
-                  >
-                    <Text style={[styles.ctaText, !validation.canSubmit && { color: theme.textMuted }]}>
-                      {submitting ? 'Processing...' : mode === 'backup' ? 'Confirm & Backup' : 'Confirm & Restore'}
-                    </Text>
-                  </LinearGradient>
-                </Pressable>
+                  disabled={!validation.canSubmit || submitting}
+                />
 
                 {mode === 'backup' && (
                   <View style={styles.securityNote}>

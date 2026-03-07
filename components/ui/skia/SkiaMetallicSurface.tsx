@@ -52,7 +52,7 @@ export function SkiaMetallicSurface({
 
   return (
     <View style={[styles.container, { width, height }, style]} {...props}>
-      <Canvas style={StyleSheet.absoluteFill} mode="continuous">
+      <Canvas style={StyleSheet.absoluteFill}>
         <Group>
           {/* Base Metallic Gradient */}
           <RoundedRect x={0} y={0} width={width} height={height} r={borderRadius}>

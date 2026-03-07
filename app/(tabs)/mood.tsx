@@ -245,7 +245,7 @@ const LineGraph = memo(function LineGraph({
   }
 
   return (
-    <Canvas style={{ width, height }} mode="continuous">
+    <Canvas style={{ width, height }}>
       {/* Gradient area fill — GPU-accelerated */}
       <SkiaPath path={areaPath} style="fill">
         <SkiaGradient

@@ -1,16 +1,15 @@
 // File: components/OnboardingModal.tsx
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import { Image } from 'react-native';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import BirthDataModal from './BirthDataModal';
 import TermsConsentModal from './TermsConsentModal';
 
@@ -222,10 +221,10 @@ export default function OnboardingModal({
               {step === 'welcome' && (
                 <>
                   <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.welcomeContainer}>
-                    <View style={[styles.logoContainer, { marginBottom: 8 }]}>
+                    <View style={[styles.logoContainer, { marginBottom: 8, alignItems: 'center' }]}>
                       <Image
-                        source={require('../assets/images/logo.png')}
-                        style={{ width: 220, height: 220, resizeMode: 'contain', alignSelf: 'center' }}
+                        source={require('../assets/images/mysky_logo.png')}
+                        style={{ width: 220, height: 220, resizeMode: 'contain' }}
                         accessibilityLabel="MySky logo"
                       />
                     </View>
@@ -234,7 +233,7 @@ export default function OnboardingModal({
                     <Text style={styles.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
 
                     <Text style={styles.description}>
-                      MySky is a personal growth and wellness app. Track your mood, sleep, and energy — journal your thoughts — and discover your patterns over time, guided by a framework built uniquely for you.
+                      Track your mood, sleep, and energy, journal your thoughts, and uncover personal patterns over time.
                     </Text>
                   </Animated.View>
 
@@ -269,22 +268,11 @@ export default function OnboardingModal({
                   </Animated.View>
 
                   <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.ctaContainer}>
-                    <Pressable
-                      style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]}
+                    <SkiaMetallicPill
+                      label="Get Started"
                       onPress={handleGetStarted}
-                      accessibilityRole="button"
-                      accessibilityLabel="Get started"
-                    >
-                      <LinearGradient
-                        colors={[...theme.goldGradient]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.ctaGradient}
-                      >
-                        <Text style={styles.ctaText}>Get Started</Text>
-                        <Ionicons name="arrow-forward" size={20} color="#0B1220" />
-                      </LinearGradient>
-                    </Pressable>
+                      style={{ marginBottom: theme.spacing.md }}
+                    />
 
                     <Pressable style={styles.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button" accessibilityLabel="Restore from backup">
                       <Ionicons name="cloud-download-outline" size={16} color={theme.textGold} />
@@ -332,17 +320,12 @@ export default function OnboardingModal({
                     onSubmitEditing={handlePassphraseSubmit}
                   />
 
-                  <Pressable style={({ pressed }) => [styles.ctaButton, pressed && styles.ctaPressed]} onPress={handlePassphraseSubmit} accessibilityRole="button" accessibilityLabel="Restore backup">
-                    <LinearGradient
-                      colors={[...theme.goldGradient]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.ctaGradient}
-                    >
-                      <Text style={styles.ctaText}>Restore</Text>
-                      <Ionicons name="cloud-download" size={20} color="#0B1220" />
-                    </LinearGradient>
-                  </Pressable>
+                  <SkiaMetallicPill
+                    label="Restore"
+                    onPress={handlePassphraseSubmit}
+                    icon={<Ionicons name="cloud-download" size={20} color="#020817" />}
+                    style={{ marginBottom: theme.spacing.md }}
+                  />
 
                   <Pressable style={styles.restoreButton} onPress={() => setStep('welcome')} accessibilityRole="button" accessibilityLabel="Cancel restore">
                     <Text style={styles.restoreText}>Cancel</Text>
@@ -360,6 +343,8 @@ export default function OnboardingModal({
           {/* Birth data is REQUIRED: onClose won't let user exit */}
           <BirthDataModal
             visible={showBirthModal}
+            hideClose={true}
+            title="Birth Details"
             onClose={handleBirthModalClose}
             onSave={handleBirthDataComplete}
           />

@@ -82,7 +82,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
       <Text style={styles.title}>{title}</Text>
 
       {/* Illuminated Horizon Graph */}
-      <Canvas style={styles.canvas} mode="continuous">
+      <Canvas style={styles.canvas}>
         {/* Glass background */}
         <RoundedRect
           x={0}

@@ -143,7 +143,7 @@ const SkiaReflectionMirror = memo(function SkiaReflectionMirror({
   return (
     <View style={styles.container}>
       {/* ── Skia Frosted Glass Layer ── */}
-      <Canvas style={styles.canvas} pointerEvents="none" mode="continuous">
+      <Canvas style={styles.canvas} pointerEvents="none">
         {/* Dark infinite plane */}
         <Rect x={0} y={0} width={MIRROR_W} height={MIRROR_H} color={PALETTE.glass} />
 

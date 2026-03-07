@@ -143,7 +143,7 @@ function SkiaStoryGate({
       style={({ pressed }) => [styles.gateWrapper, pressed && styles.pressed]}
     >
       <View style={styles.canvasContainer}>
-        <Canvas style={{ width: GATE_SIZE, height: GATE_SIZE }} mode="continuous">
+        <Canvas style={{ width: GATE_SIZE, height: GATE_SIZE }}>
           <Group
             origin={vec(GATE_SIZE / 2, GATE_SIZE / 2)}
             transform={groupTransform}

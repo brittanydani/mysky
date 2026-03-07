@@ -117,7 +117,7 @@ export default function CheckInTrendGraph({
 
       {/* Chart Panel */}
       <View style={styles.chartContainer}>
-        <Canvas style={{ width, height }} mode="continuous">
+        <Canvas style={{ width, height }}>
           {/* Guidelines */}
           {[0, 0.5, 1].map(p => (
             <SkiaLine 

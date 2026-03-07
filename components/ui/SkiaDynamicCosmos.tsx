@@ -12,8 +12,8 @@ import Animated, {
 
 const { width, height } = Dimensions.get("window");
 
-const STATIC_COUNT = 40;
-const TWINKLE_COUNT = 10;
+const STATIC_COUNT = 48;
+const TWINKLE_COUNT = 15;
 
 export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
   const { staticStars, twinklingStars } = useMemo(() => {
@@ -33,17 +33,22 @@ export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
   }, []);
 
   // One shared value per twinkling star for independent rhythm
-  const t0 = useSharedValue(0.2);
-  const t1 = useSharedValue(0.2);
-  const t2 = useSharedValue(0.2);
-  const t3 = useSharedValue(0.2);
-  const t4 = useSharedValue(0.2);
-  const t5 = useSharedValue(0.2);
-  const t6 = useSharedValue(0.2);
-  const t7 = useSharedValue(0.2);
-  const t8 = useSharedValue(0.2);
-  const t9 = useSharedValue(0.2);
-  const twinkleOpacities = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9];
+  const t0  = useSharedValue(0.2);
+  const t1  = useSharedValue(0.2);
+  const t2  = useSharedValue(0.2);
+  const t3  = useSharedValue(0.2);
+  const t4  = useSharedValue(0.2);
+  const t5  = useSharedValue(0.2);
+  const t6  = useSharedValue(0.2);
+  const t7  = useSharedValue(0.2);
+  const t8  = useSharedValue(0.2);
+  const t9  = useSharedValue(0.2);
+  const t10 = useSharedValue(0.2);
+  const t11 = useSharedValue(0.2);
+  const t12 = useSharedValue(0.2);
+  const t13 = useSharedValue(0.2);
+  const t14 = useSharedValue(0.2);
+  const twinkleOpacities = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14];
 
   useEffect(() => {
     twinkleOpacities.forEach((sv, i) => {

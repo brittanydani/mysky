@@ -161,7 +161,7 @@ const SkiaRestorationField = memo(function SkiaRestorationField({
   });
 
   return (
-    <Canvas style={[styles.canvas, { height }]} pointerEvents="none" mode="continuous">
+    <Canvas style={[styles.canvas, { height }]} pointerEvents="none">
       {/* ── Restoration Rings ── */}
       <Group>
         {ringRadii.map((r, i) => (

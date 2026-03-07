@@ -59,17 +59,17 @@ export default function OnboardingBirthScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <View style={styles.header}>
-          <Ionicons name="sparkles" size={20} color={PALETTE.gold} />
-          <Text style={styles.headerText}>Add your birth details</Text>
-        </View>
-
         {/* This screen exists only to host the modal as a step */}
         <BirthDataModal
           visible={visible}
+          hideClose={true}
+          title="Birth Details"
           onClose={() => {
             // Don’t allow skipping this step if user chose onboarding
             router.replace('/onboarding' as Href);
+          }}
+          onRestore={() => {
+            router.push('/onboarding/restore' as Href);
           }}
           onSave={onSave}
         />

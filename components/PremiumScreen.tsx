@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
+import MySkyDiamondSkia from './skia/MySkyDiamondSkia';
 import PricingCard from './ui/PricingCard';
 import { usePremium } from '../context/PremiumContext';
 import { config } from '../constants/config';
@@ -127,6 +128,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             <Pressable onPress={safeGoBack} style={styles.backButton}>
               <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
             </Pressable>
+            <View style={{ alignItems: 'center', marginBottom: 4 }}>
+              <MySkyDiamondSkia size={140} />
+            </View>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
               <Text style={styles.premiumBadge}>✨ Deeper Sky Active</Text>
               <Text style={styles.title}>You're a Deeper Sky member</Text>
@@ -192,6 +196,11 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           <Pressable onPress={safeGoBack} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
+
+          {/* Diamond logo */}
+          <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 4 }}>
+            <MySkyDiamondSkia size={140} />
+          </View>
 
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>

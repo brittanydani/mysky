@@ -64,7 +64,7 @@ function InsightCard({
     >
       {w > 0 && h > 0 && (
         <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
+          <Canvas style={StyleSheet.absoluteFillObject}>
             <RoundedRect x={0} y={0} width={w} height={h} r={20}>
               <LinearGradient
                 start={vec(0, 0)}

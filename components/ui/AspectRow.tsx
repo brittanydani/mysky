@@ -48,7 +48,7 @@ export default function AspectRow({
         <View style={[styles.glowHalo, { backgroundColor: `${cfg.color}30` }]}>
           <View style={[styles.nodeCore, { overflow: 'hidden' }]}>
               <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-                <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
+                <Canvas style={StyleSheet.absoluteFillObject}>
                   <RoundedRect x={0} y={0} width={8} height={8} r={4}>
                     <LinearGradient start={vec(0, 0)} end={vec(8, 8)} colors={cfg.gradient.map(String)} />
                   </RoundedRect>
@@ -60,7 +60,7 @@ export default function AspectRow({
         {/* Fading Connector Line */}
         <View style={[styles.connector, { overflow: 'hidden' }]}>
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
+            <Canvas style={StyleSheet.absoluteFillObject}>
               <RoundedRect x={0} y={0} width={1.5} height={100} r={1}>
                 <LinearGradient start={vec(0, 0)} end={vec(0, 100)} colors={[`${cfg.color}80`, 'rgba(255,255,255,0)']} />
               </RoundedRect>
@@ -73,7 +73,7 @@ export default function AspectRow({
       <View style={styles.cardContainer}>
         <View style={styles.cardGlow}>
           <View style={[StyleSheet.absoluteFillObject, { borderRadius: 16, overflow: 'hidden' }]} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
+            <Canvas style={StyleSheet.absoluteFillObject}>
               <RoundedRect x={0} y={0} width={400} height={600} r={16}>
                 <LinearGradient start={vec(0, 0)} end={vec(0, 600)} colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} />
               </RoundedRect>

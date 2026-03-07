@@ -137,7 +137,7 @@ function SkiaBiometricScatter({
         {/* Y Axis Label (positioned manually instead of matrix transform origin issues) */}
         <Text style={[styles.axisLabel, styles.yAxis]}>{yAxisLabel}</Text>
         
-        <Canvas style={{ width: CHART_SIZE, height: CHART_SIZE }} mode="continuous">
+        <Canvas style={{ width: CHART_SIZE, height: CHART_SIZE }}>
           {/* 0. Grid */}
           <Path path={gridPath} color={PALETTE.grid} style="stroke" strokeWidth={1} />
           

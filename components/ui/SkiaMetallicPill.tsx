@@ -1,10 +1,28 @@
 import React, { memo, useState, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View, Platform, LayoutChangeEvent } from 'react-native';
-import { SkiaMetallicSurface } from './skia/SkiaMetallicSurface';
-import { luxuryTheme } from '../../constants/luxuryTheme';
+import {
+  Canvas,
+  RoundedRect,
+  LinearGradient,
+  Group,
+  vec,
+} from '@shopify/react-native-skia';
+import { mySkyGold } from '../../constants/mySkyMetallic';
 
 const PILL_HEIGHT = 56;
-const PILL_RADIUS = 9999; // full capsule
+const PILL_RADIUS = 999;
+
+// Horizontal metallic sweep — dark edges, champagne centre, muted specular peak
+const pillGradientColors = [
+  mySkyGold.shadow,
+  mySkyGold.goldDeep,
+  mySkyGold.champagneLight,
+  mySkyGold.glossSoft,
+  mySkyGold.champagneLight,
+  mySkyGold.goldDeep,
+  mySkyGold.shadow,
+];
+const pillGradientPositions = [0, 0.18, 0.38, 0.5, 0.62, 0.82, 1];
 
 interface Props {
   /** Button label */
@@ -20,9 +38,9 @@ interface Props {
   /** Icon element to render after label */
   icon?: React.ReactNode;
   /** Override label style */
-  labelStyle?: object;
+  labelStyle?: any;
   /** Override container style */
-  style?: object;
+  style?: any;
 }
 
 function SkiaMetallicPill({
@@ -56,19 +74,25 @@ function SkiaMetallicPill({
         style,
       ]}
     >
-      {/* Skia canvas sits strictly behind layout */}
       {w > 0 && (
         <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-          <SkiaMetallicSurface
-            width={w}
-            height={height}
-            borderRadius={r}
-            type="strong"
-            showGloss={true}
-            showRim={true}
-          />
+          <Canvas style={{ flex: 1 }}>
+            <Group>
+              <RoundedRect x={0} y={0} width={w} height={height} r={r}>
+                <LinearGradient
+                  start={vec(0, height / 2)}
+                  end={vec(w, height / 2)}
+                  positions={pillGradientPositions}
+                  colors={pillGradientColors}
+                />
+              </RoundedRect>
+            </Group>
+          </Canvas>
         </View>
       )}
+
+      {/* Inner highlight for polished metal effect */}
+      <View style={[styles.innerHighlight, { borderRadius: r }]} />
 
       {/* Label + icon sit above the canvas */}
       <View style={styles.content} pointerEvents="none">
@@ -85,7 +109,22 @@ const styles = StyleSheet.create({
   outer: {
     width: '100%',
     position: 'relative',
+    shadowColor: '#3A2207',
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+    borderTopWidth: 2,
+    borderTopColor: 'rgba(254, 249, 207, 0.35)', // #FEF9CF at 35%
+    borderBottomWidth: 1,
+    borderBottomColor: '#5C380A',
     overflow: 'hidden',
+  },
+  innerHighlight: {
+    ...StyleSheet.absoluteFillObject,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    pointerEvents: 'none',
   },
   pressed: {
     opacity: 0.9,
@@ -96,14 +135,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     gap: 8,
   },
   label: {
-    color: luxuryTheme.text.onGold,
-    fontSize: 17,
-    fontWeight: '800',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    letterSpacing: 0.5,
+    color: '#020817',
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
 });

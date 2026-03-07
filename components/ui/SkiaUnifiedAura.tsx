@@ -169,7 +169,7 @@ const SkiaUnifiedAura = memo(function SkiaUnifiedAura({
 
   return (
     <View style={styles.wrapper}>
-      <Canvas style={styles.canvas} mode="continuous">
+      <Canvas style={styles.canvas}>
         {/* ── Glass card ── */}
         <Rect
           x={0}

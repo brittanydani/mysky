@@ -26,6 +26,7 @@ import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { applyEnergyLabels } from '../../constants/storyLabels';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
@@ -198,10 +199,13 @@ export default function EnergyScreen() {
                 <Text style={[styles.body, { marginTop: 8 }]}>
                   Add your birth info to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, and daily guidance.
                 </Text>
-                <Pressable style={styles.primaryBtn} onPress={() => { safeHaptic(); router.push('/(tabs)/home' as Href); }} accessibilityRole="button" accessibilityLabel="Create chart">
-                  <Ionicons name="add-circle-outline" size={16} color={theme.primary} />
-                  <Text style={styles.primaryBtnText}>Create Chart</Text>
-                </Pressable>
+                <SkiaMetallicPill
+                  label="Create Chart"
+                  onPress={() => { safeHaptic(); router.push('/(tabs)/home' as Href); }}
+                  icon={<Ionicons name="add-circle-outline" size={16} color="#020817" />}
+                  style={{ marginTop: 16 }}
+                  labelStyle={{ fontSize: 15 }}
+                />
               </LinearGradient>
             </Animated.View>
           </ScrollView>

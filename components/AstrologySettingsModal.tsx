@@ -31,6 +31,7 @@ import {
 import { HouseSystem } from '../services/astrology/types';
 import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -202,22 +203,12 @@ export default function AstrologySettingsModal({
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Pressable 
-                style={[styles.saveBtn, (!hasChanges || saving) && styles.saveBtnDisabled]} 
-                onPress={handleSave} 
+              <SkiaMetallicPill
+                label={saving ? 'Applying…' : 'Apply Changes'}
+                onPress={handleSave}
                 disabled={!hasChanges || saving}
-              >
-                <LinearGradient 
-                  colors={!hasChanges ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)'] : ['#FFF4D6', '#C9AE78', '#6B532E']} 
-                  style={styles.saveBtnGradient}
-                >
-                  {saving ? (
-                    <ActivityIndicator color="#0B1220" size="small" />
-                  ) : (
-                    <Text style={[styles.saveBtnText, !hasChanges && { color: theme.textMuted }]}>Apply Changes</Text>
-                  )}
-                </LinearGradient>
-              </Pressable>
+                icon={saving ? <ActivityIndicator color="#020817" size="small" /> : undefined}
+              />
             </View>
 
           </LinearGradient>

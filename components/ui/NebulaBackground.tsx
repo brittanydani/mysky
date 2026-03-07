@@ -217,7 +217,7 @@ function NebulaBackground({ mood = 5, energy = 5 }: NebulaBackgroundProps) {
   const maxR = Math.max(W, H);
 
   return (
-    <Canvas style={StyleSheet.absoluteFill} pointerEvents="none" mode="continuous">
+    <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
       {/* Base deep space layer */}
       <Rect x={0} y={0} width={W} height={H} color="#020817" />
 

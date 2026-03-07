@@ -89,7 +89,7 @@ export default function SkiaPulseMonitor({
     <GestureHandlerRootView style={styles.wrapper}>
       <GestureDetector gesture={tapGesture}>
         <View style={styles.container}>
-          <Canvas style={{ width: ORB_SIZE, height: ORB_SIZE }} mode="continuous">
+          <Canvas style={{ width: ORB_SIZE, height: ORB_SIZE }}>
             <Group>
               {/* 1. The Pulse Aura — expands outward with radial blur */}
               <Circle

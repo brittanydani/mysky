@@ -232,7 +232,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
       accessibilityLabel={`Journal entry: ${title || dateLabel}`}
     >
       {/* ── Skia Glass Layer ── */}
-      <Canvas style={styles.canvas} mode="continuous">
+      <Canvas style={styles.canvas}>
         <Group>
           {/* 1. Obsidian glass surface */}
           <RoundedRect
@@ -297,7 +297,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
         {/* Header row */}
         <View style={styles.headerRow}>
           {/* Dynamic sigil */}
-          <Canvas style={styles.sigilCanvas} mode="continuous">
+          <Canvas style={styles.sigilCanvas}>
             <Group opacity={0.6}>
               {sigil.map((pt, i) => {
                 const next = sigil[(i + 1) % sigil.length];

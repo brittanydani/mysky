@@ -1,9 +1,9 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
-import { theme } from '../../constants/theme';
+import MetallicTabIcon from '../../components/skia/MetallicTabIcon';
+import { mySkyText } from '../../constants/mySkyText';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -29,8 +29,8 @@ export default function TabLayout() {
           }),
         },
         sceneStyle: { backgroundColor: 'transparent' },
-        tabBarActiveTintColor: theme.primary,
-        tabBarInactiveTintColor: theme.textMuted,
+        tabBarActiveTintColor: mySkyText.tabActive,
+        tabBarInactiveTintColor: mySkyText.tabInactive,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
@@ -43,7 +43,7 @@ export default function TabLayout() {
         name="home"
         options={{
           title: 'Balance',
-          tabBarIcon: ({ color }) => <Ionicons name="pulse" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="pulse" focused={focused} />,
         }}
       />
 
@@ -51,7 +51,7 @@ export default function TabLayout() {
         name="mood"
         options={{
           title: 'Weather',
-          tabBarIcon: ({ color }) => <Ionicons name="cloudy" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="cloudy" focused={focused} />,
         }}
       />
 
@@ -59,7 +59,7 @@ export default function TabLayout() {
         name="sleep"
         options={{
           title: 'Rest',
-          tabBarIcon: ({ color }) => <Ionicons name="moon" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="moon" focused={focused} />,
         }}
       />
 
@@ -67,7 +67,7 @@ export default function TabLayout() {
         name="journal"
         options={{
           title: 'Archive',
-          tabBarIcon: ({ color }) => <Ionicons name="document-text" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="document-text" focused={focused} />,
         }}
       />
 
@@ -75,7 +75,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Ionicons name="options" size={22} color={color} />,
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="options" focused={focused} />,
         }}
       />
 

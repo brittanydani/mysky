@@ -136,7 +136,7 @@ export default function SkiaDreamEngine({ archetype, intensity, size }: Props) {
 
   return (
     <View style={styles.container}>
-      <Canvas style={{ width: s, height: s }} mode="continuous">
+      <Canvas style={{ width: s, height: s }}>
         <Group transform={[{ scale }]}>
           {/* ── 1. Subconscious Echo (Background Glow) ────────────────── */}
           <Path

@@ -90,7 +90,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      <Canvas style={{ width: size, height: size, position: 'absolute' }} mode="continuous">
+      <Canvas style={{ width: size, height: size, position: 'absolute' }}>
         {/* Draw concentric grid circles */}
         {Array.from({ length: steps }).map((_, i) => {
           const r = radius * ((i + 1) / steps);

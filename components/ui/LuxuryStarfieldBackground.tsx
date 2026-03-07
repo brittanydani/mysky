@@ -215,7 +215,7 @@ function LuxuryStarfieldBackground({
 
   return (
     <View style={[styles.container, style]} pointerEvents={pointerEvents}>
-      <Canvas style={StyleSheet.absoluteFill} mode="continuous">
+      <Canvas style={StyleSheet.absoluteFill}>
         {/* Base deep luxury gradient */}
         <RoundedRect x={0} y={0} width={width} height={height} r={0}>
           <LinearGradient

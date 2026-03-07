@@ -8,6 +8,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import MySkyLockSkia from '../components/skia/MySkyLockSkia';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -48,6 +49,10 @@ export default function PrivacyPolicyScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
           showsVerticalScrollIndicator={false}
         >
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <MySkyLockSkia size={140} />
+          </View>
+
           <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
 
           {/* ── Section Wrapper Helper ── */}

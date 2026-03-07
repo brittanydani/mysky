@@ -86,7 +86,7 @@ export default function ShadowQuoteCard({
       >
         <View style={[styles.footerDivider, { overflow: 'hidden' }]}>
           <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
+            <Canvas style={StyleSheet.absoluteFillObject}>
               <RoundedRect x={0} y={0} width={60} height={1} r={0}>
                 <LinearGradient start={vec(0, 0)} end={vec(60, 0)} colors={['rgba(255,255,255,0)', PALETTE.glassHighlight, 'rgba(255,255,255,0)']} />
               </RoundedRect>
@@ -113,7 +113,7 @@ export default function ShadowQuoteCard({
           ]}
         >
           <View style={[StyleSheet.absoluteFillObject, { borderRadius: 24, overflow: 'hidden' }]} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
+            <Canvas style={StyleSheet.absoluteFillObject}>
               <RoundedRect x={0} y={0} width={400} height={400} r={24}>
                 <LinearGradient start={vec(0, 0)} end={vec(0, 400)} colors={tone.colors} />
               </RoundedRect>

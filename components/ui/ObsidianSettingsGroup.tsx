@@ -76,8 +76,7 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
       {/* ── Skia Glass Background ── */}
       <Canvas
         style={[styles.canvas, { width: GROUP_W, height: cardH }]}
-        pointerEvents="none"
-       mode="continuous">
+        pointerEvents="none">
         {/* Glass surface */}
         <RoundedRect
           x={0}

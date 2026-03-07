@@ -158,7 +158,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
     <Canvas
       style={{ width, height }}
       accessibilityLabel={`Sleep restoration graph showing ${data.length} nights. Average quality ${(avgQualityNorm * 4 + 1).toFixed(1)} out of 5.`}
-     mode="continuous">
+    >
       <Group>
         {/* ── 1. Background Atmosphere (quality-driven glow) ── */}
         <Path path={areaPath} style="fill">

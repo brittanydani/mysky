@@ -9,6 +9,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import MySkyLockSkia from '../components/skia/MySkyLockSkia';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -52,6 +53,9 @@ export default function TermsOfServiceScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <MySkyLockSkia size={140} />
+            </View>
 
             <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
 

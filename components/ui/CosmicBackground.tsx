@@ -87,7 +87,7 @@ function CosmicBackground() {
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Canvas style={StyleSheet.absoluteFill} mode="continuous">
+      <Canvas style={StyleSheet.absoluteFill}>
         {/* Dark navy-black gradient base */}
         <Rect x={0} y={0} width={W} height={H}>
           <SkiaLinearGradient

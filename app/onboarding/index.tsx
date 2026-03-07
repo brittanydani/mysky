@@ -67,7 +67,7 @@ export default function OnboardingWelcomeScreen() {
         >
           <Animated.View entering={FadeInDown.delay(80).duration(700)} style={styles.top}>
             <Image
-              source={require('../../assets/images/logo.png')}
+              source={require('../../assets/images/mysky_logo.png')}
               style={styles.logo}
               accessibilityLabel="MySky logo"
             />
@@ -75,8 +75,7 @@ export default function OnboardingWelcomeScreen() {
             <Text style={styles.subtitle}>Personal Growth, Mapped to You</Text>
 
             <Text style={styles.description}>
-              Track your mood, sleep, and energy — journal your thoughts — and discover your patterns over time,
-              guided by a framework built uniquely for you.
+              Track your mood, sleep, and energy, journal your thoughts, and uncover personal patterns over time.
             </Text>
           </Animated.View>
 
@@ -88,7 +87,7 @@ export default function OnboardingWelcomeScreen() {
               {[
                 { icon: 'pencil', text: 'Daily journaling & guided reflection' },
                 { icon: 'pulse', text: 'Mood, sleep & energy tracking' },
-                { icon: 'analytics', text: 'Pattern insights drawn from your own data' },
+                { icon: 'analytics', text: 'Insights from your own data' },
                 { icon: 'lock-closed', text: 'Private & encrypted — only on your device' },
               ].map((f, idx) => (
                 <View key={idx} style={[styles.featureRow, idx === 3 && { marginBottom: 0 }]}>
@@ -105,7 +104,6 @@ export default function OnboardingWelcomeScreen() {
             <SkiaMetallicPill
               label="Get Started"
               onPress={goNext}
-              icon={<Ionicons name="arrow-forward" size={20} color={COLORS.buttonText} />}
               style={{ marginBottom: 16 }}
             />
 
@@ -115,7 +113,7 @@ export default function OnboardingWelcomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Restore from backup"
             >
-              <Ionicons name="cloud-download-outline" size={16} color={theme.textGold} />
+              <Ionicons name="cloud-download-outline" size={14} color="rgba(201, 174, 120, 0.6)" />
               <Text style={styles.secondaryText}>Restore from Backup</Text>
             </Pressable>
           </Animated.View>
@@ -135,14 +133,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 40,
   },
-  top: { alignItems: 'center', marginBottom: 32 },
-  logo: { 
-    width: 220, 
-    height: 220, 
-    resizeMode: 'contain', 
-    alignSelf: 'center', 
-    marginBottom: -10, // Adjusted to pull title closer to the asset
-  },
+  top: { alignItems: 'center', marginBottom: 24 },
+  logo: { width: 220, height: 220, resizeMode: 'contain', alignSelf: 'center', marginBottom: 8 },
   title: {
     fontSize: 34,
     fontWeight: '700',
@@ -150,24 +142,25 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     textAlign: 'center',
     letterSpacing: 0.5,
+    marginTop: -64,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: theme.textGold,
     fontStyle: 'italic',
-    marginTop: 8,
-    marginBottom: 24,
+    marginBottom: 16,
     textAlign: 'center',
   },
   description: {
-    fontSize: 16,
+    fontSize: 15,
     color: theme.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
   },
   
-  featuresContainer: { marginBottom: 32 },
+  featuresContainer: { marginBottom: 24 },
   featuresGlass: {
     borderRadius: 24,
     padding: 24,
@@ -191,9 +184,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.cardBorder,
   },
-  featureText: { 
-    fontSize: 15, 
-    color: theme.textSecondary, 
+  featureText: {
+    fontSize: 15,
+    color: 'rgba(226,232,240,0.88)',
     flex: 1,
     lineHeight: 22,
   },
@@ -208,18 +201,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
-  secondaryText: { 
-    fontSize: 14, 
-    fontWeight: '600',
-    color: theme.textGold,
-    marginLeft: 8,
+  secondaryText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(201, 174, 120, 0.6)',
+    marginLeft: 6,
+    letterSpacing: 0.3,
   },
 });
 
