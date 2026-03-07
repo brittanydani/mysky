@@ -35,7 +35,7 @@ export default function NeedsComparison({
         {/* Person 1 - Gold Profile */}
         <View style={[styles.column, { borderColor: `${PALETTE.gold}20` }]}>
           <View style={[StyleSheet.absoluteFillObject, { borderRadius: 20, overflow: 'hidden' }]} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject}>
+            <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
               <RoundedRect x={0} y={0} width={400} height={600} r={20}>
                 <LinearGradient start={vec(0, 0)} end={vec(0, 600)} colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} />
               </RoundedRect>
@@ -73,7 +73,7 @@ export default function NeedsComparison({
         {/* Person 2 - Silver/Blue Profile */}
         <View style={[styles.column, { borderColor: `${PALETTE.silverBlue}20` }]}>
           <View style={[StyleSheet.absoluteFillObject, { borderRadius: 20, overflow: 'hidden' }]} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject}>
+            <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
               <RoundedRect x={0} y={0} width={400} height={600} r={20}>
                 <LinearGradient start={vec(0, 0)} end={vec(0, 600)} colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} />
               </RoundedRect>

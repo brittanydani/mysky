@@ -186,7 +186,7 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
         {...panResponder.panHandlers}
       >
         {trackWidth > 0 && (
-          <Canvas style={[styles.trackCanvas, { width: trackWidth, height: TRACK_H }]} pointerEvents="none">
+          <Canvas style={[styles.trackCanvas, { width: trackWidth, height: TRACK_H }]} pointerEvents="none" mode="continuous">
             {/* Track background (obsidian glass) */}
             <RoundedRect
               x={0}

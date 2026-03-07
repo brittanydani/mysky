@@ -47,7 +47,7 @@ function PricingCard({
       {w > 0 && h > 0 && (
         <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
           {selected ? (
-            <Canvas style={StyleSheet.absoluteFillObject}>
+            <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
               <RoundedRect x={0} y={0} width={w} height={h} r={20}>
                 <LinearGradient
                   start={vec(0, 0)}
@@ -66,7 +66,7 @@ function PricingCard({
         <View style={styles.popularBadgeContainer}>
           <View style={styles.popularBadge}>
             <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-              <Canvas style={StyleSheet.absoluteFillObject}>
+              <Canvas style={StyleSheet.absoluteFillObject} mode="continuous">
                 <RoundedRect x={0} y={0} width={120} height={30} r={0}>
                   <LinearGradient
                     start={vec(0, 0)}

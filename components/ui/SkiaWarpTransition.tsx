@@ -139,7 +139,7 @@ const SkiaWarpTransition = forwardRef<WarpRef>(function SkiaWarpTransition(
     <Canvas
       style={StyleSheet.absoluteFill}
       pointerEvents="none"
-    >
+     mode="continuous">
       <Group opacity={masterOpacity}>
         {/* Speed lines */}
         <Group opacity={linesOpacity}>

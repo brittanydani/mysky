@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 import {
   Canvas,
@@ -52,7 +52,7 @@ export function SkiaMetallicSurface({
 
   return (
     <View style={[styles.container, { width, height }, style]} {...props}>
-      <Canvas style={StyleSheet.absoluteFill}>
+      <Canvas style={StyleSheet.absoluteFill} mode="continuous">
         <Group>
           {/* Base Metallic Gradient */}
           <RoundedRect x={0} y={0} width={width} height={height} r={borderRadius}>
@@ -126,3 +126,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden', // Ensures native children don't bleed out of bounds
   },
 });
+
+export default memo(SkiaMetallicSurface);

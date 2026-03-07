@@ -196,7 +196,7 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
     >
       <GestureDetector gesture={panGesture}>
         <View style={{ width: SIZE, height: SIZE }} collapsable={false}>
-          <Canvas style={{ width: SIZE, height: SIZE }}>
+          <Canvas style={{ width: SIZE, height: SIZE }} mode="continuous">
           {/* ── 1. Background track ring ── */}
           <Circle
             cx={CENTER}

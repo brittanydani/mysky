@@ -77,7 +77,7 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
       <Canvas
         style={[styles.canvas, { width: GROUP_W, height: cardH }]}
         pointerEvents="none"
-      >
+       mode="continuous">
         {/* Glass surface */}
         <RoundedRect
           x={0}

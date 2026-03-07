@@ -148,7 +148,7 @@ export default function ChakraWheel({
 
   return (
     <View style={[styles.container, { width: wheelSize, height: wheelSize }]}>
-      <Canvas style={{ width: wheelSize, height: wheelSize }}>
+      <Canvas style={{ width: wheelSize, height: wheelSize }} mode="continuous">
         
         {/* Golden Radiance Background */}
         <Circle cx={cx} cy={cy} r={centerR * 3.8}>

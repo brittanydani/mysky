@@ -175,7 +175,7 @@ const SkiaCelestialToggle = memo(function SkiaCelestialToggle({
 
       {/* Skia Toggle */}
       <View style={styles.toggleWrap}>
-        <Canvas style={styles.toggleCanvas}>
+        <Canvas style={styles.toggleCanvas} mode="continuous">
           {/* Track — obsidian surface */}
           <RoundedRect
             x={0}

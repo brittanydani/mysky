@@ -58,7 +58,7 @@ export default function OnboardingWelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      <SkiaDynamicCosmos />
+      <SkiaDynamicCosmos fill={COLORS.bg} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
@@ -126,7 +126,7 @@ export default function OnboardingWelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1, backgroundColor: COLORS.bg },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: {

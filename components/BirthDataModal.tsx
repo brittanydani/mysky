@@ -269,7 +269,7 @@ export default function BirthDataModal({ visible, onClose, onSave, initialData }
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <View style={styles.container}>
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>

@@ -11,7 +11,7 @@
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
  */
 
-import React, { useMemo, useEffect } from 'react';
+import React, { memo, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Platform } from 'react-native';
 import {
   Canvas,
@@ -77,7 +77,7 @@ interface StoryGateProps {
   onPress: () => void;
 }
 
-export default function SkiaStoryGate({
+function SkiaStoryGate({
   index,
   title,
   isUnlocked,
@@ -143,7 +143,7 @@ export default function SkiaStoryGate({
       style={({ pressed }) => [styles.gateWrapper, pressed && styles.pressed]}
     >
       <View style={styles.canvasContainer}>
-        <Canvas style={{ width: GATE_SIZE, height: GATE_SIZE }}>
+        <Canvas style={{ width: GATE_SIZE, height: GATE_SIZE }} mode="continuous">
           <Group
             origin={vec(GATE_SIZE / 2, GATE_SIZE / 2)}
             transform={groupTransform}
@@ -300,3 +300,5 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 });
+
+export default memo(SkiaStoryGate);

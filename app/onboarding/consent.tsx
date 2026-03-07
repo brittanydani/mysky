@@ -157,7 +157,7 @@ export default function OnboardingConsentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   
   headerBar: {

@@ -2,7 +2,7 @@
 // Correlates lifestyle habits (e.g., Movement) with internal states (e.g., Energy).
 // Renders a Resonance Map with a grid and data clusters
 
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
 import {
   Canvas,
@@ -39,7 +39,7 @@ const PALETTE = {
   glow: '#6EBF8B',
 };
 
-export default function SkiaBiometricScatter({ 
+function SkiaBiometricScatter({ 
   points,
   title = "Behavioral Correlation",
   subtitle = "Movement vs. Vitality",
@@ -137,7 +137,7 @@ export default function SkiaBiometricScatter({
         {/* Y Axis Label (positioned manually instead of matrix transform origin issues) */}
         <Text style={[styles.axisLabel, styles.yAxis]}>{yAxisLabel}</Text>
         
-        <Canvas style={{ width: CHART_SIZE, height: CHART_SIZE }}>
+        <Canvas style={{ width: CHART_SIZE, height: CHART_SIZE }} mode="continuous">
           {/* 0. Grid */}
           <Path path={gridPath} color={PALETTE.grid} style="stroke" strokeWidth={1} />
           
@@ -260,3 +260,5 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
+
+export default memo(SkiaBiometricScatter);

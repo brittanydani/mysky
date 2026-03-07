@@ -209,7 +209,7 @@ export default function OnboardingModal({
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
         <View style={styles.container}>
-          <SkiaDynamicCosmos />
+          <SkiaDynamicCosmos fill="#020817" />
 
           <SafeAreaView edges={['top']} style={styles.safeArea}>
             <ScrollView 
@@ -369,7 +369,7 @@ export default function OnboardingModal({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: {

@@ -440,7 +440,7 @@ export default function VisualCalibration() {
           {/* ── Interactive calibration canvas ── */}
           <GestureDetector gesture={gesture}>
             <View style={styles.calibrationZone}>
-              <Canvas style={{ width: CALIB_SIZE, height: CALIB_SIZE }}>
+              <Canvas style={{ width: CALIB_SIZE, height: CALIB_SIZE }} mode="continuous">
                 <Group>
                   {/* 1. Spectrum Ring */}
                   <Circle

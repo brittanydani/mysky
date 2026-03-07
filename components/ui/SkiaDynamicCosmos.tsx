@@ -1,82 +1,86 @@
 import React, { useEffect, useMemo } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
-import {
-  Canvas,
-  Circle,
-  Group,
-} from "@shopify/react-native-skia";
+import { Dimensions, StyleSheet } from "react-native";
+import { Canvas, Circle, Fill, Group } from "@shopify/react-native-skia";
 import Animated, {
   useSharedValue,
   withRepeat,
   withSequence,
   withTiming,
+  withDelay,
   Easing,
 } from "react-native-reanimated";
 
 const { width, height } = Dimensions.get("window");
 
-const STATIC_STARS = 40;
-const TWINKLE_STARS = 10;
+const STATIC_COUNT = 40;
+const TWINKLE_COUNT = 10;
 
-export const SkiaDynamicCosmos = () => {
-  // Generate static positions once
+export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
   const { staticStars, twinklingStars } = useMemo(() => {
-    const sStars = Array.from({ length: STATIC_STARS }).map(() => ({
+    const sStars = Array.from({ length: STATIC_COUNT }).map(() => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      r: Math.random() * 1.5 + 1.0, // Base size up to 2.5
-      opacity: Math.random() * 0.4 + 0.6, // Min opacity 0.6 (bright)
+      r: Math.random() * 1.2 + 0.6,
+      opacity: Math.random() * 0.35 + 0.45,
     }));
-
-    const tStars = Array.from({ length: TWINKLE_STARS }).map((_, i) => ({
+    const tStars = Array.from({ length: TWINKLE_COUNT }).map((_, i) => ({
       id: i,
       x: Math.random() * width,
       y: Math.random() * height,
-      baseR: Math.random() * 2.0 + 1.5, // Brighter twinkling stars
+      r: Math.random() * 1.4 + 1.0,
     }));
-
     return { staticStars: sStars, twinklingStars: tStars };
   }, []);
 
-  const twinkleProgress = useSharedValue(0.3);
+  // One shared value per twinkling star for independent rhythm
+  const t0 = useSharedValue(0.2);
+  const t1 = useSharedValue(0.2);
+  const t2 = useSharedValue(0.2);
+  const t3 = useSharedValue(0.2);
+  const t4 = useSharedValue(0.2);
+  const t5 = useSharedValue(0.2);
+  const t6 = useSharedValue(0.2);
+  const t7 = useSharedValue(0.2);
+  const t8 = useSharedValue(0.2);
+  const t9 = useSharedValue(0.2);
+  const twinkleOpacities = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9];
 
   useEffect(() => {
-    twinkleProgress.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.3, { duration: 2000, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
-  }, []);
+    twinkleOpacities.forEach((sv, i) => {
+      sv.value = withDelay(
+        i * 350,
+        withRepeat(
+          withSequence(
+            withTiming(1, { duration: 1100 + i * 180, easing: Easing.inOut(Easing.ease) }),
+            withTiming(0.12, { duration: 1600 + i * 140, easing: Easing.inOut(Easing.ease) })
+          ),
+          -1,
+          true
+        )
+      );
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Animated.View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <Canvas style={StyleSheet.absoluteFill}>
+      <Canvas style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]}>
+        {fill ? <Fill color={fill} /> : null}
         <Group>
           {staticStars.map((star, i) => (
-            <Circle 
-              key={`static-${i}`} 
-              cx={star.x} 
-              cy={star.y} 
-              r={star.r} 
-              color={`rgba(255, 255, 255, ${star.opacity})`} 
+            <Circle
+              key={`static-${i}`}
+              cx={star.x}
+              cy={star.y}
+              r={star.r}
+              color={`rgba(255, 255, 255, ${star.opacity})`}
             />
           ))}
         </Group>
-
-        <Group opacity={twinkleProgress}>
-          {twinklingStars.map((star) => (
-            <Circle 
-              key={`twinkle-${star.id}`} 
-              cx={star.x} 
-              cy={star.y} 
-              r={star.baseR} 
-              color="#F8FAFC" 
-            />
-          ))}
-        </Group>
+        {twinklingStars.map((star, i) => (
+          <Group key={`twinkle-${star.id}`} opacity={twinkleOpacities[i]}>
+            <Circle cx={star.x} cy={star.y} r={star.r} color="#F0F4FF" />
+          </Group>
+        ))}
       </Canvas>
     </Animated.View>
   );
