@@ -15,7 +15,7 @@ import {
   useDerivedValue,
   useFrameCallback,
 } from 'react-native-reanimated';
-import { goldTheme } from '../../constants/goldTheme';
+import { luxuryTheme } from '../../constants/luxuryTheme';
 
 type StarPoint = {
   x: number;
@@ -155,7 +155,7 @@ const TwinklingStar = memo(
           cy={star.y}
           r={star.r}
           opacity={opacity}
-          color={goldTheme.stars.bright}
+          color={luxuryTheme.stars.bright}
         />
       </Group>
     );
@@ -189,8 +189,8 @@ function LuxuryStarfieldBackground({
   contentContainerStyle,
   starCount = DEFAULT_STAR_COUNT,
   twinkleCount = DEFAULT_TWINKLE_COUNT,
-  topColor = goldTheme.background.top,
-  bottomColor = goldTheme.background.bottom,
+  topColor = luxuryTheme.background.top,
+  bottomColor = luxuryTheme.background.bottom,
   showNebulaGlow = true,
   softenCenter = true,
   pointerEvents = 'box-none',
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: goldTheme.background.top,
+    backgroundColor: luxuryTheme.background.top,
   },
   content: {
     flex: 1,

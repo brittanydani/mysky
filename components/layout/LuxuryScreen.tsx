@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LuxuryStarfieldBackground from '../ui/LuxuryStarfieldBackground';
-import { goldTheme } from '../../constants/goldTheme';
+import { luxuryTheme } from '../../constants/luxuryTheme';
 
 type LuxuryScreenProps = {
   children: React.ReactNode;
@@ -38,8 +38,8 @@ export default function LuxuryScreen({
   safeAreaEdges = ['top', 'left', 'right', 'bottom'],
   scrollable = false,
   keyboardAvoiding = false,
-  topColor = goldTheme.background.top,
-  bottomColor = goldTheme.background.bottom,
+  topColor = luxuryTheme.background.top,
+  bottomColor = luxuryTheme.background.bottom,
   starCount = 50,
   twinkleCount = 10,
   showNebulaGlow = true,

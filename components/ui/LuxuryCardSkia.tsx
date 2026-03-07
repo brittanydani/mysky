@@ -10,7 +10,7 @@ import {
   RoundedRect,
   vec,
 } from '@shopify/react-native-skia';
-import { goldTheme } from '../../constants/goldTheme';
+import { luxuryTheme } from '../../constants/luxuryTheme';
 
 type LuxuryCardSkiaProps = {
   width: number | string;

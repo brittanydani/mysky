@@ -20,7 +20,7 @@ import {
   RoundedRect,
   vec,
 } from '@shopify/react-native-skia';
-import { goldTheme } from '../../constants/goldTheme';
+import { luxuryTheme } from '../../constants/luxuryTheme';
 
 type LuxuryButtonSkiaProps = {
   label: string;
@@ -52,8 +52,8 @@ export default function LuxuryButtonSkia({
   textStyle,
   metallic = true,
   fullWidth = true,
-  darkTextColor = goldTheme.button.text,
-  lightTextColor = goldTheme.text.white,
+  darkTextColor = luxuryTheme.button.textDark,
+  lightTextColor = luxuryTheme.text.white,
 }: LuxuryButtonSkiaProps) {
   const isDisabled = disabled || loading;
   const isGoldFill = metallic || selected;
@@ -126,7 +126,7 @@ export default function LuxuryButtonSkia({
                   typeof width === 'number' ? width * 0.95 : height * 4,
                   height * 0.88,
                 )}
-                colors={[...goldTheme.gradients.goldStrong]}
+                colors={[...luxuryTheme.gradients.goldStrong]}
                 positions={[0, 0.16, 0.34, 0.56, 0.78, 1]}
               />
             ) : (
@@ -158,7 +158,7 @@ export default function LuxuryButtonSkia({
                   typeof width === 'number' ? width : height * 4,
                   0,
                 )}
-                colors={[...goldTheme.gradients.metallicReflection]}
+                colors={[...luxuryTheme.gradients.metallicReflection]}
                 positions={[0, 0.08, 0.2, 0.3, 0.42, 0.58, 0.78, 1]}
               />
             </RoundedRect>

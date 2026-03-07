@@ -20,7 +20,7 @@ import {
   RoundedRect,
   vec,
 } from '@shopify/react-native-skia';
-import { goldTheme } from '../../constants/goldTheme';
+import { luxuryTheme } from '../../constants/luxuryTheme';
 
 type ResponsiveLuxuryButtonSkiaProps = {
   label: string;
@@ -48,8 +48,8 @@ export default function ResponsiveLuxuryButtonSkia({
   style,
   textStyle,
   metallic = true,
-  darkTextColor = goldTheme.button.text,
-  lightTextColor = goldTheme.text.white,
+  darkTextColor = luxuryTheme.button.textDark,
+  lightTextColor = luxuryTheme.text.white,
 }: ResponsiveLuxuryButtonSkiaProps) {
   const [width, setWidth] = useState(0);
   const isDisabled = disabled || loading;
@@ -130,7 +130,7 @@ export default function ResponsiveLuxuryButtonSkia({
                 <LinearGradient
                   start={vec(height * 0.08, height * 0.12)}
                   end={vec(width * 0.95, height * 0.88)}
-                  colors={[...goldTheme.gradients.goldStrong]}
+                  colors={[...luxuryTheme.gradients.goldStrong]}
                   positions={[0, 0.16, 0.34, 0.56, 0.78, 1]}
                 />
               ) : (
@@ -159,7 +159,7 @@ export default function ResponsiveLuxuryButtonSkia({
                 <LinearGradient
                   start={vec(0, 0)}
                   end={vec(width, 0)}
-                  colors={[...goldTheme.gradients.metallicReflection]}
+                  colors={[...luxuryTheme.gradients.metallicReflection]}
                   positions={[0, 0.08, 0.2, 0.3, 0.42, 0.58, 0.78, 1]}
                 />
               </RoundedRect>
