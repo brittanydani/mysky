@@ -13,18 +13,20 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'rgba(2, 8, 23, 0.25)',
+          backgroundColor: 'rgba(2, 8, 23, 0.8)',
           borderTopWidth: 0,
+          elevation: 0,
+          position: 'absolute' as const,
           height: Platform.select({
-            ios: insets.bottom + 60,
-            android: insets.bottom + 60,
-            default: 70,
+            ios: insets.bottom + 66,
+            android: insets.bottom + 66,
+            default: 76,
           }),
           paddingTop: 8,
           paddingBottom: Platform.select({
-            ios: insets.bottom + 8,
-            android: insets.bottom + 8,
-            default: 8,
+            ios: insets.bottom + 14,
+            android: insets.bottom + 14,
+            default: 14,
           }),
         },
         sceneStyle: { backgroundColor: 'transparent' },
@@ -90,7 +92,7 @@ export default function TabLayout() {
       <Tabs.Screen name="insights" options={{ href: null }} />
 
       <Tabs.Screen name="premium" options={{ href: null }} />
-      <Tabs.Screen name="reflect" options={{ href: null }} />
+      <Tabs.Screen name="sleep" options={{ href: null }} />
     </Tabs>
   );
 }

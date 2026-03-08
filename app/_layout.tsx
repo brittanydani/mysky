@@ -1,3 +1,4 @@
+import { GoldIcon } from '../components/ui/GoldIcon';
 // File: app/_layout.tsx
 
 import React, { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
@@ -42,7 +43,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <View style={styles.errorContainer}>
-          <Ionicons name="warning-outline" size={56} color="#C9AE78" style={{ marginBottom: 20 }} />
+          <GoldIcon name="warning-outline" size={56}  style={{ marginBottom: 20 }}  />
           <Text style={styles.errorTitle}>The stars misaligned</Text>
           <Text style={styles.errorBody}>Something unexpected happened. Please close the app and reopen it, or try reloading below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
@@ -50,7 +51,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
               colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']} 
               style={styles.errorButtonGradient}
             >
-              <Ionicons name="refresh" size={16} color="#C9AE78" style={{ marginRight: 8 }} />
+              <GoldIcon name="refresh" size={16}  style={{ marginRight: 8 }}  />
               <Text style={styles.errorButtonText}>Reload Experience</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -263,7 +264,7 @@ export default function RootLayout() {
     if (initTimedOut) {
       return (
         <View style={styles.errorContainer}>
-          <Ionicons name="hourglass-outline" size={56} color="#C9AE78" style={{ marginBottom: 20 }} />
+          <GoldIcon name="hourglass-outline" size={56}  style={{ marginBottom: 20 }}  />
           <Text style={styles.errorTitle}>Taking longer than expected</Text>
           <Text style={styles.errorBody}>Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={retryInit}>
@@ -271,7 +272,7 @@ export default function RootLayout() {
               colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']}
               style={styles.errorButtonGradient}
             >
-              <Ionicons name="refresh" size={16} color="#C9AE78" style={{ marginRight: 8 }} />
+              <GoldIcon name="refresh" size={16}  style={{ marginRight: 8 }}  />
               <Text style={styles.errorButtonText}>Retry</Text>
             </LinearGradient>
           </TouchableOpacity>

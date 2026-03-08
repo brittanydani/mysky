@@ -594,7 +594,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   dateLabel: {
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.45)', // further muted
     fontSize: 13,
     marginTop: 4,
     textTransform: 'uppercase',

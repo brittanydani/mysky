@@ -33,6 +33,8 @@ import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaRestorationField from '../../components/ui/SkiaRestorationField';
 import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
+import { DreamSymbolChips } from '../../components/ui/DreamSymbolChips';
+
 import { localDb } from '../../services/storage/localDb';
 import { SleepEntry, JournalEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
@@ -886,7 +888,8 @@ export default function SleepScreen() {
                   <View style={styles.sitWithBox}>
                     <Text style={styles.sitWithLabel}>A question to sit with</Text>
                     <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
-                  </View>
+                                </View>
+                                <DreamSymbolChips symbols={todayInterp.extractedSymbols} />
                 </LinearGradient>
               </Animated.View>
             );
@@ -1022,6 +1025,7 @@ export default function SleepScreen() {
                             <Text style={styles.sitWithLabel}>A question to sit with</Text>
                             <Text style={styles.sitWithText}>"{interp.question}"</Text>
                           </View>
+                          <DreamSymbolChips symbols={interp.extractedSymbols} />
                         </LinearGradient>
                       </Animated.View>
                     )}

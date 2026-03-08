@@ -32,7 +32,7 @@ import {
   Circle as SkiaCircle,
 } from '@shopify/react-native-skia';
 
-import { theme } from '../../constants/theme';
+import { theme, MYSTIC } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -677,7 +677,7 @@ export default function MoodScreen() {
 
         <ScrollView
           style={styles.flex}
-          contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -685,12 +685,12 @@ export default function MoodScreen() {
             {/* Streak row */}
             {currentStreak > 0 && (
               <Animated.View entering={FadeInDown.delay(80).duration(500)} style={styles.streakRow}>
-                <Ionicons name="flame-outline" size={14} color={theme.primary} />
-                <Text style={styles.streakTxt}>{currentStreak} day streak</Text>
+                <Ionicons name="flame-outline" size={14} color={MYSTIC.gold} />
+                <Text style={[styles.streakTxt, { color: MYSTIC.gold }]}>{currentStreak} day streak</Text>
                 {allCheckIns.length > 0 && (
                   <>
                     <Text style={styles.dot}> · </Text>
-                    <Text style={styles.streakTxt}>{allCheckIns.length} total</Text>
+                    <Text style={[styles.streakTxt, { color: MYSTIC.silverBlue }]}>{allCheckIns.length} total</Text>
                   </>
                 )}
               </Animated.View>
@@ -1347,7 +1347,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: theme.primary,
+    color: 'rgba(255, 255, 255, 0.55)',
     fontStyle: 'italic',
     marginTop: 2,
   },

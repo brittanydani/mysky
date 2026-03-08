@@ -9,8 +9,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import NebulaBackground from '../../components/ui/NebulaBackground';
-import { GoldIcon } from '../../components/ui/GoldIcon';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import PremiumRequiredScreen from '../../components/PremiumRequiredScreen';
 import { localDb } from '../../services/storage/localDb';
@@ -402,30 +401,7 @@ export default function JournalScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={[styles.emptyCard, { position: 'relative' }]}>
-          <View style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
-            <Pressable 
-              onPress={() => void handleAddEntry()} 
-              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-              style={({ pressed }) => [{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                overflow: 'hidden',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: 'rgba(201, 174, 120, 0.4)',
-                backgroundColor: 'rgba(20, 30, 50, 0.5)',
-              }, pressed && { opacity: 0.8 }]}
-            >
-              <LinearGradient 
-                colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']} 
-                style={StyleSheet.absoluteFillObject}
-              />
-              <GoldIcon name="add" size={28}  style={{ fontWeight: '900' }}  />
-            </Pressable>
-          </View>
+        <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
           <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>Start Your Journey</Text>
           <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
@@ -491,13 +467,13 @@ export default function JournalScreen() {
 
   return (
     <View style={styles.container}>
-      <NebulaBackground mood={8} energy={6} />
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
           <FlatList
             data={[]}
             renderItem={null}
-            contentContainerStyle={{ paddingBottom: 120 }}
+            contentContainerStyle={{ paddingBottom: 40 }}
             ListHeaderComponent={
               <PremiumRequiredScreen
                 feature="Check-In Trends"
@@ -513,7 +489,7 @@ export default function JournalScreen() {
             ListHeaderComponent={ListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
-            contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 20 }}
+            contentContainerStyle={{ paddingBottom: 60, paddingHorizontal: 20 }}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
             initialNumToRender={15}
@@ -525,7 +501,6 @@ export default function JournalScreen() {
         )}
 
         {!showPremiumRequired && (
-          entries.length > 0 && 
           <Animated.View
             entering={FadeInDown.delay(600).duration(600)}
             style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}

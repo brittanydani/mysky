@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 18, color: PALETTE.textMain, fontWeight: '600', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  headerTitle: { fontSize: 18, color: '#FFFFFF', fontWeight: '600', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   iconBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   
   scrollView: { flex: 1 },

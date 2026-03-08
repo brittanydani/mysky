@@ -376,52 +376,28 @@ export default function InsightsScreen() {
           <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
             <Text style={styles.sectionTitle}>Explore</Text>
             <View style={styles.exploreGrid}>
-              <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/story')}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
-                  <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
-                    <Ionicons name="book-outline" size={20} color={PALETTE.silverBlue} />
-                  </View>
-                  <View>
-                    <Text style={styles.exploreChipTitle}>My Story</Text>
-                    <Text style={styles.exploreChipSub}>Your timeline</Text>
-                  </View>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/journal')}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
-                  <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
-                    <Ionicons name="journal-outline" size={20} color={PALETTE.silverBlue} />
-                  </View>
-                  <View>
-                    <Text style={styles.exploreChipTitle}>Journal</Text>
-                    <Text style={styles.exploreChipSub}>Your entries</Text>
-                  </View>
-                </LinearGradient>
-              </Pressable>
-
               <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/healing')}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
-                  <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(212, 163, 179, 0.15)' }]}>
-                    <Ionicons name="heart-outline" size={20} color={PALETTE.rose} />
-                  </View>
-                  <View>
-                    <Text style={styles.exploreChipTitle}>Healing</Text>
-                    <Text style={styles.exploreChipSub}>Inner work</Text>
-                  </View>
-                </LinearGradient>
+                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
+                   <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(212, 163, 179, 0.15)' }]}>
+                     <Ionicons name="heart-outline" size={20} color={PALETTE.rose} />
+                   </View>
+                   <View>
+                     <Text style={styles.exploreChipTitle}>Healing</Text>
+                     <Text style={styles.exploreChipSub}>Inner work</Text>
+                   </View>
+                 </LinearGradient>
               </Pressable>
 
-              <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/chart')}>
-                <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
-                  <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
-                    <Ionicons name="map-outline" size={20} color={PALETTE.gold} />
-                  </View>
-                  <View>
-                    <Text style={styles.exploreChipTitle}>Personal Map</Text>
-                    <Text style={styles.exploreChipSub}>Your blueprint</Text>
-                  </View>
-                </LinearGradient>
+              <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/relationships')}>
+                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
+                   <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(224, 187, 228, 0.15)' }]}>
+                     <Ionicons name="people-outline" size={20} color="#E0BBE4" />
+                   </View>
+                   <View>
+                     <Text style={styles.exploreChipTitle}>Connections</Text>
+                     <Text style={styles.exploreChipSub}>Relationship charts</Text>
+                   </View>
+                 </LinearGradient>
               </Pressable>
             </View>
           </Animated.View>

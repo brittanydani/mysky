@@ -616,7 +616,7 @@ export default function ChartScreen() {
                 >
                   {!overlayPerson ? (
                     <View style={[styles.personChip, styles.personChipActive]}>
-                      <Ionicons name="person" size={14} color="#C9AE78" />
+                      <GoldIcon name="person" size={14}   />
                       <Text style={[styles.personChipText, { color: '#FFFFFF', fontWeight: '700' }]}>You</Text>
                     </View>
                   ) : (
@@ -642,7 +642,7 @@ export default function ChartScreen() {
                   >
                     {isActive ? (
                       <View style={[styles.personChip, styles.personChipActive]}>
-                        <Ionicons name="layers-outline" size={14} color="#C9AE78" />
+                        <GoldIcon name="layers-outline" size={14}   />
                         <Text style={[styles.personChipText, { color: '#FFFFFF', fontWeight: '700' }]} numberOfLines={1}>
                           {person.name}
                         </Text>

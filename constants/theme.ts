@@ -90,6 +90,7 @@ export const MYSTIC = {
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   amethyst: '#9D76C1',
+  gold: '#D4AF37',
 } as const;
 
 export const theme = {

@@ -421,7 +421,7 @@ export default function VisualCalibration() {
                   <View style={[styles.summaryChip, { backgroundColor: prof.color }]} />
                   <Text style={[styles.summaryValue, isCurrent && styles.summaryValueActive]}>{prof.label}</Text>
                   {isCurrent && (
-                    <Ionicons name="pencil" size={12} color="#C9AE78" style={{ marginLeft: 4 }} />
+                    <GoldIcon name="pencil" size={12}  style={{ marginLeft: 4 }}  />
                   )}
                 </Pressable>
               );
@@ -431,7 +431,7 @@ export default function VisualCalibration() {
           {/* ── Active category prompt ── */}
           <Animated.View key={activeCat.id} entering={FadeIn.duration(300)} style={styles.promptBox}>
             <View style={styles.promptHeader}>
-              <Ionicons name={activeCat.icon} size={16} color="#C9AE78" />
+              <GoldIcon name={activeCat.icon} size={16}   />
               <Text style={styles.promptTitle}>{activeCat.label}</Text>
             </View>
             <Text style={styles.promptText}>{activeCat.prompt}</Text>

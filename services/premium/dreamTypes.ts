@@ -1095,6 +1095,7 @@ export interface DreamInterpretation {
    * Never includes inferred or symbolically expanded labels.
    */
   explicitImagery: string[];
+  extractedSymbols?: Array<{ word: string; category: string; description: string }>;
   /**
    * Interpretive themes derived from trigger analysis (Phase B).
    * Clearly labeled as interpretation, not factual imagery claims.

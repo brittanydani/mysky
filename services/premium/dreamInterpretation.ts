@@ -44,6 +44,7 @@ import {
 } from './themeDefinitions';
 import { inferDefaultsFromTriggers, getTriggerReflectionQuestion } from './triggerTaxonomy';
 import { matchDreamKeywords, KeywordMatch } from './dreamKeywords';
+import { parseDreamSymbols } from './dreamSymbolParser';
 
 // ─── Signal Weights ───────────────────────────────────────────────────────────
 
@@ -534,6 +535,9 @@ export function generateDreamInterpretation(
   // ── Match dream journal keywords (symbols, imagery, motifs) ──────────
   const keywordMatches = matchDreamKeywords(dreamText);
 
+  // ── Match single word symbols (Hall Van De Castle) ───────────────────
+  const extractedSymbols = parseDreamSymbols(dreamText);
+
   // ── Blend trigger scores from feelings + text ─────────────────────────────
   const triggerScores = blendTriggerScores(aggregates, textSignals);
 
@@ -582,6 +586,7 @@ export function generateDreamInterpretation(
     generatedAt: new Date().toISOString(),
     explicitImagery,
     interpretiveThemes,
+    extractedSymbols,
   };
 }
 
