@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   actionTitle: { fontSize: 16, fontWeight: '700' },
   actionSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
 
-  emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 20, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder },
   emptyText: { color: theme.textMuted, fontSize: 14, fontStyle: 'italic' },
 
   rightsContainer: { gap: 12, paddingLeft: 4 },

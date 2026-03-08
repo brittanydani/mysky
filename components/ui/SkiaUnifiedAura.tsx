@@ -325,7 +325,7 @@ export default SkiaUnifiedAura;
 const styles = StyleSheet.create({
   wrapper: {
     width: AURA_W,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     alignSelf: 'center',
     borderRadius: 16,
     overflow: 'hidden',

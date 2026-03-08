@@ -316,7 +316,7 @@ export { computeStabilityIndex };
 const localStyles = StyleSheet.create({
   card: {
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
     borderTopColor: 'rgba(255,255,255,0.1)',

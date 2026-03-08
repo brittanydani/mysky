@@ -20,16 +20,12 @@ import {
   matchFont,
   RadialGradient,
   SweepGradient,
-  LinearGradient,
   Text as SkiaText,
   useFont,
   vec,
-  Shadow,
-  Paint,
   BlurMask,
   Path,
   Skia,
-  Oval,
 } from '@shopify/react-native-skia';
 
 import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
@@ -151,42 +147,6 @@ const PLANET_COLORS: Record<string, string> = {
   Midheaven: '#C9AE78',
 };
 
-const PLANET_GRADIENT_INNER: Record<string, string> = {
-  Sun: '#E8D7A6',
-  Jupiter: '#E8D7A6',
-  Ascendant: '#E8D7A6',
-  Midheaven: '#E8D7A6',
-  Moon: '#D4DDE8',
-  Mercury: '#B8D4F0',
-  Venus: '#EAB8C8',
-  Mars: '#E8B4B4',
-  Saturn: '#B0B0C8',
-  Uranus: '#A8DAE0',
-  Neptune: '#B0BCEC',
-  Pluto: '#C8B4E4',
-  'North Node': '#CECEE0',
-  'South Node': '#CECEE0',
-  Chiron: '#D0FBD0',
-};
-
-const PLANET_GRADIENT_OUTER: Record<string, string> = {
-  Sun: '#7E6330',
-  Jupiter: '#7E6330',
-  Ascendant: '#7E6330',
-  Midheaven: '#7E6330',
-  Moon: '#748098',
-  Mercury: '#44849C',
-  Venus: '#9C4C6C',
-  Mars: '#9C4C4C',
-  Saturn: '#505070',
-  Uranus: '#348490',
-  Neptune: '#44549C',
-  Pluto: '#5E4088',
-  'North Node': '#606070',
-  'South Node': '#606070',
-  Chiron: '#509950',
-};
-
 const OVERLAY_PLANET_COLORS: Record<string, string> = {
   Sun: '#8C7CCF',
   Moon: '#7C70C0',
@@ -205,54 +165,18 @@ const OVERLAY_PLANET_COLORS: Record<string, string> = {
   Midheaven: '#8C7CCF',
 };
 
-const OVERLAY_GRADIENT_INNER: Record<string, string> = {
-  Sun: '#C4B8F0',
-  Moon: '#B8ACEC',
-  Mercury: '#B0BCEC',
-  Venus: '#C8B0F0',
-  Mars: '#C4ACEC',
-  Jupiter: '#C4B8F0',
-  Saturn: '#A8A4DC',
-  Uranus: '#B0C0EC',
-  Neptune: '#A8B8E8',
-  Pluto: '#C0AEE8',
-  'North Node': '#B0B0C0',
-  'South Node': '#B0B0C0',
-  Chiron: '#B0E0B0',
-  Ascendant: '#C4B8F0',
-  Midheaven: '#C4B8F0',
-};
 
-const OVERLAY_GRADIENT_OUTER: Record<string, string> = {
-  Sun: '#2E2550',
-  Moon: '#28205C',
-  Mercury: '#243060',
-  Venus: '#38285C',
-  Mars: '#3C2858',
-  Jupiter: '#2E2550',
-  Saturn: '#20205C',
-  Uranus: '#243060',
-  Neptune: '#202858',
-  Pluto: '#2E2060',
-  'North Node': '#303040',
-  'South Node': '#303040',
-  Chiron: '#305030',
-  Ascendant: '#2E2550',
-  Midheaven: '#2E2550',
-};
-
-// ── 4 User Metallic Gradation Palettes ──
-// Generates the 3D polished sphere gradient per-user
-function getPremiumGoldGradient(userIndex: number): string[] {
-  const baseTints = [
-      ['#FFF4D6', '#E9D9B8', '#C9AE78', '#9B7A46', '#6B532E'], // User 1 - Champagne Gold
-      ['#FFFFFF', '#E4E7EC', '#C8CCD4', '#8E97A3', '#5E6875'], // User 2 - Silver / Platinum
-      ['#FFF2C9', '#E6C98A', '#D4B26A', '#9F7E3E', '#6B5325'], // User 3 - Warm Gold
-      ['#FFEDE3', '#E8CFC1', '#D2B6A4', '#A88E7C', '#6B532E']  // User 4 - Rose Gold
+// ── Per-user metallic sphere palettes (high-contrast for 3D pop) ──
+// 0: Champagne Gold, 1: Silver, 2: Rose Gold, 3: Purple Metallic
+function getUserSpherePalette(userIndex: number): string[] {
+  const palettes = [
+    ['#FFFBF0', '#F0E0B0', '#C9AE78', '#8A6A30', '#3A2810'], // Champagne Gold
+    ['#FFFFFF', '#E8EAED', '#C0C4CC', '#707880', '#282C34'], // Silver / Platinum
+    ['#FFF0EC', '#EDDAC8', '#D4A898', '#9A6858', '#3A1C10'], // Rose Gold
+    ['#F4EEFF', '#DACAF0', '#A880D4', '#6040A0', '#201030'], // Purple Metallic
   ];
-  return baseTints[userIndex % 4] || baseTints[0];
+  return palettes[userIndex % 4] ?? palettes[0];
 }
-
 
 // Muted, jewel-tone aspect colors matching reference palette
 const ASPECT_COLOR: Record<string, string> = {
@@ -661,43 +585,30 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   return (
     <View style={styles.container} accessible accessibilityRole="image" accessibilityLabel={accessibilitySummary}>
       <Canvas style={{ width: SIZE_CANVAS, height: SIZE_CANVAS, backgroundColor: 'transparent' }}>
-        {/* ── Subtle wheel glow (champagne halo) ── */}
-        <Circle cx={CX} cy={CY} r={R_OUTER + 26} opacity={1}>
-          <RadialGradient
-            c={vec(CX, CY)}
-            r={R_OUTER + 26}
-            colors={[
-              'rgba(232, 214, 174,0.18)',  // champagne glow
-              'rgba(232, 214, 174,0.06)',
-              'rgba(232, 214, 174,0.00)'
-            ]}
-            positions={[0, 0.55, 1]}
-          />
-        </Circle>
 
         {/* ── Outer Zodiac Border (Major Ring) ── */}
         <Group>
           {/* Underglow */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.25)">
+          <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.28)">
             <BlurMask blur={4} style="normal" />
           </Circle>
           
           {/* Outer edge of bezel */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 45} style="stroke" strokeWidth={1} opacity={0.9}>
+          <Circle cx={CX} cy={CY} r={R_OUTER + 45} style="stroke" strokeWidth={1} opacity={0.95}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
                 '#3A2E1C', '#FFFFFF', '#8A734D', '#2A1F14', 
-                '#B39D7D', '#FDF5E6', '#D4C4A3', '#1A1208', 
+                '#B39D7D', '#FFFFFF', '#D4C4A3', '#1A1208', 
                 '#F8E8C9', '#3A2E1C'
               ]}
-              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.65, 0.78, 0.88, 0.95, 1.0]}
+              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]}
               transform={[{ rotate: -0.1 }]}
             />
           </Circle>
 
           {/* Inner edge of bezel */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 43} style="stroke" strokeWidth={1} opacity={0.9}>
+          <Circle cx={CX} cy={CY} r={R_OUTER + 43} style="stroke" strokeWidth={1} opacity={0.95}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
@@ -705,8 +616,8 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
-              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
-              transform={[{ rotate: 0.15 }]} // Offset rotation for highly reflective interplay
+              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]}
+              transform={[{ rotate: 0.15 }]}
             />
           </Circle>
         </Group>
@@ -715,26 +626,26 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         <Group>
           {/* 1. Outer Gold Bezel */}
           {/* Glow layer */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.25)">
+          <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.28)">
             <BlurMask blur={3} style="normal" />
           </Circle>
           
           {/* Outer edge */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 3} style="stroke" strokeWidth={1} opacity={0.9}>
+          <Circle cx={CX} cy={CY} r={R_OUTER + 3} style="stroke" strokeWidth={1} opacity={0.95}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
                 '#3A2E1C', '#FFFFFF', '#8A734D', '#2A1F14', 
-                '#B39D7D', '#FDF5E6', '#D4C4A3', '#1A1208', 
+                '#B39D7D', '#FFFFFF', '#D4C4A3', '#1A1208', 
                 '#F8E8C9', '#3A2E1C'
               ]}
-              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.65, 0.78, 0.88, 0.95, 1.0]}
+              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]}
               transform={[{ rotate: -0.05 }]}
             />
           </Circle>
 
           {/* Inner edge */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 1} style="stroke" strokeWidth={1} opacity={0.9}>
+          <Circle cx={CX} cy={CY} r={R_OUTER + 1} style="stroke" strokeWidth={1} opacity={0.95}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
@@ -742,17 +653,17 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
-              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
+              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]}
               transform={[{ rotate: 0.2 }]}
             />
           </Circle>
 
           {/* 2. Inner Soft Gold Ring */}
-          <Circle cx={CX} cy={CY} r={R_OUTER - 2} style="stroke" strokeWidth={0.8} opacity={0.9}>
+          <Circle cx={CX} cy={CY} r={R_OUTER - 2} style="stroke" strokeWidth={0.8} opacity={0.95}>
              <SweepGradient
               c={vec(CX, CY)}
               colors={['#8A734D', '#FDF5E6', '#4A3728', '#C9AE78', '#FFFFFF', '#3A2E1C', '#8A734D']}
-              positions={[0.0, 0.15, 0.35, 0.5, 0.7, 0.85, 1.0]}
+              positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]}
               transform={[{ rotate: -0.3 }]}
             />
           </Circle>
@@ -836,15 +747,15 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
         {/* ── House ring border ── */}
         <Group>
-          <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.8} opacity={0.5}>
+          <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.8} opacity={0.90}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
-                'rgba(232, 214, 174, 0.1)', 
-                'rgba(255, 255, 255, 0.6)', 
-                'rgba(232, 214, 174, 0.1)', 
-                'rgba(255, 255, 255, 0.3)', 
-                'rgba(232, 214, 174, 0.1)'
+                'rgba(232, 214, 174, 0.2)',
+                'rgba(255, 255, 255, 0.95)',
+                'rgba(232, 214, 174, 0.2)',
+                'rgba(255, 255, 255, 0.65)',
+                'rgba(232, 214, 174, 0.2)'
               ]}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
@@ -852,45 +763,22 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           </Circle>
         </Group>
 
-        {/* ── Glass reflection highlights on the wheel face ── */}
-        <Group opacity={0.12}>
-          {/* Upper-left broad specular highlight arc */}
-          <Path
-            path={makeArcPath(CX, CY, (R_OUTER + R_INNER) / 2, -160, 80)}
-            style="stroke"
-            strokeWidth={(R_OUTER - R_INNER) * 0.55}
-            strokeCap="round"
-          >
-            <LinearGradient
-              start={vec(CX - R_OUTER * 0.6, CY - R_OUTER * 0.7)}
-              end={vec(CX + R_OUTER * 0.1, CY - R_OUTER * 0.1)}
-              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0)']}
-              positions={[0, 0.45, 1]}
-            />
-            <BlurMask blur={6} style="normal" />
-          </Path>
-          {/* Lower-right subtle counter-reflection */}
-          <Path
-            path={makeArcPath(CX, CY, (R_OUTER + R_INNER) / 2, 30, 50)}
-            style="stroke"
-            strokeWidth={(R_OUTER - R_INNER) * 0.35}
-            strokeCap="round"
-          >
-            <LinearGradient
-              start={vec(CX + R_OUTER * 0.3, CY + R_OUTER * 0.4)}
-              end={vec(CX + R_OUTER * 0.7, CY + R_OUTER * 0.6)}
-              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.35)', 'rgba(255,255,255,0)']}
-              positions={[0, 0.5, 1]}
-            />
-            <BlurMask blur={8} style="normal" />
-          </Path>
-        </Group>
-
         {/* Thin specular edge catch — top of wheel */}
         <Path
           path={makeArcPath(CX, CY, R_OUTER - 1, -140, 100)}
           style="stroke"
-          strokeWidth={1.2}
+          strokeWidth={1.8}
+          strokeCap="round"
+          color="rgba(255,255,255,0.22)"
+        >
+          <BlurMask blur={2} style="normal" />
+        </Path>
+
+        {/* Secondary specular — bottom-right of wheel */}
+        <Path
+          path={makeArcPath(CX, CY, R_OUTER - 1, 40, 60)}
+          style="stroke"
+          strokeWidth={1.0}
           strokeCap="round"
           color="rgba(255,255,255,0.10)"
         >
@@ -898,19 +786,19 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         </Path>
 
         {/* ── Dotted astronomy diagram rings ── */}
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.8} opacity={0.4}>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.8} opacity={0.75}>
           <SweepGradient
               c={vec(CX, CY)}
-              colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.75)', 'rgba(255,255,255,0.2)']}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.8} opacity={0.4}>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.8} opacity={0.75}>
           <SweepGradient
               c={vec(CX, CY)}
-              colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)']}
+              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.75)', 'rgba(255,255,255,0.2)']}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
@@ -976,13 +864,17 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
         {/* ── Natal planet glyphs (glassy spheres) ── */}
         {showPerson1 && placedPlanets.map((planet) => {
-          const glyphPos = polarToXY(planet.displayAngle, R_PLANET_RING);
+          const isPoint = ['Ascendant', 'Midheaven', 'North Node', 'South Node', 'Chiron', 'ASC', 'MC'].includes(planet.label);
+          const actualRadius = isPoint ? R_INNER + 20 : R_PLANET_RING;
+          const glyphPos = polarToXY(planet.displayAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
-          const tickInner = polarToXY(planet.originalAngle, R_PLANET_RING + 10);
+          const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : R_PLANET_RING + 10);
+          const textColor = isPoint ? "#FFFFFF" : "#000000";
+          const textOpacity = 1.0;
+          const textStyle = isPoint ? "fill" : "stroke";
+          const strokeWidthVal = isPoint ? 0 : 1.5;
 
           const baseColor = PLANET_COLORS[planet.label] || '#B89B6A';
-          const innerColor = PLANET_GRADIENT_INNER[planet.label] || baseColor;
-          const outerColor = PLANET_GRADIENT_OUTER[planet.label] || baseColor;
 
           const glyph = planet.symbol;
           const glyphFont = glyph.length > 1 ? sans11Heavy : zodiacMain;
@@ -1003,56 +895,93 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 opacity={0.40}
               />
 
-              {/* Glow halos (stronger) */}
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 3} color={baseColor} opacity={0.14} />
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 1} color={baseColor} opacity={0.09} />
+              {/* Sphere rendering — planets only, not chart points */}
+              {!isPoint && (
+                <>
+                  {/* Outer glow halo */}
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 4} color={baseColor} opacity={0.18} />
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 2} color={baseColor} opacity={0.10} />
 
-              {/* Soft shadow ring for dimensional pop */}
-              <Shadow dx={0} dy={0} blur={10} color={`${baseColor}44`} />
+                  {/* Drop shadow for depth */}
+                  <Circle cx={glyphPos.x + 1.5} cy={glyphPos.y + 2} r={PLANET_R} color="rgba(0,0,0,0.45)">
+                    <BlurMask blur={4} style="normal" />
+                  </Circle>
 
-{/* Base sphere gradient (the metal body) */}
-                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R}>
-                  <RadialGradient
-                    c={vec(glyphPos.x - PLANET_R * 0.3, glyphPos.y - PLANET_R * 0.3)}
-                    r={PLANET_R * 1.5}
-                    colors={getPremiumGoldGradient(0)}
-                    positions={[0, 0.25, 0.5, 0.75, 1]}
+                  {/* Base sphere — lit from upper-left */}
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R}>
+                    <RadialGradient
+                      c={vec(glyphPos.x - PLANET_R * 0.25, glyphPos.y - PLANET_R * 0.25)}
+                      r={PLANET_R * 1.6}
+                      colors={getUserSpherePalette(0)}
+                      positions={[0, 0.2, 0.5, 0.78, 1]}
+                    />
+                  </Circle>
+
+                  {/* Shadow hemisphere — darkens lower-right */}
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R}>
+                    <RadialGradient
+                      c={vec(glyphPos.x + PLANET_R * 0.45, glyphPos.y + PLANET_R * 0.45)}
+                      r={PLANET_R * 1.2}
+                      colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0)']}
+                      positions={[0, 0.5, 1]}
+                    />
+                  </Circle>
+
+                  {/* Sharp specular dot — pure white point light */}
+                  <Circle
+                    cx={glyphPos.x - PLANET_R * 0.32}
+                    cy={glyphPos.y - PLANET_R * 0.32}
+                    r={PLANET_R * 0.16}
+                    color="rgba(255,255,255,1.0)"
                   />
-                </Circle>
-                
-                {/* Secondary reflection band */}
-                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R} color="rgba(255,255,255,0.18)">
-                  <BlurMask blur={2} style="inner" />
-                </Circle>
 
-                {/* Specular highlight (small bright spot) */}
-                <Circle 
-                  cx={glyphPos.x - PLANET_R * 0.3} 
-                  cy={glyphPos.y - PLANET_R * 0.3} 
-                  r={PLANET_R * 0.2} 
-                  color="rgba(255,255,255,0.65)" 
-                />
+                  {/* Soft halo around specular */}
+                  <Circle
+                    cx={glyphPos.x - PLANET_R * 0.26}
+                    cy={glyphPos.y - PLANET_R * 0.26}
+                    r={PLANET_R * 0.42}
+                    color="rgba(255,255,255,0.30)"
+                  >
+                    <BlurMask blur={2.5} style="normal" />
+                  </Circle>
 
-                {/* Rim highlight */}
-                <Circle 
-                  cx={glyphPos.x} 
-                  cy={glyphPos.y} 
-                  r={PLANET_R} 
-                  style="stroke" 
-                  strokeWidth={0.6} 
-                  color="rgba(255,255,255,0.15)" 
-                />
+                  {/* Rim highlight — bright edge catch */}
+                  <Circle
+                    cx={glyphPos.x}
+                    cy={glyphPos.y}
+                    r={PLANET_R - 0.4}
+                    style="stroke"
+                    strokeWidth={1.4}
+                    color="rgba(255,255,255,0.55)"
+                  />
+                </>
+              )}
 
               {/* Glyph */}
-              {symbolFont ? (
+              {isPoint && planet.label === 'Chiron' ? (
+                (() => {
+                  const path = Skia.Path.Make();
+                  const cx = glyphPos.x, cy = glyphPos.y;
+                  // Circle at top of vertical stroke
+                  path.addCircle(cx, cy - 5, 3);
+                  // Vertical stem from below circle down
+                  path.moveTo(cx, cy - 2);
+                  path.lineTo(cx, cy + 5);
+                  // K upper arm: from mid-stem going upper-right
+                  path.moveTo(cx, cy + 1);
+                  path.lineTo(cx + 4.5, cy - 3.5);
+                  // K lower arm: from mid-stem going lower-right
+                  path.moveTo(cx, cy + 1);
+                  path.lineTo(cx + 4.5, cy + 5);
+                  return <Path path={path} style="stroke" strokeWidth={1.3} color="#FFFFFF" strokeCap="round" />;
+                })()
+              ) : symbolFont ? (
                 <SkiaText
                   x={glyphPos.x - 9}
                   y={glyphPos.y + 6}
                   text={glyph}
                   font={symbolFont}
-                  color="#000000"
-                  style="stroke"
-                  strokeWidth={1.5}
+                  color={textColor} style={textStyle as "stroke" | "fill"} strokeWidth={strokeWidthVal} opacity={textOpacity}
                 />
               ) : glyphFont && (
                 <SkiaText
@@ -1060,9 +989,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                   y={glyphPos.y + glyphOffsetY}
                   text={glyph}
                   font={glyphFont}
-                  color="#000000"
-                  style="stroke"
-                  strokeWidth={1.5}
+                  color={textColor} style={textStyle as "stroke" | "fill"} strokeWidth={strokeWidthVal} opacity={textOpacity}
                 />
               )}
 
@@ -1082,13 +1009,17 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
         {/* ── Overlay planets (velvet spheres, secondary hierarchy) ── */}
         {showPerson2 && placedOverlayPlanets.map((planet) => {
-          const glyphPos = polarToXY(planet.displayAngle, R_OVERLAY_RING);
+          const isPoint = ['Ascendant', 'Midheaven', 'North Node', 'South Node', 'Chiron', 'ASC', 'MC'].includes(planet.label);
+          const actualRadius = isPoint ? R_INNER + 36 : R_OVERLAY_RING;
+          const glyphPos = polarToXY(planet.displayAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
-          const tickInner = polarToXY(planet.originalAngle, R_OVERLAY_RING + 10);
+          const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : R_OVERLAY_RING + 10);
+          const textColor = isPoint ? "#FFFFFF" : "#000000";
+          const textOpacity = 1.0;
+          const textStyle = isPoint ? "fill" : "stroke";
+          const strokeWidthVal = isPoint ? 0 : 1.5;
 
           const baseColor = planet.color;
-          const innerColor = OVERLAY_GRADIENT_INNER[planet.label] || baseColor;
-          const outerColor = OVERLAY_GRADIENT_OUTER[planet.label] || baseColor;
 
           const glyph = planet.symbol;
           const glyphFont = glyph.length > 1 ? sans9Heavy : zodiacOverlay;
@@ -1111,59 +1042,87 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 <DashPathEffect intervals={[2, 2]} />
               </Line>
 
-              {/* Glow halos (stronger, matches natal) */}
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 3} color={baseColor} opacity={0.14} />
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 1} color={baseColor} opacity={0.09} />
+              {/* Sphere rendering — planets only, not chart points */}
+              {!isPoint && (
+                <>
+                  {/* Outer glow halo */}
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75 + 4} color={baseColor} opacity={0.18} />
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75 + 2} color={baseColor} opacity={0.10} />
 
-              {/* Soft shadow ring for dimensional pop */}
-              <Circle
-                cx={glyphPos.x}
-                cy={glyphPos.y}
-                r={PLANET_R + 2.2}
-                style="stroke"
-                strokeWidth={3.2}
-                color="rgba(0,0,0,0.20)"
-              />
+                  {/* Drop shadow for depth */}
+                  <Circle cx={glyphPos.x + 1.2} cy={glyphPos.y + 1.5} r={PLANET_R * 0.75} color="rgba(0,0,0,0.45)">
+                    <BlurMask blur={3} style="normal" />
+                  </Circle>
 
-              {/* Sphere (dashed border, smaller) */}
-              <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75} style="stroke" strokeWidth={0.9} color={baseColor} opacity={0.85}>
-                <DashPathEffect intervals={[3, 2]} />
-              </Circle>
-{/* Base sphere gradient (the metal body) */}
-                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75}>
-                  <RadialGradient
-                    c={vec(glyphPos.x - (PLANET_R * 0.75) * 0.3, glyphPos.y - (PLANET_R * 0.75) * 0.3)}
-                    r={(PLANET_R * 0.75) * 1.5}
-                    colors={getPremiumGoldGradient(1)}
-                    positions={[0, 0.25, 0.5, 0.75, 1]}
+                  {/* Base sphere — lit from upper-left */}
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75}>
+                    <RadialGradient
+                      c={vec(glyphPos.x - (PLANET_R * 0.75) * 0.25, glyphPos.y - (PLANET_R * 0.75) * 0.25)}
+                      r={(PLANET_R * 0.75) * 1.6}
+                      colors={getUserSpherePalette(1)}
+                      positions={[0, 0.2, 0.5, 0.78, 1]}
+                    />
+                  </Circle>
+
+                  {/* Shadow hemisphere — darkens lower-right */}
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75}>
+                    <RadialGradient
+                      c={vec(glyphPos.x + (PLANET_R * 0.75) * 0.45, glyphPos.y + (PLANET_R * 0.75) * 0.45)}
+                      r={(PLANET_R * 0.75) * 1.2}
+                      colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0)']}
+                      positions={[0, 0.5, 1]}
+                    />
+                  </Circle>
+
+                  {/* Sharp specular dot */}
+                  <Circle
+                    cx={glyphPos.x - (PLANET_R * 0.75) * 0.32}
+                    cy={glyphPos.y - (PLANET_R * 0.75) * 0.32}
+                    r={(PLANET_R * 0.75) * 0.16}
+                    color="rgba(255,255,255,1.0)"
                   />
-                </Circle>
-                
-                {/* Secondary reflection band */}
-                <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R * 0.75} color="rgba(255,255,255,0.18)">
-                  <BlurMask blur={2} style="inner" />
-                </Circle>
 
-                {/* Specular highlight */}
-                <Circle 
-                  cx={glyphPos.x - (PLANET_R * 0.75) * 0.3} 
-                  cy={glyphPos.y - (PLANET_R * 0.75) * 0.3} 
-                  r={(PLANET_R * 0.75) * 0.2} 
-                  color="rgba(255,255,255,0.65)" 
-                />
+                  {/* Soft halo around specular */}
+                  <Circle
+                    cx={glyphPos.x - (PLANET_R * 0.75) * 0.26}
+                    cy={glyphPos.y - (PLANET_R * 0.75) * 0.26}
+                    r={(PLANET_R * 0.75) * 0.42}
+                    color="rgba(255,255,255,0.28)"
+                  >
+                    <BlurMask blur={2} style="normal" />
+                  </Circle>
 
-                {/* Rim highlight */}
-                <Circle 
-                  cx={glyphPos.x} 
-                  cy={glyphPos.y} 
-                  r={PLANET_R * 0.75} 
-                  style="stroke" 
-                  strokeWidth={0.6} 
-                  color="rgba(255,255,255,0.15)" 
-                />
+                  {/* Rim highlight */}
+                  <Circle
+                    cx={glyphPos.x}
+                    cy={glyphPos.y}
+                    r={PLANET_R * 0.75 - 0.4}
+                    style="stroke"
+                    strokeWidth={1.2}
+                    color="rgba(255,255,255,0.50)"
+                  />
+                </>
+              )}
 
               {/* Glyph */}
-              {glyphFont && (
+              {isPoint && planet.label === 'Chiron' ? (
+                (() => {
+                  const path = Skia.Path.Make();
+                  const cx = glyphPos.x, cy = glyphPos.y;
+                  // Circle at top of vertical stroke (scaled down for overlay)
+                  path.addCircle(cx, cy - 4, 2.4);
+                  // Vertical stem
+                  path.moveTo(cx, cy - 1.6);
+                  path.lineTo(cx, cy + 4);
+                  // K upper arm
+                  path.moveTo(cx, cy + 0.8);
+                  path.lineTo(cx + 3.6, cy - 2.8);
+                  // K lower arm
+                  path.moveTo(cx, cy + 0.8);
+                  path.lineTo(cx + 3.6, cy + 4);
+                  return <Path path={path} style="stroke" strokeWidth={1.1} color="#FFFFFF" strokeCap="round" />;
+                })()
+              ) : glyphFont && (
                 <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color="#000000" style="stroke" strokeWidth={1.2} />
               )}
 
@@ -1193,7 +1152,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                      y={textPosInner.y + 3} 
                      text="ASC" 
                      font={sans8} 
-                     color="rgba(240, 234, 214,0.9)" 
+                     color="#FFFFFF"
                    />
                 )}
               </Group>
@@ -1216,7 +1175,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                      y={textPosInner.y + 3} 
                      text="MC" 
                      font={sans8} 
-                     color="rgba(240, 234, 214,0.9)" 
+                     color="#FFFFFF"
                    />
                 )}
               </Group>
@@ -1234,7 +1193,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         </Circle>
 
         {/* Navy shadow halo */}
-        <Circle cx={CX} cy={CY} r={R_INNER + 4} style="stroke" strokeWidth={6} color="rgba(5,7,11,0.70)" />
+        <Circle cx={CX} cy={CY} r={R_INNER + 4} style="stroke" strokeWidth={6} color="rgba(2,8,23,0.70)" />
 
         {/* Glass face (deeper, cosmic) */}
         <Circle cx={CX} cy={CY} r={R_INNER}>
@@ -1242,58 +1201,29 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             c={vec(CX - 10, CY - 12)}
             r={R_INNER * 1.8}
             colors={[
-              '#0E1830',   // faint inner glow
-              '#0D1626',   // mid depth
-              '#05080F'    // deep center
+              '#020817',   // match background
+              '#020817',   // match background
+              '#020817'    // match background
             ]}
             positions={[0, 0.55, 1]}
           />
         </Circle>
 
-        {/* ── Glass reflections on center hub ── */}
-        {/* Primary crescent highlight — upper-left */}
-        <Oval
-          x={CX - R_INNER * 0.72}
-          y={CY - R_INNER * 0.78}
-          width={R_INNER * 1.1}
-          height={R_INNER * 0.55}
-        >
-          <RadialGradient
-            c={vec(CX - R_INNER * 0.2, CY - R_INNER * 0.5)}
-            r={R_INNER * 0.65}
-            colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0)']}
-            positions={[0, 0.5, 1]}
-          />
-        </Oval>
-        {/* Secondary subtle reflection — lower-right */}
-        <Oval
-          x={CX - R_INNER * 0.1}
-          y={CY + R_INNER * 0.15}
-          width={R_INNER * 0.65}
-          height={R_INNER * 0.35}
-        >
-          <RadialGradient
-            c={vec(CX + R_INNER * 0.2, CY + R_INNER * 0.35)}
-            r={R_INNER * 0.4}
-            colors={['rgba(255,255,255,0.07)', 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0)']}
-            positions={[0, 0.5, 1]}
-          />
-        </Oval>
-        {/* Tiny specular dot — simulates point light catch */}
-        <Circle cx={CX - R_INNER * 0.25} cy={CY - R_INNER * 0.35} r={3} color="rgba(255,255,255,0.18)">
-          <BlurMask blur={2} style="normal" />
+        {/* Tiny specular dot on center hub — point light catch */}
+        <Circle cx={CX - R_INNER * 0.25} cy={CY - R_INNER * 0.35} r={3} color="rgba(255,255,255,0.30)">
+          <BlurMask blur={1.5} style="normal" />
         </Circle>
 
         {/* ── Center Hub: Inner Bezel ── */}
         <Group>
-          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} opacity={0.65}>
+          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} opacity={0.70}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
                 'rgba(232, 214, 174, 0.25)', 
-                'rgba(255, 255, 255, 0.8)', 
+                'rgba(255, 255, 255, 0.9)', 
                 'rgba(232, 214, 174, 0.25)', 
-                'rgba(255, 255, 255, 0.4)', 
+                'rgba(255, 255, 255, 0.45)', 
                 'rgba(232, 214, 174, 0.25)'
               ]}
               positions={[0, 0.15, 0.5, 0.65, 1]}
@@ -1303,21 +1233,21 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           </Circle>
           
           {/* Outer edge of inner hub */}
-          <Circle cx={CX} cy={CY} r={R_INNER + 1} style="stroke" strokeWidth={1} opacity={0.9}>
+          <Circle cx={CX} cy={CY} r={R_INNER + 1} style="stroke" strokeWidth={1} opacity={0.95}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
                 '#3A2E1C', '#FFFFFF', '#8A734D', '#2A1F14', 
-                '#B39D7D', '#FDF5E6', '#D4C4A3', '#1A1208', 
+                '#B39D7D', '#FFFFFF', '#D4C4A3', '#1A1208', 
                 '#F8E8C9', '#3A2E1C'
               ]}
-              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.65, 0.78, 0.88, 0.95, 1.0]}
+              positions={[0.0, 0.12, 0.25, 0.38, 0.52, 0.62, 0.78, 0.88, 0.95, 1.0]}
               transform={[{ rotate: -0.15 }]}
             />
           </Circle>
 
           {/* Inner edge of inner hub */}
-          <Circle cx={CX} cy={CY} r={R_INNER - 1} style="stroke" strokeWidth={1} opacity={0.9}>
+          <Circle cx={CX} cy={CY} r={R_INNER - 1} style="stroke" strokeWidth={1} opacity={0.95}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
@@ -1325,17 +1255,17 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
-              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.68, 0.82, 0.9, 0.96, 1.0]}
+              positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]}
               transform={[{ rotate: 0.1 }]}
             />
           </Circle>
         </Group>
 
-        <Circle cx={CX} cy={CY} r={R_INNER - 3} style="stroke" strokeWidth={0.8} opacity={0.9}>
+        <Circle cx={CX} cy={CY} r={R_INNER - 3} style="stroke" strokeWidth={0.8} opacity={0.95}>
            <SweepGradient
               c={vec(CX, CY)}
               colors={['#8A734D', '#FDF5E6', '#4A3728', '#C9AE78', '#FFFFFF', '#3A2E1C', '#8A734D']}
-              positions={[0.0, 0.15, 0.35, 0.5, 0.7, 0.85, 1.0]}
+              positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]}
               transform={[{ rotate: -0.2 }]}
             />
         </Circle>

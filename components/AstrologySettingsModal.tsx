@@ -219,7 +219,7 @@ export default function AstrologySettingsModal({
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'flex-end' },
+  overlay: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
   dismissArea: { flex: 1 },
   modalContainer: {
     maxHeight: '90%',
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   modalContent: { flex: 1 },
   header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
-  headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)', marginBottom: 20 },
+  headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginBottom: 20 },
   headerRow: { flexDirection: 'row', width: '100%', paddingHorizontal: 24, justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   closeBtn: { padding: 4 },
@@ -247,11 +247,11 @@ const styles = StyleSheet.create({
   houseCard: {
     padding: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
   },
-  cardSelected: { backgroundColor: 'rgba(232,214,174,0.08)', borderColor: 'rgba(232,214,174,0.25)' },
+  cardSelected: { backgroundColor: 'transparent', borderColor: 'rgba(232,214,174,0.25)' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   optionTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
   optionSub: { fontSize: 12, color: theme.textMuted, lineHeight: 18 },
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     alignItems: 'center',
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   orbLabel: { fontSize: 13, fontWeight: '700', color: theme.textSecondary },
 
-  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12 },
+  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'transparent', padding: 12, borderRadius: 12 },
   infoNoteText: { flex: 1, fontSize: 12, color: theme.textMuted, fontStyle: 'italic' },
 
   footer: { padding: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },

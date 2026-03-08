@@ -178,9 +178,6 @@ const styles = StyleSheet.create({
     backgroundColor: luxuryTheme.text.goldPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: luxuryTheme.shadow.glowGold,
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
   },
   priceRow: {
     flexDirection: 'row',

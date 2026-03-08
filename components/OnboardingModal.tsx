@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: theme.cardBorder,
     justifyContent: 'center',
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   dot3: { opacity: 1 },
   passphraseInput: {
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: theme.cardBorder,
     borderRadius: theme.borderRadius.md,

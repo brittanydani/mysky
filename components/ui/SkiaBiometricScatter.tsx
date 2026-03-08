@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   obsidianCard: {
     padding: 24,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
     borderTopColor: 'rgba(255,255,255,0.10)',
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(232,214,174,0.08)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(232, 214, 174, 0.15)',
   },

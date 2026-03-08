@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   innerGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
   interactiveText: { color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
   
-  glassInput: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder },
+  glassInput: { backgroundColor: 'transparent', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder },
   titleInput: { padding: 16, color: PALETTE.textMain, fontSize: 16 },
   
   reflectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   
   promptZone: { marginBottom: 20 },
   transitContext: { fontSize: 13, color: PALETTE.silverBlue, fontStyle: 'italic', marginBottom: 12, textAlign: 'center' },
-  primaryPromptCard: { backgroundColor: 'rgba(232,214,174,0.08)', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
+  primaryPromptCard: { backgroundColor: 'transparent', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
   promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
   primaryPromptText: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontStyle: 'italic', lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   contentInput: { padding: 16, color: PALETTE.textMain, fontSize: 16, lineHeight: 26 },
   
   footer: { marginTop: 24 },
-  saveBtn: { borderRadius: 16, overflow: 'hidden', shadowColor: PALETTE.gold, shadowOpacity: 0.2, shadowRadius: 12 },
+  saveBtn: { borderRadius: 16, overflow: 'hidden', },
   saveGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
   saveBtnText: { color: '#020817', fontSize: 17, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
 });

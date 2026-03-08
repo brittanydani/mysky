@@ -448,7 +448,7 @@ export default function EnergyScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Unlock full energy guidance"
                   >
-                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'rgba(232, 214, 174,0.08)', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
+                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'transparent', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
                       <Ionicons name="sparkles" size={14} color={theme.primary} />
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.lockText, { fontWeight: '600' }]}>Full guidance includes:</Text>
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   toneSeparator: {
     width: 1,
     height: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'transparent',
     marginHorizontal: 2,
   },
   toneLabel: {
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
   intensityBarOuter: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     marginBottom: 12,
     overflow: 'hidden',
     position: 'relative' as const,
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(232, 214, 174,0.12)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(232, 214, 174,0.22)',
     marginTop: 10,
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'transparent',
     marginVertical: 12,
   },
   wheelContainer: {
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(232,214,174,0.08)',
+    backgroundColor: 'transparent',
   },
   domainName: {
     color: theme.textPrimary,
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   },
   focusDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'transparent',
     marginTop: 16,
     marginBottom: 12,
   },

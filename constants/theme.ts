@@ -43,7 +43,7 @@ export const MYSTIC = {
   bgDeep: '#020817',
 
   // ─ Text hierarchy ─
-  heading: '#F8FAFC',
+  heading: '#FFFFFF',
   body: 'rgba(226,232,240,0.78)',
   muted: 'rgba(226,232,240,0.45)',
 
@@ -79,7 +79,7 @@ export const MYSTIC = {
   starDim: 'rgba(255,255,255,0.72)',
 
   // ─ Glass card system ─
-  cardBg: 'rgba(255,255,255,0.03)',
+  cardBg: 'transparent',
   cardBorder: 'rgba(232,214,174,0.18)',
   cardHighlight: 'rgba(255,255,255,0.06)',
 
@@ -134,8 +134,8 @@ export const theme = {
   warning: MYSTIC.restoreGold,
 
   // Card Colors — transparent glass
-  cardGradientStart: 'rgba(14,24,48,0.40)',
-  cardGradientEnd: 'rgba(2,8,23,0.60)',
+  cardGradientStart: 'transparent',
+  cardGradientEnd: 'transparent',
   cardBorder: MYSTIC.cardBorder,
 
   // Locked/Premium

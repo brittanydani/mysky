@@ -68,8 +68,7 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
 }: Props) {
   // Measure height dynamically — we use a fixed min-height and let React
   // measure the actual content. The Skia canvas is positioned absolute.
-  const [contentH, setContentH] = React.useState(120);
-  const cardH = contentH + 48; // title area + padding
+  const [cardH, setCardH] = React.useState(150);
 
   return (
     <View style={styles.wrapper}>
@@ -133,7 +132,7 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
       </Canvas>
 
       {/* ── Content Layer ── */}
-      <View style={[styles.content, { minHeight: cardH }]}>
+      <View style={styles.content} onLayout={(e) => setCardH(e.nativeEvent.layout.height)}>
         {/* Section header */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>{title}</Text>
@@ -144,10 +143,7 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
         <View style={styles.divider} />
 
         {/* Children (setting rows) */}
-        <View
-          onLayout={(e) => setContentH(e.nativeEvent.layout.height)}
-          style={styles.childWrap}
-        >
+        <View style={styles.childWrap}>
           {children}
         </View>
       </View>

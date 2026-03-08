@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -418,12 +418,12 @@ const styles = StyleSheet.create({
   },
   comparisonColumn: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
   },
   premiumColumn: {
-    backgroundColor: 'rgba(232,214,174,0.08)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(232,214,174,0.18)',
   },

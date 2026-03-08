@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
   
   relationshipCardGradient: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center' },
-  relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(232, 214, 174, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   relationshipInfo: { flex: 1, marginLeft: 16 },
   relationshipName: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 2 },
   relationshipType: { fontSize: 13, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
   typeIconContainer: { borderRadius: 16, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder },
   typeLabel: { marginTop: 10, fontSize: 13, color: theme.textSecondary, textAlign: 'center', fontWeight: '500' },
   
-  limitIndicator: { marginTop: 20, padding: 16, backgroundColor: 'rgba(232, 214, 174, 0.1)', borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
+  limitIndicator: { marginTop: 20, padding: 16, backgroundColor: 'transparent', borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
   limitText: { fontSize: 13, color: theme.textGold, textAlign: 'center', fontWeight: '600' },
   
   discoverSection: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder },
@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
   detailScrollContent: { paddingHorizontal: 20, paddingTop: 16 },
 
   personSelectorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  personPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
+  personPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'transparent' },
   personPillPartner: { flex: 1 },
   personPillActive: { borderColor: 'rgba(230, 213, 184, 0.4)', backgroundColor: 'rgba(230, 213, 184, 0.1)' },
   personPillText: { fontSize: 14, fontWeight: '600', color: theme.textMuted },
@@ -802,13 +802,13 @@ const styles = StyleSheet.create({
   personPillAddText: { fontSize: 14, fontWeight: '600', color: theme.textGold },
 
   filterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginVertical: 16 },
-  filterPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
-  filterDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.2)' },
+  filterPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'transparent' },
+  filterDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent' },
   filterPillText: { fontSize: 12, color: theme.textMuted, fontWeight: '600' },
 
   summaryBar: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, paddingVertical: 20, paddingHorizontal: 12, marginTop: 12, marginBottom: 24 },
   summaryCol: { flex: 1, alignItems: 'center', gap: 4 },
-  summarySep: { width: 1, height: 48, backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'center' },
+  summarySep: { width: 1, height: 48, backgroundColor: 'transparent', alignSelf: 'center' },
   summaryIcon: { fontSize: 11, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
   summarySign: { fontSize: 16, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   summaryDetail: { fontSize: 12, color: theme.textSecondary },
@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
   insightCardText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   sectionHeader: { fontSize: 18, color: theme.textPrimary, marginTop: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
-  reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'rgba(232,214,174,0.08)', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: theme.textGold },
+  reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'transparent', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: theme.textGold },
   reminderText: { fontSize: 16, color: theme.textPrimary, fontStyle: 'italic', lineHeight: 24, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
   upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
@@ -837,11 +837,11 @@ const styles = StyleSheet.create({
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },
   bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.textGold, marginTop: 8, marginRight: 12 },
   bulletText: { flex: 1, fontSize: 15, color: theme.textSecondary, lineHeight: 22 },
-  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'rgba(232, 214, 174, 0.1)', borderRadius: 16, padding: 20, marginBottom: 16 },
+  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'transparent', borderRadius: 16, padding: 20, marginBottom: 16 },
   tipText: { flex: 1, fontSize: 15, color: theme.textPrimary, marginLeft: 16, lineHeight: 22 },
 
   previewSection: { marginTop: 6 },
-  previewDivider: { height: 1, backgroundColor: 'rgba(232, 214, 174, 0.15)', marginVertical: 12 },
+  previewDivider: { height: 1, backgroundColor: 'transparent', marginVertical: 12 },
   previewAspectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
   previewDot: { width: 6, height: 6, borderRadius: 3, marginRight: 10 },
   previewPlanets: { flex: 1, fontSize: 13, color: theme.textSecondary, fontWeight: '500' },

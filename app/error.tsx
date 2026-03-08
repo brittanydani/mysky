@@ -27,7 +27,7 @@ export default function GlobalError({ error, retry }: { error: Error; retry?: ()
       <Pressable
         onPress={() => (retry ? retry() : router.replace('/' as Href))}
         style={{
-          backgroundColor: 'rgba(255,255,255,0.12)',
+          backgroundColor: 'transparent',
           borderRadius: 14,
           paddingVertical: 12,
           paddingHorizontal: 16,

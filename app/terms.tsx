@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   glassCard: {
     borderRadius: 20,
     padding: 20,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: theme.cardBorder,
     borderTopColor: theme.glass.highlight,

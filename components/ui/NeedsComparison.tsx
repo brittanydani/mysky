@@ -42,7 +42,7 @@ export default function NeedsComparison({
             </Canvas>
           </View>
           <View style={styles.nameRow}>
-            <View style={[styles.avatar, { backgroundColor: 'rgba(232, 214, 174, 0.15)' }]}>
+            <View style={[styles.avatar, { backgroundColor: 'transparent' }]}>
               <Ionicons name="person" size={12} color={PALETTE.gold} />
             </View>
             <Text style={[styles.name, { color: PALETTE.gold }]} numberOfLines={1}>{person1Name}</Text>
@@ -180,13 +180,13 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     width: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'transparent',
   },
   dividerIcon: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.28)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center',

@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md, textAlign: 'center',
   },
   createChartButton: {
-    backgroundColor: 'rgba(232,214,174,0.18)',
+    backgroundColor: 'transparent',
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.full,
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: theme.borderRadius.full,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
   cardLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 2, marginLeft: theme.spacing.sm },
   strongestBadge: {
-    marginLeft: 'auto', backgroundColor: 'rgba(232, 214, 174, 0.12)',
+    marginLeft: 'auto', backgroundColor: 'transparent',
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: theme.borderRadius.sm,
   },
   strongestBadgeText: { fontSize: 8, fontWeight: '600', color: theme.primary, letterSpacing: 0.2, textTransform: 'uppercase' },

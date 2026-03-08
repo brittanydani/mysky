@@ -11,7 +11,7 @@ export const luxuryTheme = {
   },
 
   text: {
-    white: '#F8FAFC',
+    white: '#FFFFFF',
     heading: '#FFFFFF',
     body: 'rgba(226,232,240,0.78)',
     muted: 'rgba(226,232,240,0.58)',
@@ -19,7 +19,7 @@ export const luxuryTheme = {
     goldPrimary: '#FFFFFF',
     goldSecondary: '#FFFFFF',
     goldBright: '#FFFFFF',
-    onDark: '#F8FAFC',
+    onDark: '#FFFFFF',
     onGold: '#0B1220',
   },
 
@@ -73,11 +73,7 @@ export const luxuryTheme = {
       'rgba(221,187,131,0.22)',
       'rgba(111,85,46,0.18)',
     ],
-    cardFill: [
-      'rgba(255,255,255,0.035)',
-      'rgba(255,255,255,0.015)',
-      'rgba(255,255,255,0.01)',
-    ],
+    cardFill: ['transparent', 'transparent'],
     metallicReflection: [
       'rgba(255,255,255,0.00)',
       'rgba(255,255,255,0.12)',
@@ -135,7 +131,7 @@ export const luxuryTheme = {
   },
 
   shadow: {
-    card: 'rgba(0,0,0,0.22)',
+    card: 'transparent',
     glowGold: 'rgba(207,174,115,0.35)',
     glowSoft: 'rgba(247,231,194,0.18)',
   },

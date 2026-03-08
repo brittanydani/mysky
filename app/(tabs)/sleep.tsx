@@ -846,7 +846,7 @@ export default function SleepScreen() {
                 <View style={styles.pulseSection}>
                   <Text style={[styles.pulseLabel, { color: PALETTE.emerald, marginBottom: 12 }]}>Rest data sealed softly 🌙</Text>
                   <Pressable 
-                    style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignSelf: 'center' }}
+                    style={{ backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignSelf: 'center' }}
                     onPress={() => { Haptics.selectionAsync().catch(()=>{}); setIsEditingUnlocked(true); }}
                   >
                     <Text style={{ color: PALETTE.textMain, fontSize: 14, fontWeight: '600' }}>Edit Entry</Text>
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   formTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), flex: 1 },
   
-  cancelEditBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.06)' },
+  cancelEditBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 16, backgroundColor: 'transparent' },
   cancelEditText: { fontSize: 13, color: theme.textMuted, fontWeight: '600' },
   
   fieldLabel: { fontSize: 14, fontWeight: '600', color: PALETTE.textMain, marginBottom: 12, marginTop: 24 },
@@ -1084,7 +1084,7 @@ const styles = StyleSheet.create({
   qualityRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   moonBtn: { padding: 4 },
 
-  stepperRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, overflow: 'hidden', marginBottom: 6 },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, overflow: 'hidden', marginBottom: 6 },
   stepperBtn: { paddingHorizontal: 24, paddingVertical: 16, justifyContent: 'center', alignItems: 'center' },
   stepperValue: { flex: 1, alignItems: 'center', paddingVertical: 16 },
   stepperValueText: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
@@ -1092,7 +1092,7 @@ const styles = StyleSheet.create({
   stepperHint: { fontSize: 12, color: theme.textMuted, textAlign: 'center', fontStyle: 'italic', marginBottom: 8 },
 
   dreamInput: {
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     borderRadius: 16,
@@ -1107,10 +1107,10 @@ const styles = StyleSheet.create({
   dreamLockTitle: { fontSize: 14, fontWeight: '600', color: PALETTE.gold, marginBottom: 4 },
   dreamLockSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
 
-  dreamMoodDropdown: { backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  dreamMoodDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   dreamMoodDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
   dreamMoodDropdownPlaceholder: { color: theme.textMuted, fontSize: 15 },
-  dreamMoodOptions: { backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, overflow: 'hidden' },
+  dreamMoodOptions: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, overflow: 'hidden' },
   dreamMoodOption: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
   dreamMoodOptionSelected: { backgroundColor: 'rgba(157, 118, 193, 0.15)' },
   dreamMoodOptionText: { color: PALETTE.textMain, fontSize: 15 },
@@ -1120,41 +1120,41 @@ const styles = StyleSheet.create({
   feelingSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, height: 40 },
 
   tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
-  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.04)' },
+  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'transparent' },
   tierDot: { width: 8, height: 8, borderRadius: 4 },
   tierPillText: { color: theme.textSecondary, fontSize: 14, fontWeight: '600' },
   tierBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
   tierBadgeText: { color: '#020817', fontSize: 11, fontWeight: '700' },
   tierHint: { color: theme.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16, fontStyle: 'italic' },
 
-  intensityRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.02)', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  intensityRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: 'transparent', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
   intensityLabel: { fontSize: 13, color: theme.textMuted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
   intensityDots: { flexDirection: 'row', gap: 8 },
-  intensityDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center' },
+  intensityDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center' },
   intensityDotActive: { backgroundColor: 'rgba(157, 118, 193, 0.25)', borderColor: PALETTE.amethyst },
   intensityDotText: { fontSize: 14, color: theme.textMuted, fontWeight: '600' },
   intensityDotTextActive: { color: PALETTE.amethyst },
 
-  metadataSection: { backgroundColor: 'rgba(0,0,0,0.2)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, padding: 16 },
+  metadataSection: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, padding: 16 },
   metadataRow: { marginBottom: 20 },
   metadataLabel: { fontSize: 14, color: theme.textSecondary, fontWeight: '600', marginBottom: 12 },
   
   awakenRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  awakenChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  awakenChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder },
   awakenChipActive: { backgroundColor: 'rgba(157, 118, 193, 0.2)', borderColor: PALETTE.amethyst },
   awakenChipText: { fontSize: 14, color: theme.textMuted, fontWeight: '500' },
   awakenChipTextActive: { color: PALETTE.amethyst, fontWeight: '600' },
 
-  awakenDropdown: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  awakenDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
-  awakenDropdownList: { backgroundColor: 'rgba(0,0,0,0.4)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginTop: 8, overflow: 'hidden' },
+  awakenDropdownList: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginTop: 8, overflow: 'hidden' },
   awakenDropdownItem: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
   awakenDropdownItemActive: { backgroundColor: 'rgba(157, 118, 193, 0.15)' },
   awakenDropdownItemText: { fontSize: 15, color: theme.textSecondary, fontWeight: '500' },
   awakenDropdownItemTextActive: { color: PALETTE.amethyst, fontWeight: '600' },
 
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', paddingHorizontal: 3 },
+  toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'transparent', justifyContent: 'center', paddingHorizontal: 3 },
   toggleTrackActive: { backgroundColor: 'rgba(157, 118, 193, 0.4)' },
   toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: theme.textMuted },
   toggleThumbActive: { alignSelf: 'flex-end', backgroundColor: PALETTE.amethyst },

@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyButton: {
-    backgroundColor: 'rgba(232, 214, 174, 0.15)',
+    backgroundColor: 'transparent',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,

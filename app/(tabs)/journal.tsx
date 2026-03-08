@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(232, 214, 174, 0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  premiumBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'transparent', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   premiumBadgeText: { fontSize: 10, fontWeight: '700', color: theme.textGold },
 
   lockBox: {
@@ -587,9 +587,9 @@ const styles = StyleSheet.create({
   },
   insightHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   insightTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, flex: 1 },
-  confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'rgba(255, 255, 255, 0.08)', marginLeft: 12 },
+  confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'transparent', marginLeft: 12 },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
-  confidenceSuggested: { backgroundColor: 'rgba(232, 214, 174, 0.12)' },
+  confidenceSuggested: { backgroundColor: 'transparent' },
   confidenceText: { fontSize: 10, color: theme.textPrimary, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
   insightDescription: { fontSize: 15, color: theme.textSecondary, lineHeight: 22, marginBottom: 10 },
   insightEvidence: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic', marginBottom: 8 },
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
 
   fabContainer: { position: 'absolute', right: 20, zIndex: 1000 },
-  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', shadowColor: theme.textGold, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
+  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', },
   fabPressed: { opacity: 0.9, transform: [{ scale: 0.95 }] },
   fabGradient: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
 });

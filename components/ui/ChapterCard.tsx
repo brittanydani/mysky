@@ -93,11 +93,6 @@ function ChapterCard({
       style={({ pressed }) => [
         styles.container,
         {
-          shadowColor: dominantColor,
-          elevation: 6,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.22,
-          shadowRadius: 10,
           borderColor: `${dominantColor}55`,
           borderTopColor: `${dominantColor}88`,
         },
@@ -227,7 +222,7 @@ const styles = StyleSheet.create({
   lockBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(232,214,174,0.12)',
+    backgroundColor: 'transparent',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
@@ -280,7 +275,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderLeftWidth: 3,
     borderLeftColor: PALETTE.gold,
     borderWidth: 1,
@@ -309,7 +304,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',

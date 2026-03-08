@@ -88,6 +88,8 @@ export default function TabLayout() {
       <Tabs.Screen name="growth" options={{ href: null }} />
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing" options={{ href: null }} />
+      <Tabs.Screen name="insights" options={{ href: null }} />
+
       <Tabs.Screen name="premium" options={{ href: null }} />
       <Tabs.Screen name="reflect" options={{ href: null }} />
     </Tabs>

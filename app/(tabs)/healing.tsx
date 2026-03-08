@@ -72,7 +72,7 @@ function DeepCard({
       style={styles.deepCard}
     >
       <View style={styles.deepCardHeader}>
-        <View style={[styles.deepCardIcon, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+        <View style={[styles.deepCardIcon, { backgroundColor: 'transparent' }]}>
           <Ionicons name={icon} size={18} color={color} />
         </View>
         <Text style={styles.deepCardTitle}>{title}</Text>
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   emptyButton: {
-    backgroundColor: 'rgba(232, 214, 174, 0.12)',
+    backgroundColor: 'transparent',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 24,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   },
   deepDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'transparent',
     marginVertical: 16,
   },
   
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   toolText: { flex: 1, fontSize: 15, color: theme.textPrimary, lineHeight: 22, fontWeight: '500' },
   
   affirmationBox: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   },
   
   promptBox: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 16,
     marginTop: 8,

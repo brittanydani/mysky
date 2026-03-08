@@ -53,10 +53,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     // Subtle gold glow on active
-    shadowColor: '#C99949',
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
   },
 });

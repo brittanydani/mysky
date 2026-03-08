@@ -713,7 +713,7 @@ export default function ChartScreen() {
           {/* ── Relationship Type Picker Modal ── */}
           {showRelTypePicker && (
             <View style={styles.relTypePickerOverlay}>
-              <View style={[styles.relTypePicker, { backgroundColor: 'rgba(0,0,0,0.7)' }]}> 
+              <View style={[styles.relTypePicker, { backgroundColor: 'transparent' }]}> 
                 <Text style={styles.relTypeTitle}>What's their relationship to you?</Text>
                 {(Object.keys(RELATIONSHIP_LABELS) as RelationshipType[]).map((type) => (
                   <Pressable
@@ -764,7 +764,7 @@ export default function ChartScreen() {
 
           {/* ── Big Three Summary ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={{ width: '100%' }}>
-            <View style={[styles.bigThreeCard, { backgroundColor: 'rgba(0,0,0,0.18)' }]}> 
+            <View style={[styles.bigThreeCard, { backgroundColor: 'transparent' }]}> 
               <View style={styles.bigThreeRow}>
                 <View style={styles.bigThreeItem}>
                   <Text style={styles.bigThreeLabel}>
@@ -822,7 +822,7 @@ export default function ChartScreen() {
           {/* ── Sensitive Points (Premium) ── */}
           {isPremium && sensitivePoints.length > 0 && (
             <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ width: '100%' }}>
-              <View style={[styles.sensitiveCard, { backgroundColor: 'rgba(0,0,0,0.14)' }]}> 
+              <View style={[styles.sensitiveCard, { backgroundColor: 'transparent' }]}> 
                 <Text style={styles.sensitiveTitle}>Sensitive Points</Text>
 
                 <View style={styles.sensitiveGrid}>
@@ -1629,7 +1629,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(232, 214, 174,0.15)',
+    backgroundColor: 'transparent',
   },
   goHomeText: { color: theme.primary, fontWeight: '700' },
   safeArea: { flex: 1 },
@@ -1743,7 +1743,7 @@ const styles = StyleSheet.create({
   sensitiveDeg: { color: theme.textMuted, fontSize: 11, marginTop: 1, textAlign: 'center' },
 
   insightBox: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
     marginTop: theme.spacing.sm,
@@ -1786,7 +1786,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
-  tabBtnActive: { backgroundColor: 'rgba(232,214,174,0.18)' },
+  tabBtnActive: { backgroundColor: 'transparent' },
   tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
   tabTextActive: { color: theme.primary },
 
@@ -1915,7 +1915,7 @@ const styles = StyleSheet.create({
   patternIcon: { fontSize: 20, marginRight: 10 },
   patternTitle: { color: theme.textPrimary, fontWeight: '700', fontSize: 17, textAlign: 'center' },
   patternHighlight: {
-    backgroundColor: 'rgba(232, 214, 174,0.12)',
+    backgroundColor: 'transparent',
     borderRadius: theme.borderRadius.md,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -1924,7 +1924,7 @@ const styles = StyleSheet.create({
   },
   patternHighlightText: { color: theme.primary, fontWeight: '700', fontSize: 15, textAlign: 'center' },
   patternDesc: { color: theme.textSecondary, fontSize: 13, lineHeight: 20, marginTop: theme.spacing.sm, textAlign: 'center' },
-  tooltipBox: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: theme.borderRadius.md, padding: 10, marginTop: theme.spacing.md },
+  tooltipBox: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', backgroundColor: 'transparent', borderRadius: theme.borderRadius.md, padding: 10, marginTop: theme.spacing.md },
   tooltipText: { color: theme.textMuted, fontSize: 11, lineHeight: 16, marginLeft: 6, flex: 1, fontStyle: 'italic', textAlign: 'center' },
 
   // ── People Bar (Multi-Chart) ──
@@ -1938,7 +1938,7 @@ const styles = StyleSheet.create({
   personChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1950,11 +1950,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderColor: '#FFFFFF',
     borderWidth: 1,
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 2,
   },
   personChipText: {
     color: theme.textMuted,
@@ -1976,11 +1971,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFFFFF', /* Richer metallic contrast */
     borderStyle: 'dashed',
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 2,
   },
   addPersonText: { color: theme.primary, fontSize: 13, fontWeight: '600' },
 
@@ -2015,7 +2005,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: theme.borderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
     marginBottom: 6,
     alignItems: 'center',
   },
@@ -2043,7 +2033,7 @@ const styles = StyleSheet.create({
   chartSettingsTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm },
   chartSettingsDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
   chartSettingsTags: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
-  settingTag: { backgroundColor: 'rgba(232, 214, 174, 0.15)', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
+  settingTag: { backgroundColor: 'transparent', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
   settingTagText: { fontSize: 11, color: '#E8D6AE', fontWeight: '500' },
 
   // ── Chart Glossary ──

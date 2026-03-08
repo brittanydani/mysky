@@ -109,11 +109,6 @@ const styles = StyleSheet.create({
   outer: {
     width: '100%',
     position: 'relative',
-    shadowColor: '#3A2207',
-    shadowOpacity: 0.28,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
     borderTopWidth: 2,
     borderTopColor: 'rgba(254, 249, 207, 0.35)', // #FEF9CF at 35%
     borderBottomWidth: 1,

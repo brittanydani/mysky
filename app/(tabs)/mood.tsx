@@ -34,7 +34,6 @@ import {
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import NebulaBackground from '../../components/ui/NebulaBackground';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { NatalChart } from '../../services/astrology/types';
@@ -627,7 +626,6 @@ export default function MoodScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <NebulaBackground mood={5} />
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.flex}>
           <View style={styles.centered}>
@@ -649,7 +647,6 @@ export default function MoodScreen() {
   if (loadError) {
     return (
       <View style={styles.container}>
-        <NebulaBackground mood={3} />
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.flex}>
           <View style={styles.centered}>
@@ -668,7 +665,6 @@ export default function MoodScreen() {
 
   return (
     <View style={styles.container}>
-      <NebulaBackground mood={moodSlider} />
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.flex}>
         {/* Header */}
@@ -1001,7 +997,7 @@ export default function MoodScreen() {
                       {TIME_OF_DAY_LABELS[selectedTimeSlot].emoji}
                     </Text>
                     <Pressable 
-                      style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: '#333842', alignSelf: 'center' }}
+                      style={{ backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: '#333842', alignSelf: 'center' }}
                       onPress={() => { Haptics.selectionAsync().catch(()=>{}); setIsEditingUnlocked(true); }}
                     >
                       <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '600' }}>Edit Entry</Text>
@@ -1274,7 +1270,7 @@ export default function MoodScreen() {
                     style={[styles.card, { borderColor: 'rgba(232,214,174,0.18)' }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(232, 214, 174,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'transparent', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
                         <Ionicons name="sparkles" size={10} color={theme.primary} />
                         <Text style={{ fontSize: 10, fontWeight: '600', color: theme.primary }}>Deeper Sky</Text>
                       </View>
@@ -1287,7 +1283,7 @@ export default function MoodScreen() {
                           <Text style={[styles.body, { marginBottom: 8 }]}>
                             You have {allCheckIns.length} check-in{allCheckIns.length !== 1 ? 's' : ''} — enough data to start revealing your emotional rhythms.
                           </Text>
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, borderRadius: 8, backgroundColor: 'transparent', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
                             <View style={{ alignItems: 'center' }}>
                               <Text style={{ fontSize: 16, fontWeight: '800', color: theme.textMuted }}>— —</Text>
                               <Text style={{ color: theme.textMuted, fontSize: 11, marginTop: 2 }}>Avg Mood</Text>
@@ -1431,12 +1427,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
   },
   timeSlotChipOn: {
-    backgroundColor: 'rgba(232, 214, 174,0.18)',
+    backgroundColor: 'transparent',
     borderColor: theme.primary,
   },
   timeSlotChipDone: {
@@ -1470,12 +1466,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
   },
   tagChipOn: {
-    backgroundColor: 'rgba(232, 214, 174,0.18)',
+    backgroundColor: 'transparent',
     borderColor: theme.primary,
   },
   tagTxt: { color: theme.textSecondary, fontSize: 13, fontWeight: '600' },
@@ -1496,7 +1492,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.20)',
   },
@@ -1513,7 +1509,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
   },
@@ -1569,10 +1565,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
   },
   rangeBtnOn: {
-    backgroundColor: 'rgba(232, 214, 174,0.18)',
+    backgroundColor: 'transparent',
     borderColor: theme.primary,
   },
   rangeTxt: { color: theme.textMuted, fontSize: 12, fontWeight: '700' },
@@ -1589,7 +1585,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 8,
     borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
@@ -1607,7 +1603,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
   },
   tagStatFill: { height: '100%', borderRadius: 2, backgroundColor: theme.primary },
@@ -1623,7 +1619,7 @@ const styles = StyleSheet.create({
   todBucket: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 4,

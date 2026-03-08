@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderWidth: 1,
     borderColor: 'rgba(232,214,174,0.25)',
-    backgroundColor: 'rgba(232,214,174,0.08)',
+    backgroundColor: 'transparent',
     marginBottom: 16,
   },
   pickBtnSuccess: {
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   
   input: {
     width: '100%',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     borderRadius: 16,
@@ -243,11 +243,10 @@ const styles = StyleSheet.create({
   ctaButton: { 
     borderRadius: 16, 
     overflow: 'hidden', 
-    shadowColor: PALETTE.gold, 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 12, 
-    elevation: 4 
+ 
+ 
+ 
+ 
   },
   ctaGradient: { 
     paddingVertical: 16, 

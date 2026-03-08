@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'transparent',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,

@@ -13,7 +13,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
-import NebulaBackground from '../../../components/ui/NebulaBackground';
 import BackupPassphraseModal from '../../../components/BackupPassphraseModal';
 import PrivacySettingsModal from '../../../components/PrivacySettingsModal';
 import BirthDataModal from '../../../components/BirthDataModal';
@@ -387,7 +386,6 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <NebulaBackground mood={5} energy={3} />
       <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -443,42 +441,6 @@ export default function SettingsScreen() {
               </LinearGradient>
             </Animated.View>
           )}
-
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.section}>
-            <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 4 }}>
-              <Pressable
-                style={{ flex: 1 }}
-                onPress={() => router.push('/(tabs)/chart' as Href)}
-                accessibilityRole="button"
-                accessibilityLabel="View Personal Blueprint"
-              >
-                <LinearGradient
-                  colors={['rgba(232, 214, 174, 0.12)', 'rgba(232, 214, 174, 0.02)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', height: 110, justifyContent: 'center', alignItems: 'center' }]}
-                >
-                  <Ionicons name="planet-outline" size={28} color={theme.primary} style={{ marginBottom: 8 }} />
-                  <Text style={[styles.settingTitle, { fontSize: 16, textAlign: 'center' }]}>Personal Blueprint</Text>
-                  <Text style={[styles.settingDescription, { textAlign: 'center', fontSize: 12, marginTop: 4 }]}>Natal Chart</Text>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable
-                style={{ flex: 1 }}
-                onPress={() => router.push('/(tabs)/story' as Href)}
-                accessibilityRole="button"
-                accessibilityLabel="View Life Architecture"
-              >
-                <LinearGradient
-                  colors={['rgba(139, 196, 232, 0.12)', 'rgba(139, 196, 232, 0.02)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(139, 196, 232, 0.25)', height: 110, justifyContent: 'center', alignItems: 'center' }]}
-                >
-                  <Ionicons name="map-outline" size={28} color="#8BC4E8" style={{ marginBottom: 8 }} />
-                  <Text style={[styles.settingTitle, { fontSize: 16, textAlign: 'center' }]}>Life Architecture</Text>
-                  <Text style={[styles.settingDescription, { textAlign: 'center', fontSize: 12, marginTop: 4 }]}>Story Modules</Text>
-                </LinearGradient>
-              </Pressable>
-            </View>
-          </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key">
@@ -1003,19 +965,19 @@ const styles = StyleSheet.create({
   cardGradient: { padding: theme.spacing.lg },
 
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  settingInfo: { flex: 1, marginRight: theme.spacing.md },
+  settingInfo: { flex: 1, flexShrink: 1, marginRight: theme.spacing.md },
   settingHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs },
   settingTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm, flex: 1 },
 
   premiumBadge: {
-    backgroundColor: 'rgba(232,214,174,0.18)',
+    backgroundColor: 'transparent',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
     borderRadius: theme.borderRadius.sm,
   },
   premiumText: { fontSize: 10, color: theme.primary, fontWeight: '600' },
 
-  settingDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
+  settingDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, flexShrink: 1, flexWrap: "wrap" },
   lastSyncText: { fontSize: 12, color: theme.textMuted, marginTop: theme.spacing.xs },
 
   backupActions: { gap: theme.spacing.sm },
@@ -1025,7 +987,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: 'rgba(232, 214, 174, 0.1)',
+    backgroundColor: 'transparent',
     borderRadius: theme.borderRadius.sm,
   },
   syncButtonDisabled: { opacity: 0.6 },
@@ -1042,7 +1004,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(232,214,174,0.18)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: theme.spacing.md,
@@ -1052,7 +1014,7 @@ const styles = StyleSheet.create({
   premiumDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
 
   privacyInfo: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'transparent',
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
     gap: theme.spacing.sm,
@@ -1060,7 +1022,7 @@ const styles = StyleSheet.create({
   privacyItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   privacyText: { fontSize: 12, color: theme.textSecondary, flex: 1 },
 
-  securityGrid: { gap: theme.spacing.md },
+  securityGrid: { gap: theme.spacing.md, paddingHorizontal: 16 },
   securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
   securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(72, 187, 120, 0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   securityContent: { flex: 1 },
@@ -1069,7 +1031,7 @@ const styles = StyleSheet.create({
 
   chartSettingsSummary: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
   settingTag: {
-    backgroundColor: 'rgba(232, 214, 174, 0.15)',
+    backgroundColor: 'transparent',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 4,
     borderRadius: theme.borderRadius.sm,
@@ -1125,7 +1087,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: theme.spacing.xs,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: 'rgba(232, 214, 174, 0.1)',
+    backgroundColor: 'transparent',
     borderRadius: theme.borderRadius.sm,
   },
   keyLossBannerButtonDestructive: {

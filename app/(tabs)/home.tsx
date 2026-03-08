@@ -30,7 +30,6 @@ import { useFocusEffect } from '@react-navigation/core';
 import { theme } from '../../constants/theme';
 
 // ── Custom Skia Suite ──
-import NebulaBackground from '../../components/ui/NebulaBackground';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
 import SkiaStabilityDashboard, { computeStabilityIndex } from '../../components/ui/SkiaStabilityDashboard';
@@ -283,7 +282,6 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <NebulaBackground mood={5} />
         <SkiaDynamicCosmos />
         <Text style={styles.loadingText}>Preparing your reflections...</Text>
       </View>
@@ -293,7 +291,6 @@ export default function HomeScreen() {
   if (!userChart) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
-        <NebulaBackground mood={3} />
         <SkiaDynamicCosmos />
         <Text style={styles.loadingText}>Preparing onboarding…</Text>
       </View>
@@ -305,7 +302,6 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* LAYER 1: Atmospheric Shader — turbulence driven by energy, color by transits */}
-      <NebulaBackground mood={mood} energy={energy} />
 
       {/* REPLACEMENT: Subtle, drifting cosmic field */}
       <SkiaDynamicCosmos />
@@ -742,7 +738,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'transparent',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -765,7 +761,7 @@ const styles = StyleSheet.create({
   nudgeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
     borderRadius: 16,
@@ -837,7 +833,7 @@ const styles = StyleSheet.create({
   },
   trendBadge: {
     marginLeft: 'auto',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 4,
   },

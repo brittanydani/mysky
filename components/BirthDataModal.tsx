@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   textInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   pickButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     overflow: 'hidden',
     marginTop: 4,
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
   },
   pickerOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'transparent',
     justifyContent: 'flex-end',
   },
   pickerContent: {
@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: 'rgba(232,214,174,0.25)',
-    backgroundColor: 'rgba(232,214,174,0.05)',
+    backgroundColor: 'transparent',
     zIndex: 1,
   },
 });

@@ -147,16 +147,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
   },
   closeCard: {
     padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.03)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'transparent',
   },
   quoteText: {
     fontSize: 17,

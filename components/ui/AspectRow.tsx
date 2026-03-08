@@ -152,12 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     // iOS Shadow
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
     // Android Shadow
-    elevation: 4,
   },
   nodeCore: {
     width: 8,
@@ -177,11 +172,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden', // Contain the gradient background
     // Drop shadow for the entire card
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
   },
   cardGlow: {
     flex: 1,
@@ -237,7 +227,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   strongBadge: {
-    backgroundColor: 'rgba(232, 214, 174, 0.1)',
+    backgroundColor: 'transparent',
     borderColor: 'rgba(232,214,174,0.18)',
   },
   strongBadgeText: {

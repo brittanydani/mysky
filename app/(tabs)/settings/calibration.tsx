@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   obsidianCard: {
     padding: 20,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     padding: 20,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
   },
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   summaryRowActive: {
-    backgroundColor: 'rgba(232, 214, 174, 0.06)',
+    backgroundColor: 'transparent',
     marginHorizontal: -12,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     backgroundcolor: '#FFFFFF',
   },
   saveButtonDisabled: {
-    backgroundColor: 'rgba(232,214,174,0.18)',
+    backgroundColor: 'transparent',
   },
   saveButtonText: {
     color: '#020817',
