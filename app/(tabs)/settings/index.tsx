@@ -114,6 +114,13 @@ export default function SettingsScreen() {
   const successColor = theme.success;
   const errorColor = theme.error;
 
+  // ── Accent colors for settings sections ──
+  const accentGold = '#C9AE78';
+  const accentAmethyst = '#9D76C1';
+  const accentBlue = '#8BC4E8';
+  const accentCopper = '#CD7F5D';
+  const accentEmerald = '#6EBF8B';
+
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [backupInProgress, setBackupInProgress] = useState(false);
@@ -391,7 +398,7 @@ export default function SettingsScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
           <Text style={styles.title}>Calibration</Text>
-          <Text style={styles.subtitle}>Instrument precision · Data sovereignty</Text>
+          <Text style={[styles.subtitle, { color: accentGold }]}>Instrument precision · Data sovereignty</Text>
         </Animated.View>
 
         <ScrollView
@@ -448,7 +455,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="cloud-upload" size={20} color={theme.primary} />
+                        <Ionicons name="cloud-upload" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Backup & Restore</Text>
                         {!isPremium && (
                           <View style={styles.premiumBadge}>
@@ -475,7 +482,7 @@ export default function SettingsScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Backup now"
                     >
-                      <Ionicons name="cloud-upload" size={16} color={theme.primary} />
+                      <Ionicons name="cloud-upload" size={16} color={accentGold} />
                       <Text style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</Text>
                     </Pressable>
 
@@ -486,7 +493,7 @@ export default function SettingsScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Restore backup"
                     >
-                      <Ionicons name="cloud-download" size={16} color={theme.primary} />
+                      <Ionicons name="cloud-download" size={16} color={accentGold} />
                       <Text style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</Text>
                     </Pressable>
                   </View>
@@ -555,7 +562,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="color-filter" size={20} color={theme.primary} />
+                      <Ionicons name="color-filter" size={20} color={accentAmethyst} />
                       <Text style={styles.settingTitle}>Visual Atmosphere</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -602,7 +609,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="shield-checkmark" size={20} color={theme.primary} />
+                      <Ionicons name="shield-checkmark" size={20} color={accentBlue} />
                       <Text style={styles.settingTitle}>Privacy Settings</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -615,15 +622,15 @@ export default function SettingsScreen() {
               <ObsidianDivider />
               <View style={[styles.privacyInfo, { marginHorizontal: 16, marginBottom: 8 }]}>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="phone-portrait" size={16} color={successColor} />
+                  <Ionicons name="phone-portrait" size={16} color={accentBlue} />
                   <Text style={styles.privacyText}>Data stored locally on your device</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="shield" size={16} color={successColor} />
+                  <Ionicons name="shield" size={16} color={accentEmerald} />
                   <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="ban" size={16} color={successColor} />
+                  <Ionicons name="ban" size={16} color={accentAmethyst} />
                   <Text style={styles.privacyText}>Never sold or shared</Text>
                 </View>
               </View>
@@ -694,7 +701,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="document-text-outline" size={20} color={theme.primary} />
+                      <Ionicons name="document-text-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>Privacy Policy</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -714,7 +721,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="reader-outline" size={20} color={theme.primary} />
+                      <Ionicons name="reader-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>Terms of Service</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -734,7 +741,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="help-circle-outline" size={20} color={theme.primary} />
+                      <Ionicons name="help-circle-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>FAQ</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -762,7 +769,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="mail-outline" size={20} color={theme.primary} />
+                      <Ionicons name="mail-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Contact Us</Text>
                     </View>
                     <Text style={styles.settingDescription}>brittanyapps@outlook.com</Text>
@@ -788,7 +795,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="sparkles" size={20} color={theme.primary} />
+                        <Ionicons name="sparkles" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
@@ -835,7 +842,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="sparkles" size={20} color={theme.primary} />
+                        <Ionicons name="sparkles" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky Active</Text>
                       </View>
                       <Text style={styles.settingDescription}>
@@ -991,7 +998,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
   },
   syncButtonDisabled: { opacity: 0.6 },
-  syncButtonText: { fontSize: 14, color: theme.primary, fontWeight: '600', marginLeft: theme.spacing.xs },
+  syncButtonText: { fontSize: 14, color: '#C9AE78', fontWeight: '600', marginLeft: theme.spacing.xs },
 
   premiumCard: {
     borderRadius: theme.borderRadius.lg,

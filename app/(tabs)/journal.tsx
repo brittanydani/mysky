@@ -511,7 +511,7 @@ export default function JournalScreen() {
                 onPress={() => void handleAddEntry()}
                 height={60}
                 borderRadius={30}
-                icon={<Ionicons name="add" size={28} color="#020817" />}
+                icon={<Ionicons name="add" size={32} color="#020817" style={{ fontWeight: '900' }} />}
                 style={{ width: 60 }}
               />
             </Pressable>

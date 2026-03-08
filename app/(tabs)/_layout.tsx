@@ -13,9 +13,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'transparent',
-          borderTopWidth: 1,
-          borderTopColor: 'rgba(232, 214, 174, 0.15)',
+          backgroundColor: 'rgba(2, 8, 23, 0.25)',
+          borderTopWidth: 0,
           height: Platform.select({
             ios: insets.bottom + 60,
             android: insets.bottom + 60,

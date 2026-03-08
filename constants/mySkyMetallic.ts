@@ -164,3 +164,15 @@ export const mySkyBackground = {
   panel:   '#0B1526',
   soft:    'rgba(255,255,255,0.03)',
 } as const;
+
+// ── Fill gradient — rich warm gold for filled chips, badges, buttons ───────
+// Use this for any solid-filled golden element (add pills, CTA chips, etc.).
+// Diagonal sweep (start top-left, end bottom-right) for maximum depth.
+export const metallicFillColors = [
+  '#6B532E',  // deep bronze
+  '#B8A27A',  // warm tan
+  '#C9AE78',  // champagne core
+  '#E9D9B8',  // light gold highlight
+  '#8A7A5A',  // muted bronze
+] as const;
+export const metallicFillPositions = [0, 0.25, 0.5, 0.75, 1] as const;

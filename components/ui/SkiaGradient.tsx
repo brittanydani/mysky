@@ -44,7 +44,7 @@ export const SkiaGradient: React.FC<LinearGradientProps> = ({
     >
       {dimensions.width > 0 && dimensions.height > 0 && (
         <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          <Canvas style={StyleSheet.absoluteFillObject}>
+          <Canvas style={StyleSheet.absoluteFillObject} pointerEvents="none">
             <Rect x={0} y={0} width={dimensions.width} height={dimensions.height}>
               <SkiaLinearGradient
                 start={skiaStart}

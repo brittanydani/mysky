@@ -7,22 +7,14 @@ import {
   Group,
   vec,
 } from '@shopify/react-native-skia';
-import { mySkyGold } from '../../constants/mySkyMetallic';
+import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 
 const PILL_HEIGHT = 56;
 const PILL_RADIUS = 999;
 
-// Horizontal metallic sweep — dark edges, champagne centre, muted specular peak
-const pillGradientColors = [
-  mySkyGold.shadow,
-  mySkyGold.goldDeep,
-  mySkyGold.champagneLight,
-  mySkyGold.glossSoft,
-  mySkyGold.champagneLight,
-  mySkyGold.goldDeep,
-  mySkyGold.shadow,
-];
-const pillGradientPositions = [0, 0.18, 0.38, 0.5, 0.62, 0.82, 1];
+// Rich diagonal metallic sweep matching the golden fill gradient system
+const pillGradientColors = [...metallicFillColors];
+const pillGradientPositions = [...metallicFillPositions];
 
 interface Props {
   /** Button label */
@@ -80,8 +72,8 @@ function SkiaMetallicPill({
             <Group>
               <RoundedRect x={0} y={0} width={w} height={height} r={r}>
                 <LinearGradient
-                  start={vec(0, height / 2)}
-                  end={vec(w, height / 2)}
+                  start={vec(0, 0)}
+                  end={vec(w, height)}
                   positions={pillGradientPositions}
                   colors={pillGradientColors}
                 />
@@ -96,7 +88,7 @@ function SkiaMetallicPill({
 
       {/* Label + icon sit above the canvas */}
       <View style={styles.content} pointerEvents="none">
-        <Text style={[styles.label, labelStyle]}>{label}</Text>
+        {label ? <Text style={[styles.label, labelStyle]}>{label}</Text> : null}
         {icon}
       </View>
     </Pressable>

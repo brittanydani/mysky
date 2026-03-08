@@ -4,13 +4,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
+import { metallicFillColors } from '../../constants/mySkyMetallic';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
@@ -32,10 +33,10 @@ import { parseLocalDate } from '../../utils/dateUtils';
 
 // ── Colors per element ──
 const ELEMENT_COLORS: Record<string, string> = {
-  Fire: '#E07A7A',
-  Earth: '#6EBF8B',
-  Air: '#8BC4E8',
-  Water: '#7A8BE0',
+  Fire: '#E8D6AE',
+  Earth: '#E8D6AE',
+  Air: '#E8D6AE',
+  Water: '#E8D6AE',
 };
 
 // ── Zodiac Font Family (matches wheel exactly) ──
@@ -670,12 +671,12 @@ export default function ChartScreen() {
                   accessibilityLabel="Add person"
                 >
                   <LinearGradient
-                    colors={['#6B532E', '#B8A27A', '#C9AE78', '#E9D9B8', '#8A7A5A']}
+                    colors={[...metallicFillColors]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.addPersonChip}
                   >
-                    <Ionicons name="add" size={16} color={theme.textPrimary} />
+                    <FontAwesome6 name="plus" size={12} color={"#141222"} />
                     <Text style={[styles.addPersonText, { color: "#141222", fontWeight: "700" }]}>Add</Text>
                   </LinearGradient>
                 </Pressable>
@@ -1968,9 +1969,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 4,
-    borderWidth: 1,
-    borderColor: '#FFFFFF', /* Richer metallic contrast */
-    borderStyle: 'dashed',
+    borderWidth: 1.5,
+    borderColor: '#C9AE78',
   },
   addPersonText: { color: theme.primary, fontSize: 13, fontWeight: '600' },
 

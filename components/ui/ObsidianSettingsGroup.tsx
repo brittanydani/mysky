@@ -39,11 +39,11 @@ const GROUP_W = SCREEN_W - 32;
 
 const GLASS = {
   surface: 'rgba(15, 18, 25, 0.88)',
-  border: 'rgba(255,255,255,0.06)',
-  specularTop: 'rgba(255,255,255,0.06)',
+  border: 'rgba(201, 174, 120, 0.08)',
+  specularTop: 'rgba(201, 174, 120, 0.06)',
   specularBot: 'rgba(255, 255, 255, 0.0)',
-  divider: 'rgba(255, 255, 255, 0.04)',
-  nebulaHint: 'rgba(100, 70, 160, 0.04)',
+  divider: 'rgba(201, 174, 120, 0.06)',
+  nebulaHint: 'rgba(100, 70, 160, 0.06)',
 };
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -126,7 +126,12 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
         />
 
         {/* Specular edge highlight (left accent bar) */}
-        <Rect x={0} y={20} width={2} height={cardH - 40} color="rgba(232, 214, 174, 0.15)">
+        <Rect x={0} y={20} width={2} height={cardH - 40} color="rgba(201, 174, 120, 0.20)">
+          <BlurMask blur={3} style="outer" />
+        </Rect>
+
+        {/* Right edge accent (subtle symmetry) */}
+        <Rect x={GROUP_W - 2} y={20} width={2} height={cardH - 40} color="rgba(157, 118, 193, 0.10)">
           <BlurMask blur={3} style="outer" />
         </Rect>
       </Canvas>
@@ -186,7 +191,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    color: '#FFFFFF',
+    color: '#C9AE78',
     fontSize: 14,
     fontWeight: '700',
     fontFamily: SERIF,

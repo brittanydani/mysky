@@ -24,14 +24,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown, FadeIn, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 
-import { theme } from '../../constants/theme';
 
 // ── Custom Skia Suite ──
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
 import SkiaStabilityDashboard, { computeStabilityIndex } from '../../components/ui/SkiaStabilityDashboard';
 import type { StabilityDataPoint } from '../../components/ui/SkiaStabilityDashboard';
 import SkiaWarpTransition from '../../components/ui/SkiaWarpTransition';
@@ -58,7 +56,7 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#F0EAD6',
+  textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
@@ -98,10 +96,9 @@ export default function HomeScreen() {
   const [showEditBirth, setShowEditBirth] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Aura data — derived from latest check-in (defaults until loaded)
+  // Check-in data — used by insight engine
   const [mood, setMood] = useState(7);
   const [energy, setEnergy] = useState(8);
-  const [tension, setTension] = useState(3);
 
   // Stability data — last 7 days of combined metrics
   const [stabilityData, setStabilityData] = useState<StabilityDataPoint[]>([]);
@@ -149,8 +146,6 @@ export default function HomeScreen() {
               if (latest.moodScore != null) setMood(latest.moodScore);
               const energyMap: Record<string, number> = { low: 3, medium: 5, high: 8 };
               if (latest.energyLevel) setEnergy(energyMap[latest.energyLevel] ?? 5);
-              const stressMap: Record<string, number> = { low: 2, medium: 5, high: 8 };
-              if (latest.stressLevel) setTension(stressMap[latest.stressLevel] ?? 3);
             }
 
             // Build stability data from check-ins + sleep entries
@@ -372,14 +367,6 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* ── Unified Aura — Fluid Mood/Energy/Tension Signature ── */}
-          <Animated.View
-            entering={FadeIn.delay(300).duration(1200)}
-            style={styles.auraContainer}
-          >
-            <SkiaUnifiedAura mood={mood} energy={energy} tension={tension} />
-          </Animated.View>
-
           {/* ── Stability Index Card ── */}
           <Animated.View entering={FadeInDown.delay(500).duration(600)}>
             <SkiaStabilityDashboard data={stabilityData} />
@@ -586,7 +573,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
-    color: theme.textSecondary,
+    color: 'rgba(255, 255, 255, 0.9)',
     fontStyle: 'italic',
     marginTop: 16,
   },
@@ -607,18 +594,11 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   dateLabel: {
-    color: theme.textMuted,
+    color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 13,
     marginTop: 4,
     textTransform: 'uppercase',
     letterSpacing: 1,
-  },
-
-  // Aura
-  auraContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
   },
 
   // Insight Card
@@ -685,7 +665,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 2,
   },
-  quickLinkSub: { color: theme.textMuted, fontSize: 11 },
+  quickLinkSub: { color: 'rgba(255, 255, 255, 0.85)', fontSize: 11 },
 
   // Premium preview
   premiumPreviewCard: {
@@ -719,7 +699,7 @@ const styles = StyleSheet.create({
   },
   premiumPreviewSub: {
     fontSize: 14,
-    color: theme.textSecondary,
+    color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -750,7 +730,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   streakLabel: {
-    color: theme.textMuted,
+    color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -825,7 +805,7 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   metricLabel: {
-    color: theme.textMuted,
+    color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 10,
     fontWeight: '600',
     textTransform: 'uppercase',
