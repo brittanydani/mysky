@@ -92,7 +92,6 @@ export default function TabLayout() {
       <Tabs.Screen name="insights" options={{ href: null }} />
 
       <Tabs.Screen name="premium" options={{ href: null }} />
-      <Tabs.Screen name="sleep" options={{ href: null }} />
     </Tabs>
   );
 }

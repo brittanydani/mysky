@@ -201,7 +201,13 @@ function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(chartName)} — MySky</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
 
 /* ── Starfield background ── */
 body {

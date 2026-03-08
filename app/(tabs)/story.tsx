@@ -279,9 +279,9 @@ export default function StoryScreen() {
                       <ChapterCard
                         chapter={`Chapter ${index + 1}`}
                         title={applyStoryLabels(chapter.title)}
-                        content={chapter.content}
-                        reflection={chapter.reflection}
-                        affirmation={chapter.affirmation}
+                        content={applyStoryLabels(chapter.content)}
+                        reflection={applyStoryLabels(chapter.reflection)}
+                        affirmation={applyStoryLabels(chapter.affirmation)}
                       />
                     </Animated.View>
                   )}
@@ -347,9 +347,10 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
+    fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: 'serif',
     letterSpacing: 0.5,
     textAlign: 'center',
     marginBottom: 6,

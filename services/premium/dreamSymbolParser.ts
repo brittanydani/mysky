@@ -11,6 +11,16 @@ export interface ExtractedSymbol {
 const symbolMap = new Map<string, string>();
 let isInitialized = false;
 
+const STOP_WORDS = new Set([
+  "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "with", "by", "of", "about", "as", "into", "like", "through", "after", "over", "between", "out", "against", "during", "without", "before", "under", "around", "among", 
+  "my", "your", "his", "her", "its", "our", "their", "i", "you", "he", "she", "it", "we", "they", "me", "him", "us", "them", 
+  "this", "that", "these", "those", "is", "am", "are", "was", "were", "be", "being", "been", "have", "has", "had", "do", "does", "did", 
+  "will", "would", "shall", "should", "may", "might", "must", "can", "could", 
+  "dream", "dreamt", "woke", "wake", "felt", "just", "only", "mentioned", "very", "really", "so", "too", "quite", "rather", "somewhat", 
+  "there", "here", "where", "when", "why", "how", "what", "which", "who", "whom", "then", "some", "any", "no", "every", "all", "both", "either", "neither", "each", "much", "many", "few", "several", "less", "least", "more", "most", "such",
+  "from", "not", "also", "even"
+]);
+
 function initializeDictionary() {
   if (isInitialized) return;
   for (const item of DREAM_SINGLE_WORD_SYMBOLS) {
@@ -30,7 +40,7 @@ export function parseDreamSymbols(text: string): ExtractedSymbol[] {
   const lowerText = text.toLowerCase();
   
   // Extract all contiguous alphabetic words
-  const words = lowerText.match(/[a-z]+/g) || [];
+  const words = (lowerText.match(/[a-z]+/g) || []).filter(w => !STOP_WORDS.has(w));
   const extracted = new Map<string, ExtractedSymbol>();
 
   // Helper to fetch description

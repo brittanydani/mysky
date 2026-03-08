@@ -150,10 +150,9 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
       {forces.map((force, i) => {
         const labelPoint = getCoordinates(100, i, true);
         const txtAlign = Math.abs(labelPoint.x - center) < 10 ? 'center' : (labelPoint.x < center ? 'right' : 'left');
-        const offset = Math.abs(labelPoint.x - center) < 10 ? -25 : (labelPoint.x < center ? -55 : 5);
         const topOffset = txtAlign === 'center' && labelPoint.y < center ? -20 : -10;
 
-        const textLines = (SHORT_FORCE_LABELS[force.label] ? SHORT_FORCE_LABELS[force.label] : applyStoryLabels(force.label)).split(' ');
+        const textContent = SHORT_FORCE_LABELS[force.label] ? SHORT_FORCE_LABELS[force.label] : applyStoryLabels(force.label);
 
         return (
           <View 
@@ -161,22 +160,20 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
             style={{ 
               position: 'absolute', 
               top: labelPoint.y + topOffset, 
-              left: labelPoint.x + offset, 
-              width: 50, 
+              left: labelPoint.x + (txtAlign === 'center' ? -50 : (txtAlign === 'right' ? -105 : 5)), 
+              width: 100, 
               alignItems: txtAlign === 'center' ? 'center' : (txtAlign === 'right' ? 'flex-end' : 'flex-start')
             }}>
-            {textLines.map((word, wIdx) => (
               <Text 
-                key={wIdx} 
+                numberOfLines={1}
                 style={{ 
                   color: force.color, 
                   fontSize: 12, 
                   fontWeight: '600', 
-                  fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) 
+                  fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' })
                 }}>
-                {word.substring(0, 10)}
+                {textContent}
               </Text>
-            ))}
           </View>
         );
       })}

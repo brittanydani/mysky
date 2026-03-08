@@ -894,7 +894,7 @@ export default function SleepScreen() {
                     <Text style={styles.sitWithLabel}>A question to sit with</Text>
                     <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
                                 </View>
-                                <DreamSymbolChips symbols={todayInterp.extractedSymbols} />
+                                {/* <DreamSymbolChips symbols={todayInterp.extractedSymbols} /> */}
                 </LinearGradient>
               </Animated.View>
             );
@@ -1030,7 +1030,7 @@ export default function SleepScreen() {
                             <Text style={styles.sitWithLabel}>A question to sit with</Text>
                             <Text style={styles.sitWithText}>"{interp.question}"</Text>
                           </View>
-                          <DreamSymbolChips symbols={interp.extractedSymbols} />
+                          {/* <DreamSymbolChips symbols={interp.extractedSymbols} /> */}
                         </LinearGradient>
                       </Animated.View>
                     )}
@@ -1069,7 +1069,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20 },
 
   header: { marginTop: 16, marginBottom: 24 },
-  title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
+  title: { fontSize: 32, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', letterSpacing: 0.5 },
   subtitle: { color: theme.textSecondary, fontSize: 15, fontStyle: 'italic', marginTop: 4 },
 
   section: { marginBottom: 32 },

@@ -491,7 +491,7 @@ export default function JournalScreen() {
 
   return (
     <View style={styles.container}>
-      <NebulaBackground mood={8} energy={6} />
+      <NebulaBackground mood={5} energy={8} />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
           <FlatList
@@ -560,8 +560,8 @@ const styles = StyleSheet.create({
 
   header: { paddingVertical: 16, marginBottom: 8 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 34, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), letterSpacing: 0.5 },
-  subtitle: { fontSize: 15, color: theme.textGold, fontStyle: 'italic', marginTop: 4, letterSpacing: 0.3 },
+  title: { fontSize: 32, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', letterSpacing: 0.5 },
+  subtitle: { fontSize: 14, color: theme.primary, fontStyle: 'italic', marginTop: 2 },
   poeticIntro: {
     fontSize: 15,
     color: theme.textSecondary,
