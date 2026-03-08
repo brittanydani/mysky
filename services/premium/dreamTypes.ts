@@ -1028,7 +1028,12 @@ export type DreamTheme =
   | 'conflict'
   | 'connection'
   | 'transformation'
-  | 'mystery';
+  | 'mystery'
+  | 'survival'
+  | 'loss'
+  | 'discovery'
+  | 'mundane'
+  | 'surreal';
 
 export interface DreamMetadata {
   vividness: number;        // 1–5

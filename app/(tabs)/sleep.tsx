@@ -175,6 +175,11 @@ const DREAM_THEMES: { id: DreamTheme; label: string }[] = [
   { id: 'connection', label: 'Connection' },
   { id: 'transformation', label: 'Transformation' },
   { id: 'mystery', label: 'Mystery' },
+  { id: 'survival', label: 'Survival / Escape' },
+  { id: 'loss', label: 'Loss / Grief' },
+  { id: 'discovery', label: 'Discovery' },
+  { id: 'mundane', label: 'Everyday Life' },
+  { id: 'surreal', label: 'Surreal' },
 ];
 
 function formatDate(dateStr: string): string {

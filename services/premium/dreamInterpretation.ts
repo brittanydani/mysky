@@ -404,6 +404,11 @@ function buildParagraph(
       connection: 'Something in you may be working through themes of belonging, closeness, or what it means to be met by another person.',
       transformation: 'Something in your inner world may be shifting \u2014 a version of you that\u2019s ready to change.',
       mystery: 'There\u2019s something here your deeper awareness senses but hasn\u2019t fully named yet.',
+      survival: 'You may be feeling pressed to protect yourself or outrun something overwhelming in your waking life.',
+      loss: 'A part of you might be metabolizing an ending or holding space for grief.',
+      discovery: 'Something in you is uncovering new truths, bringing previously hidden layers to the surface.',
+      mundane: 'Your inner world seems to be processing everyday logistics and waking details rather than deep symbolism.',
+      surreal: 'Things may feel distorted or harder to ground right now, bypassing strict logical understanding.',
     };
     if (metadata.overallTheme) {
       const themePhrase = THEME_PHRASES[metadata.overallTheme];
