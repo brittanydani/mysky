@@ -49,7 +49,7 @@ export default function OnboardingBirthScreen() {
 
       await localDb.saveChart(savedChart);
 
-      router.replace('/(tabs)/home' as Href);
+      router.replace('/(tabs)/mood' as Href);
     } catch (e) {
       logger.error('[OnboardingBirth] failed:', e);
     }

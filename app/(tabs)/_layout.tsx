@@ -1,40 +1,9 @@
 import { Tabs } from 'expo-router';
-import { Platform, View, StyleSheet } from 'react-native';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 
 import MetallicTabIcon from '../../components/skia/MetallicTabIcon';
 import { mySkyText } from '../../constants/mySkyText';
-
-/** Elevated glowing orb icon for the central Check-In tab */
-function CheckInTabIcon({ focused }: { focused: boolean }) {
-  return (
-    <View style={ciStyles.wrapper}>
-      {focused && <View style={ciStyles.glow} />}
-      <View style={[ciStyles.orb, focused && ciStyles.orbActive]}>
-        <MetallicTabIcon name="add" focused={focused} size={26} />
-      </View>
-    </View>
-  );
-}
-
-const ciStyles = StyleSheet.create({
-  wrapper: { alignItems: 'center', justifyContent: 'center', width: 56, height: 56, marginBottom: 8 },
-  glow: {
-    position: 'absolute', width: 56, height: 56, borderRadius: 28,
-    backgroundColor: 'rgba(110, 191, 139, 0.18)',
-  },
-  orb: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(110, 191, 139, 0.15)',
-    borderWidth: 1.5, borderColor: 'rgba(110, 191, 139, 0.35)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  orbActive: {
-    backgroundColor: 'rgba(110, 191, 139, 0.25)',
-    borderColor: 'rgba(110, 191, 139, 0.55)',
-  },
-});
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -44,7 +13,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: 'transparent',
+          backgroundColor: 'rgba(2, 8, 23, 0.8)',
           borderTopWidth: 0,
           elevation: 0,
           position: 'absolute' as const,
@@ -60,15 +29,6 @@ export default function TabLayout() {
             default: 14,
           }),
         },
-        tabBarBackground: () => (
-          <BlurView
-            intensity={40}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-          >
-            <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(2, 8, 23, 0.55)' }} />
-          </BlurView>
-        ),
         sceneStyle: { backgroundColor: 'transparent' },
         tabBarActiveTintColor: mySkyText.tabActive,
         tabBarInactiveTintColor: mySkyText.tabInactive,
@@ -79,43 +39,39 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* ── 1. Today — daily dashboard ── */}
+      {/* ── Visible tabs (exactly 5) ── */}
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Today',
-          tabBarIcon: ({ focused }) => <MetallicTabIcon name="sunny" focused={focused} />,
+          title: 'Balance',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="pulse" focused={focused} />,
         }}
       />
 
-      {/* ── 2. Blueprint — deep psychology hub ── */}
       <Tabs.Screen
-        name="blueprint"
+        name="mood"
         options={{
-          title: 'Blueprint',
-          tabBarIcon: ({ focused }) => <MetallicTabIcon name="compass" focused={focused} />,
+          title: 'Weather',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="cloudy" focused={focused} />,
         }}
       />
 
-      {/* ── 3. [ + ] — central action button ── */}
       <Tabs.Screen
-        name="checkin"
+        name="sleep"
         options={{
-          title: '',
-          tabBarIcon: ({ focused }) => <CheckInTabIcon focused={focused} />,
+          title: 'Rest',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="moon" focused={focused} />,
         }}
       />
 
-      {/* ── 4. Journal — analytics & history ── */}
       <Tabs.Screen
         name="journal"
         options={{
-          title: 'Journal',
+          title: 'Archive',
           tabBarIcon: ({ focused }) => <MetallicTabIcon name="document-text" focused={focused} />,
         }}
       />
 
-      {/* ── 5. Settings — calibration & astrological engine ── */}
       <Tabs.Screen
         name="settings"
         options={{
@@ -127,8 +83,6 @@ export default function TabLayout() {
       {/* ── Hidden routes — still accessible via router.push ── */}
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="today" options={{ href: null }} />
-      <Tabs.Screen name="mood" options={{ href: null }} />
-      <Tabs.Screen name="sleep" options={{ href: null }} />
       <Tabs.Screen name="energy" options={{ href: null }} />
       <Tabs.Screen name="chart" options={{ href: null }} />
       <Tabs.Screen name="story" options={{ href: null }} />

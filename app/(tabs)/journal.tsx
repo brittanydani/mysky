@@ -26,7 +26,6 @@ import CheckInTrendGraph from '../../components/ui/CheckInTrendGraph';
 import ObsidianJournalEntry from '../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../services/journal/nlp';
 import SkiaDreamEngine from '../../components/ui/SkiaDreamEngine';
-import SkiaBiometricScatter from '../../components/ui/SkiaBiometricScatter';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
@@ -280,13 +279,13 @@ export default function JournalScreen() {
       <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.title}>Journal</Text>
-            <Text style={styles.subtitle}>Analytics · History · Pattern memory</Text>
+            <Text style={styles.title}>Archive</Text>
+            <Text style={styles.subtitle}>Subconscious field · Pattern memory</Text>
           </View>
         </View>
 
         <Text style={styles.poeticIntro}>
-          Your private archive. Each entry becomes a data point in your personal pattern architecture — revealing what the conscious mind overlooks.
+          Your private subconscious archive. Each entry becomes a data point in your personal pattern architecture — revealing what the conscious mind overlooks.
         </Text>
       </Animated.View>
 
@@ -315,30 +314,6 @@ export default function JournalScreen() {
             </Animated.View>
           </Pressable>
         )
-      )}
-
-      {/* ── Mood × Energy Scatter ── */}
-      {isPremium && checkIns.length >= 3 && (
-        <Animated.View entering={FadeInDown.delay(240).duration(600)} style={styles.checkInTrendSection}>
-          <LinearGradient
-            colors={['rgba(14, 24, 48, 0.50)', 'rgba(10, 18, 36, 0.35)']}
-            style={{ borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}
-          >
-            <Text style={styles.chartTitle}>Mood × Energy Connection</Text>
-            <Text style={styles.checkInTrendSubtitle}>Each point maps one check-in — clusters reveal your baseline</Text>
-            <SkiaBiometricScatter
-              points={checkIns.slice(0, 30).map(c => ({
-                x: c.moodScore / 10,
-                y: c.energyLevel === 'high' ? 0.85 : c.energyLevel === 'medium' ? 0.5 : 0.2,
-              }))}
-              title="Mental State Correlation"
-              subtitle="Emotional Mood vs. Physical Energy"
-              xAxisLabel="High Mood"
-              yAxisLabel="High Energy"
-              insight="Your energy levels and mood scores tend to move together. Focus on physical recharge to boost emotional state."
-            />
-          </LinearGradient>
-        </Animated.View>
       )}
 
       {isPremium && patternInsights.length > 0 && (

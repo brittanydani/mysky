@@ -174,10 +174,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
     position: 'relative',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 16,
-    overflow: 'hidden',
   },
   canvas: {
     position: 'absolute',
@@ -188,7 +184,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingTop: 16,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   headerRow: {
     paddingHorizontal: 16,

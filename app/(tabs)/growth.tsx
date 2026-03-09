@@ -187,7 +187,7 @@ export default function PatternsScreen() {
               <Text style={styles.promptText}>{prompt}</Text>
 
               <View style={styles.promptActions}>
-                <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/checkin')}>
+                <Pressable style={styles.promptBtn} onPress={() => nav('/(tabs)/mood')}>
                   <LinearGradient colors={['rgba(139, 196, 232, 0.25)', 'rgba(139, 196, 232, 0.1)']} style={styles.promptBtnGradient}>
                     <Ionicons name="happy-outline" size={18} color={PALETTE.silverBlue} />
                     <Text style={[styles.promptBtnText, { color: PALETTE.silverBlue }]}>Log Mood</Text>
@@ -213,7 +213,7 @@ export default function PatternsScreen() {
                 <View style={{ alignItems: 'center', paddingVertical: 10 }}>
                   <Ionicons name="pulse" size={32} color={theme.textMuted} style={{ marginBottom: 12 }} />
                   <Text style={styles.snapshotEmptyText}>Log a few mood check-ins to see your patterns here</Text>
-                  <Pressable onPress={() => nav('/(tabs)/checkin')}>
+                  <Pressable onPress={() => nav('/(tabs)/mood')}>
                     <Text style={styles.snapshotEmptyLink}>Start tracking →</Text>
                   </Pressable>
                 </View>

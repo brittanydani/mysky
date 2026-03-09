@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Text, Platform } from 'react-native';
 import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
@@ -46,35 +46,14 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   size = 300 
 }) => {
   const center = size / 2;
-  const radius = (size / 2) * 0.5;
+  const radius = (size / 2) * 0.5; // Slightly smaller to ensure full visibility
   const steps = 5;
-
-  // ── Entrance animation: scale factor 0 → 1 over 800ms with ease-out ──
-  const [scale, setScale] = useState(0);
-
-  useEffect(() => {
-    const DURATION = 800;
-    const start = Date.now();
-    let raf: number;
-
-    const tick = () => {
-      const elapsed = Date.now() - start;
-      const t = Math.min(elapsed / DURATION, 1);
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - t, 3);
-      setScale(eased);
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [forces.length]);
 
   // Calculate coordinates for a given value and index
   const getCoordinates = (value: number, index: number, isLabel: boolean = false) => {
     // Offset by -90 degrees (Math.PI / 2) to start at the top
     const angle = (Math.PI * 2 * index) / forces.length - Math.PI / 2;
-    const r = isLabel ? radius * 1.65 : (radius * value) / 100;
+    const r = isLabel ? radius * 1.5 : (radius * value) / 100;
     return {
       x: center + r * Math.cos(angle),
       y: center + r * Math.sin(angle),
@@ -84,11 +63,11 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   const polygonPoints = useMemo(() => {
     return forces
       .map((f, i) => {
-        const { x, y } = getCoordinates(f.value * scale, i);
+        const { x, y } = getCoordinates(f.value, i);
         return `${x},${y}`;
       })
       .join(' ');
-  }, [forces, center, radius, scale]);
+  }, [forces, center, radius]);
 
   // Determine the dominant force color for the fill gradient
   const dominantForce = useMemo(() => {
@@ -99,7 +78,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   // Map valid polygon points for Skia Path
   const skiaPath = useMemo(() => {
     if (forces.length === 0) return '';
-    const points = forces.map((f, i) => getCoordinates(f.value * scale, i));
+    const points = forces.map((f, i) => getCoordinates(f.value, i));
     const start = points[0];
     let path = `M${start.x},${start.y}`;
     for (let i = 1; i < points.length; i++) {
@@ -107,7 +86,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
     }
     path += ' Z';
     return path;
-  }, [forces, center, radius, scale]);
+  }, [forces, center, radius]);
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -154,7 +133,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
         
         {/* Force Points */}
         {forces.map((force, i) => {
-          const { x, y } = getCoordinates(force.value * scale, i);
+          const { x, y } = getCoordinates(force.value, i);
           return (
             <Circle
               key={`point-${i}`}

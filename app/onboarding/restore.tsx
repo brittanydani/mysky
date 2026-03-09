@@ -73,7 +73,7 @@ export default function OnboardingRestoreScreen() {
       };
 
       AstrologyCalculator.generateNatalChart(birthData); // sanity compute
-      router.replace('/(tabs)/home' as Href);
+      router.replace('/(tabs)/mood' as Href);
     } catch (e) {
       logger.error('[Restore] restore failed:', e);
       Alert.alert('Restore Failed', 'Could not restore from backup. Please check your passphrase and try again.');
