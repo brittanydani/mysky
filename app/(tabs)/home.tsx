@@ -45,7 +45,8 @@ import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop'
 import { config } from '../../constants/config';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
-import { usePremium } from '../../context/PremiumContext';\nimport { SkeletonLine, SkeletonCard } from '../../components/ui/SkeletonLoader';
+import { usePremium } from '../../context/PremiumContext';
+import { SkeletonLine, SkeletonCard } from '../../components/ui/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -297,6 +298,15 @@ export default function HomeScreen() {
     );
   }
 
+  // ── Aura color mapping ──
+  const auraColor = useMemo(() => {
+    if (stability.label === 'Aligned' && mood >= 7) return 'rgba(110, 191, 139, 0.10)'; // sage green
+    if (stability.label === 'Aligned' || stability.label === 'Coherent') return 'rgba(139, 196, 232, 0.08)'; // silver blue
+    if (stability.label === 'Shifting') return 'rgba(201, 174, 120, 0.08)'; // amber gold
+    if (mood <= 4) return 'rgba(157, 118, 193, 0.10)'; // violet
+    return 'rgba(205, 127, 93, 0.08)'; // warm copper
+  }, [stability.label, mood]);
+
   // ── Stability Dashboard ──
 
   return (
@@ -305,6 +315,24 @@ export default function HomeScreen() {
 
       {/* REPLACEMENT: Subtle, drifting cosmic field */}
       <SkiaDynamicCosmos />
+
+      {/* LAYER 2: Mood-reactive aura gradient */}
+      <View
+        pointerEvents="none"
+        style={StyleSheet.absoluteFillObject}
+      >
+        <View
+          style={{
+            position: 'absolute',
+            top: -80,
+            left: '10%',
+            width: '80%',
+            height: 300,
+            borderRadius: 150,
+            backgroundColor: auraColor,
+          }}
+        />
+      </View>
 
       {/* LAYER 3: Interactive UI */}
       <SafeAreaView style={styles.safeArea}>

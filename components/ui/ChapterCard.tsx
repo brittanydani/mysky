@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   content: {
     fontSize: 15,
     color: theme.textSecondary,
-    lineHeight: 24,
+    lineHeight: 26,
   },
   lockedContent: {
     color: theme.textMuted,

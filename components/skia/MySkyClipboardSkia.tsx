@@ -61,7 +61,7 @@ const MySkyClipboardSkia = memo(function MySkyClipboardSkia({ size = 512, style 
         />
 
         <RoundedRect x={clipX} y={clipY} width={clipW} height={clipH} r={clipR}>
-          <LinearGradient start={vec(clipX, clipY)} end={vec(clipX, clipY + clipH)} colors={metallicStopsSoft} positions={metallicPositionsSoft} />
+          <LinearGradient start={vec(clipX, clipY)} end={vec(clipX, clipY + clipH)} colors={[...metallicStopsSoft]} positions={[...metallicPositionsSoft]} />
           <Shadow dx={0} dy={size * 0.01} blur={size * 0.02} color="rgba(0,0,0,0.4)" />
         </RoundedRect>
 

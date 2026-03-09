@@ -20,6 +20,9 @@
   ],
   "exclude": [
     "node_modules",
-    "supabase/functions"
+    "supabase/functions",
+    "journal_backup.tsx",
+    "test_bathroom.ts",
+    "test_bathroom.js"
   ]
 }

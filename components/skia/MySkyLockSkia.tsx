@@ -28,7 +28,7 @@ const MySkyLockSkia = memo(function MySkyLockSkia({ size = 512, style }: Props) 
           <LinearGradient start={vec(center - shackleR, shackleCY - shackleR)} end={vec(center + shackleR, shackleCY + shackleR)} colors={[mySkyGold.glossBright, mySkyGold.shadowDeep, mySkyGold.base]} positions={[0, 0.5, 1]} />
         </Path>
         <RoundedRect x={boxX} y={boxY} width={boxW} height={boxH} r={boxR}>
-          <LinearGradient start={vec(boxX, boxY)} end={vec(boxX + boxW, boxY + boxH)} colors={metallicStopsSoft} positions={metallicPositionsSoft} />
+          <LinearGradient start={vec(boxX, boxY)} end={vec(boxX + boxW, boxY + boxH)} colors={[...metallicStopsSoft]} positions={[...metallicPositionsSoft]} />
           <Shadow dx={0} dy={size * 0.01} blur={size * 0.03} color="rgba(0,0,0,0.3)" inner />
         </RoundedRect>
         <RoundedRect x={boxX} y={boxY} width={boxW} height={boxH} r={boxR} color={mySkyGold.shadow} style="stroke" strokeWidth={size * 0.008} />

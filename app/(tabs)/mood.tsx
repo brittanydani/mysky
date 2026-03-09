@@ -33,6 +33,7 @@ import {
 } from '@shopify/react-native-skia';
 
 import { theme, MYSTIC } from '../../constants/theme';
+import { getTagColor } from '../../constants/tagColors';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -916,7 +917,7 @@ export default function MoodScreen() {
                         <Ionicons
                           name={(INFLUENCE_ICONS[tag] ?? 'ellipse-outline') as any}
                           size={14}
-                          color={selectedTags.includes(tag) ? '#fff' : 'rgba(255,255,255,0.5)'}
+                          color={selectedTags.includes(tag) ? getTagColor(tag) : 'rgba(255,255,255,0.5)'}
                         />
                         <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
                           {INFLUENCE_LABELS[tag]}
@@ -1005,7 +1006,7 @@ export default function MoodScreen() {
                             <Ionicons
                               name={(QUALITY_ICONS[q] ?? 'ellipse-outline') as any}
                               size={14}
-                              color={selectedQuality === q ? '#fff' : 'rgba(255,255,255,0.5)'}
+                              color={selectedQuality === q ? getTagColor(q) : 'rgba(255,255,255,0.5)'}
                             />
                             <Text style={[styles.qualityTxt, selectedQuality === q && styles.qualityTxtOn]}>
                               {QUALITY_LABELS[q]}
