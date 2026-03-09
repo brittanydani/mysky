@@ -40,7 +40,6 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
-import { GoldIcon } from '../../../components/ui/GoldIcon';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -441,7 +440,7 @@ export default function VisualCalibration() {
           {/* ── Interactive calibration canvas ── */}
           <GestureDetector gesture={gesture}>
             <View style={styles.calibrationZone}>
-              <Canvas style={{ width: CALIB_SIZE, height: CALIB_SIZE }}>
+              <Canvas style={{ width: CALIB_SIZE, height: CALIB_SIZE }} mode="continuous">
                 <Group>
                   {/* 1. Spectrum Ring */}
                   <Circle
@@ -703,7 +702,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 14,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundcolor: '#FFFFFF',
   },
   saveButtonDisabled: {
     backgroundColor: 'transparent',

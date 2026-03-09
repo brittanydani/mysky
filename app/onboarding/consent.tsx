@@ -87,7 +87,7 @@ export default function OnboardingConsentScreen() {
           >
             <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>Your space. Your data.</Text>
+          <Text style={styles.headerTitle}>Before you continue</Text>
           <View style={styles.backButton} />
         </View>
 
@@ -96,57 +96,15 @@ export default function OnboardingConsentScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Data Sovereignty Pledge ── */}
+          {/* Glassmorphic Card */}
           <LinearGradient 
             colors={[theme.cardGradientStart, theme.cardGradientEnd]} 
             style={styles.card}
           >
-            <Text style={styles.title}>Data Sovereignty</Text>
+            <Text style={styles.title}>Accept Terms & Privacy</Text>
             <Text style={styles.body}>
-              MySky is a private mirror — built to reflect your inner world, for your eyes only.
-            </Text>
-
-            <View style={styles.pledgeList}>
-              <View style={styles.pledgeRow}>
-                <View style={styles.pledgeIcon}>
-                  <Ionicons name="lock-closed-outline" size={18} color="#6EBF8B" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.pledgeTitle}>Locally Encrypted</Text>
-                  <Text style={styles.pledgeBody}>Your journal entries and check-ins never leave your device.</Text>
-                </View>
-              </View>
-
-              <View style={styles.pledgeRow}>
-                <View style={styles.pledgeIcon}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color="#8BC4E8" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.pledgeTitle}>Zero Tracking</Text>
-                  <Text style={styles.pledgeBody}>No advertising IDs, no third-party profiling, no data sales.</Text>
-                </View>
-              </View>
-
-              <View style={styles.pledgeRow}>
-                <View style={styles.pledgeIcon}>
-                  <Ionicons name="eye-off-outline" size={18} color="#9D76C1" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.pledgeTitle}>A Private Mirror</Text>
-                  <Text style={styles.pledgeBody}>This app is a tool for self-reflection — no social features, no sharing.</Text>
-                </View>
-              </View>
-            </View>
-          </LinearGradient>
-
-          {/* ── Legal Agreement ── */}
-          <LinearGradient 
-            colors={[theme.cardGradientStart, theme.cardGradientEnd]} 
-            style={[styles.card, { marginTop: 20 }]}
-          >
-            <Text style={styles.legalTitle}>Terms & Privacy</Text>
-            <Text style={styles.body}>
-              By creating your internal weather space, you agree to our Terms of Service and Privacy Policy.
+              To use MySky, please review and accept the Terms of Service and Privacy Policy.
+              Your data stays on your device by default, with encryption at rest.
             </Text>
 
             <View style={styles.linkRow}>
@@ -273,35 +231,4 @@ const styles = StyleSheet.create({
   checkText: { flex: 1, color: theme.textPrimary, fontSize: 15, lineHeight: 22 },
   
   note: { marginTop: 20, textAlign: 'center', color: theme.textMuted, fontSize: 12, fontStyle: 'italic' },
-
-  // Data Sovereignty pledge
-  pledgeList: { gap: 20, marginTop: 4 },
-  pledgeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
-  pledgeIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  pledgeTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    marginBottom: 4,
-  },
-  pledgeBody: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    lineHeight: 20,
-  },
-  legalTitle: {
-    fontSize: 18,
-    color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-    marginBottom: 10,
-    letterSpacing: 0.3,
-  },
 });

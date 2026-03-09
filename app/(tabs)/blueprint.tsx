@@ -35,7 +35,6 @@ import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { FullNatalStoryGenerator, GeneratedChapter } from '../../services/premium/fullNatalStory';
 import { exportChartToPdf } from '../../services/premium/pdfExport';
-import { CheckInService } from '../../services/patterns/checkInService';
 import { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
@@ -140,18 +139,6 @@ export default function BlueprintScreen() {
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
-  const [checkInCount, setCheckInCount] = useState(0);
-
-  // Progressive unlock thresholds per chapter (index 0 = free, index 1-9 = premium)
-  const CHAPTER_UNLOCK_CHECKINS = [0, 3, 5, 8, 12, 16, 20, 25, 30, 40];
-
-  const getUnlockHint = (index: number): string | null => {
-    if (isPremium) return null;
-    const threshold = CHAPTER_UNLOCK_CHECKINS[index] ?? 0;
-    const remaining = threshold - checkInCount;
-    if (remaining <= 0) return null;
-    return `Unlocks after ${remaining} more check-in${remaining === 1 ? '' : 's'}`;
-  };
 
   useFocusEffect(
     useCallback(() => {
@@ -181,12 +168,6 @@ export default function BlueprintScreen() {
             if (!isActive) return;
             setChart(natal);
             setChapters(story.chapters);
-
-            // Fetch check-in count for progressive unlock hints
-            try {
-              const count = await CheckInService.getCheckInCount(savedChart.id);
-              if (isActive) setCheckInCount(count);
-            } catch { /* non-critical */ }
           } else {
             setHasChart(false);
             setChart(null);
@@ -288,7 +269,7 @@ export default function BlueprintScreen() {
                   style={styles.exportBtnGradient}
                 >
                   {isExporting ? (
-                    <Text style={{ color: PALETTE.gold, fontSize: 13, fontWeight: '600' }}>Exporting…</Text>
+                    <ActivityIndicator size="small" color={PALETTE.gold} />
                   ) : (
                     <>
                       <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
@@ -358,12 +339,6 @@ export default function BlueprintScreen() {
                     }
                   }}
                 />
-                {isLocked && getUnlockHint(index) && (
-                  <View style={styles.unlockHintRow}>
-                    <Ionicons name="lock-open-outline" size={12} color={PALETTE.textMuted} />
-                    <Text style={styles.unlockHintText}>{getUnlockHint(index)}</Text>
-                  </View>
-                )}
                 {!isLocked && expandedChapterId === chapter.id && (
                   <Animated.View entering={FadeInDown.duration(400)}>
                     <ChapterCard
@@ -617,22 +592,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: PALETTE.gold,
     fontWeight: '600',
-  },
-
-  // Progressive unlock hints
-  unlockHintRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-    marginTop: -4,
-    marginBottom: 4,
-  },
-  unlockHintText: {
-    fontSize: 12,
-    color: PALETTE.textMuted,
-    fontStyle: 'italic',
   },
 
   // Empty state

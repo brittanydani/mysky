@@ -185,12 +185,12 @@ export const theme = {
     bodyLarge: {
       fontSize: 16,
       fontWeight: '400' as const,
-      lineHeight: 26,
+      lineHeight: 24,
     },
     bodyMedium: {
       fontSize: 14,
       fontWeight: '400' as const,
-      lineHeight: 22,
+      lineHeight: 20,
     },
     bodySmall: {
       fontSize: 12,

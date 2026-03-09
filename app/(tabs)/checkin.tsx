@@ -34,7 +34,6 @@ import { useFocusEffect } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../constants/theme';
-import { getTagColor } from '../../constants/tagColors';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SkiaResonanceSlider from '../../components/ui/SkiaResonanceSlider';
@@ -610,10 +609,7 @@ export default function CheckInScreen() {
                   return (
                     <Pressable
                       key={tag}
-                      style={[
-                        styles.tagPill,
-                        isSelected && [styles.tagPillSelected, { borderColor: `${getTagColor(tag)}55` }],
-                      ]}
+                      style={[styles.tagPill, isSelected && styles.tagPillSelected]}
                       onPress={() => toggleTag(tag)}
                       accessibilityRole="button"
                       accessibilityState={{ selected: isSelected }}
@@ -622,7 +618,7 @@ export default function CheckInScreen() {
                         <Ionicons
                           name={INFLUENCE_ICONS[tag] ?? 'ellipse-outline'}
                           size={14}
-                          color={isSelected ? getTagColor(tag) : PALETTE.textSoft}
+                          color={isSelected ? PALETTE.sage : PALETTE.textSoft}
                         />
                         <Text style={[styles.tagText, isSelected && styles.tagTextSelected]}>
                           {INFLUENCE_LABELS[tag] ?? tag}

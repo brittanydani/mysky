@@ -1,11 +1,11 @@
 import React from 'react';
-import { Text, TextProps, StyleSheet, View, ViewStyle, StyleProp } from 'react-native';
+import { Text, TextProps, StyleSheet, View } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { SkiaGradient } from './SkiaGradient';
 
 export const GoldText: React.FC<TextProps> = ({ style, ...rest }) => {
   return (
-    <View style={style as StyleProp<ViewStyle>}>
+    <View style={style}>
       <MaskedView
         style={styles.maskedView}
         maskElement={<Text {...rest} style={[style, styles.resetLayout]} />}
