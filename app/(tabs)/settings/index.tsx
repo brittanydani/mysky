@@ -397,7 +397,7 @@ export default function SettingsScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-          <Text style={styles.title}>Calibration</Text>
+          <Text style={styles.title}>Settings</Text>
           <Text style={[styles.subtitle, { color: accentGold }]}>Instrument precision · Data sovereignty</Text>
         </Animated.View>
 
@@ -775,6 +775,31 @@ export default function SettingsScreen() {
                     <Text style={styles.settingDescription}>brittanyapps@outlook.com</Text>
                   </View>
                   <Ionicons name="open-outline" size={18} color={theme.textMuted} />
+                </View>
+              </Pressable>
+            </ObsidianSettingsGroup>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(650).duration(600)} style={styles.section}>
+            <ObsidianSettingsGroup title="Advanced" subtitle="Deep calibration tools">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  router.push('/(tabs)/chart' as Href);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="View your natal chart source code"
+              >
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <Ionicons name="code-slash-outline" size={20} color={accentGold} />
+                      <Text style={styles.settingTitle}>Source Code</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>Natal chart wheel, placements & aspects</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
             </ObsidianSettingsGroup>

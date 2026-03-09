@@ -45,7 +45,7 @@ import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop'
 import { config } from '../../constants/config';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
-import { usePremium } from '../../context/PremiumContext';
+import { usePremium } from '../../context/PremiumContext';\nimport { SkeletonLine, SkeletonCard } from '../../components/ui/SkeletonLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -278,7 +278,12 @@ export default function HomeScreen() {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <SkiaDynamicCosmos />
-        <Text style={styles.loadingText}>Preparing your reflections...</Text>
+        <View style={{ paddingHorizontal: 24, paddingTop: 80, gap: 20 }}>
+          <SkeletonLine width="45%" height={22} />
+          <SkeletonLine width="55%" height={12} />
+          <SkeletonCard style={{ marginTop: 12 }} />
+          <SkeletonCard />
+        </View>
       </View>
     );
   }
@@ -462,63 +467,9 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* ── Explore Cards ── */}
-          <Animated.View
-            entering={FadeInDown.delay(1050).duration(600)}
-            style={styles.sectionBlock}
-          >
-            <Text style={styles.sectionTitle}>Explore</Text>
-            <View style={styles.quickLinksRow}>
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/story' as Href)}
-              >
-                <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
-                    <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Story</Text>
-                    <Text style={styles.quickLinkSub}>Your framework</Text>
-                  </View>
-                </View>
-              </Pressable>
-
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/growth' as Href)}
-              >
-                <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(110, 191, 139, 0.15)' }]}>
-                    <Ionicons name="trending-up-outline" size={22} color={PALETTE.emerald} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Patterns</Text>
-                    <Text style={styles.quickLinkSub}>Explore connections</Text>
-                  </View>
-                </View>
-              </Pressable>
-
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/chart' as Href)}
-              >
-                <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
-                    <Ionicons name="grid-outline" size={22} color={PALETTE.silverBlue} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Profile</Text>
-                    <Text style={styles.quickLinkSub}>Your blueprint</Text>
-                  </View>
-                </View>
-              </Pressable>
-            </View>
-          </Animated.View>
-
           {/* ── Premium Teaser ── */}
           {!isPremium && (
-            <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
+            <Animated.View entering={FadeInDown.delay(1050).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                 <View style={styles.premiumPreviewCard}>
                   <View style={styles.premiumPreviewHeader}>

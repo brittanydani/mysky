@@ -257,7 +257,7 @@ export default function RootLayout() {
 
   const handleOnboardingComplete = () => {
     setOnboardingComplete(true);
-    router.replace('/(tabs)/mood');
+    router.replace('/(tabs)/home');
   };
 
   if (checkingConsent || !dbReady) {

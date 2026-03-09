@@ -66,13 +66,22 @@ const INFLUENCE_TAGS: ThemeTag[] = [
 ];
 
 const INFLUENCE_LABELS: Record<string, string> = {
-  sleep: '😴 Sleep', work: '💼 Work', social: '👥 Social',
-  relationships: '💞 Relationships', conflict: '⚡ Conflict', health: '🏥 Health',
-  movement: '🏃 Movement', nature: '🌿 Nature',
-  alone_time: '🧘 Alone time',
-  finances: '💰 Finances', weather: '🌦️ Weather', food: '🍽️ Food',
-  screens: '📱 Screens', kids: '👶 Kids', productivity: '✅ Productivity',
-  substances: '🍷 Substances', intimacy: '🔥 Intimacy',
+  sleep: 'Sleep', work: 'Work', social: 'Social',
+  relationships: 'Relationships', conflict: 'Conflict', health: 'Health',
+  movement: 'Movement', nature: 'Nature',
+  alone_time: 'Alone time',
+  finances: 'Finances', weather: 'Weather', food: 'Food',
+  screens: 'Screens', kids: 'Kids', productivity: 'Productivity',
+  substances: 'Substances', intimacy: 'Intimacy',
+};
+
+const INFLUENCE_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
+  sleep: 'moon-outline', work: 'briefcase-outline', social: 'people-outline',
+  relationships: 'heart-outline', conflict: 'flash-outline', health: 'medkit-outline',
+  movement: 'walk-outline', nature: 'leaf-outline', alone_time: 'body-outline',
+  finances: 'wallet-outline', weather: 'partly-sunny-outline', food: 'restaurant-outline',
+  screens: 'phone-portrait-outline', kids: 'happy-outline', productivity: 'checkmark-done-outline',
+  substances: 'wine-outline', intimacy: 'flame-outline',
 };
 
 // Emotional quality — optional premium single-select
@@ -82,21 +91,28 @@ const QUALITY_OPTIONS: ThemeTag[] = [
 ];
 
 const QUALITY_LABELS: Record<string, string> = {
-  eq_calm: '😌 Calm', eq_anxious: '😰 Anxious', eq_focused: '🎯 Focused',
-  eq_disconnected: '🌫️ Disconnected', eq_hopeful: '🌅 Hopeful',
-  eq_irritable: '😤 Irritable', eq_grounded: '🌳 Grounded',
-  eq_scattered: '🌀 Scattered', eq_heavy: '🪨 Heavy', eq_open: '🌸 Open',
+  eq_calm: 'Calm', eq_anxious: 'Anxious', eq_focused: 'Focused',
+  eq_disconnected: 'Disconnected', eq_hopeful: 'Hopeful',
+  eq_irritable: 'Irritable', eq_grounded: 'Grounded',
+  eq_scattered: 'Scattered', eq_heavy: 'Heavy', eq_open: 'Open',
+};
+
+const QUALITY_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
+  eq_calm: 'water-outline', eq_anxious: 'alert-outline', eq_focused: 'locate-outline',
+  eq_disconnected: 'cloud-offline-outline', eq_hopeful: 'sunny-outline',
+  eq_irritable: 'thunderstorm-outline', eq_grounded: 'earth-outline',
+  eq_scattered: 'shuffle-outline', eq_heavy: 'barbell-outline', eq_open: 'flower-outline',
 };
 
 // Backward-compat label lookup for top-tags display
 const ALL_TAG_LABELS: Record<string, string> = {
   ...INFLUENCE_LABELS,
   ...QUALITY_LABELS,
-  confidence: '💪 Confidence', money: '💰 Money',
-  family: '👨‍👩‍👧 Family', creativity: '🎨 Creativity',
-  boundaries: '🛡️ Boundaries', career: '📈 Career', anxiety: '😰 Anxiety',
-  joy: '😊 Joy', grief: '🥀 Grief', clarity: '💎 Clarity',
-  overwhelm: '😵 Overwhelm', loneliness: '🌑 Loneliness', gratitude: '🙏 Gratitude',
+  confidence: 'Confidence', money: 'Money',
+  family: 'Family', creativity: 'Creativity',
+  boundaries: 'Boundaries', career: 'Career', anxiety: 'Anxiety',
+  joy: 'Joy', grief: 'Grief', clarity: 'Clarity',
+  overwhelm: 'Overwhelm', loneliness: 'Loneliness', gratitude: 'Gratitude',
 };
 
 const COLORS = {
@@ -896,9 +912,16 @@ export default function MoodScreen() {
                             : 'Double-tap to add, up to 3 tags'
                       }
                     >
-                      <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
-                        {INFLUENCE_LABELS[tag]}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons
+                          name={(INFLUENCE_ICONS[tag] ?? 'ellipse-outline') as any}
+                          size={14}
+                          color={selectedTags.includes(tag) ? '#fff' : 'rgba(255,255,255,0.5)'}
+                        />
+                        <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
+                          {INFLUENCE_LABELS[tag]}
+                        </Text>
+                      </View>
                     </Pressable>
                   ))}
 
@@ -978,9 +1001,16 @@ export default function MoodScreen() {
                           accessibilityLabel={QUALITY_LABELS[q]}
                           accessibilityState={{ selected: selectedQuality === q }}
                         >
-                          <Text style={[styles.qualityTxt, selectedQuality === q && styles.qualityTxtOn]}>
-                            {QUALITY_LABELS[q]}
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Ionicons
+                              name={(QUALITY_ICONS[q] ?? 'ellipse-outline') as any}
+                              size={14}
+                              color={selectedQuality === q ? '#fff' : 'rgba(255,255,255,0.5)'}
+                            />
+                            <Text style={[styles.qualityTxt, selectedQuality === q && styles.qualityTxtOn]}>
+                              {QUALITY_LABELS[q]}
+                            </Text>
+                          </View>
                         </Pressable>
                       ))}
                     </View>

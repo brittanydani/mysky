@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions, Platform } from 'react-native';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable, Dimensions, Platform, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
 import { Canvas, Path, Circle, LinearGradient as SkiaGradient, vec, Line as SkiaLine } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { theme } from '../../constants/theme';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { parseLocalDate } from '../../utils/dateUtils';
@@ -47,6 +48,8 @@ export default function CheckInTrendGraph({
   height?: number;
 }) {
   const [activeMetric, setActiveMetric] = useState<MetricKey>('mood');
+  const [scrubIndex, setScrubIndex] = useState<number | null>(null);
+  const lastScrubRef = useRef<number>(-1);
   const metric = METRICS.find(m => m.key === activeMetric) ?? METRICS[0];
 
   const chartW = width - padding.left - padding.right;
@@ -69,10 +72,62 @@ export default function CheckInTrendGraph({
       };
       const val = extract();
       const y = padding.top + chartH - ((val - 1) / 9) * chartH;
-      const label = parseLocalDate(ci.date).toLocaleDateString('en-US', { weekday: 'narrow' });
-      return { x, y, label };
+      const dayIdx = parseLocalDate(ci.date).getDay();
+      const label = ['Su','M','Tu','W','Th','F','Sa'][dayIdx];
+      const tag = ci.tags?.[0] ?? null;
+      return { x, y, label, score: val, tag };
     });
   }, [sorted, activeMetric, chartW, chartH]);
+
+  // ── Scrub gesture ──
+  const findClosestPoint = useCallback((touchX: number) => {
+    if (points.length === 0) return -1;
+    let closest = 0;
+    let minDist = Math.abs(points[0].x - touchX);
+    for (let i = 1; i < points.length; i++) {
+      const dist = Math.abs(points[i].x - touchX);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
+      }
+    }
+    return closest;
+  }, [points]);
+
+  const chartLayoutRef = useRef({ x: 0, y: 0 });
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => {
+        const touchX = e.nativeEvent.locationX;
+        const idx = findClosestPoint(touchX);
+        if (idx >= 0) {
+          setScrubIndex(idx);
+          lastScrubRef.current = idx;
+          Haptics.selectionAsync().catch(() => {});
+        }
+      },
+      onPanResponderMove: (e) => {
+        const touchX = e.nativeEvent.locationX;
+        const idx = findClosestPoint(touchX);
+        if (idx >= 0 && idx !== lastScrubRef.current) {
+          setScrubIndex(idx);
+          lastScrubRef.current = idx;
+          Haptics.selectionAsync().catch(() => {});
+        }
+      },
+      onPanResponderRelease: () => {
+        setScrubIndex(null);
+        lastScrubRef.current = -1;
+      },
+      onPanResponderTerminate: () => {
+        setScrubIndex(null);
+        lastScrubRef.current = -1;
+      },
+    })
+  ).current;
 
   const linePath = useMemo(() => {
     if (points.length < 2) return '';
@@ -116,7 +171,7 @@ export default function CheckInTrendGraph({
       </View>
 
       {/* Chart Panel */}
-      <View style={styles.chartContainer}>
+      <View style={styles.chartContainer} {...panResponder.panHandlers}>
         <Canvas style={{ width, height }}>
           {/* Guidelines */}
           {[0, 0.5, 1].map(p => (
@@ -139,9 +194,39 @@ export default function CheckInTrendGraph({
           <Path path={linePath} color={metric.color} style="stroke" strokeWidth={2.5} strokeJoin="round" />
 
           {points.map((pt, i) => (
-            <Circle key={i} cx={pt.x} cy={pt.y} r={3.5} color={metric.color} />
+            <Circle key={i} cx={pt.x} cy={pt.y} r={scrubIndex === i ? 6 : 3.5} color={metric.color} />
           ))}
+
+          {/* Scrub indicator line */}
+          {scrubIndex !== null && points[scrubIndex] && (
+            <SkiaLine
+              p1={vec(points[scrubIndex].x, padding.top)}
+              p2={vec(points[scrubIndex].x, padding.top + chartH)}
+              color={`${metric.color}55`}
+              strokeWidth={1}
+            />
+          )}
         </Canvas>
+
+        {/* Scrub tooltip */}
+        {scrubIndex !== null && points[scrubIndex] && (
+          <View
+            style={[
+              styles.tooltip,
+              {
+                left: Math.max(8, Math.min(points[scrubIndex].x - 50, width - 108)),
+                top: Math.max(2, points[scrubIndex].y - 44),
+              },
+            ]}
+          >
+            <Text style={styles.tooltipScore}>
+              {metric.label}: {points[scrubIndex].score.toFixed(1)}
+            </Text>
+            {points[scrubIndex].tag && (
+              <Text style={styles.tooltipTag}>{points[scrubIndex].tag}</Text>
+            )}
+          </View>
+        )}
 
         {points.map((pt, i) => (
           <Text 
@@ -209,4 +294,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(14,24,48,0.32)',
   },
   emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, fontStyle: 'italic' },
+  tooltip: {
+    position: 'absolute',
+    backgroundColor: 'rgba(10,18,36,0.92)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  tooltipScore: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  tooltipTag: {
+    fontSize: 11,
+    color: 'rgba(226,232,240,0.7)',
+    marginTop: 2,
+  },
 });

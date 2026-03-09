@@ -178,6 +178,7 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
       {/* Skia Track */}
       <View
         style={styles.trackContainer}
+        hitSlop={{ top: 10, bottom: 10 }}
         onLayout={(e) => {
           const w = e.nativeEvent.layout.width;
           setTrackWidth(w);
@@ -243,6 +244,13 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
 
             {/* Thumb */}
             <Group>
+              {/* Invisible touch halo — 44pt minimum target */}
+              <Circle
+                cx={thumbX}
+                cy={TRACK_H / 2}
+                r={22}
+                color="rgba(255,255,255,0.0)"
+              />
               <Circle
                 cx={thumbX}
                 cy={TRACK_H / 2}

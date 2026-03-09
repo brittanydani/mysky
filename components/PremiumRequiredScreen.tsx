@@ -38,7 +38,7 @@ export default function PremiumRequiredScreen({
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)/mood' as Href);
+      router.replace('/(tabs)/home' as Href);
     }
   };
 

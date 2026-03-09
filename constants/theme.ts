@@ -44,8 +44,8 @@ export const MYSTIC = {
 
   // ─ Text hierarchy ─
   heading: '#FFFFFF',
-  body: 'rgba(226,232,240,0.78)',
-  muted: 'rgba(226,232,240,0.45)',
+  body: 'rgba(226,232,240,0.85)',
+  muted: 'rgba(226,232,240,0.58)',
 
   // ─ Champagne-gold accents ─
   subtitleGold: '#FFFFFF',
