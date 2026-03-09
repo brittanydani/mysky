@@ -17,6 +17,8 @@ import CosmicBackground from '../components/ui/CosmicBackground';
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
+import { InsightToastProvider } from '../context/InsightToastContext';
+import InsightToast from '../components/ui/InsightToast';
 
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
@@ -284,20 +286,21 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <PremiumProvider>
-          <StarNotificationProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{ flex: 1, position: 'relative' }}>
-              <CosmicBackground />
-              <SafeAreaProvider>
-                <StatusBar style="light" />
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: 'transparent' },
-                    animation: 'fade',
-                  }}
+      <InsightToastProvider>
+        <AuthProvider>
+          <PremiumProvider>
+            <StarNotificationProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <View style={{ flex: 1, position: 'relative' }}>
+                <CosmicBackground />
+                <SafeAreaProvider>
+                  <StatusBar style="light" />
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: 'transparent' },
+                      animation: 'fade',
+                    }}
                 >
                   {/* Only mount tabs after privacy consent is confirmed */}
                   {!needsPrivacyConsent && <Stack.Screen name="(tabs)" />}
@@ -305,6 +308,9 @@ export default function RootLayout() {
                   <Stack.Screen name="terms" />
                   <Stack.Screen name="faq" />
                 </Stack>
+
+                {/* Global insight toast — sits above all screens */}
+                <InsightToast />
 
                 {/* Overlay gates (do NOT unmount navigation) */}
                 {needsPrivacyConsent && (
@@ -322,10 +328,11 @@ export default function RootLayout() {
                 )}
               </SafeAreaProvider>
             </View>
-          </GestureHandlerRootView>
-          </StarNotificationProvider>
-        </PremiumProvider>
-      </AuthProvider>
+            </GestureHandlerRootView>
+            </StarNotificationProvider>
+          </PremiumProvider>
+        </AuthProvider>
+      </InsightToastProvider>
     </ErrorBoundary>
   );
 }

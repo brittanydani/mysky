@@ -70,7 +70,9 @@ export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
     <Animated.View style={StyleSheet.absoluteFill} pointerEvents="none">
       <Canvas style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]}>
         {fill ? <Fill color={fill} /> : null}
-        <Group>
+        {/* blendMode="screen" ensures overlapping stars brighten (like real light),
+            not muddy — equivalent to ColorFilter.MakeBlend(color, BlendMode.Screen) */}
+        <Group blendMode="screen">
           {staticStars.map((star, i) => (
             <Circle
               key={`static-${i}`}
@@ -82,7 +84,7 @@ export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
           ))}
         </Group>
         {twinklingStars.map((star, i) => (
-          <Group key={`twinkle-${star.id}`} opacity={twinkleOpacities[i]}>
+          <Group key={`twinkle-${star.id}`} opacity={twinkleOpacities[i]} blendMode="screen">
             <Circle cx={star.x} cy={star.y} r={star.r} color="#F0F4FF" />
           </Group>
         ))}

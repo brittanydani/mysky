@@ -15,7 +15,17 @@ export const GoldText: React.FC<TextProps> = ({ style, ...rest }) => {
           start={{ x: 0, y: 0.2 }}
           end={{ x: 1, y: 0.8 }}
         >
-          <Text {...rest} style={[style, styles.resetLayout, { opacity: 0 }]} />
+          {/* DropShadow for gold serif text: blur=2, offset=(0,1), rgba(0,0,0,0.5)
+              Makes the gold text "pop" off the starfield without adding weight. */}
+          <Text
+            {...rest}
+            style={[
+              style,
+              styles.resetLayout,
+              styles.goldShadow,
+              { opacity: 0 },
+            ]}
+          />
         </SkiaGradient>
       </MaskedView>
     </View>
@@ -24,5 +34,10 @@ export const GoldText: React.FC<TextProps> = ({ style, ...rest }) => {
 
 const styles = StyleSheet.create({
   maskedView: { flexDirection: 'row' },
-  resetLayout: { margin: 0, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0, padding: 0 }
+  resetLayout: { margin: 0, marginTop: 0, marginBottom: 0, marginLeft: 0, marginRight: 0, padding: 0 },
+  goldShadow: {
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
 });

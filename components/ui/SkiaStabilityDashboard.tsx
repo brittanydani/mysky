@@ -55,18 +55,31 @@ interface Props {
 }
 
 // ─── Palette ───────────────────────────────────────────────────────────────────
+// Somatic Wave Colors — Vitality System
+//   Mood    (#D4AF37) — Gold:    The Sun / Self / Joy
+//   Energy  (#7DEBDB) — Cyan:    The Breath / Movement
+//   Rest    (#A286F2) — Lavender: The Night / Recovery
+// Emotional Weather — Ambient System (Stability Index glow mapping)
+//   Aligned   (#7DEBDB) — Cyan:        mood + energy in sync
+//   Turbulent (#D4832A) — Amber/Rose:  high mismatch, tense/agitated
+//   Depleted  (#3D4670) — Slate/Violet: all metrics low, dims to not over-stimulate
 
 const COLORS = {
-  sleep: '#8BC4E8',
-  mood: '#C9AE78',
-  energy: '#6EBF8B',
-  sleepGlow: 'rgba(139, 196, 232, 0.3)',
-  moodGlow: 'rgba(232,214,174,0.25)',
-  energyGlow: 'rgba(110, 191, 139, 0.3)',
+  // Somatic wave pillars
+  mood: '#D4AF37',
+  moodGlow: 'rgba(212, 175, 55, 0.30)',
+  energy: '#7DEBDB',
+  energyGlow: 'rgba(125, 235, 219, 0.30)',
+  sleep: '#A286F2',
+  sleepGlow: 'rgba(162, 134, 242, 0.30)',
+  // Grid / axis
   grid: 'rgba(255, 255, 255, 0.04)',
   axisText: 'rgba(240, 234, 214, 0.35)',
-  coherent: '#6EBF8B',
-  fragmented: '#CD7F5D',
+  // Stability Index state colors (Emotional Weather)
+  coherent: '#7DEBDB',      // Aligned — Cyan
+  turbulent: '#D4832A',     // Turbulent — Amber
+  fragmented: '#E07A98',    // Dysregulated — Rose
+  recovering: '#A286F2',    // Recovering — Lavender
   indexBg: 'rgba(255,255,255,0.03)',
 };
 
@@ -74,10 +87,10 @@ const COLORS = {
 
 function computeStabilityIndex(data: StabilityDataPoint[]): {
   index: number;
-  label: 'Coherent' | 'Aligned' | 'Shifting' | 'Fragmented';
+  label: 'Aligned' | 'Turbulent' | 'Depleted' | 'Recovering';
   color: string;
 } {
-  if (data.length < 2) return { index: 50, label: 'Shifting', color: COLORS.mood };
+  if (data.length < 2) return { index: 50, label: 'Turbulent', color: COLORS.turbulent };
 
   // Normalise each metric to 0–1
   const normMood = data.map(d => d.mood / 10);
@@ -111,10 +124,10 @@ function computeStabilityIndex(data: StabilityDataPoint[]): {
   const raw = coherencePart * 0.6 + levelPart * 0.4;
   const index = Math.round(Math.min(100, Math.max(0, raw * 100)));
 
-  if (index >= 80) return { index, label: 'Coherent', color: COLORS.coherent };
-  if (index >= 60) return { index, label: 'Aligned', color: COLORS.mood };
-  if (index >= 40) return { index, label: 'Shifting', color: COLORS.mood };
-  return { index, label: 'Fragmented', color: COLORS.fragmented };
+  if (index >= 75) return { index, label: 'Aligned', color: COLORS.coherent };
+  if (index >= 55) return { index, label: 'Turbulent', color: COLORS.turbulent };
+  if (index >= 35) return { index, label: 'Depleted', color: COLORS.fragmented };
+  return { index, label: 'Recovering', color: COLORS.recovering };
 }
 
 // ─── Path Builder ──────────────────────────────────────────────────────────────
@@ -234,7 +247,7 @@ const SkiaStabilityDashboard = memo(function SkiaStabilityDashboard({
           </View>
           <View style={localStyles.legendItem}>
             <View style={[localStyles.legendDot, { backgroundColor: COLORS.sleep }]} />
-            <Text style={localStyles.legendLabel}>Sleep</Text>
+            <Text style={localStyles.legendLabel}>Rest</Text>
           </View>
         </View>
       </View>

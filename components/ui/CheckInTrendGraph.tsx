@@ -42,10 +42,13 @@ export default function CheckInTrendGraph({
   checkIns,
   width = Dimensions.get('window').width - 40,
   height = 200,
+  dreamDates,
 }: {
   checkIns: DailyCheckIn[];
   width?: number;
   height?: number;
+  /** Set of YYYY-MM-DD dates that have a dream entry  */
+  dreamDates?: Set<string>;
 }) {
   const [activeMetric, setActiveMetric] = useState<MetricKey>('mood');
   const [scrubIndex, setScrubIndex] = useState<number | null>(null);
@@ -75,9 +78,10 @@ export default function CheckInTrendGraph({
       const dayIdx = parseLocalDate(ci.date).getDay();
       const label = ['Su','M','Tu','W','Th','F','Sa'][dayIdx];
       const tag = ci.tags?.[0] ?? null;
-      return { x, y, label, score: val, tag };
+      const hasDream = dreamDates?.has(ci.date) ?? false;
+      return { x, y, label, score: val, tag, hasDream };
     });
-  }, [sorted, activeMetric, chartW, chartH]);
+  }, [sorted, activeMetric, chartW, chartH, dreamDates]);
 
   // ── Scrub gesture ──
   const findClosestPoint = useCallback((touchX: number) => {
@@ -196,6 +200,20 @@ export default function CheckInTrendGraph({
           {points.map((pt, i) => (
             <Circle key={i} cx={pt.x} cy={pt.y} r={scrubIndex === i ? 6 : 3.5} color={metric.color} />
           ))}
+
+          {/* Dream indicator dots — silver-blue moon beneath data point */}
+          {points.map((pt, i) =>
+            (pt as any).hasDream ? (
+              <Circle
+                key={`d-${i}`}
+                cx={pt.x}
+                cy={pt.y + 14}
+                r={3}
+                color="#8BC4E8"
+                opacity={0.85}
+              />
+            ) : null
+          )}
 
           {/* Scrub indicator line */}
           {scrubIndex !== null && points[scrubIndex] && (

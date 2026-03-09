@@ -1,41 +1,37 @@
 // File: components/ui/SkiaResonanceSlider.tsx
 /**
- * SkiaResonanceSlider — Resonance-enhanced metric slider
+ * SkiaResonanceSlider — Celestial String "Beads of Light" slider
  *
- * Replaces the standard PanResponder slider with a Skia-powered track
- * that physically vibrates and glows brighter as the user reaches the
- * "Radiant" (10/10) or "Intense" ends of the scale.
+ * Three visual layers drawn in Skia:
+ *   1. Track (The String) — 1.5pt dashed line in ghostly silver.
+ *   2. Active Fill (The Energy) — colored stroke + animated BlurMask glow.
+ *   3. Thumb (The Pearl) — RadialGradient (white→color) + Shadow + pulsing aura.
  *
- * Layers:
- *   1. Obsidian glass track with subtle specular highlight.
- *   2. Gradient fill whose luminance scales with value.
- *   3. "Resonance glow" — a pulsing radial bloom under the thumb that
- *      intensifies at extreme values.
- *   4. Animated thumb with inner star-point catch-light.
+ * Haptic: impactAsync(Light) fires at every integer step.
+ * Floating label: "{value}/{max}" floats above the thumb during active drag.
+ * Visual intensity scales with value — dim at 1-2, steady at 5, vibrant+pulsing at 8-9.
  *
- * Haptic feedback fires on each integer step.
- *
- * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
+ * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 3.x+
  */
 
-import React, { memo, useMemo, useRef, useEffect } from 'react';
+import React, { memo, useMemo, useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   PanResponder,
-  Dimensions,
   Platform,
 } from 'react-native';
 import {
   Canvas,
-  Rect,
-  RoundedRect,
+  Path,
   Circle,
   Group,
-  LinearGradient,
   RadialGradient,
   BlurMask,
+  Shadow,
+  DashPathEffect,
+  Skia,
   vec,
 } from '@shopify/react-native-skia';
 import {
@@ -46,22 +42,20 @@ import {
   Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { theme } from '../../constants/theme';
 
-const TRACK_H = 48;
-const TRACK_R = 12;
+const TRACK_H = 56;
 const THUMB_R = 12;
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
 interface Props {
-  /** Question text */
+  /** Slider label (e.g. "Internal Climate") */
   question: string;
-  /** Current value (1–10) */
+  /** Current value (1–9) */
   value: number;
   /** Value change handler */
   onChange: (v: number) => void;
-  /** Accent colour for the fill/glow */
+  /** Accent colour for fill/glow/pearl */
   color: string;
   /** Three anchor labels [low, mid, high] */
   anchors: [string, string, string];
@@ -82,25 +76,58 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
   min = 1,
   max = 9,
 }: Props) {
-  const [trackWidth, setTrackWidth] = React.useState(0);
+  const [trackWidth, setTrackWidth] = useState(0);
   const trackWidthRef = useRef(0);
   const valueRef = useRef(value);
   const onChangeRef = useRef(onChange);
   const startValueRef = useRef(value);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => { valueRef.current = value; }, [value]);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
 
-  // ── Resonance pulse ──
+  // ── Continuous pulse (0 → 1, looping) ──
   const pulseValue = useSharedValue(0);
-
   useEffect(() => {
     pulseValue.value = withRepeat(
-      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
+      withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }),
       -1,
       true,
     );
   }, [pulseValue]);
+
+  // ── Intensity (0–1) mirrors slider position ──
+  const intensitySv = useSharedValue((value - min) / (max - min));
+  useEffect(() => {
+    intensitySv.value = (value - min) / (max - min);
+  }, [value, min, max, intensitySv]);
+
+  // ── isDrag shared value for worklet-side aura expansion ──
+  const isDragSv = useSharedValue(0);
+
+  // ── Animated aura opacity ──
+  const auraOpacity = useDerivedValue(() => {
+    'worklet';
+    const base = 0.09 + intensitySv.value * 0.46;
+    const dragBoost = isDragSv.value * 0.12;
+    const pulse = pulseValue.value * intensitySv.value * 0.2;
+    return base + dragBoost + pulse;
+  });
+
+  // ── Animated aura radius ──
+  const auraR = useDerivedValue(() => {
+    'worklet';
+    const base = 16 + isDragSv.value * 8;
+    const extra = intensitySv.value * 8;
+    const pulse = pulseValue.value * intensitySv.value * 6;
+    return base + extra + pulse;
+  });
+
+  // ── Animated fill glow opacity ──
+  const fillGlowOp = useDerivedValue(() => {
+    'worklet';
+    return 0.06 + intensitySv.value * 0.30 + pulseValue.value * intensitySv.value * 0.12;
+  });
 
   // ── Pan responder ──
   const panResponder = useRef(
@@ -111,6 +138,8 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
       onMoveShouldSetPanResponderCapture: () => true,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (e) => {
+        setIsDragging(true);
+        isDragSv.value = 1;
         const tw = trackWidthRef.current;
         if (tw > 0) {
           const pct = Math.min(1, Math.max(0, e.nativeEvent.locationX / tw));
@@ -119,7 +148,7 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
           if (tapped !== valueRef.current) {
             valueRef.current = tapped;
             onChangeRef.current(tapped);
-            Haptics.selectionAsync().catch(() => {});
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
           }
         } else {
           startValueRef.current = valueRef.current;
@@ -133,10 +162,12 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
         const clamped = Math.round(Math.min(max, Math.max(min, raw)));
         if (clamped !== valueRef.current) {
           valueRef.current = clamped;
-          Haptics.selectionAsync().catch(() => {});
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
           onChangeRef.current(clamped);
         }
       },
+      onPanResponderRelease: () => { setIsDragging(false); isDragSv.value = 0; },
+      onPanResponderTerminate: () => { setIsDragging(false); isDragSv.value = 0; },
     })
   ).current;
 
@@ -145,40 +176,37 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
   const fillWidth = trackWidth * fillPct;
   const thumbX = fillWidth;
 
-  // Resonance intensity — higher at extremes
-  const resonanceIntensity = useMemo(() => {
-    const norm = (value - min) / (max - min); // 0–1
-    // U-shaped curve: max at 0 and 1, min at 0.5
-    return Math.pow(Math.abs(norm - 0.5) * 2, 1.5);
-  }, [value, min, max]);
+  // ── Skia paths (rebuilt only when dimensions change) ──
+  const trackPath = useMemo(() => {
+    if (trackWidth <= 0) return null;
+    const p = Skia.Path.Make();
+    p.moveTo(0, TRACK_H / 2);
+    p.lineTo(trackWidth, TRACK_H / 2);
+    return p;
+  }, [trackWidth]);
 
-  // Resonance glow opacity (animated)
-  const glowOp = useDerivedValue(() => {
-    'worklet';
-    return 0.05 + resonanceIntensity * (0.2 + pulseValue.value * 0.15);
-  });
+  const fillPath = useMemo(() => {
+    if (fillWidth <= 0) return null;
+    const p = Skia.Path.Make();
+    p.moveTo(0, TRACK_H / 2);
+    p.lineTo(fillWidth, TRACK_H / 2);
+    return p;
+  }, [fillWidth]);
 
-  const glowR = useDerivedValue(() => {
-    'worklet';
-    return 20 + resonanceIntensity * (15 + pulseValue.value * 8);
-  });
+  // ── Floating label position (clamped to track bounds) ──
+  const labelLeft = Math.max(
+    0,
+    Math.min(trackWidth > 0 ? trackWidth - 32 : 0, thumbX - 16),
+  );
 
   return (
     <View style={styles.container}>
-      {/* Question */}
-      <Text style={styles.question}>{question}</Text>
+      {/* Slider label in accent color, small-caps */}
+      <Text style={[styles.question, { color }]}>{question}</Text>
 
-      {/* Value display */}
-      <View style={styles.valueRow}>
-        <Text style={[styles.valueText, { color }]}>
-          {value}<Text style={styles.maxText}> / {max}</Text>
-        </Text>
-      </View>
-
-      {/* Skia Track */}
+      {/* Touch target + canvas wrapper */}
       <View
         style={styles.trackContainer}
-        hitSlop={{ top: 10, bottom: 10 }}
         onLayout={(e) => {
           const w = e.nativeEvent.layout.width;
           setTrackWidth(w);
@@ -186,100 +214,82 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
         }}
         {...panResponder.panHandlers}
       >
+        {/* Floating drag value label */}
+        {isDragging && trackWidth > 0 && (
+          <View
+            style={[styles.floatingLabel, { left: labelLeft }]}
+            pointerEvents="none"
+          >
+            <Text style={[styles.floatingLabelText, { color }]}>
+              {value}/{max}
+            </Text>
+          </View>
+        )}
+
         {trackWidth > 0 && (
-          <Canvas style={[styles.trackCanvas, { width: trackWidth, height: TRACK_H }]} pointerEvents="none">
-            {/* Track background (obsidian glass) */}
-            <RoundedRect
-              x={0}
-              y={TRACK_H / 2 - 4}
-              width={trackWidth}
-              height={8}
-              r={4}
-              color="rgba(30, 35, 50, 0.9)"
-            />
-            {/* Specular highlight */}
-            <RoundedRect
-              x={0}
-              y={TRACK_H / 2 - 4}
-              width={trackWidth}
-              height={4}
-              r={4}
-              color="rgba(255, 255, 255, 0.04)"
-            />
+          <Canvas
+            style={[styles.trackCanvas, { width: trackWidth, height: TRACK_H }]}
+            pointerEvents="none"
+          >
+            {/* ── Layer 1: Track — etched celestial string ── */}
+            {trackPath && (
+              <Path
+                path={trackPath}
+                strokeWidth={1.5}
+                style="stroke"
+                color="rgba(255, 255, 255, 0.1)"
+              >
+                <DashPathEffect intervals={[3, 4]} phase={0} />
+              </Path>
+            )}
 
-            {/* Fill */}
-            <RoundedRect
-              x={0}
-              y={TRACK_H / 2 - 4}
-              width={fillWidth}
-              height={8}
-              r={4}
-            >
-              <LinearGradient
-                start={vec(0, 0)}
-                end={vec(fillWidth, 0)}
-                colors={[`${color}40`, color]}
-              />
-            </RoundedRect>
+            {/* ── Layer 2: Active fill — energy traveling the string ── */}
+            {fillPath && (
+              <Group>
+                {/* Soft glow halo behind the line */}
+                <Path
+                  path={fillPath}
+                  strokeWidth={8}
+                  style="stroke"
+                  color={color}
+                  opacity={fillGlowOp}
+                >
+                  <BlurMask blur={6} style="normal" />
+                </Path>
+                {/* Crisp fill line on top */}
+                <Path
+                  path={fillPath}
+                  strokeWidth={1.5}
+                  style="stroke"
+                  color={color}
+                  opacity={0.85}
+                />
+              </Group>
+            )}
 
-            {/* Fill glow */}
-            <RoundedRect
-              x={0}
-              y={TRACK_H / 2 - 6}
-              width={fillWidth}
-              height={12}
-              r={6}
-              color={color}
-              opacity={0.2}
-            >
-              <BlurMask blur={8} style="normal" />
-            </RoundedRect>
-
-            {/* Resonance glow under thumb */}
-            <Group opacity={glowOp}>
-              <Circle cx={thumbX} cy={TRACK_H / 2} r={glowR} color={color}>
+            {/* ── Layer 3a: Thumb aura — pulsing bloom ── */}
+            <Group opacity={auraOpacity}>
+              <Circle cx={thumbX} cy={TRACK_H / 2} r={auraR} color={color}>
                 <BlurMask blur={15} style="normal" />
               </Circle>
             </Group>
 
-            {/* Thumb */}
+            {/* ── Layer 3b: Thumb pearl — RadialGradient + Shadow ── */}
             <Group>
-              {/* Invisible touch halo — 44pt minimum target */}
-              <Circle
-                cx={thumbX}
-                cy={TRACK_H / 2}
-                r={22}
-                color="rgba(255,255,255,0.0)"
-              />
-              <Circle
-                cx={thumbX}
-                cy={TRACK_H / 2}
-                r={THUMB_R}
-                color="rgba(25, 30, 45, 1)"
-              />
-              <Circle
-                cx={thumbX}
-                cy={TRACK_H / 2}
-                r={THUMB_R}
-                color={color}
-                style="stroke"
-                strokeWidth={2}
-              />
-              {/* Inner catch-light star */}
-              <Circle
-                cx={thumbX - 2}
-                cy={TRACK_H / 2 - 2}
-                r={2.5}
-                color="rgba(255, 255, 255, 0.35)"
-              >
-                <BlurMask blur={1.5} style="solid" />
+              <Circle cx={thumbX} cy={TRACK_H / 2} r={THUMB_R}>
+                <RadialGradient
+                  c={vec(thumbX, TRACK_H / 2)}
+                  r={THUMB_R}
+                  colors={['#FFFFFF', color]}
+                />
+                <Shadow dx={0} dy={0} blur={10} color={color} />
               </Circle>
             </Group>
           </Canvas>
         )}
       </View>
 
-      {/* Anchors */}
+      {/* Anchor labels */}
       <View style={styles.anchorRow}>
         <Text style={[styles.anchor, { textAlign: 'left', flex: 1 }]}>{anchors[0]}</Text>
         <Text style={[styles.anchor, { textAlign: 'center', flex: 1 }]}>{anchors[1]}</Text>
@@ -295,28 +305,16 @@ export default SkiaResonanceSlider;
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 18,
-  },
-  question: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
-    marginBottom: 6,
-  },
-  valueRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
     marginBottom: 8,
   },
-  valueText: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  maxText: {
-    fontSize: 12,
-    color: theme.textMuted,
-    fontWeight: '400',
+  question: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+    paddingLeft: 2,
+    fontFamily: Platform.select({ ios: 'SF Pro Text', android: 'sans-serif-medium' }),
   },
   trackContainer: {
     height: TRACK_H,
@@ -325,14 +323,31 @@ const styles = StyleSheet.create({
   trackCanvas: {
     height: TRACK_H,
   },
+  floatingLabel: {
+    position: 'absolute',
+    top: 0,
+    zIndex: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: 'rgba(2, 8, 23, 0.75)',
+    alignItems: 'center',
+  },
+  floatingLabelText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    fontFamily: Platform.select({ ios: 'SF Pro Text', android: 'sans-serif-medium' }),
+  },
   anchorRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 2,
   },
   anchor: {
-    color: theme.textMuted,
+    color: 'rgba(255, 255, 255, 0.35)',
     fontSize: 10,
     fontWeight: '500',
+    letterSpacing: 0.3,
   },
 });

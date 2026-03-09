@@ -1,16 +1,20 @@
 // File: app/(tabs)/checkin.tsx
-// MySky — Check-In: The Universal Input Portal
+// MySky — The Ritual: Observatory Input Portal
 //
-// Unified logging experience combining Morning Rest (sleep/dreams) and
-// Internal Weather (mood/energy/tension) into a single, ritualistic flow.
+// The bridge where the user's raw reality enters the Observatory.
+// A frosted-glass bottom sheet slides up over the cosmos, presenting
+// three pathways as Skia-drawn symbols. The "Hold to Seal" ring anchors
+// data with a gold SweepGradient and haptic heartbeat.
 //
-// Flow:
-//   1. Pathway selection — "What are we reflecting on?"
-//   2. Guided input sequence (Path A: Rest, Path B: Weather)
-//   3. "Hold to Sync" confirmation via SkiaPulseMonitor
-//   4. Return to previous tab — user lands right where they were
+// Visual Architecture:
+//   - Full-screen SkiaDynamicCosmos background (stars visible through glass)
+//   - BlurView over upper 30% to simulate the "blurred Today" effect
+//   - Frosted glass panel occupies lower 70%, springs in on mount
+//   - RitualSelectorIcons: Sun (Weather) · Moon (Rest) · Pen (Journal)
+//   - SkiaHoldRing: gold sweep ring with DashPathEffect progress
+//   - RitualCompletionOverlay: star burst + delta insight
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -24,52 +28,59 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { theme } from '../../constants/theme';
 import { getTagColor } from '../../constants/tagColors';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
+import SkiaHoldRing from '../../components/ui/SkiaHoldRing';
 import SkiaResonanceSlider from '../../components/ui/SkiaResonanceSlider';
 import SkiaMoonDragger from '../../components/ui/SkiaMoonDragger';
+import RitualSelectorIcons, { RitualType } from '../../components/ui/RitualSelectorIcons';
+import RitualCompletionOverlay from '../../components/ui/RitualCompletionOverlay';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { NatalChart } from '../../services/astrology/types';
 import { CheckInService, CheckInInput, TIME_OF_DAY_LABELS } from '../../services/patterns/checkInService';
+import { generateDailySynthesis } from '../../services/today/dailySynthesis';
 import { ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../../services/patterns/types';
 import { SleepEntry, generateId } from '../../services/storage/models';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 
-const { width: SCREEN_W } = Dimensions.get('window');
+const { height: SCREEN_H } = Dimensions.get('window');
 
 // ── Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#D4AF37',
+  goldLight: '#EBC07D',
+  cyan: '#7DEBDB',
+  lavender: '#A286F2',
   sage: 'rgba(110, 191, 139, 1)',
   sageSoft: 'rgba(110, 191, 139, 0.15)',
   sageBorder: 'rgba(110, 191, 139, 0.35)',
-  sageGlow: 'rgba(110, 191, 139, 0.25)',
   silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
   textMain: '#FFFFFF',
   textSoft: 'rgba(255,255,255,0.75)',
   textMuted: 'rgba(255,255,255,0.45)',
-  glassBg: 'rgba(14, 24, 48, 0.50)',
+  glassBg: 'rgba(8, 14, 36, 0.78)',
   glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
+  glassHighlight: 'rgba(255,255,255,0.10)',
 };
 
-const MOOD_COLOR  = '#C9AE78';
-const ENERGY_COLOR = '#6fb3d3';
+const MOOD_COLOR   = '#D4AF37';
+const ENERGY_COLOR = '#7DEBDB';
 const STRESS_COLOR = '#e07b7b';
 
 // ── Types ──
@@ -118,8 +129,14 @@ export default function CheckInScreen() {
   // Data state
   const [chartId, setChartId] = useState('');
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
+  const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [completionInsight, setCompletionInsight] = useState('');
+  const [completionType, setCompletionType] = useState<'weather' | 'rest'>('weather');
+  const [previousMood, setPreviousMood] = useState(5);
+  const [currentMood, setCurrentMood] = useState(5);
 
   // Navigation state
   const [path, setPath] = useState<CheckInPath>('select');
@@ -138,6 +155,17 @@ export default function CheckInScreen() {
   const [sleepQuality, setSleepQuality] = useState(0);
   const [dreamText, setDreamText] = useState('');
 
+  // ── Bottom sheet spring animation ──
+  const panelTranslateY = useSharedValue(SCREEN_H);
+  const panelStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: panelTranslateY.value }],
+  }));
+
+  // Animate panel in when screen gains focus
+  const springPanel = useCallback(() => {
+    panelTranslateY.value = withSpring(0, { damping: 26, stiffness: 220, mass: 1 });
+  }, [panelTranslateY]);
+
   // Reset flow state when entering the tab
   useFocusEffect(
     useCallback(() => {
@@ -155,6 +183,9 @@ export default function CheckInScreen() {
       setDreamText('');
       setSaving(false);
 
+      // Spring panel in
+      springPanel();
+
       // Load chart
       (async () => {
         try {
@@ -166,6 +197,7 @@ export default function CheckInScreen() {
           }
           const saved = charts[0];
           setChartId(saved.id);
+          setUserName(saved.name ?? '');
           const natal = AstrologyCalculator.generateNatalChart({
             date: saved.birthDate,
             time: saved.birthTime,
@@ -177,13 +209,24 @@ export default function CheckInScreen() {
             houseSystem: saved.houseSystem,
           });
           setUserChart(natal);
+
+          // Load previous mood for delta calculation
+          try {
+            const recentCheckIns = await localDb.getCheckIns(saved.id, 2);
+            if (recentCheckIns.length >= 1) {
+              const prev = recentCheckIns[0].moodScore ?? 5;
+              setPreviousMood(prev);
+            }
+          } catch {
+            // Ignore — delta will default to zero
+          }
         } catch (e) {
           logger.error('[CheckIn] load failed:', e);
         } finally {
           setLoading(false);
         }
       })();
-    }, [])
+    }, [springPanel])
   );
 
   // ── Weather Save ──────────────────────────────────────────────────────────
@@ -210,16 +253,22 @@ export default function CheckInScreen() {
         JSON.stringify({ energy: energySlider, stress: stressSlider }),
       );
 
-      // Return user to wherever they were
-      if (router.canGoBack()) router.back();
-      else router.replace('/(tabs)/home' as Href);
+      setCurrentMood(moodSlider);
+      setCompletionType('weather');
+      try {
+        const synth = await generateDailySynthesis(userChart, chartId);
+        setCompletionInsight(synth.weatherMicroInsight);
+      } catch {
+        setCompletionInsight('');
+      }
+      setShowCompletion(true);
     } catch (e) {
       logger.error('[CheckIn] weather save failed:', e);
       Alert.alert('Save Error', 'Could not save check-in. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [userChart, chartId, moodSlider, energySlider, stressSlider, selectedTags, selectedTimeSlot, saving, router]);
+  }, [userChart, chartId, moodSlider, energySlider, stressSlider, selectedTags, selectedTimeSlot, saving]);
 
   // ── Rest Save ─────────────────────────────────────────────────────────────
 
@@ -258,18 +307,44 @@ export default function CheckInScreen() {
 
       await localDb.saveSleepEntry(entry);
 
-      // Return user to wherever they were
-      if (router.canGoBack()) router.back();
-      else router.replace('/(tabs)/home' as Href);
+      setCompletionType('rest');
+      try {
+        if (userChart) {
+          const synth = await generateDailySynthesis(userChart, chartId);
+          setCompletionInsight(synth.restMicroInsight);
+        } else {
+          setCompletionInsight('');
+        }
+      } catch {
+        setCompletionInsight('');
+      }
+      setShowCompletion(true);
     } catch (e) {
       logger.error('[CheckIn] rest save failed:', e);
       Alert.alert('Save Error', 'Could not save sleep entry. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [chartId, sleepDuration, sleepQuality, dreamText, saving, router]);
+  }, [chartId, sleepDuration, sleepQuality, dreamText, saving, userChart]);
+
+  const handleCompletionDone = useCallback(() => {
+    setShowCompletion(false);
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/home' as Href);
+  }, [router]);
 
   // ── Path selection handlers ──────────────────────────────────────────────
+
+  const handleRitualSelect = useCallback((type: RitualType) => {
+    Haptics.selectionAsync().catch(() => {});
+    if (type === 'journal') {
+      router.push('/(tabs)/journal' as Href);
+      return;
+    }
+    setPath(type === 'weather' ? 'weather' : 'rest');
+    setWeatherStep('sliders');
+    setRestStep('duration');
+  }, [router]);
 
   const selectPath = useCallback((p: CheckInPath) => {
     Haptics.selectionAsync().catch(() => {});
@@ -317,418 +392,458 @@ export default function CheckInScreen() {
     return (
       <View style={styles.container}>
         <SkiaDynamicCosmos />
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.centered}>
-            <Text style={styles.loadingText}>Preparing your space…</Text>
-          </View>
-        </SafeAreaView>
+        <View style={styles.centered}>
+          <Text style={styles.loadingText}>Preparing your space…</Text>
+        </View>
       </View>
     );
   }
 
+  // ── The selected ritual type for the selector (null = none chosen yet) ──
+  const ritualSelected: RitualType | null =
+    path === 'weather' ? 'weather' : path === 'rest' ? 'rest' : null;
+
+  // ── Tension → cosmos twinkle speed (1.0 calm → 2.1 high tension) ──
+  const cosmosSpeedMultiplier =
+    stressSlider >= 7 ? 2.1 : stressSlider >= 4 ? 1.5 : 1.0;
+
+  // ── Shared panel wrapper used for all views ──────────────────────────────
+  //    Top 30%: blurred cosmos  |  Bottom 70%: frosted glass with content
+  const renderPanel = (content: React.ReactNode) => (
+    <View style={styles.container}>
+      <SkiaDynamicCosmos twinkleSpeedMultiplier={cosmosSpeedMultiplier} />
+
+      {/* Blur layer over upper area — simulates the "blurred Today" effect */}
+      <BlurView intensity={18} tint="dark" style={styles.blurTop} pointerEvents="none" />
+
+      {/* Frosted glass bottom sheet */}
+      <Animated.View style={[styles.glassPanel, panelStyle]}>
+        <View style={styles.panelHandle} />
+        {content}
+      </Animated.View>
+
+      {/* Completion overlay */}
+      <RitualCompletionOverlay
+        visible={showCompletion}
+        onDone={handleCompletionDone}
+        microInsight={completionInsight}
+        checkInType={completionType}
+        userName={userName}
+        currentMood={currentMood}
+        previousMood={previousMood}
+      />
+    </View>
+  );
+
   // ── Render: Pathway Selection ────────────────────────────────────────────
 
   if (path === 'select') {
-    return (
-      <View style={styles.container}>
-        <SkiaDynamicCosmos />
-        <SafeAreaView style={styles.safeArea}>
-          <ScrollView contentContainerStyle={styles.selectContent} showsVerticalScrollIndicator={false}>
-            <Animated.View entering={FadeInDown.duration(500)}>
-              <Text style={styles.selectQuestion}>What are we reflecting on?</Text>
-              <Text style={styles.selectSubtext}>Choose your path for this moment</Text>
-            </Animated.View>
+    return renderPanel(
+      <ScrollView
+        contentContainerStyle={styles.selectContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View entering={FadeInDown.duration(500)}>
+          <Text style={styles.selectQuestion}>The Ritual</Text>
+          <Text style={styles.selectSubtext}>What are we anchoring today?</Text>
+        </Animated.View>
 
-            {/* Path A: Morning Rest */}
-            <Animated.View entering={FadeInDown.delay(150).duration(500)}>
-              <Pressable
-                style={({ pressed }) => [styles.pathCard, pressed && styles.pathCardPressed]}
-                onPress={() => selectPath('rest')}
-                accessibilityRole="button"
-                accessibilityLabel="Morning Rest: Sleep quality and dream journal"
-              >
-                <LinearGradient
-                  colors={['rgba(14, 24, 48, 0.60)', 'rgba(10, 18, 36, 0.45)']}
-                  style={styles.pathCardInner}
-                >
-                  <View style={styles.pathIconRow}>
-                    <View style={styles.pathIconContainer}>
-                      <Ionicons name="moon" size={28} color={PALETTE.silverBlue} />
-                    </View>
-                    <View style={styles.pathTextCol}>
-                      <Text style={styles.pathTitle}>Morning Rest</Text>
-                      <Text style={styles.pathSubtext}>Sleep quality & dream journal</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={PALETTE.textMuted} />
-                  </View>
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
+        {/* Skia ritual selector icons */}
+        <Animated.View entering={FadeInDown.delay(200).duration(500)} style={{ marginTop: 28 }}>
+          <RitualSelectorIcons
+            selected={ritualSelected}
+            onSelect={handleRitualSelect}
+          />
+        </Animated.View>
 
-            {/* Path B: Internal Weather */}
-            <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-              <Pressable
-                style={({ pressed }) => [styles.pathCard, pressed && styles.pathCardPressed]}
-                onPress={() => selectPath('weather')}
-                accessibilityRole="button"
-                accessibilityLabel="Internal Weather: Mood, energy, and tension"
-              >
-                <LinearGradient
-                  colors={['rgba(14, 24, 48, 0.60)', 'rgba(10, 18, 36, 0.45)']}
-                  style={styles.pathCardInner}
-                >
-                  <View style={styles.pathIconRow}>
-                    <View style={styles.pathIconContainer}>
-                      <Ionicons name="cloudy" size={28} color={PALETTE.gold} />
-                    </View>
-                    <View style={styles.pathTextCol}>
-                      <Text style={styles.pathTitle}>Internal Weather</Text>
-                      <Text style={styles.pathSubtext}>Mood, energy & tension</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={PALETTE.textMuted} />
-                  </View>
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
+        <Animated.View entering={FadeInDown.delay(400).duration(400)} style={styles.selectHintRow}>
+          <Text style={styles.selectHint}>Tap a symbol to begin</Text>
+        </Animated.View>
+      </ScrollView>
     );
   }
 
   // ── Render: Morning Rest Flow ────────────────────────────────────────────
 
   if (path === 'rest') {
-    return (
-      <View style={styles.container}>
-        <SkiaDynamicCosmos />
-        <SafeAreaView style={styles.safeArea}>
-          {/* Back button */}
+    return renderPanel(
+      <>
+        {/* Back + step dots */}
+        <View style={styles.panelTopRow}>
           <Pressable style={styles.backButton} onPress={goBack} accessibilityRole="button" accessibilityLabel="Go back">
-            <Ionicons name="chevron-back" size={24} color={PALETTE.textSoft} />
+            <Ionicons name="chevron-back" size={22} color={PALETTE.textSoft} />
           </Pressable>
-
-          <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            {/* Step indicator */}
-            <View style={styles.stepRow}>
-              {(['duration', 'quality', 'dream', 'sync'] as RestStep[]).map((s, i) => (
+          <View style={styles.stepRow}>
+            {(['duration', 'quality', 'dream', 'sync'] as RestStep[]).map((s, i) => {
+              const steps: RestStep[] = ['duration', 'quality', 'dream', 'sync'];
+              return (
                 <View
                   key={s}
                   style={[
                     styles.stepDot,
                     restStep === s && styles.stepDotActive,
-                    (['duration', 'quality', 'dream', 'sync'] as RestStep[]).indexOf(restStep) > i && styles.stepDotDone,
+                    steps.indexOf(restStep) > i && styles.stepDotDone,
                   ]}
                 />
-              ))}
-            </View>
+              );
+            })}
+          </View>
+          <View style={{ width: 44 }} />
+        </View>
 
-            {/* Step: Duration */}
-            {restStep === 'duration' && (
+        <ScrollView
+          contentContainerStyle={styles.flowContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Step: Duration */}
+          {restStep === 'duration' && (
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
+              <Text style={styles.stepTitle}>How long did you sleep?</Text>
+              <Text style={styles.stepSubtext}>Adjust to your best estimate</Text>
+
+              <View style={styles.durationDisplay}>
+                <Text style={styles.durationValue}>{sleepDuration.toFixed(1)}</Text>
+                <Text style={styles.durationUnit}>hours</Text>
+              </View>
+
+              <View style={styles.durationControls}>
+                <Pressable
+                  style={styles.durationBtn}
+                  onPress={() => setSleepDuration(prev => Math.max(0, prev - 0.5))}
+                  accessibilityRole="button"
+                  accessibilityLabel="Decrease sleep duration"
+                >
+                  <Ionicons name="remove" size={24} color={PALETTE.textMain} />
+                </Pressable>
+                <View style={styles.durationTrack}>
+                  <View style={[styles.durationFill, { width: `${Math.min(100, (sleepDuration / 12) * 100)}%` }]} />
+                </View>
+                <Pressable
+                  style={styles.durationBtn}
+                  onPress={() => setSleepDuration(prev => Math.min(12, prev + 0.5))}
+                  accessibilityRole="button"
+                  accessibilityLabel="Increase sleep duration"
+                >
+                  <Ionicons name="add" size={24} color={PALETTE.textMain} />
+                </Pressable>
+              </View>
+
+              <Pressable style={styles.nextBtn} onPress={advanceRest} accessibilityRole="button">
+                <Text style={styles.nextBtnText}>Next</Text>
+                <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
+              </Pressable>
+            </Animated.View>
+          )}
+
+          {/* Step: Quality */}
+          {restStep === 'quality' && (
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
+              <Text style={styles.stepTitle}>How rested do you feel?</Text>
+              <Text style={styles.stepSubtext}>Drag the moon to set your rest quality</Text>
+
+              <View style={styles.moonRow}>
+                <SkiaMoonDragger value={sleepQuality} onChange={setSleepQuality} />
+              </View>
+
+              <Pressable style={styles.nextBtn} onPress={advanceRest} accessibilityRole="button">
+                <Text style={styles.nextBtnText}>Next</Text>
+                <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
+              </Pressable>
+            </Animated.View>
+          )}
+
+          {/* Step: Dream Journal */}
+          {restStep === 'dream' && (
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
-                <Text style={styles.stepTitle}>How long did you sleep?</Text>
-                <Text style={styles.stepSubtext}>Adjust to your best estimate</Text>
+                <Text style={styles.stepTitle}>Any dreams to capture?</Text>
+                <Text style={styles.stepSubtext}>Record fragments before they fade</Text>
 
-                <View style={styles.durationDisplay}>
-                  <Text style={styles.durationValue}>{sleepDuration.toFixed(1)}</Text>
-                  <Text style={styles.durationUnit}>hours</Text>
-                </View>
-
-                {/* Simple increment/decrement controls */}
-                <View style={styles.durationControls}>
-                  <Pressable
-                    style={styles.durationBtn}
-                    onPress={() => setSleepDuration(prev => Math.max(0, prev - 0.5))}
-                    accessibilityRole="button"
-                    accessibilityLabel="Decrease sleep duration"
-                  >
-                    <Ionicons name="remove" size={24} color={PALETTE.textMain} />
-                  </Pressable>
-                  <View style={styles.durationTrack}>
-                    <View style={[styles.durationFill, { width: `${Math.min(100, (sleepDuration / 12) * 100)}%` }]} />
-                  </View>
-                  <Pressable
-                    style={styles.durationBtn}
-                    onPress={() => setSleepDuration(prev => Math.min(12, prev + 0.5))}
-                    accessibilityRole="button"
-                    accessibilityLabel="Increase sleep duration"
-                  >
-                    <Ionicons name="add" size={24} color={PALETTE.textMain} />
-                  </Pressable>
-                </View>
+                {/* Gold serif border dream input */}
+                <TextInput
+                  style={styles.dreamInput}
+                  placeholder="Describe what you remember…"
+                  placeholderTextColor={PALETTE.textMuted}
+                  value={dreamText}
+                  onChangeText={setDreamText}
+                  multiline
+                  textAlignVertical="top"
+                  maxLength={2000}
+                  accessibilityLabel="Dream journal text input"
+                />
+                <Text style={styles.charCount}>{dreamText.length}/2000</Text>
 
                 <Pressable style={styles.nextBtn} onPress={advanceRest} accessibilityRole="button">
-                  <Text style={styles.nextBtnText}>Next</Text>
+                  <Text style={styles.nextBtnText}>{dreamText.trim() ? 'Next' : 'Skip'}</Text>
                   <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
                 </Pressable>
               </Animated.View>
-            )}
+            </TouchableWithoutFeedback>
+          )}
 
-            {/* Step: Quality */}
-            {restStep === 'quality' && (
-              <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
-                <Text style={styles.stepTitle}>How rested do you feel?</Text>
-                <Text style={styles.stepSubtext}>Tap a moon to rate your rest</Text>
-
-                <View style={styles.moonRow}>
-                  <SkiaMoonDragger
-                    value={sleepQuality}
-                    onChange={setSleepQuality}
-                  />
-                </View>
-
-                <Pressable style={styles.nextBtn} onPress={advanceRest} accessibilityRole="button">
-                  <Text style={styles.nextBtnText}>Next</Text>
-                  <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
-                </Pressable>
-              </Animated.View>
-            )}
-
-            {/* Step: Dream Journal */}
-            {restStep === 'dream' && (
-              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
-                  <Text style={styles.stepTitle}>Any dreams to capture?</Text>
-                  <Text style={styles.stepSubtext}>Record fragments before they fade</Text>
-
-                  <TextInput
-                    style={styles.dreamInput}
-                    placeholder="Describe what you remember…"
-                    placeholderTextColor={PALETTE.textMuted}
-                    value={dreamText}
-                    onChangeText={setDreamText}
-                    multiline
-                    textAlignVertical="top"
-                    maxLength={2000}
-                    accessibilityLabel="Dream journal text input"
-                  />
-
-                  <Text style={styles.charCount}>{dreamText.length}/2000</Text>
-
-                  <Pressable style={styles.nextBtn} onPress={advanceRest} accessibilityRole="button">
-                    <Text style={styles.nextBtnText}>{dreamText.trim() ? 'Next' : 'Skip'}</Text>
-                    <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
-                  </Pressable>
-                </Animated.View>
-              </TouchableWithoutFeedback>
-            )}
-
-            {/* Step: Hold to Sync */}
-            {restStep === 'sync' && (
-              <Animated.View entering={FadeInDown.duration(400)} style={styles.syncContainer}>
-                <Text style={styles.syncLabel}>Hold to seal your rest data softly 🌙</Text>
-                <Text style={styles.syncHint}>Hold to seal and confirm</Text>
-                <SkiaPulseMonitor onSyncComplete={handleRestSave} />
-              </Animated.View>
-            )}
-          </ScrollView>
-        </SafeAreaView>
-      </View>
+          {/* Step: Hold to Seal */}
+          {restStep === 'sync' && (
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.syncContainer}>
+              <Text style={styles.syncLabel}>Anchor your rest data</Text>
+              <Text style={styles.syncHint}>Hold the ring for 2.5 seconds to seal</Text>
+              <SkiaHoldRing onSyncComplete={handleRestSave} />
+            </Animated.View>
+          )}
+        </ScrollView>
+      </>
     );
   }
 
   // ── Render: Internal Weather Flow ────────────────────────────────────────
 
-  return (
-    <View style={styles.container}>
-      <SkiaDynamicCosmos />
-      <SafeAreaView style={styles.safeArea}>
-        {/* Back button */}
+  return renderPanel(
+    <>
+      {/* Back + step dots */}
+      <View style={styles.panelTopRow}>
         <Pressable style={styles.backButton} onPress={goBack} accessibilityRole="button" accessibilityLabel="Go back">
-          <Ionicons name="chevron-back" size={24} color={PALETTE.textSoft} />
+          <Ionicons name="chevron-back" size={22} color={PALETTE.textSoft} />
         </Pressable>
-
-        <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
-          {/* Step indicator */}
-          <View style={styles.stepRow}>
-            {(['sliders', 'context', 'sync'] as WeatherStep[]).map((s, i) => (
+        <View style={styles.stepRow}>
+          {(['sliders', 'context', 'sync'] as WeatherStep[]).map((s, i) => {
+            const steps: WeatherStep[] = ['sliders', 'context', 'sync'];
+            return (
               <View
                 key={s}
                 style={[
                   styles.stepDot,
-                  weatherStep === s && styles.stepDotActive,
-                  (['sliders', 'context', 'sync'] as WeatherStep[]).indexOf(weatherStep) > i && styles.stepDotDone,
+                  weatherStep === s && styles.stepDotActiveCyan,
+                  steps.indexOf(weatherStep) > i && styles.stepDotDoneCyan,
                 ]}
               />
-            ))}
-          </View>
+            );
+          })}
+        </View>
+        <View style={{ width: 44 }} />
+      </View>
 
-          {/* Step: Sliders */}
-          {weatherStep === 'sliders' && (
-            <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
-              <Text style={styles.stepTitle}>Your internal weather</Text>
-              <Text style={styles.stepSubtext}>
-                {TIME_OF_DAY_LABELS[selectedTimeSlot].emoji} {TIME_OF_DAY_LABELS[selectedTimeSlot].label} check-in
-              </Text>
+      <ScrollView contentContainerStyle={styles.flowContent} showsVerticalScrollIndicator={false}>
+        {/* ── Sliders ── */}
+        {weatherStep === 'sliders' && (
+          <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Internal Weather</Text>
+            <Text style={styles.stepSubtext}>
+              {TIME_OF_DAY_LABELS[selectedTimeSlot].emoji}{' '}
+              {TIME_OF_DAY_LABELS[selectedTimeSlot].label} check-in
+            </Text>
 
-              <View style={styles.sliderGroup}>
-                <SkiaResonanceSlider
-                  question="How are you feeling emotionally?"
-                  value={moodSlider}
-                  onChange={setMoodSlider}
-                  color={MOOD_COLOR}
-                  anchors={['Very low', 'Neutral', 'Excellent']}
-                  min={1}
-                  max={9}
-                />
-                <SkiaResonanceSlider
-                  question="How is your energy right now?"
-                  value={energySlider}
-                  onChange={setEnergySlider}
-                  color={ENERGY_COLOR}
-                  anchors={['Exhausted', 'Steady', 'Energized']}
-                  min={1}
-                  max={9}
-                />
-                <SkiaResonanceSlider
-                  question="How activated or stressed do you feel?"
-                  value={stressSlider}
-                  onChange={setStressSlider}
-                  color={STRESS_COLOR}
-                  anchors={['Calm', 'Alert', 'Overwhelmed']}
-                  min={1}
-                  max={9}
-                />
-              </View>
+            <View style={styles.sliderGroup}>
+              <SkiaResonanceSlider
+                question="Internal Climate"
+                value={moodSlider}
+                onChange={setMoodSlider}
+                color={MOOD_COLOR}
+                anchors={['Depleted', 'Balanced', 'Expansive']}
+                min={1}
+                max={9}
+              />
+              <SkiaResonanceSlider
+                question="Vitality Pulse"
+                value={energySlider}
+                onChange={setEnergySlider}
+                color={ENERGY_COLOR}
+                anchors={['Exhausted', 'Steady', 'Energized']}
+                min={1}
+                max={9}
+              />
+              <SkiaResonanceSlider
+                question="Somatic Pressure"
+                value={stressSlider}
+                onChange={setStressSlider}
+                color={STRESS_COLOR}
+                anchors={['Calm', 'Alert', 'Overwhelmed']}
+                min={1}
+                max={9}
+              />
+            </View>
 
-              <Pressable style={styles.nextBtn} onPress={advanceWeather} accessibilityRole="button">
-                <Text style={styles.nextBtnText}>Next</Text>
-                <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
-              </Pressable>
-            </Animated.View>
-          )}
+            <Pressable style={styles.nextBtn} onPress={advanceWeather} accessibilityRole="button">
+              <Text style={styles.nextBtnText}>Next</Text>
+              <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
+            </Pressable>
+          </Animated.View>
+        )}
 
-          {/* Step: Context tags */}
-          {weatherStep === 'context' && (
-            <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
-              <Text style={styles.stepTitle}>What shaped your day?</Text>
-              <Text style={styles.stepSubtext}>Select up to 3 influences</Text>
+        {/* ── Context tags ── */}
+        {weatherStep === 'context' && (
+          <Animated.View entering={FadeInDown.duration(400)} style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>What shaped your day?</Text>
+            <Text style={styles.stepSubtext}>Select up to 3 influences</Text>
 
-              <View style={styles.tagGrid}>
-                {INFLUENCE_TAGS.map(tag => {
-                  const isSelected = selectedTags.includes(tag);
-                  return (
-                    <Pressable
-                      key={tag}
-                      style={[
-                        styles.tagPill,
-                        isSelected && [styles.tagPillSelected, { borderColor: `${getTagColor(tag)}55` }],
-                      ]}
-                      onPress={() => toggleTag(tag)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isSelected }}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons
-                          name={INFLUENCE_ICONS[tag] ?? 'ellipse-outline'}
-                          size={14}
-                          color={isSelected ? getTagColor(tag) : PALETTE.textSoft}
-                        />
-                        <Text style={[styles.tagText, isSelected && styles.tagTextSelected]}>
-                          {INFLUENCE_LABELS[tag] ?? tag}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
+            <View style={styles.tagGrid}>
+              {INFLUENCE_TAGS.map(tag => {
+                const isSelected = selectedTags.includes(tag);
+                const tagColor = getTagColor(tag);
+                return (
+                  <Pressable
+                    key={tag}
+                    style={[
+                      styles.tagPill,
+                      isSelected && {
+                        borderColor: `${tagColor}55`,
+                        backgroundColor: `${tagColor}15`,
+                        // Shadow glow (Blur ~10 approximated via shadow)
+                        shadowColor: tagColor,
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.65,
+                        shadowRadius: 10,
+                        elevation: 6,
+                      },
+                    ]}
+                    onPress={() => toggleTag(tag)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons
+                        name={INFLUENCE_ICONS[tag] ?? 'ellipse-outline'}
+                        size={14}
+                        color={isSelected ? tagColor : PALETTE.textSoft}
+                      />
+                      <Text style={[styles.tagText, isSelected && { color: tagColor, fontWeight: '600' }]}>
+                        {INFLUENCE_LABELS[tag] ?? tag}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
 
-              <Pressable style={styles.nextBtn} onPress={advanceWeather} accessibilityRole="button">
-                <Text style={styles.nextBtnText}>Next</Text>
-                <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
-              </Pressable>
-            </Animated.View>
-          )}
+            <Pressable style={styles.nextBtn} onPress={advanceWeather} accessibilityRole="button">
+              <Text style={styles.nextBtnText}>Next</Text>
+              <Ionicons name="chevron-forward" size={18} color={PALETTE.textMain} />
+            </Pressable>
+          </Animated.View>
+        )}
 
-          {/* Step: Hold to Sync */}
-          {weatherStep === 'sync' && (
-            <Animated.View entering={FadeInDown.duration(400)} style={styles.syncContainer}>
-              <Text style={styles.syncLabel}>Hold to sync your internal weather ✨</Text>
-              <Text style={styles.syncHint}>Hold to seal and confirm</Text>
-              <SkiaPulseMonitor onSyncComplete={handleWeatherSave} />
-            </Animated.View>
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+        {/* ── Hold to Seal ── */}
+        {weatherStep === 'sync' && (
+          <Animated.View entering={FadeInDown.duration(400)} style={styles.syncContainer}>
+            <Text style={styles.syncLabel}>Anchor your internal weather</Text>
+            <Text style={styles.syncHint}>Hold the ring for 2.5 seconds to seal</Text>
+            <SkiaHoldRing onSyncComplete={handleWeatherSave} />
+          </Animated.View>
+        )}
+      </ScrollView>
+    </>
   );
 }
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
+const PANEL_HEIGHT = SCREEN_H * 0.72;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
-  safeArea: { flex: 1 },
 
+  // ── Frosted glass panel ──
+  blurTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: SCREEN_H * 0.30,
+  },
+  glassPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: PANEL_HEIGHT,
+    backgroundColor: PALETTE.glassBg,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: PALETTE.glassHighlight,
+    overflow: 'hidden',
+  },
+  panelHandle: {
+    alignSelf: 'center',
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  panelTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+
+  // ── Loading ──
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: PALETTE.textMuted, fontSize: 15, fontWeight: '500' },
+
+  safeArea: { flex: 1 },
 
   // ── Pathway Selection ──
   selectContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 120,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    paddingTop: 16,
   },
   selectQuestion: {
     color: PALETTE.textMain,
     fontSize: 26,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   selectSubtext: {
     color: PALETTE.textSoft,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '400',
     textAlign: 'center',
-    marginBottom: 40,
   },
-  pathCard: { marginBottom: 16, borderRadius: 16, overflow: 'hidden' },
-  pathCardPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
-  pathCardInner: {
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+  selectHintRow: { alignItems: 'center', marginTop: 24 },
+  selectHint: {
+    color: PALETTE.textMuted,
+    fontSize: 12,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
-  pathIconRow: { flexDirection: 'row', alignItems: 'center' },
-  pathIconContainer: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    alignItems: 'center', justifyContent: 'center',
-    marginRight: 16,
-  },
-  pathTextCol: { flex: 1 },
-  pathTitle: { color: PALETTE.textMain, fontSize: 18, fontWeight: '700', marginBottom: 4 },
-  pathSubtext: { color: PALETTE.textSoft, fontSize: 14, fontWeight: '400' },
 
   // ── Flow shared ──
   backButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    alignSelf: 'flex-start',
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   flowContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 120,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
   stepRow: {
+    flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 32,
     gap: 8,
+    alignItems: 'center',
   },
   stepDot: {
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
-  stepDotActive: { backgroundColor: PALETTE.sage, width: 24 },
-  stepDotDone: { backgroundColor: 'rgba(110, 191, 139, 0.45)' },
+  stepDotActive: { backgroundColor: PALETTE.lavender, width: 24 },
+  stepDotDone: { backgroundColor: 'rgba(162, 134, 242, 0.45)' },
+  stepDotActiveCyan: { backgroundColor: PALETTE.cyan, width: 24 },
+  stepDotDoneCyan: { backgroundColor: 'rgba(125, 235, 219, 0.35)' },
 
-  stepContainer: { gap: 16 },
+  stepContainer: { gap: 16, paddingTop: 8 },
   stepTitle: {
     color: PALETTE.textMain,
     fontSize: 22,
@@ -738,7 +853,6 @@ const styles = StyleSheet.create({
   stepSubtext: {
     color: PALETTE.textSoft,
     fontSize: 14,
-    fontWeight: '400',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -751,10 +865,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 28,
-    backgroundColor: 'rgba(110, 191, 139, 0.18)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: PALETTE.sageBorder,
-    marginTop: 24,
+    borderColor: 'rgba(255,255,255,0.12)',
+    marginTop: 20,
     gap: 6,
   },
   nextBtnText: {
@@ -764,12 +878,9 @@ const styles = StyleSheet.create({
   },
 
   // ── Duration step ──
-  durationDisplay: {
-    alignItems: 'center',
-    marginVertical: 24,
-  },
+  durationDisplay: { alignItems: 'center', marginVertical: 20 },
   durationValue: {
-    color: PALETTE.silverBlue,
+    color: PALETTE.lavender,
     fontSize: 56,
     fontWeight: '200',
     fontVariant: ['tabular-nums'],
@@ -801,33 +912,32 @@ const styles = StyleSheet.create({
   durationFill: {
     height: '100%',
     borderRadius: 3,
-    backgroundColor: PALETTE.silverBlue,
+    backgroundColor: PALETTE.lavender,
   },
 
   // ── Quality step ──
-  moonRow: {
-    alignItems: 'center',
-    marginVertical: 16,
-  },
+  moonRow: { alignItems: 'center', marginVertical: 12 },
 
-  // ── Dream step ──
+  // ── Dream step — gold serif border ──
   dreamInput: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(212, 175, 55, 0.05)',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderWidth: 1.5,
+    borderColor: `${PALETTE.gold}60`,
     color: PALETTE.textMain,
     fontSize: 15,
     lineHeight: 22,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    minHeight: 140,
+    minHeight: 130,
     textAlignVertical: 'top',
+    fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }),
   },
   charCount: {
     color: PALETTE.textMuted,
     fontSize: 12,
     textAlign: 'right',
+    marginTop: 4,
   },
 
   // ── Sync step ──
@@ -835,26 +945,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 60,
-    gap: 12,
+    paddingTop: 32,
+    gap: 10,
   },
   syncLabel: {
     color: PALETTE.textMain,
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 4,
   },
   syncHint: {
     color: PALETTE.textMuted,
     fontSize: 13,
-    fontWeight: '400',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
 
   // ── Sliders ──
-  sliderGroup: { gap: 8 },
+  sliderGroup: { gap: 24 },
 
   // ── Tags ──
   tagGrid: {
@@ -871,17 +979,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  tagPillSelected: {
-    backgroundColor: PALETTE.sageSoft,
-    borderColor: PALETTE.sageBorder,
-  },
   tagText: {
     color: PALETTE.textSoft,
     fontSize: 13,
     fontWeight: '500',
-  },
-  tagTextSelected: {
-    color: PALETTE.sage,
-    fontWeight: '600',
   },
 });

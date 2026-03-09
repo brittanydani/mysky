@@ -27,9 +27,81 @@ import ObsidianJournalEntry from '../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../services/journal/nlp';
 import SkiaDreamEngine from '../../components/ui/SkiaDreamEngine';
 import SkiaBiometricScatter from '../../components/ui/SkiaBiometricScatter';
+import SkiaVolatilityGraph from '../../components/ui/SkiaVolatilityGraph';
+import SkiaDreamSymbolFrequency from '../../components/ui/SkiaDreamSymbolFrequency';
+import PersonalInsightDashboard from '../../components/ui/PersonalInsightDashboard';
+import { SleepEntry } from '../../services/storage/models';
+import SkiaTagEnergyAnalysis from '../../components/ui/SkiaTagEnergyAnalysis';
+import WordConstellation from '../../components/ui/WordConstellation';
+import SentimentMismatchCard from '../../components/ui/SentimentMismatchCard';
+import CharacterTracker from '../../components/ui/CharacterTracker';
+import PatternInsightEngine from '../../components/ui/PatternInsightEngine';
+import JournalFilterModal, { JournalFilterState, EMPTY_FILTER, isFilterActive, applyJournalFilter } from '../../components/JournalFilterModal';
+import SkiaMoodTimeline from '../../components/ui/SkiaMoodTimeline';
+import SkiaGaussianHeatmap from '../../components/ui/SkiaGaussianHeatmap';
+import DreamPatternCard from '../../components/ui/DreamPatternCard';
+import MonthlySynthesisCard from '../../components/ui/MonthlySynthesisCard';
+import TimeOfDayPatternCard from '../../components/ui/TimeOfDayPatternCard';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
+
+// ─── Mixed Feed Types ─────────────────────────────────────────────────────────
+
+type FeedItem =
+  | { type: 'journal'; id: string; date: string; data: JournalEntry }
+  | { type: 'dream';   id: string; date: string; data: SleepEntry }
+  | { type: 'monthly'; id: string; date: string; monthKey: string; entries: JournalEntry[]; prevEntries: JournalEntry[] };
+
+function buildFeed(
+  journalEntries: JournalEntry[],
+  dreamEntries: SleepEntry[],
+): FeedItem[] {
+  // Merge journal + dream items sorted newest first
+  const items: FeedItem[] = [
+    ...journalEntries.map(e => ({ type: 'journal' as const, id: e.id, date: e.date, data: e })),
+    ...dreamEntries.map(e => ({ type: 'dream' as const, id: `dream-${e.id}`, date: e.date, data: e })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+
+  // Inject monthly synthesis at month boundaries (every time month changes going chronologically)
+  const result: FeedItem[] = [];
+  let currentMonth = '';
+  const monthBuckets: Record<string, JournalEntry[]> = {};
+
+  // Pre-bucket journal entries by month
+  for (const e of journalEntries) {
+    const mk = e.date.slice(0, 7); // YYYY-MM
+    if (!monthBuckets[mk]) monthBuckets[mk] = [];
+    monthBuckets[mk].push(e);
+  }
+
+  for (const item of items) {
+    const itemMonth = item.date.slice(0, 7);
+    if (itemMonth !== currentMonth) {
+      // Inject synthesis card when we cross a completed month boundary
+      if (currentMonth && monthBuckets[currentMonth] && monthBuckets[currentMonth].length >= 3) {
+        const prevMonthKey = (() => {
+          const [y, m] = currentMonth.split('-').map(Number);
+          const pm = m === 1 ? 12 : m - 1;
+          const py = m === 1 ? y - 1 : y;
+          return `${py}-${String(pm).padStart(2, '0')}`;
+        })();
+        result.push({
+          type: 'monthly',
+          id: `monthly-${currentMonth}`,
+          date: `${currentMonth}-01`,
+          monthKey: currentMonth,
+          entries: monthBuckets[currentMonth],
+          prevEntries: monthBuckets[prevMonthKey] ?? [],
+        });
+      }
+      currentMonth = itemMonth;
+    }
+    result.push(item);
+  }
+
+  return result;
+}
 
 // ── Cinematic Palette ──
 
@@ -83,7 +155,26 @@ export default function JournalScreen() {
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
+  const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
   const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
+  const [showFilter, setShowFilter] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState<JournalFilterState>(EMPTY_FILTER);
+  const [rangeKey, setRangeKey] = useState<'7D' | '30D' | '90D'>('30D');
+
+  // Filtered entries derived from all loaded entries + current filter
+  const filteredEntries = useMemo(
+    () => applyJournalFilter(entries, checkIns, currentFilter),
+    [entries, checkIns, currentFilter],
+  );
+
+  // Range-windowed check-ins for pattern charts
+  const rangedCheckIns = useMemo(() => {
+    const days = rangeKey === '7D' ? 7 : rangeKey === '30D' ? 30 : 90;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    return checkIns.filter(ci => ci.date >= cutoffStr);
+  }, [checkIns, rangeKey]);
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedEntryIds(prev => {
@@ -98,6 +189,7 @@ export default function JournalScreen() {
     useCallback(() => {
       void loadEntries(true);
       void loadCheckIns();
+      void loadSleepEntries();
     }, [])
   );
 
@@ -205,11 +297,24 @@ export default function JournalScreen() {
         setCheckIns([]);
         return;
       }
-      const result = await CheckInService.getAllCheckIns(primaryChart.id, 7);
+      const result = await CheckInService.getAllCheckIns(primaryChart.id, 90);
       setCheckIns(Array.isArray(result) ? result : []);
     } catch (error) {
       logger.error('Failed to load check-ins:', error);
       setCheckIns([]);
+    }
+  };
+
+  const loadSleepEntries = async () => {
+    try {
+      const charts = await localDb.getCharts();
+      const primaryChart = charts[0];
+      if (!primaryChart) { setSleepEntries([]); return; }
+      const result = await localDb.getSleepEntries(primaryChart.id, 30);
+      setSleepEntries(Array.isArray(result) ? result : []);
+    } catch (error) {
+      logger.error('Failed to load sleep entries:', error);
+      setSleepEntries([]);
     }
   };
 
@@ -251,13 +356,26 @@ export default function JournalScreen() {
   const stableFormatDate = useCallback(formatDate, []);
   const stableFormatTime = useCallback(formatTime, []);
 
-  const keyExtractor = useCallback((item: JournalEntry) => item.id, []);
+  const keyExtractor = useCallback((item: FeedItem) => item.id, []);
 
-  const renderEntry = useCallback(({ item }: ListRenderItemInfo<JournalEntry>) => {
+  const renderEntry = useCallback(({ item }: ListRenderItemInfo<FeedItem>) => {
+    if (item.type === 'dream') {
+      return <DreamPatternCard entry={item.data} />;
+    }
+    if (item.type === 'monthly') {
+      return (
+        <MonthlySynthesisCard
+          monthKey={item.monthKey}
+          entries={item.entries}
+          prevEntries={item.prevEntries}
+        />
+      );
+    }
+    // Default: journal entry
     return (
       <EntryCard
-        entry={item}
-        isExpanded={expandedEntryIds.has(item.id)}
+        entry={item.data}
+        isExpanded={expandedEntryIds.has(item.data.id)}
         onToggle={toggleExpanded}
         onEdit={handleEditEntry}
         onDelete={handleDeleteEntry}
@@ -279,9 +397,35 @@ export default function JournalScreen() {
     <>
       <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
         <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.title}>Journal</Text>
-            <Text style={styles.subtitle}>Analytics · History · Pattern memory</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>Subconscious Field</Text>
+            <Text style={styles.subtitle}>ARCHIVE · ANALYTICS · PATTERN MEMORY</Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            {sleepEntries.length >= 1 && (
+              <Pressable
+                onPress={() => router.push('/(tabs)/dream-engine' as Href)}
+                style={styles.dreamFreqBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Dream Frequency"
+              >
+                <Ionicons name="moon" size={14} color="#A286F2" />
+                <Text style={styles.dreamFreqLabel}>Dream Frequency</Text>
+              </Pressable>
+            )}
+            <Pressable
+              onPress={() => setShowFilter(true)}
+              style={[styles.searchIconBtn, isFilterActive(currentFilter) && styles.searchIconBtnActive]}
+              accessibilityRole="button"
+              accessibilityLabel="Open search and filter"
+            >
+              <Ionicons
+                name={isFilterActive(currentFilter) ? 'filter' : 'search-outline'}
+                size={18}
+                color={isFilterActive(currentFilter) ? '#C9AE78' : 'rgba(255,255,255,0.55)'}
+              />
+              {isFilterActive(currentFilter) && <View style={styles.filterActiveDot} />}
+            </Pressable>
           </View>
         </View>
 
@@ -289,6 +433,24 @@ export default function JournalScreen() {
           Your private archive. Each entry becomes a data point in your personal pattern architecture — revealing what the conscious mind overlooks.
         </Text>
       </Animated.View>
+
+      {/* ── Chart A: Mood Timeline ─────────────────────────────────────────── */}
+      {isPremium && checkIns.length >= 3 && (
+        <Animated.View entering={FadeInDown.delay(160).duration(600)} style={styles.checkInTrendSection}>
+          <SkiaMoodTimeline checkIns={checkIns} width={width - 40} />
+        </Animated.View>
+      )}
+
+      {/* ── Personal Insight Dashboard (premium, master card) ── */}
+      {isPremium && (checkIns.length >= 4 || entries.length >= 3) && (
+        <Animated.View entering={FadeInDown.delay(180).duration(600)} style={{ marginBottom: 24 }}>
+          <PersonalInsightDashboard
+            checkIns={checkIns}
+            entries={entries}
+            sleepEntries={sleepEntries}
+          />
+        </Animated.View>
+      )}
 
       {checkIns.length >= 2 && (
         isPremium ? (
@@ -317,27 +479,88 @@ export default function JournalScreen() {
         )
       )}
 
-      {/* ── Mood × Energy Scatter ── */}
+      {/* ── Chart B: Gaussian Heatmap (Energy × Mood) ── */}
       {isPremium && checkIns.length >= 3 && (
         <Animated.View entering={FadeInDown.delay(240).duration(600)} style={styles.checkInTrendSection}>
-          <LinearGradient
-            colors={['rgba(14, 24, 48, 0.50)', 'rgba(10, 18, 36, 0.35)']}
-            style={{ borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}
+          <SkiaGaussianHeatmap checkIns={checkIns} width={width - 40} />
+        </Animated.View>
+      )}
+
+      {/* ── Emotional Volatility Graph (NEW) ── */}
+      {isPremium && checkIns.length >= 3 && (
+        <Animated.View entering={FadeInDown.delay(260).duration(600)} style={styles.checkInTrendSection}>
+          <Text style={styles.chartTitle}>Emotional Volatility</Text>
+          <Text style={styles.checkInTrendSubtitle}>Stability band · how much your mood fluctuates day to day</Text>
+          <SkiaVolatilityGraph checkIns={checkIns} width={width - 40} />
+        </Animated.View>
+      )}
+
+      {/* ── Subconscious Patterns \u2192 ── */}
+      {isPremium && sleepEntries.length >= 1 && (
+        <Animated.View entering={FadeInDown.delay(275).duration(600)} style={{ marginBottom: 12 }}>
+          <Pressable
+            onPress={() => router.push('/(tabs)/insights' as Href)}
+            accessibilityRole="button"
+            accessibilityLabel="View subconscious patterns"
           >
-            <Text style={styles.chartTitle}>Mood × Energy Connection</Text>
-            <Text style={styles.checkInTrendSubtitle}>Each point maps one check-in — clusters reveal your baseline</Text>
-            <SkiaBiometricScatter
-              points={checkIns.slice(0, 30).map(c => ({
-                x: c.moodScore / 10,
-                y: c.energyLevel === 'high' ? 0.85 : c.energyLevel === 'medium' ? 0.5 : 0.2,
-              }))}
-              title="Mental State Correlation"
-              subtitle="Emotional Mood vs. Physical Energy"
-              xAxisLabel="High Mood"
-              yAxisLabel="High Energy"
-              insight="Your energy levels and mood scores tend to move together. Focus on physical recharge to boost emotional state."
-            />
-          </LinearGradient>
+            <LinearGradient
+              colors={['rgba(14, 24, 48, 0.50)', 'rgba(10, 18, 36, 0.35)']}
+              style={{ borderRadius: 14, padding: 14, borderWidth: 1, borderColor: 'rgba(157,118,193,0.2)', flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            >
+              <Ionicons name="moon-outline" size={20} color="#C4A0D8" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.chartTitle}>Subconscious Patterns</Text>
+                <Text style={styles.checkInTrendSubtitle}>Dream symbol frequency \u00b7 archetypal analysis</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.35)" />
+            </LinearGradient>
+          </Pressable>
+        </Animated.View>
+      )}
+
+      {/* ── Dream Symbol Frequency (NEW) ── */}
+      {isPremium && sleepEntries.length >= 3 && (
+        <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.checkInTrendSection}>
+          <SkiaDreamSymbolFrequency sleepEntries={sleepEntries} width={width - 40} />
+        </Animated.View>
+      )}
+
+      {/* ── Tag Energy Analysis (Chart 6) ── */}
+      {isPremium && checkIns.length >= 5 && (
+        <Animated.View entering={FadeInDown.delay(290).duration(600)} style={styles.checkInTrendSection}>
+          <SkiaTagEnergyAnalysis checkIns={checkIns} />
+        </Animated.View>
+      )}
+
+      {/* ── Pattern Insight Engine (System 7) ── */}
+      {isPremium && checkIns.length >= 7 && (
+        <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.checkInTrendSection}>
+          <PatternInsightEngine
+            checkIns={checkIns}
+            sleepEntries={sleepEntries}
+            entries={entries}
+          />
+        </Animated.View>
+      )}
+
+      {/* ── Word Constellation (System 1) ── */}
+      {isPremium && entries.length >= 4 && (
+        <Animated.View entering={FadeInDown.delay(310).duration(600)} style={styles.checkInTrendSection}>
+          <WordConstellation entries={entries} />
+        </Animated.View>
+      )}
+
+      {/* ── Sentiment Mismatch Card (System 3) ── */}
+      {isPremium && entries.length >= 4 && checkIns.length >= 4 && (
+        <Animated.View entering={FadeInDown.delay(320).duration(600)} style={styles.checkInTrendSection}>
+          <SentimentMismatchCard entries={entries} checkIns={checkIns} />
+        </Animated.View>
+      )}
+
+      {/* ── Character Tracker (System 4) ── */}
+      {isPremium && entries.length >= 4 && (
+        <Animated.View entering={FadeInDown.delay(330).duration(600)} style={styles.checkInTrendSection}>
+          <CharacterTracker entries={entries} checkIns={checkIns} />
         </Animated.View>
       )}
 
@@ -395,12 +618,24 @@ export default function JournalScreen() {
 
       <View style={styles.entriesSection}>
         <View style={styles.entriesHeader}>
-          <Text style={styles.sectionTitle}>Recent Entries</Text>
-          <Text style={styles.entriesCount}>{totalCount} entries</Text>
+          <Text style={styles.sectionTitle}>
+            {isFilterActive(currentFilter) ? 'Filtered Results' : 'Recent Entries'}
+          </Text>
+          <Pressable
+            onPress={() => setShowFilter(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Search and filter entries"
+          >
+            <Text style={styles.entriesCount}>
+              {isFilterActive(currentFilter)
+                ? `${filteredEntries.length} of ${totalCount}`
+                : `${totalCount} entries`}
+            </Text>
+          </Pressable>
         </View>
       </View>
     </>
-  ), [checkIns, isPremium, patternInsights, totalCount, router, width]);
+  ), [checkIns, sleepEntries, entries, isPremium, patternInsights, totalCount, router]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 
@@ -532,7 +767,9 @@ export default function JournalScreen() {
           />
         ) : (
           <FlatList
-            data={entries}
+            data={isFilterActive(currentFilter)
+              ? filteredEntries.map(e => ({ type: 'journal' as const, id: e.id, date: e.date, data: e }))
+              : buildFeed(entries, sleepEntries)}
             renderItem={renderEntry}
             keyExtractor={keyExtractor}
             ListHeaderComponent={ListHeader}
@@ -574,6 +811,15 @@ export default function JournalScreen() {
           onSave={handleSaveEntry}
           initialData={editingEntry}
         />
+
+        <JournalFilterModal
+          visible={showFilter}
+          onClose={() => setShowFilter(false)}
+          onApply={(f) => setCurrentFilter(f)}
+          currentFilter={currentFilter}
+          allEntries={entries}
+          resultCount={applyJournalFilter(entries, checkIns, currentFilter).length}
+        />
       </SafeAreaView>
     </View>
   );
@@ -583,17 +829,70 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
 
-  header: { paddingVertical: 16, marginBottom: 8 },
+  header: { paddingVertical: 20, marginBottom: 4 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 32, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', letterSpacing: 0.5 },
-  subtitle: { fontSize: 14, color: theme.primary, fontStyle: 'italic', marginTop: 2 },
+  title: { fontSize: 34, fontWeight: '700', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), letterSpacing: 0.4 },
+  subtitle: { fontSize: 13, color: 'rgba(201,174,120,0.75)', fontStyle: 'italic', marginTop: 4, letterSpacing: 0.3 },
   poeticIntro: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    lineHeight: 24,
-    marginTop: 20,
+    fontSize: 14,
+    color: theme.textMuted,
+    lineHeight: 22,
+    marginTop: 16,
   },
 
+  // ── Module cards ──────────────────────────────────────────────────────────
+  moduleSection: {
+    marginBottom: 28,
+  },
+  moduleTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  moduleTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+  },
+  moduleSubtitle: {
+    fontSize: 13,
+    color: theme.textMuted,
+    fontStyle: 'italic',
+    marginBottom: 16,
+  },
+
+  // ── Range toggle ──────────────────────────────────────────────────────────
+  rangeToggleRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 28,
+    alignSelf: 'center',
+  },
+  rangeBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  rangeBtnActive: {
+    borderColor: 'rgba(201,174,120,0.55)',
+    backgroundColor: 'rgba(201,174,120,0.12)',
+  },
+  rangeBtnLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.40)',
+    letterSpacing: 0.8,
+  },
+  rangeBtnLabelActive: {
+    color: '#C9AE78',
+  },
+
+  // ── Legacy chart styles (kept for backward compat) ────────────────────────
   chartTitle: {
     fontSize: 20,
     color: theme.textPrimary,
@@ -649,6 +948,29 @@ const styles = StyleSheet.create({
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sectionTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) },
   entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic' },
+  searchIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  searchIconBtnActive: {
+    backgroundColor: 'rgba(201,174,120,0.12)',
+    borderColor: 'rgba(201,174,120,0.30)',
+  },
+  filterActiveDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#C9AE78',
+  },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
   loadingText: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic' },
@@ -672,5 +994,14 @@ const styles = StyleSheet.create({
   fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', },
   fabPressed: { opacity: 0.9, transform: [{ scale: 0.95 }] },
   fabGradient: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+  dreamFreqBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(162,134,242,0.1)', paddingHorizontal: 10,
+    paddingVertical: 6, borderRadius: 14, borderWidth: 1,
+    borderColor: 'rgba(162,134,242,0.25)',
+  },
+  dreamFreqLabel: {
+    color: '#A286F2', fontSize: 11, fontWeight: '700',
+  },
 });
 

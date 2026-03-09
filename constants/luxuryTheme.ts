@@ -148,6 +148,83 @@ export const luxuryTheme = {
     cardPadding: 18,
     sectionGap: 16,
   },
+
+  // ── Somatic Wave Colors (The Vitality System) ──────────────────────────────
+  // Three pillars of human experience rendered as liquid-light Skia gradients.
+  // High amplitude = high intensity; low amplitude = depletion.
+  somaticWave: {
+    // Mood — The Sun / Self / Joy
+    mood: '#D4AF37',
+    moodGlow: 'rgba(212, 175, 55, 0.30)',
+    moodGlowFaint: 'rgba(212, 175, 55, 0.12)',
+    // Energy — The Breath / Movement
+    energy: '#7DEBDB',
+    energyGlow: 'rgba(125, 235, 219, 0.30)',
+    energyGlowFaint: 'rgba(125, 235, 219, 0.12)',
+    // Rest — The Night / Recovery
+    rest: '#A286F2',
+    restGlow: 'rgba(162, 134, 242, 0.30)',
+    restGlowFaint: 'rgba(162, 134, 242, 0.12)',
+  },
+
+  // ── Emotional Weather Colors (The Ambient System) ──────────────────────────
+  // App-wide glow mapped to the Stability Index.
+  // Instruct Skia RadialGradient to shift background based on this state.
+  emotionalWeather: {
+    // Aligned — mood and energy in sync; clear cool morning
+    aligned: '#7DEBDB',
+    alignedGlow: 'rgba(125, 235, 219, 0.20)',
+    // Turbulent — high mismatch (e.g. High Energy + Low Mood); tense/agitated
+    turbulent: '#D4832A',
+    turbulentGlow: 'rgba(212, 131, 42, 0.22)',
+    // Depleted — all metrics low; app dims to avoid over-stimulation
+    depleted: '#3D4670',
+    depletedGlow: 'rgba(61, 70, 112, 0.30)',
+    depletedAccent: '#6B68A8',
+  },
+
+  // ── Energy Architecture (The Chakra System) ───────────────────────────────
+  // Muted jewel tones for the Frequency Orb and Mandala Screen.
+  chakraJewels: {
+    root:      { name: 'Root',        symbolism: 'Survival, Grounding, Safety',           core: '#FF4D4D', glow: 'rgba(255, 77, 77, 0.40)',   deep: '#7A1818' },
+    sacral:    { name: 'Sacral',      symbolism: 'Creativity, Emotions, Pleasure',         core: '#FFA500', glow: 'rgba(255, 165, 0, 0.40)',   deep: '#7A4D00' },
+    solar:     { name: 'Solar',       symbolism: 'Power, Confidence, Mastery',             core: '#FFD700', glow: 'rgba(255, 215, 0, 0.40)',   deep: '#7A6500' },
+    heart:     { name: 'Heart',       symbolism: 'Love, Compassion, Healing',              core: '#4CAF50', glow: 'rgba(76, 175, 80, 0.40)',   deep: '#1A5E1A' },
+    throat:    { name: 'Throat',      symbolism: 'Truth, Communication, Voice',            core: '#00BFFF', glow: 'rgba(0, 191, 255, 0.40)',   deep: '#005A7A' },
+    thirdEye:  { name: 'Third Eye',   symbolism: 'Intuition, Dreams, Vision',              core: '#483D8B', glow: 'rgba(72, 61, 139, 0.40)',   deep: '#1A1535' },
+    crown:     { name: 'Crown',       symbolism: 'Connection, Purpose, Spirit',            core: '#EE82EE', glow: 'rgba(238, 130, 238, 0.40)', deep: '#6A2E6A' },
+  },
+
+  // ── Blueprint Colors (The Identity System) ────────────────────────────────
+  // Architectural colors for the Blueprint Tab: past is silver, present is gold.
+  blueprint: {
+    natalBaseline: '#C0C0C0',                      // Silver — the unshakable past
+    natalBaselineGlow: 'rgba(192, 192, 192, 0.15)',
+    natalBaselineStroke: 'rgba(192, 192, 192, 0.45)',
+    behavioralLayer: '#D4AF37',                    // Gold — alchemized experience
+    behavioralLayerGlow: 'rgba(212, 175, 55, 0.18)',
+    behavioralLayerStroke: 'rgba(212, 175, 55, 0.55)',
+    gridLine: 'rgba(192, 192, 192, 0.12)',         // Silver-toned grid
+    axisLine: 'rgba(192, 192, 192, 0.18)',
+    // Typography — never pure 100% white
+    textPrimary: 'rgba(255, 255, 255, 0.80)',      // 80% white: primary headers
+    textSecondary: 'rgba(255, 255, 255, 0.60)',    // 60% white: secondary descriptions
+  },
+
+  // ── Skia Paint Logic (Technical Rendering Notes) ──────────────────────────
+  // Reference these when writing Skia.Paint() or Canvas primitives.
+  skiaPaint: {
+    // Dithering: set paint.setDither(true) to prevent banding in dark gradients.
+    // ColorFilter: use ColorFilter.MakeBlend(color, BlendMode.Screen) for stars
+    //   and waves so overlapping colors get brighter (like real light), not muddy.
+    // DropShadow for gold serif text:
+    goldTextShadow: {
+      dx: 0,
+      dy: 1,
+      blur: 2,
+      color: 'rgba(0, 0, 0, 0.5)',
+    },
+  },
 };
 
 export type LuxuryTheme = typeof luxuryTheme;
