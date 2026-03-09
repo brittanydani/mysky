@@ -32,6 +32,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaStabilityDashboard, { computeStabilityIndex } from '../../components/ui/SkiaStabilityDashboard';
 import type { StabilityDataPoint } from '../../components/ui/SkiaStabilityDashboard';
+import StabilityIndexCard from '../../components/ui/StabilityIndexCard';
 import SkiaWarpTransition from '../../components/ui/SkiaWarpTransition';
 import type { WarpRef } from '../../components/ui/SkiaWarpTransition';
 
@@ -369,7 +370,7 @@ export default function HomeScreen() {
 
           {/* ── Stability Index Card ── */}
           <Animated.View entering={FadeInDown.delay(500).duration(600)}>
-            <SkiaStabilityDashboard data={stabilityData} />
+            <StabilityIndexCard data={stabilityData} />
           </Animated.View>
 
           {/* ── Actionable Insight ── */}

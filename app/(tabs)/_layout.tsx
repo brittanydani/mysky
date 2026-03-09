@@ -43,54 +43,54 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Balance',
-          tabBarIcon: ({ focused }) => <MetallicTabIcon name="pulse" focused={focused} />,
+          title: 'Today',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="sunny" focused={focused} />,
         }}
       />
 
       <Tabs.Screen
-        name="mood"
+        name="checkin"
         options={{
-          title: 'Weather',
-          tabBarIcon: ({ focused }) => <MetallicTabIcon name="cloudy" focused={focused} />,
+          title: 'Check In',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="add-circle-outline" focused={focused} />,
         }}
       />
 
       <Tabs.Screen
-        name="sleep"
+        name="growth"
         options={{
-          title: 'Rest',
-          tabBarIcon: ({ focused }) => <MetallicTabIcon name="moon" focused={focused} />,
+          title: 'Patterns',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="analytics-outline" focused={focused} />,
         }}
       />
 
       <Tabs.Screen
         name="journal"
         options={{
-          title: 'Archive',
-          tabBarIcon: ({ focused }) => <MetallicTabIcon name="document-text" focused={focused} />,
+          title: 'Journal',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="book-outline" focused={focused} />,
         }}
       />
 
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ focused }) => <MetallicTabIcon name="options" focused={focused} />,
+          title: 'You',
+          tabBarIcon: ({ focused }) => <MetallicTabIcon name="person-outline" focused={focused} />,
         }}
       />
 
       {/* ── Hidden routes — still accessible via router.push ── */}
       <Tabs.Screen name="index" options={{ href: null }} />
       <Tabs.Screen name="today" options={{ href: null }} />
+      <Tabs.Screen name="mood" options={{ href: null }} />
+      <Tabs.Screen name="sleep" options={{ href: null }} />
       <Tabs.Screen name="energy" options={{ href: null }} />
       <Tabs.Screen name="chart" options={{ href: null }} />
       <Tabs.Screen name="story" options={{ href: null }} />
-      <Tabs.Screen name="growth" options={{ href: null }} />
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing" options={{ href: null }} />
       <Tabs.Screen name="insights" options={{ href: null }} />
-
       <Tabs.Screen name="premium" options={{ href: null }} />
     </Tabs>
   );
