@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20 },
 
   header: { marginTop: 16, marginBottom: 24 },
-  title: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5, marginBottom: 4 },
+  title: { fontSize: 32, fontWeight: '700', color: PALETTE.textMain, fontFamily: 'serif', letterSpacing: 0.5, marginBottom: 4 },
   subtitle: { color: theme.textSecondary, fontSize: 15, fontStyle: 'italic', letterSpacing: 0.3 },
 
   section: { marginBottom: 24 },

@@ -102,7 +102,7 @@ export default function PrivacyPolicyScreen() {
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={styles.securityCard}>
               <View style={styles.securityHeader}>
                 <Ionicons name="lock-closed" size={18} color={PALETTE.emerald} />
-                <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Encryption at Rest</Text>
+                <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Encryption at Rest</Text>
               </View>
               <Text style={styles.paragraph}>
                 Sensitive fields — journal content, titles, birth places, dream text, mood/stress/energy scores, emotional tags, check-in notes, wins, challenges, and NLP results — use <Text style={styles.highlight}>AES-256-GCM</Text> field-level encryption. The data encryption key is stored in your device's hardware-backed SecureStore (iOS Keychain / Android Keystore).
@@ -112,7 +112,7 @@ export default function PrivacyPolicyScreen() {
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <Ionicons name="shield-checkmark" size={18} color={PALETTE.emerald} />
-                <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Tamper Detection</Text>
+                <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Tamper Detection</Text>
               </View>
               <Text style={styles.paragraph}>
                 SecureStore payloads are protected with <Text style={styles.highlight}>HMAC-SHA256</Text> tamper detection using a device-unique key. Security events are logged in a rolling audit trail for your transparency.
@@ -122,7 +122,7 @@ export default function PrivacyPolicyScreen() {
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <Ionicons name="cloud-offline" size={18} color={PALETTE.emerald} />
-                <Text style={[styles.securityTitle, { color: PALETTE.emerald }]}>Backup Encryption</Text>
+                <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Backup Encryption</Text>
               </View>
               <Text style={styles.paragraph}>
                 Encrypted .msky backups use <Text style={styles.highlight}>AES-256-GCM with PBKDF2-SHA256</Text> key derivation (600,000 iterations) from your chosen passphrase. Backups are never uploaded to any server — you control where they go via your device's share sheet.
@@ -242,12 +242,12 @@ const styles = StyleSheet.create({
   headerTitle: { 
     fontSize: 18, 
     fontWeight: '600', 
-    color: theme.textPrimary, 
+    color: "#FFFFFF", 
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 20 },
-  lastUpdated: { fontSize: 13, color: theme.textMuted, marginBottom: 24, fontStyle: 'italic', textAlign: 'center' },
+  lastUpdated: { fontSize: 13, color: "#FFFFFF", marginBottom: 24, fontStyle: 'italic', textAlign: 'center' },
   
   section: { marginBottom: 32 },
   glassSection: {
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: theme.textGold,
+    color: "#FFFFFF",
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 16,
     paddingLeft: 4,
@@ -269,12 +269,12 @@ const styles = StyleSheet.create({
   subSectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.textPrimary,
+    color: "#FFFFFF",
     marginBottom: 8,
   },
   paragraph: {
     fontSize: 15,
-    color: theme.textSecondary,
+    color: "#FFFFFF",
     lineHeight: 24,
     marginBottom: 12,
   },
@@ -286,13 +286,13 @@ const styles = StyleSheet.create({
   },
   bulletPoint: {
     fontSize: 15,
-    color: theme.textSecondary,
+    color: "#FFFFFF",
     lineHeight: 24,
     marginBottom: 8,
     paddingLeft: 4,
   },
-  highlight: { color: PALETTE.silverBlue, fontWeight: '600' },
-  boldText: { color: theme.textPrimary, fontWeight: '600' },
+  highlight: { color: "#FFFFFF", fontWeight: '600' },
+  boldText: { color: "#FFFFFF", fontWeight: '600' },
   
   securityCard: {
     borderRadius: 16,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     borderColor: theme.cardBorder,
     borderTopColor: theme.glass.highlight,
   },
-  contactInfo: { fontSize: 16, color: theme.textGold, fontWeight: '600' },
+  contactInfo: { fontSize: 16, color: "#FFFFFF", fontWeight: '600' },
   
   footer: {
     alignItems: 'center',
@@ -322,5 +322,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
-  footerText: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic' },
+  footerText: { fontSize: 13, color: "#FFFFFF", fontStyle: 'italic' },
 });

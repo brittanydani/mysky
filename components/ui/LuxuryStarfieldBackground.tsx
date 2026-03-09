@@ -40,8 +40,8 @@ type LuxuryStarfieldBackgroundProps = {
   pointerEvents?: 'auto' | 'none' | 'box-none' | 'box-only';
 };
 
-const DEFAULT_STAR_COUNT = 50;
-const DEFAULT_TWINKLE_COUNT = 10;
+const DEFAULT_STAR_COUNT = 100;
+const DEFAULT_TWINKLE_COUNT = 25;
 
 // Stable seeded random so stars don't jump around on every render.
 function mulberry32(seed: number) {

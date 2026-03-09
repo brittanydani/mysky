@@ -90,7 +90,7 @@ export default function PrivacyConsentModal({
                   </View>
 
                   <View style={[styles.glassSection, { borderColor: 'rgba(139, 196, 232, 0.2)' }]}>
-                    <Text style={[styles.sectionLabel, { color: PALETTE.silverBlue }]}>How We Protect It</Text>
+                    <Text style={[styles.sectionLabel, { color: "#FFFFFF" }]}>How We Protect It</Text>
                     <View style={styles.dataRow}>
                         <Ionicons name="lock-closed-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.dataText}>Core data stays encrypted on your device</Text>
@@ -206,12 +206,12 @@ const styles = StyleSheet.create({
   },
   title: { 
     fontSize: 30, 
-    color: PALETTE.textMain, 
+    color: "#FFFFFF", 
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), 
     marginBottom: 12, 
     textAlign: 'center' 
   },
-  subtitle: { fontSize: 16, color: theme.textSecondary, textAlign: 'center', paddingHorizontal: 20, lineHeight: 22, fontStyle: 'italic' },
+  subtitle: { fontSize: 16, color: "#FFFFFF", textAlign: 'center', paddingHorizontal: 20, lineHeight: 22, fontStyle: 'italic' },
   
   contentContainer: { marginBottom: 40 },
   glassSection: {
@@ -222,28 +222,28 @@ const styles = StyleSheet.create({
     borderColor: PALETTE.glassBorder,
     marginBottom: 16,
   },
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: PALETTE.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: "#FFFFFF", letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
   dataRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 12 },
-  dataText: { fontSize: 14, color: theme.textSecondary, flex: 1 },
+  dataText: { fontSize: 14, color: "#FFFFFF", flex: 1 },
   
   policyLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 6 },
-  policyLinkText: { fontSize: 14, color: PALETTE.gold, fontWeight: '700' },
+  policyLinkText: { fontSize: 14, color: "#FFFFFF", fontWeight: '700' },
 
   footerActions: { marginTop: 24, gap: 16 },
   acceptBtn: { borderRadius: 16, overflow: 'hidden', },
   btnGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
   acceptBtnText: { fontSize: 17, fontWeight: '700', color: '#020817', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },
-  declineBtnText: { fontSize: 14, color: theme.textMuted, fontWeight: '600', textDecorationLine: 'underline' },
+  declineBtnText: { fontSize: 14, color: "#FFFFFF", fontWeight: '600', textDecorationLine: 'underline' },
 
   // Full Policy View
   policyHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 32, gap: 16 },
   backBtn: { width: 44, height: 44, justifyContent: 'center' },
-  policyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  lastUpdated: { fontSize: 12, color: theme.textMuted, marginBottom: 24, fontStyle: 'italic' },
+  policyTitle: { fontSize: 24, color: "#FFFFFF", fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  lastUpdated: { fontSize: 12, color: "#FFFFFF", marginBottom: 24, fontStyle: 'italic' },
   legalContent: { gap: 20 },
-  legalSub: { fontSize: 18, fontWeight: '700', color: PALETTE.gold, marginTop: 10 },
-  policyText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
+  legalSub: { fontSize: 18, fontWeight: '700', color: "#FFFFFF", marginTop: 10 },
+  policyText: { fontSize: 15, color: "#FFFFFF", lineHeight: 24 },
   policyCloseBtn: { 
     marginTop: 40, 
     paddingVertical: 16, 
@@ -253,5 +253,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
   },
-  policyCloseText: { fontSize: 15, fontWeight: '700', color: PALETTE.textMain },
+  policyCloseText: { fontSize: 15, fontWeight: '700', color: "#FFFFFF" },
 });

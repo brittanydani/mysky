@@ -1100,12 +1100,25 @@ export interface DreamInterpretation {
    * Never includes inferred or symbolically expanded labels.
    */
   explicitImagery: string[];
-  extractedSymbols?: Array<{ word: string; category: string; description: string }>;
+  extractedSymbols?: { word: string; category: string; description: string }[];
   /**
    * Interpretive themes derived from trigger analysis (Phase B).
    * Clearly labeled as interpretation, not factual imagery claims.
    */
   interpretiveThemes: string[];
+  /**
+   * Dream pattern analysis (when pattern engine produces a confident result).
+   * Provides the primary dream pattern, secondary patterns, emotional
+   * contradictions, ending analysis, and an elegant undercurrent label.
+   */
+  patternAnalysis?: {
+    primaryPattern: string;
+    secondaryPatterns: string[];
+    confidence: number;
+    undercurrentLabel: string;
+    emotionalContradictions: { poleA: string; poleB: string; intensity: number }[];
+    endingType: string;
+  };
 }
 
 // ─── Engine Input ─────────────────────────────────────────────────────────────

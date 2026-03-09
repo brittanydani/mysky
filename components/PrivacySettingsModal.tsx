@@ -151,16 +151,16 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 <Text style={styles.sectionLabel}>System Integrity</Text>
                 <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   {[
-                    { label: 'Architecture', val: 'Local-First', icon: 'server-outline', color: PALETTE.silverBlue },
-                    { label: 'Encryption', val: 'AES-256-GCM', icon: 'lock-closed-outline', color: PALETTE.silverBlue },
-                    { label: 'Sharing', val: 'Never Sold', icon: 'ban-outline', color: PALETTE.gold },
+                    { label: 'Architecture', val: 'Local-First', icon: 'server-outline', color: "#FFFFFF" },
+                    { label: 'Encryption', val: 'AES-256-GCM', icon: 'lock-closed-outline', color: "#FFFFFF" },
+                    { label: 'Sharing', val: 'Never Sold', icon: 'ban-outline', color: "#FFFFFF" },
                   ].map((item, i) => (
                     <View key={i} style={[styles.statusRow, i === 2 && { borderBottomWidth: 0 }]}>
                       <View style={styles.rowLead}>
                         <Ionicons name={item.icon as any} size={16} color={item.color} />
                         <Text style={styles.statusLabel}>{item.label}</Text>
                       </View>
-                      <Text style={[styles.statusVal, { color: item.color }]}>{item.val}</Text>
+                      <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>{item.val}</Text>
                     </View>
                   ))}
                 </LinearGradient>
@@ -175,7 +175,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                       <Ionicons name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
                       <Text style={styles.statusLabel}>Status</Text>
                     </View>
-                    <Text style={[styles.statusVal, { color: consentRecord?.granted ? PALETTE.gold : PALETTE.copper }]}>
+                    <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
                       {consentRecord?.granted ? (consentRecord.expired ? 'Expired' : 'Active') : 'Not granted'}
                     </Text>
                   </View>
@@ -185,7 +185,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                         <Ionicons name="time-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.statusLabel}>Consented</Text>
                       </View>
-                      <Text style={[styles.statusVal, { color: PALETTE.silverBlue }]}>
+                      <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
                         {new Date(consentRecord.timestamp).toLocaleDateString()}
                       </Text>
                     </View>
@@ -195,7 +195,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                       <Ionicons name="document-outline" size={16} color={PALETTE.silverBlue} />
                       <Text style={styles.statusLabel}>Policy Version</Text>
                     </View>
-                    <Text style={[styles.statusVal, { color: PALETTE.silverBlue }]}>
+                    <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
                       {consentRecord?.policyVersion ?? '—'}
                     </Text>
                   </View>
@@ -204,7 +204,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   <Pressable style={styles.actionCard} onPress={handleWithdrawConsent} disabled={isLoading}>
                     <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                       <Ionicons name="close-circle-outline" size={22} color={PALETTE.copper} />
-                      <Text style={[styles.actionTitle, { color: PALETTE.copper }]}>Withdraw Consent</Text>
+                      <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Withdraw Consent</Text>
                       <Text style={styles.actionSub}>Revoke data processing consent. Existing data is preserved.</Text>
                     </LinearGradient>
                   </Pressable>
@@ -219,7 +219,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading}>
                       <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <Ionicons name="download-outline" size={22} color={PALETTE.silverBlue} />
-                        <Text style={[styles.actionTitle, { color: PALETTE.silverBlue }]}>Export Archive</Text>
+                        <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Export Archive</Text>
                         <Text style={styles.actionSub}>Create a readable backup of all entries.</Text>
                       </LinearGradient>
                     </Pressable>
@@ -227,7 +227,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading}>
                       <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <Ionicons name="trash-outline" size={22} color={PALETTE.copper} />
-                        <Text style={[styles.actionTitle, { color: PALETTE.copper }]}>Hard Reset</Text>
+                        <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Hard Reset</Text>
                         <Text style={styles.actionSub}>Permanently erase all data from this device.</Text>
                       </LinearGradient>
                     </Pressable>
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  headerTitle: { fontSize: 20, color: "#FFFFFF", fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   closeBtn: { padding: 4 },
   
   scrollView: { flex: 1 },
@@ -282,26 +282,26 @@ const styles = StyleSheet.create({
   content: { gap: 32 },
 
   section: { gap: 12 },
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: PALETTE.gold, textTransform: 'uppercase', letterSpacing: 2, paddingLeft: 4 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 2, paddingLeft: 4 },
   
   glassCard: { borderRadius: 20, paddingHorizontal: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
   rowLead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  statusLabel: { fontSize: 14, color: theme.textSecondary, fontWeight: '500' },
+  statusLabel: { fontSize: 14, color: "#FFFFFF", fontWeight: '500' },
   statusVal: { fontSize: 14, fontWeight: '700' },
 
   actionGrid: { gap: 12 },
   actionCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
   actionGradient: { padding: 20, gap: 8 },
   actionTitle: { fontSize: 16, fontWeight: '700' },
-  actionSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
+  actionSub: { fontSize: 13, color: "#FFFFFF", lineHeight: 18 },
 
   emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 20, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  emptyText: { color: theme.textMuted, fontSize: 14, fontStyle: 'italic' },
+  emptyText: { color: "#FFFFFF", fontSize: 14, fontStyle: 'italic' },
 
   rightsContainer: { gap: 12, paddingLeft: 4 },
   rightNode: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rightNodeText: { fontSize: 14, color: theme.textSecondary },
+  rightNodeText: { fontSize: 14, color: "#FFFFFF" },
 
-  complianceNote: { fontSize: 12, color: theme.textMuted, textAlign: 'center', fontStyle: 'italic', lineHeight: 18, paddingHorizontal: 20 },
+  complianceNote: { fontSize: 12, color: "#FFFFFF", textAlign: 'center', fontStyle: 'italic', lineHeight: 18, paddingHorizontal: 20 },
 });

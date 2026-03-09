@@ -18,6 +18,7 @@ export const mySkyGold = {
   glossSoft:      '#F7E7C6',  // soft gloss
   champagneLight: '#EFD596',  // upper-mid highlight
   champagne:      '#DDBA6A',  // main champagne body
+  base:           '#DDBA6A',  // base gold (alias for champagne)
   goldMid:        '#C99949',  // mid gold
   goldDeep:       '#A8742E',  // deep warm gold
   shadow:         '#7A511C',  // shadow

@@ -472,25 +472,24 @@ export default function SleepScreen() {
     setExpandedEntryId(entry.id);
     Haptics.selectionAsync().catch(() => {});
 
-    if (!interpretations[entry.id]) {
-      try {
-        let feelings: SelectedFeeling[] = [];
-        let metadata: DreamMetadata = { vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false };
-        if (entry.dreamFeelings) { try { feelings = JSON.parse(entry.dreamFeelings); } catch {} }
-        if (entry.dreamMetadata) { try { metadata = JSON.parse(entry.dreamMetadata); } catch {} }
-        
-        const aggregates = computeDreamAggregates(feelings, natalChart);
-        const otherEntries = entries.filter(e => e.id !== entry.id);
-        const patterns = computeDreamPatterns(feelings, otherEntries);
-        
-        const result = generateDreamInterpretation({
-          entry, dreamText: entry.dreamText, feelings, metadata, aggregates, patterns,
-        });
-        setInterpretations(prev => ({ ...prev, [entry.id]: result }));
-      } catch (e) {
-        logger.error('Dream interpretation failed:', e);
-        setExpandedEntryId(null);
-      }
+    // Always regenerate interpretation (no stale cache)
+    try {
+      let feelings: SelectedFeeling[] = [];
+      let metadata: DreamMetadata = { vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false };
+      if (entry.dreamFeelings) { try { feelings = JSON.parse(entry.dreamFeelings); } catch {} }
+      if (entry.dreamMetadata) { try { metadata = JSON.parse(entry.dreamMetadata); } catch {} }
+      
+      const aggregates = computeDreamAggregates(feelings, natalChart);
+      const otherEntries = entries.filter(e => e.id !== entry.id);
+      const patterns = computeDreamPatterns(feelings, otherEntries);
+      
+      const result = generateDreamInterpretation({
+        entry, dreamText: entry.dreamText, feelings, metadata, aggregates, patterns,
+      });
+      setInterpretations(prev => ({ ...prev, [entry.id]: result }));
+    } catch (e) {
+      logger.error('Dream interpretation failed:', e);
+      setExpandedEntryId(null);
     }
   }, [expandedEntryId, interpretations, natalChart, entries]);
 
@@ -890,6 +889,11 @@ export default function SleepScreen() {
                     <Text style={styles.todayInterpretTitle}>Your Dream Reflection</Text>
                   </View>
                   <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
+                  {todayInterp.patternAnalysis?.undercurrentLabel ? (
+                    <View style={styles.undercurrentBox}>
+                      <Text style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</Text>
+                    </View>
+                  ) : null}
                   <View style={styles.sitWithBox}>
                     <Text style={styles.sitWithLabel}>A question to sit with</Text>
                     <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
@@ -1026,6 +1030,11 @@ export default function SleepScreen() {
                       <Animated.View entering={FadeInDown.duration(400)}>
                         <LinearGradient colors={['rgba(157, 118, 193, 0.1)', 'rgba(2,8,23,0.50)']} style={styles.interpretCard}>
                           <Text style={styles.interpretBody}>{interp.paragraph}</Text>
+                          {interp.patternAnalysis?.undercurrentLabel ? (
+                            <View style={styles.undercurrentBox}>
+                              <Text style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</Text>
+                            </View>
+                          ) : null}
                           <View style={styles.sitWithBox}>
                             <Text style={styles.sitWithLabel}>A question to sit with</Text>
                             <Text style={styles.sitWithText}>"{interp.question}"</Text>
@@ -1242,6 +1251,9 @@ const styles = StyleSheet.create({
   interpretCard: { borderRadius: 20, padding: 24, marginTop: 6, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
   interpretBody: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   
+  undercurrentBox: { marginTop: 16, paddingVertical: 8, paddingHorizontal: 14, alignSelf: 'flex-start', borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.10)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.18)' },
+  undercurrentLabel: { fontSize: 12, fontWeight: '600', color: PALETTE.amethyst, letterSpacing: 0.8, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+
   sitWithBox: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(157, 118, 193, 0.15)' },
   sitWithLabel: { fontSize: 11, fontWeight: '700', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24, fontStyle: 'italic', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },

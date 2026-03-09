@@ -4,6 +4,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { SkiaGradient } from '../../components/ui/SkiaGradient';
+import MaskedView from '@react-native-masked-view/masked-view';
 import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -11,7 +13,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import { metallicFillColors } from '../../constants/mySkyMetallic';
+import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
@@ -71,6 +73,61 @@ const ASPECT_NATURE_COLORS: Record<string, string> = {
 
 // ── Multi-character planet symbols that need smaller font in aspects tab ──
 const MULTI_CHAR_PLANETS = new Set(['Ascendant', 'Midheaven']);
+
+// ── Gradient helpers ──
+const GRAD_PROPS = {
+  colors: [...metallicFillColors] as string[],
+  locations: [...metallicFillPositions] as number[],
+  start: { x: 0, y: 0 },
+  end: { x: 1, y: 1 },
+};
+
+/** Renders a zodiac/planet text glyph with the metallic fill gradient. */
+function GradientSymbol({
+  symbol,
+  fontSize = 18,
+  w = 28,
+  h = 24,
+  style,
+}: {
+  symbol: string;
+  fontSize?: number;
+  w?: number;
+  h?: number;
+  style?: object;
+}) {
+  return (
+    <MaskedView
+      style={[{ width: w, height: h }, style]}
+      maskElement={
+        <Text
+          style={{
+            fontFamily: ZODIAC_FAMILY,
+            fontSize,
+            color: '#000',
+            lineHeight: h,
+            width: w,
+            textAlign: 'center',
+            backgroundColor: 'transparent',
+          }}
+        >
+          {symbol}
+        </Text>
+      }
+    >
+      <SkiaGradient {...GRAD_PROPS} style={{ width: w, height: h }} />
+    </MaskedView>
+  );
+}
+
+/** Wraps a Chiron/Node SVG icon with the metallic fill gradient. */
+function GradientIcon({ size, children }: { size: number; children: React.ReactElement }) {
+  return (
+    <MaskedView style={{ width: size, height: size }} maskElement={children}>
+      <SkiaGradient {...GRAD_PROPS} style={{ width: size, height: size }} />
+    </MaskedView>
+  );
+}
 
 type TabKey = 'planets' | 'houses' | 'aspects' | 'patterns';
 
@@ -616,7 +673,7 @@ export default function ChartScreen() {
                 >
                   {!overlayPerson ? (
                     <View style={[styles.personChip, styles.personChipActive]}>
-                      <GoldIcon name="person" size={14}   />
+                      <Ionicons name="person" size={14} color="#FFFFFF" />
                       <Text style={[styles.personChipText, { color: '#FFFFFF', fontWeight: '700' }]}>You</Text>
                     </View>
                   ) : (
@@ -642,7 +699,7 @@ export default function ChartScreen() {
                   >
                     {isActive ? (
                       <View style={[styles.personChip, styles.personChipActive]}>
-                        <GoldIcon name="layers-outline" size={14}   />
+                        <Ionicons name="layers-outline" size={14} color="#FFFFFF" />
                         <Text style={[styles.personChipText, { color: '#FFFFFF', fontWeight: '700' }]} numberOfLines={1}>
                           {person.name}
                         </Text>
@@ -768,12 +825,14 @@ export default function ChartScreen() {
             <View style={[styles.bigThreeCard, { backgroundColor: 'transparent' }]}> 
               <View style={styles.bigThreeRow}>
                 <View style={styles.bigThreeItem}>
-                  <Text style={styles.bigThreeLabel}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>☉</Text> Sun
-                  </Text>
-                  <Text style={styles.bigThreeSign}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.sun.sign.symbol}</Text> {activeChart!.sun.sign.name}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                    <GradientSymbol symbol="☉" fontSize={11} w={13} h={13} />
+                    <Text style={styles.bigThreeLabel}> Sun</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
+                    <GradientSymbol symbol={activeChart!.sun.sign.symbol} fontSize={12} w={15} h={14} />
+                    <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.sun.sign.name}</Text>
+                  </View>
                   <Text style={styles.bigThreeDeg}>
                     {activeChart!.sun.degree}°{String(activeChart!.sun.minute).padStart(2, '0')}' · House{' '}
                     {activeChart!.sun.house}
@@ -781,12 +840,14 @@ export default function ChartScreen() {
                 </View>
 
                 <View style={styles.bigThreeItem}>
-                  <Text style={styles.bigThreeLabel}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>☽</Text> Moon
-                  </Text>
-                  <Text style={styles.bigThreeSign}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.moon.sign.symbol}</Text> {activeChart!.moon.sign.name}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                    <GradientSymbol symbol="☽" fontSize={11} w={13} h={13} />
+                    <Text style={styles.bigThreeLabel}> Moon</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
+                    <GradientSymbol symbol={activeChart!.moon.sign.symbol} fontSize={12} w={15} h={14} />
+                    <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.moon.sign.name}</Text>
+                  </View>
                   <Text style={styles.bigThreeDeg}>
                     {activeChart!.moon.degree}°{String(activeChart!.moon.minute).padStart(2, '0')}' · House{' '}
                     {activeChart!.moon.house}
@@ -796,9 +857,10 @@ export default function ChartScreen() {
                 {activeChart!.ascendant && (
                   <View style={styles.bigThreeItem}>
                     <Text style={styles.bigThreeLabel}>AC Rising</Text>
-                    <Text style={styles.bigThreeSign}>
-                      <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.ascendant.sign.symbol}</Text> {activeChart!.ascendant.sign.name}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
+                      <GradientSymbol symbol={activeChart!.ascendant.sign.symbol} fontSize={12} w={15} h={14} />
+                      <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.ascendant.sign.name}</Text>
+                    </View>
                     <Text style={styles.bigThreeDeg}>
                       {activeChart!.ascendant.degree}°{String(activeChart!.ascendant.minute).padStart(2, '0')}'
                     </Text>
@@ -809,9 +871,10 @@ export default function ChartScreen() {
               {activeChart!.midheaven && (
                 <View style={styles.mcRow}>
                   <Text style={styles.mcLabel}>MC Midheaven</Text>
-                  <Text style={styles.mcSign}>
-                    <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{activeChart!.midheaven.sign.symbol}</Text> {activeChart!.midheaven.sign.name}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+                    <GradientSymbol symbol={activeChart!.midheaven.sign.symbol} fontSize={16} w={20} h={18} />
+                    <Text style={[styles.mcSign, { marginTop: 0 }]}> {activeChart!.midheaven.sign.name}</Text>
+                  </View>
                   <Text style={styles.mcDeg}>
                     {activeChart!.midheaven.degree}°{String(activeChart!.midheaven.minute).padStart(2, '0')}'
                   </Text>
@@ -830,19 +893,15 @@ export default function ChartScreen() {
                   {sensitivePoints.map((pt) => (
                     <View key={pt.label} style={styles.sensitiveItem}>
                       <View style={{ marginBottom: 4 }}>
-                        {pt.label === 'Chiron' && <ChironIcon size={20} color={'#E8D6AE'} />}
-                        {pt.label === 'North Node' && <NorthNodeIcon size={20} color={'#E8D6AE'} />}
-                        {pt.label === 'South Node' && <SouthNodeIcon size={20} color={'#E8D6AE'} />}
+                        {pt.label === 'Chiron' && <GradientIcon size={20}><ChironIcon size={20} color={'#000'} /></GradientIcon>}
+                        {pt.label === 'North Node' && <GradientIcon size={20}><NorthNodeIcon size={20} color={'#000'} /></GradientIcon>}
+                        {pt.label === 'South Node' && <GradientIcon size={20}><SouthNodeIcon size={20} color={'#000'} /></GradientIcon>}
                       </View>
                       <Text style={styles.sensitiveName}>{pt.label}</Text>
-                      <Text
-                        style={[
-                          styles.sensitiveSign,
-                          { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
-                        ]}
-                      >
-                        <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{pt.signSymbol}</Text> {pt.sign}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+                        <GradientSymbol symbol={pt.signSymbol} fontSize={13} w={16} h={15} />
+                        <Text style={[styles.sensitiveSign, { marginTop: 0 }]}> {pt.sign}</Text>
+                      </View>
                       <Text style={styles.sensitiveDeg}>
                         {pt.degree}°{String(pt.minute).padStart(2, '0')}'{pt.house ? ` · H${pt.house}` : ''}
                       </Text>
@@ -918,9 +977,13 @@ export default function ChartScreen() {
                     style={styles.tableRow}
                   >
                     <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                      <Text style={[styles.planetSymbol, planetSymbol.length > 1 && { fontSize: 13 }]}>
-                        {planetSymbol}
-                      </Text>
+                      <GradientSymbol
+                        symbol={planetSymbol}
+                        fontSize={planetSymbol.length > 1 ? 13 : 18}
+                        w={28}
+                        h={24}
+                        style={{ marginRight: 10 }}
+                      />
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.planetName, MULTI_CHAR_PLANETS.has(row.label) && { fontSize: 11 }]}>
                           {row.label}
@@ -930,7 +993,7 @@ export default function ChartScreen() {
                     </View>
 
                     <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                      <Text style={[styles.signSymbol, { color: '#E8D6AE' }]}>{row.p.sign.symbol}</Text>
+                      <GradientSymbol symbol={row.p.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.signName, { color: elColor }]}>{row.p.sign.name}</Text>
                         <Text style={styles.elementLabel}>
@@ -970,9 +1033,9 @@ export default function ChartScreen() {
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
                         <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
-                          {pt.label === 'Chiron' && <ChironIcon size={18} color={'#E8D6AE'} />}
-                          {pt.label === 'North Node' && <NorthNodeIcon size={18} color={'#E8D6AE'} />}
-                          {pt.label === 'South Node' && <SouthNodeIcon size={18} color={'#E8D6AE'} />}
+                          {pt.label === 'Chiron' && <GradientIcon size={18}><ChironIcon size={18} color={'#000'} /></GradientIcon>}
+                          {pt.label === 'North Node' && <GradientIcon size={18}><NorthNodeIcon size={18} color={'#000'} /></GradientIcon>}
+                          {pt.label === 'South Node' && <GradientIcon size={18}><SouthNodeIcon size={18} color={'#000'} /></GradientIcon>}
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
@@ -981,14 +1044,7 @@ export default function ChartScreen() {
                       </View>
 
                       <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                        <Text
-                          style={[
-                            styles.signSymbol,
-                            { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
-                          ]}
-                        >
-                          {pt.signSymbol}
-                        </Text>
+                        <GradientSymbol symbol={pt.signSymbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
                         <View style={{ flex: 1 }}>
                           <Text
                             style={[
@@ -1072,7 +1128,7 @@ export default function ChartScreen() {
                         </View>
 
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                          <Text style={[styles.signSymbol, { color: '#E8D6AE' }]}>{cusp.sign.symbol}</Text>
+                          <GradientSymbol symbol={cusp.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
                           <View style={{ flex: 1 }}>
                             <Text style={[styles.signName, { color: elColor }]}>{cusp.sign.name}</Text>
                           </View>
@@ -1119,28 +1175,28 @@ export default function ChartScreen() {
                       if (planet.name === 'Chiron') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <ChironIcon size={18} color={'#E8D6AE'} />
+                            <GradientIcon size={18}><ChironIcon size={18} color={'#000'} /></GradientIcon>
                           </View>
                         );
                       }
                       if (planet.name === 'North Node') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <NorthNodeIcon size={18} color={'#E8D6AE'} />
+                            <GradientIcon size={18}><NorthNodeIcon size={18} color={'#000'} /></GradientIcon>
                           </View>
                         );
                       }
                       if (planet.name === 'South Node') {
                         return (
                           <View style={styles.aspectIconWrap}>
-                            <SouthNodeIcon size={18} color={'#E8D6AE'} />
+                            <GradientIcon size={18}><SouthNodeIcon size={18} color={'#000'} /></GradientIcon>
                           </View>
                         );
                       }
                       if (MULTI_CHAR_PLANETS.has(planet.name)) {
-                        return <Text style={[styles.aspectPlanetSymbol, { fontSize: 11 }]}>{planet.symbol}</Text>;
+                        return <GradientSymbol symbol={planet.symbol} fontSize={11} w={24} h={24} style={{ marginRight: 6 }} />;
                       }
-                      return <Text style={styles.aspectPlanetSymbol}>{planet.symbol}</Text>;
+                      return <GradientSymbol symbol={planet.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />;
                     };
 
                     return (
@@ -1167,7 +1223,7 @@ export default function ChartScreen() {
                         </View>
 
                         <View style={[styles.td, { flex: 2, alignItems: 'center' }]}>
-                          <Text style={[styles.aspectSymbol, { color: '#E8D6AE' }]}>{asp.type.symbol}</Text>
+                          <GradientSymbol symbol={asp.type.symbol} fontSize={18} w={24} h={24} />
                           <Text style={[styles.aspectName, { color: natureColor }]}>{asp.type.name}</Text>
                           <Text style={[styles.aspectNature, { color: natureColor }]}>{asp.type.nature}</Text>
                         </View>
@@ -1250,10 +1306,12 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Chart Ruler</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <Text style={styles.patternHighlightText}>
-                      <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{chartPatterns.chartRuler.planetSymbol}</Text> {chartPatterns.chartRuler.planet} in <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{chartPatterns.chartRuler.rulerSignSymbol}</Text>{' '}
-                      {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <GradientSymbol symbol={chartPatterns.chartRuler.planetSymbol} fontSize={15} w={18} h={17} />
+                      <Text style={styles.patternHighlightText}> {chartPatterns.chartRuler.planet} in </Text>
+                      <GradientSymbol symbol={chartPatterns.chartRuler.rulerSignSymbol} fontSize={15} w={18} h={17} />
+                      <Text style={styles.patternHighlightText}> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</Text>
+                    </View>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
                   <View style={styles.tooltipBox}>
@@ -1274,10 +1332,10 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Point of Flow</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <Text style={styles.patternHighlightText}>
-                      <Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{partOfFortune.sign?.symbol}</Text> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°
-                      {partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <GradientSymbol symbol={partOfFortune.sign?.symbol ?? ''} fontSize={15} w={18} h={17} />
+                      <Text style={styles.patternHighlightText}> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</Text>
+                    </View>
                   </View>
                   <Text style={styles.patternDesc}>
                     This point (traditionally "Part of Fortune") reflects where you tend to find ease, natural resilience,
