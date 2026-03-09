@@ -59,20 +59,18 @@ const ORB_POSITIONS = {
 // ── Colour interpolation ───────────────────────────────────────────────────
 
 function moodColor(v: number): string {
-  // Gold spectrum: low → muted amber, high → radiant gold (#D4AF37)
   const t = v / 10;
-  const r = Math.round(160 + t * 52); // 160 → 212
-  const g = Math.round(110 + t * 65); // 110 → 175
-  const b = Math.round(20  + t * 35); // 20  → 55
+  const r = Math.round(180 + t * 32);
+  const g = Math.round(140 + t * 35);
+  const b = Math.round(40 + t * 15);
   return `rgba(${r}, ${g}, ${b}, ${0.3 + t * 0.4})`;
 }
 
 function energyColor(v: number): string {
-  // Cyan spectrum: low → muted slate-cyan, high → vivid cyan (#7DEBDB)
   const t = v / 10;
-  const r = Math.round(40  + t * 85);  // 40  → 125
-  const g = Math.round(100 + t * 135); // 100 → 235
-  const b = Math.round(110 + t * 109); // 110 → 219
+  const r = Math.round(60 + t * 40);
+  const g = Math.round(120 + t * 59);
+  const b = Math.round(170 + t * 41);
   return `rgba(${r}, ${g}, ${b}, ${0.3 + t * 0.4})`;
 }
 

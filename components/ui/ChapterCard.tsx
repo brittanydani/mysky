@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginBottom: 16,
-    lineHeight: 30, // 140% of 21px to prevent reading fatigue in dark mode
+    lineHeight: 27,
   },
   lockedTitle: {
     color: theme.textSecondary,

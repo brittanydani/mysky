@@ -1,13 +1,12 @@
 // File: app/(tabs)/blueprint.tsx
-// MySky — Blueprint: Architecture Hub
+// MySky — Blueprint: The Master Layout
 //
-// The user's personal blueprint — a hub screen linking to:
-//   1. Core Force Map (radar hero)
-//   2. Growth Insights
-//   3. Energy Architecture
-//   4. Relationships
+// The user's complete psychological architecture:
+//   1. Hero — Core Force Map radar chart + Export PDF
+//   2. Story — 10 Chapters as expandable cards
+//   3. Deep Dives — Energy Domains + Relationships
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,6 +14,7 @@ import {
   ScrollView,
   Pressable,
   Dimensions,
+  Alert,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,12 +25,17 @@ import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
+import { theme } from '../../constants/theme';
+import { applyStoryLabels } from '../../constants/storyLabels';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
+import ChapterCard from '../../components/ui/ChapterCard';
+import SkiaStoryGate, { CHAPTER_COLORS } from '../../components/ui/SkiaStoryGate';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { FullNatalStoryGenerator, GeneratedChapter } from '../../services/premium/fullNatalStory';
+import { exportChartToPdf } from '../../services/premium/pdfExport';
 import { CheckInService } from '../../services/patterns/checkInService';
-import { DailyCheckIn } from '../../services/patterns/types';
 import { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
@@ -38,20 +43,16 @@ import { SkeletonBlueprint } from '../../components/ui/SkeletonLoader';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
-
-// ── Palette ──────────────────────────────────────────────────────────────────
+// ── Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  goldDim: 'rgba(201,174,120,0.55)',
   silverBlue: '#8BC4E8',
-  amethyst: '#9D76C1',
   emerald: '#6EBF8B',
+  amethyst: '#9D76C1',
   textMain: '#FFFFFF',
-  textSoft: 'rgba(255,255,255,0.72)',
-  textMuted: 'rgba(255,255,255,0.42)',
-  glassBorder: 'rgba(255,255,255,0.07)',
-  glassBorderGold: 'rgba(201,174,120,0.18)',
+  textSoft: 'rgba(255,255,255,0.75)',
+  textMuted: 'rgba(255,255,255,0.45)',
+  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 // ── Force calculation ──
@@ -73,7 +74,7 @@ function calculateForces(chart: NatalChart | null) {
   const scores: Record<string, { label: string; val: number; color: string }> = {};
 
   const addScore = (key: string, points: number) => {
-    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || PALETTE.gold };
+    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || theme.textGold };
     scores[key].val += points;
   };
 
@@ -82,7 +83,7 @@ function calculateForces(chart: NatalChart | null) {
     const isPersonal = ['Mercury', 'Venus', 'Mars'].includes(p.planet.name);
     const points = isLuminary ? 30 : isPersonal ? 20 : 10;
     addScore(p.planet.name, points);
-    if (p.sign?.name) addScore(p.sign.name, points);
+    if (p.sign && p.sign.name) addScore(p.sign.name, points);
   });
 
   if (chart.risingSign) addScore(chart.risingSign.name, 30);
@@ -97,114 +98,99 @@ function calculateForces(chart: NatalChart | null) {
     }));
 }
 
-/** Derive a short interpretation sentence from the force data. */
-function buildInterpretation(
-  forces: { label: string; value: number }[],
-  behavioralForces?: { label: string; value: number }[],
-): string {
-  if (!forces.length) return 'Your foundational architecture is taking shape.';
-  const baseline = forces[0];
-  if (!behavioralForces || behavioralForces.length === 0) {
-    return `${baseline.label} anchors your foundational architecture — the quiet force beneath every pattern.`;
-  }
-  let maxShift = 0;
-  let shiftedLabel = '';
-  forces.forEach((f, i) => {
-    const b = behavioralForces[i];
-    if (b) {
-      const delta = Math.abs(b.value - f.value);
-      if (delta > maxShift) { maxShift = delta; shiftedLabel = f.label; }
-    }
-  });
-  if (maxShift > 12 && shiftedLabel) {
-    return `Your recent life is stretching your natural blueprint — ${shiftedLabel} is currently most activated.`;
-  }
-  return `${baseline.label} and stability remain the strongest anchors in your current architecture.`;
-}
+// ── Deep-dive links (below chapters) ──
 
-// ── Module card definitions ──────────────────────────────────────────────────
-interface ModuleCard {
+interface DeepDive {
   id: string;
   title: string;
-  description: string;
+  subtitle: string;
   icon: React.ComponentProps<typeof Ionicons>['name'];
-  accentColor: string;
+  iconColor: string;
   route: string;
   premium: boolean;
 }
 
-const MODULE_CARDS: ModuleCard[] = [
-  {
-    id: 'growth',
-    title: 'Growth Insights',
-    description: 'Explore inner-child themes, fear patterns, avoidance, and the forces shaping your development.',
-    icon: 'leaf-outline',
-    accentColor: PALETTE.emerald,
-    route: '/(tabs)/growth',
-    premium: false,
-  },
+const DEEP_DIVES: DeepDive[] = [
   {
     id: 'energy',
-    title: 'Energy Architecture',
-    description: 'View your energetic centers, focus areas, and current guidance on where activation is gathering.',
+    title: 'Energy Domains',
+    subtitle: 'Chakra mandala & energy guidance',
     icon: 'pulse-outline',
-    accentColor: PALETTE.amethyst,
+    iconColor: PALETTE.amethyst,
     route: '/(tabs)/energy',
     premium: true,
   },
   {
     id: 'relationships',
     title: 'Relationships',
-    description: 'Map the relational patterns woven through your story and the people who shape your nervous system.',
+    subtitle: 'Add charts & explore dynamics',
     icon: 'people-outline',
-    accentColor: PALETTE.silverBlue,
+    iconColor: PALETTE.silverBlue,
     route: '/(tabs)/relationships',
     premium: true,
   },
 ];
 
-// ════════════════════════════════════════════════════════════════════════════
-// Main screen
-// ════════════════════════════════════════════════════════════════════════════
-
 export default function BlueprintScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
   const [chart, setChart] = useState<NatalChart | null>(null);
+  const [chapters, setChapters] = useState<GeneratedChapter[]>([]);
   const [hasChart, setHasChart] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
+  const [checkInCount, setCheckInCount] = useState(0);
+
+  // Progressive unlock thresholds per chapter (index 0 = free, index 1-9 = premium)
+  const CHAPTER_UNLOCK_CHECKINS = [0, 3, 5, 8, 12, 16, 20, 25, 30, 40];
+
+  const getUnlockHint = (index: number): string | null => {
+    if (isPremium) return null;
+    const threshold = CHAPTER_UNLOCK_CHECKINS[index] ?? 0;
+    const remaining = threshold - checkInCount;
+    if (remaining <= 0) return null;
+    return `Unlocks after ${remaining} more check-in${remaining === 1 ? '' : 's'}`;
+  };
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+
       (async () => {
         try {
           setLoading(true);
           const charts = await localDb.getCharts();
           if (!isActive) return;
+
           if (charts.length > 0) {
             setHasChart(true);
-            const saved = charts[0];
-            const natal = AstrologyCalculator.generateNatalChart({
-              date: saved.birthDate,
-              time: saved.birthTime,
-              hasUnknownTime: saved.hasUnknownTime,
-              place: saved.birthPlace,
-              latitude: saved.latitude,
-              longitude: saved.longitude,
-              timezone: saved.timezone,
-              houseSystem: saved.houseSystem,
-            });
+            const savedChart = charts[0];
+            const birthData = {
+              date: savedChart.birthDate,
+              time: savedChart.birthTime,
+              hasUnknownTime: savedChart.hasUnknownTime,
+              place: savedChart.birthPlace,
+              latitude: savedChart.latitude,
+              longitude: savedChart.longitude,
+              timezone: savedChart.timezone,
+              houseSystem: savedChart.houseSystem,
+            };
+            const natal = AstrologyCalculator.generateNatalChart(birthData);
+            const story = FullNatalStoryGenerator.generateFullStory(natal, isPremium);
             if (!isActive) return;
             setChart(natal);
+            setChapters(story.chapters);
+
+            // Fetch check-in count for progressive unlock hints
             try {
-              const recentCheckIns = await CheckInService.getAllCheckIns(saved.id, 30);
-              if (isActive) setCheckIns(Array.isArray(recentCheckIns) ? recentCheckIns : []);
+              const count = await CheckInService.getCheckInCount(savedChart.id);
+              if (isActive) setCheckInCount(count);
             } catch { /* non-critical */ }
           } else {
             setHasChart(false);
             setChart(null);
+            setChapters([]);
           }
         } catch (e) {
           logger.error('[Blueprint] load failed:', e);
@@ -212,30 +198,30 @@ export default function BlueprintScreen() {
           if (isActive) setLoading(false);
         }
       })();
+
       return () => { isActive = false; };
-    }, [])
+    }, [isPremium])
   );
 
-  const forces = calculateForces(chart);
+  const handleExportPdf = useCallback(async () => {
+    if (!isPremium) {
+      router.push('/(tabs)/premium' as Href);
+      return;
+    }
+    if (!chart || chapters.length === 0 || isExporting) return;
 
-  const behavioralForces = useMemo(() => {
-    if (!forces.length || checkIns.length < 3) return undefined;
-    const recent = checkIns.slice(0, 30);
-    const avgMood = recent.reduce((s, c) => s + c.moodScore, 0) / recent.length;
-    const energyFactor = recent.filter(c => c.energyLevel === 'high').length / recent.length;
-    const vitalityRatio = (avgMood / 10) * 0.7 + energyFactor * 0.3;
-    return forces.map(f => ({
-      ...f,
-      value: Math.round(f.value * 0.5 + vitalityRatio * 50),
-    }));
-  }, [forces, checkIns]);
+    setIsExporting(true);
+    try {
+      await exportChartToPdf(chart, chapters);
+    } catch (err) {
+      logger.error('PDF export failed:', err);
+      Alert.alert('Export failed', 'Something went wrong generating the PDF. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [isPremium, chart, chapters, isExporting, router]);
 
-  const interpretation = useMemo(
-    () => buildInterpretation(forces, behavioralForces),
-    [forces, behavioralForces]
-  );
-
-  const handleModulePress = useCallback((item: ModuleCard) => {
+  const handleDeepDivePress = useCallback((item: DeepDive) => {
     if (!hasChart) {
       router.push('/(tabs)/home' as Href);
       return;
@@ -247,6 +233,9 @@ export default function BlueprintScreen() {
     Haptics.selectionAsync().catch(() => {});
     router.push(item.route as Href);
   }, [hasChart, isPremium, router]);
+
+  const forces = calculateForces(chart);
+  const unlockedCount = chapters.filter(c => !c.isPremium || isPremium).length;
 
   if (loading) {
     return (
@@ -269,53 +258,66 @@ export default function BlueprintScreen() {
         >
           {/* ── 1. Header ── */}
           <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
-            <Text style={styles.title}>Architecture</Text>
-            <Text style={styles.headerSub}>Your personal blueprint</Text>
+            <Text style={styles.title}>Blueprint</Text>
+            <Text style={styles.headerSub}>
+              Your personal architecture — a structured framework of behavioral patterns, core drives, and growth vectors.
+            </Text>
+            {chapters.length > 0 && (
+              <Text style={styles.dimensionLabel}>
+                {chapters.length} dimensions — {unlockedCount} mapped
+              </Text>
+            )}
           </Animated.View>
 
           {/* ── Hero: Core Force Map ── */}
           {hasChart && forces.length > 0 ? (
-            <Animated.View entering={FadeInDown.delay(100).duration(550)} style={styles.heroCard}>
-              <LinearGradient
-                colors={['rgba(14,24,48,0.72)', 'rgba(6,12,28,0.88)']}
-                style={styles.heroCardInner}
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.radarWrap}>
+              <Text style={styles.radarLabel}>Core Force Map</Text>
+              <PsychologicalForcesRadar forces={forces} size={SCREEN_W - 40} />
+
+              {/* Export PDF */}
+              <Pressable
+                onPress={handleExportPdf}
+                disabled={isExporting}
+                style={({ pressed }) => [styles.exportButton, pressed && { opacity: 0.8 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Export chart as PDF"
               >
-                <View style={styles.heroCardHeader}>
-                  <View>
-                    <Text style={styles.heroCardTitle}>Core Force Map</Text>
-                    <Text style={styles.heroCardSubtitle}>
-                      {behavioralForces ? 'Baseline · Current overlay' : 'Foundational architecture'}
-                    </Text>
-                  </View>
-                  <View style={styles.goldDot} />
-                </View>
-                <View style={styles.radarContainer}>
-                  <PsychologicalForcesRadar
-                    forces={forces}
-                    size={SCREEN_W - 80}
-                    behavioralForces={behavioralForces}
-                  />
-                </View>
-                <View style={styles.interpretationRow}>
-                  <Ionicons name="sparkles" size={13} color={PALETTE.goldDim} style={{ marginTop: 1 }} />
-                  <Text style={styles.interpretationText}>{interpretation}</Text>
-                </View>
-              </LinearGradient>
+                <LinearGradient
+                  colors={['rgba(232,214,174,0.18)', 'rgba(232,214,174,0.08)']}
+                  style={styles.exportBtnGradient}
+                >
+                  {isExporting ? (
+                    <Text style={{ color: PALETTE.gold, fontSize: 13, fontWeight: '600' }}>Exporting…</Text>
+                  ) : (
+                    <>
+                      <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
+                      <Text style={styles.exportButtonText}>Export PDF</Text>
+                      {!isPremium && (
+                        <View style={styles.premiumBadge}>
+                          <Ionicons name="diamond-outline" size={10} color={PALETTE.gold} />
+                          <Text style={styles.premiumText}>PRO</Text>
+                        </View>
+                      )}
+                    </>
+                  )}
+                </LinearGradient>
+              </Pressable>
             </Animated.View>
           ) : (
-            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.emptyCard}>
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.emptyState}>
               <LinearGradient
-                colors={['rgba(14,24,48,0.50)', 'rgba(2,8,23,0.72)']}
-                style={styles.emptyCardInner}
+                colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']}
+                style={styles.emptyCard}
               >
-                <Ionicons name="compass-outline" size={44} color={PALETTE.textMuted} style={{ marginBottom: 18 }} />
+                <Ionicons name="book-outline" size={48} color={PALETTE.textMuted} style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyTitle}>Your architecture awaits</Text>
                 <Text style={styles.emptySubtitle}>
-                  Enter your birth details to build a personalized map of your core forces, drives, and growth directions.
+                  Enter your birth details to build a personalized blueprint of behavioral patterns, drives, and growth directions.
                 </Text>
                 <Pressable
                   onPress={() => router.push('/(tabs)/home' as Href)}
-                  style={({ pressed }) => [styles.emptyButton, pressed && { opacity: 0.8 }]}
+                  style={styles.emptyButton}
                   accessibilityRole="button"
                   accessibilityLabel="Build your blueprint"
                 >
@@ -325,259 +327,350 @@ export default function BlueprintScreen() {
             </Animated.View>
           )}
 
-          {/* ── Module grid ── */}
-          <Animated.View entering={FadeInDown.delay(220).duration(500)} style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>Pathways</Text>
-          </Animated.View>
+          {/* ── 2. The 10 Chapters ── */}
+          {chapters.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Your Story</Text>
+              <Text style={styles.sectionSubtitle}>10 dimensions of your psychological architecture</Text>
+            </Animated.View>
+          )}
 
-          {MODULE_CARDS.map((item, index) => (
-            <Animated.View
-              key={item.id}
-              entering={FadeInDown.delay(280 + index * 80).duration(500)}
-            >
+          {chapters.map((chapter, index) => {
+            const isLocked = !isPremium && chapter.isPremium;
+
+            return (
+              <Animated.View
+                key={chapter.id}
+                entering={FadeInDown.delay(250 + index * 60).duration(500)}
+              >
+                <SkiaStoryGate
+                  index={index}
+                  title={applyStoryLabels(chapter.title)}
+                  isUnlocked={!isLocked}
+                  isPremium={isPremium}
+                  accentColor={CHAPTER_COLORS[index]}
+                  onPress={() => {
+                    if (isLocked) {
+                      router.push('/(tabs)/premium' as Href);
+                    } else {
+                      Haptics.selectionAsync().catch(() => {});
+                      setExpandedChapterId(prev => prev === chapter.id ? null : chapter.id);
+                    }
+                  }}
+                />
+                {isLocked && getUnlockHint(index) && (
+                  <View style={styles.unlockHintRow}>
+                    <Ionicons name="lock-open-outline" size={12} color={PALETTE.textMuted} />
+                    <Text style={styles.unlockHintText}>{getUnlockHint(index)}</Text>
+                  </View>
+                )}
+                {!isLocked && expandedChapterId === chapter.id && (
+                  <Animated.View entering={FadeInDown.duration(400)}>
+                    <ChapterCard
+                      chapter={`Chapter ${index + 1}`}
+                      title={applyStoryLabels(chapter.title)}
+                      content={applyStoryLabels(chapter.content)}
+                      reflection={applyStoryLabels(chapter.reflection)}
+                      affirmation={applyStoryLabels(chapter.affirmation)}
+                    />
+                  </Animated.View>
+                )}
+              </Animated.View>
+            );
+          })}
+
+          {/* Unlock prompt */}
+          {!isPremium && chapters.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(250 + chapters.length * 60).duration(500)}>
               <Pressable
-                style={({ pressed }) => [styles.moduleCard, pressed && styles.moduleCardPressed]}
-                onPress={() => handleModulePress(item)}
+                onPress={() => router.push('/(tabs)/premium' as Href)}
                 accessibilityRole="button"
-                accessibilityLabel={`${item.title}: ${item.description}`}
+                accessibilityLabel="Unlock all chapters"
               >
                 <LinearGradient
-                  colors={['rgba(13,22,44,0.80)', 'rgba(8,14,30,0.65)']}
-                  style={styles.moduleCardInner}
+                  colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']}
+                  style={styles.upsellGradient}
                 >
-                  <View style={[styles.moduleIconWrap, { backgroundColor: `${item.accentColor}12` }]}>
-                    <Ionicons name={item.icon} size={26} color={item.accentColor} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                    <Text style={styles.upsellTitle}>7 more dimensions to explore</Text>
                   </View>
-                  <View style={styles.moduleTextCol}>
-                    <View style={styles.moduleTitleRow}>
-                      <Text style={styles.moduleTitle}>{item.title}</Text>
-                      {item.premium && !isPremium && (
-                        <View style={styles.proBadge}>
-                          <Ionicons name="diamond-outline" size={9} color={PALETTE.gold} />
-                          <Text style={styles.proBadgeText}>PRO</Text>
-                        </View>
-                      )}
+                  <Text style={styles.upsellText}>
+                    Attachment Style · Conflict Resolution · Inner Child Patterns · Shadow Integration · Growth Vectors — and more.
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+                    <Text style={styles.unlockText}>Expand your blueprint</Text>
+                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          )}
+
+          {/* ── 3. Deep Dives ── */}
+          {hasChart && (
+            <Animated.View entering={FadeInDown.delay(300 + chapters.length * 60).duration(500)} style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Frameworks</Text>
+              <Text style={styles.sectionSubtitle}>Additional structural tools</Text>
+            </Animated.View>
+          )}
+
+          {hasChart && DEEP_DIVES.map((item, index) => (
+            <Animated.View
+              key={item.id}
+              entering={FadeInDown.delay(350 + chapters.length * 60 + index * 80).duration(500)}
+            >
+              <Pressable
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                onPress={() => handleDeepDivePress(item)}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.title}: ${item.subtitle}`}
+              >
+                <LinearGradient
+                  colors={['rgba(14, 24, 48, 0.55)', 'rgba(10, 18, 36, 0.40)']}
+                  style={styles.cardInner}
+                >
+                  <View style={styles.cardRow}>
+                    <View style={[styles.iconCircle, { backgroundColor: `${item.iconColor}15` }]}>
+                      <Ionicons name={item.icon} size={24} color={item.iconColor} />
                     </View>
-                    <Text style={styles.moduleDescription}>{item.description}</Text>
+                    <View style={styles.cardTextCol}>
+                      <View style={styles.titleRow}>
+                        <Text style={styles.cardTitle}>{item.title}</Text>
+                        {item.premium && !isPremium && (
+                          <View style={styles.premiumBadge}>
+                            <Ionicons name="diamond-outline" size={10} color={PALETTE.gold} />
+                            <Text style={styles.premiumText}>PRO</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={PALETTE.textMuted} />
                   </View>
-                  <Ionicons name="chevron-forward" size={17} color={PALETTE.textMuted} style={{ marginLeft: 8 }} />
                 </LinearGradient>
               </Pressable>
             </Animated.View>
           ))}
-
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Styles ──────────────────────────────────────────────────────────────────
+
+const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safeArea: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 16,
     paddingBottom: 120,
   },
 
-  // ── Header
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  title: {
-    color: PALETTE.textMain,
-    fontSize: 34,
-    fontWeight: '700',
-    fontFamily: SERIF,
-    letterSpacing: 0.4,
-    marginBottom: 6,
-  },
-  headerSub: {
+  loadingText: {
     color: PALETTE.textMuted,
-    fontSize: 14,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-
-  // ── Hero card (Core Force Map)
-  heroCard: {
-    marginBottom: 28,
-    borderRadius: 22,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorderGold,
-  },
-  heroCardInner: {
-    borderRadius: 22,
-    paddingTop: 22,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  heroCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  heroCardTitle: {
-    color: PALETTE.textMain,
-    fontSize: 20,
-    fontWeight: '700',
-    fontFamily: SERIF,
-    letterSpacing: 0.2,
-  },
-  heroCardSubtitle: {
-    color: PALETTE.textMuted,
-    fontSize: 12,
-    marginTop: 3,
-    letterSpacing: 0.4,
-  },
-  goldDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: PALETTE.gold,
-    marginTop: 6,
-    opacity: 0.7,
-  },
-  radarContainer: {
-    alignItems: 'center',
-  },
-  interpretationRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: PALETTE.glassBorder,
-  },
-  interpretationText: {
-    flex: 1,
-    color: PALETTE.textSoft,
-    fontSize: 13,
-    lineHeight: 20,
     fontStyle: 'italic',
-  },
-
-  // ── Empty state
-  emptyCard: {
-    marginBottom: 28,
-    borderRadius: 22,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-  },
-  emptyCardInner: {
-    borderRadius: 22,
-    padding: 36,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    fontSize: 22,
-    color: PALETTE.textMain,
-    fontFamily: SERIF,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: PALETTE.textSoft,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 28,
-  },
-  emptyButton: {
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorderGold,
-  },
-  emptyButtonText: {
-    color: PALETTE.gold,
-    fontWeight: '700',
     fontSize: 15,
   },
 
-  // ── Section header
-  sectionHeader: {
-    marginBottom: 14,
-  },
-  sectionLabel: {
-    color: PALETTE.textMuted,
-    fontSize: 11,
+  // Header
+  header: { alignItems: 'center', marginBottom: 24 },
+  title: {
+    color: PALETTE.textMain,
+    fontSize: 32,
     fontWeight: '700',
-    letterSpacing: 1.8,
-    textTransform: 'uppercase',
+    fontFamily: SERIF,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  headerSub: {
+    color: PALETTE.textSoft,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 8,
+  },
+  dimensionLabel: {
+    color: PALETTE.textMuted,
+    fontSize: 13,
+    marginTop: 12,
+    fontStyle: 'italic',
+    letterSpacing: 0.5,
   },
 
-  // ── Module cards
-  moduleCard: {
-    marginBottom: 12,
-    borderRadius: 18,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+  // Radar
+  radarWrap: { alignItems: 'center', marginBottom: 28 },
+  radarLabel: {
+    color: PALETTE.textSoft,
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: SERIF,
+    marginBottom: 4,
   },
-  moduleCardPressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.988 }],
-  },
-  moduleCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 18,
-    borderRadius: 18,
-  },
-  moduleIconWrap: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  moduleTextCol: {
-    flex: 1,
-  },
-  moduleTitleRow: {
+
+  // Export PDF
+  exportButton: { marginTop: 4, borderRadius: 20, overflow: 'hidden' },
+  exportBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(232,214,174,0.25)',
+  },
+  exportButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: PALETTE.gold,
+  },
+
+  // Section headers
+  sectionHeader: { marginTop: 8, marginBottom: 16 },
+  sectionTitle: {
+    color: PALETTE.textMain,
+    fontSize: 22,
+    fontWeight: '700',
+    fontFamily: SERIF,
     marginBottom: 4,
   },
-  moduleTitle: {
+  sectionSubtitle: {
+    color: PALETTE.textMuted,
+    fontSize: 13,
+  },
+
+  // Deep-dive cards
+  card: { marginBottom: 12, borderRadius: 16, overflow: 'hidden' },
+  cardPressed: { opacity: 0.85, transform: [{ scale: 0.985 }] },
+  cardInner: {
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+  },
+  cardRow: { flexDirection: 'row', alignItems: 'center' },
+  iconCircle: {
+    width: 46, height: 46, borderRadius: 23,
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: 14,
+  },
+  cardTextCol: { flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cardTitle: {
     color: PALETTE.textMain,
     fontSize: 16,
     fontWeight: '700',
-    fontFamily: SERIF,
   },
-  moduleDescription: {
+  cardSubtitle: {
     color: PALETTE.textSoft,
     fontSize: 13,
-    lineHeight: 19,
+    fontWeight: '400',
+    marginTop: 2,
   },
-  proBadge: {
+
+  // Premium badge
+  premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 8,
-    backgroundColor: 'rgba(201,174,120,0.10)',
+    backgroundColor: 'rgba(201, 174, 120, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(201,174,120,0.22)',
+    borderColor: 'rgba(201, 174, 120, 0.25)',
   },
-  proBadgeText: {
+  premiumText: {
     color: PALETTE.gold,
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+
+  // Upsell
+  upsellGradient: {
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(232,214,174,0.18)',
+    marginTop: 16,
+  },
+  upsellTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: PALETTE.textMain,
+    fontFamily: SERIF,
+  },
+  upsellText: {
+    fontSize: 14,
+    color: PALETTE.textSoft,
+    lineHeight: 22,
+  },
+  unlockText: {
+    fontSize: 14,
+    color: PALETTE.gold,
+    fontWeight: '600',
+  },
+
+  // Progressive unlock hints
+  unlockHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    marginTop: -4,
+    marginBottom: 4,
+  },
+  unlockHintText: {
+    fontSize: 12,
+    color: PALETTE.textMuted,
+    fontStyle: 'italic',
+  },
+
+  // Empty state
+  emptyState: {
+    marginBottom: 24,
+  },
+  emptyCard: {
+    borderRadius: 20,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    fontSize: 24,
+    color: PALETTE.textMain,
+    fontFamily: SERIF,
+    marginBottom: 12,
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: PALETTE.textSoft,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(232,214,174,0.25)',
+  },
+  emptyButtonText: {
+    color: PALETTE.gold,
+    fontWeight: '700',
+    fontSize: 15,
   },
 });

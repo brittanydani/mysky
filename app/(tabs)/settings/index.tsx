@@ -544,54 +544,12 @@ export default function SettingsScreen() {
                     </View>
                   </View>
                 </View>
-              <ObsidianDivider />
-              <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
-                onPress={async () => {
-                  try { await Haptics.selectionAsync(); } catch {}
-                  await Linking.openSettings();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Configure biometric lock in device settings"
-              >
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <Ionicons name="finger-print" size={20} color={accentBlue} />
-                      <Text style={styles.settingTitle}>Biometric Lock</Text>
-                    </View>
-                    <Text style={styles.settingDescription}>Face ID / Touch ID — configure in device Settings</Text>
-                  </View>
-                  <Ionicons name="open-outline" size={18} color={theme.textMuted} />
-                </View>
-              </Pressable>
             </ObsidianSettingsGroup>
           </Animated.View>
 
           {/* ── Calibration (Celestial Toggles) ── */}
           <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Personalization" subtitle="Fine-tune your experience">
-              <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
-                onPress={async () => {
-                  try { await Haptics.selectionAsync(); } catch {}
-                  handleDevEditBirthData();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Update birth data"
-              >
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <Ionicons name="person-circle-outline" size={20} color={accentGold} />
-                      <Text style={styles.settingTitle}>Update Birth Data</Text>
-                    </View>
-                    <Text style={styles.settingDescription}>Change name, birth location or time</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
-                </View>
-              </Pressable>
-              <ObsidianDivider />
               <Pressable
                 style={{ paddingHorizontal: 16, paddingVertical: 12 }}
                 onPress={async () => {
@@ -646,47 +604,16 @@ export default function SettingsScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Data Sovereignty" subtitle="Your interior world is yours alone">
-              <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
-                onPress={async () => {
-                  try { await Haptics.selectionAsync(); } catch {}
-                  router.push('/(tabs)/settings/data-sovereignty' as Href);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Privacy Pledge"
-              >
+            <ObsidianSettingsGroup title="Privacy & Data" subtitle="Device-only, encrypted at rest">
+              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="heart-outline" size={20} color={accentBlue} />
-                      <Text style={styles.settingTitle}>Privacy Pledge</Text>
+                      <Ionicons name="shield-checkmark" size={20} color={accentBlue} />
+                      <Text style={styles.settingTitle}>Privacy Settings</Text>
                     </View>
                     <Text style={styles.settingDescription}>
-                      How MySky protects and respects your interior world
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
-                </View>
-              </Pressable>
-              <ObsidianDivider />
-              <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
-                onPress={async () => {
-                  try { await Haptics.selectionAsync(); } catch {}
-                  setShowPrivacyModal(true);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Delete all data"
-              >
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <Ionicons name="trash-outline" size={20} color={errorColor} />
-                      <Text style={[styles.settingTitle, { color: errorColor }]}>Delete All Data</Text>
-                    </View>
-                    <Text style={styles.settingDescription}>
-                      Permanently erase all charts, journals, and settings
+                      Export, delete, or manage your data on this device
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
@@ -987,21 +914,6 @@ export default function SettingsScreen() {
               </Pressable>
             </Animated.View>
           )}
-
-          {/* ── Advanced Calibration (Source Code) Ghost Button ── */}
-          <Animated.View entering={FadeInDown.delay(800).duration(600)} style={[styles.section, { alignItems: 'center', paddingTop: 24, paddingBottom: 8 }]}>
-            <Pressable
-              style={styles.sourceCodeButton}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                router.push('/(tabs)/chart' as Href);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Advanced Calibration — natal chart source code"
-            >
-              <Text style={styles.sourceCodeButtonText}>Advanced Calibration (Source Code)</Text>
-            </Pressable>
-          </Animated.View>
         </ScrollView>
       </SafeAreaView>
 
@@ -1031,12 +943,14 @@ export default function SettingsScreen() {
         }}
       />
 
-      <BirthDataModal
-        visible={showDevBirthModal}
-        onClose={() => setShowDevBirthModal(false)}
-        onSave={handleDevBirthSave}
-        initialData={devBirthInitial}
-      />
+      {__DEV__ && (
+        <BirthDataModal
+          visible={showDevBirthModal}
+          onClose={() => setShowDevBirthModal(false)}
+          onSave={handleDevBirthSave}
+          initialData={devBirthInitial}
+        />
+      )}
     </View>
   );
 }
@@ -1215,23 +1129,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: theme.primary,
-  },
-  sourceCodeButton: {
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    paddingHorizontal: 24,
-    paddingVertical: 13,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#D4AF37',
-    backgroundColor: 'transparent',
-    alignSelf: 'center' as const,
-  },
-  sourceCodeButtonText: {
-    color: '#D4AF37',
-    fontSize: 11,
-    fontWeight: '600' as const,
-    letterSpacing: 2,
-    textTransform: 'uppercase' as const,
   },
 });

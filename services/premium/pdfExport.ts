@@ -72,17 +72,7 @@ function degMin(deg: number, min: number): string {
 
 // ─── HTML builder ─────────────────────────────────────────────────────────────
 
-export interface PdfForceData {
-  label: string;
-  value: number;
-}
-
-function buildForceRow(f: PdfForceData): string {
-  const pct = Math.round(f.value);
-  return `<tr><td>${esc(f.label)}</td><td>${pct}%</td><td><div class="force-bar"><div class="force-fill" style="width:${pct}%"></div></div></td></tr>`;
-}
-
-function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[], forces?: PdfForceData[]): string {
+function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
   const { birthData, sunSign, moonSign, risingSign, placements, houseCusps, aspects } = chart;
 
   const birthTime = birthData.hasUnknownTime ? 'Unknown' : (birthData.time ?? 'Unknown');
@@ -384,11 +374,6 @@ td {
 tr:last-child td { border-bottom: none; }
 .rx { color: rgba(212, 175, 55,0.7); font-style: italic; }
 
-/* ── Core Force Map ── */
-.force-description { font-size: 12px; color: rgba(255,255,255,0.50); margin: -4px 0 12px; font-style: italic; }
-.force-bar { background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px; width: 100%; overflow: hidden; }
-.force-fill { height: 8px; border-radius: 4px; background: linear-gradient(90deg,#C0C0C0,#D4AF37); }
-
 /* ── Aspects ── */
 .aspect-group {
   font-size: 13px;
@@ -549,16 +534,6 @@ ${houseSection}
   ${aspectsContent}
 </div>
 
-${forces && forces.length > 0 ? `
-<div class="section">
-  <h2 class="section-title">Core Force Map — Forensic Profile</h2>
-  <p class="force-description">Dominant psychological forces derived from natal placements, expressed as relative influence percentages.</p>
-  <table>
-    <thead><tr><th>Force</th><th>Influence</th><th>Relative Magnitude</th></tr></thead>
-    <tbody>${forces.map(buildForceRow).join('')}</tbody>
-  </table>
-</div>` : ''}
-
 <h2 class="chapters-header">Your Themes</h2>
 ${chapterHtml}
 
@@ -580,9 +555,8 @@ ${chapterHtml}
 export async function exportChartToPdf(
   chart: NatalChart,
   chapters: GeneratedChapter[],
-  forces?: PdfForceData[],
 ): Promise<void> {
-  const html = buildPdfHtml(chart, chapters, forces);
+  const html = buildPdfHtml(chart, chapters);
 
   // Render HTML → PDF in the system temp directory
   const { uri: tmpUri } = await Print.printToFileAsync({ html, base64: false });

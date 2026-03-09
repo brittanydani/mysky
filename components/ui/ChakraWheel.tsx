@@ -38,17 +38,15 @@ interface ChakraWheelProps {
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-// ===== Chakra Muted Jewel-Tone Palette (Energy Architecture) =====
-// Traditional human energy center colors, muted for a high-end look.
-// Order follows the spine from root to crown.
+// ===== Cinematic Jewel-Tone Chakra Palette =====
 export const CHAKRA_COLORS: Record<string, { core: string; glow: string; deep: string }> = {
-  Crown:          { core: '#EE82EE', glow: 'rgba(238,130,238,0.45)', deep: '#6A2E6A' }, // Violet   — Connection, Purpose, Spirit
-  'Third Eye':    { core: '#483D8B', glow: 'rgba(72,61,139,0.45)',   deep: '#1A1535' }, // Indigo   — Intuition, Dreams, Vision
-  Throat:         { core: '#00BFFF', glow: 'rgba(0,191,255,0.45)',   deep: '#005A7A' }, // Sapphire — Truth, Communication, Voice
-  Heart:          { core: '#4CAF50', glow: 'rgba(76,175,80,0.45)',   deep: '#1A5E1A' }, // Emerald  — Love, Compassion, Healing
-  'Solar Plexus': { core: '#FFD700', glow: 'rgba(255,215,0,0.45)',   deep: '#7A6500' }, // Gold     — Power, Confidence, Mastery
-  Sacral:         { core: '#FFA500', glow: 'rgba(255,165,0,0.45)',   deep: '#7A4D00' }, // Amber    — Creativity, Emotions, Pleasure
-  Root:           { core: '#FF4D4D', glow: 'rgba(255,77,77,0.45)',   deep: '#7A1818' }, // Ruby     — Survival, Grounding, Safety
+  Crown:          { core: '#9D76C1', glow: '#D4A3B3', deep: '#4A3559' }, // Amethyst
+  'Third Eye':    { core: '#6A7391', glow: '#8BC4E8', deep: '#2C365E' }, // Indigo/Silver
+  Throat:         { core: '#5C89A6', glow: '#BEE0F5', deep: '#26466D' }, // Sapphire
+  Heart:          { core: '#6EBF8B', glow: '#A8E6B6', deep: '#2A5C3D' }, // Emerald
+  'Solar Plexus': { core: '#C9AE78', glow: '#FFF4D6', deep: '#6B532E' }, // Champagne Gold
+  Sacral:         { core: '#CD7F5D', glow: '#E8A98C', deep: '#6B3A26' }, // Copper
+  Root:           { core: '#C87878', glow: '#E8A9A9', deep: '#6A2B2B' }, // Garnet
 };
 
 // Elegant Champagne Gold Base

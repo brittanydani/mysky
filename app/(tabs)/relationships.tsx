@@ -23,13 +23,12 @@ import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
 import { localDb } from '../../services/storage/localDb';
-import { SavedChart, RelationshipChart, JournalEntry, generateId } from '../../services/storage/models';
+import { SavedChart, RelationshipChart, generateId } from '../../services/storage/models';
 import { BirthData, NatalChart } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { SynastryEngine, SynastryReport, SynastryAspect } from '../../services/astrology/synastryEngine';
 import { RelationshipInsightGenerator, RelationshipInsight } from '../../services/astrology/relationshipInsights';
 import { PremiumRelationshipService, RelationshipComparison } from '../../services/premium/relationshipCharts';
-import { calculateRelationalImpact, RelationalImpactResult } from '../../services/insights/relationalImpact';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import NeedsComparison from '../../components/ui/NeedsComparison';
@@ -78,8 +77,6 @@ export default function RelationshipsScreen() {
   const [synastryReport, setSynastryReport] = useState<SynastryReport | null>(null);
   const [relationshipInsight, setRelationshipInsight] = useState<RelationshipInsight | null>(null);
   const [comparison, setComparison] = useState<RelationshipComparison | null>(null);
-  const [relationalImpactData, setRelationalImpactData] = useState<RelationalImpactResult | null>(null);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'aspects' | 'dynamics'>('overview');
   const [filterMode, setFilterMode] = useState({ person1: true, person2: true, cross: true });
   const [summaryPerson, setSummaryPerson] = useState<'you' | 'them'>('them');
@@ -124,14 +121,6 @@ export default function RelationshipsScreen() {
         
         const rels = await localDb.getRelationshipCharts(saved.id);
         setRelationships(rels);
-
-        // Load journal entries for relational impact analysis
-        try {
-          const entries = await localDb.getJournalEntries();
-          setJournalEntries(entries);
-        } catch (e) {
-          logger.error('Failed to load journal entries for relational impact:', e);
-        }
 
         const previews: Record<string, { aspects: SynastryAspect[]; connection: string }> = {};
         for (const rel of rels) {
@@ -269,10 +258,6 @@ export default function RelationshipsScreen() {
       setRelationshipInsight(insight);
       setViewMode('detail');
     
-      // Compute relational impact from journal data
-      const impact = calculateRelationalImpact(rel.name, journalEntries);
-      setRelationalImpactData(impact);
-
       if (isPremium) {
         const comp = PremiumRelationshipService.generateComparison(userChart, otherChart, rel.relationship, isPremium, synastry);
         setComparison(comp);
@@ -290,7 +275,6 @@ export default function RelationshipsScreen() {
     setSynastryReport(null);
     setRelationshipInsight(null);
     setComparison(null);
-    setRelationalImpactData(null);
     setActiveTab('overview');
     setFilterMode({ person1: true, person2: true, cross: true });
     setSummaryPerson('them');
@@ -538,43 +522,6 @@ export default function RelationshipsScreen() {
                     </LinearGradient>
                   </Pressable>
                 )}
-
-                {/* ── Relational Impact ── */}
-                {relationalImpactData && (
-                  <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-                    <Text style={styles.sectionHeader}>Journal Impact</Text>
-                    <LinearGradient
-                      colors={
-                        relationalImpactData.impactDelta >= 0.2
-                          ? ['rgba(110, 191, 139, 0.18)', 'rgba(2,8,23,0.60)']
-                          : relationalImpactData.impactDelta <= -0.2
-                          ? ['rgba(205, 127, 93, 0.18)', 'rgba(2,8,23,0.60)']
-                          : ['rgba(139, 196, 232, 0.12)', 'rgba(2,8,23,0.60)']
-                      }
-                      style={styles.impactCard}
-                    >
-                      <View style={styles.impactHeaderRow}>
-                        <Ionicons
-                          name="analytics-outline"
-                          size={18}
-                          color={relationalImpactData.impactDelta >= 0.2 ? '#6EBF8B' : relationalImpactData.impactDelta <= -0.2 ? '#CD7F5D' : '#8BC4E8'}
-                        />
-                        <Text style={[
-                          styles.impactLabel,
-                          { color: relationalImpactData.impactDelta >= 0.2 ? '#6EBF8B' : relationalImpactData.impactDelta <= -0.2 ? '#CD7F5D' : '#8BC4E8' },
-                        ]}>
-                          {relationalImpactData.impactLabel}
-                        </Text>
-                        {relationalImpactData.mentionCount > 0 && (
-                          <Text style={styles.impactMentionCount}>
-                            {relationalImpactData.mentionCount} mention{relationalImpactData.mentionCount === 1 ? '' : 's'}
-                          </Text>
-                        )}
-                      </View>
-                      <Text style={styles.impactInsightText}>{relationalImpactData.insight}</Text>
-                    </LinearGradient>
-                  </Animated.View>
-                )}
               </Animated.View>
             )}
 
@@ -627,13 +574,6 @@ export default function RelationshipsScreen() {
                 <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
                   <Text style={styles.dynamicLabel}>How to Repair After Conflict</Text>
                   <Text style={styles.dynamicText}>{relationshipInsight.dynamics.howToRepairConflict}</Text>
-                  {/* Repair Bridge: reframing phrase for direct use */}
-                  <View style={styles.repairBridgeBox}>
-                    <Ionicons name="chatbubble-ellipses-outline" size={14} color="#C4A0D8" style={{ marginTop: 2 }} />
-                    <Text style={styles.repairBridgeText}>
-                      Bridge phrase: "I notice I'm pulling back — I need a moment, then I want to reconnect with you."
-                    </Text>
-                  </View>
                 </LinearGradient>
 
                 <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.dynamicCard}>
@@ -677,8 +617,8 @@ export default function RelationshipsScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         
         <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
-          <Text style={styles.title}>Relational Hub</Text>
-          <Text style={styles.subtitle}>A psychological map of how you connect — powered by your journal</Text>
+          <Text style={styles.title}>Relationships</Text>
+          <Text style={styles.subtitle}>Understanding, not compatibility scores</Text>
         </Animated.View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -899,17 +839,6 @@ const styles = StyleSheet.create({
   bulletText: { flex: 1, fontSize: 15, color: theme.textSecondary, lineHeight: 22 },
   tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'transparent', borderRadius: 16, padding: 20, marginBottom: 16 },
   tipText: { flex: 1, fontSize: 15, color: theme.textPrimary, marginLeft: 16, lineHeight: 22 },
-
-  // Relational Impact
-  impactCard: { borderRadius: 20, padding: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
-  impactHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  impactLabel: { flex: 1, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  impactMentionCount: { fontSize: 12, color: theme.textMuted },
-  impactInsightText: { fontSize: 15, color: theme.textPrimary, lineHeight: 23, fontStyle: 'italic' },
-
-  // Repair Bridge
-  repairBridgeBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(196,160,216,0.25)' },
-  repairBridgeText: { flex: 1, fontSize: 13, color: '#C4A0D8', lineHeight: 20, fontStyle: 'italic' },
 
   previewSection: { marginTop: 6 },
   previewDivider: { height: 1, backgroundColor: 'transparent', marginVertical: 12 },

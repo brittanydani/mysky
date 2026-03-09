@@ -136,7 +136,6 @@ export default function TabLayout() {
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing" options={{ href: null }} />
       <Tabs.Screen name="insights" options={{ href: null }} />
-      <Tabs.Screen name="dream-engine" options={{ href: null }} />
 
       <Tabs.Screen name="premium" options={{ href: null }} />
     </Tabs>

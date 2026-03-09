@@ -136,12 +136,6 @@ function SkiaBiometricScatter({
       <View style={styles.canvasContainer}>
         {/* Y Axis Label (positioned manually instead of matrix transform origin issues) */}
         <Text style={[styles.axisLabel, styles.yAxis]}>{yAxisLabel}</Text>
-
-        {/* Quadrant state labels */}
-        <Text style={[styles.quadrantLabel, { top: PAD_TOP + 8, left: PAD_LEFT + 8 }]}>Depleted</Text>
-        <Text style={[styles.quadrantLabel, { top: PAD_TOP + 8, right: PAD_RIGHT + 8, textAlign: 'right' }]}>Agitated</Text>
-        <Text style={[styles.quadrantLabel, { bottom: PAD_BOTTOM + 8, left: PAD_LEFT + 8 }]}>Calm</Text>
-        <Text style={[styles.quadrantLabel, { bottom: PAD_BOTTOM + 8, right: PAD_RIGHT + 8, textAlign: 'right' }]}>Radiant</Text>
         
         <Canvas style={{ width: CHART_SIZE, height: CHART_SIZE }}>
           {/* 0. Grid */}
@@ -234,14 +228,6 @@ const styles = StyleSheet.create({
     bottom: PAD_BOTTOM - 18,
     textAlign: 'right',
     maxWidth: 96,
-  },
-  quadrantLabel: {
-    position: 'absolute',
-    color: 'rgba(255,255,255,0.18)',
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
   },
   insightBox: {
     marginTop: 10,

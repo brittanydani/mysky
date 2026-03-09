@@ -5,7 +5,6 @@ export default function SettingsLayout() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="calibration" />
-      <Stack.Screen name="data-sovereignty" />
     </Stack>
   );
 }

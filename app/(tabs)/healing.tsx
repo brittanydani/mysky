@@ -15,7 +15,6 @@ import { HealingInsightsGenerator, HealingInsights } from '../../services/premiu
 import { ShadowQuoteEngine, ShadowQuote } from '../../services/astrology/shadowQuotes';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { localDb } from '../../services/storage/localDb';
-import { computeHealingTrigger, HealingTriggerResult } from '../../services/insights/healingTrigger';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
@@ -26,8 +25,6 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  lavender: '#C4A0D8',    // Healing Glow — safe space for inner work
-  healingGlow: '#B49FCC', // Softer lavender for somatic actions
   textMain: theme.textPrimary,
   glassBorder: theme.cardBorder,
   glassHighlight: theme.glass.highlight,
@@ -90,7 +87,6 @@ export default function HealingScreen() {
   const { isPremium } = usePremium();
   const [healingQuote, setHealingQuote] = useState<ShadowQuote | null>(null);
   const [healingData, setHealingData] = useState<HealingInsights | null>(null);
-  const [healingTrigger, setHealingTrigger] = useState<HealingTriggerResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -127,15 +123,7 @@ export default function HealingScreen() {
 
         const insights = HealingInsightsGenerator.generateHealingInsights(chart);
         setHealingData(insights);
-
-        // Compute healing trigger from recent journal entries
-        try {
-          const journalEntries = await localDb.getJournalEntries();
-          const trigger = computeHealingTrigger(journalEntries);
-          setHealingTrigger(trigger);
-        } catch (e) {
-          logger.error('[Healing] Failed to compute trigger:', e);
-        }
+        // await localDb.setCache('healing_insights', insights);
 
         // We can keep the quote generation here or move it.
         const result = await ShadowQuoteEngine.getDailyShadowQuote(chart);
@@ -168,35 +156,11 @@ export default function HealingScreen() {
         >
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Growth & Recovery</Text>
+            <Text style={styles.title}>Growth Insights</Text>
             <Text style={styles.headerSub}>
-              Your inner work in motion — healing insights, somatic anchors, and a measurable recovery trajectory.
+              Explore emotional patterns, inner needs, and pathways to growth — grounded in your personal blueprint.
             </Text>
           </Animated.View>
-
-          {/* ── Shadow Work Trigger ── */}
-          {healingTrigger?.triggered && (
-            <Animated.View entering={FadeInDown.delay(140).duration(700)} style={styles.triggerSection}>
-              <LinearGradient
-                colors={['rgba(196,160,216,0.18)', 'rgba(2,8,23,0.70)']}
-                style={styles.triggerCard}
-              >
-                <View style={styles.triggerHeader}>
-                  <View style={[styles.triggerDot, { backgroundColor: PALETTE.lavender }]} />
-                  <Text style={styles.triggerLabel}>Healing Note</Text>
-                </View>
-                <Text style={styles.triggerText}>{healingTrigger.healingNote}</Text>
-                {healingTrigger.somaticAnchor && (
-                  <View style={styles.somaticAnchorBox}>
-                    <Text style={styles.somaticAnchorTitle}>Somatic Anchor</Text>
-                    <Text style={styles.somaticAnchorAction}>{healingTrigger.somaticAnchor.action}</Text>
-                    <Text style={styles.somaticAnchorRationale}>{healingTrigger.somaticAnchor.rationale}</Text>
-                    <Text style={styles.somaticAnchorDuration}>{healingTrigger.somaticAnchor.duration}</Text>
-                  </View>
-                )}
-              </LinearGradient>
-            </Animated.View>
-          )}
 
           {/* Shadow quote — right below the header */}
           {healingQuote && (
@@ -248,21 +212,6 @@ export default function HealingScreen() {
                   variant="featured"
                 />
               )}
-
-              {/* Somatic Anchor for Inner Child (premium) */}
-              {isPremium && healingTrigger?.somaticAnchor && (
-                <LinearGradient
-                  colors={['rgba(196,160,216,0.14)', 'rgba(2,8,23,0.55)']}
-                  style={styles.somaticCardInline}
-                >
-                  <View style={styles.somaticInlineHeader}>
-                    <Ionicons name="body-outline" size={14} color={PALETTE.lavender} />
-                    <Text style={styles.somaticInlineLabel}>Somatic Anchor</Text>
-                  </View>
-                  <Text style={styles.somaticInlineAction}>{healingTrigger.somaticAnchor.action}</Text>
-                  <Text style={styles.somaticInlineText}>{healingTrigger.somaticAnchor.rationale} · {healingTrigger.somaticAnchor.duration}</Text>
-                </LinearGradient>
-              )}
             </Animated.View>
           )}
 
@@ -291,21 +240,6 @@ export default function HealingScreen() {
                   lockedHint="See what drives your deepest fears →"
                   onPress={goToPremium}
                 />
-              )}
-
-              {/* Somatic Anchor for Fear Pattern (premium) */}
-              {isPremium && healingTrigger?.somaticAnchor && (
-                <LinearGradient
-                  colors={['rgba(196,160,216,0.14)', 'rgba(2,8,23,0.55)']}
-                  style={styles.somaticCardInline}
-                >
-                  <View style={styles.somaticInlineHeader}>
-                    <Ionicons name="body-outline" size={14} color={PALETTE.lavender} />
-                    <Text style={styles.somaticInlineLabel}>When This Pattern Activates</Text>
-                  </View>
-                  <Text style={styles.somaticInlineAction}>{healingTrigger.somaticAnchor.action}</Text>
-                  <Text style={styles.somaticInlineText}>{healingTrigger.somaticAnchor.rationale} · {healingTrigger.somaticAnchor.duration}</Text>
-                </LinearGradient>
               )}
             </Animated.View>
           )}
@@ -416,39 +350,6 @@ export default function HealingScreen() {
               )}
             </Animated.View>
           )}
-
-          {/* ── Recovery Progress ── */}
-          {healingTrigger?.recoveryScore.progressInsight ? (
-            <Animated.View entering={FadeInDown.delay(580).duration(600)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Recovery Trajectory</Text>
-              <LinearGradient
-                colors={
-                  healingTrigger.recoveryScore.improving
-                    ? ['rgba(110, 191, 139, 0.16)', 'rgba(2,8,23,0.65)']
-                    : ['rgba(196,160,216,0.14)', 'rgba(2,8,23,0.65)']
-                }
-                style={styles.recoveryCard}
-              >
-                <View style={styles.recoveryHeaderRow}>
-                  <Ionicons
-                    name={healingTrigger.recoveryScore.improving ? 'trending-up' : 'time-outline'}
-                    size={18}
-                    color={healingTrigger.recoveryScore.improving ? '#6EBF8B' : PALETTE.lavender}
-                  />
-                  <Text style={[
-                    styles.recoveryBadge,
-                    { color: healingTrigger.recoveryScore.improving ? '#6EBF8B' : PALETTE.lavender },
-                  ]}>
-                    {healingTrigger.recoveryScore.improving ? 'Measurable Growth' : 'In Progress'}
-                  </Text>
-                  {healingTrigger.activeCycle && (
-                    <Text style={styles.recoveryCycle}>{healingTrigger.activeCycle}</Text>
-                  )}
-                </View>
-                <Text style={styles.recoveryText}>{healingTrigger.recoveryScore.progressInsight}</Text>
-              </LinearGradient>
-            </Animated.View>
-          ) : null}
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -621,117 +522,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-  },
-
-  // ── Shadow Work Trigger ──
-  triggerSection: { marginBottom: 16 },
-  triggerCard: {
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(196,160,216,0.25)',
-    borderTopColor: 'rgba(196,160,216,0.4)',
-  },
-  triggerHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  triggerDot: { width: 8, height: 8, borderRadius: 4 },
-  triggerLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    color: '#C4A0D8',
-  },
-  triggerText: { fontSize: 15, color: theme.textPrimary, lineHeight: 23, marginBottom: 16 },
-
-  // ── Somatic Anchor (trigger card version) ──
-  somaticAnchorBox: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(196,160,216,0.25)',
-    paddingTop: 16,
-  },
-  somaticAnchorTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    color: '#C4A0D8',
-    marginBottom: 6,
-  },
-  somaticAnchorAction: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    marginBottom: 6,
-  },
-  somaticAnchorRationale: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  somaticAnchorDuration: {
-    fontSize: 12,
-    color: '#C4A0D8',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-
-  // ── Somatic Anchor (inline card version) ──
-  somaticCardInline: {
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(196,160,216,0.20)',
-  },
-  somaticInlineHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  somaticInlineLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    color: '#C4A0D8',
-  },
-  somaticInlineAction: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    marginBottom: 4,
-  },
-  somaticInlineText: {
-    fontSize: 13,
-    color: theme.textSecondary,
-    lineHeight: 19,
-  },
-
-  // ── Recovery Progress ──
-  recoveryCard: {
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
-  },
-  recoveryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  recoveryBadge: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
-  recoveryCycle: {
-    flex: 1,
-    fontSize: 11,
-    color: theme.textMuted,
-    textAlign: 'right',
-    fontStyle: 'italic',
-  },
-  recoveryText: {
-    fontSize: 15,
-    color: theme.textPrimary,
-    lineHeight: 23,
-    fontStyle: 'italic',
   },
 });
 
