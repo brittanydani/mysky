@@ -165,7 +165,7 @@ export default function PatternsScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header ── */}
@@ -372,36 +372,6 @@ export default function PatternsScreen() {
             </Animated.View>
           )}
 
-          {/* ── Section 3: Explore more ── */}
-          <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
-            <Text style={styles.sectionTitle}>Explore</Text>
-            <View style={styles.exploreGrid}>
-              <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/healing')}>
-                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
-                   <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(212, 163, 179, 0.15)' }]}>
-                     <Ionicons name="heart-outline" size={20} color={PALETTE.rose} />
-                   </View>
-                   <View>
-                     <Text style={styles.exploreChipTitle}>Healing</Text>
-                     <Text style={styles.exploreChipSub}>Inner work</Text>
-                   </View>
-                 </LinearGradient>
-              </Pressable>
-
-              <Pressable style={styles.exploreChip} onPress={() => nav('/(tabs)/relationships')}>
-                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)', 'rgba(20, 24, 34, 0.7)']} style={styles.exploreChipGradient}>
-                   <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(224, 187, 228, 0.15)' }]}>
-                     <Ionicons name="people-outline" size={20} color="#E0BBE4" />
-                   </View>
-                   <View>
-                     <Text style={styles.exploreChipTitle}>Connections</Text>
-                     <Text style={styles.exploreChipSub}>Relationship charts</Text>
-                   </View>
-                 </LinearGradient>
-              </Pressable>
-            </View>
-          </Animated.View>
-
           {/* ── Section 4: Advanced Astrological Context ── */}
           <Animated.View entering={FadeInDown.delay(380).duration(600)} style={[styles.section, { marginTop: 8 }]}>
             <Pressable onPress={() => nav('/astrology-context')}>
@@ -492,13 +462,6 @@ const styles = StyleSheet.create({
   liftLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 1, marginBottom: 4, textTransform: 'uppercase' },
   liftWords: { fontSize: 16, color: PALETTE.textMain, fontWeight: '500' },
   liftNote: { fontSize: 12, color: theme.textMuted, marginTop: 16, fontStyle: 'italic' },
-
-  exploreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  exploreChip: { width: '48%', flexGrow: 1, borderRadius: 16, overflow: 'hidden' },
-  exploreChipGradient: { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 80, borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16 },
-  exploreIconWrap: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
-  exploreChipTitle: { color: PALETTE.textMain, fontWeight: '600', fontSize: 15, marginBottom: 2 },
-  exploreChipSub: { color: theme.textMuted, fontSize: 12 },
 
   astrologyCard: { padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(197, 180, 147, 0.2)' },
   astrologyHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },

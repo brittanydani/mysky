@@ -189,7 +189,7 @@ export default function EnergyScreen() {
           </Animated.View>
           <ScrollView
             style={styles.scroll}
-            contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
+            contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
             showsVerticalScrollIndicator={false}
           >
             <Animated.View entering={FadeInDown.delay(200).duration(600)}>
@@ -245,7 +245,7 @@ export default function EnergyScreen() {
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.content, { paddingBottom: 32 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* ═══ S1 — ENERGY SNAPSHOT ═══ */}

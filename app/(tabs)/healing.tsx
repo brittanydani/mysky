@@ -151,7 +151,7 @@ export default function HealingScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 40 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
@@ -364,9 +364,10 @@ const styles = StyleSheet.create({
   
   header: { marginTop: 16, marginBottom: 8 },
   title: {
-    fontSize: 34,
+    fontSize: 32,
+    fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    fontFamily: 'serif',
     letterSpacing: 0.5,
     marginBottom: 6,
   },

@@ -768,60 +768,6 @@ export default function AstrologyContextScreen() {
               </Pressable>
             </Animated.View>
           )}
-
-          {/* ── Explore More ── */}
-          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.exploreSection}>
-            <Text style={styles.exploreTitle}>Go deeper</Text>
-            <View style={styles.exploreRow}>
-              <Pressable
-                style={styles.exploreCard}
-                onPress={() => router.push('/(tabs)/chart' as Href)}
-                accessibilityRole="button"
-                accessibilityLabel="Map"
-              >
-                <LinearGradient
-                  colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.5)']}
-                  style={styles.exploreCardGradient}
-                >
-                  <Ionicons name="planet-outline" size={22} color={theme.primary} />
-                  <Text style={styles.exploreCardTitle}>Map</Text>
-                  <Text style={styles.exploreCardSub}>Your chart</Text>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable
-                style={styles.exploreCard}
-                onPress={() => router.push('/(tabs)/story' as Href)}
-                accessibilityRole="button"
-                accessibilityLabel="My Story"
-              >
-                <LinearGradient
-                  colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.5)']}
-                  style={styles.exploreCardGradient}
-                >
-                  <Ionicons name="book-outline" size={22} color={theme.primary} />
-                  <Text style={styles.exploreCardTitle}>My Story</Text>
-                  <Text style={styles.exploreCardSub}>Your narrative</Text>
-                </LinearGradient>
-              </Pressable>
-
-              <Pressable
-                style={styles.exploreCard}
-                onPress={() => router.push('/(tabs)/healing' as Href)}
-                accessibilityRole="button"
-                accessibilityLabel="Healing"
-              >
-                <LinearGradient
-                  colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.5)']}
-                  style={styles.exploreCardGradient}
-                >
-                  <Ionicons name="heart-outline" size={22} color={theme.primary} />
-                  <Text style={styles.exploreCardTitle}>Healing</Text>
-                  <Text style={styles.exploreCardSub}>Fear patterns</Text>
-                </LinearGradient>
-              </Pressable>
-            </View>
-          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -1072,50 +1018,4 @@ const styles = StyleSheet.create({
   resonanceText: { fontSize: 13, color: theme.textSecondary, lineHeight: 19, fontStyle: 'italic' as const },
   transitShadowContainer: { marginTop: theme.spacing.md, paddingTop: theme.spacing.sm },
   shadowReason: { fontSize: 11, color: theme.textMuted, textAlign: 'center' as const, marginTop: 6, letterSpacing: 0.3 },
-
-  // ── Explore More ──
-  exploreSection: {
-    width: '100%',
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.xs,
-  },
-  exploreTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    textAlign: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  exploreRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  exploreCard: {
-    flex: 1,
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(232, 214, 174,0.15)',
-  },
-  exploreCardGradient: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.sm,
-    gap: 6,
-  },
-  exploreCardTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    textAlign: 'center',
-  },
-  exploreCardSub: {
-    fontSize: 11,
-    color: theme.textMuted,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
 });

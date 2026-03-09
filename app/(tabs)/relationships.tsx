@@ -603,7 +603,7 @@ export default function RelationshipsScreen() {
               </Animated.View>
             )}
 
-            <View style={{ height: 40 }} />
+            <View style={{ height: 16 }} />
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -730,7 +730,7 @@ export default function RelationshipsScreen() {
               </View>
             </LinearGradient>
           </Animated.View>
-          <View style={{ height: 40 }} />
+          <View style={{ height: 16 }} />
         </ScrollView>
       </SafeAreaView>
 
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
   
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 34, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 0.5 },
+  title: { fontSize: 32, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', letterSpacing: 0.5 },
   subtitle: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic', marginTop: 6 },
   scrollView: { flex: 1, paddingHorizontal: 20 },
   

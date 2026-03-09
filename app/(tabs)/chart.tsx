@@ -1651,6 +1651,36 @@ export default function ChartScreen() {
               </View>
             )}
           </Animated.View>
+
+          {/* ── Section: Explore more ── */}
+          <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Explore</Text>
+            <View style={styles.exploreGrid}>
+              <Pressable style={styles.exploreChip} onPress={() => router.push('/(tabs)/healing' as Href)}>
+                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)' as any, 'rgba(20, 24, 34, 0.7)' as any]} style={styles.exploreChipGradient}>
+                   <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(212, 163, 179, 0.15)' }]}>
+                     <Ionicons name="heart-outline" size={20} color="#D4A3B3" />
+                   </View>
+                   <View>
+                     <Text style={styles.exploreChipTitle}>Healing</Text>
+                     <Text style={styles.exploreChipSub}>Inner work</Text>
+                   </View>
+                 </LinearGradient>
+              </Pressable>
+
+              <Pressable style={styles.exploreChip} onPress={() => router.push('/(tabs)/relationships' as Href)}>
+                 <LinearGradient colors={['rgba(35, 40, 55, 0.4)' as any, 'rgba(20, 24, 34, 0.7)' as any]} style={styles.exploreChipGradient}>
+                   <View style={[styles.exploreIconWrap, { backgroundColor: 'rgba(224, 187, 228, 0.15)' }]}>
+                     <Ionicons name="people-outline" size={20} color="#E0BBE4" />
+                   </View>
+                   <View>
+                     <Text style={styles.exploreChipTitle}>Connections</Text>
+                     <Text style={styles.exploreChipSub}>Relationship charts</Text>
+                   </View>
+                 </LinearGradient>
+              </Pressable>
+            </View>
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
 
@@ -2105,4 +2135,14 @@ const styles = StyleSheet.create({
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
   glossaryDefinition: { fontSize: 14, color: '#E8D6AE', lineHeight: 20, marginTop: theme.spacing.xs },
+
+  // ── Explore Section ──
+  section: { width: '100%', marginBottom: 32 },
+  sectionTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: 'serif', marginBottom: 12, letterSpacing: 0.3, paddingLeft: 4, alignSelf: 'flex-start' },
+  exploreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, width: '100%' },
+  exploreChip: { width: '48%', flexGrow: 1, borderRadius: 16, overflow: 'hidden' },
+  exploreChipGradient: { padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 80, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', borderRadius: 16 },
+  exploreIconWrap: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  exploreChipTitle: { color: theme.textPrimary, fontWeight: '600', fontSize: 15, marginBottom: 2 },
+  exploreChipSub: { color: theme.textMuted, fontSize: 12 },
 });
