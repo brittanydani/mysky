@@ -42,6 +42,9 @@ import {
 } from '../../services/energy/energyEngine';
 import { logger } from '../../utils/logger';
 import ChakraWheelComponent from '../../components/ui/ChakraWheel';
+import { MoodClimateCloud } from '../../components/ui/MoodClimateCloud';
+import { CorrelationGyroscope } from '../../components/ui/CorrelationGyroscope';
+import { useCorrelationStore } from '../../store/correlationStore';
 
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -79,6 +82,7 @@ function formatToday(): string {
 export default function EnergyScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
+  const syncCorrelations = useCorrelationStore((s) => s.syncCorrelations);
 
   const [loading, setLoading] = useState(true);
   const [hasChart, setHasChart] = useState(false);
@@ -112,6 +116,7 @@ export default function EnergyScreen() {
   useFocusEffect(
     useCallback(() => {
       Haptics.selectionAsync().catch(() => {});
+      syncCorrelations();
 
       const load = async () => {
         try {
@@ -463,6 +468,25 @@ export default function EnergyScreen() {
               )}
             </LinearGradient>
           </Animated.View>
+
+          {/* ── Mood Climate Cloud ── */}
+          <SectionHeader icon="cloudy-outline" title="Mood Climate" delay={450} />
+          <Animated.View entering={FadeInDown.delay(460).duration(600)} style={{ marginBottom: 12 }}>
+            <MoodClimateCloud
+              turbulence={snapshot ? (snapshot.intensity === 'Low' ? 2 : snapshot.intensity === 'Moderate' ? 5 : 8) : 3}
+              height={220}
+            />
+          </Animated.View>
+
+          {/* ── Correlation Gyroscope ── */}
+          {isPremium && (
+            <>
+              <SectionHeader icon="analytics-outline" title="Neural Patterns" delay={490} />
+              <Animated.View entering={FadeInDown.delay(500).duration(600)} style={{ marginBottom: 16 }}>
+                <CorrelationGyroscope height={280} />
+              </Animated.View>
+            </>
+          )}
 
           {/* ── Footer ── */}
           <Animated.View entering={FadeInDown.delay(480).duration(600)} style={styles.footer}>

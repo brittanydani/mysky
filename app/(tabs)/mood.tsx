@@ -22,15 +22,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  Canvas,
-  Path as SkiaPath,
-  LinearGradient as SkiaGradient,
-  vec,
-  Skia,
-  BlurMask,
-  Circle as SkiaCircle,
-} from '@shopify/react-native-skia';
+
 
 import { theme, MYSTIC } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
@@ -47,6 +39,7 @@ import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
 import SkiaResonanceSlider from '../../components/ui/SkiaResonanceSlider';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SkiaBiometricScatter from '../../components/ui/SkiaBiometricScatter';
+import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 // card padding (16) × 2 + scroll horizontal padding (16) × 2 = 64
@@ -172,118 +165,7 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// ─── LineGraph ────────────────────────────────────────────────────────────────
 
-interface GraphProps {
-  data: number[];
-  minY: number;
-  maxY: number;
-  color: string;
-  width: number;
-  height: number;
-  gradId?: string; // kept for API compat, unused by Skia
-}
-
-const LineGraph = memo(function LineGraph({
-  data,
-  minY: absMin,
-  maxY: absMax,
-  color,
-  width,
-  height,
-}: GraphProps) {
-  const PAD = { top: 10, bottom: 10, left: 4, right: 4 };
-  const gW = width - PAD.left - PAD.right;
-  const gH = height - PAD.top - PAD.bottom;
-
-  // Build Skia paths via useMemo so they're only recalculated when data changes
-  const { linePath, areaPath, lastPt } = useMemo(() => {
-    if (data.length < 2) return { linePath: null, areaPath: null, lastPt: null };
-
-    // Auto-scale to actual data range with padding so trends are prominent
-    const dataMin = Math.min(...data);
-    const dataMax = Math.max(...data);
-    const dataSpan = dataMax - dataMin;
-    const buf = Math.max(dataSpan * 0.25, 0.5);
-    const minY = Math.max(absMin, Math.floor(dataMin - buf));
-    const maxY = Math.min(absMax, Math.ceil(dataMax + buf));
-    const range = maxY - minY || 1;
-
-    const pts = data.map((v, i) => ({
-      x: PAD.left + (i / (data.length - 1)) * gW,
-      y: PAD.top + gH - ((v - minY) / range) * gH,
-    }));
-
-    // ── Stroke path (cubic bezier) ──
-    const stroke = Skia.Path.Make();
-    stroke.moveTo(pts[0].x, pts[0].y);
-    for (let i = 1; i < pts.length; i++) {
-      const p = pts[i - 1];
-      const c = pts[i];
-      const cpX = (p.x + c.x) / 2;
-      stroke.cubicTo(cpX, p.y, cpX, c.y, c.x, c.y);
-    }
-
-    // ── Area fill path (close to bottom) ──
-    const area = Skia.Path.Make();
-    area.addPath(stroke);
-    const last = pts[pts.length - 1];
-    area.lineTo(last.x, PAD.top + gH);
-    area.lineTo(pts[0].x, PAD.top + gH);
-    area.close();
-
-    return { linePath: stroke, areaPath: area, lastPt: last };
-  }, [data, absMin, absMax, gW, gH]);
-
-  if (!linePath || !areaPath || !lastPt) {
-    return (
-      <View style={{ width, height, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: theme.textMuted, fontSize: 12 }}>Not enough data yet</Text>
-      </View>
-    );
-  }
-
-  return (
-    <Canvas style={{ width, height }}>
-      {/* Gradient area fill — GPU-accelerated */}
-      <SkiaPath path={areaPath} style="fill">
-        <SkiaGradient
-          start={vec(0, PAD.top)}
-          end={vec(0, PAD.top + gH)}
-          colors={[`${color}73`, `${color}08`]}
-        />
-      </SkiaPath>
-
-      {/* Stroke with outer glow (BlurMask) for a neon light-bleed effect */}
-      <SkiaPath
-        path={linePath}
-        style="stroke"
-        strokeWidth={2.5}
-        color={color}
-        strokeCap="round"
-        strokeJoin="round"
-      >
-        <BlurMask blur={3} style="outer" />
-      </SkiaPath>
-
-      {/* Crisp inner stroke on top */}
-      <SkiaPath
-        path={linePath}
-        style="stroke"
-        strokeWidth={2}
-        color={color}
-        strokeCap="round"
-        strokeJoin="round"
-      />
-
-      {/* Pulsing last-data-point indicator */}
-      <SkiaCircle cx={lastPt.x} cy={lastPt.y} r={5} color={`${color}40`}>
-        <BlurMask blur={4} style="normal" />
-      </SkiaCircle>
-      <SkiaCircle cx={lastPt.x} cy={lastPt.y} r={3.5} color={color} />
-    </Canvas>
-  );
-});
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -313,14 +195,7 @@ const AvgBadge = memo(function AvgBadge({ label, value, color }: { label: string
   );
 });
 
-const GraphLabel = memo(function GraphLabel({ label, color }: { label: string; color: string }) {
-  return (
-    <View style={styles.graphLabelRow}>
-      <View style={[styles.graphDot, { backgroundColor: color }]} />
-      <Text style={styles.graphLabelTxt}>{label}</Text>
-    </View>
-  );
-});
+
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
@@ -523,9 +398,7 @@ export default function MoodScreen() {
     [allCheckIns, timeRange]
   );
 
-  const moodData = useMemo(() => filteredCheckIns.map(c => c.moodScore), [filteredCheckIns]);
-  const energyData = useMemo(() => filteredCheckIns.map(c => levelToNum(c.energyLevel)), [filteredCheckIns]);
-  const stressData = useMemo(() => filteredCheckIns.map(c => levelToNum(c.stressLevel)), [filteredCheckIns]);
+
   const avgs = useMemo(() => computeAverages(filteredCheckIns), [filteredCheckIns]);
   const topTags = useMemo(() => computeTopTags(filteredCheckIns), [filteredCheckIns]);
 
@@ -1138,40 +1011,11 @@ export default function MoodScreen() {
                         <AvgBadge label="Avg Stress" value={numToLevelLabel(avgs.stress)} color={COLORS.stress} />
                       </View>
 
-                      {/* Graph: Mood */}
-                      <GraphLabel label="Mood" color={COLORS.mood} />
-                      <LineGraph
-                        data={moodData}
-                        minY={1}
-                        maxY={10}
-                        color={COLORS.mood}
+                      {/* Cinematic 3D wave chart — mood · energy · stress */}
+                      <NeonWaveChart
+                        checkIns={filteredCheckIns}
                         width={GRAPH_W}
-                        height={60}
-                        gradId="grad_mood"
-                      />
-
-                      {/* Graph: Energy */}
-                      <GraphLabel label="Energy" color={COLORS.energy} />
-                      <LineGraph
-                        data={energyData}
-                        minY={1}
-                        maxY={10}
-                        color={COLORS.energy}
-                        width={GRAPH_W}
-                        height={60}
-                        gradId="grad_energy"
-                      />
-
-                      {/* Graph: Stress */}
-                      <GraphLabel label="Stress" color={COLORS.stress} />
-                      <LineGraph
-                        data={stressData}
-                        minY={1}
-                        maxY={10}
-                        color={COLORS.stress}
-                        width={GRAPH_W}
-                        height={60}
-                        gradId="grad_stress"
+                        height={220}
                       />
 
                       {/* Top themes */}

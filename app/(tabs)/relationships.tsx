@@ -34,6 +34,8 @@ import { logger } from '../../utils/logger';
 import NeedsComparison from '../../components/ui/NeedsComparison';
 import AspectRow from '../../components/ui/AspectRow';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
+import { useSceneStore } from '../../store/sceneStore';
+import { useResonanceStore } from '../../store/resonanceStore';
 
 // ── Cinematic Palette ──
 
@@ -88,9 +90,16 @@ export default function RelationshipsScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingRelationType, setAddingRelationType] = useState<RelationshipType>('partner');
 
+  const setActiveScene = useSceneStore((s) => s.setActiveScene);
+  const clearScene     = useSceneStore((s) => s.clearScene);
+  const syncData       = useResonanceStore((s) => s.syncData);
+
   useFocusEffect(
     useCallback(() => {
       loadData();
+      setActiveScene('RESONANCE_HELIX');
+      syncData();
+      return () => clearScene();
     }, [])
   );
 

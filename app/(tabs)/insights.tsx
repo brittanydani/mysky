@@ -26,6 +26,8 @@ import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
+import { CircadianRhythmTerrain } from '../../components/ui/CircadianRhythmTerrain';
+import { useCircadianStore } from '../../store/circadianStore';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -285,6 +287,9 @@ export default function InsightsScreen() {
 
               {isPremium ? (
                 <>
+                  {/* Circadian Rhythm Terrain */}
+                  <CircadianRhythmTerrain height={240} />
+
                   {/* Blended insight */}
                   {enhanced && enhanced.blended.length > 0 && (
                     <LinearGradient colors={['rgba(139, 196, 232, 0.1)', 'rgba(20, 24, 34, 0.7)']} style={styles.glassCard}>

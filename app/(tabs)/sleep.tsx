@@ -55,6 +55,8 @@ import {
 import { computeDreamAggregates, computeDreamPatterns } from '../../services/premium/dreamAggregates';
 import SkiaSleepGraph from '../../components/ui/SkiaSleepGraph';
 import type { SleepPoint } from '../../components/ui/SkiaSleepGraph';
+import { DreamClusterMap, DEFAULT_DREAM_NODES } from '../../components/ui/DreamClusterMap';
+import { useSyncDreamData } from '../../hooks/useSyncDreamData';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SkiaMoonDragger from '../../components/ui/SkiaMoonDragger';
 
@@ -204,6 +206,10 @@ function formatDuration(hours: number): string {
 export default function SleepScreen() {
   const { isPremium } = usePremium();
   const router = useRouter();
+
+  // Silently refresh dream cluster data from Supabase on each screen mount
+  useSyncDreamData();
+
   const scrollRef = useRef<ScrollView>(null);
   const [chartId, setChartId] = useState<string | null>(null);
   const [entries, setEntries] = useState<SleepEntry[]>([]);
@@ -970,6 +976,23 @@ export default function SleepScreen() {
                   />
                 </View>
               )}
+            </Animated.View>
+          )}
+
+          {/* ── Dream Symbol Cluster (premium) ── */}
+          {isPremium && entries.some(e => e.dreamText) && (
+            <Animated.View entering={FadeInDown.delay(265).duration(600)} style={styles.section}>
+              <Text style={styles.sectionTitle}>Dream Symbols</Text>
+              <LinearGradient
+                colors={['rgba(15, 18, 28, 0.85)', 'rgba(10, 13, 22, 0.95)']}
+                style={styles.obsidianCard}
+              >
+                <View style={styles.obsidianCardHeader}>
+                  <Ionicons name="planet-outline" size={14} color={PALETTE.silverBlue} />
+                  <Text style={styles.obsidianCardEyebrow}>Recurring Themes</Text>
+                </View>
+                <DreamClusterMap nodes={DEFAULT_DREAM_NODES} height={280} />
+              </LinearGradient>
             </Animated.View>
           )}
 

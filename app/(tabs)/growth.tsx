@@ -26,6 +26,7 @@ import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
+import { OrbitalPatternsMap } from '../../components/ui/OrbitalPatternsMap';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -282,6 +283,7 @@ export default function PatternsScreen() {
           {snapshot.checkInCount > 0 && (
             <Animated.View entering={FadeInDown.delay(290).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Your Patterns</Text>
+              <OrbitalPatternsMap height={260} />
 
               {isPremium ? (
                 <>
