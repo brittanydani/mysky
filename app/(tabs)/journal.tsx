@@ -22,10 +22,8 @@ import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
 import { CheckInService } from '../../services/patterns/checkInService';
 import { DailyCheckIn } from '../../services/patterns/types';
-import CheckInTrendGraph from '../../components/ui/CheckInTrendGraph';
 import ObsidianJournalEntry from '../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../services/journal/nlp';
-import SkiaDreamEngine from '../../components/ui/SkiaDreamEngine';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
@@ -289,32 +287,7 @@ export default function JournalScreen() {
         </Text>
       </Animated.View>
 
-      {checkIns.length >= 2 && (
-        isPremium ? (
-          <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
-            <Text style={styles.chartTitle}>7-Day Mood Trends</Text>
-            <Text style={styles.checkInTrendSubtitle}>From your daily weather check-ins</Text>
-            <CheckInTrendGraph checkIns={checkIns} width={width - 40} />
-          </Animated.View>
-        ) : (
-          <Pressable onPress={() => setShowPremiumRequired(true)} accessibilityRole="button" accessibilityLabel="Unlock 7-day check-in trends">
-            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.checkInTrendSection}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <Text style={styles.chartTitle}>7-Day Mood Trends</Text>
-                <View style={styles.premiumBadge}>
-                  <Ionicons name="sparkles" size={10} color={theme.textGold} />
-                  <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
-                </View>
-              </View>
-              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.lockBox}>
-                <Ionicons name="trending-up" size={36} color={theme.textGold} style={{ marginBottom: 8 }} />
-                <Text style={styles.lockTitle}>Your trends are ready</Text>
-                <Text style={styles.lockSubtitle}>See how your mood, energy, and stress shift across the week</Text>
-              </LinearGradient>
-            </Animated.View>
-          </Pressable>
-        )
-      )}
+
 
       {isPremium && patternInsights.length > 0 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>

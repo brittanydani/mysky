@@ -4,9 +4,8 @@
 // Single entry point for daily self-logging.
 // Two cards surface the two check-in pathways without cluttering the tab bar.
 
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import {
-  Dimensions,
   View,
   Text,
   StyleSheet,
@@ -19,15 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect } from '@react-navigation/core';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import SomaticWaveCanvas, { type SomaticWaveProps } from '../../components/ui/SomaticWaveCanvas';
-import { localDb } from '../../services/storage/localDb';
-import { computeStabilityIndex } from '../../components/ui/SkiaStabilityDashboard';
-import type { StabilityDataPoint } from '../../components/ui/SkiaStabilityDashboard';
-
-const SCREEN_W = Dimensions.get('window').width;
 
 const PALETTE = {
   gold: '#C9AE78',
@@ -70,65 +62,8 @@ const CARDS: CheckInCard[] = [
   },
 ];
 
-type StabilityLabel = SomaticWaveProps['stabilityLabel'];
-
 export default function CheckInScreen() {
   const router = useRouter();
-
-  // ── Last check-in data for Somatic Wave ──
-  const [moodScore, setMoodScore]     = useState(7);
-  const [energyScore, setEnergyScore] = useState(7);
-  const [restScore, setRestScore]     = useState(7);
-  const [stabilityLabel, setStabilityLabel] = useState<StabilityLabel>('Aligned');
-
-  useFocusEffect(
-    useCallback(() => {
-      (async () => {
-        try {
-          const charts = await localDb.getCharts();
-          if (charts.length === 0) return;
-          const chartId = charts[0].id;
-
-          const checkins = await localDb.getCheckIns(chartId, 7);
-          const sleepEntries = await localDb.getSleepEntries(chartId, 7);
-
-          if (checkins.length === 0) return;
-
-          // Use the latest check-in for live somatic values
-          const latest = checkins[0];
-          const energyMap: Record<string, number> = { low: 3, medium: 6, high: 9 };
-          const latestMood   = latest.moodScore ?? 7;
-          const latestEnergy = energyMap[latest.energyLevel ?? 'medium'] ?? 6;
-
-          const sleepByDate: Record<string, number> = {};
-          for (const s of sleepEntries) {
-            sleepByDate[s.date] = s.durationHours ?? 7;
-          }
-          const latestRest = sleepByDate[latest.date] ?? 7;
-
-          setMoodScore(latestMood);
-          setEnergyScore(latestEnergy);
-          setRestScore(latestRest);
-
-          // Compute stability from recent window for animation state
-          const stabilityPoints: StabilityDataPoint[] = checkins
-            .slice(0, 7)
-            .reverse()
-            .map(ci => ({
-              date: ci.date,
-              mood: ci.moodScore ?? 7,
-              energy: energyMap[ci.energyLevel ?? 'medium'] ?? 6,
-              sleep: sleepByDate[ci.date] ?? 7,
-            }));
-
-          const stability = computeStabilityIndex(stabilityPoints);
-          setStabilityLabel(stability.label as StabilityLabel);
-        } catch {
-          // Fall back to defaults — wave still animates
-        }
-      })();
-    }, []),
-  );
 
   const nav = (route: Href) => {
     Haptics.selectionAsync().catch(() => {});
@@ -145,18 +80,6 @@ export default function CheckInScreen() {
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.title}>Check In</Text>
             <Text style={styles.subtitle}>What would you like to track today?</Text>
-          </Animated.View>
-
-          {/* ── Somatic Wave — The Energy Mirror ── */}
-          <Animated.View entering={FadeInDown.delay(140).duration(700)} style={styles.waveWrapper}>
-            <SomaticWaveCanvas
-              width={SCREEN_W - 40}
-              height={128}
-              moodScore={moodScore}
-              energyScore={energyScore}
-              restScore={restScore}
-              stabilityLabel={stabilityLabel}
-            />
           </Animated.View>
 
           {/* ── Check-in cards ── */}

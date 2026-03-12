@@ -30,9 +30,6 @@ import { useFocusEffect } from '@react-navigation/core';
 
 // ── Custom Skia Suite ──
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import SkiaStabilityDashboard, { computeStabilityIndex } from '../../components/ui/SkiaStabilityDashboard';
-import type { StabilityDataPoint } from '../../components/ui/SkiaStabilityDashboard';
-import StabilityIndexCard from '../../components/ui/StabilityIndexCard';
 import SkiaWarpTransition from '../../components/ui/SkiaWarpTransition';
 import type { WarpRef } from '../../components/ui/SkiaWarpTransition';
 
@@ -101,8 +98,6 @@ export default function HomeScreen() {
   const [mood, setMood] = useState(7);
   const [energy, setEnergy] = useState(8);
 
-  // Stability data — last 7 days of combined metrics
-  const [stabilityData, setStabilityData] = useState<StabilityDataPoint[]>([]);
   const [latestSleep, setLatestSleep] = useState(7);
 
   // Daily loop — streak, weekly summary, insights, nudge
@@ -149,27 +144,8 @@ export default function HomeScreen() {
               if (latest.energyLevel) setEnergy(energyMap[latest.energyLevel] ?? 5);
             }
 
-            // Build stability data from check-ins + sleep entries
+            // Build sleep data
             const sleepEntries = await localDb.getSleepEntries(chart.id, 7);
-            const sleepByDate: Record<string, number> = {};
-            for (const s of sleepEntries) {
-              sleepByDate[s.date] = s.durationHours ?? 7;
-            }
-
-            const stabilityPoints: StabilityDataPoint[] = checkins
-              .slice(0, 7)
-              .reverse()
-              .map(ci => {
-                const energyMapLocal: Record<string, number> = { low: 3, medium: 5, high: 8 };
-                return {
-                  date: ci.date,
-                  mood: ci.moodScore,
-                  energy: energyMapLocal[ci.energyLevel] ?? 5,
-                  sleep: sleepByDate[ci.date] ?? 7,
-                };
-              });
-            setStabilityData(stabilityPoints);
-
             if (sleepEntries.length > 0 && sleepEntries[0].durationHours != null) {
               setLatestSleep(sleepEntries[0].durationHours);
             }
@@ -254,14 +230,11 @@ export default function HomeScreen() {
     ? ChartDisplayManager.formatChartWithTimeWarnings(userChart)
     : null;
 
-  // ── Stability computation ──
-  const stability = useMemo(() => computeStabilityIndex(stabilityData), [stabilityData]);
-
   // Prefer daily loop insight; fall back to legacy insight engine
   const insightText = useMemo(() => {
     if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
-    return generateInsight(stability.index, mood, energy, latestSleep);
-  }, [dailyLoop, stability.index, mood, energy, latestSleep]);
+    return generateInsight(75, mood, energy, latestSleep);
+  }, [dailyLoop, mood, energy, latestSleep]);
 
   const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
   const ACCENT_MAP: Record<string, string> = {
@@ -367,11 +340,6 @@ export default function HomeScreen() {
               </Pressable>
             </Animated.View>
           )}
-
-          {/* ── Stability Index Card ── */}
-          <Animated.View entering={FadeInDown.delay(500).duration(600)}>
-            <StabilityIndexCard data={stabilityData} />
-          </Animated.View>
 
           {/* ── Actionable Insight ── */}
           <Animated.View

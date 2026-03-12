@@ -21,7 +21,6 @@ import React, { Suspense, useState, useEffect } from 'react';
 import { StyleSheet, View, AppState } from 'react-native';
 import { Canvas } from '@react-three/fiber/native';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { PerformanceMonitor } from '@react-three/drei/native';
 import { useSceneStore } from '@/store/sceneStore';
 
 // Lazy-load scenes — only the active scene bundle is ever evaluated
@@ -36,7 +35,6 @@ const EtherealPlasmaSphere    = React.lazy(() => import('../3d/EtherealPlasmaSph
 export function GlobalCanvas() {
   const activeScene = useSceneStore((s) => s.activeScene);
   const [appIsActive, setAppIsActive] = useState(true);
-  const [dpr, setDpr] = useState(1);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
@@ -49,7 +47,6 @@ export function GlobalCanvas() {
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <Canvas
         camera={{ position: [0, 0, 15], fov: 55 }}
-        dpr={dpr}
         style={{ pointerEvents: 'auto' }}
         frameloop={appIsActive ? 'always' : 'never'}
       >
@@ -63,9 +60,6 @@ export function GlobalCanvas() {
             {activeScene === 'CHECK_IN_SPHERE'  && <EtherealPlasmaSphere />}
             {/* TODAY_WAVES, PATTERNS_ORBIT rendered here once built */}
           </Suspense>
-
-          {/* Auto-lowers pixel ratio to 0.8 when FPS drops below threshold on device */}
-          <PerformanceMonitor onDecline={() => setDpr(0.8)} onIncline={() => setDpr(1)} />
 
           {/* Cinematic post-processing pipeline — shared across all scenes */}
           <EffectComposer enableNormalPass={false}>

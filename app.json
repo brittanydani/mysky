@@ -106,8 +106,6 @@
     },
     "plugins": [
       "expo-router",
-      "expo-gl",
-      "expo-haptics",
       "expo-web-browser",
       "expo-secure-store",
       [

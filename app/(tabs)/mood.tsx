@@ -35,10 +35,8 @@ import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import type { TimeOfDayMetricInsight, TimeOfDayBucket } from '../../utils/insightsEngine';
-import SkiaUnifiedAura from '../../components/ui/SkiaUnifiedAura';
 import SkiaResonanceSlider from '../../components/ui/SkiaResonanceSlider';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
-import SkiaBiometricScatter from '../../components/ui/SkiaBiometricScatter';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -569,17 +567,6 @@ export default function MoodScreen() {
               </Animated.View>
             )}
 
-            {/* ═══ Unified Aura — Internal Weather Station ═══ */}
-            {allCheckIns.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(90).duration(600)} style={{ marginBottom: 8 }}>
-                <SkiaUnifiedAura
-                  mood={moodSlider}
-                  energy={energySlider}
-                  tension={stressSlider}
-                />
-              </Animated.View>
-            )}
-
             {/* ═══ Quick Check-In ═══ */}
             <SectionLabel icon="heart-outline" title="Quick Check-In" delay={100} />
             <Animated.View entering={FadeInDown.delay(120).duration(600)}>
@@ -903,32 +890,6 @@ export default function MoodScreen() {
                 )}
               </LinearGradient>
             </Animated.View>
-
-            {/* ═══ Mood Scatter — mood vs energy connection ═══ */}
-            {allCheckIns.length >= 3 && (
-              <Animated.View entering={FadeInDown.delay(180).duration(600)}>
-                <LinearGradient
-                  colors={['rgba(14, 24, 48,0.50)', 'rgba(10, 18, 36,0.35)']}
-                  style={styles.card}
-                >
-                  <View style={styles.scatterSection}>
-                    <Text style={styles.scatterTitle}>Mood × Energy Connection</Text>
-                    <Text style={styles.scatterHint}>Each point maps one check-in — clusters reveal your baseline patterns</Text>
-                    <SkiaBiometricScatter
-                      points={allCheckIns.slice(0, 30).map(c => ({
-                        x: c.moodScore / 10,
-                        y: c.energyLevel === 'high' ? 0.85 : c.energyLevel === 'medium' ? 0.5 : 0.2,
-                      }))}
-                      title="Mental State Correlation"
-                      subtitle="Emotional Mood vs. Physical Energy"
-                      xAxisLabel="High Mood"
-                      yAxisLabel="High Energy"
-                      insight="Your energy levels and mood scores tend to move together. Focus on physical recharge to boost emotional state."
-                    />
-                  </View>
-                </LinearGradient>
-              </Animated.View>
-            )}
 
             {/* ═══ Energy Reading link ═══ */}
             <Animated.View entering={FadeInDown.delay(200).duration(600)}>
