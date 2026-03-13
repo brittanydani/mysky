@@ -1,23 +1,30 @@
 /**
  * components/ui/MoodClimateCloud.tsx
- * MySky — Mood Climate: Volumetric Particle Cloud (React Three Fiber)
+ * MySky — Mood Climate: Pure Skia Particle Cloud (120fps UI thread)
  *
  * Architecture:
- *   • Self-contained Canvas (no GlobalCanvas dependency)
- *   • 400 particles whose motion regime is driven by emotional climate data
- *   • Climate input: avgAnxiety + avgStress → 0–1 turbulenceLevel
- *   • Low calm:    slow laminar drift, soft cyan/blue/indigo tones
- *   • High anxiety: turbulent jitter, fast noise, pink-red/amber/violet tones
- *   • Each particle has an individual phase offset for organic variance
- *   • Turbulence ramps smoothly — no hard cutoff
- *   • Particle size + opacity also respond to turbulence level
- *   • No GLSL · No window.devicePixelRatio · No GlobalCanvas · No drei
+ *   • 300 particles driven by Reanimated useDerivedValue worklet — zero JS bridge
+ *   • Renders via @shopify/react-native-skia <Points>
+ *   • Low turbulence: slow laminar drift, cyan/indigo tones
+ *   • High turbulence: chaotic noise, rose/amber tones
+ *   • No React Three Fiber · No THREE · Pure Skia + Reanimated
  */
 
-import React, { useMemo, useRef } from 'react';
-import { View } from 'react-native';
-import { Canvas, useFrame } from '@react-three/fiber/native';
-import * as THREE from 'three';
+import React, { useEffect, useMemo } from 'react';
+import { View, Dimensions } from 'react-native';
+import {
+  Canvas,
+  Points,
+  Group,
+  BlurMask,
+} from '@shopify/react-native-skia';
+import {
+  useDerivedValue,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,136 +34,108 @@ export interface MoodClimateCloudProps {
   height?:     number;
 }
 
-// ─── Particle cloud ───────────────────────────────────────────────────────────
+// ─── Static particle data — computed once at module load ──────────────────────
 
-const PARTICLE_COUNT = 400;
+const PARTICLE_COUNT = 300;
 
-// Color palettes
-const CALM_COLORS    = ['#00F5FF', '#33CCFF', '#5EF2FF', '#66C7FF', '#7C4DFF'];
-const CHARGED_COLORS = ['#FF4D6D', '#FF8A3D', '#FF003C', '#BC13FE', '#FFD166'];
-
-function lerpColor(a: THREE.Color, b: THREE.Color, t: number): THREE.Color {
-  const r = a.r + (b.r - a.r) * t;
-  const g = a.g + (b.g - a.g) * t;
-  const bl = a.b + (b.b - a.b) * t;
-  return new THREE.Color(r, g, bl);
+interface ParticleData {
+  baseX:  number;
+  baseY:  number;
+  phase:  number;
+  speed:  number;
 }
 
-interface CloudProps {
-  turbulence: number;  // 0–1
-}
+const _PARTICLES: ParticleData[] = (() => {
+  const arr: ParticleData[] = [];
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const theta = (i / PARTICLE_COUNT) * Math.PI * 2 * 13.7;
+    const phi   = Math.acos(1 - 2 * ((i * 0.618033) % 1));
+    const r     = 60 + (i % 5) * 30;
+    arr.push({
+      baseX: Math.sin(phi) * Math.cos(theta) * r,
+      baseY: Math.sin(phi) * Math.sin(theta) * r * 0.65,  // flatten Z
+      phase: (i / PARTICLE_COUNT) * Math.PI * 2,
+      speed: 0.25 + (i % 7) * 0.09,
+    });
+  }
+  return arr;
+})();
 
-function ParticleCloud({ turbulence }: CloudProps) {
-  const pointsRef = useRef<THREE.Points>(null);
+// ─── Color helper ─────────────────────────────────────────────────────────────
 
-  // Build stable initial positions and per-particle phase offsets
-  const { positions, phases, speeds } = useMemo(() => {
-    const pos   = new Float32Array(PARTICLE_COUNT * 3);
-    const ph    = new Float32Array(PARTICLE_COUNT);
-    const sp    = new Float32Array(PARTICLE_COUNT);
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      // Fibonacci sphere for even initial distribution
-      const theta = (i / PARTICLE_COUNT) * Math.PI * 2 * 13.7;
-      const phi   = Math.acos(1 - 2 * ((i * 0.618033) % 1));
-      const r     = 1.5 + (i % 5) * 0.9;
-      pos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      pos[i * 3 + 2] = r * Math.cos(phi);
-      ph[i] = (i / PARTICLE_COUNT) * Math.PI * 2;
-      sp[i] = 0.3 + (i % 7) * 0.09;
-    }
-
-    return { positions: pos, phases: ph, speeds: sp };
-  }, []);
-
-  // Working buffer mutated every frame
-  const workPos = useMemo(() => new Float32Array(positions), [positions]);
-
-  useFrame(({ clock }) => {
-    const t   = clock.getElapsedTime();
-    const pts = pointsRef.current;
-    if (!pts) return;
-
-    const attr  = pts.geometry.attributes.position as THREE.BufferAttribute;
-    const jitter = turbulence * 0.6;          // amplitude of chaotic displacement
-    const base   = 1.0 - turbulence * 0.5;   // laminar amplitude shrinks under chaos
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const ph = phases[i];
-      const sp = speeds[i];
-      const ox = positions[i * 3];
-      const oy = positions[i * 3 + 1];
-      const oz = positions[i * 3 + 2];
-
-      // Laminar drift — large-scale, slow wave flow
-      const lx = Math.sin(t * sp * 0.4 + ph)           * base * 0.9;
-      const ly = Math.cos(t * sp * 0.35 + ph + 1.2)    * base * 0.9;
-      const lz = Math.sin(t * sp * 0.3  + ph + 2.4)    * base * 0.9;
-
-      // Turbulence — fast, small, multi-frequency noise
-      const tx = Math.sin(t * sp * 4.2 + ph * 3.1)     * jitter * 0.55;
-      const ty = Math.cos(t * sp * 3.8 + ph * 2.7)     * jitter * 0.55;
-      const tz = Math.sin(t * sp * 5.1 + ph * 1.9)     * jitter * 0.55;
-
-      workPos[i * 3]     = ox + lx + tx;
-      workPos[i * 3 + 1] = oy + ly + ty;
-      workPos[i * 3 + 2] = oz + lz + tz;
-    }
-
-    attr.array = workPos;
-    attr.needsUpdate = true;
-  });
-
-  // Interpolate particle color between calm and charged palettes
-  const pointColor = useMemo(() => {
-    const calmHex    = CALM_COLORS[Math.floor(turbulence * (CALM_COLORS.length - 1))];
-    const chargedHex = CHARGED_COLORS[Math.floor(turbulence * (CHARGED_COLORS.length - 1))];
-    return lerpColor(
-      new THREE.Color(calmHex),
-      new THREE.Color(chargedHex),
-      turbulence,
-    );
-  }, [turbulence]);
-
-  const particleSize    = 0.04 + turbulence * 0.06;
-  const particleOpacity = 0.45 + turbulence * 0.35;
-
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          array={workPos}
-          count={PARTICLE_COUNT}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        color={pointColor}
-        size={particleSize}
-        transparent
-        opacity={particleOpacity}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        sizeAttenuation
-      />
-    </points>
-  );
+function turbulenceColor(t01: number): string {
+  const r = Math.round(t01 * 255);
+  const g = Math.round(200 - t01 * 140);
+  const b = Math.round(255 - t01 * 80);
+  return `rgb(${r},${g},${b})`;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const { width: SCREEN_W } = Dimensions.get('window');
+
 export function MoodClimateCloud({ turbulence = 3, height = 280 }: MoodClimateCloudProps) {
-  // Normalise 1–10 input → 0–1
   const t01 = Math.max(0, Math.min(1, (turbulence - 1) / 9));
+
+  // Continously incrementing clock on the UI thread
+  // Using 2π×100 ensures sin/cos wraps seamlessly (sin(2π×100×speed) = sin(0) for integer speeds)
+  const clock = useSharedValue(0);
+  useEffect(() => {
+    clock.value = withRepeat(
+      withTiming(Math.PI * 2 * 100, { duration: 400_000, easing: Easing.linear }),
+      -1,
+      false,
+    );
+    return () => { clock.value = 0; };
+  }, []);
+
+  // Turbulence level accessible on the UI thread
+  const turbulenceShared = useSharedValue(t01);
+  useEffect(() => { turbulenceShared.value = t01; }, [t01]);
+
+  const cx = SCREEN_W / 2;
+  const cy = height  / 2;
+
+  // All 300 particle positions computed in a Reanimated worklet — 60-120fps, zero JS bridge
+  const points = useDerivedValue<{ x: number; y: number }[]>(() => {
+    const t    = clock.value;
+    const turb = turbulenceShared.value;
+    const laminar = (1.0 - turb * 0.4) * 90;
+    const jitter  = turb * 55;
+
+    const pts: { x: number; y: number }[] = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = _PARTICLES[i];
+      const lx = Math.sin(t * p.speed * 0.4  + p.phase)           * laminar;
+      const ly = Math.cos(t * p.speed * 0.35 + p.phase + 1.2)     * laminar;
+      const tx = Math.sin(t * p.speed * 4.2  + p.phase * 3.1)     * jitter;
+      const ty = Math.cos(t * p.speed * 3.8  + p.phase * 2.7)     * jitter;
+      pts.push({ x: cx + p.baseX + lx + tx, y: cy + p.baseY + ly + ty });
+    }
+    return pts;
+  });
+
+  const pointColor = useMemo(() => turbulenceColor(t01), [t01]);
 
   return (
     <View style={{ height, width: '100%' }}>
-      <Canvas camera={{ position: [0, 0, 12], fov: 55 }}>
-        <fog attach="fog" args={['#030308', 8, 22]} />
-        <ParticleCloud turbulence={t01} />
+      <Canvas style={{ flex: 1 }}>
+        {/* Soft outer glow — blurred, low opacity */}
+        <Group opacity={0.14}>
+          <Points points={points} mode="points" color={pointColor} strokeWidth={22}>
+            <BlurMask blur={14} style="solid" />
+          </Points>
+        </Group>
+
+        {/* Mid glow layer */}
+        <Group opacity={0.30}>
+          <Points points={points} mode="points" color={pointColor} strokeWidth={7} />
+        </Group>
+
+        {/* Crisp particle core */}
+        <Points points={points} mode="points" color={pointColor} strokeWidth={2.5} opacity={0.85} />
       </Canvas>
     </View>
   );
 }
+

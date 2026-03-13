@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Text, Platform } from 'react-native';
-import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient } from '@shopify/react-native-skia';
+import { View, StyleSheet, Text } from 'react-native';
+import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient, BlurMask } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
 import { applyStoryLabels } from '../../constants/storyLabels';
 
@@ -121,59 +121,74 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
           );
         })}
 
-        {/* The Data Polygon */}
+        {/* The Data Polygon — glow layer beneath */}
+        <Path path={skiaPath} style="fill" opacity={0.35}>
+          <SkiaRadialGradient
+            c={vec(center, center)}
+            r={radius}
+            colors={[`${dominantForce}CC`, `${dominantForce}22`]}
+          />
+          <BlurMask blur={14} style="normal" />
+        </Path>
+
+        {/* The Data Polygon — solid fill */}
         <Path path={skiaPath} style="fill">
           <SkiaRadialGradient
             c={vec(center, center)}
             r={radius}
-            colors={[`${dominantForce}66`, `${dominantForce}0D`]}
+            colors={[`${dominantForce}55`, `${dominantForce}10`]}
           />
         </Path>
-        <Path path={skiaPath} color={dominantForce} style="stroke" strokeWidth={2} strokeJoin="round" />
+        <Path path={skiaPath} color={dominantForce} style="stroke" strokeWidth={2} strokeJoin="round" opacity={0.85} />
         
-        {/* Force Points */}
+        {/* Force Points — glow halo + crisp dot */}
         {forces.map((force, i) => {
           const { x, y } = getCoordinates(force.value, i);
           return (
-            <Circle
-              key={`point-${i}`}
-              cx={x}
-              cy={y}
-              r={4}
-              color={force.color}
-            />
+            <React.Fragment key={`point-${i}`}>
+              <Circle cx={x} cy={y} r={9} color={force.color} opacity={0.25}>
+                <BlurMask blur={7} style="normal" />
+              </Circle>
+              <Circle cx={x} cy={y} r={4} color={force.color} />
+              <Circle cx={x} cy={y} r={1.8} color="rgba(255,255,255,0.80)" />
+            </React.Fragment>
           );
         })}
       </Canvas>
 
-      {/* HTML absolute text for labels */}
+      {/* Text labels anchored to axis endpoints */}
       {forces.map((force, i) => {
         const labelPoint = getCoordinates(100, i, true);
-        const txtAlign = Math.abs(labelPoint.x - center) < 10 ? 'center' : (labelPoint.x < center ? 'right' : 'left');
-        const topOffset = txtAlign === 'center' && labelPoint.y < center ? -20 : -10;
+        const isLeft   = labelPoint.x < center - 10;
+        const isRight  = labelPoint.x > center + 10;
+        const isCenter = !isLeft && !isRight;
+        const isAbove  = labelPoint.y < center;
+
+        const leftOffset = isCenter ? -50 : isLeft ? -108 : 8;
+        const topOffset  = isCenter ? (isAbove ? -22 : 4) : -10;
 
         const textContent = SHORT_FORCE_LABELS[force.label] ? SHORT_FORCE_LABELS[force.label] : applyStoryLabels(force.label);
 
         return (
-          <View 
-            key={`text-${i}`} 
-            style={{ 
-              position: 'absolute', 
-              top: labelPoint.y + topOffset, 
-              left: labelPoint.x + (txtAlign === 'center' ? -50 : (txtAlign === 'right' ? -105 : 5)), 
-              width: 100, 
-              alignItems: txtAlign === 'center' ? 'center' : (txtAlign === 'right' ? 'flex-end' : 'flex-start')
+          <View
+            key={`text-${i}`}
+            style={{
+              position: 'absolute',
+              top: labelPoint.y + topOffset,
+              left: labelPoint.x + leftOffset,
+              width: 100,
+              alignItems: isCenter ? 'center' : isLeft ? 'flex-end' : 'flex-start',
             }}>
-              <Text 
-                numberOfLines={1}
-                style={{ 
-                  color: force.color, 
-                  fontSize: 12, 
-                  fontWeight: '600', 
-                  fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' })
-                }}>
-                {textContent}
-              </Text>
+            <Text
+              numberOfLines={1}
+              style={{
+                color: 'rgba(226,232,240,0.72)',
+                fontSize: 11,
+                fontWeight: '600',
+                letterSpacing: 0.3,
+              }}>
+              {textContent}
+            </Text>
           </View>
         );
       })}

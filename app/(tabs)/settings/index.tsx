@@ -752,10 +752,6 @@ export default function SettingsScreen() {
                 </View>
               </Pressable>
             </ObsidianSettingsGroup>
-
-            <Text style={styles.versionText}>
-              MySky v{Constants.expoConfig?.version ?? '1.0.0'}
-            </Text>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(625).duration(600)} style={styles.section}>
@@ -772,7 +768,7 @@ export default function SettingsScreen() {
                       <Ionicons name="mail-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Contact Us</Text>
                     </View>
-                    <Text style={styles.settingDescription}>brittanyapps@outlook.com</Text>
+                    <Text style={styles.settingDescription}>Get help with MySky</Text>
                   </View>
                   <Ionicons name="open-outline" size={18} color={theme.textMuted} />
                 </View>
@@ -858,7 +854,7 @@ export default function SettingsScreen() {
 
           {__DEV__ && (
             <Animated.View entering={FadeInDown.delay(775).duration(600)} style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: 'rgba(224, 122, 152, 0.8)' }]}>Developer Tools</Text>
+              <Text style={[styles.sectionTitle, { color: 'rgba(224, 122, 152, 0.5)' }]}>Developer Tools</Text>
 
               <Pressable
                 style={styles.settingCard}
@@ -889,6 +885,11 @@ export default function SettingsScreen() {
               </Pressable>
             </Animated.View>
           )}
+
+          {/* Version — always at the very bottom */}
+          <Text style={styles.versionText}>
+            MySky v{Constants.expoConfig?.version ?? '1.0.0'}
+          </Text>
         </ScrollView>
       </SafeAreaView>
 
@@ -949,10 +950,11 @@ const styles = StyleSheet.create({
 
   section: { marginBottom: theme.spacing.xl },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#9A9A9F',
+    letterSpacing: 2.5,
+    textTransform: 'uppercase',
     marginBottom: theme.spacing.md,
   },
   sectionTitleRow: {
@@ -1052,7 +1054,7 @@ const styles = StyleSheet.create({
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
   glossaryDefinition: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs },
 
-  versionText: { fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: theme.spacing.sm, fontStyle: 'italic' },
+  versionText: { fontSize: 11, color: 'rgba(226,232,240,0.25)', textAlign: 'center', marginTop: theme.spacing.xl, marginBottom: theme.spacing.sm, letterSpacing: 0.5 },
 
   // Key-loss warning banner
   keyLossBanner: {

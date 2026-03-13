@@ -142,6 +142,7 @@ export default function RelationshipsScreen() {
               latitude: rel.latitude,
               longitude: rel.longitude,
               timezone: rel.timezone,
+              houseSystem: saved.houseSystem,
             };
             const otherChart = AstrologyCalculator.generateNatalChart(relBirthData);
             otherChart.name = rel.name;
@@ -216,7 +217,7 @@ export default function RelationshipsScreen() {
 
       if (userChart) {
         try {
-          const otherChart = AstrologyCalculator.generateNatalChart(birthData);
+          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: savedUserChart?.houseSystem });
           otherChart.name = extra?.chartName || 'Someone Special';
           const report = SynastryEngine.calculateSynastry(userChart, otherChart);
           const topAspects = report.aspects.filter(a => a.strength === 'strong').slice(0, 3);
@@ -248,6 +249,7 @@ export default function RelationshipsScreen() {
       const birthData: BirthData = {
         date: rel.birthDate, time: rel.birthTime, hasUnknownTime: rel.hasUnknownTime,
         place: rel.birthPlace, latitude: rel.latitude, longitude: rel.longitude, timezone: rel.timezone,
+        houseSystem: savedUserChart?.houseSystem,
       };
     
       const otherChart = AstrologyCalculator.generateNatalChart(birthData);

@@ -301,6 +301,14 @@ export default function RootLayout() {
                 >
                   {/* Only mount tabs after privacy consent is confirmed */}
                   {!needsPrivacyConsent && <Stack.Screen name="(tabs)" />}
+                  {/* Full-screen writing sanctuary — outside tabs so the dock disappears */}
+                  <Stack.Screen
+                    name="sanctuary"
+                    options={{
+                      presentation: 'fullScreenModal',
+                      animation: 'fade_from_bottom',
+                    }}
+                  />
                   <Stack.Screen name="privacy" />
                   <Stack.Screen name="terms" />
                   <Stack.Screen name="faq" />

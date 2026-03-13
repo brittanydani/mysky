@@ -162,9 +162,14 @@ export const SkiaChakraNode = ({ name, color, stateColor, intensity, size, clock
 
   return (
     <Group opacity={intensity}>
-      {/* 1. The Aura Glow (Outer) - Breathing */}
-      <Circle cx={center} cy={center} r={auraRadius} color={color.glow} opacity={auraOpacity}>
+      {/* 1. The Aura Glow (Outer) - Breathing — blendMode screen = emitted light */}
+      <Circle cx={center} cy={center} r={auraRadius} color={color.glow} opacity={auraOpacity} blendMode="screen">
         <BlurMask blur={15} style="outer" />
+      </Circle>
+
+      {/* 1b. Inner burning core — screens with background to create white-hot center */}
+      <Circle cx={center} cy={center} r={auraRadius} color={color.core} opacity={0.28} blendMode="screen">
+        <BlurMask blur={6} style="inner" />
       </Circle>
 
       {/* 2. The 3D Specular Sphere */}

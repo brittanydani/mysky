@@ -191,17 +191,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    color: '#C9AE78',
-    fontSize: 14,
+    color: '#9A9A9F',
+    fontSize: 11,
     fontWeight: '700',
-    fontFamily: SERIF,
-    letterSpacing: 0.5,
+    letterSpacing: 2.5,
     textTransform: 'uppercase',
   },
   subtitle: {
-    color: theme.textMuted,
+    color: 'rgba(226,232,240,0.40)',
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 3,
+    letterSpacing: 0.2,
   },
   divider: {
     height: 1,

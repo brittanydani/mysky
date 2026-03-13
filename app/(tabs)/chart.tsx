@@ -8,9 +8,10 @@ import { SkiaGradient } from '../../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
 
 import { theme } from '../../constants/theme';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
@@ -20,6 +21,7 @@ import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/As
 import BirthDataModal from '../../components/BirthDataModal';
 import AstrologySettingsModal from '../../components/AstrologySettingsModal';
 import { localDb } from '../../services/storage/localDb';
+import { PremiumSegmentedControl } from '../../components/ui/PremiumSegmentedControl';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { NatalChart, PlanetPlacement, Aspect, HouseCusp as HouseCuspType, BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -33,12 +35,12 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
 
-// ── Colors per element ──
+// ── Colors per element (muted, sophisticated — not neon) ──
 const ELEMENT_COLORS: Record<string, string> = {
-  Fire: '#E8D6AE',
-  Earth: '#E8D6AE',
-  Air: '#E8D6AE',
-  Water: '#E8D6AE',
+  Fire: '#E57F7F',   // Muted Coral
+  Earth: '#7FA88B',  // Sage Green
+  Air: '#7F9CE5',    // Soft Periwinkle
+  Water: '#7FA8E5',  // Slate Blue
 };
 
 // ── Zodiac Font Family (matches wheel exactly) ──
@@ -130,6 +132,96 @@ function GradientIcon({ size, children }: { size: number; children: React.ReactE
 }
 
 type TabKey = 'planets' | 'houses' | 'aspects' | 'patterns';
+
+// ── Premium planet data row: strict columns, tabular nums, elemental colors ──
+type PlanetDataRowProps = {
+  iconElement?: React.ReactNode;
+  glyph?: string;
+  glyphFontSize?: number;
+  planet: string;
+  isRetrograde?: boolean;
+  signGlyph: string;
+  sign: string;
+  element: string;
+  modality?: string;
+  degrees: string;
+  house: number | string;
+};
+
+function PlanetDataRow({
+  iconElement,
+  glyph,
+  glyphFontSize = 20,
+  planet,
+  isRetrograde,
+  signGlyph,
+  sign,
+  element,
+  modality,
+  degrees,
+  house,
+}: PlanetDataRowProps) {
+  const scale = useSharedValue(1);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const elColor = ELEMENT_COLORS[element] || '#E8D6AE';
+
+  return (
+    <Pressable
+      onPressIn={() => { scale.value = withSpring(0.97, { mass: 0.5, damping: 15 }); }}
+      onPressOut={() => { scale.value = withSpring(1, { mass: 0.5, damping: 15 }); }}
+      onPress={() => Haptics.selectionAsync().catch(() => {})}
+      accessibilityRole="button"
+      accessibilityLabel={`${planet} in ${sign}`}
+    >
+      <Animated.View style={[styles.premiumRow, animStyle]}>
+        {/* Col 1: glyph / icon */}
+        <View style={styles.premiumColGlyph}>
+          {iconElement ?? (
+            <GradientSymbol
+              symbol={glyph ?? '•'}
+              fontSize={glyphFontSize}
+              w={28}
+              h={28}
+            />
+          )}
+        </View>
+
+        {/* Col 2: planet name + Rx badge */}
+        <View style={styles.premiumColPlanet}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.premiumPlanetText}>{planet}</Text>
+            {isRetrograde && (
+              <View style={styles.premiumRxBadge}>
+                <Text style={styles.premiumRxText}>Rx</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Col 3: sign glyph + name + element · modality */}
+        <View style={styles.premiumColSign}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+            <GradientSymbol symbol={signGlyph} fontSize={13} w={16} h={16} />
+            <Text style={[styles.premiumSignText, { color: elColor, marginLeft: 3 }]}>{sign}</Text>
+          </View>
+          <Text style={styles.premiumMetaText}>
+            {element}{modality ? ` · ${modality}` : ''}
+          </Text>
+        </View>
+
+        {/* Col 4: degrees with tabular nums */}
+        <View style={styles.premiumColDegrees}>
+          <Text style={styles.premiumDegreeText}>{degrees}</Text>
+        </View>
+
+        {/* Col 5: house number */}
+        <View style={styles.premiumColHouse}>
+          <Text style={styles.premiumHouseText}>{house || '—'}</Text>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+}
 
 type SensitivePointRow = {
   label: 'Chiron' | 'North Node' | 'South Node';
@@ -659,7 +751,8 @@ export default function ChartScreen() {
 
           {/* ── People Bar (Premium Multi-Chart) ── */}
           {isPremium && (
-            <Animated.View entering={FadeInDown.delay(120).duration(600)} style={{ width: '100%' }}>
+            <Animated.View entering={FadeInDown.delay(120).duration(600)} style={{ width: '100%', alignItems: 'center' }}>
+              <BlurView intensity={45} tint="dark" style={styles.glassPeopleBar}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.peopleBar}>
                 {/* Your chart chip (always first) */}
                 <Pressable
@@ -721,23 +814,18 @@ export default function ChartScreen() {
                   </Pressable>
                 )})}
 
-                {/* Add person button */}
+                {/* Add person button — minimal circular icon */}
                 <Pressable
                   onPress={() => setShowRelTypePicker(true)}
                   accessibilityRole="button"
                   accessibilityLabel="Add person"
                 >
-                  <LinearGradient
-                    colors={[...metallicFillColors]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.addPersonChip}
-                  >
-                    <FontAwesome6 name="plus" size={12} color={"#141222"} />
-                    <Text style={[styles.addPersonText, { color: "#141222", fontWeight: "700" }]}>Add</Text>
-                  </LinearGradient>
+                  <View style={styles.addPersonChip}>
+                    <FontAwesome6 name="plus" size={13} color={'rgba(232,214,174,0.85)'} />
+                  </View>
                 </Pressable>
               </ScrollView>
+              </BlurView>
 
               {/* Overlay legend when active — luxury pill tags */}
               {activeOverlays.length > 0 && (
@@ -822,43 +910,41 @@ export default function ChartScreen() {
 
           {/* ── Big Three Summary ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={{ width: '100%' }}>
-            <View style={[styles.bigThreeCard, { backgroundColor: 'transparent' }]}> 
+            <View style={[styles.bigThreeCard, { backgroundColor: 'transparent' }]}>
               <View style={styles.bigThreeRow}>
                 <View style={styles.bigThreeItem}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                    <GradientSymbol symbol="☉" fontSize={11} w={13} h={13} />
+                    <GradientSymbol symbol="☉" fontSize={16} w={20} h={20} />
                     <Text style={styles.bigThreeLabel}> Sun</Text>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
-                    <GradientSymbol symbol={activeChart!.sun.sign.symbol} fontSize={12} w={15} h={14} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+                    <GradientSymbol symbol={activeChart!.sun.sign.symbol} fontSize={18} w={22} h={20} />
                     <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.sun.sign.name}</Text>
                   </View>
                   <Text style={styles.bigThreeDeg}>
-                    {activeChart!.sun.degree}°{String(activeChart!.sun.minute).padStart(2, '0')}' · House{' '}
-                    {activeChart!.sun.house}
+                    {activeChart!.sun.degree}°{String(activeChart!.sun.minute).padStart(2, '0')}' · H{activeChart!.sun.house}
                   </Text>
                 </View>
 
                 <View style={styles.bigThreeItem}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                    <GradientSymbol symbol="☽" fontSize={11} w={13} h={13} />
+                    <GradientSymbol symbol="☽" fontSize={16} w={20} h={20} />
                     <Text style={styles.bigThreeLabel}> Moon</Text>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
-                    <GradientSymbol symbol={activeChart!.moon.sign.symbol} fontSize={12} w={15} h={14} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+                    <GradientSymbol symbol={activeChart!.moon.sign.symbol} fontSize={18} w={22} h={20} />
                     <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.moon.sign.name}</Text>
                   </View>
                   <Text style={styles.bigThreeDeg}>
-                    {activeChart!.moon.degree}°{String(activeChart!.moon.minute).padStart(2, '0')}' · House{' '}
-                    {activeChart!.moon.house}
+                    {activeChart!.moon.degree}°{String(activeChart!.moon.minute).padStart(2, '0')}' · H{activeChart!.moon.house}
                   </Text>
                 </View>
 
                 {activeChart!.ascendant && (
                   <View style={styles.bigThreeItem}>
-                    <Text style={styles.bigThreeLabel}>AC Rising</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
-                      <GradientSymbol symbol={activeChart!.ascendant.sign.symbol} fontSize={12} w={15} h={14} />
+                    <Text style={styles.bigThreeLabel}>Rising</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+                      <GradientSymbol symbol={activeChart!.ascendant.sign.symbol} fontSize={18} w={22} h={20} />
                       <Text style={[styles.bigThreeSign, { marginTop: 0 }]}> {activeChart!.ascendant.sign.name}</Text>
                     </View>
                     <Text style={styles.bigThreeDeg}>
@@ -870,9 +956,9 @@ export default function ChartScreen() {
 
               {activeChart!.midheaven && (
                 <View style={styles.mcRow}>
-                  <Text style={styles.mcLabel}>MC Midheaven</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
-                    <GradientSymbol symbol={activeChart!.midheaven.sign.symbol} fontSize={16} w={20} h={18} />
+                  <Text style={styles.mcLabel}>MC · Midheaven</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 6 }}>
+                    <GradientSymbol symbol={activeChart!.midheaven.sign.symbol} fontSize={22} w={26} h={24} />
                     <Text style={[styles.mcSign, { marginTop: 0 }]}> {activeChart!.midheaven.sign.name}</Text>
                   </View>
                   <Text style={styles.mcDeg}>
@@ -886,131 +972,110 @@ export default function ChartScreen() {
           {/* ── Sensitive Points (Premium) ── */}
           {isPremium && sensitivePoints.length > 0 && (
             <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ width: '100%' }}>
-              <View style={[styles.sensitiveCard, { backgroundColor: 'transparent' }]}> 
-                <Text style={styles.sensitiveTitle}>Sensitive Points</Text>
+              <Text style={styles.sensitiveTitle}>Sensitive Points</Text>
 
-                <View style={styles.sensitiveGrid}>
-                  {sensitivePoints.map((pt) => (
-                    <View key={pt.label} style={styles.sensitiveItem}>
-                      <View style={{ marginBottom: 4 }}>
-                        {pt.label === 'Chiron' && <GradientIcon size={20}><ChironIcon size={20} color={'#000'} /></GradientIcon>}
-                        {pt.label === 'North Node' && <GradientIcon size={20}><NorthNodeIcon size={20} color={'#000'} /></GradientIcon>}
-                        {pt.label === 'South Node' && <GradientIcon size={20}><SouthNodeIcon size={20} color={'#000'} /></GradientIcon>}
+              {/* 3-column coordinate grid */}
+              <View style={styles.sensitiveGridCard}>
+                {sensitivePoints.map((pt, idx) => {
+                  const degStr = `${pt.degree}°${String(pt.minute).padStart(2, '0')}'${pt.house ? ` · H${pt.house}` : ''}`;
+                  return (
+                    <React.Fragment key={pt.label}>
+                      {idx > 0 && <View style={styles.sensitiveVerticalDivider} />}
+                      <View style={styles.sensitiveGridItem}>
+                        <View style={{ marginBottom: 6 }}>
+                          {pt.label === 'Chiron' && <GradientIcon size={22}><ChironIcon size={22} color={'#000'} /></GradientIcon>}
+                          {pt.label === 'North Node' && <GradientIcon size={22}><NorthNodeIcon size={22} color={'#000'} /></GradientIcon>}
+                          {pt.label === 'South Node' && <GradientIcon size={22}><SouthNodeIcon size={22} color={'#000'} /></GradientIcon>}
+                        </View>
+                        <Text style={styles.sensitiveGridName}>{pt.label}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+                          <GradientSymbol symbol={pt.signSymbol} fontSize={12} w={15} h={14} />
+                          <Text style={styles.sensitiveGridSign}> {pt.sign}</Text>
+                        </View>
+                        <Text style={styles.sensitiveGridDeg}>{degStr}</Text>
                       </View>
-                      <Text style={styles.sensitiveName}>{pt.label}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
-                        <GradientSymbol symbol={pt.signSymbol} fontSize={13} w={16} h={15} />
-                        <Text style={[styles.sensitiveSign, { marginTop: 0 }]}> {pt.sign}</Text>
-                      </View>
-                      <Text style={styles.sensitiveDeg}>
-                        {pt.degree}°{String(pt.minute).padStart(2, '0')}'{pt.house ? ` · H${pt.house}` : ''}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-
-                {chironInsight && (
-                  <View style={styles.insightBox}>
-                    <Text style={styles.insightLabel}>Chiron Theme</Text>
-                    <Text style={styles.insightTitle}>{chironInsight.title}</Text>
-                    <Text style={styles.insightText}>{chironInsight.theme}</Text>
-                  </View>
-                )}
-
-                {nodeInsight && (
-                  <View style={styles.insightBox}>
-                    <Text style={styles.insightLabel}>Node Axis</Text>
-                    <Text style={styles.insightText}>{nodeInsight.fusionLine}</Text>
-                  </View>
-                )}
+                    </React.Fragment>
+                  );
+                })}
               </View>
+
+              {/* Interpretation cards */}
+              {(chironInsight || nodeInsight) && (
+                <View style={styles.sensitiveInterpCard}>
+                  {chironInsight && (
+                    <View style={styles.sensitiveInterpBlock}>
+                      <View style={styles.sensitiveInterpHeader}>
+                        <View style={{ marginRight: 8 }}>
+                          <GradientIcon size={16}><ChironIcon size={16} color={'#000'} /></GradientIcon>
+                        </View>
+                        <Text style={styles.sensitiveInterpTitle}>{chironInsight.title}</Text>
+                      </View>
+                      <Text style={styles.sensitiveInterpBody}>{chironInsight.theme}</Text>
+                    </View>
+                  )}
+
+                  {chironInsight && nodeInsight && <View style={styles.sensitiveHorizDivider} />}
+
+                  {nodeInsight && (
+                    <View style={styles.sensitiveInterpBlock}>
+                      <View style={styles.sensitiveInterpHeader}>
+                        <View style={{ marginRight: 8 }}>
+                          <GradientIcon size={16}><NorthNodeIcon size={16} color={'#000'} /></GradientIcon>
+                        </View>
+                        <Text style={styles.sensitiveInterpTitle}>Nodal Axis · Path Forward</Text>
+                      </View>
+                      <Text style={styles.sensitiveInterpBody}>{nodeInsight.fusionLine}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </Animated.View>
           )}
 
           {/* ── Tab Switcher ── */}
-          <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.tabRow}>
-            {(['planets', 'houses', 'aspects', 'patterns'] as TabKey[]).map((tab) => (
-              <Pressable
-                key={tab}
-                style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
-                onPress={() => setActiveTab(tab)}
-                accessibilityRole="tab"
-                accessibilityLabel={`${tab.charAt(0).toUpperCase() + tab.slice(1)} tab`}
-                accessibilityState={{ selected: activeTab === tab }}
-              >
-                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                  {tab === 'planets'
-                    ? `Planets (${planetRows.length})`
-                    : tab === 'houses'
-                      ? `Houses (${houseCusps.length})`
-                      : tab === 'aspects'
-                        ? `Aspects (${sortedAspects.length})`
-                        : `Patterns (${patternCount})`}
-                </Text>
-              </Pressable>
-            ))}
+          <Animated.View entering={FadeInDown.delay(250).duration(600)}>
+            <PremiumSegmentedControl
+              options={[
+                { id: 'planets', label: 'Planets', count: planetRows.length },
+                { id: 'houses', label: 'Houses', count: houseCusps.length },
+                { id: 'aspects', label: 'Aspects', count: sortedAspects.length },
+                { id: 'patterns', label: 'Patterns', count: patternCount },
+              ]}
+              selectedIndex={['planets', 'houses', 'aspects', 'patterns'].indexOf(activeTab)}
+              onChange={(index) => setActiveTab((['planets', 'houses', 'aspects', 'patterns'] as TabKey[])[index])}
+            />
           </Animated.View>
 
           {/* ── Planets Table ── */}
           {activeTab === 'planets' && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
               <View style={styles.tableHeader}>
-                <Text style={[styles.th, { width: 140 }]}>Planet</Text>
-                <Text style={[styles.th, { flex: 2 }]}>Sign</Text>
-                <Text style={[styles.th, { flex: 1 }]}>Deg</Text>
-                <Text style={[styles.th, { flex: 1 }]}>House</Text>
+                <View style={{ width: 40 }} />
+                <Text style={[styles.th, { flex: 1, textAlign: 'left' }]}>Planet</Text>
+                <Text style={[styles.th, { width: 96, textAlign: 'right', paddingRight: 12 }]}>Sign</Text>
+                <Text style={[styles.th, { width: 64, textAlign: 'right', paddingRight: 12 }]}>Deg</Text>
+                <Text style={[styles.th, { width: 24, textAlign: 'center' }]}>H</Text>
               </View>
 
-              {planetRows.map((row, idx) => {
-                const elColor = ELEMENT_COLORS[row.p.sign.element] || theme.textSecondary;
+              {planetRows.map((row) => {
                 const retro = getRetrogradeFlag(row.p as any);
                 const planetSymbol = (row.p as any)?.planet?.symbol ?? '•';
+                const degrees = `${row.p.degree}°${String(row.p.minute).padStart(2, '0')}'`;
 
                 return (
-                  <LinearGradient
+                  <PlanetDataRow
                     key={row.label}
-                    colors={
-                      idx % 2 === 0
-                        ? ['rgba(14, 24, 48,0.5)', 'rgba(10, 18, 36,0.3)']
-                        : ['rgba(10, 18, 36,0.4)', 'rgba(10, 18, 36,0.3)']
-                    }
-                    style={styles.tableRow}
-                  >
-                    <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                      <GradientSymbol
-                        symbol={planetSymbol}
-                        fontSize={planetSymbol.length > 1 ? 13 : 18}
-                        w={28}
-                        h={24}
-                        style={{ marginRight: 10 }}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.planetName, MULTI_CHAR_PLANETS.has(row.label) && { fontSize: 11 }]}>
-                          {row.label}
-                        </Text>
-                        {retro && <Text style={styles.retroLabel}>℞ Retrograde</Text>}
-                      </View>
-                    </View>
-
-                    <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                      <GradientSymbol symbol={row.p.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.signName, { color: elColor }]}>{row.p.sign.name}</Text>
-                        <Text style={styles.elementLabel}>
-                          {row.p.sign.element} · {row.p.sign.modality}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={[styles.td, { flex: 1 }]}>
-                      <Text style={styles.degreeText}>{row.p.degree}°</Text>
-                      <Text style={styles.minuteText}>{String(row.p.minute).padStart(2, '0')}'</Text>
-                    </View>
-
-                    <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                      <Text style={styles.houseNum}>{row.p.house || '—'}</Text>
-                    </View>
-                  </LinearGradient>
+                    glyph={planetSymbol}
+                    glyphFontSize={planetSymbol.length > 1 ? 13 : 20}
+                    planet={row.label}
+                    isRetrograde={retro}
+                    signGlyph={row.p.sign.symbol}
+                    sign={row.p.sign.name}
+                    element={row.p.sign.element}
+                    modality={row.p.sign.modality}
+                    degrees={degrees}
+                    house={row.p.house || '—'}
+                  />
                 );
               })}
 
@@ -1021,53 +1086,27 @@ export default function ChartScreen() {
                     <Text style={styles.pointsLabel}>Sensitive Points</Text>
                   </View>
 
-                  {sensitivePoints.map((pt, idx) => (
-                    <LinearGradient
-                      key={pt.label}
-                      colors={
-                        idx % 2 === 0
-                          ? ['rgba(14, 24, 48,0.5)', 'rgba(10, 18, 36,0.3)']
-                          : ['rgba(10, 18, 36,0.4)', 'rgba(10, 18, 36,0.3)']
-                      }
-                      style={styles.tableRow}
-                    >
-                      <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
-                        <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
-                          {pt.label === 'Chiron' && <GradientIcon size={18}><ChironIcon size={18} color={'#000'} /></GradientIcon>}
-                          {pt.label === 'North Node' && <GradientIcon size={18}><NorthNodeIcon size={18} color={'#000'} /></GradientIcon>}
-                          {pt.label === 'South Node' && <GradientIcon size={18}><SouthNodeIcon size={18} color={'#000'} /></GradientIcon>}
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.planetName}>{pt.label}</Text>
-                          {pt.retrograde && <Text style={styles.retroLabel}>℞ Retrograde</Text>}
-                        </View>
-                      </View>
+                  {sensitivePoints.map((pt) => {
+                    const icon =
+                      pt.label === 'Chiron' ? <GradientIcon size={20}><ChironIcon size={20} color={'#000'} /></GradientIcon> :
+                      pt.label === 'North Node' ? <GradientIcon size={20}><NorthNodeIcon size={20} color={'#000'} /></GradientIcon> :
+                      <GradientIcon size={20}><SouthNodeIcon size={20} color={'#000'} /></GradientIcon>;
+                    const degrees = `${pt.degree}°${String(pt.minute).padStart(2, '0')}'`;
 
-                      <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
-                        <GradientSymbol symbol={pt.signSymbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
-                        <View style={{ flex: 1 }}>
-                          <Text
-                            style={[
-                              styles.signName,
-                              { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
-                            ]}
-                          >
-                            {pt.sign}
-                          </Text>
-                          <Text style={styles.elementLabel}>{pt.element}</Text>
-                        </View>
-                      </View>
-
-                      <View style={[styles.td, { flex: 1 }]}>
-                        <Text style={styles.degreeText}>{pt.degree}°</Text>
-                        <Text style={styles.minuteText}>{String(pt.minute).padStart(2, '0')}'</Text>
-                      </View>
-
-                      <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                        <Text style={styles.houseNum}>{pt.house || '—'}</Text>
-                      </View>
-                    </LinearGradient>
-                  ))}
+                    return (
+                      <PlanetDataRow
+                        key={pt.label}
+                        iconElement={icon}
+                        planet={pt.label}
+                        isRetrograde={pt.retrograde}
+                        signGlyph={pt.signSymbol}
+                        sign={pt.sign}
+                        element={pt.element}
+                        degrees={degrees}
+                        house={pt.house || '—'}
+                      />
+                    );
+                  })}
                 </>
               )}
             </Animated.View>
@@ -1783,14 +1822,15 @@ const styles = StyleSheet.create({
   bigThreeRow: { flexDirection: 'row', justifyContent: 'space-evenly' },
   bigThreeItem: { alignItems: 'center', flex: 1 },
   bigThreeLabel: {
-    color: theme.textMuted,
-    fontSize: 11,
-    letterSpacing: 1,
+    color: theme.textSecondary,
+    fontSize: 12,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
     textAlign: 'center',
+    fontWeight: '500',
   },
-  bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 12, marginTop: 6, textAlign: 'center' },
-  bigThreeDeg: { color: theme.textSecondary, fontSize: 10, marginTop: 3, textAlign: 'center', opacity: 0.9 },
+  bigThreeSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 15, marginTop: 6, textAlign: 'center', letterSpacing: 0.3 },
+  bigThreeDeg: { color: theme.textSecondary, fontSize: 11, marginTop: 4, textAlign: 'center', fontVariant: ['tabular-nums'] },
   mcRow: {
     alignItems: 'center',
     marginTop: theme.spacing.md,
@@ -1799,9 +1839,9 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.06)',
     width: '100%',
   },
-  mcLabel: { color: theme.textMuted, fontSize: 12, letterSpacing: 0.5, textAlign: 'center' },
-  mcSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 16, marginTop: 4, textAlign: 'center' },
-  mcDeg: { color: theme.textSecondary, fontSize: 11, marginTop: 2, textAlign: 'center' },
+  mcLabel: { color: theme.textSecondary, fontSize: 12, letterSpacing: 0.8, textTransform: 'uppercase', textAlign: 'center', fontWeight: '500' },
+  mcSign: { color: theme.textPrimary, fontWeight: '700', fontSize: 18, marginTop: 4, textAlign: 'center', letterSpacing: 0.3 },
+  mcDeg: { color: theme.textSecondary, fontSize: 11, marginTop: 2, textAlign: 'center', fontVariant: ['tabular-nums'] },
 
   sensitiveCard: {
     borderRadius: theme.borderRadius.xl,
@@ -1811,25 +1851,88 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sensitiveTitle: {
-    color: theme.textMuted,
+    color: theme.textSecondary,
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.md,
+    letterSpacing: 2,
+    marginBottom: 16,
     textAlign: 'center',
   },
-  sensitiveGrid: {
+  sensitiveGridCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    backgroundColor: 'rgba(14, 18, 32, 0.7)',
+    borderRadius: 20,
+    paddingVertical: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+    width: '100%',
   },
-  sensitiveItem: { alignItems: 'center', minWidth: 90 },
-  sensitiveName: { color: theme.textPrimary, fontSize: 12, fontWeight: '600', textAlign: 'center' },
-  sensitiveSign: { color: theme.textSecondary, fontSize: 13, fontWeight: '500', marginTop: 2, textAlign: 'center' },
-  sensitiveDeg: { color: theme.textMuted, fontSize: 11, marginTop: 1, textAlign: 'center' },
+  sensitiveGridItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  sensitiveVerticalDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginVertical: 4,
+  },
+  sensitiveGridName: {
+    color: theme.textPrimary,
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  sensitiveGridSign: {
+    color: theme.textSecondary,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  sensitiveGridDeg: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontVariant: ['tabular-nums'],
+    fontWeight: '500',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  sensitiveInterpCard: {
+    backgroundColor: 'rgba(14, 18, 32, 0.7)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: theme.spacing.lg,
+  },
+  sensitiveInterpBlock: {
+    padding: 20,
+  },
+  sensitiveInterpHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sensitiveInterpTitle: {
+    color: theme.textPrimary,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    flex: 1,
+  },
+  sensitiveInterpBody: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    lineHeight: 21,
+    fontWeight: '400',
+  },
+  sensitiveHorizDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginLeft: 20,
+  },
 
   insightBox: {
     backgroundColor: 'transparent',
@@ -2036,8 +2139,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   personChipActive: {
-    backgroundColor: 'transparent',
-    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.55)',
     borderWidth: 1,
   },
   personChipText: {
@@ -2050,19 +2153,27 @@ const styles = StyleSheet.create({
   personChipRelation: { color: theme.textMuted, fontSize: 10, fontStyle: 'italic', opacity: 0.7 },
 
   addPersonChip: {
-    flexDirection: 'row',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(232,214,174,0.28)',
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 4,
-    borderWidth: 1.5,
-    borderColor: '#C9AE78',
+    justifyContent: 'center',
   },
   addPersonText: { color: theme.primary, fontSize: 13, fontWeight: '600' },
 
-  // ── Overlay Legend (luxury pill tags) ──
+  // ── Glassmorphism people bar ──
+  glassPeopleBar: {
+    borderRadius: 30,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(14, 14, 20, 0.45)',
+    maxWidth: '100%',
+    marginBottom: 8,
+  },
   overlayLegend: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -2145,4 +2256,82 @@ const styles = StyleSheet.create({
   exploreIconWrap: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   exploreChipTitle: { color: theme.textPrimary, fontWeight: '600', fontSize: 15, marginBottom: 2 },
   exploreChipSub: { color: theme.textMuted, fontSize: 12 },
+
+  // ── Premium planet data rows ──
+  premiumRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(14, 18, 32, 0.55)',
+    borderRadius: 14,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  premiumColGlyph: {
+    width: 32,
+    alignItems: 'center',
+  },
+  premiumColPlanet: {
+    flex: 1,
+    paddingLeft: 8,
+  },
+  premiumColSign: {
+    width: 96,
+    alignItems: 'flex-end',
+    paddingRight: 12,
+  },
+  premiumColDegrees: {
+    width: 64,
+    alignItems: 'flex-end',
+    paddingRight: 10,
+  },
+  premiumColHouse: {
+    width: 24,
+    alignItems: 'center',
+  },
+  premiumPlanetText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    letterSpacing: 0.3,
+  },
+  premiumRxBadge: {
+    marginLeft: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    backgroundColor: 'rgba(255,255,255,0.09)',
+    borderRadius: 4,
+  },
+  premiumRxText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.textSecondary,
+    letterSpacing: 0.5,
+  },
+  premiumSignText: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  premiumMetaText: {
+    fontSize: 10,
+    color: theme.textMuted,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  premiumDegreeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.textPrimary,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 0.3,
+  },
+  premiumHouseText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: theme.textPrimary,
+  },
 });

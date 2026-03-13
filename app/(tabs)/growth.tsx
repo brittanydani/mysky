@@ -9,7 +9,7 @@
  */
 
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,7 +26,13 @@ import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
-import { OrbitalPatternsMap } from '../../components/ui/OrbitalPatternsMap';
+import { BreathingMandala } from '../../components/ui/BreathingMandala';
+import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
+import { DailyCheckIn } from '../../services/patterns/types';
+
+const SCREEN_W = Dimensions.get('window').width;
+// 20px horizontal padding each side + 16px card padding each side = 72px total inset
+const CHART_W = SCREEN_W - 72;
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -73,6 +79,7 @@ export default function PatternsScreen() {
     stressTrend: null,
   });
   const [enhanced, setEnhanced] = useState<EnhancedInsightBundle | null>(null);
+  const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -110,6 +117,9 @@ export default function PatternsScreen() {
           }
 
           setSnapshot({ avgMood, checkInCount: checkIns.length, stressTrend });
+          // Store the last 20 check-ins for the trend chart
+          const sorted = [...checkIns].sort((a, b) => a.date.localeCompare(b.date));
+          setTrendCheckIns(sorted.slice(-20));
 
           // ── Enhanced insights pipeline ──
           try {
@@ -283,7 +293,20 @@ export default function PatternsScreen() {
           {snapshot.checkInCount > 0 && (
             <Animated.View entering={FadeInDown.delay(290).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Your Patterns</Text>
-              <OrbitalPatternsMap height={260} />
+              <View style={styles.mandalaContainer}>
+                <BreathingMandala size={280} />
+              </View>
+
+              {/* ── 7-day trend — golden Bézier scrub chart ── */}
+              {trendCheckIns.length >= 2 && (
+                <View style={styles.trendCard}>
+                  <View style={styles.trendLabelRow}>
+                    <Ionicons name="trending-up" size={14} color={PALETTE.gold} />
+                    <Text style={[styles.trendLabel, { color: PALETTE.gold }]}>MOOD · ENERGY · STRESS — LAST {trendCheckIns.length} DAYS</Text>
+                  </View>
+                  <NeonWaveChart checkIns={trendCheckIns} width={CHART_W} height={200} />
+                </View>
+              )}
 
               {isPremium ? (
                 <>
@@ -410,6 +433,18 @@ const styles = StyleSheet.create({
 
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 12, letterSpacing: 0.3, paddingLeft: 4 },
+  mandalaContainer: { alignItems: 'center', marginVertical: 8 },
+  trendCard: {
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: 'rgba(20,24,36,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    borderTopColor: 'rgba(255,255,255,0.12)',
+  },
+  trendLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
+  trendLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.4 },
 
   glassCard: {
     borderRadius: 20,

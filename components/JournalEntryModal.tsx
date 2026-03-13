@@ -24,8 +24,16 @@ import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { toLocalDateString } from '../utils/dateUtils';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  cancelAnimation,
+} from 'react-native-reanimated';import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
@@ -65,6 +73,12 @@ type EnergyKey = 'low' | 'steady' | 'high';
 export default function JournalEntryModal({ visible, onClose, onSave, initialData }: JournalEntryModalProps) {
   const { isPremium } = usePremium();
   
+  // ── Writing-mode state ──
+  const [writingMode, setWritingMode] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pulseOpacity = useSharedValue(1);
+
   const [date, setDate] = useState(new Date());
   const [mood, setMood] = useState<MoodKey>('okay');
   const [energyLevel, setEnergyLevel] = useState<EnergyKey>('steady');
@@ -88,8 +102,46 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   useEffect(() => {
     return () => {
       if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
   }, []);
+
+  // ── Debounced "pending save" indicator — fires 1.5 s after the user stops typing ──
+  useEffect(() => {
+    if (!writingMode || !content.trim()) return;
+    setPendingSave(false);
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      setPendingSave(true);
+    }, 1500);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [content, writingMode]);
+
+  // ── Pulsing animation for the save indicator ──
+  useEffect(() => {
+    if (pendingSave) {
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.25, { duration: 900 }),
+          withTiming(1, { duration: 900 }),
+        ),
+        -1,
+        true,
+      );
+    } else {
+      cancelAnimation(pulseOpacity);
+      pulseOpacity.value = withTiming(1, { duration: 200 });
+    }
+  }, [pendingSave]);
+
+  // Exit writing mode when the modal closes
+  useEffect(() => {
+    if (!visible) setWritingMode(false);
+  }, [visible]);
+
+
 
   useEffect(() => {
     if (visible) loadUserChart();
@@ -136,6 +188,18 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       }
     } catch {}
   };
+
+  const pulseStyle = useAnimatedStyle(() => ({ opacity: pulseOpacity.value }));
+
+  const enterWritingMode = useCallback(() => {
+    setWritingMode(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  }, []);
+
+  const exitWritingMode = useCallback(() => {
+    setWritingMode(false);
+    Keyboard.dismiss();
+  }, []);
 
   useEffect(() => {
     if (!visible) return;
@@ -197,16 +261,78 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           <SkiaDynamicCosmos />
           <SafeAreaView edges={['top']} style={styles.safeArea}>
             
-            {/* Header */}
-            <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-              <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
-                <Ionicons name="close" size={24} color={PALETTE.textMain} />
-              </Pressable>
-              <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
-              <View style={{ width: 44 }} />
-            </Animated.View>
+            {/* Header — collapses to minimal bar in writing mode */}
+            {writingMode ? (
+              <View style={styles.writingHeader}>
+                <Pressable style={styles.iconBtn} onPress={exitWritingMode} hitSlop={15}>
+                  <Ionicons name="chevron-down" size={22} color={PALETTE.textMain} />
+                </Pressable>
+                <Text style={styles.writingDateLabel} numberOfLines={1}>
+                  {formatDate(date)}
+                </Text>
+                <View style={styles.writingHeaderRight}>
+                  {pendingSave && (
+                    <Animated.View style={[styles.saveIndicator, pulseStyle]}>
+                      <View style={styles.saveIndicatorDot} />
+                      <Text style={styles.saveIndicatorText}>Secured</Text>
+                    </Animated.View>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+                <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
+                  <Ionicons name="close" size={24} color={PALETTE.textMain} />
+                </Pressable>
+                <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
+                <View style={{ width: 44 }} />
+              </Animated.View>
+            )}
 
             <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              {writingMode ? (
+                /* ── Distraction-free writing surface ── */
+                <>
+                  <TextInput
+                    style={styles.focusedContentInput}
+                    value={content}
+                    onChangeText={setContent}
+                    placeholder="What is surfacing for you right now?"
+                    placeholderTextColor="rgba(240,234,214,0.22)"
+                    multiline
+                    textAlignVertical="top"
+                    autoFocus
+                  />
+                  {/* Mood quick-pick — floats above the keyboard */}
+                  <View style={styles.moodToolbar}>
+                    {(
+                      [
+                        { key: 'calm',   label: '☽ Calm',   color: '#6EBF8B' },
+                        { key: 'soft',   label: '◌ Soft',   color: '#8BC4E8' },
+                        { key: 'okay',   label: '◈ Okay',   color: '#C9AE78' },
+                        { key: 'heavy',  label: '◎ Heavy',  color: 'rgba(201,174,120,0.55)' },
+                        { key: 'stormy', label: '◉ Stormy', color: '#E07A7A' },
+                      ] as { key: MoodKey; label: string; color: string }[]
+                    ).map(({ key, label, color }) => (
+                      <Pressable
+                        key={key}
+                        onPress={() => {
+                          setMood(key);
+                          Haptics.selectionAsync().catch(() => {});
+                        }}
+                        style={[
+                          styles.moodChip,
+                          mood === key && { borderColor: color, backgroundColor: `${color}22` },
+                        ]}
+                      >
+                        <Text style={[styles.moodChipText, { color: mood === key ? color : 'rgba(255,255,255,0.45)' }]}>
+                          {label}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              ) : (
               <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                 
                 {/* Date Selection */}
@@ -273,6 +399,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       style={styles.contentInput}
                       value={content}
                       onChangeText={setContent}
+                      onFocus={enterWritingMode}
                       placeholder="What is surfacing for you right now?"
                       placeholderTextColor={theme.textMuted}
                       multiline
@@ -292,6 +419,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 </Animated.View>
 
               </ScrollView>
+              )} {/* end writingMode ternary */}
 
               {showDatePicker && (
                 <DateTimePicker
@@ -316,7 +444,23 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   headerTitle: { fontSize: 18, color: '#FFFFFF', fontWeight: '600', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   iconBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  
+
+  // ── Writing mode header ──
+  writingHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  writingDateLabel: { flex: 1, fontSize: 13, color: 'rgba(240,234,214,0.50)', marginLeft: 4 },
+  writingHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  saveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: 'rgba(110,191,139,0.12)', borderWidth: 1, borderColor: 'rgba(110,191,139,0.25)' },
+  saveIndicatorDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#6EBF8B' },
+  saveIndicatorText: { fontSize: 11, color: '#6EBF8B', fontWeight: '600', letterSpacing: 0.5 },
+
+  // ── Distraction-free writing surface ──
+  focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 20, paddingBottom: 12, color: PALETTE.textMain, fontSize: 17, lineHeight: 28, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlignVertical: 'top' },
+
+  // ── Mood quick-pick toolbar (sits above keyboard in writing mode) ──
+  moodToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.75)' },
+  moodChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' },
+  moodChipText: { fontSize: 12, fontWeight: '600' },
+
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 60 },
   

@@ -125,7 +125,7 @@ function detectTimeOfDay(date: Date = new Date()): TimeOfDay {
 export const TIME_OF_DAY_LABELS: Record<TimeOfDay, { label: string; emoji: string; hours: string }> = {
   morning:   { label: 'Morning',   emoji: '🌅', hours: '5am–12pm' },
   afternoon: { label: 'Afternoon', emoji: '☀️', hours: '12pm–5pm' },
-  evening:   { label: 'Evening',   emoji: '🌆', hours: '5pm–9pm' },
+  evening:   { label: 'Evening',   emoji: '�', hours: '5pm–9pm' },
   night:     { label: 'Night',     emoji: '🌙', hours: '9pm–5am' },
 };
 

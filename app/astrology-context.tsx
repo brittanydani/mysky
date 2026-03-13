@@ -522,6 +522,7 @@ export default function AstrologyContextScreen() {
                 dominantDomain === 'love' && { borderColor: DOMAIN_HIGHLIGHT.love },
               ]}
             >
+              <View style={[styles.cardTopGlow, { backgroundColor: '#E07A98' }]} />
               <View style={styles.cardHeader}>
                 <Ionicons name="heart" size={18} color="#E07A98" />
                 <Text style={[styles.cardLabel, { color: '#E07A98' }]}>LOVE</Text>
@@ -550,6 +551,7 @@ export default function AstrologyContextScreen() {
                 dominantDomain === 'energy' && { borderColor: DOMAIN_HIGHLIGHT.energy },
               ]}
             >
+              <View style={[styles.cardTopGlow, { backgroundColor: '#6EBF8B' }]} />
               <View style={styles.cardHeader}>
                 <Ionicons name="flash" size={18} color="#6EBF8B" />
                 <Text style={[styles.cardLabel, { color: '#6EBF8B' }]}>ENERGY</Text>
@@ -578,6 +580,7 @@ export default function AstrologyContextScreen() {
                 (dominantDomain === 'growth' || dominantDomain === 'focus' || dominantDomain === 'direction') && { borderColor: DOMAIN_HIGHLIGHT.growth },
               ]}
             >
+              <View style={[styles.cardTopGlow, { backgroundColor: '#8BC4E8' }]} />
               <View style={styles.cardHeader}>
                 <Ionicons name="leaf" size={18} color="#8BC4E8" />
                 <Text style={[styles.cardLabel, { color: '#8BC4E8' }]}>GROWTH</Text>
@@ -607,6 +610,7 @@ export default function AstrologyContextScreen() {
                   dominantDomain === 'mood' && { borderColor: DOMAIN_HIGHLIGHT.mood },
                 ]}
               >
+                <View style={[styles.cardTopGlow, { backgroundColor: '#7A8BE0' }]} />
                 <View style={styles.cardHeader}>
                   <Ionicons name="water" size={18} color="#7A8BE0" />
                   <Text style={[styles.cardLabel, { color: '#7A8BE0' }]}>EMOTIONAL WEATHER</Text>
@@ -926,24 +930,32 @@ const styles = StyleSheet.create({
   // ── Guidance Cards ──
   guidanceCard: {
     borderRadius: theme.borderRadius.xl, padding: theme.spacing.xl, borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.08)', overflow: 'hidden',
   },
   guidanceCardHighlight: { borderWidth: 1.5 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md },
-  cardLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 2, marginLeft: theme.spacing.sm },
+  cardLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginLeft: theme.spacing.sm },
   strongestBadge: {
     marginLeft: 'auto', backgroundColor: 'transparent',
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: theme.borderRadius.sm,
   },
   strongestBadgeText: { fontSize: 8, fontWeight: '600', color: theme.primary, letterSpacing: 0.2, textTransform: 'uppercase' },
-  cardHeadline: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', marginBottom: theme.spacing.sm },
-  cardMessage: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
+  cardHeadline: { fontSize: 20, fontWeight: '600', color: theme.textPrimary, lineHeight: 28, letterSpacing: -0.3, marginBottom: theme.spacing.sm },
+  cardMessage: { fontSize: 16, color: theme.textSecondary, lineHeight: 26 },
   premiumExtra: {
     marginTop: theme.spacing.md, paddingTop: theme.spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
-  premiumKeyInsight: { fontSize: 14, fontWeight: '600', color: theme.primary, fontStyle: 'italic', marginBottom: 4 },
-  premiumAction: { fontSize: 13, color: theme.textSecondary, lineHeight: 19 },
+  premiumKeyInsight: { fontSize: 15, fontWeight: '600', color: theme.primary, marginBottom: 4 },
+  premiumAction: { fontSize: 15, color: theme.textSecondary, lineHeight: 22 },
+  cardTopGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 20,
+    right: 20,
+    height: 1.5,
+    opacity: 0.65,
+  },
 
   // ── Daily Affirmation ──
   affirmationCard: {

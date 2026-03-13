@@ -59,6 +59,9 @@ import { DreamClusterMap, DEFAULT_DREAM_NODES } from '../../components/ui/DreamC
 import { useSyncDreamData } from '../../hooks/useSyncDreamData';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SkiaMoonDragger from '../../components/ui/SkiaMoonDragger';
+import SegmentRating from '../../components/ui/SegmentRating';
+import AwakenStateSheet from '../../components/ui/AwakenStateSheet';
+import PremiumPill from '../../components/ui/PremiumPill';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -238,6 +241,7 @@ export default function SleepScreen() {
   });
   
   const [showAwakenDropdown, setShowAwakenDropdown] = useState(false);
+  const [showAwakenSheet, setShowAwakenSheet] = useState(false);
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
   const [selectedTier, setSelectedTier] = useState<FeelingTier | null>(null);
   const [showMetadata, setShowMetadata] = useState(false);
@@ -329,6 +333,7 @@ export default function SleepScreen() {
         setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
       }
       setShowAwakenDropdown(false);
+      setShowAwakenSheet(false);
       setShowFeelingPicker(false);
       setSelectedTier(null);
       setShowMetadata(false);
@@ -343,6 +348,7 @@ export default function SleepScreen() {
       setSelectedFeelings([]);
       setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
       setShowAwakenDropdown(false);
+      setShowAwakenSheet(false);
       setShowFeelingPicker(false);
       setSelectedTier(null);
       setShowMetadata(false);
@@ -780,64 +786,60 @@ export default function SleepScreen() {
                   
                   {showMetadata && (
                     <View style={styles.metadataSection}>
+                      {/* ── 1-5 rating rows → SegmentRating ── */}
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Vividness</Text>
-                        <View style={styles.intensityDots}>
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <Pressable key={n} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, vividness: n })); }} style={[styles.intensityDot, n <= dreamMetadata.vividness && styles.intensityDotActive]}>
-                              <Text style={[styles.intensityDotText, n <= dreamMetadata.vividness && styles.intensityDotTextActive]}>{n}</Text>
-                            </Pressable>
-                          ))}
-                        </View>
+                        <SegmentRating
+                          value={dreamMetadata.vividness}
+                          onChange={n => setDreamMetadata(prev => ({ ...prev, vividness: n }))}
+                        />
                       </View>
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Lucidity</Text>
-                        <View style={styles.intensityDots}>
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <Pressable key={n} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, lucidity: n })); }} style={[styles.intensityDot, n <= dreamMetadata.lucidity && styles.intensityDotActive]}>
-                              <Text style={[styles.intensityDotText, n <= dreamMetadata.lucidity && styles.intensityDotTextActive]}>{n}</Text>
-                            </Pressable>
-                          ))}
-                        </View>
+                        <SegmentRating
+                          value={dreamMetadata.lucidity}
+                          onChange={n => setDreamMetadata(prev => ({ ...prev, lucidity: n }))}
+                        />
                       </View>
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Sense of control</Text>
-                        <View style={styles.intensityDots}>
-                          {[1, 2, 3, 4, 5].map(n => (
-                            <Pressable key={n} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, controlLevel: n })); }} style={[styles.intensityDot, n <= dreamMetadata.controlLevel && styles.intensityDotActive]}>
-                              <Text style={[styles.intensityDotText, n <= dreamMetadata.controlLevel && styles.intensityDotTextActive]}>{n}</Text>
-                            </Pressable>
-                          ))}
-                        </View>
+                        <SegmentRating
+                          value={dreamMetadata.controlLevel}
+                          onChange={n => setDreamMetadata(prev => ({ ...prev, controlLevel: n }))}
+                        />
                       </View>
 
-                      <View style={styles.metadataRow}>
+                      {/* ── Overall theme → PremiumPill grid ── */}
+                      <View style={[styles.metadataRow, { alignItems: 'flex-start', flexDirection: 'column', gap: 8 }]}>
                         <Text style={styles.metadataLabel}>Overall theme</Text>
-                        <View style={styles.awakenRow}>
+                        <View style={styles.themeGrid}>
                           {DREAM_THEMES.map(t => (
-                            <Pressable key={t.id} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, overallTheme: prev.overallTheme === t.id ? undefined : t.id })); }} style={[styles.awakenChip, dreamMetadata.overallTheme === t.id && styles.awakenChipActive]}>
-                              <Text style={[styles.awakenChipText, dreamMetadata.overallTheme === t.id && styles.awakenChipTextActive]}>{t.label}</Text>
-                            </Pressable>
+                            <PremiumPill
+                              key={t.id}
+                              label={t.label}
+                              isSelected={dreamMetadata.overallTheme === t.id}
+                              onToggle={() => setDreamMetadata(prev => ({
+                                ...prev,
+                                overallTheme: prev.overallTheme === t.id ? undefined : t.id,
+                              }))}
+                              accentColor={PALETTE.amethyst}
+                            />
                           ))}
                         </View>
                       </View>
 
+                      {/* ── Woke up feeling → bottom sheet trigger ── */}
                       <View style={styles.metadataRow}>
                         <Text style={styles.metadataLabel}>Woke up feeling</Text>
-                        <Pressable onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowAwakenDropdown(prev => !prev); }} style={styles.awakenDropdown}>
-                          <Text style={styles.awakenDropdownText}>{AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}</Text>
-                          <Ionicons name={showAwakenDropdown ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
+                        <Pressable
+                          onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowAwakenSheet(true); }}
+                          style={styles.awakenDropdown}
+                        >
+                          <Text style={styles.awakenDropdownText}>
+                            {AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}
+                          </Text>
+                          <Ionicons name="chevron-up" size={16} color={PALETTE.amethyst} />
                         </Pressable>
-                        {showAwakenDropdown && (
-                          <View style={styles.awakenDropdownList}>
-                            {AWAKEN_STATES.map(s => (
-                              <Pressable key={s.id} onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, awakenState: s.id })); setShowAwakenDropdown(false); }} style={[styles.awakenDropdownItem, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemActive]}>
-                                <Text style={[styles.awakenDropdownItemText, dreamMetadata.awakenState === s.id && styles.awakenDropdownItemTextActive]}>{s.label}</Text>
-                                {dreamMetadata.awakenState === s.id && <Ionicons name="checkmark" size={18} color={PALETTE.amethyst} />}
-                              </Pressable>
-                            ))}
-                          </View>
-                        )}
                       </View>
                       
                       <Pressable onPress={() => { Haptics.selectionAsync().catch(() => {}); setDreamMetadata(prev => ({ ...prev, recurring: !prev.recurring })); }} style={styles.recurringRow}>
@@ -848,6 +850,15 @@ export default function SleepScreen() {
                       </Pressable>
                     </View>
                   )}
+
+                  {/* Awaken state bottom sheet */}
+                  <AwakenStateSheet
+                    visible={showAwakenSheet}
+                    options={AWAKEN_STATES}
+                    selected={dreamMetadata.awakenState}
+                    onSelect={id => setDreamMetadata(prev => ({ ...prev, awakenState: id as typeof prev.awakenState }))}
+                    onClose={() => setShowAwakenSheet(false)}
+                  />
                 </>
               )}
 
@@ -866,8 +877,7 @@ export default function SleepScreen() {
                 </View>
               ) : (
                 <View style={styles.pulseSection}>
-                  <Text style={styles.pulseLabel}>Hold to seal your rest data</Text>
-                  <Text style={styles.pulseHint}>Hold to seal and confirm</Text>
+                  <Text style={styles.pulseLabel}>Your sleep story ends here</Text>
                   <SkiaPulseMonitor onSyncComplete={handleSave} />
                 </View>
               )}
@@ -1181,6 +1191,7 @@ const styles = StyleSheet.create({
   metadataLabel: { fontSize: 14, color: theme.textSecondary, fontWeight: '600', marginBottom: 12 },
   
   awakenRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   awakenChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder },
   awakenChipActive: { backgroundColor: 'rgba(157, 118, 193, 0.2)', borderColor: PALETTE.amethyst },
   awakenChipText: { fontSize: 14, color: theme.textMuted, fontWeight: '500' },

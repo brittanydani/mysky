@@ -203,8 +203,8 @@ export default function ChakraWheel({
           <Circle key={`dust-${i}`} cx={d.x} cy={d.y} r={d.r} color="#F8FAFC" opacity={d.o} />
         ))}
 
-        {/* Animated Center Halo (Real-Time Skia Glow) */}
-        <Circle cx={cx} cy={cy} r={haloRadius} opacity={haloOpacity}>
+        {/* Animated Center Halo (Real-Time Skia Glow) — screen mode = pure light bloom */}
+        <Circle cx={cx} cy={cy} r={haloRadius} opacity={haloOpacity} blendMode="screen">
            <RadialGradient
             c={vec(cx, cy)}
             r={centerR * 1.6}

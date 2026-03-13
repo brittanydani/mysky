@@ -48,9 +48,9 @@ import {
 import * as Haptics from 'expo-haptics';
 import { theme } from '../../constants/theme';
 
-const TRACK_H = 48;
+const TRACK_H = 52;
 const TRACK_R = 12;
-const THUMB_R = 12;
+const THUMB_R = 13;
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -190,48 +190,48 @@ const SkiaResonanceSlider = memo(function SkiaResonanceSlider({
             {/* Track background (obsidian glass) */}
             <RoundedRect
               x={0}
-              y={TRACK_H / 2 - 4}
+              y={TRACK_H / 2 - 5}
               width={trackWidth}
-              height={8}
-              r={4}
-              color="rgba(30, 35, 50, 0.9)"
+              height={10}
+              r={5}
+              color="rgba(28, 34, 52, 0.95)"
             />
             {/* Specular highlight */}
             <RoundedRect
               x={0}
-              y={TRACK_H / 2 - 4}
+              y={TRACK_H / 2 - 5}
               width={trackWidth}
-              height={4}
-              r={4}
-              color="rgba(255, 255, 255, 0.04)"
+              height={5}
+              r={5}
+              color="rgba(255, 255, 255, 0.05)"
             />
 
             {/* Fill */}
             <RoundedRect
               x={0}
-              y={TRACK_H / 2 - 4}
+              y={TRACK_H / 2 - 5}
               width={fillWidth}
-              height={8}
-              r={4}
+              height={10}
+              r={5}
             >
               <LinearGradient
                 start={vec(0, 0)}
                 end={vec(fillWidth, 0)}
-                colors={[`${color}40`, color]}
+                colors={[`${color}50`, color]}
               />
             </RoundedRect>
 
             {/* Fill glow */}
             <RoundedRect
               x={0}
-              y={TRACK_H / 2 - 6}
+              y={TRACK_H / 2 - 7}
               width={fillWidth}
-              height={12}
-              r={6}
+              height={14}
+              r={7}
               color={color}
-              opacity={0.2}
+              opacity={0.22}
             >
-              <BlurMask blur={8} style="normal" />
+              <BlurMask blur={9} style="normal" />
             </RoundedRect>
 
             {/* Resonance glow under thumb */}
@@ -287,26 +287,32 @@ export default SkiaResonanceSlider;
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 18,
+    marginBottom: 22,
   },
   question: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    fontWeight: '500',
+    color: theme.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
     marginBottom: 6,
+    opacity: 0.92,
   },
   valueRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   valueText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: 'hidden',
   },
   maxText: {
-    fontSize: 12,
+    fontSize: 11,
     color: theme.textMuted,
     fontWeight: '400',
   },
@@ -320,11 +326,12 @@ const styles = StyleSheet.create({
   anchorRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 5,
   },
   anchor: {
-    color: theme.textMuted,
+    color: 'rgba(226,232,240,0.38)',
     fontSize: 10,
     fontWeight: '500',
+    letterSpacing: 0.3,
   },
 });

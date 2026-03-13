@@ -75,17 +75,24 @@ function OrbitalRing({ radius, tiltX, tiltZ, speed, colorHex, opacity, isPulse }
     const t = clock.getElapsedTime();
     angleRef.current += speed * 0.016;  // ~60 fps step
 
-    // Pulse scale — only for strong correlations
-    let scale = 1.0;
-    if (isPulse) {
-      scale = 1 + Math.sin(t * 3.5) * 0.18;
-    }
+    // Compute orbit position in world space
+    baseVec.set(radius * Math.cos(angleRef.current), 0, radius * Math.sin(angleRef.current));
+    baseVec.applyQuaternion(quat);
+
+    // Z-depth illusion: camera sits at z≈+13, so positive world-Z = near side.
+    // Remap world z from [-radius, +radius] → 0 (far) … 1 (near).
+    const depthT = (baseVec.z / radius + 1) * 0.5;          // 0→1
+    // Node scales from 0.45 (far-receding) to 1.30 (near-approaching)
+    const depthScale = 0.45 + depthT * 0.85;
+
+    // Pulse only fires strongly on the near side — deeper 3D feel
+    const pulseExtra = isPulse
+      ? Math.sin(t * 3.5) * 0.18 * depthT
+      : 0;
 
     if (nodeRef.current) {
-      baseVec.set(radius * Math.cos(angleRef.current), 0, radius * Math.sin(angleRef.current));
-      baseVec.applyQuaternion(quat);
       nodeRef.current.position.copy(baseVec);
-      nodeRef.current.scale.setScalar(scale);
+      nodeRef.current.scale.setScalar(depthScale + pulseExtra);
     }
   });
 

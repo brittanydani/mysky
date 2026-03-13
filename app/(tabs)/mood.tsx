@@ -12,9 +12,8 @@ import {
   TextInput,
   Alert,
   Keyboard,
-  TouchableWithoutFeedback,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,8 +34,9 @@ import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import type { TimeOfDayMetricInsight, TimeOfDayBucket } from '../../utils/insightsEngine';
-import SkiaResonanceSlider from '../../components/ui/SkiaResonanceSlider';
+import FluidSlider from '../../components/ui/FluidSlider';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
+import PremiumPill from '../../components/ui/PremiumPill';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -57,13 +57,13 @@ const INFLUENCE_TAGS: ThemeTag[] = [
 ];
 
 const INFLUENCE_LABELS: Record<string, string> = {
-  sleep: '😴 Sleep', work: '💼 Work', social: '👥 Social',
-  relationships: '💞 Relationships', conflict: '⚡ Conflict', health: '🏥 Health',
-  movement: '🏃 Movement', nature: '🌿 Nature',
-  alone_time: '🧘 Alone time',
-  finances: '💰 Finances', weather: '🌦️ Weather', food: '🍽️ Food',
-  screens: '📱 Screens', kids: '👶 Kids', productivity: '✅ Productivity',
-  substances: '🍷 Substances', intimacy: '🔥 Intimacy',
+  sleep: 'Sleep', work: 'Work', social: 'Social',
+  relationships: 'Relationships', conflict: 'Conflict', health: 'Health',
+  movement: 'Movement', nature: 'Nature',
+  alone_time: 'Alone time',
+  finances: 'Finances', weather: 'Weather', food: 'Food',
+  screens: 'Screens', kids: 'Kids', productivity: 'Productivity',
+  substances: 'Substances', intimacy: 'Intimacy',
 };
 
 // Emotional quality — optional premium single-select
@@ -73,27 +73,48 @@ const QUALITY_OPTIONS: ThemeTag[] = [
 ];
 
 const QUALITY_LABELS: Record<string, string> = {
-  eq_calm: '😌 Calm', eq_anxious: '😰 Anxious', eq_focused: '🎯 Focused',
-  eq_disconnected: '🌫️ Disconnected', eq_hopeful: '🌅 Hopeful',
-  eq_irritable: '😤 Irritable', eq_grounded: '🌳 Grounded',
-  eq_scattered: '🌀 Scattered', eq_heavy: '🪨 Heavy', eq_open: '🌸 Open',
+  eq_calm: 'Calm', eq_anxious: 'Anxious', eq_focused: 'Focused',
+  eq_disconnected: 'Disconnected', eq_hopeful: 'Hopeful',
+  eq_irritable: 'Irritable', eq_grounded: 'Grounded',
+  eq_scattered: 'Scattered', eq_heavy: 'Heavy', eq_open: 'Open',
 };
 
 // Backward-compat label lookup for top-tags display
 const ALL_TAG_LABELS: Record<string, string> = {
   ...INFLUENCE_LABELS,
   ...QUALITY_LABELS,
-  confidence: '💪 Confidence', money: '💰 Money',
-  family: '👨‍👩‍👧 Family', creativity: '🎨 Creativity',
-  boundaries: '🛡️ Boundaries', career: '📈 Career', anxiety: '😰 Anxiety',
-  joy: '😊 Joy', grief: '🥀 Grief', clarity: '💎 Clarity',
-  overwhelm: '😵 Overwhelm', loneliness: '🌑 Loneliness', gratitude: '🙏 Gratitude',
+  confidence: 'Confidence', money: 'Money',
+  family: 'Family', creativity: 'Creativity',
+  boundaries: 'Boundaries', career: 'Career', anxiety: 'Anxiety',
+  joy: 'Joy', grief: 'Grief', clarity: 'Clarity',
+  overwhelm: 'Overwhelm', loneliness: 'Loneliness', gratitude: 'Gratitude',
 };
 
 const COLORS = {
   mood: '#C9AE78',
   energy: '#6fb3d3',
   stress: '#e07b7b',
+};
+
+// Accent colour per influence tag — drives PremiumPill selected state colour
+const TAG_ACCENT: Record<string, string> = {
+  sleep:        '#8BC4E8',
+  alone_time:   '#8BC4E8',
+  weather:      '#8BC4E8',
+  health:       '#6EBF8B',
+  movement:     '#6EBF8B',
+  nature:       '#6EBF8B',
+  food:         '#6EBF8B',
+  work:         '#C9AE78',
+  productivity: '#C9AE78',
+  finances:     '#C9AE78',
+  social:       '#E07A98',
+  relationships:'#E07A98',
+  kids:         '#E07A98',
+  intimacy:     '#E07A98',
+  conflict:     '#E07A7A',
+  screens:      '#9D76C1',
+  substances:   '#9D76C1',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -178,7 +199,7 @@ const SectionLabel = memo(function SectionLabel({
 }) {
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(600)} style={styles.sectionRow}>
-      <Ionicons name={icon} size={18} color={theme.primary} />
+      <Ionicons name={icon} size={18} color={COLORS.mood} />
       <Text style={styles.sectionTitle}>{title}</Text>
     </Animated.View>
   );
@@ -200,6 +221,7 @@ const AvgBadge = memo(function AvgBadge({ label, value, color }: { label: string
 export default function MoodScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
+  const insets = useSafeAreaInsets();
 
   // Chart state
   const [loading, setLoading] = useState(true);
@@ -548,7 +570,7 @@ export default function MoodScreen() {
 
         <ScrollView
           style={styles.flex}
-          contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 80 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -556,7 +578,7 @@ export default function MoodScreen() {
             {/* Streak row */}
             {currentStreak > 0 && (
               <Animated.View entering={FadeInDown.delay(80).duration(500)} style={styles.streakRow}>
-                <Ionicons name="flame-outline" size={14} color={MYSTIC.gold} />
+                <Ionicons name="star" size={14} color={MYSTIC.gold} />
                 <Text style={[styles.streakTxt, { color: MYSTIC.gold }]}>{currentStreak} day streak</Text>
                 {allCheckIns.length > 0 && (
                   <>
@@ -568,7 +590,7 @@ export default function MoodScreen() {
             )}
 
             {/* ═══ Quick Check-In ═══ */}
-            <SectionLabel icon="heart-outline" title="Quick Check-In" delay={100} />
+            <SectionLabel icon="water-outline" title="Quick Check-In" delay={100} />
             <Animated.View entering={FadeInDown.delay(120).duration(600)}>
               <LinearGradient
                 colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
@@ -672,8 +694,8 @@ export default function MoodScreen() {
                         </Text>
                         {isCompleted && (
                           <Ionicons
-                            name="checkmark-circle"
-                            size={12}
+                            name="star-outline"
+                            size={11}
                             color={isSelected ? theme.primary : theme.energy}
                             style={{ marginTop: 2 }}
                           />
@@ -698,9 +720,9 @@ export default function MoodScreen() {
                   </View>
                 )}
 
-                <View pointerEvents={(completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 'none' : 'auto'} style={{ opacity: (completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 0.7 : 1 }}>
+                <View style={{ opacity: (completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 0.7 : 1, pointerEvents: (completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 'none' : 'auto' }}>
                   {/* Sliders — Resonance-enhanced */}
-                <SkiaResonanceSlider
+                <FluidSlider
                   question="How are you feeling emotionally?"
                   value={moodSlider}
                   onChange={setMoodSlider}
@@ -709,7 +731,7 @@ export default function MoodScreen() {
                   min={1}
                   max={9}
                 />
-                <SkiaResonanceSlider
+                <FluidSlider
                   question="How is your energy right now?"
                   value={energySlider}
                   onChange={setEnergySlider}
@@ -718,7 +740,7 @@ export default function MoodScreen() {
                   min={1}
                   max={9}
                 />
-                <SkiaResonanceSlider
+                <FluidSlider
                   question="How activated or stressed do you feel?"
                   value={stressSlider}
                   onChange={setStressSlider}
@@ -734,51 +756,34 @@ export default function MoodScreen() {
                 </Text>
                 <View style={styles.tagRow}>
                   {INFLUENCE_TAGS.map(tag => (
-                    <Pressable
+                    <PremiumPill
                       key={tag}
-                      style={[styles.tagChip, selectedTags.includes(tag) && styles.tagChipOn]}
-                      onPress={() => {
-                        Haptics.selectionAsync().catch(() => {});
+                      label={INFLUENCE_LABELS[tag]}
+                      isSelected={selectedTags.includes(tag)}
+                      onToggle={() =>
                         setSelectedTags(prev =>
                           prev.includes(tag)
                             ? prev.filter(t => t !== tag)
                             : prev.length >= 3 ? prev : [...prev, tag]
-                        );
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={INFLUENCE_LABELS[tag]}
-                      accessibilityState={{ selected: selectedTags.includes(tag) }}
-                      accessibilityHint={
-                        selectedTags.includes(tag)
-                          ? 'Double-tap to remove'
-                          : selectedTags.length >= 3
-                            ? 'Maximum 3 tags already selected'
-                            : 'Double-tap to add, up to 3 tags'
+                        )
                       }
-                    >
-                      <Text style={[styles.tagTxt, selectedTags.includes(tag) && styles.tagTxtOn]}>
-                        {INFLUENCE_LABELS[tag]}
-                      </Text>
-                    </Pressable>
+                      accentColor={TAG_ACCENT[tag] ?? '#C9AE78'}
+                      disabled={!selectedTags.includes(tag) && selectedTags.length >= 3}
+                    />
                   ))}
 
-                  {/* Custom tags — up to 3 total (preset + custom); hold to remove */}
+                  {/* Custom tags — up to 3 total; hold to remove */}
                   {selectedTags
                     .filter(t => !(INFLUENCE_TAGS as string[]).includes(t) && !t.startsWith('eq_'))
                     .map(customTag => (
-                      <Pressable
+                      <PremiumPill
                         key={customTag}
-                        style={[styles.tagChip, styles.tagChipOn]}
-                        onLongPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                          setSelectedTags(prev => prev.filter(t => t !== customTag));
-                        }}
-                        delayLongPress={600}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${customTag}, hold to remove`}
-                      >
-                        <Text style={[styles.tagTxt, styles.tagTxtOn]}>✏️ {customTag}</Text>
-                      </Pressable>
+                        label={customTag}
+                        isSelected
+                        onToggle={() => {}}
+                        onLongPress={() => setSelectedTags(prev => prev.filter(t => t !== customTag))}
+                        accentColor={TAG_ACCENT[customTag] ?? '#C9AE78'}
+                      />
                     ))}
 
                   {/* "+ other" chip or inline input */}
@@ -822,26 +827,18 @@ export default function MoodScreen() {
                 {/* Premium: Emotional Quality */}
                 {isPremium && (
                   <>
-                    <Text style={[styles.tagsLabel, { marginTop: 4 }]}>
+                    <Text style={[styles.tagsLabel, { marginTop: 16 }]}>
                       What best describes today? <Text style={styles.tagsMuted}>(optional)</Text>
                     </Text>
                     <View style={styles.tagRow}>
                       {QUALITY_OPTIONS.map(q => (
-                        <Pressable
+                        <PremiumPill
                           key={q}
-                          style={[styles.qualityChip, selectedQuality === q && styles.qualityChipOn]}
-                          onPress={() => {
-                            Haptics.selectionAsync().catch(() => {});
-                            setSelectedQuality(prev => prev === q ? null : q);
-                          }}
-                          accessibilityRole="button"
-                          accessibilityLabel={QUALITY_LABELS[q]}
-                          accessibilityState={{ selected: selectedQuality === q }}
-                        >
-                          <Text style={[styles.qualityTxt, selectedQuality === q && styles.qualityTxtOn]}>
-                            {QUALITY_LABELS[q]}
-                          </Text>
-                        </Pressable>
+                          label={QUALITY_LABELS[q]}
+                          isSelected={selectedQuality === q}
+                          onToggle={() => setSelectedQuality(prev => prev === q ? null : q)}
+                          accentColor="#C9B3E8"
+                        />
                       ))}
                     </View>
                   </>
@@ -852,15 +849,15 @@ export default function MoodScreen() {
                 {/* Somatic Pulse Monitor / Action Area */}
                 {completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked ? (
                   <View style={[styles.pulseSection, { paddingVertical: 24 }]}>
-                    <Text style={[styles.pulseLabel, { color: theme.energy, marginBottom: 16 }]}>
+                    <Text style={[styles.pulseLabel, { color: theme.energy, marginBottom: 16, fontSize: 14 }]}>
                       Check-in sealed for {TIME_OF_DAY_LABELS[selectedTimeSlot].label.toLowerCase()}{' '}
                       {TIME_OF_DAY_LABELS[selectedTimeSlot].emoji}
                     </Text>
-                    <Pressable 
-                      style={{ backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: '#333842', alignSelf: 'center' }}
+                    <Pressable
+                      style={styles.editEntryBtn}
                       onPress={() => { Haptics.selectionAsync().catch(()=>{}); setIsEditingUnlocked(true); }}
                     >
-                      <Text style={{ color: theme.textPrimary, fontSize: 14, fontWeight: '600' }}>Edit Entry</Text>
+                      <Text style={styles.editEntryTxt}>Edit Entry</Text>
                     </Pressable>
                   </View>
                 ) : (
@@ -904,20 +901,20 @@ export default function MoodScreen() {
                 >
                   <View style={styles.linkRow}>
                     <View style={styles.linkLeft}>
-                      <Ionicons name="pulse-outline" size={20} color={theme.primary} />
+                      <Ionicons name="infinite-outline" size={20} color={COLORS.mood} />
                       <View>
                         <Text style={styles.linkTitle}>Energy Reading</Text>
                         <Text style={styles.linkSub}>Chakra wheel · Domain breakdown · Guidance</Text>
                       </View>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.primary} />
+                    <Ionicons name="chevron-forward" size={20} color={COLORS.mood} />
                   </View>
                 </LinearGradient>
               </Pressable>
             </Animated.View>
 
             {/* ═══ Your Patterns ═══ */}
-            <SectionLabel icon="analytics-outline" title="Your Patterns" delay={200} />
+            <SectionLabel icon="eye-outline" title="Your Patterns" delay={200} />
 
             {isPremium ? (
               <Animated.View entering={FadeInDown.delay(220).duration(600)}>
@@ -948,7 +945,7 @@ export default function MoodScreen() {
 
                   {filteredCheckIns.length < 2 ? (
                     <View style={styles.emptyState}>
-                      <Ionicons name="hourglass-outline" size={28} color={theme.primary} />
+                      <Ionicons name="planet-outline" size={28} color={theme.primary} />
                       <Text style={[styles.body, { textAlign: 'center', marginTop: 10 }]}>
                         {allCheckIns.length === 0
                           ? 'Log your first check-in above to start tracking'
@@ -1156,7 +1153,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 2,
   },
-  content: { paddingHorizontal: theme.spacing.lg },
+  content: { paddingHorizontal: theme.spacing.lg, paddingTop: 8 },
 
   card: {
     borderRadius: theme.borderRadius.lg,
@@ -1188,7 +1185,7 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
   },
 
-  streakRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  streakRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, marginBottom: 8 },
   streakTxt: { color: theme.primary, fontSize: 13, fontWeight: '600' },
   dot: { color: theme.textMuted, fontSize: 13 },
 
@@ -1216,9 +1213,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 10,
+    marginTop: 24,
   },
   tagsMuted: { color: theme.textMuted, fontWeight: '400', fontSize: 13 },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 22 },
 
   // Time-of-day slots
   timeSlotRow: {
@@ -1268,19 +1266,19 @@ const styles = StyleSheet.create({
   },
 
   tagChip: {
-    paddingHorizontal: 13,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.10)',
   },
   tagChipOn: {
-    backgroundColor: 'transparent',
-    borderColor: theme.primary,
+    backgroundColor: 'rgba(201,174,120,0.14)',
+    borderColor: 'rgba(201,174,120,0.55)',
   },
-  tagTxt: { color: theme.textSecondary, fontSize: 13, fontWeight: '600' },
-  tagTxtOn: { color: theme.primary },
+  tagTxt: { color: 'rgba(226,232,240,0.62)', fontSize: 13, fontWeight: '500' },
+  tagTxtOn: { color: '#E8D4A6', fontWeight: '600' },
   tagChipOther: {
     paddingHorizontal: 13,
     paddingVertical: 8,
@@ -1311,19 +1309,19 @@ const styles = StyleSheet.create({
   },
 
   qualityChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
   },
   qualityChipOn: {
-    backgroundColor: 'rgba(142,111,211,0.18)',
-    borderColor: 'rgba(142,111,211,0.5)',
+    backgroundColor: 'rgba(157,118,193,0.15)',
+    borderColor: 'rgba(157,118,193,0.52)',
   },
-  qualityTxt: { color: theme.textSecondary, fontSize: 12, fontWeight: '600' },
-  qualityTxtOn: { color: '#B49EE0' },
+  qualityTxt: { color: 'rgba(226,232,240,0.62)', fontSize: 13, fontWeight: '500' },
+  qualityTxtOn: { color: '#C9B3E8', fontWeight: '600' },
 
   saveBtn: {
     borderRadius: theme.borderRadius.sm,
@@ -1341,7 +1339,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
   },
   saveBtnTxt: { color: theme.primary, fontSize: 15, fontWeight: '800' },
-  hint: { color: theme.textMuted, fontSize: 12, textAlign: 'center', fontStyle: 'italic' },
+  hint: { color: 'rgba(226,232,240,0.28)', fontSize: 11, textAlign: 'center', fontStyle: 'italic', letterSpacing: 0.2 },
 
   // Error banner
   errorBanner: {
@@ -1388,15 +1386,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   avgBadge: { alignItems: 'center' },
-  avgValue: { fontSize: 16, fontWeight: '800' },
-  avgLabel: { color: theme.textMuted, fontSize: 11, marginTop: 2 },
+  avgValue: { fontSize: 18, fontWeight: '800', letterSpacing: 0.3 },
+  avgLabel: { color: theme.textMuted, fontSize: 11, marginTop: 3 },
 
   graphLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2, marginTop: 8 },
   graphDot: { width: 8, height: 8, borderRadius: 4 },
@@ -1408,7 +1406,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
   },
   tagStatFill: { height: '100%', borderRadius: 2, backgroundColor: theme.primary },
@@ -1446,6 +1444,23 @@ const styles = StyleSheet.create({
   todInsightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   todInsightEmoji: { fontSize: 14, marginTop: 1 },
   todInsightText: { color: theme.textSecondary, fontSize: 13, flex: 1, lineHeight: 18 },
+
+  // Edit Entry button (sealed state)
+  editEntryBtn: {
+    alignSelf:        'center',
+    paddingVertical:  11,
+    paddingHorizontal: 28,
+    borderRadius:     20,
+    borderWidth:      1,
+    borderColor:      'rgba(201,174,120,0.35)',
+    backgroundColor:  'rgba(201,174,120,0.06)',
+  },
+  editEntryTxt: {
+    color:        '#C9AE78',
+    fontSize:     14,
+    fontWeight:   '700',
+    letterSpacing: 0.4,
+  },
 
   // Pulse monitor
   pulseSection: {

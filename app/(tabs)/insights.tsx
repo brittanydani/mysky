@@ -74,9 +74,11 @@ export default function InsightsScreen() {
     stressTrend: null,
   });
   const [enhanced, setEnhanced] = useState<EnhancedInsightBundle | null>(null);
+  const syncRhythm = useCircadianStore((s) => s.syncRhythm);
 
   useFocusEffect(
     useCallback(() => {
+      syncRhythm().catch(() => {});
       (async () => {
         try {
           const charts = await localDb.getCharts();
@@ -137,7 +139,7 @@ export default function InsightsScreen() {
           logger.error('Insights snapshot load failed:', e);
         }
       })();
-    }, [])
+    }, [syncRhythm])
   );
 
   const nav = (route: string) => {

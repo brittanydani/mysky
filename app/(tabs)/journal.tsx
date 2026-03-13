@@ -214,8 +214,7 @@ export default function JournalScreen() {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {}
-    setEditingEntry(undefined);
-    setShowEntryModal(true);
+    router.push('/sanctuary' as Href);
   };
 
   const handleEditEntry = useCallback(async (entry: JournalEntry) => {

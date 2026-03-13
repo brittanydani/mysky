@@ -120,8 +120,8 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
       // Shift angle so top = 0
       angle += Math.PI / 2;
       if (angle < 0) angle += Math.PI * 2;
-      // Convert to hours
-      const hours = Math.round((angle / (Math.PI * 2)) * MAX_HOURS * 2) / 2; // 0.5h steps
+      // Convert to hours — snap to 15-minute (0.25h) intervals
+      const hours = Math.round((angle / (Math.PI * 2)) * MAX_HOURS * 4) / 4;
       const clamped = Math.max(0, Math.min(MAX_HOURS, hours));
       if (clamped !== valueRef.current) {
         Haptics.selectionAsync().catch(() => {});
@@ -365,6 +365,7 @@ const localStyles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '800',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    fontVariant: ['tabular-nums'], // Prevents layout jitter as digits change
   },
   qualityText: {
     fontSize: 12,

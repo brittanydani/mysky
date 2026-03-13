@@ -1,30 +1,31 @@
 /**
  * NeonWaveChart.tsx
- * MySky — Luminous Terrain Chart (React Three Fiber / expo-gl)
+ * MySky — Smooth Area Line Chart (Skia)
  *
- * Architecture:
- *   • Three series: Mood (#FFCC00), Energy (#00FFFF), Stress (#FF003C)
- *   • Each series is a LayeredRibbonCluster: 4 concentric tube layers
- *       1. Core       radius 0.02  opacity 0.90
- *       2. Tight glow radius 0.12  opacity 0.40
- *       3. Silk band  radius 0.40  opacity 0.12
- *       4. Haze       radius 0.80  opacity 0.04
- *   • Organic Y breathing: Math.sin(i * 0.8 + phase) * 0.8 on data Y
- *   • All layers: meshBasicMaterial + THREE.AdditiveBlending — no GLSL
- *   • Scrub beam / gesture / tooltip identical to previous version
+ * Three smooth bezier area series:
+ *   Mood   #C9AE78  · champagne gold
+ *   Energy #6fb3d3  · soft blue
+ *   Stress #e07b7b  · rose
  *
- * No GLSL  ·  No window.devicePixelRatio  ·  No GlobalCanvas  ·  No drei
+ * Layout: Y-axis labels | plot area | X-axis date labels
+ * Interaction: pan-scrub → animated vertical line + floating tooltip
+ *
+ * No R3F · No THREE · Pure @shopify/react-native-skia + Reanimated
  */
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { StyleSheet, Text, View, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { Canvas, useFrame } from '@react-three/fiber/native';
-import * as THREE from 'three';
+  Canvas,
+  Path,
+  Skia,
+  LinearGradient,
+  Circle,
+  BlurMask,
+  Group,
+  vec,
+} from '@shopify/react-native-skia';
 import {
   Gesture,
   GestureDetector,
@@ -35,189 +36,64 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { DailyCheckIn } from '../../services/patterns/types';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ── Palette ───────────────────────────────────────────────────────────────────
+
+const MOOD_COLOR   = '#C9AE78';
+const ENERGY_COLOR = '#6fb3d3';
+const STRESS_COLOR = '#e07b7b';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function levelToNum(level: 'low' | 'medium' | 'high'): number {
   return level === 'low' ? 2 : level === 'medium' ? 5 : 9;
 }
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
-
-const HALF_W = 5.6;   // half the 3D chart width
-const CAM_Z  = 8.5;
-
-function indexToX(i: number, total: number): number {
-  if (total <= 1) return 0;
-  return -HALF_W + (i / (total - 1)) * (HALF_W * 2);
+/** Append alpha (0–1) as 2 hex chars to a #RRGGBB color string */
+function withAlpha(color: string, alpha: number): string {
+  return color + Math.round(alpha * 255).toString(16).padStart(2, '0');
 }
 
-function valToY(v: number): number {
-  // 1–10 → -2.4 to +2.4
-  return ((v - 1) / 9) * 4.8 - 2.4;
+/** Smooth cubic-bezier path through {x,y} points using midpoint control */
+function buildLinePath(pts: { x: number; y: number }[]) {
+  const p = Skia.Path.Make();
+  if (pts.length < 2) return p;
+  p.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    const cx = (pts[i - 1].x + pts[i].x) / 2;
+    p.cubicTo(cx, pts[i - 1].y, cx, pts[i].y, pts[i].x, pts[i].y);
+  }
+  return p;
 }
 
-// ─── Tube layer definitions ───────────────────────────────────────────────────
-
-const TUBE_LAYERS = [
-  { radius: 0.02, opacity: 0.90 },
-  { radius: 0.12, opacity: 0.40 },
-  { radius: 0.40, opacity: 0.12 },
-  { radius: 0.80, opacity: 0.04 },
-] as const;
-
-// ─── Layered Ribbon Cluster ───────────────────────────────────────────────────
-
-interface RibbonProps {
-  values:   number[];
-  hexColor: string;
-  zOffset:  number;
-  phase:    number;
-  speed:    number;
+/** Line path closed at bottom to form a filled area shape */
+function buildAreaPath(pts: { x: number; y: number }[], bottom: number) {
+  const p = buildLinePath(pts);
+  if (pts.length < 2) return p;
+  p.lineTo(pts[pts.length - 1].x, bottom);
+  p.lineTo(pts[0].x, bottom);
+  p.close();
+  return p;
 }
 
-function LayeredRibbonCluster({ values, hexColor, zOffset, phase, speed }: RibbonProps) {
-  const groupRef = useRef<THREE.Group>(null);
+// ── Layout ────────────────────────────────────────────────────────────────────
 
-  const { curve, dotPositions } = useMemo(() => {
-    const pts = values.map((v, i) => new THREE.Vector3(
-      indexToX(i, values.length),
-      valToY(v) + Math.sin(i * 0.8 + phase) * 0.8,
-      zOffset,
-    ));
-    return {
-      curve:        new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5),
-      dotPositions: pts,
-    };
-  }, [values, zOffset, phase]);
+const PAD_L = 36;   // room for y-axis labels
+const PAD_R = 10;
+const PAD_T = 18;
+const PAD_B = 28;   // room for x-axis labels
 
-  const tubeGeos = useMemo(
-    () => TUBE_LAYERS.map(l => new THREE.TubeGeometry(curve, 100, l.radius, 10, false)),
-    [curve],
-  );
-
-  const colorObj = useMemo(() => new THREE.Color(hexColor), [hexColor]);
-
-  useFrame(({ clock }) => {
-    if (groupRef.current) {
-      groupRef.current.position.y = Math.sin(clock.getElapsedTime() * speed + phase) * 0.10;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {TUBE_LAYERS.map((layer, i) => (
-        <mesh key={i} geometry={tubeGeos[i]}>
-          <meshBasicMaterial
-            color={colorObj}
-            transparent
-            opacity={layer.opacity}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
-      ))}
-
-      {dotPositions.map((pos, i) => (
-        <group key={i} position={pos}>
-          <mesh>
-            <sphereGeometry args={[0.13, 10, 10]} />
-            <meshBasicMaterial
-              color={hexColor}
-              transparent
-              opacity={0.38}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
-          <mesh>
-            <sphereGeometry args={[0.045, 8, 8]} />
-            <meshBasicMaterial
-              color="#ffffff"
-              transparent
-              opacity={1.0}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
-}
-
-// ─── Scrub Beam ───────────────────────────────────────────────────────────────
-
-interface BeamProps {
-  indexRef: React.MutableRefObject<number>;
-  total:    number;
-}
-
-function ScrubBeam({ indexRef, total }: BeamProps) {
-  const beamRef  = useRef<THREE.Mesh>(null);
-  const currentX = useRef(0);
-
-  useFrame(() => {
-    if (!beamRef.current) return;
-    const targetX = indexToX(indexRef.current, total);
-    currentX.current = THREE.MathUtils.lerp(currentX.current, targetX, 0.18);
-    beamRef.current.position.x = currentX.current;
-  });
-
-  return (
-    <mesh ref={beamRef} position={[0, 0, 1.5]}>
-      <cylinderGeometry args={[0.025, 0.025, 10, 8]} />
-      <meshBasicMaterial
-        color="#ffffff"
-        transparent
-        opacity={0.35}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </mesh>
-  );
-}
-
-// ─── Starfield ────────────────────────────────────────────────────────────────
-
-function Stars() {
-  const positions = useMemo(() => {
-    const N   = 220;
-    const pos = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) {
-      pos[i * 3]     = (Math.sin(i * 2.13) * 0.5 + 0.5) * 22 - 11;
-      pos[i * 3 + 1] = (Math.sin(i * 3.71) * 0.5 + 0.5) * 14 -  7;
-      pos[i * 3 + 2] = (Math.sin(i * 1.37) * 0.5 + 0.5) *  6 -  9;
-    }
-    return pos;
-  }, []);
-
-  return (
-    <points>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" array={positions} count={220} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        color="#8899BB"
-        size={0.05}
-        transparent
-        opacity={0.45}
-        depthWrite={false}
-      />
-    </points>
-  );
-}
-
-// ─── Series config ────────────────────────────────────────────────────────────
+// ── Series config ─────────────────────────────────────────────────────────────
 
 const SERIES = [
-  { key: 'stress' as const, color: '#FF003C', zOffset: -0.5, phase: 1.2, speed: 0.45 },
-  { key: 'energy' as const, color: '#00FFFF', zOffset:  0.0, phase: 0.0, speed: 0.60 },
-  { key: 'mood'   as const, color: '#FFCC00', zOffset:  0.5, phase: 2.4, speed: 0.38 },
-];
+  { key: 'stress' as const, color: STRESS_COLOR, label: 'Stress' },
+  { key: 'energy' as const, color: ENERGY_COLOR, label: 'Energy' },
+  { key: 'mood'   as const, color: MOOD_COLOR,   label: 'Mood'   },
+] as const;
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 export interface NeonWaveChartProps {
   checkIns: DailyCheckIn[];
@@ -225,13 +101,15 @@ export interface NeonWaveChartProps {
   height?:  number;
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartProps) {
   const displayed = useMemo(
-    () => [...checkIns].sort((a, b) => a.date.localeCompare(b.date)).slice(-14),
+    () => [...checkIns].sort((a, b) => a.date.localeCompare(b.date)).slice(-20),
     [checkIns],
   );
+
+  const total = displayed.length;
 
   const seriesValues = useMemo(() => ({
     mood:   displayed.map(c => c.moodScore),
@@ -239,52 +117,128 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
     stress: displayed.map(c => levelToNum(c.stressLevel)),
   }), [displayed]);
 
-  const total = displayed.length;
+  // Plot rectangle
+  const plotW      = width  - PAD_L - PAD_R;
+  const plotH      = height - PAD_T - PAD_B;
+  const plotBottom = PAD_T + plotH;
 
-  // Active index propagated to 3D beam without re-renders
-  const scrubIndexRef = useRef(Math.max(0, total - 1));
-  const [activeIdx, setActiveIdx]         = useState(Math.max(0, total - 1));
-  const tooltipOpacity                    = useSharedValue(0);
-  const tooltipLeft                       = useSharedValue(width / 2 - 72);
+  // Build per-series paths (memoized to avoid Skia path recreation on every render)
+  const seriesData = useMemo(() =>
+    SERIES.map(s => {
+      const values = seriesValues[s.key];
+      const pts = values.map((v, i) => ({
+        x: PAD_L + (total <= 1 ? plotW / 2 : (i / (total - 1)) * plotW),
+        y: PAD_T + (1 - (v - 1) / 8) * plotH,   // val 1→bottom, val 9→top
+      }));
+      return { ...s, pts, linePath: buildLinePath(pts), areaPath: buildAreaPath(pts, plotBottom) };
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [seriesValues, plotW, plotH, plotBottom, total],
+  );
+
+  // Grid lines at values 1, 5, 9 (Low / Mid / High)
+  const gridRows = useMemo(() =>
+    ([9, 5, 1] as const).map((v, i) => {
+      const gy = PAD_T + (1 - (v - 1) / 8) * plotH;
+      const p  = Skia.Path.Make();
+      p.moveTo(PAD_L, gy);
+      p.lineTo(PAD_L + plotW, gy);
+      return { path: p, gy, label: ['High', 'Mid', 'Low'][i] };
+    }),
+    [plotH, plotW],
+  );
+
+  // X-axis date labels: first · middle · last
+  const axisLabels = useMemo(() => {
+    if (total < 2) return [];
+    const indices = [...new Set([0, Math.floor((total - 1) / 2), total - 1])];
+    return indices.map(i => ({
+      text: new Date(displayed[i].date + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      x: PAD_L + (i / (total - 1)) * plotW,
+    }));
+  }, [displayed, total, plotW]);
+
+  // ── Scrub interaction ──────────────────────────────────────────────────────
+  const [activeIdx, setActiveIdx] = useState(Math.max(0, total - 1));
+  const tooltipVisible = useSharedValue(0);
+  const scrubX         = useSharedValue(PAD_L + plotW);
+
+  // Y positions for each series — synced to SharedValue so worklet can read them
+  const yPositionsRef = useSharedValue<{ mood: number[]; energy: number[]; stress: number[] }>(
+    { mood: [], energy: [], stress: [] }
+  );
+  const dotYMood   = useSharedValue(0);
+  const dotYEnergy = useSharedValue(0);
+  const dotYStress = useSharedValue(0);
+  const prevSnapIdx = useSharedValue(-1);
+
+  // Compute Y-position lookup table whenever source data changes
+  const seriesYPositions = useMemo(() => ({
+    mood:   seriesData.find(s => s.key === 'mood')?.pts.map(p => p.y)   ?? [],
+    energy: seriesData.find(s => s.key === 'energy')?.pts.map(p => p.y) ?? [],
+    stress: seriesData.find(s => s.key === 'stress')?.pts.map(p => p.y) ?? [],
+  }), [seriesData]);
+
+  useEffect(() => {
+    yPositionsRef.value = seriesYPositions;
+    // Seed dot positions to the default (last) data point
+    const li = Math.max(0, total - 1);
+    if (li < seriesYPositions.mood.length)   dotYMood.value   = seriesYPositions.mood[li];
+    if (li < seriesYPositions.energy.length) dotYEnergy.value = seriesYPositions.energy[li];
+    if (li < seriesYPositions.stress.length) dotYStress.value = seriesYPositions.stress[li];
+  }, [seriesYPositions, total]);
+
+  // Haptic tick — fired via runOnJS from the UI-thread worklet
+  const triggerHaptic = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  }, []);
 
   const updateScrub = (touchX: number) => {
     'worklet';
-    const clamped = Math.max(0, Math.min(width, touchX));
-    const idx     = Math.round((clamped / width) * (total - 1));
-    const safe    = Math.max(0, Math.min(total - 1, idx));
-    scrubIndexRef.current = safe;
-    tooltipLeft.value = Math.max(4, Math.min(width - 148, clamped - 72));
+    const relX = Math.max(0, Math.min(plotW, touchX - PAD_L));
+    const idx  = Math.round((relX / plotW) * (total - 1));
+    const safe = Math.max(0, Math.min(total - 1, idx));
+
+    // Haptic tick whenever the scrub snaps to a new data point
+    if (safe !== prevSnapIdx.value) {
+      prevSnapIdx.value = safe;
+      runOnJS(triggerHaptic)();
+    }
+
+    scrubX.value = PAD_L + (total <= 1 ? plotW / 2 : (safe / (total - 1)) * plotW);
+
+    // Animate indicator dots to the snapped Y positions
+    const allY = yPositionsRef.value;
+    if (safe < allY.mood.length)   dotYMood.value   = withSpring(allY.mood[safe],   { damping: 18 });
+    if (safe < allY.energy.length) dotYEnergy.value = withSpring(allY.energy[safe], { damping: 18 });
+    if (safe < allY.stress.length) dotYStress.value = withSpring(allY.stress[safe], { damping: 18 });
+
     runOnJS(setActiveIdx)(safe);
   };
 
   const panGesture = Gesture.Pan()
     .activeOffsetX([-6, 6])
-    .failOffsetY([-12, 12])
-    .onBegin(e => { 'worklet'; tooltipOpacity.value = withSpring(1); updateScrub(e.x); })
+    .failOffsetY([-14, 14])
+    .onBegin(e  => { 'worklet'; tooltipVisible.value = withSpring(1); updateScrub(e.x); })
     .onChange(e => { 'worklet'; updateScrub(e.x); })
-    .onFinalize(() => { 'worklet'; tooltipOpacity.value = withSpring(0); });
+    .onFinalize(() => { 'worklet'; tooltipVisible.value = withSpring(0); });
 
-  const tooltipStyle = useAnimatedStyle(() => ({
-    opacity:   tooltipOpacity.value,
-    transform: [{ translateX: tooltipLeft.value }],
+  const scrubStyle = useAnimatedStyle(() => ({
+    opacity:   tooltipVisible.value,
+    transform: [{ translateX: scrubX.value }],
   }));
 
-  const active = displayed[activeIdx];
-  const dateLabel = active
+  const tipStyle = useAnimatedStyle(() => ({
+    opacity: tooltipVisible.value,
+  }));
+
+  const active     = displayed[activeIdx];
+  const dateLabel  = active
     ? new Date(active.date + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     : '';
-
-  // X-axis labels: show first, middle, last
-  const axisLabels = useMemo(() => {
-    if (total === 0) return [];
-    const indices = [0, Math.floor((total - 1) / 2), total - 1].filter(
-      (v, i, arr) => arr.indexOf(v) === i,
-    );
-    return indices.map(i => ({
-      label: new Date(displayed[i].date + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      pct:   total === 1 ? 0.5 : i / (total - 1),
-    }));
-  }, [displayed, total]);
+  const tooltipLeft = total > 1
+    ? Math.max(PAD_L, Math.min(width - 152, PAD_L + (activeIdx / (total - 1)) * plotW - 76))
+    : PAD_L;
 
   if (total < 2) {
     return (
@@ -296,105 +250,255 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
 
   return (
     <View style={[styles.root, { width, height }]}>
-      {/* ── 3D layer (non-interactive) ── */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <Canvas camera={{ position: [0, 0, CAM_Z], fov: 55 }}>
-          <fog attach="fog" args={['#02010A', 6, 22]} />
-          <Stars />
-          {SERIES.map(s => (
-            <LayeredRibbonCluster
-              key={s.key}
-              values={seriesValues[s.key]}
-              hexColor={s.color}
-              zOffset={s.zOffset}
-              phase={s.phase}
-              speed={s.speed}
+      {/* ── Skia canvas — all chart drawing ── */}
+      <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+        {/* Horizontal grid lines */}
+        {gridRows.map((g, i) => (
+          <React.Fragment key={i}>
+            <Path
+              path={g.path}
+              style="stroke"
+              strokeWidth={1}
+              color="rgba(255,255,255,0.07)"
             />
-          ))}
-          <ScrubBeam indexRef={scrubIndexRef} total={total} />
-        </Canvas>
+          </React.Fragment>
+        ))}
+
+        {/* Series rendered back-to-front: stress → energy → mood */}
+        {seriesData.map(s => (
+          <React.Fragment key={s.key}>
+          <Group>
+            {/* Gradient fill area */}
+            <Path path={s.areaPath}>
+              <LinearGradient
+                start={vec(PAD_L, PAD_T)}
+                end={vec(PAD_L, plotBottom)}
+                colors={[withAlpha(s.color, 0.32), withAlpha(s.color, 0.00)]}
+              />
+            </Path>
+
+            {/* Soft glow beneath the line */}
+            <Path
+              path={s.linePath}
+              style="stroke"
+              strokeWidth={6}
+              strokeCap="round"
+              color={withAlpha(s.color, 0.20)}
+            >
+              <BlurMask blur={7} style="solid" />
+            </Path>
+
+            {/* Crisp line */}
+            <Path
+              path={s.linePath}
+              style="stroke"
+              strokeWidth={2}
+              strokeJoin="round"
+              strokeCap="round"
+              color={s.color}
+            />
+
+            {/* Data point dots */}
+            {s.pts.map((pt, i) => (
+              <React.Fragment key={i}>
+              <Group>
+                <Circle cx={pt.x} cy={pt.y} r={6} color={withAlpha(s.color, 0.18)}>
+                  <BlurMask blur={5} style="normal" />
+                </Circle>
+                <Circle cx={pt.x} cy={pt.y} r={2.5} color={s.color} />
+                <Circle cx={pt.x} cy={pt.y} r={1.0} color="rgba(255,255,255,0.85)" />
+              </Group>
+              </React.Fragment>
+            ))}
+          </Group>
+          </React.Fragment>
+        ))}
+
+        {/* ── Animated scrub indicator: glowing dots that snap to each series line ── */}
+        <Group opacity={tooltipVisible}>
+          {/* Mood — champagne gold */}
+          <Circle cx={scrubX} cy={dotYMood} r={11} color={withAlpha(MOOD_COLOR, 0.15)} blendMode="screen">
+            <BlurMask blur={9} style="solid" />
+          </Circle>
+          <Circle cx={scrubX} cy={dotYMood} r={4.5} color={MOOD_COLOR} />
+          <Circle cx={scrubX} cy={dotYMood} r={1.8} color="rgba(255,255,255,0.9)" />
+          {/* Energy — soft blue */}
+          <Circle cx={scrubX} cy={dotYEnergy} r={11} color={withAlpha(ENERGY_COLOR, 0.15)} blendMode="screen">
+            <BlurMask blur={9} style="solid" />
+          </Circle>
+          <Circle cx={scrubX} cy={dotYEnergy} r={4.5} color={ENERGY_COLOR} />
+          <Circle cx={scrubX} cy={dotYEnergy} r={1.8} color="rgba(255,255,255,0.9)" />
+          {/* Stress — rose */}
+          <Circle cx={scrubX} cy={dotYStress} r={11} color={withAlpha(STRESS_COLOR, 0.15)} blendMode="screen">
+            <BlurMask blur={9} style="solid" />
+          </Circle>
+          <Circle cx={scrubX} cy={dotYStress} r={4.5} color={STRESS_COLOR} />
+          <Circle cx={scrubX} cy={dotYStress} r={1.8} color="rgba(255,255,255,0.9)" />
+        </Group>
+
+      </Canvas>
+
+      {/* ── Axis labels (RN Views — supports text overflow) ── */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        {gridRows.map((g, i) => (
+          <React.Fragment key={i}>
+            <Text style={[styles.yLabel, { top: g.gy - 7 }]}>
+              {g.label}
+            </Text>
+          </React.Fragment>
+        ))}
+        {axisLabels.map((item, i) => (
+          <React.Fragment key={i}>
+            <Text style={[styles.xLabel, { left: item.x - 22, bottom: 4 }]}>
+              {item.text}
+            </Text>
+          </React.Fragment>
+        ))}
       </View>
 
-      {/* ── Gesture & UI layer ── */}
+      {/* ── Pan gesture + scrub overlay ── */}
       <GestureDetector gesture={panGesture}>
         <View style={StyleSheet.absoluteFill}>
-          {/* Floating tooltip */}
-          <Animated.View style={[styles.tooltip, tooltipStyle]} pointerEvents="none">
-            <Text style={styles.tooltipDate}>{dateLabel}</Text>
-            <View style={styles.tooltipRow}>
-              <View style={[styles.dot, { backgroundColor: '#FFCC00' }]} />
-              <Text style={styles.tooltipLbl}>Mood</Text>
-              <Text style={[styles.tooltipVal, { color: '#FFCC00' }]}>
-                {active ? active.moodScore.toFixed(1) : '—'}
-              </Text>
-            </View>
-            <View style={styles.tooltipRow}>
-              <View style={[styles.dot, { backgroundColor: '#00FFFF' }]} />
-              <Text style={styles.tooltipLbl}>Energy</Text>
-              <Text style={[styles.tooltipVal, { color: '#00FFFF' }]}>
-                {active ? active.energyLevel : '—'}
-              </Text>
-            </View>
-            <View style={styles.tooltipRow}>
-              <View style={[styles.dot, { backgroundColor: '#FF003C' }]} />
-              <Text style={styles.tooltipLbl}>Stress</Text>
-              <Text style={[styles.tooltipVal, { color: '#FF003C' }]}>
-                {active ? active.stressLevel : '—'}
-              </Text>
+          {/* Vertical scrub line */}
+          <Animated.View
+            style={[styles.scrubLine, { height: plotH, top: PAD_T }, scrubStyle]}
+            pointerEvents="none"
+          />
+
+          {/* Tooltip */}
+          <Animated.View
+            style={[styles.tooltipShell, { top: PAD_T + 10, left: tooltipLeft }, tipStyle]}
+            pointerEvents="none"
+          >
+            {/* Frosted glass base */}
+            <BlurView
+              intensity={Platform.OS === 'android' ? 20 : 45}
+              tint="dark"
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Dark navy tint */}
+            <View style={styles.tooltipTint} />
+            {/* Gold rim */}
+            <View style={styles.tooltipRim} />
+            {/* Top highlight */}
+            <View style={styles.tooltipHighlight} />
+            {/* Content */}
+            <View style={styles.tooltipContent}>
+              <Text style={styles.tooltipDate}>{dateLabel}</Text>
+              {[
+                { key: 'mood',   color: MOOD_COLOR,   label: 'Mood',
+                  val: active ? active.moodScore.toFixed(1) : '—' },
+                { key: 'energy', color: ENERGY_COLOR, label: 'Energy',
+                  val: active ? levelToNum(active.energyLevel).toFixed(1) : '—' },
+                { key: 'stress', color: STRESS_COLOR, label: 'Stress',
+                  val: active ? levelToNum(active.stressLevel).toFixed(1) : '—' },
+              ].map(row => (
+                <React.Fragment key={row.key}>
+                <View style={styles.tooltipRow}>
+                  <View style={[styles.tooltipDot, { backgroundColor: row.color }]} />
+                  <Text style={styles.tooltipLbl}>{row.label}</Text>
+                  <Text style={[styles.tooltipVal, { color: row.color }]}>{row.val}</Text>
+                </View>
+                </React.Fragment>
+              ))}
             </View>
           </Animated.View>
-
-          {/* X-axis labels */}
-          <View style={[styles.axis, { width }]} pointerEvents="none">
-            {axisLabels.map((item, i) => (
-              <Text
-                key={i}
-                style={[styles.axisLbl, { left: item.pct * (width - 48) }]}
-              >
-                {item.label}
-              </Text>
-            ))}
-          </View>
         </View>
       </GestureDetector>
     </View>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
     borderRadius: 12,
-    backgroundColor: '#02010A',
   },
   emptyTxt: {
     color: 'rgba(255,255,255,0.35)',
     fontSize: 13,
+    textAlign: 'center',
   },
-  tooltip: {
+  yLabel: {
+    position:    'absolute',
+    left:        0,
+    width:       PAD_L - 4,
+    color:       'rgba(255,255,255,0.28)',
+    fontSize:    9,
+    fontWeight:  '600',
+    textAlign:   'right',
+    letterSpacing: 0.3,
+  },
+  xLabel: {
+    position:    'absolute',
+    width:       44,
+    textAlign:   'center',
+    color:       'rgba(255,255,255,0.28)',
+    fontSize:    9,
+    fontWeight:  '600',
+    letterSpacing: 0.3,
+  },
+  scrubLine: {
     position:        'absolute',
-    top:             18,
-    width:           144,
-    backgroundColor: 'rgba(12,14,30,0.88)',
-    borderRadius:    12,
-    borderWidth:     1,
-    borderColor:     'rgba(255,255,255,0.12)',
-    padding:         12,
+    width:           1.5,
+    backgroundColor: 'rgba(201,174,120,0.75)',  // champagne gold
+    borderRadius:    1,
+    shadowColor:     '#C9AE78',
+    shadowOffset:    { width: 0, height: 0 },
+    shadowOpacity:   0.9,
+    shadowRadius:    5,
+    elevation:       4,
+  },
+  // ── Tooltip shell (frosted glass) ────────────────────────────────────────
+  tooltipShell: {
+    position:     'absolute',
+    width:        148,
+    borderRadius: 14,
+    overflow:     'hidden',   // clips BlurView to border radius
+    // Elevation shadow
+    shadowColor:     '#000',
+    shadowOffset:    { width: 0, height: 6 },
+    shadowOpacity:   0.45,
+    shadowRadius:    16,
+    elevation:       10,
+  },
+  tooltipTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(2, 8, 23, 0.55)',
+  },
+  tooltipRim: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius:  14,
+    borderWidth:   1,
+    borderColor:   'rgba(255, 244, 214, 0.14)',
+  },
+  tooltipHighlight: {
+    position:        'absolute',
+    top:             0,
+    left:            12,
+    right:           12,
+    height:          1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius:    1,
+  },
+  tooltipContent: {
+    padding: 10,
   },
   tooltipDate: {
-    color:        'rgba(255,255,255,0.5)',
-    fontSize:     10,
-    marginBottom: 6,
-    letterSpacing: 0.5,
+    color:         'rgba(255,255,255,0.50)',
+    fontSize:      10,
+    marginBottom:  6,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   tooltipRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    marginBottom:   5,
+    flexDirection: 'row',
+    alignItems:    'center',
+    marginBottom:  4,
   },
-  dot: {
+  tooltipDot: {
     width:        7,
     height:       7,
     borderRadius: 3.5,
@@ -402,23 +506,12 @@ const styles = StyleSheet.create({
   },
   tooltipLbl: {
     flex:     1,
-    color:    '#ffffff',
-    fontSize: 12,
+    color:    'rgba(255,255,255,0.65)',
+    fontSize: 11,
   },
   tooltipVal: {
-    fontSize:   13,
+    fontSize:   11,
     fontWeight: '700',
   },
-  axis: {
-    position: 'absolute',
-    bottom:   6,
-    height:   18,
-  },
-  axisLbl: {
-    position:  'absolute',
-    color:     'rgba(255,255,255,0.3)',
-    fontSize:  10,
-    fontWeight: '600',
-    letterSpacing: 0.4,
-  },
 });
+
