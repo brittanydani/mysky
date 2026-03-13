@@ -33,21 +33,6 @@ export interface DreamNode {
   coOccursWith?:   string[];
 }
 
-// ─── Defaults ─────────────────────────────────────────────────────────────────
-
-export const DEFAULT_DREAM_NODES: DreamNode[] = [
-  { id: 'water',     label: 'Water',     frequency: 8, tone: 'mystery',    coOccursWith: ['house', 'light'] },
-  { id: 'house',     label: 'House',     frequency: 7, tone: 'connection', coOccursWith: ['water', 'people'] },
-  { id: 'pursuit',   label: 'Pursuit',   frequency: 6, tone: 'fear',       coOccursWith: ['falling'] },
-  { id: 'animals',   label: 'Animals',   frequency: 5, tone: 'adventure',  coOccursWith: ['light'] },
-  { id: 'childhood', label: 'Childhood', frequency: 7, tone: 'longing',    coOccursWith: ['house', 'people'] },
-  { id: 'people',    label: 'People',    frequency: 9, tone: 'connection', coOccursWith: ['house', 'childhood'] },
-  { id: 'path',      label: 'Path',      frequency: 4, tone: 'adventure',  coOccursWith: ['pursuit'] },
-  { id: 'light',     label: 'Light',     frequency: 5, tone: 'joy',        coOccursWith: ['water', 'animals'] },
-  { id: 'falling',   label: 'Falling',   frequency: 4, tone: 'fear',       coOccursWith: ['pursuit'] },
-  { id: 'memory',    label: 'Memory',    frequency: 6, tone: 'longing',    coOccursWith: ['childhood'] },
-];
-
 // ─── Tone → color ─────────────────────────────────────────────────────────────
 
 const TONE_COLOR: Record<DreamTone, string> = {
@@ -218,17 +203,22 @@ function ClusterScene({ renderNodes, connectorPairs }: SceneProps) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export interface DreamClusterMapProps {
-  nodes?:  DreamNode[];    // static fallback (dev / no-data state)
+  nodes?:  DreamNode[];    // explicit override (e.g. screenshots)
   height?: number;
 }
 
 export function DreamClusterMap({
-  nodes  = DEFAULT_DREAM_NODES,
+  nodes,
   height = 300,
 }: DreamClusterMapProps) {
-  // Prefer live data from the store; fall back to static prop nodes
+  // Prefer live data from the store; then explicit prop; then nothing
   const storeNodes = useDreamMapStore((s) => s.data?.nodes ?? []);
   const storeLinks = useDreamMapStore((s) => s.data?.links ?? []);
+
+  // If there is no store data and no explicit prop, render nothing
+  if (storeNodes.length === 0 && (!nodes || nodes.length === 0)) {
+    return null;
+  }
 
   const { renderNodes, connectorPairs } = useMemo(() => {
     if (storeNodes.length > 0) {
@@ -257,17 +247,18 @@ export function DreamClusterMap({
       return { renderNodes: rNodes, connectorPairs: pairs };
     }
 
-    // ── Static path: use DreamNode[] prop ──
-    const rNodes: RenderNode[] = nodes.map(n => ({
+    // ── Static path: use explicit DreamNode[] prop (e.g. screenshots) ──
+    const srcNodes = nodes ?? [];
+    const rNodes: RenderNode[] = srcNodes.map(n => ({
       id:       n.id,
       hexColor: TONE_COLOR[n.tone] ?? '#88AACC',
       radius:   0.07 + (n.frequency / 10) * 0.16,
     }));
 
-    const indexMap = new Map<string, number>(nodes.map((n, i) => [n.id, i]));
+    const indexMap = new Map<string, number>(srcNodes.map((n, i) => [n.id, i]));
     const seen = new Set<string>();
     const pairs: Array<{ a: number; b: number; color: string }> = [];
-    nodes.forEach((n, i) => {
+    srcNodes.forEach((n, i) => {
       (n.coOccursWith ?? []).forEach(otherId => {
         const j = indexMap.get(otherId);
         if (j === undefined) return;

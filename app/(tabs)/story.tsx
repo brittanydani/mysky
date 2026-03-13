@@ -22,7 +22,12 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
-
+const PALETTE = {
+  gold: '#D4B872',
+  bg: '#0A0A0C', // Unified OLED Black
+  textMain: '#FFFFFF',
+  glassBorder: 'rgba(255,255,255,0.08)',
+};
 
 const FORCE_COLORS_MAP: Record<string, string> = {
   'Sun': '#C9AE78',
@@ -194,9 +199,11 @@ export default function StoryScreen() {
               Your personal blueprint — a structured framework of behavioral patterns, core drives, and growth vectors derived from your unique data.
             </Text>
             {chapters.length > 0 && (
-              <Text style={styles.subtitle}>
-                {chapters.length} dimensions — {unlockedCount} mapped
-              </Text>
+              <View style={styles.statsBadge}>
+                <Text style={styles.statsText}>
+                  {unlockedCount} / {chapters.length} DIMENSIONS MAPPED
+                </Text>
+              </View>
             )}
             
             {chapters.length > 0 && (
@@ -208,15 +215,15 @@ export default function StoryScreen() {
                 accessibilityLabel="Export chart as PDF"
               >
                 <LinearGradient
-                  colors={['rgba(232,214,174,0.18)', 'rgba(232, 214, 174, 0.1)']}
+                  colors={['rgba(212,184,114,0.12)', 'rgba(212,184,114,0.05)']}
                   style={styles.exportBtnGradient}
                 >
                   {isExporting ? (
-                    <ActivityIndicator size="small" color={theme.textGold} />
+                    <ActivityIndicator size="small" color={PALETTE.gold} />
                   ) : (
                     <>
-                      <Ionicons name="share-outline" size={16} color={theme.textGold} />
-                      <Text style={styles.exportButtonText}>Export PDF</Text>
+                      <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
+                      <Text style={styles.exportButtonText}>Export Full Architecture (PDF)</Text>
                     </>
                   )}
                 </LinearGradient>
@@ -226,9 +233,9 @@ export default function StoryScreen() {
 
           {/* Radar Chart */}
           {chart && chapters.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ alignItems: 'center' }}>
-              <Text style={[styles.title, { fontSize: 22, marginTop: 10, marginBottom: -10, alignSelf: 'flex-start', marginLeft: 20 }]}>Core Force Map</Text>
-              <PsychologicalForcesRadar forces={calculateForces(chart)} size={350} />
+            <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.radarWrapper}>
+              <Text style={styles.radarTitle}>Core Force Map</Text>
+              <PsychologicalForcesRadar forces={calculateForces(chart)} size={320} />
             </Animated.View>
           )}
 
@@ -329,11 +336,11 @@ export default function StoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: PALETTE.bg },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   
   loadingText: {
     color: theme.textSecondary,
@@ -343,14 +350,14 @@ const styles = StyleSheet.create({
   
   header: {
     alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 32,
+    marginTop: 20,
+    marginBottom: 40,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    color: PALETTE.textMain,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     letterSpacing: 0.5,
     textAlign: 'center',
     marginBottom: 6,
@@ -361,13 +368,36 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 16,
+    marginTop: 8,
   },
-  subtitle: {
-    fontSize: 13,
-    color: theme.textMuted,
-    marginTop: 12,
-    fontStyle: 'italic',
-    letterSpacing: 0.5,
+  statsBadge: {
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: 'rgba(212,184,114,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,114,0.2)',
+  },
+  statsText: {
+    color: PALETTE.gold,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    fontVariant: ['tabular-nums'],
+  },
+
+  radarWrapper: {
+    alignItems: 'center',
+    marginBottom: 48,
+  },
+  radarTitle: {
+    color: PALETTE.textMain,
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    alignSelf: 'flex-start',
+    marginBottom: 20,
   },
 
   exportButton: {
@@ -378,17 +408,18 @@ const styles = StyleSheet.create({
   exportBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 10,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.25)',
+    borderColor: PALETTE.glassBorder,
   },
   exportButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: theme.textGold,
+    fontWeight: '700',
+    color: PALETTE.gold,
   },
 
   upsellGradient: {

@@ -30,15 +30,9 @@ interface CorrelationStore {
   syncCorrelations: () => Promise<void>;
 }
 
-// Fallback data used while RPC loads (gives the gyroscope interesting motion)
-const FALLBACK: CorrelationPair[] = [
-  { metric_a: 'mood',   metric_b: 'energy',  correlation:  0.72 },
-  { metric_a: 'mood',   metric_b: 'stress',  correlation: -0.61 },
-  { metric_a: 'mood',   metric_b: 'anxiety', correlation: -0.48 },
-  { metric_a: 'energy', metric_b: 'stress',  correlation: -0.55 },
-  { metric_a: 'energy', metric_b: 'anxiety', correlation: -0.38 },
-  { metric_a: 'stress', metric_b: 'anxiety', correlation:  0.84 },
-];
+// Empty until real user data arrives from the RPC.
+// The gyroscope renders nothing when this array is empty.
+const INITIAL_CORRELATIONS: CorrelationPair[] = [];
 
 function isValidPairs(value: unknown): value is CorrelationPair[] {
   if (!Array.isArray(value)) return false;
@@ -54,7 +48,7 @@ function isValidPairs(value: unknown): value is CorrelationPair[] {
 }
 
 export const useCorrelationStore = create<CorrelationStore>((set) => ({
-  correlations: FALLBACK,
+  correlations: INITIAL_CORRELATIONS,
   isFetching:   false,
   error:        null,
 
@@ -69,7 +63,7 @@ export const useCorrelationStore = create<CorrelationStore>((set) => ({
     }
 
     if (!isValidPairs(data) || (data as CorrelationPair[]).length === 0) {
-      // Not enough data — keep fallback to keep the gyroscope alive
+      // Not enough data yet — leave empty so the UI shows an honest empty state
       set({ isFetching: false });
       return;
     }

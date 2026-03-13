@@ -45,7 +45,7 @@ export const metallicStopsTiny = [
 export const metallicPositionsTiny = [0, 0.22, 0.5, 0.78, 1] as const;
 
 // ── Soft — 11 stops, for pills, buttons, standard icons ──────────────────
-export const metallicStopsSoft = [
+export const metallicStopsSoft: string[] = [
   mySkyGold.shadowDeep,
   mySkyGold.shadow,
   mySkyGold.goldDeep,
@@ -57,10 +57,10 @@ export const metallicStopsSoft = [
   mySkyGold.champagne,
   mySkyGold.goldMid,
   mySkyGold.shadow,
-] as const;
-export const metallicPositionsSoft = [
+];
+export const metallicPositionsSoft: number[] = [
   0.0, 0.08, 0.2, 0.34, 0.5, 0.62, 0.74, 0.82, 0.9, 0.96, 1.0,
-] as const;
+];
 
 // ── Hero — 12 stops, adds specular peak, for logos & feature icons ─────────
 export const metallicStopsHero = [

@@ -3,9 +3,9 @@
  * MySky — Smooth Area Line Chart (Skia)
  *
  * Three smooth bezier area series:
- *   Mood   #C9AE78  · champagne gold
- *   Energy #6fb3d3  · soft blue
- *   Stress #e07b7b  · rose
+ *   Mood   #C9AE78  · soft gold
+ *   Energy #6fb3d3  · muted cyan
+ *   Stress #CC6666  · dusty rose
  *
  * Layout: Y-axis labels | plot area | X-axis date labels
  * Interaction: pan-scrub → animated vertical line + floating tooltip
@@ -43,7 +43,7 @@ import { DailyCheckIn } from '../../services/patterns/types';
 
 const MOOD_COLOR   = '#C9AE78';
 const ENERGY_COLOR = '#6fb3d3';
-const STRESS_COLOR = '#e07b7b';
+const STRESS_COLOR = '#CC6666';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ function buildAreaPath(pts: { x: number; y: number }[], bottom: number) {
 
 const PAD_L = 36;   // room for y-axis labels
 const PAD_R = 10;
-const PAD_T = 18;
+const PAD_T = 28;   // room for floating tooltip above
 const PAD_B = 28;   // room for x-axis labels
 
 // ── Series config ─────────────────────────────────────────────────────────────
@@ -273,7 +273,7 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
               <LinearGradient
                 start={vec(PAD_L, PAD_T)}
                 end={vec(PAD_L, plotBottom)}
-                colors={[withAlpha(s.color, 0.32), withAlpha(s.color, 0.00)]}
+                colors={[withAlpha(s.color, 0.22), withAlpha(s.color, 0.00)]}
               />
             </Path>
 
@@ -281,18 +281,18 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
             <Path
               path={s.linePath}
               style="stroke"
-              strokeWidth={6}
+              strokeWidth={5}
               strokeCap="round"
-              color={withAlpha(s.color, 0.20)}
+              color={withAlpha(s.color, 0.15)}
             >
-              <BlurMask blur={7} style="solid" />
+              <BlurMask blur={6} style="solid" />
             </Path>
 
             {/* Crisp line */}
             <Path
               path={s.linePath}
               style="stroke"
-              strokeWidth={2}
+              strokeWidth={2.5}
               strokeJoin="round"
               strokeCap="round"
               color={s.color}
@@ -302,11 +302,10 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
             {s.pts.map((pt, i) => (
               <React.Fragment key={i}>
               <Group>
-                <Circle cx={pt.x} cy={pt.y} r={6} color={withAlpha(s.color, 0.18)}>
-                  <BlurMask blur={5} style="normal" />
+                <Circle cx={pt.x} cy={pt.y} r={4} color={withAlpha(s.color, 0.12)}>
+                  <BlurMask blur={4} style="normal" />
                 </Circle>
-                <Circle cx={pt.x} cy={pt.y} r={2.5} color={s.color} />
-                <Circle cx={pt.x} cy={pt.y} r={1.0} color="rgba(255,255,255,0.85)" />
+                <Circle cx={pt.x} cy={pt.y} r={2} color={s.color} />
               </Group>
               </React.Fragment>
             ))}
@@ -365,9 +364,9 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
             pointerEvents="none"
           />
 
-          {/* Tooltip */}
+          {/* Tooltip — positioned above chart area */}
           <Animated.View
-            style={[styles.tooltipShell, { top: PAD_T + 10, left: tooltipLeft }, tipStyle]}
+            style={[styles.tooltipShell, { top: 0, left: tooltipLeft }, tipStyle]}
             pointerEvents="none"
           >
             {/* Frosted glass base */}

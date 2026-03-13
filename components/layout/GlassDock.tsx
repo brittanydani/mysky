@@ -40,14 +40,15 @@ type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 interface TabConfig {
   label: string;
   icon: IoniconsName;
+  iconFocused: IoniconsName;
 }
 
 const VISIBLE_TABS: Record<string, TabConfig> = {
-  home:     { label: 'Today',     icon: 'sunny' },
-  growth:   { label: 'Patterns',  icon: 'analytics-outline' },
-  journal:  { label: 'Archive',   icon: 'archive-outline' },
-  chart:    { label: 'Blueprint', icon: 'compass-outline' },
-  settings: { label: 'Settings',  icon: 'settings-outline' },
+  home:     { label: 'Today',     icon: 'sunny-outline', iconFocused: 'sunny' },
+  growth:   { label: 'Patterns',  icon: 'analytics-outline', iconFocused: 'analytics' },
+  journal:  { label: 'Archive',   icon: 'archive-outline', iconFocused: 'archive' },
+  chart:    { label: 'Blueprint', icon: 'compass-outline', iconFocused: 'compass' },
+  settings: { label: 'Settings',  icon: 'settings-outline', iconFocused: 'settings' },
 };
 
 const DOCK_HEIGHT = 62;
@@ -90,7 +91,7 @@ const TabButton = memo(function TabButton({ isFocused, cfg, onPress, onLayout }:
       hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
     >
       <Animated.View style={animatedIconStyle}>
-        <MetallicTabIcon name={cfg.icon} focused={isFocused} size={22} />
+        <MetallicTabIcon name={isFocused ? cfg.iconFocused : cfg.icon} focused={isFocused} size={22} />
       </Animated.View>
 
       <Text
@@ -102,6 +103,11 @@ const TabButton = memo(function TabButton({ isFocused, cfg, onPress, onLayout }:
       >
         {cfg.label}
       </Text>
+
+      {/* Active indicator dot */}
+      {isFocused && (
+        <View style={styles.indicatorDot} />
+      )}
     </Pressable>
   );
 });
@@ -286,9 +292,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 7,
+    paddingVertical: 6,
     gap: 3,
     position: 'relative',
+  },
+
+  // Active indicator dot below label
+  indicatorDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#D4B872',
+    marginTop: 1,
   },
 
   // Shared sliding indicator — spring-physics pill behind the active tab
@@ -311,6 +326,6 @@ const styles = StyleSheet.create({
     color: '#D4B872',
   },
   labelInactive: {
-    color: 'rgba(255, 255, 255, 0.42)',
+    color: 'rgba(255, 255, 255, 0.35)',
   },
 });

@@ -93,7 +93,7 @@ const ALL_TAG_LABELS: Record<string, string> = {
 const COLORS = {
   mood: '#C9AE78',
   energy: '#6fb3d3',
-  stress: '#e07b7b',
+  stress: '#CC6666',
 };
 
 // Accent colour per influence tag — drives PremiumPill selected state colour
@@ -210,6 +210,25 @@ const AvgBadge = memo(function AvgBadge({ label, value, color }: { label: string
     <View style={styles.avgBadge} accessibilityLabel={`${label}: ${value}`}>
       <Text style={[styles.avgValue, { color }]}>{value}</Text>
       <Text style={styles.avgLabel}>{label}</Text>
+    </View>
+  );
+});
+
+const SealedMetric = memo(function SealedMetric({
+  label, value, color,
+}: { label: string; value: number; color: string }) {
+  return (
+    <View style={styles.sealedMetricRow} accessibilityLabel={`${label}: ${value} out of 9`}>
+      <Text style={styles.sealedMetricLabel}>{label}</Text>
+      <View style={styles.sealedMetricTrack}>
+        <View
+          style={[
+            styles.sealedMetricFill,
+            { width: `${Math.round(((value - 1) / 8) * 100)}%` as `${number}%`, backgroundColor: color },
+          ]}
+        />
+      </View>
+      <Text style={[styles.sealedMetricValue, { color }]}>{value}</Text>
     </View>
   );
 });
@@ -564,7 +583,7 @@ export default function MoodScreen() {
         <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
           <Text style={styles.title}>Internal Weather</Text>
           <Text style={styles.subtitle}>
-            Daily check-in · {formatToday()}
+            Daily check-in  ·  {formatToday()}
           </Text>
         </Animated.View>
 
@@ -682,7 +701,12 @@ export default function MoodScreen() {
                         accessibilityLabel={`${info.label} check-in${isCompleted ? ' (completed)' : ''}`}
                         accessibilityState={{ selected: isSelected }}
                       >
-                        <Text style={styles.timeSlotEmoji}>{info.emoji}</Text>
+                        <Ionicons
+                          name={(info as any).icon ?? 'ellipse-outline'}
+                          size={18}
+                          color={isSelected ? theme.primary : isCompleted ? theme.energy : 'rgba(255,255,255,0.40)'}
+                          style={{ marginBottom: 3 }}
+                        />
                         <Text
                           style={[
                             styles.timeSlotLabel,
@@ -720,7 +744,30 @@ export default function MoodScreen() {
                   </View>
                 )}
 
-                <View style={{ opacity: (completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 0.7 : 1, pointerEvents: (completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? 'none' : 'auto' }}>
+                {(completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked) ? (
+                  /* ── Sealed: Static Biometric Readout ── */
+                  <View style={styles.sealedReadout}>
+                    <SealedMetric label="Emotional Resonance" value={moodSlider} color={COLORS.mood} />
+                    <SealedMetric label="Energy Vitality" value={energySlider} color={COLORS.energy} />
+                    <SealedMetric label="Internal Tension" value={stressSlider} color={COLORS.stress} />
+                    {(selectedTags.length > 0 || !!selectedQuality) && (
+                      <View style={styles.sealedTagRow}>
+                        {selectedTags.map(t => (
+                          <View key={t} style={styles.sealedTagChip}>
+                            <Text style={styles.sealedTagTxt}>{INFLUENCE_LABELS[t] ?? t}</Text>
+                          </View>
+                        ))}
+                        {selectedQuality && (
+                          <View style={[styles.sealedTagChip, styles.sealedTagChipQuality]}>
+                            <Text style={[styles.sealedTagTxt, { color: '#C9B3E8' }]}>{QUALITY_LABELS[selectedQuality]}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  /* ── Active: Interactive sliders + tags ── */
+                  <View>
                   {/* Sliders — Resonance-enhanced */}
                 <FluidSlider
                   question="How are you feeling emotionally?"
@@ -767,7 +814,7 @@ export default function MoodScreen() {
                             : prev.length >= 3 ? prev : [...prev, tag]
                         )
                       }
-                      accentColor={TAG_ACCENT[tag] ?? '#C9AE78'}
+                      accentColor={TAG_ACCENT[tag] ?? '#D4B872'}
                       disabled={!selectedTags.includes(tag) && selectedTags.length >= 3}
                     />
                   ))}
@@ -782,7 +829,7 @@ export default function MoodScreen() {
                         isSelected
                         onToggle={() => {}}
                         onLongPress={() => setSelectedTags(prev => prev.filter(t => t !== customTag))}
-                        accentColor={TAG_ACCENT[customTag] ?? '#C9AE78'}
+                        accentColor={TAG_ACCENT[customTag] ?? '#D4B872'}
                       />
                     ))}
 
@@ -843,15 +890,14 @@ export default function MoodScreen() {
                     </View>
                   </>
                 )}
-
-                </View>{/* end of locked inputs view */}
+                  </View>
+                )}
 
                 {/* Somatic Pulse Monitor / Action Area */}
                 {completedSlots.includes(selectedTimeSlot) && !isEditingUnlocked ? (
                   <View style={[styles.pulseSection, { paddingVertical: 24 }]}>
                     <Text style={[styles.pulseLabel, { color: theme.energy, marginBottom: 16, fontSize: 14 }]}>
-                      Check-in sealed for {TIME_OF_DAY_LABELS[selectedTimeSlot].label.toLowerCase()}{' '}
-                      {TIME_OF_DAY_LABELS[selectedTimeSlot].emoji}
+                      Check-in sealed for {TIME_OF_DAY_LABELS[selectedTimeSlot].label.toLowerCase()}
                     </Text>
                     <Pressable
                       style={styles.editEntryBtn}
@@ -973,14 +1019,14 @@ export default function MoodScreen() {
                       <NeonWaveChart
                         checkIns={filteredCheckIns}
                         width={GRAPH_W}
-                        height={220}
+                        height={260}
                       />
 
                       {/* Top themes */}
                       {topTags.length > 0 && (
                         <>
-                          <Text style={[styles.graphLabelTxt, { marginTop: 12, marginBottom: 6, color: theme.textSecondary }]}>
-                            Most Common Themes
+                          <Text style={[styles.graphLabelTxt, { marginTop: 16, marginBottom: 10, color: theme.textSecondary }]}>
+                            Most common themes
                           </Text>
                           {topTags.map(({ tag, count }) => (
                             <View key={tag} style={styles.tagStatRow}>
@@ -1003,18 +1049,18 @@ export default function MoodScreen() {
                       {todInsights && todInsights.buckets.length >= 2 && (
                         <>
                           <Text style={[styles.graphLabelTxt, { marginTop: 16, marginBottom: 8, color: theme.textSecondary }]}>
-                            🕐 Time of Day Patterns
+                            Time of day patterns
                           </Text>
 
                           {/* Bucket overview */}
                           <View style={styles.todBucketRow}>
                             {todInsights.buckets.map(b => {
-                              const emoji: Record<string, string> = {
-                                Morning: '🌅', Afternoon: '☀️', Evening: '🌆', Night: '🌙',
+                              const iconMap: Record<string, string> = {
+                                Morning: 'sunny-outline', Afternoon: 'partly-sunny-outline', Evening: 'moon-outline', Night: 'cloudy-night-outline',
                               };
                               return (
                                 <View key={b.label} style={styles.todBucket}>
-                                  <Text style={{ fontSize: 16 }}>{emoji[b.label]}</Text>
+                                  <Ionicons name={(iconMap[b.label] ?? 'ellipse-outline') as any} size={16} color="rgba(255,255,255,0.50)" />
                                   <Text style={styles.todBucketLabel}>{b.label}</Text>
                                   <View style={{ gap: 1, alignItems: 'center' }}>
                                     <Text style={[styles.todBucketVal, { color: COLORS.mood }]}>{b.avgMood.toFixed(1)}</Text>
@@ -1131,7 +1177,7 @@ export default function MoodScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
+  container: { flex: 1, backgroundColor: '#0A0A0C' },
   flex: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
@@ -1141,17 +1187,18 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.sm,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '300',
     color: theme.textPrimary,
-    fontFamily: 'serif',
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   subtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.55)',
-    fontStyle: 'italic',
-    marginTop: 2,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.45)',
+    fontWeight: '500',
+    letterSpacing: 0.8,
+    marginTop: 4,
   },
   content: { paddingHorizontal: theme.spacing.lg, paddingTop: 8 },
 
@@ -1165,9 +1212,9 @@ const styles = StyleSheet.create({
   },
   heroText: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '500',
     color: theme.textPrimary,
-    fontFamily: 'serif',
+    letterSpacing: 0.3,
   },
   body: { color: theme.textSecondary, fontSize: 14, lineHeight: 20 },
 
@@ -1179,10 +1226,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
+    color: 'rgba(255,255,255,0.60)',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
 
   streakRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, marginBottom: 8 },
@@ -1209,14 +1257,14 @@ const styles = StyleSheet.create({
   todayNoticeTxt: { color: theme.textMuted, fontSize: 12 },
 
   tagsLabel: {
-    color: theme.textSecondary,
+    color: 'rgba(255,255,255,0.70)',
     fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 10,
+    fontWeight: '500',
+    marginBottom: 12,
     marginTop: 24,
   },
-  tagsMuted: { color: theme.textMuted, fontWeight: '400', fontSize: 13 },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 22 },
+  tagsMuted: { color: theme.textMuted, fontWeight: '400', fontSize: 12 },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 22 },
 
   // Time-of-day slots
   timeSlotRow: {
@@ -1280,14 +1328,14 @@ const styles = StyleSheet.create({
   tagTxt: { color: 'rgba(226,232,240,0.62)', fontSize: 13, fontWeight: '500' },
   tagTxtOn: { color: '#E8D4A6', fontWeight: '600' },
   tagChipOther: {
-    paddingHorizontal: 13,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    borderStyle: 'dashed',
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
-  tagTxtOther: { color: theme.textMuted, fontSize: 13, fontWeight: '600' },
+  tagTxtOther: { color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: '500' },
   customTagInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1393,24 +1441,28 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   avgBadge: { alignItems: 'center' },
-  avgValue: { fontSize: 18, fontWeight: '800', letterSpacing: 0.3 },
+  avgValue: { fontSize: 18, fontWeight: '800', letterSpacing: 0.3, fontVariant: ['tabular-nums'] },
   avgLabel: { color: theme.textMuted, fontSize: 11, marginTop: 3 },
 
   graphLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2, marginTop: 8 },
   graphDot: { width: 8, height: 8, borderRadius: 4 },
-  graphLabelTxt: { color: theme.textSecondary, fontSize: 13, fontWeight: '700' },
+  graphLabelTxt: { color: theme.textSecondary, fontSize: 12, fontWeight: '600', letterSpacing: 0.8, textTransform: 'uppercase' },
 
-  tagStatRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 5 },
-  tagStatLabel: { color: theme.textSecondary, fontSize: 13, width: 130 },
+  tagStatRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  tagStatLabel: { color: 'rgba(255,255,255,0.70)', fontSize: 13, width: 110 },
   tagStatBar: {
     flex: 1,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     overflow: 'hidden',
   },
-  tagStatFill: { height: '100%', borderRadius: 2, backgroundColor: theme.primary },
-  tagStatCount: { color: theme.textMuted, fontSize: 12, width: 28, textAlign: 'right' },
+  tagStatFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: 'rgba(201,174,120,0.45)',
+  },
+  tagStatCount: { color: 'rgba(255,255,255,0.50)', fontSize: 12, width: 28, textAlign: 'right', fontWeight: '600' },
 
   // Time-of-day insights
   todBucketRow: {
@@ -1429,7 +1481,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   todBucketLabel: { color: theme.textSecondary, fontSize: 10, fontWeight: '600' },
-  todBucketVal: { fontSize: 12, fontWeight: '700' },
+  todBucketVal: { fontSize: 12, fontWeight: '700', fontVariant: ['tabular-nums'] },
   todBucketCount: { color: theme.textMuted, fontSize: 9 },
   todLegend: {
     flexDirection: 'row',
@@ -1445,6 +1497,64 @@ const styles = StyleSheet.create({
   todInsightEmoji: { fontSize: 14, marginTop: 1 },
   todInsightText: { color: theme.textSecondary, fontSize: 13, flex: 1, lineHeight: 18 },
 
+  // Sealed biometric readout
+  sealedReadout: {
+    paddingVertical: 8,
+    gap: 12,
+  },
+  sealedMetricRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sealedMetricLabel: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    width: 130,
+  },
+  sealedMetricTrack: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+  },
+  sealedMetricFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  sealedMetricValue: {
+    fontSize: 14,
+    fontWeight: '800',
+    width: 24,
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+  sealedTagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 12,
+  },
+  sealedTagChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  sealedTagChipQuality: {
+    borderColor: 'rgba(201,179,232,0.25)',
+    backgroundColor: 'rgba(201,179,232,0.08)',
+  },
+  sealedTagTxt: {
+    color: theme.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
   // Edit Entry button (sealed state)
   editEntryBtn: {
     alignSelf:        'center',
@@ -1452,11 +1562,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     borderRadius:     20,
     borderWidth:      1,
-    borderColor:      'rgba(201,174,120,0.35)',
-    backgroundColor:  'rgba(201,174,120,0.06)',
+    borderColor:      'rgba(212,184,114,0.35)',
+    backgroundColor:  'rgba(212,184,114,0.06)',
   },
   editEntryTxt: {
-    color:        '#C9AE78',
+    color:        '#D4B872',
     fontSize:     14,
     fontWeight:   '700',
     letterSpacing: 0.4,

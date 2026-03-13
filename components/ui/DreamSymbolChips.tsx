@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { ExtractedSymbol } from '../../services/premium/dreamSymbolParser';
-import { PALETTE, theme } from '../../constants/theme';
+import { theme } from '../../constants/theme';
 
 interface Props {
   symbols?: ExtractedSymbol[];
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   },
   chipWord: {
     fontSize: 13,
-    color: theme.text,
+    color: theme.textPrimary,
     fontWeight: '500',
     textTransform: 'capitalize',
   },

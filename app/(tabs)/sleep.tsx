@@ -55,7 +55,7 @@ import {
 import { computeDreamAggregates, computeDreamPatterns } from '../../services/premium/dreamAggregates';
 import SkiaSleepGraph from '../../components/ui/SkiaSleepGraph';
 import type { SleepPoint } from '../../components/ui/SkiaSleepGraph';
-import { DreamClusterMap, DEFAULT_DREAM_NODES } from '../../components/ui/DreamClusterMap';
+import { DreamClusterMap } from '../../components/ui/DreamClusterMap';
 import { useSyncDreamData } from '../../hooks/useSyncDreamData';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SkiaMoonDragger from '../../components/ui/SkiaMoonDragger';
@@ -67,6 +67,7 @@ const SCREEN_W = Dimensions.get('window').width;
 
 // ── Cinematic Palette ──
 const PALETTE = {
+  bg: '#0A0A0C',             // Unified OLED black — reduces blue light for late-night logging
   gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
@@ -214,6 +215,7 @@ export default function SleepScreen() {
   useSyncDreamData();
 
   const scrollRef = useRef<ScrollView>(null);
+  const prevHourRef = useRef(7); // tracks last integer hour for haptic snap (matches durationHours default 7.5)
   const [chartId, setChartId] = useState<string | null>(null);
   const [entries, setEntries] = useState<SleepEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -572,8 +574,8 @@ export default function SleepScreen() {
         >
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Rest & Sleep</Text>
-            <Text style={styles.subtitle}>Sleep quality · Dream journal</Text>
+            <Text style={styles.title}>Nightly Archive</Text>
+            <Text style={styles.subtitle}>Circadian rest & dream memory</Text>
           </Animated.View>
 
           {/* ── Log Form (Cinematic Glass) ── */}
@@ -602,7 +604,7 @@ export default function SleepScreen() {
                 )}
               </View>
 
-              <View pointerEvents={(editingEntryId && !isEditingUnlocked) ? 'none' : 'auto'} style={{ opacity: (editingEntryId && !isEditingUnlocked) ? 0.7 : 1 }}>
+              <View pointerEvents={(editingEntryId && !isEditingUnlocked) ? 'none' : 'auto'} style={{ opacity: (editingEntryId && !isEditingUnlocked) ? 0.4 : 1 }}>
               {/* Quality rating */}
               <Text style={styles.fieldLabel}>How rested do you feel?</Text>
               <View style={styles.qualityRow}>
@@ -622,7 +624,15 @@ export default function SleepScreen() {
               <View style={{ alignItems: 'center', marginBottom: 12 }}>
                 <SkiaMoonDragger
                   value={durationHours}
-                  onChange={(h) => { setHasDuration(true); setDurationHours(h); }}
+                  onChange={(h) => {
+                    setHasDuration(true);
+                    const newHour = Math.floor(h);
+                    if (newHour !== prevHourRef.current) {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+                      prevHourRef.current = newHour;
+                    }
+                    setDurationHours(h);
+                  }}
                 />
               </View>
 
@@ -864,20 +874,20 @@ export default function SleepScreen() {
 
               </View>
 
-              {/* Somatic Pulse Monitor / Action Area */}
+              {/* Nightly Archive Seal / Unlock Area */}
               {editingEntryId && !isEditingUnlocked ? (
                 <View style={styles.pulseSection}>
-                  <Text style={[styles.pulseLabel, { color: PALETTE.emerald, marginBottom: 12 }]}>Rest data sealed softly 🌙</Text>
-                  <Pressable 
-                    style={{ backgroundColor: 'transparent', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignSelf: 'center' }}
-                    onPress={() => { Haptics.selectionAsync().catch(()=>{}); setIsEditingUnlocked(true); }}
+                  <Text style={[styles.pulseLabel, { color: PALETTE.emerald, marginBottom: 12 }]}>Nightly Archive sealed 🌙</Text>
+                  <Pressable
+                    style={styles.unlockBtn}
+                    onPress={() => { Haptics.selectionAsync().catch(() => {}); setIsEditingUnlocked(true); }}
                   >
-                    <Text style={{ color: PALETTE.textMain, fontSize: 14, fontWeight: '600' }}>Edit Entry</Text>
+                    <Text style={styles.unlockText}>Unlock Archive to Edit</Text>
                   </Pressable>
                 </View>
               ) : (
                 <View style={styles.pulseSection}>
-                  <Text style={styles.pulseLabel}>Your sleep story ends here</Text>
+                  <Text style={styles.pulseLabel}>Hold to Seal Nightly Log</Text>
                   <SkiaPulseMonitor onSyncComplete={handleSave} />
                 </View>
               )}
@@ -1001,7 +1011,7 @@ export default function SleepScreen() {
                   <Ionicons name="planet-outline" size={14} color={PALETTE.silverBlue} />
                   <Text style={styles.obsidianCardEyebrow}>Recurring Themes</Text>
                 </View>
-                <DreamClusterMap nodes={DEFAULT_DREAM_NODES} height={280} />
+                <DreamClusterMap height={280} />
               </LinearGradient>
             </Animated.View>
           )}
@@ -1105,7 +1115,7 @@ export default function SleepScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: PALETTE.bg },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
@@ -1138,7 +1148,7 @@ const styles = StyleSheet.create({
   stepperRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, overflow: 'hidden', marginBottom: 6 },
   stepperBtn: { paddingHorizontal: 24, paddingVertical: 16, justifyContent: 'center', alignItems: 'center' },
   stepperValue: { flex: 1, alignItems: 'center', paddingVertical: 16 },
-  stepperValueText: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  stepperValueText: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontVariant: ['tabular-nums'] },
   stepperPlaceholder: { color: theme.textMuted, fontWeight: '400', fontSize: 24 },
   stepperHint: { fontSize: 12, color: theme.textMuted, textAlign: 'center', fontStyle: 'italic', marginBottom: 8 },
 
@@ -1259,7 +1269,7 @@ const styles = StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 10 },
   statCard: { flex: 1, borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight, minHeight: 90, justifyContent: 'center' },
   statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 },
-  statValue: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
+  statValue: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, fontVariant: ['tabular-nums'] },
   statSub: { fontSize: 11, color: theme.textMuted, marginTop: 4, textAlign: 'center', fontStyle: 'italic' },
 
   entryCard: { marginBottom: 16 },
@@ -1300,4 +1310,8 @@ const styles = StyleSheet.create({
   pulseSection: { alignItems: 'center', paddingVertical: 20, gap: 10 },
   pulseLabel: { color: PALETTE.textMain, fontSize: 15, fontWeight: '700', letterSpacing: 0.3, textAlign: 'center' },
   pulseHint: { color: theme.textMuted, fontSize: 12, fontStyle: 'italic', textAlign: 'center' },
+
+  // Archive lock / unlock
+  unlockBtn: { alignSelf: 'center', marginTop: 4, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  unlockText: { color: PALETTE.silverBlue, fontWeight: '700', fontSize: 14 },
 });

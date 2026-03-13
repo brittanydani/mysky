@@ -1,10 +1,9 @@
 /**
  * store/resonanceStore.ts
- * Zustand store for the CinematicResonanceHelix GlobalCanvas scene.
+ * Zustand store for relationship resonance data (helix visualisation).
  *
- * react-native-mmkv is not installed — data lives in-memory for the session.
- * `hydrateFromCache` is a no-op placeholder so callers don't need to change
- * if MMKV is added later.
+ * Data lives in-memory for the session.
+ * `hydrateFromCache` is a no-op — ready for MMKV when added.
  */
 
 import { create } from 'zustand';

@@ -69,3 +69,4 @@ update_*.py
 node_modules
 .expo
 .expo-shared
+dist/

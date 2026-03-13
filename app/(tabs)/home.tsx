@@ -24,7 +24,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';
 
 
@@ -49,13 +51,14 @@ const { width } = Dimensions.get('window');
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#D4B872',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
+  bg: '#0A0A0C',
   textMain: '#FFFFFF',
-  glassBorder: 'rgba(255,255,255,0.06)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
@@ -281,7 +284,7 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* ── Header ── */}
+          {/* ── Hub Header: Balance Greeting + Aura ── */}
           <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
             <View>
               <Text style={styles.greeting}>
@@ -295,6 +298,8 @@ export default function HomeScreen() {
                 })}
               </Text>
             </View>
+            {/* Balance Aura — biometric signature reacting to mood/energy */}
+            <View style={styles.balanceAura} />
           </Animated.View>
 
           {/* ── Streak Row ── */}
@@ -436,14 +441,14 @@ export default function HomeScreen() {
             entering={FadeInDown.delay(1050).duration(600)}
             style={styles.sectionBlock}
           >
-            <Text style={styles.sectionTitle}>Explore</Text>
+            <Text style={styles.sectionTitle}>Explore Your Blueprint</Text>
             <View style={styles.quickLinksRow}>
               <Pressable
                 style={styles.quickLink}
                 onPress={() => router.push('/(tabs)/story' as Href)}
               >
                 <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(197, 180, 147, 0.15)' }]}>
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: `${PALETTE.gold}15` }]}>
                     <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -458,12 +463,12 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/growth' as Href)}
               >
                 <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(110, 191, 139, 0.15)' }]}>
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: `${PALETTE.emerald}15` }]}>
                     <Ionicons name="trending-up-outline" size={22} color={PALETTE.emerald} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
                     <Text style={styles.quickLinkTitle}>Patterns</Text>
-                    <Text style={styles.quickLinkSub}>Explore connections</Text>
+                    <Text style={styles.quickLinkSub}>Analysis & connections</Text>
                   </View>
                 </View>
               </Pressable>
@@ -473,7 +478,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/(tabs)/chart' as Href)}
               >
                 <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
+                  <View style={[styles.quickLinkIconWrap, { backgroundColor: `${PALETTE.silverBlue}15` }]}>
                     <Ionicons name="grid-outline" size={22} color={PALETTE.silverBlue} />
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
@@ -513,7 +518,10 @@ export default function HomeScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* LAYER 4: Global Warp Overlay */}
+      {/* LAYER 4: Luminous Check-In FAB */}
+      <CheckInFAB />
+
+      {/* LAYER 5: Global Warp Overlay */}
       <SkiaWarpTransition ref={warpRef} />
 
       {/* Birth Data Modal */}
@@ -536,10 +544,67 @@ export default function HomeScreen() {
   );
 }
 
+// ── Luminous Check-In FAB ────────────────────────────────────────────────────
+
+function CheckInFAB() {
+  const router = useRouter();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Pressable
+      onPressIn={() => { scale.value = withSpring(0.88, { mass: 0.5, damping: 12 }); }}
+      onPressOut={() => { scale.value = withSpring(1, { mass: 0.5, damping: 12 }); }}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+        router.push('/(tabs)/checkin' as Href);
+      }}
+      style={fabStyles.container}
+      accessibilityLabel="Log check-in"
+      accessibilityRole="button"
+    >
+      <Animated.View style={[fabStyles.glowWrapper, animatedStyle]}>
+        <BlurView intensity={60} tint="dark" style={fabStyles.glassCircle}>
+          <Ionicons name="add" size={28} color="#D4B872" />
+        </BlurView>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+const fabStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 120,
+    right: 24,
+    zIndex: 100,
+  },
+  glowWrapper: {
+    shadowColor: '#D4B872',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 12,
+  },
+  glassCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 244, 214, 0.18)',
+    overflow: 'hidden',
+  },
+});
+
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: PALETTE.bg },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: 'rgba(255, 255, 255, 0.9)',
@@ -554,7 +619,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
+  },
+  balanceAura: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(212, 184, 114, 0.2)',
+    borderWidth: 1,
+    borderColor: PALETTE.gold,
   },
   greeting: {
     color: '#FFFFFF',
@@ -697,6 +770,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontVariant: ['tabular-nums'] as const,
   },
   streakLabel: {
     color: 'rgba(255, 255, 255, 0.85)',
@@ -772,6 +846,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontVariant: ['tabular-nums'] as const,
   },
   metricLabel: {
     color: 'rgba(255, 255, 255, 0.85)',

@@ -37,9 +37,10 @@ import {
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
+import { GoldIcon } from '../../../components/ui/GoldIcon';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -188,6 +189,7 @@ function getDefaultProfiles(): AllProfiles {
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function VisualCalibration() {
   const router = useRouter();
+  const navigation = useNavigation();
 
   // Active category index
   const [activeCatIdx, setActiveCatIdx] = useState(0);
@@ -202,6 +204,7 @@ export default function VisualCalibration() {
   // Animated shared values driving the Skia orb position
   const moodHue = useSharedValue(activeProfile.hue);
   const sensitivity = useSharedValue(activeProfile.sensitivity);
+  const prevHueSegment = useSharedValue(-1);
 
   // Track whether the user has changed any profile since last save
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -288,6 +291,10 @@ export default function VisualCalibration() {
     Haptics.selectionAsync().catch(() => {});
   }, []);
 
+  const triggerThresholdHaptic = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  }, []);
+
   // Helper — update profile state on gesture end (no auto-persist)
   const finalizeGesture = useCallback(
     (hue: number, sens: number) => {
@@ -324,6 +331,23 @@ export default function VisualCalibration() {
     };
   }, []);
 
+  // ── Navigation guard — warn before leaving with unsaved changes ──
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+      e.preventDefault();
+      Alert.alert(
+        'Unsaved Changes',
+        'You have unsaved color preferences. Discard and leave?',
+        [
+          { text: 'Stay', style: 'cancel' },
+          { text: 'Discard', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) },
+        ],
+      );
+    });
+    return unsubscribe;
+  }, [hasUnsavedChanges, navigation]);
+
   // ── Gesture — callbacks run as worklets, JS calls wrapped in runOnJS ──
   const gesture = useMemo(
     () =>
@@ -344,13 +368,17 @@ export default function VisualCalibration() {
           moodHue.value = hue;
 
           runOnJS(updateProfile)(hue, clampedDist);
-          runOnJS(triggerHaptic)();
+          const segment = Math.floor(hue * 10);
+          if (segment !== prevHueSegment.value) {
+            prevHueSegment.value = segment;
+            runOnJS(triggerThresholdHaptic)();
+          }
         })
         .onEnd(() => {
           'worklet';
           runOnJS(finalizeGesture)(moodHue.value, sensitivity.value);
         }),
-    [updateProfile, triggerHaptic, finalizeGesture],
+    [updateProfile, triggerThresholdHaptic, finalizeGesture],
   );
 
   // ── Derived positions for the calibration orb (worklet thread) ──
@@ -440,8 +468,21 @@ export default function VisualCalibration() {
           {/* ── Interactive calibration canvas ── */}
           <GestureDetector gesture={gesture}>
             <View style={styles.calibrationZone}>
-              <Canvas style={{ width: CALIB_SIZE, height: CALIB_SIZE }} mode="continuous">
+              <Canvas style={{ width: CALIB_SIZE, height: CALIB_SIZE }}>
                 <Group>
+                  {/* 0. Ambient spectrum glow */}
+                  <Circle
+                    cx={CENTER}
+                    cy={CENTER}
+                    r={RING_RADIUS}
+                    style="stroke"
+                    strokeWidth={32}
+                    opacity={0.18}
+                  >
+                    <SweepGradient c={vec(CENTER, CENTER)} colors={SPECTRUM_COLORS} />
+                    <BlurMask blur={22} style="normal" />
+                  </Circle>
+
                   {/* 1. Spectrum Ring */}
                   <Circle
                     cx={CENTER}
@@ -499,7 +540,7 @@ export default function VisualCalibration() {
             <Ionicons
               name="checkmark-circle"
               size={20}
-              color={hasUnsavedChanges ? '#020817' : 'rgba(7,9,15,0.4)'}
+              color={hasUnsavedChanges ? '#0A0A0C' : 'rgba(10,10,12,0.4)'}
             />
             <Text
               style={[
@@ -534,7 +575,7 @@ export default function VisualCalibration() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020817',
+    backgroundColor: '#0A0A0C',
     padding: 24,
   },
   safe: {
@@ -689,6 +730,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     minWidth: 60,
     textAlign: 'right',
+    fontVariant: ['tabular-nums'],
   },
   summaryValueActive: {
     color: 'rgba(255,255,255,0.7)',
@@ -702,13 +744,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 14,
     borderRadius: 16,
-    backgroundcolor: '#FFFFFF',
+    backgroundColor: '#FFFFFF',
   },
   saveButtonDisabled: {
     backgroundColor: 'transparent',
   },
   saveButtonText: {
-    color: '#020817',
+    color: '#0A0A0C',
     fontSize: 16,
     fontWeight: '700',
   },

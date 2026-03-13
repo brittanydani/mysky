@@ -1,5 +1,6 @@
 // File: app/(tabs)/energy.tsx
-// MySky — Energy Screen (Chakra wheel, domains, guidance)
+// MySky — Energy Screen: Somatic Scan + Neural Particle design
+// Visual anchor → energy weather → chakra wheel → focus → domains → guidance → mood → neural patterns
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -9,16 +10,13 @@ import {
   ScrollView,
   Pressable,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import Animated, {
   FadeInDown,
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing,
+  FadeIn,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -29,6 +27,7 @@ import { theme } from '../../constants/theme';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { applyEnergyLabels } from '../../constants/storyLabels';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import { SomaticEnergyOrb } from '../../components/ui/SomaticEnergyOrb';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { usePremium } from '../../context/PremiumContext';
@@ -50,10 +49,10 @@ import { useCorrelationStore } from '../../store/correlationStore';
 const { width: SCREEN_W } = Dimensions.get('window');
 const WHEEL_SIZE = SCREEN_W * 0.75;
 
-const INTENSITY_BAR: Record<EnergyIntensity, { fill: number; color: string; label: string }> = {
-  Low:      { fill: 0.3,  color: theme.calm,  label: 'Low' },
-  Moderate: { fill: 0.6,  color: theme.okay,  label: 'Steady' },
-  High:     { fill: 0.95, color: theme.stormy, label: 'Elevated' },
+const INTENSITY_META: Record<EnergyIntensity, { label: string; color: string }> = {
+  Low:      { label: 'Low Intensity',      color: theme.calm },
+  Moderate: { label: 'Steady Intensity',   color: theme.okay },
+  High:     { label: 'Elevated Intensity', color: theme.stormy },
 };
 
 const CHAKRA_STATE_COLORS: Record<ChakraState, string> = {
@@ -68,14 +67,6 @@ function safeHaptic() {
   Haptics.selectionAsync().catch(() => {});
 }
 
-function formatToday(): string {
-  return new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
 /* ════════════════════════════════════════════════
    MAIN SCREEN
    ════════════════════════════════════════════════ */
@@ -83,6 +74,7 @@ export default function EnergyScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
   const syncCorrelations = useCorrelationStore((s) => s.syncCorrelations);
+  const hasCorrelationData = useCorrelationStore((s) => s.correlations.length > 0);
 
   const [loading, setLoading] = useState(true);
   const [hasChart, setHasChart] = useState(false);
@@ -97,20 +89,6 @@ export default function EnergyScreen() {
       if (wheelTooltipTimer.current) clearTimeout(wheelTooltipTimer.current);
     };
   }, []);
-
-  /* pulse animation for intensity bar */
-  const pulse = useSharedValue(0.7);
-  useEffect(() => {
-    pulse.value = withRepeat(
-      withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- pulse is a Reanimated SharedValue (stable ref), only needs to run once
-  }, []);
-  const pulseStyle = useAnimatedStyle(() => ({
-    opacity: pulse.value,
-  }));
 
   /* load chart + generate snapshot */
   useFocusEffect(
@@ -188,18 +166,17 @@ export default function EnergyScreen() {
       <View style={styles.container}>
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Energy</Text>
-            <Text style={styles.subtitle}>Your personal energy weather {'\u2014'} built from your profile.</Text>
-          </Animated.View>
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
             showsVerticalScrollIndicator={false}
           >
+            <Animated.View entering={FadeIn.duration(1000)} style={styles.somaticHeader}>
+              <SomaticEnergyOrb intensity="Low" size={180} />
+              <Text style={styles.somaticPrompt}>Your energy mirror awaits</Text>
+            </Animated.View>
             <Animated.View entering={FadeInDown.delay(200).duration(600)}>
               <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
-                <Ionicons name="sparkles" size={32} color={theme.primary} style={{ marginBottom: 12 }} />
                 <Text style={styles.heroToneText}>Energy needs your birth info</Text>
                 <Text style={[styles.body, { marginTop: 8 }]}>
                   Add your birth info to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, and daily guidance.
@@ -226,7 +203,7 @@ export default function EnergyScreen() {
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.loadingContainer}>
-            <Ionicons name="sparkles" size={28} color={theme.primary} />
+            <SomaticEnergyOrb intensity="Low" size={140} />
             <Text style={[styles.body, { marginTop: 12 }]}>Reading your energy{'\u2026'}</Text>
           </View>
         </SafeAreaView>
@@ -234,74 +211,58 @@ export default function EnergyScreen() {
     );
   }
 
-  /* ── Main render ── */
-  const barInfo = INTENSITY_BAR[snapshot.intensity];
+  /* ── Derived values ── */
+  const intensityMeta = INTENSITY_META[snapshot.intensity];
+  const cloudTurbulence = snapshot.intensity === 'Low' ? 2 : snapshot.intensity === 'Moderate' ? 5 : 9;
 
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Animated.View entering={FadeInDown.delay(60).duration(600)} style={styles.header}>
-          <Text style={styles.title}>Energy</Text>
-          <Text style={styles.subtitle}>
-            {userName ? `${userName}'s energy` : 'Your energy'} {'\u2022'} {formatToday()}
-          </Text>
-        </Animated.View>
-
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
+          contentContainerStyle={{ paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
         >
-          {/* ═══ S1 — ENERGY SNAPSHOT ═══ */}
-          <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+          {/* ═══ HUB 1 — SOMATIC ANCHOR ═══ */}
+          <Animated.View entering={FadeIn.duration(1000)} style={styles.somaticHeader}>
+            <SomaticEnergyOrb intensity={snapshot.intensity} />
+            <Text style={styles.somaticPrompt}>
+              {userName ? `${userName}, focus inward` : 'Focus your awareness internally'}...
+            </Text>
+          </Animated.View>
+
+          {/* ═══ HUB 2 — ENERGY WEATHER ═══ */}
+          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.content}>
             <LinearGradient
-              colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
-              style={[styles.card, { paddingHorizontal: 18, paddingVertical: 14 }]}
+              colors={['rgba(212,184,114,0.10)', 'rgba(10,10,12,0.80)']}
+              style={styles.snapshotCard}
             >
-              <View style={styles.toneBadge}>
-                <Text style={styles.toneLabel}>{snapshot.tone}</Text>
-                <View style={styles.toneSeparator} />
-                <Text style={styles.intensityLabel}>{barInfo.label}</Text>
-              </View>
-              <View style={styles.intensityBarOuter}>
-                <Animated.View
-                  style={[
-                    styles.intensityBarGlow,
-                    { width: `${barInfo.fill * 100}%`, backgroundColor: barInfo.color },
-                    pulseStyle,
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.intensityBarInner,
-                    { width: `${barInfo.fill * 100}%`, backgroundColor: barInfo.color },
-                  ]}
-                />
-              </View>
-              <Text style={[styles.body, { marginTop: 6 }]}>{snapshot.quickMeaning}</Text>
+              <Text style={styles.toneLabel}>{snapshot.tone}</Text>
+              <Text style={[styles.intensityBadge, { color: intensityMeta.color }]}>
+                {intensityMeta.label}
+              </Text>
+              <Text style={styles.meaningText}>{snapshot.quickMeaning}</Text>
             </LinearGradient>
           </Animated.View>
 
-          {/* ═══ S2 — ENERGY WHEEL ═══ */}
-          <Animated.View entering={FadeInDown.delay(160).duration(600)}>
+          {/* ═══ HUB 3 — CHAKRA WHEEL ═══ */}
+          <Animated.View entering={FadeInDown.delay(300).duration(600)}>
             <Pressable
               style={styles.wheelContainer}
               onPress={() => {
                 safeHaptic();
-                if (snapshot) {
-                  const dc = snapshot.dominantChakra;
-                  const stateHint: Record<string, string> = {
-                    'Grounding Needed': 'is overactive — grounding helps',
-                    'Sensitive': 'is heightened — move gently',
-                    'Flowing': 'is open and moving freely',
-                    'Quiet': 'is resting quietly',
-                  };
-                  const tip = `${dc.name} ${stateHint[dc.state] || dc.state}`;
-                  setWheelTooltip(tip);
-                  if (wheelTooltipTimer.current) clearTimeout(wheelTooltipTimer.current);
-                  wheelTooltipTimer.current = setTimeout(() => setWheelTooltip(null), 2800);
-                }
+                const dc = snapshot.dominantChakra;
+                const stateHint: Record<string, string> = {
+                  'Grounding Needed': 'is overactive \u2014 grounding helps',
+                  'Sensitive': 'is heightened \u2014 move gently',
+                  'Flowing': 'is open and moving freely',
+                  'Quiet': 'is resting quietly',
+                };
+                const tip = `${dc.name} ${stateHint[dc.state] || dc.state}`;
+                setWheelTooltip(tip);
+                if (wheelTooltipTimer.current) clearTimeout(wheelTooltipTimer.current);
+                wheelTooltipTimer.current = setTimeout(() => setWheelTooltip(null), 2800);
               }}
               accessibilityRole="button"
               accessibilityLabel="Energy wheel, tap for details"
@@ -313,187 +274,183 @@ export default function EnergyScreen() {
                 showLabels={false}
               />
               {wheelTooltip && (
-                <Animated.View
-                  entering={FadeInDown.duration(300)}
-                  style={styles.wheelTooltip}
-                >
+                <Animated.View entering={FadeInDown.duration(300)} style={styles.wheelTooltip}>
                   <Text style={styles.wheelTooltipText}>{wheelTooltip}</Text>
                 </Animated.View>
               )}
             </Pressable>
           </Animated.View>
 
-          {/* ═══ S3 — CHAKRA FOCUS TODAY ═══ */}
-          <SectionHeader icon="body-outline" title="Today's Focus" delay={220} />
-          <Animated.View entering={FadeInDown.delay(240).duration(600)}>
-            <ChakraCard chakra={snapshot.dominantChakra} highlight />
-            {isPremium ? (
-              <>
-                {snapshot.chakras
-                  .filter(c => c.name !== snapshot.dominantChakra.name && (c.state === 'Sensitive' || c.state === 'Grounding Needed'))
-                  .map(c => <ChakraCard key={c.name} chakra={c} role="secondary" />)}
-                {snapshot.chakras
-                  .filter(c => c.name !== snapshot.dominantChakra.name && c.state !== 'Sensitive' && c.state !== 'Grounding Needed')
-                  .length > 0 && (
-                  <View style={styles.bgChakraSection}>
-                    <Text style={styles.bgChakraLabel}>In the background</Text>
-                    {snapshot.chakras
-                      .filter(c => c.name !== snapshot.dominantChakra.name && c.state !== 'Sensitive' && c.state !== 'Grounding Needed')
-                      .map(c => <ChakraCard key={c.name} chakra={c} role="background" />)}
+          {/* ═══ HUB 4 — CHAKRA FOCUS TODAY ═══ */}
+          <View style={styles.content}>
+            <SectionHeader icon="body-outline" title="Today's Focus" delay={360} />
+            <Animated.View entering={FadeInDown.delay(380).duration(600)}>
+              <ChakraCard chakra={snapshot.dominantChakra} highlight />
+              {isPremium ? (
+                <>
+                  {snapshot.chakras
+                    .filter(c => c.name !== snapshot.dominantChakra.name && (c.state === 'Sensitive' || c.state === 'Grounding Needed'))
+                    .map(c => <ChakraCard key={c.name} chakra={c} role="secondary" />)}
+                  {snapshot.chakras
+                    .filter(c => c.name !== snapshot.dominantChakra.name && c.state !== 'Sensitive' && c.state !== 'Grounding Needed')
+                    .length > 0 && (
+                    <View style={styles.bgChakraSection}>
+                      <Text style={styles.bgChakraLabel}>In the background</Text>
+                      {snapshot.chakras
+                        .filter(c => c.name !== snapshot.dominantChakra.name && c.state !== 'Sensitive' && c.state !== 'Grounding Needed')
+                        .map(c => <ChakraCard key={c.name} chakra={c} role="background" />)}
+                    </View>
+                  )}
+                </>
+              ) : (
+                <LinearGradient colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(232,214,174,0.18)' }]}>
+                  <View style={styles.lockBanner}>
+                    <Ionicons name="sparkles" size={14} color={theme.primary} />
+                    <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
                   </View>
-                )}
-              </>
-            ) : (
-              <LinearGradient colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(232,214,174,0.18)' }]}>
-                <View style={styles.lockBanner}>
-                  <Ionicons name="sparkles" size={14} color={theme.primary} />
-                  <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
-                </View>
-                <Text style={{ fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 6 }}>
-                  Your birth data activates specific energy centers {'\u2014'} see which ones need attention today
-                </Text>
-              </LinearGradient>
-            )}
-          </Animated.View>
+                  <Text style={{ fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 6 }}>
+                    Your birth data activates specific energy centers {'\u2014'} see which ones need attention today
+                  </Text>
+                </LinearGradient>
+              )}
+            </Animated.View>
 
-          {/* ═══ S4 — ENERGY BY DOMAIN ═══ */}
-          <SectionHeader icon="grid-outline" title="Energy by Domain" delay={320} />
-          <Animated.View entering={FadeInDown.delay(340).duration(600)}>
-            {snapshot.domains.map((d, idx) => {
-              const isFree = snapshot.freeDomainIndices.includes(idx);
-              const isLocked = !isPremium && !isFree;
-              const isExpanded = expandedDomain === idx;
-              return (
-                <Pressable
-                  key={d.name}
-                  onPress={() => {
-                    if (isLocked) {
+            {/* ═══ HUB 5 — MOOD CLIMATE ═══ */}
+            <SectionHeader icon="cloudy-outline" title="Mood Climate" delay={420} />
+            <Animated.View entering={FadeInDown.delay(440).duration(600)} style={{ marginBottom: 12 }}>
+              <MoodClimateCloud turbulence={cloudTurbulence} height={220} />
+            </Animated.View>
+
+            {/* ═══ HUB 6 — NEURAL PATTERNS (Premium, only with real data) ═══ */}
+            {isPremium && hasCorrelationData && (
+              <>
+                <SectionHeader icon="analytics-outline" title="Neural Patterns" delay={460} />
+                <Animated.View entering={FadeInDown.delay(480).duration(600)} style={{ marginBottom: 16 }}>
+                  <CorrelationGyroscope height={280} />
+                </Animated.View>
+              </>
+            )}
+
+            {/* ═══ HUB 7 — ENERGY BY DOMAIN (Progressive Disclosure) ═══ */}
+            <SectionHeader icon="grid-outline" title="Energy Domains" delay={500} />
+            <Animated.View entering={FadeInDown.delay(520).duration(600)}>
+              {snapshot.domains.map((d, idx) => {
+                const isFree = snapshot.freeDomainIndices.includes(idx);
+                const isLocked = !isPremium && !isFree;
+                const isExpanded = expandedDomain === idx;
+                return (
+                  <Pressable
+                    key={d.name}
+                    onPress={() => {
+                      if (isLocked) {
+                        safeHaptic();
+                        router.push('/(tabs)/premium' as Href);
+                        return;
+                      }
                       safeHaptic();
-                      router.push('/(tabs)/premium' as Href);
-                      return;
-                    }
-                    safeHaptic();
-                    setExpandedDomain(isExpanded ? null : idx);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${d.name} energy domain${isLocked ? ', locked' : ''}`}
-                  accessibilityState={{ expanded: isExpanded }}
-                >
-                  <LinearGradient
-                    colors={isLocked
-                      ? ['rgba(10, 18, 36,0.5)', 'rgba(13,20,33,0.5)']
-                      : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']
-                    }
-                    style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
+                      setExpandedDomain(isExpanded ? null : idx);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${d.name} energy domain${isLocked ? ', locked' : ''}`}
+                    accessibilityState={{ expanded: isExpanded }}
                   >
-                    <View style={styles.domainRow}>
-                      <View style={styles.domainIconWrap}>
+                    <LinearGradient
+                      colors={isLocked
+                        ? ['rgba(10,18,36,0.5)', 'rgba(13,20,33,0.5)']
+                        : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']
+                      }
+                      style={[styles.card, { padding: 16, marginBottom: 8 }]}
+                    >
+                      <View style={styles.domainRow}>
+                        <View style={styles.domainIconWrap}>
+                          <Ionicons
+                            name={(d.icon as keyof typeof Ionicons.glyphMap) || 'ellipse'}
+                            size={20}
+                            color={isLocked ? theme.textMuted : theme.primary}
+                          />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.domainName, isLocked && styles.textLocked]}>{d.name}</Text>
+                          <Text style={[styles.domainState, isLocked && styles.textLocked]}>
+                            {isLocked ? '\u2022\u2022\u2022\u2022\u2022\u2022' : d.state}
+                          </Text>
+                        </View>
                         <Ionicons
-                          name={(d.icon as keyof typeof Ionicons.glyphMap) || 'ellipse'}
-                          size={20}
+                          name={isLocked ? 'lock-closed' : isExpanded ? 'chevron-up' : 'chevron-down'}
+                          size={16}
                           color={isLocked ? theme.textMuted : theme.primary}
                         />
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.domainName, isLocked && styles.textLocked]}>{d.name}</Text>
-                        <Text style={[styles.domainState, isLocked && styles.textLocked]}>
-                          {isLocked ? '\u2022\u2022\u2022\u2022\u2022\u2022' : d.state}
-                        </Text>
-                      </View>
-                      <Ionicons
-                        name={isLocked ? 'lock-closed' : isExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={16}
-                        color={isLocked ? theme.textMuted : theme.primary}
-                      />
-                    </View>
-                    {isExpanded && !isLocked && (
-                      <View style={styles.domainExpanded}>
-                        <Text style={styles.body}>{d.feeling}</Text>
-                        <View style={styles.domainWhyRow}>
-                          <Ionicons name="information-circle-outline" size={14} color={theme.primary} />
-                          <Text style={styles.domainWhyText}>{applyEnergyLabels(d.why)}</Text>
-                        </View>
-                        <View style={styles.domainSuggestionRow}>
-                          <Ionicons name="bulb-outline" size={14} color={theme.energy} />
-                          <Text style={styles.domainSuggestionText}>{d.suggestion}</Text>
-                        </View>
-                      </View>
-                    )}
-                  </LinearGradient>
-                </Pressable>
-              );
-            })}
-          </Animated.View>
-
-          {/* ═══ S5 — ENERGY GUIDANCE ═══ */}
-          <SectionHeader icon="compass-outline" title="Energy Guidance" delay={400} />
-          <Animated.View entering={FadeInDown.delay(420).duration(600)}>
-            <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
-              {isPremium ? (
-                <>
-                  <GuidanceBlock icon="arrow-up-outline" label="Lean into" text={snapshot.guidance.leanInto} context={snapshot.guidance.leanIntoContext} color={theme.energy} />
-                  <View style={styles.divider} />
-                  <GuidanceBlock icon="hand-left-outline" label="Move gently around" text={snapshot.guidance.moveGentlyAround} context={snapshot.guidance.moveGentlyContext} color={theme.heavy} />
-                  <View style={styles.divider} />
-                  <GuidanceBlock icon="flash-outline" label="Best use of energy" text={snapshot.guidance.bestUseOfEnergy} context={snapshot.guidance.bestUseContext} color={theme.primary} />
-                  <View style={styles.divider} />
-                  <View style={styles.guidanceRitualBlock}>
-                    <View style={styles.guidanceHeader}>
-                      <Ionicons name="sparkles-outline" size={16} color={theme.calm} />
-                      <Text style={[styles.guidanceLabel, { color: theme.calm }]}>Today{'\u2019'}s Micro-Ritual</Text>
-                    </View>
-                    <Text style={styles.guidanceRitualText}>{snapshot.guidance.ritual}</Text>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.guidanceFree}>{snapshot.freeGuidanceLine}</Text>
-                  <Pressable
-                    onPress={() => router.push('/(tabs)/premium' as Href)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Unlock full energy guidance"
-                  >
-                    <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'transparent', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
-                      <Ionicons name="sparkles" size={14} color={theme.primary} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.lockText, { fontWeight: '600' }]}>Full guidance includes:</Text>
-                        <Text style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
-                          Lean into · Move gently around · Best use of energy · Today's micro-ritual
-                        </Text>
-                      </View>
-                      <Ionicons name="arrow-forward" size={14} color={theme.primary} />
-                    </View>
+                      {isExpanded && !isLocked && (
+                        <Animated.View entering={FadeInDown.duration(300)} style={styles.domainExpanded}>
+                          <Text style={styles.body}>{d.feeling}</Text>
+                          <View style={styles.domainWhyRow}>
+                            <Ionicons name="information-circle-outline" size={14} color={theme.primary} />
+                            <Text style={styles.domainWhyText}>{applyEnergyLabels(d.why)}</Text>
+                          </View>
+                          <View style={styles.domainSuggestionRow}>
+                            <Ionicons name="bulb-outline" size={14} color={theme.energy} />
+                            <Text style={styles.domainSuggestionText}>{d.suggestion}</Text>
+                          </View>
+                        </Animated.View>
+                      )}
+                    </LinearGradient>
                   </Pressable>
-                </>
-              )}
-            </LinearGradient>
-          </Animated.View>
+                );
+              })}
+            </Animated.View>
 
-          {/* ── Mood Climate Cloud ── */}
-          <SectionHeader icon="cloudy-outline" title="Mood Climate" delay={450} />
-          <Animated.View entering={FadeInDown.delay(460).duration(600)} style={{ marginBottom: 12 }}>
-            <MoodClimateCloud
-              turbulence={snapshot ? (snapshot.intensity === 'Low' ? 2 : snapshot.intensity === 'Moderate' ? 5 : 8) : 3}
-              height={220}
-            />
-          </Animated.View>
+            {/* ═══ HUB 8 — ENERGY GUIDANCE ═══ */}
+            <SectionHeader icon="compass-outline" title="Energy Guidance" delay={560} />
+            <Animated.View entering={FadeInDown.delay(580).duration(600)}>
+              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
+                {isPremium ? (
+                  <>
+                    <GuidanceBlock icon="arrow-up-outline" label="Lean into" text={snapshot.guidance.leanInto} context={snapshot.guidance.leanIntoContext} color={theme.energy} />
+                    <View style={styles.divider} />
+                    <GuidanceBlock icon="hand-left-outline" label="Move gently around" text={snapshot.guidance.moveGentlyAround} context={snapshot.guidance.moveGentlyContext} color={theme.heavy} />
+                    <View style={styles.divider} />
+                    <GuidanceBlock icon="flash-outline" label="Best use of energy" text={snapshot.guidance.bestUseOfEnergy} context={snapshot.guidance.bestUseContext} color={theme.primary} />
+                    <View style={styles.divider} />
+                    <View style={styles.guidanceRitualBlock}>
+                      <View style={styles.guidanceHeader}>
+                        <Ionicons name="sparkles-outline" size={16} color={theme.calm} />
+                        <Text style={[styles.guidanceLabel, { color: theme.calm }]}>Today{'\u2019'}s Micro-Ritual</Text>
+                      </View>
+                      <Text style={styles.guidanceRitualText}>{snapshot.guidance.ritual}</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.guidanceFree}>{snapshot.freeGuidanceLine}</Text>
+                    <Pressable
+                      onPress={() => router.push('/(tabs)/premium' as Href)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Unlock full energy guidance"
+                    >
+                      <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'transparent', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
+                        <Ionicons name="sparkles" size={14} color={theme.primary} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.lockText, { fontWeight: '600' }]}>Full guidance includes:</Text>
+                          <Text style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
+                            Lean into · Move gently around · Best use of energy · Today's micro-ritual
+                          </Text>
+                        </View>
+                        <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                      </View>
+                    </Pressable>
+                  </>
+                )}
+              </LinearGradient>
+            </Animated.View>
 
-          {/* ── Correlation Gyroscope ── */}
-          {isPremium && (
-            <>
-              <SectionHeader icon="analytics-outline" title="Neural Patterns" delay={490} />
-              <Animated.View entering={FadeInDown.delay(500).duration(600)} style={{ marginBottom: 16 }}>
-                <CorrelationGyroscope height={280} />
-              </Animated.View>
-            </>
-          )}
-
-          {/* ── Footer ── */}
-          <Animated.View entering={FadeInDown.delay(480).duration(600)} style={styles.footer}>
-            <Text style={styles.footerText}>
-              Energy is not a forecast {'\u2014'} it is a mirror. Your personal framework creates conditions; you decide what to do with them.
-            </Text>
-          </Animated.View>
+            {/* ── Footer ── */}
+            <Animated.View entering={FadeInDown.delay(620).duration(600)} style={styles.footer}>
+              <Text style={styles.footerText}>
+                Energy is not a forecast {'\u2014'} it is a mirror. Your personal framework creates conditions; you decide what to do with them.
+              </Text>
+            </Animated.View>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -504,13 +461,17 @@ export default function EnergyScreen() {
    SUB-COMPONENTS
    ════════════════════════════════════════════════ */
 
-function SectionHeader({ icon, title, delay }: { icon: keyof typeof Ionicons.glyphMap; title: string; delay: number }) {
-  return (
-    <Animated.View entering={FadeInDown.delay(delay).duration(600)} style={styles.sectionTitleRow}>
+function SectionHeader({ icon, title, delay }: { icon: keyof typeof Ionicons.glyphMap; title: string; delay?: number }) {
+  const content = (
+    <View style={styles.sectionTitleRow}>
       <Ionicons name={icon} size={18} color={theme.primary} />
       <Text style={styles.sectionTitle}>{title}</Text>
-    </Animated.View>
+    </View>
   );
+  if (delay != null) {
+    return <Animated.View entering={FadeInDown.delay(delay).duration(600)}>{content}</Animated.View>;
+  }
+  return content;
 }
 
 type ChakraRole = 'primary' | 'secondary' | 'background';
@@ -658,22 +619,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.sm,
-  },
-  backBtn: {
-    flexDirection: 'row',
+
+  /* ── Somatic anchor ── */
+  somaticHeader: {
+    height: 300,
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 6,
+    justifyContent: 'center',
   },
-  backBtnText: {
-    color: theme.primary,
-    fontSize: 14,
-    fontWeight: '600',
+  somaticPrompt: {
+    color: 'rgba(255,255,255,0.40)',
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: -30,
+    textAlign: 'center',
   },
+
   scroll: {
     flex: 1,
   },
@@ -690,19 +650,41 @@ const styles = StyleSheet.create({
   cardPad: {
     padding: theme.spacing.lg,
   },
-  title: {
-    fontSize: 32,
+
+  /* ── Snapshot card ── */
+  snapshotCard: {
+    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: theme.spacing.md,
+  },
+  toneLabel: {
+    color: theme.textPrimary,
+    fontSize: 24,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  intensityBadge: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginTop: 4,
+  },
+  meaningText: {
+    color: 'rgba(255,255,255,0.60)',
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 12,
+  },
+  heroToneText: {
+    fontSize: 20,
     fontWeight: '700',
     color: theme.textPrimary,
     fontFamily: 'serif',
-    letterSpacing: 0.5,
   },
-  subtitle: {
-    fontSize: 14,
-    color: theme.primary,
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
+
   body: {
     color: theme.textSecondary,
     fontSize: 14,
@@ -716,56 +698,6 @@ const styles = StyleSheet.create({
   textLocked: {
     color: theme.textMuted,
   },
-  toneBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
-  },
-  toneSeparator: {
-    width: 1,
-    height: 12,
-    backgroundColor: 'transparent',
-    marginHorizontal: 2,
-  },
-  toneLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    letterSpacing: 0.3,
-  },
-  intensityLabel: {
-    fontSize: 13,
-    color: theme.textSecondary ?? 'rgba(255,255,255,0.72)',
-    fontWeight: '500',
-    letterSpacing: 0.3,
-  },
-  heroToneText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.textPrimary,
-    fontFamily: 'serif',
-  },
-  intensityBarOuter: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'transparent',
-    marginBottom: 12,
-    overflow: 'hidden',
-    position: 'relative' as const,
-  },
-  intensityBarGlow: {
-    position: 'absolute' as const,
-    top: -2,
-    left: 0,
-    height: 8,
-    borderRadius: 4,
-    opacity: 0.25,
-  },
-  intensityBarInner: {
-    height: 4,
-    borderRadius: 2,
-  },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -778,23 +710,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: theme.textPrimary,
     fontFamily: 'serif',
-  },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'rgba(232, 214, 174,0.22)',
-    marginTop: 10,
-  },
-  primaryBtnText: {
-    color: theme.primary,
-    fontSize: 14,
-    fontWeight: '800',
   },
   lockBanner: {
     flexDirection: 'row',

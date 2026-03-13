@@ -8,10 +8,9 @@
  *
  * Data flow:
  *   syncRhythm() → supabase.rpc('get_weekly_rhythm') → grid state
- *   CircadianTerrain reads grid via useCircadianStore selector.
+ *   CircadianRhythmTerrain reads grid via useCircadianStore selector.
  *
- * Note: react-native-mmkv is not installed — data lives in-memory for the session.
- * Replace the in-memory default with MMKV reads/writes once the package is added.
+ * Note: data lives in-memory for the session. Ready for MMKV when added.
  */
 
 import { create } from 'zustand';

@@ -28,6 +28,13 @@ import { analyzeJournalContent } from '../../services/journal/nlp';
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
 
+const PALETTE = {
+  gold: '#D4B872',
+  amethyst: '#9D76C1',
+  bg: '#0A0A0C',
+  glassBorder: 'rgba(255,255,255,0.08)',
+};
+
 // ── Cinematic Palette ──
 
 // ─── Memoized entry card ───────────────────────────────────────────────────────
@@ -212,7 +219,7 @@ export default function JournalScreen() {
 
   const handleAddEntry = async () => {
     try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
     router.push('/sanctuary' as Href);
   };
@@ -527,7 +534,7 @@ export default function JournalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: PALETTE.bg },
   safeArea: { flex: 1 },
 
   header: { paddingVertical: 16, marginBottom: 8 },
@@ -578,7 +585,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: theme.cardBorder,
+    borderColor: PALETTE.glassBorder,
     borderTopColor: theme.glass.highlight,
     marginBottom: 12,
   },
@@ -595,7 +602,7 @@ const styles = StyleSheet.create({
   entriesSection: { marginBottom: 16 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sectionTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) },
-  entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic' },
+  entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic', fontVariant: ['tabular-nums'] },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
   loadingText: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic' },

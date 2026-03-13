@@ -44,8 +44,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
       return (
         <View style={styles.errorContainer}>
           <GoldIcon name="warning-outline" size={56}  style={{ marginBottom: 20 }}  />
-          <Text style={styles.errorTitle}>The stars misaligned</Text>
-          <Text style={styles.errorBody}>Something unexpected happened. Please close the app and reopen it, or try reloading below.</Text>
+          <Text style={styles.errorTitle}>Something went wrong</Text>
+          <Text style={styles.errorBody}>An unexpected error occurred. Please close the app and reopen it, or try reloading below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
             <LinearGradient 
               colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']} 

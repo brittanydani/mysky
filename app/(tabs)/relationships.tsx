@@ -756,7 +756,7 @@ export default function RelationshipsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0C' },
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
   loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15, fontStyle: 'italic' },
@@ -822,7 +822,7 @@ const styles = StyleSheet.create({
   summarySep: { width: 1, height: 48, backgroundColor: 'transparent', alignSelf: 'center' },
   summaryIcon: { fontSize: 11, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
   summarySign: { fontSize: 16, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  summaryDetail: { fontSize: 12, color: theme.textSecondary },
+  summaryDetail: { fontSize: 12, color: theme.textSecondary, fontVariant: ['tabular-nums'] },
 
   tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.cardBorder, marginBottom: 16 },
   tab: { paddingVertical: 14, paddingHorizontal: 16, marginRight: 8 },
