@@ -11,13 +11,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState, memo } from '
 import {
   Alert,
   Dimensions,
-  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
   Platform,
 } from 'react-native';
@@ -36,7 +34,7 @@ import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 import { DreamSymbolChips } from '../../components/ui/DreamSymbolChips';
 
 import { localDb } from '../../services/storage/localDb';
-import { SleepEntry, JournalEntry, generateId } from '../../services/storage/models';
+import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -228,7 +226,6 @@ export default function SleepScreen() {
 
   const [natalChart, setNatalChart] = useState<NatalChart | null>(null);
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
-  const [recentJournalEntries, setRecentJournalEntries] = useState<JournalEntry[]>([]);
   const [interpretations, setInterpretations] = useState<Record<string, DreamInterpretation>>({});
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
@@ -242,7 +239,6 @@ export default function SleepScreen() {
     vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false,
   });
   
-  const [showAwakenDropdown, setShowAwakenDropdown] = useState(false);
   const [showAwakenSheet, setShowAwakenSheet] = useState(false);
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
   const [selectedTier, setSelectedTier] = useState<FeelingTier | null>(null);
@@ -334,7 +330,6 @@ export default function SleepScreen() {
       } else {
         setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
       }
-      setShowAwakenDropdown(false);
       setShowAwakenSheet(false);
       setShowFeelingPicker(false);
       setSelectedTier(null);
@@ -349,7 +344,6 @@ export default function SleepScreen() {
       setDreamText('');
       setSelectedFeelings([]);
       setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
-      setShowAwakenDropdown(false);
       setShowAwakenSheet(false);
       setShowFeelingPicker(false);
       setSelectedTier(null);
@@ -368,15 +362,13 @@ export default function SleepScreen() {
           const id = savedChart.id;
           setChartId(id);
 
-          const [data, checkIns, journalEntries] = await Promise.all([
+          const [data, checkIns] = await Promise.all([
             localDb.getSleepEntries(id, 30),
             localDb.getCheckIns(id, 30),
-            localDb.getJournalEntriesPaginated(5),
           ]);
 
           setEntries(data);
           setRecentCheckIns(checkIns);
-          setRecentJournalEntries(journalEntries);
           applyEntryToForm(data.find(e => e.date === today));
 
           try {
@@ -404,10 +396,6 @@ export default function SleepScreen() {
     try {
       setSaving(true);
       setSaveError(null);
-
-      let isConnected = true;
-      try { await fetch('https://clients3.google.com/generate_204', { method: 'HEAD', mode: 'no-cors' }); } catch { isConnected = false; }
-      if (!isConnected) logger.warn('Saving sleep entry while offline');
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
@@ -467,9 +455,7 @@ export default function SleepScreen() {
       savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
     } catch (e) {
       logger.error('Sleep save failed:', e);
-      let isOffline = false;
-      try { await fetch('https://clients3.google.com/generate_204', { method: 'HEAD', mode: 'no-cors' }); } catch { isOffline = true; }
-      const msg = isOffline ? 'You appear to be offline. Your entry could not be saved.' : 'Could not save entry. Please try again.';
+      const msg = 'Could not save entry. Please try again.';
       setSaveError(msg);
       Alert.alert('Save Error', msg);
       setSaving(false);
@@ -605,7 +591,7 @@ export default function SleepScreen() {
               </View>
 
               <View pointerEvents={(editingEntryId && !isEditingUnlocked) ? 'none' : 'auto'} style={{ opacity: (editingEntryId && !isEditingUnlocked) ? 0.4 : 1 }}>
-              {/* Quality rating */}
+              {/* Quality rating — tactile moon-phase glyphs */}
               <Text style={styles.fieldLabel}>How rested do you feel?</Text>
               <View style={styles.qualityRow}>
                 {[1, 2, 3, 4, 5].map(n => (
@@ -614,10 +600,23 @@ export default function SleepScreen() {
                     onPress={() => { Haptics.selectionAsync().catch(() => {}); setQuality(n === quality ? 0 : n); }}
                     style={styles.moonBtn}
                   >
-                    <Ionicons name={n <= quality ? 'moon' : 'moon-outline'} size={32} color={n <= quality ? PALETTE.silverBlue : 'rgba(255,255,255,0.1)'} />
+                    <Text style={[
+                      styles.moonRatingIcon,
+                      {
+                        opacity: n <= quality ? 1 : 0.18,
+                        textShadowColor: n <= quality ? PALETTE.silverBlue : 'transparent',
+                      },
+                    ]}>
+                      {n <= quality ? '☾' : '☽'}
+                    </Text>
                   </Pressable>
                 ))}
               </View>
+              {quality > 0 && (
+                <Text style={styles.qualityStateLabel}>
+                  {['Exhausted', 'Restless', 'Moderate', 'Restored', 'Deeply Rested'][quality - 1]}
+                </Text>
+              )}
 
               {/* Moon Dragger — Radial duration instrument */}
               <Text style={styles.fieldLabel}>Hours slept</Text>
@@ -667,16 +666,19 @@ export default function SleepScreen() {
               {/* Dream journal — Deeper Sky only */}
               <Text style={styles.fieldLabel}>Dream journal</Text>
               {isPremium ? (
-                <TextInput
-                  style={styles.dreamInput}
-                  value={dreamText}
-                  onChangeText={setDreamText}
-                  placeholder="What did you dream about?"
-                  placeholderTextColor={theme.textMuted}
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
+                <View style={[styles.dreamGlassCard, dreamText.length > 0 && styles.dreamGlassCardActive]}>
+                  <TextInput
+                    style={styles.dreamInputInner}
+                    value={dreamText}
+                    onChangeText={setDreamText}
+                    placeholder="It was about…"
+                    placeholderTextColor={theme.textMuted}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    selectionColor={PALETTE.silverBlue}
+                  />
+                </View>
               ) : (
                 <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                   <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.dreamLock}>
@@ -686,6 +688,30 @@ export default function SleepScreen() {
                       <Text style={styles.dreamLockSub}>Log and search your dreams with Deeper Sky</Text>
                     </View>
                     <Ionicons name="arrow-forward" size={16} color={PALETTE.gold} />
+                  </LinearGradient>
+                </Pressable>
+              )}
+
+              {/* Symbolic Interpretation — premium visual hook */}
+              {!isPremium && (
+                <Pressable
+                  onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); router.push('/(tabs)/premium' as Href); }}
+                  style={({ pressed }) => pressed && { opacity: 0.88 }}
+                >
+                  <LinearGradient
+                    colors={['rgba(157, 118, 193, 0.16)', 'rgba(10, 13, 22, 0.92)']}
+                    style={styles.interpretLock}
+                  >
+                    <View style={styles.interpretLockInner}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.interpretLockTitle}>Symbolic Interpretation</Text>
+                        <Text style={styles.interpretLockSub}>AI analysis of archetypes and emotional patterns in your dreams.</Text>
+                      </View>
+                      <View style={styles.deeperSkyBadge}>
+                        <Ionicons name="sparkles" size={10} color={PALETTE.amethyst} />
+                        <Text style={styles.deeperSkyBadgeText}>DEEPER SKY</Text>
+                      </View>
+                    </View>
                   </LinearGradient>
                 </Pressable>
               )}
@@ -923,8 +949,8 @@ export default function SleepScreen() {
                   <View style={styles.sitWithBox}>
                     <Text style={styles.sitWithLabel}>A question to sit with</Text>
                     <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
-                                </View>
-                                {/* <DreamSymbolChips symbols={todayInterp.extractedSymbols} /> */}
+                  </View>
+                  <DreamSymbolChips symbols={todayInterp.extractedSymbols} />
                 </LinearGradient>
               </Animated.View>
             );
@@ -1082,7 +1108,7 @@ export default function SleepScreen() {
                             <Text style={styles.sitWithLabel}>A question to sit with</Text>
                             <Text style={styles.sitWithText}>"{interp.question}"</Text>
                           </View>
-                          {/* <DreamSymbolChips symbols={interp.extractedSymbols} /> */}
+                          <DreamSymbolChips symbols={interp.extractedSymbols} />
                         </LinearGradient>
                       </Animated.View>
                     )}
@@ -1144,6 +1170,8 @@ const styles = StyleSheet.create({
   
   qualityRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   moonBtn: { padding: 4 },
+  moonRatingIcon: { fontSize: 34, color: PALETTE.silverBlue, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 12 },
+  qualityStateLabel: { textAlign: 'center', fontSize: 12, fontWeight: '600', color: PALETTE.silverBlue, letterSpacing: 0.8, marginTop: 4, marginBottom: 4, textTransform: 'uppercase' },
 
   stepperRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, overflow: 'hidden', marginBottom: 6 },
   stepperBtn: { paddingHorizontal: 24, paddingVertical: 16, justifyContent: 'center', alignItems: 'center' },
@@ -1152,21 +1180,59 @@ const styles = StyleSheet.create({
   stepperPlaceholder: { color: theme.textMuted, fontWeight: '400', fontSize: 24 },
   stepperHint: { fontSize: 12, color: theme.textMuted, textAlign: 'center', fontStyle: 'italic', marginBottom: 8 },
 
-  dreamInput: {
-    backgroundColor: 'transparent',
+  // Glassmorphic dream journal
+  dreamGlassCard: {
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    borderRadius: 16,
     padding: 16,
-    color: PALETTE.textMain,
-    fontSize: 16,
-    lineHeight: 24,
-    minHeight: 120,
     marginBottom: 8,
+    backgroundColor: 'transparent',
+  },
+  dreamGlassCardActive: {
+    borderColor: 'rgba(139, 196, 232, 0.30)',
+    shadowColor: PALETTE.silverBlue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.20,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  dreamInputInner: {
+    fontSize: 16,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    lineHeight: 24,
+    minHeight: 104,
+    textAlignVertical: 'top',
   },
   dreamLock: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', padding: 16, marginBottom: 8 },
   dreamLockTitle: { fontSize: 14, fontWeight: '600', color: PALETTE.gold, marginBottom: 4 },
   dreamLockSub: { fontSize: 13, color: theme.textMuted, lineHeight: 18 },
+
+  // Symbolic Interpretation premium lock card
+  interpretLock: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(157, 118, 193, 0.28)',
+    overflow: 'hidden',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  interpretLockInner: { flexDirection: 'row', alignItems: 'center', padding: 20, gap: 16 },
+  interpretLockTitle: { fontSize: 15, fontWeight: '600', color: PALETTE.textMain, marginBottom: 4 },
+  interpretLockSub: { fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
+  deeperSkyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(157, 118, 193, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(157, 118, 193, 0.25)',
+  },
+  deeperSkyBadgeText: { color: PALETTE.amethyst, fontSize: 9, fontWeight: '700', letterSpacing: 1 },
 
   dreamMoodDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   dreamMoodDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },

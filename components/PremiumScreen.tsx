@@ -10,7 +10,6 @@ import * as Haptics from 'expo-haptics';
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import MySkyDiamondSkia from './skia/MySkyDiamondSkia';
-import PricingCard from './ui/PricingCard';
 import { usePremium } from '../context/PremiumContext';
 import { config } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
@@ -186,6 +185,12 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
+      {/* Atmospheric background blurs */}
+      <View style={styles.atmosphereLayer} pointerEvents="none">
+        <View style={styles.atmosphereOrb1} />
+        <View style={styles.atmosphereOrb2} />
+      </View>
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
@@ -197,142 +202,173 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
 
-          {/* Diamond logo */}
-          <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 4 }}>
-            <MySkyDiamondSkia size={140} />
-          </View>
+          {/* ── Hero: Ethereal Eclipse ── */}
+          <Animated.View entering={FadeInDown.delay(100).duration(700)} style={styles.heroSection}>
+            <View style={styles.heroEclipse}>
+              <View style={styles.heroRingOuter} />
+              <View style={styles.heroRingInner} />
+              <View style={styles.heroCore} />
+              <MySkyDiamondSkia size={60} />
+            </View>
+          </Animated.View>
 
-          {/* Header */}
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
+          {/* ── Value Copywriting ── */}
+          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.header}>
             <Text style={styles.premiumBadge}>✦ {DEEPER_SKY_MARKETING.headline}</Text>
-            <Text style={styles.title}>{DEEPER_SKY_MARKETING.subheadline}</Text>
-            <Text style={styles.subtitle}>{DEEPER_SKY_MARKETING.tagline}</Text>
+            <Text style={styles.heroTitle}>
+              Unlock your complete{'\n'}architectural blueprint
+            </Text>
+            <Text style={styles.heroSubtitle}>
+              Map your subconscious patterns, decode your dreams, and receive personalized daily guidance.
+            </Text>
           </Animated.View>
 
-          {/* Feature highlights */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.featureList}>
-            {DEEPER_SKY_FEATURES.map((feature) => (
-              <View key={feature.id} style={styles.featureItem}>
-                <Ionicons name={feature.icon as any} size={20} color={theme.primary} />
-                <View style={styles.featureInfo}>
-                  <Text style={styles.featureName}>{feature.name}</Text>
-                  <Text style={styles.featureDesc}>{feature.description}</Text>
+          {/* ── Value Propositions (outcome-focused) ── */}
+          <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
+            {[
+              { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#9D76C1' },
+              { icon: 'analytics-outline', title: 'Decode your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#8BC4E8' },
+              { icon: 'sparkles-outline', title: 'Daily cosmic guidance', desc: 'Personalized action steps aligned to your natal chart', color: '#D4B872' },
+              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup & restore with end-to-end encryption', color: '#6EBF8B' },
+            ].map((item, idx) => (
+              <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
+                <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
+                  <Ionicons name={item.icon as any} size={22} color={item.color} />
                 </View>
-              </View>
+                <View style={styles.valueText}>
+                  <Text style={styles.valueTitle}>{item.title}</Text>
+                  <Text style={styles.valueDesc}>{item.desc}</Text>
+                </View>
+              </Animated.View>
             ))}
           </Animated.View>
 
-          {/* Free vs Premium comparison */}
-          <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.comparisonSection}>
-            <View style={styles.comparisonColumn}>
-              <Text style={styles.comparisonHeader}>Free</Text>
-              {config.premiumFeatures.free.map((feat, i) => (
-                <View key={i} style={styles.comparisonRow}>
-                  <Ionicons name="checkmark" size={14} color={theme.textMuted} />
-                  <Text style={styles.comparisonText}>{feat}</Text>
-                </View>
-              ))}
-            </View>
-            <View style={[styles.comparisonColumn, styles.premiumColumn]}>
-              <Text style={[styles.comparisonHeader, { color: theme.primary }]}>Deeper Sky</Text>
-              {config.premiumFeatures.premium.map((feat, i) => (
-                <View key={i} style={styles.comparisonRow}>
-                  <Ionicons name="star" size={14} color={theme.primary} />
-                  <Text style={[styles.comparisonText, { color: theme.textPrimary }]}>{feat}</Text>
-                </View>
-              ))}
-            </View>
+          {/* ── Anchor Pricing: Side-by-Side Cards ── */}
+          <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.pricingRow}>
+            {resolvedTiers.filter(t => t.id !== 'lifetime').map((tier) => {
+              const isAnnual = tier.id === 'yearly';
+              const isSelected = selectedPlan === tier.id;
+              return (
+                <Pressable
+                  key={tier.id}
+                  onPress={() => {
+                    setSelectedPlan(tier.id as PlanType);
+                    Haptics.selectionAsync().catch(() => {});
+                  }}
+                  style={[
+                    styles.pricingCard,
+                    isSelected && styles.pricingCardSelected,
+                    isAnnual && isSelected && styles.pricingCardAnnual,
+                  ]}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
+                >
+                  {isAnnual && (
+                    <View style={styles.bestValueBadge}>
+                      <Text style={styles.bestValueText}>BEST VALUE</Text>
+                    </View>
+                  )}
+                  <Text style={styles.pricingPeriod}>
+                    {isAnnual ? '12 Months' : '1 Month'}
+                  </Text>
+                  <Text style={[styles.pricingPrice, isSelected && styles.pricingPriceSelected]}>
+                    {tier.price}
+                  </Text>
+                  <Text style={[styles.pricingMeta, isSelected && styles.pricingMetaSelected]}>
+                    {isAnnual ? `${tier.period}` : 'Billed monthly'}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </Animated.View>
 
-          {/* Pricing Cards */}
-          <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.pricingSection}>
-            <Text style={styles.sectionTitle}>Choose Your Plan</Text>
-            {resolvedTiers.map((tier) => (
-              <PricingCard
-                key={tier.id}
-                name={tier.name}
-                price={tier.price}
-                period={tier.period}
-                description={tier.description}
-                popular={tier.popular}
-                selected={selectedPlan === tier.id}
-                onPress={() => setSelectedPlan(tier.id as PlanType)}
-              />
-            ))}
-          </Animated.View>
+          {/* Lifetime option, smaller */}
+          {resolvedTiers.find(t => t.id === 'lifetime') && (
+            <Animated.View entering={FadeInDown.delay(550).duration(500)}>
+              <Pressable
+                onPress={() => {
+                  setSelectedPlan('lifetime');
+                  Haptics.selectionAsync().catch(() => {});
+                }}
+                style={[
+                  styles.lifetimeRow,
+                  selectedPlan === 'lifetime' && styles.lifetimeRowSelected,
+                ]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selectedPlan === 'lifetime' }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.lifetimeLabel}>Lifetime Access</Text>
+                  <Text style={styles.lifetimeDesc}>One-time purchase, forever yours</Text>
+                </View>
+                <Text style={[styles.lifetimePrice, selectedPlan === 'lifetime' && { color: '#D4B872' }]}>
+                  {resolvedTiers.find(t => t.id === 'lifetime')?.price}
+                </Text>
+              </Pressable>
+            </Animated.View>
+          )}
+        </ScrollView>
 
-          {/* Purchase Button */}
-          <Animated.View entering={FadeInUp.delay(400).duration(600)} style={styles.purchaseSection}>
+        {/* ── Sticky Bottom CTA ── */}
+        <View style={[styles.stickyBottom, { paddingBottom: insets.bottom + 16 }]}>
+          <Animated.View entering={FadeInUp.delay(600).duration(600)}>
             <Pressable
               onPress={handlePurchase}
               disabled={loading}
-              style={({ pressed }) => [styles.purchaseButton, pressed && styles.purchaseButtonPressed]}
+              style={({ pressed }) => [styles.ctaButton, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
             >
               <LinearGradient
                 colors={[theme.primary, theme.primaryDark]}
-                style={styles.purchaseGradient}
+                style={styles.ctaGradient}
               >
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text style={styles.purchaseButtonText}>
-                    Continue with {resolvedTiers.find(t => t.id === selectedPlan)?.name}
+                  <Text style={styles.ctaText}>
+                    {selectedPlan === 'yearly' ? 'Start 7-Day Free Trial' : `Continue with ${resolvedTiers.find(t => t.id === selectedPlan)?.name}`}
                   </Text>
                 )}
               </LinearGradient>
             </Pressable>
+          </Animated.View>
 
-            <Pressable onPress={handleRestore} disabled={restoring} style={styles.restoreButton}>
+          {/* Legal bar */}
+          <View style={styles.legalBar}>
+            <Pressable onPress={handleRestore} disabled={restoring} hitSlop={12}>
               {restoring ? (
                 <ActivityIndicator size="small" color={theme.textMuted} />
               ) : (
-                <Text style={styles.restoreText}>Restore Purchases</Text>
+                <Text style={styles.legalBarLink}>Restore</Text>
               )}
             </Pressable>
-          </Animated.View>
+            <Text style={styles.legalBarDot}>·</Text>
+            <Pressable
+              onPress={() => {
+                if (onClose) onClose();
+                setTimeout(() => router.push('/terms' as Href), 350);
+              }}
+              hitSlop={12}
+            >
+              <Text style={styles.legalBarLink}>Terms</Text>
+            </Pressable>
+            <Text style={styles.legalBarDot}>·</Text>
+            <Pressable
+              onPress={() => {
+                if (onClose) onClose();
+                setTimeout(() => router.push('/privacy' as Href), 350);
+              }}
+              hitSlop={12}
+            >
+              <Text style={styles.legalBarLink}>Privacy</Text>
+            </Pressable>
+          </View>
 
-          {/* Legal links — required for App Store subscription compliance */}
-          <Animated.View entering={FadeInDown.delay(420).duration(600)} style={styles.legalSection}>
-            <Text style={styles.legalDisclosure}>
-              {Platform.OS === 'ios'
-                ? 'Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Settings → Apple ID → Subscriptions.'
-                : 'Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in Google Play → Payments & subscriptions.'}
-            </Text>
-            <Text style={styles.legalDisclosure}>
-              MySky is for self-reflection and personal insight only. It is not medical, psychological, or financial advice.
-            </Text>
-            <View style={styles.legalLinks}>
-              <Pressable
-                onPress={() => {
-                  if (onClose) onClose();
-                  setTimeout(() => router.push('/terms' as Href), 350);
-                }}
-                accessibilityRole="link"
-                hitSlop={12}
-                style={styles.legalLinkPressable}
-              >
-                <Text style={styles.legalLink}>Terms of Use</Text>
-              </Pressable>
-              <Text style={styles.legalSeparator}>·</Text>
-              <Pressable
-                onPress={() => {
-                  if (onClose) onClose();
-                  setTimeout(() => router.push('/privacy' as Href), 350);
-                }}
-                accessibilityRole="link"
-                hitSlop={12}
-                style={styles.legalLinkPressable}
-              >
-                <Text style={styles.legalLink}>Privacy Policy</Text>
-              </Pressable>
-            </View>
-          </Animated.View>
-
-          {/* Trust line */}
-          <Animated.View entering={FadeInDown.delay(450).duration(600)} style={styles.trustSection}>
-            <Text style={styles.trustText}>{DEEPER_SKY_MARKETING.trustLine}</Text>
-          </Animated.View>
-        </ScrollView>
+          <Text style={styles.legalMicro}>
+            {Platform.OS === 'ios'
+              ? 'Auto-renews. Cancel anytime in Settings → Apple ID → Subscriptions.'
+              : 'Auto-renews. Cancel anytime in Google Play → Subscriptions.'}
+          </Text>
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -352,6 +388,31 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: theme.spacing.lg,
   },
+
+  // ── Atmosphere ──
+  atmosphereLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  atmosphereOrb1: {
+    position: 'absolute',
+    top: -80,
+    right: -60,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(139, 196, 232, 0.06)',
+  },
+  atmosphereOrb2: {
+    position: 'absolute',
+    bottom: 100,
+    left: -80,
+    width: 350,
+    height: 350,
+    borderRadius: 175,
+    backgroundColor: 'rgba(201, 174, 120, 0.05)',
+  },
+
   backButton: {
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
@@ -362,17 +423,263 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // ── Hero Eclipse ──
+  heroSection: {
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  heroEclipse: {
+    width: 180,
+    height: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroRingOuter: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  heroRingInner: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 174, 120, 0.15)',
+    shadowColor: '#D4B872',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  heroCore: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(201, 174, 120, 0.05)',
+  },
+
+  // ── Header ──
   header: {
     marginBottom: theme.spacing.xl,
+    alignItems: 'center',
   },
   premiumBadge: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.primary,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: theme.spacing.md,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    letterSpacing: 0.3,
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
+    lineHeight: 36,
+  },
+  heroSubtitle: {
+    fontSize: 15,
+    color: theme.textSecondary,
+    lineHeight: 24,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
+
+  // ── Value Propositions ──
+  valueSection: {
+    marginBottom: 32,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  valueIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  valueText: {
+    flex: 1,
+  },
+  valueTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    marginBottom: 3,
+  },
+  valueDesc: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 18,
+  },
+
+  // ── Pricing Cards ──
+  pricingRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  pricingCard: {
+    flex: 1,
+    paddingVertical: 24,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    alignItems: 'center',
+  },
+  pricingCardSelected: {
+    borderColor: 'rgba(212, 184, 114, 0.35)',
+    backgroundColor: 'rgba(212, 184, 114, 0.04)',
+    shadowColor: '#D4B872',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  pricingCardAnnual: {
+    borderColor: 'rgba(212, 184, 114, 0.5)',
+    borderWidth: 1.5,
+  },
+  bestValueBadge: {
+    backgroundColor: '#D4B872',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginBottom: 12,
+  },
+  bestValueText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#020817',
+    letterSpacing: 1,
+  },
+  pricingPeriod: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 8,
+  },
+  pricingPrice: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    marginBottom: 4,
+  },
+  pricingPriceSelected: {
+    color: '#FFF',
+  },
+  pricingMeta: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.35)',
+  },
+  pricingMetaSelected: {
+    color: '#D4B872',
+  },
+
+  // ── Lifetime ──
+  lifetimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.01)',
+    marginBottom: 24,
+  },
+  lifetimeRowSelected: {
+    borderColor: 'rgba(212, 184, 114, 0.3)',
+    backgroundColor: 'rgba(212, 184, 114, 0.03)',
+  },
+  lifetimeLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.primary,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: theme.spacing.sm,
+    color: theme.textPrimary,
   },
+  lifetimeDesc: {
+    fontSize: 12,
+    color: theme.textMuted,
+    marginTop: 2,
+  },
+  lifetimePrice: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    marginLeft: 12,
+  },
+
+  // ── Sticky Bottom ──
+  stickyBottom: {
+    paddingTop: 12,
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: 'rgba(2, 8, 23, 0.85)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.04)',
+  },
+  ctaButton: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#D4B872',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+  },
+  ctaGradient: {
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+  },
+  ctaText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: theme.background,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+  },
+  legalBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+    gap: 12,
+  },
+  legalBarLink: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.35)',
+  },
+  legalBarDot: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.15)',
+  },
+  legalMicro: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.25)',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 14,
+  },
+
+  // ── Already premium state ──
   title: {
     fontSize: 28,
     fontWeight: '700',
@@ -411,84 +718,12 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     lineHeight: 18,
   },
-  comparisonSection: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-  },
-  comparisonColumn: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-  },
-  premiumColumn: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.18)',
-  },
-  comparisonHeader: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: theme.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.sm,
-  },
-  comparisonRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    marginBottom: 6,
-  },
-  comparisonText: {
-    fontSize: 12,
-    color: theme.textSecondary,
-    lineHeight: 16,
-    flex: 1,
-  },
-  pricingSection: {
-    marginBottom: theme.spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+  manageText: {
+    fontSize: 13,
     color: theme.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: theme.spacing.md,
-  },
-  purchaseSection: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  purchaseButton: {
-    width: '100%',
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-  },
-  purchaseButtonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  purchaseGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-  },
-  purchaseButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.background,
-  },
-  restoreButton: {
-    marginTop: theme.spacing.md,
-    padding: theme.spacing.sm,
-  },
-  restoreText: {
-    fontSize: 14,
-    color: theme.textMuted,
-    textDecorationLine: 'underline',
+    textAlign: 'center',
+    marginTop: theme.spacing.xl,
+    fontStyle: 'italic',
   },
   trustSection: {
     alignItems: 'center',
@@ -500,42 +735,5 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
     textAlign: 'center',
     fontStyle: 'italic',
-  },
-  manageText: {
-    fontSize: 13,
-    color: theme.textMuted,
-    textAlign: 'center',
-    marginTop: theme.spacing.xl,
-    fontStyle: 'italic',
-  },
-  legalSection: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xs,
-    gap: 6,
-  },
-  legalDisclosure: {
-    fontSize: 11,
-    color: theme.textMuted,
-    textAlign: 'center',
-    lineHeight: 16,
-    opacity: 0.7,
-  },
-  legalLinks: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  legalLinkPressable: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  legalLink: {
-    fontSize: 13,
-    color: theme.primary,
-    textDecorationLine: 'underline',
-  },
-  legalSeparator: {
-    fontSize: 12,
-    color: theme.textMuted,
   },
 });

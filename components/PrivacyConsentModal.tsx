@@ -35,7 +35,7 @@ export default function PrivacyConsentModal({
   privacyPolicyUrl,
   contactEmail,
 }: PrivacyConsentModalProps) {
-  const email = contactEmail ?? 'brittanyapps@outlook.com';
+  const email = contactEmail ?? 'support@mysky.app';
   const [showFullPolicy, setShowFullPolicy] = useState(false);
 
   useEffect(() => {

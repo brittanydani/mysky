@@ -12,11 +12,11 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Platform,
+  TextStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
-import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -28,23 +28,20 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 
 const PALETTE = {
-  gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  rose: '#D4A3B3',
-  amethyst: '#9D76C1',
+  gold: '#D9BF8C',
+  silverBlue: '#6E8CB4',
+  rose: '#D98C8C',
+  sage: '#8CBEAA',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.45)',
-  glassBorder: 'rgba(255,255,255,0.06)',
+  textMuted: 'rgba(255,255,255,0.6)',
+  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 interface BlueprintCard {
   title: string;
-  eyebrow: string;
   description: string;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  color: string;
+  icon: string;
+  iconStyle: TextStyle;
   gradientColors: [string, string];
   route: Href;
   premium?: boolean;
@@ -52,41 +49,37 @@ interface BlueprintCard {
 
 const CARDS: BlueprintCard[] = [
   {
-    title: 'Your Chart',
-    eyebrow: 'Natal Wheel',
-    description: 'Planetary placements, house positions, and the aspects that define you.',
-    icon: 'planet-outline',
-    color: PALETTE.gold,
-    gradientColors: ['rgba(201, 174, 120, 0.18)', 'rgba(14, 18, 30, 0.7)'],
+    title: 'Natal Chart',
+    description: 'Planets, houses, and aspects mapping your arrival.',
+    icon: '⚝',
+    iconStyle: { color: PALETTE.gold },
+    gradientColors: ['rgba(217, 191, 140, 0.1)', 'transparent'],
     route: '/(tabs)/chart' as Href,
   },
   {
     title: 'Life Narrative',
-    eyebrow: 'Your Story',
-    description: 'The psychological forces and natal chapters that shape who you are.',
-    icon: 'layers-outline',
-    color: PALETTE.silverBlue,
-    gradientColors: ['rgba(139, 196, 232, 0.18)', 'rgba(14, 18, 30, 0.7)'],
+    description: '10 psychological chapters written from your cosmic data.',
+    icon: '✧',
+    iconStyle: { color: PALETTE.silverBlue },
+    gradientColors: ['rgba(110, 140, 180, 0.1)', 'transparent'],
     route: '/(tabs)/story' as Href,
     premium: true,
   },
   {
     title: 'Connections',
-    eyebrow: 'Relationships',
-    description: 'Synastry reports and compatibility insights for the people in your life.',
-    icon: 'people-outline',
-    color: PALETTE.rose,
-    gradientColors: ['rgba(212, 163, 179, 0.18)', 'rgba(14, 18, 30, 0.7)'],
+    description: 'Synastry, compatibility scores, and relational dynamics.',
+    icon: '⚯',
+    iconStyle: { color: PALETTE.rose },
+    gradientColors: ['rgba(217, 140, 140, 0.1)', 'transparent'],
     route: '/(tabs)/relationships' as Href,
     premium: true,
   },
   {
-    title: 'Healing',
-    eyebrow: 'Inner Work',
-    description: 'Shadow work cards and astrology-driven guidance for deep growth.',
-    icon: 'leaf-outline',
-    color: PALETTE.emerald,
-    gradientColors: ['rgba(110, 191, 139, 0.18)', 'rgba(14, 18, 30, 0.7)'],
+    title: 'Healing Paths',
+    description: 'Shadow work, inner child needs, and restorative anchors.',
+    icon: '⚕',
+    iconStyle: { color: PALETTE.sage },
+    gradientColors: ['rgba(140, 190, 170, 0.1)', 'transparent'],
     route: '/(tabs)/healing' as Href,
     premium: true,
   },
@@ -110,8 +103,12 @@ export default function BlueprintScreen() {
     }, []),
   );
 
-  const nav = (route: Href) => {
-    Haptics.selectionAsync().catch(() => {});
+  const nav = (route: Href, premium?: boolean) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (premium && !isPremium) {
+      router.push('/(tabs)/premium' as Href);
+      return;
+    }
     router.push(route);
   };
 
@@ -119,182 +116,136 @@ export default function BlueprintScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
+      {/* Deep Space Atmosphere */}
+      <LinearGradient
+        colors={['rgba(85, 65, 115, 0.1)', 'transparent']}
+        style={styles.topGlow}
+      />
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
-          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Header ── */}
+          {/* Header */}
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Blueprint</Text>
-            <Text style={styles.subtitle}>
-              {chartName ? `${chartName}'s identity map` : 'Your natal identity map'}
+            <Text style={styles.headerTitle}>Blueprint</Text>
+            <Text style={styles.headerSubtitle}>
+              {chartName
+                ? `${chartName} · Identity architecture`
+                : 'Identity architecture · Pattern origins'}
             </Text>
           </Animated.View>
 
-          {/* ── Cards ── */}
-          {CARDS.map((card, i) => (
-            <Animated.View
-              key={card.route as string}
-              entering={FadeInDown.delay(160 + i * 80).duration(600)}
-              style={styles.cardWrapper}
-            >
-              <Pressable
-                onPress={() => nav(card.route)}
-                style={({ pressed }) => [styles.pressable, pressed && styles.pressableActive]}
+          {/* Cards */}
+          <View style={styles.grid}>
+            {CARDS.map((card, i) => (
+              <Animated.View
+                key={card.route as string}
+                entering={FadeInDown.delay(160 + i * 80).duration(600)}
               >
-                <LinearGradient colors={card.gradientColors} style={styles.card}>
-                  <View style={[styles.iconRing, { borderColor: card.color + '40' }]}>
-                    <Ionicons name={card.icon} size={26} color={card.color} />
-                  </View>
+                <Pressable
+                  style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                  onPress={() => nav(card.route, card.premium)}
+                >
+                  <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+                  <LinearGradient colors={card.gradientColors} style={StyleSheet.absoluteFill} />
 
-                  <View style={styles.cardText}>
-                    <Text style={styles.cardEyebrow}>{card.eyebrow}</Text>
-                    <View style={styles.cardTitleRow}>
+                  <View style={styles.cardContent}>
+                    {card.premium ? (
+                      <View style={styles.premiumHeader}>
+                        <Text style={[styles.cardIcon, card.iconStyle]}>{card.icon}</Text>
+                        <PremiumBadge />
+                      </View>
+                    ) : (
+                      <Text style={[styles.cardIcon, card.iconStyle]}>{card.icon}</Text>
+                    )}
+                    <View>
                       <Text style={styles.cardTitle}>{card.title}</Text>
-                      {card.premium && !isPremium && (
-                        <View style={styles.premiumBadge}>
-                          <Ionicons name="star" size={9} color={PALETTE.gold} />
-                        </View>
-                      )}
+                      <Text style={styles.cardSubtitle}>{card.description}</Text>
                     </View>
-                    <Text style={styles.cardDescription}>{card.description}</Text>
                   </View>
+                </Pressable>
+              </Animated.View>
+            ))}
+          </View>
 
-                  <Ionicons
-                    name="chevron-forward"
-                    size={18}
-                    color={PALETTE.textMuted}
-                    style={styles.chevron}
-                  />
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
-          ))}
+          <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
+// Premium lock indicator
+const PremiumBadge = () => (
+  <View style={styles.badgeContainer}>
+    <Text style={styles.badgeIcon}>✦</Text>
+    <Text style={styles.badgeText}>DEEPER SKY</Text>
+  </View>
+);
+
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0D16',
-  },
-  safeArea: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 120,
-    paddingTop: 8,
-  },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  safeArea: { flex: 1 },
+  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 60 },
 
-  // ── Header ──
-  header: {
-    marginBottom: 28,
-    paddingTop: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
+  // Header
+  header: { marginBottom: 32 },
+  headerTitle: {
+    fontSize: 34,
     color: PALETTE.textMain,
-    letterSpacing: 0.3,
-    marginBottom: 4,
+    fontFamily: 'Georgia',
+    fontWeight: '300',
+    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 14,
-    color: PALETTE.textMuted,
-    letterSpacing: 0.2,
-  },
+  headerSubtitle: { fontSize: 14, color: PALETTE.gold },
 
-  // ── Cards ──
-  cardWrapper: {
-    marginBottom: 12,
-    borderRadius: 18,
-    overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  pressable: {
-    borderRadius: 18,
-    overflow: 'hidden',
-  },
-  pressableActive: {
-    opacity: 0.82,
-  },
+  // Grid
+  grid: { gap: 20 },
+
+  // Card
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    borderRadius: 18,
+    height: 180,
+    borderRadius: 24,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    gap: 14,
   },
+  cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
+  cardContent: { flex: 1, padding: 24, justifyContent: 'space-between' },
 
-  // ── Icon ring ──
-  iconRing: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    flexShrink: 0,
-  },
+  premiumHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
 
-  // ── Text ──
-  cardText: {
-    flex: 1,
-    gap: 2,
-  },
-  cardEyebrow: {
-    fontSize: 11,
-    color: PALETTE.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
+  cardIcon: { fontSize: 32 },
   cardTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 20,
     color: PALETTE.textMain,
-    letterSpacing: 0.2,
+    fontFamily: 'Georgia',
+    fontWeight: '400',
+    marginBottom: 6,
   },
-  premiumBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(201,174,120,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(201,174,120,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardDescription: {
+  cardSubtitle: {
     fontSize: 13,
     color: PALETTE.textMuted,
     lineHeight: 18,
-    marginTop: 2,
+    paddingRight: 20,
   },
-  chevron: {
-    flexShrink: 0,
+
+  // Premium badge
+  badgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(217, 191, 140, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 191, 140, 0.3)',
   },
+  badgeIcon: { color: PALETTE.gold, fontSize: 10, marginRight: 4 },
+  badgeText: { color: PALETTE.gold, fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
 });

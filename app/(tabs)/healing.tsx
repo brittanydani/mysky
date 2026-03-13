@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -10,7 +10,6 @@ import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import InsightCard from '../../components/ui/InsightCard';
-import ShadowQuoteCard from '../../components/ui/ShadowQuoteCard';
 import { HealingInsightsGenerator, HealingInsights } from '../../services/premium/healingInsights';
 import { ShadowQuoteEngine, ShadowQuote } from '../../services/astrology/shadowQuotes';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -25,9 +24,12 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
+  sage: '#8CBEAA',
   bg: '#0A0A0C', // Unified OLED Black
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
+  sageBorder: 'rgba(140, 190, 170, 0.2)',
+  sageGlass: 'rgba(140, 190, 170, 0.08)',
 };
 
 export default function HealingScreen() {
@@ -79,6 +81,16 @@ export default function HealingScreen() {
 
   const goToPremium = () => router.push('/(tabs)/premium' as Href);
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <SkiaDynamicCosmos />
+        <ActivityIndicator size="large" color={PALETTE.sage} style={{ marginBottom: 16 }} />
+        <Text style={styles.loadingText}>Mapping your healing paths...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -99,8 +111,10 @@ export default function HealingScreen() {
 
           {/* ── Daily Shadow Insight ── */}
           {healingQuote && (
-            <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.shadowSection}>
-              <ShadowQuoteCard quote={healingQuote} variant="footer" animationDelay={0} />
+            <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.quoteContainer}>
+              <Text style={styles.quoteMark}>“</Text>
+              <Text style={styles.quoteText}>{healingQuote.text}</Text>
+              <Text style={styles.quoteSub}>DAILY SHADOW PROMPT</Text>
             </Animated.View>
           )}
 
@@ -122,13 +136,13 @@ export default function HealingScreen() {
           {healingData && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
               {isPremium ? (
-                <DeepCard icon="heart" title="Inner Child Architecture" color={PALETTE.rose}>
+                <DeepCard icon="heart" title="Inner Child Architecture" color={PALETTE.sage}>
                   <Text style={styles.deepCardMain}>{healingData.reparenting.innerChildNeeds}</Text>
                   <View style={styles.deepDivider} />
-                  <DetailRow label="NURTURE GAP" text={healingData.reparenting.whatWasMissing} color={PALETTE.rose} />
-                  <DetailRow label="REPARENTING PATH" text={healingData.reparenting.howToProvideItNow} color={PALETTE.rose} />
-                  <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.rose }]}>
-                    <Text style={[styles.affirmationText, { color: PALETTE.rose }]}>"{healingData.reparenting.affirmation}"</Text>
+                  <DetailRow label="NURTURE GAP" text={healingData.reparenting.whatWasMissing} color={PALETTE.sage} />
+                  <DetailRow label="REPARENTING PATH" text={healingData.reparenting.howToProvideItNow} color={PALETTE.sage} />
+                  <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.sage }]}>
+                    <Text style={[styles.affirmationText, { color: PALETTE.sage }]}>"{healingData.reparenting.affirmation}"</Text>
                   </View>
                 </DeepCard>
               ) : (
@@ -142,11 +156,11 @@ export default function HealingScreen() {
             <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Shadow Protection</Text>
               {isPremium ? (
-                <DeepCard icon="shield-outline" title="Core Defense Pattern" color={PALETTE.copper}>
+                <DeepCard icon="shield-outline" title="Core Defense Pattern" color={PALETTE.sage}>
                   <Text style={styles.deepCardMain}>{healingData.fears.coreFear}</Text>
                   <View style={styles.deepDivider} />
-                  <DetailRow label="MECHANISM" text={healingData.fears.howItShows} color={PALETTE.copper} />
-                  <DetailRow label="GENTLE REFRAME" text={healingData.fears.gentleReframe} color={PALETTE.copper} />
+                  <DetailRow label="MECHANISM" text={healingData.fears.howItShows} color={PALETTE.sage} />
+                  <DetailRow label="GENTLE REFRAME" text={healingData.fears.gentleReframe} color={PALETTE.sage} />
                 </DeepCard>
               ) : (
                 <InsightCard title="Defense Patterns" content="Your blueprint reveals how you protect yourself when unsafe." icon="shield" locked lockedHint="Unlock Shadow Insights" onPress={goToPremium} />
@@ -185,22 +199,43 @@ function DeepCard({ icon, title, color, children }: { icon: any, title: string, 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', fontSize: 15 },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
   header: { marginTop: 16, marginBottom: 8 },
   title: { fontSize: 32, fontWeight: '700', color: '#FFFFFF', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  headerSub: { fontSize: 14, color: PALETTE.gold, fontStyle: 'italic', marginTop: 4 },
+  headerSub: { fontSize: 14, color: PALETTE.sage, fontStyle: 'italic', marginTop: 4 },
   section: { marginTop: 16 },
   sectionTitle: { fontSize: 18, color: '#FFFFFF', fontFamily: 'serif', marginBottom: 12 },
-  shadowSection: { marginTop: 12 },
+
+  // ── Bespoke shadow quote block ──
+  quoteContainer: { alignItems: 'center', marginBottom: 48, marginTop: 8, paddingHorizontal: 16 },
+  quoteMark: {
+    fontSize: 72,
+    color: 'rgba(140, 190, 170, 0.25)',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    height: 52,
+    lineHeight: 80,
+    overflow: 'hidden',
+  },
+  quoteText: {
+    fontSize: 22,
+    color: '#FFFFFF',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    textAlign: 'center',
+    lineHeight: 32,
+    marginBottom: 20,
+  },
+  quoteSub: { fontSize: 10, color: PALETTE.sage, fontWeight: '800', letterSpacing: 2 },
   emptyStateContainer: { marginTop: 32 },
   emptyCard: { borderRadius: 24, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder },
   emptyTitle: { fontSize: 24, color: '#FFFFFF', fontFamily: 'serif', marginBottom: 12 },
   emptySubtitle: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 24 },
   emptyButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.gold },
   emptyButtonText: { color: PALETTE.gold, fontWeight: '700' },
-  deepCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
+  deepCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: PALETTE.sageBorder },
   deepCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
   deepCardTitle: { fontSize: 18, color: '#FFFFFF', fontWeight: '700' },
   deepCardMain: { fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },

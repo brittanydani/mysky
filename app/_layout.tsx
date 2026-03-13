@@ -23,6 +23,8 @@ import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceM
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
+import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
+import { useSubscriptionStore } from '../store/useSubscriptionStore';
 
 // ── Cinematic Error Boundary ──
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -81,6 +83,9 @@ export default function RootLayout() {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Flush any check-ins queued by the Home Screen widget's "Log Energy" button
+  usePendingWidgetCheckIns();
+
   const [checkingConsent, setCheckingConsent] = useState(true);
   const [dbReady, setDbReady] = useState(false);
   const [initTimedOut, setInitTimedOut] = useState(false);
@@ -106,6 +111,11 @@ export default function RootLayout() {
       // DB migration + settings should only happen once consent is granted
       await MigrationService.performMigrationIfNeeded();
       await AstrologySettingsService.getSettings();
+
+      // Boot the subscription store so isPro is known before any screen renders
+      useSubscriptionStore.getState().initialize().catch((e) =>
+        logger.error('Subscription store init failed:', e)
+      );
 
       // If they already accepted terms previously, see if onboarding can be skipped
       if (termsAccepted) {
@@ -225,6 +235,24 @@ export default function RootLayout() {
     return () => sub.remove();
   }, []);
 
+  // Deep-link routing from local notification taps
+  useEffect(() => {
+    let sub: { remove(): void } | null = null;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const Notifs = require('expo-notifications') as typeof import('expo-notifications');
+      sub = Notifs.addNotificationResponseReceivedListener(response => {
+        const route = response.notification.request.content.data?.route as string | undefined;
+        if (route) {
+          router.push(route as any);
+        }
+      });
+    } catch {
+      // expo-notifications native module not available
+    }
+    return () => sub?.remove();
+  }, [router]);
+
   const handlePrivacyConsent = async (granted: boolean) => {
     try {
       if (!granted) {
@@ -301,7 +329,15 @@ export default function RootLayout() {
                 >
                   {/* Only mount tabs after privacy consent is confirmed */}
                   {!needsPrivacyConsent && <Stack.Screen name="(tabs)" />}
-                  {/* Full-screen writing sanctuary — outside tabs so the dock disappears */}
+
+                  {/* Onboarding & Auth */}
+                  <Stack.Screen name="onboarding" />
+                  <Stack.Screen name="(auth)/sign-in" options={{ presentation: 'modal' }} />
+
+                  {/* --- HIDDEN SCREENS (MODALS) --- */}
+                  {/* Slide up over the tab bar — dedicated workspaces */}
+                  <Stack.Screen name="sleep" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="checkin" options={{ presentation: 'modal' }} />
                   <Stack.Screen
                     name="sanctuary"
                     options={{
@@ -309,14 +345,19 @@ export default function RootLayout() {
                       animation: 'fade_from_bottom',
                     }}
                   />
-                  <Stack.Screen name="privacy" />
-                  <Stack.Screen name="terms" />
-                  <Stack.Screen name="faq" />
+                  {/* Slide-up from within the tab context (e.g. natal chart detail) */}
+                  <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
+
+                  {/* Legal */}
+                  <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="settings/notifications" options={{ presentation: 'modal' }} />
                 </Stack>
 
                 {/* Overlay gates (do NOT unmount navigation) */}
                 {needsPrivacyConsent && (
-                  <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail="brittanyapps@outlook.com" />
+                  <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail="support@mysky.app" />
                 )}
 
                 {/* IMPORTANT: Terms now happens INSIDE onboarding (after Welcome). */}

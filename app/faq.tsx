@@ -122,7 +122,7 @@ export default function FAQScreen() {
 
             <Text style={styles.question}>How do I contact support or ask privacy questions?</Text>
             <Text style={styles.answer}>
-              Email <Text style={styles.highlight}>brittanyapps@outlook.com</Text>. We respond to privacy-related inquiries within 30 days.
+              Email <Text style={styles.highlight}>support@mysky.app</Text>. We respond to privacy-related inquiries within 30 days.
             </Text>
               </View>
           </View>

@@ -209,10 +209,10 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.sectionTitle}>Contact Us</Text>
             <Pressable
               style={styles.contactCard}
-              onPress={() => Linking.openURL('mailto:brittanyapps@outlook.com?subject=MySky%20Privacy%20Inquiry')}
+              onPress={() => Linking.openURL('mailto:support@mysky.app?subject=MySky%20Privacy%20Inquiry')}
             >
               <Ionicons name="mail-outline" size={20} color={theme.textGold} />
-              <Text style={styles.contactInfo}>brittanyapps@outlook.com</Text>
+              <Text style={styles.contactInfo}>support@mysky.app</Text>
             </Pressable>
             <Text style={[styles.paragraph, { marginTop: 12 }]}>We respond to privacy-related inquiries within 30 days.</Text>
           </View>

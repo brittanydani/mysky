@@ -1,0 +1,87 @@
+import { useEffect, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
+import { consumePendingCheckIns } from '../services/widgets/widgetDataService';
+import { CheckInService } from '../services/patterns/checkInService';
+import { AstrologyCalculator } from '../services/astrology/calculator';
+import { localDb } from '../services/storage/localDb';
+import { logger } from '../utils/logger';
+
+/**
+ * Listens for the app returning to the foreground and flushes any check-ins
+ * that were queued by QuickCheckInIntent inside the widget extension.
+ *
+ * Each queued record carries only a Unix timestamp (the widget has no access
+ * to the natal chart). This hook builds the full DailyCheckIn — with live
+ * astrological context — and persists it via CheckInService.
+ *
+ * Mount once at the root layout level (__layout.tsx).
+ */
+export function usePendingWidgetCheckIns(): void {
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+
+  useEffect(() => {
+    // Attempt a flush immediately at mount in case the widget button was tapped
+    // while the app was fully terminated (cold-launch path).
+    flushPendingCheckIns();
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      const wasBackground =
+        appStateRef.current === 'background' ||
+        appStateRef.current === 'inactive';
+      if (wasBackground && nextState === 'active') {
+        flushPendingCheckIns();
+      }
+      appStateRef.current = nextState;
+    });
+
+    return () => subscription.remove();
+  }, []);
+}
+
+async function flushPendingCheckIns(): Promise<void> {
+  consumePendingCheckIns(async (records) => {
+    if (!records.length) return;
+
+    try {
+      const charts = await localDb.getCharts();
+      if (!charts.length) {
+        logger.warn('[Widget] Cannot flush pending check-ins — no chart found.');
+        return;
+      }
+
+      const saved = charts[0];
+      const natal = AstrologyCalculator.generateNatalChart({
+        date:           saved.birthDate,
+        time:           saved.birthTime,
+        hasUnknownTime: saved.hasUnknownTime,
+        place:          saved.birthPlace,
+        latitude:       saved.latitude,
+        longitude:      saved.longitude,
+        timezone:       saved.timezone,
+        houseSystem:    saved.houseSystem,
+      });
+
+      for (const record of records) {
+        try {
+          await CheckInService.saveCheckIn(
+            {
+              moodScore:  5,          // neutral baseline — user can refine in-app
+              energyLevel: 'medium',
+              stressLevel: 'medium',
+              tags:        [],
+              note:        'Quick check-in logged from Home Screen widget',
+            },
+            natal,
+            saved.id,
+          );
+        } catch (e) {
+          logger.error('[Widget] Failed to flush single pending check-in:', e);
+        }
+      }
+
+      logger.info(`[Widget] Flushed ${records.length} pending widget check-in(s).`);
+    } catch (e) {
+      logger.error('[Widget] Failed to flush pending check-ins:', e);
+    }
+  });
+}

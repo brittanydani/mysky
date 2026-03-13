@@ -21,6 +21,12 @@ public class AppDelegate: ExpoAppDelegate {
     reactNativeFactory = factory
     bindReactNativeFactory(factory)
 
+    // Boot the SwiftData container early so it is ready before any native
+    // module requests it.  The singleton is a no-op on iOS < 17.
+    if #available(iOS 17.0, *) {
+      _ = MySkyDataContainerManager.shared
+    }
+
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)
     factory.startReactNative(

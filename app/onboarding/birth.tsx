@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
@@ -12,6 +13,7 @@ import { BirthData } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
+import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -22,9 +24,13 @@ const PALETTE = {
 export default function OnboardingBirthScreen() {
   const router = useRouter();
   const [visible, setVisible] = useState(true);
+  const [savedName, setSavedName] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     setVisible(true);
+    AsyncStorage.getItem('msky_user_name')
+      .then((v) => { if (v) setSavedName(v); })
+      .catch(() => {});
   }, []);
 
   const onSave = useCallback(async (birthData: BirthData, extra?: { chartName?: string }) => {
@@ -49,6 +55,23 @@ export default function OnboardingBirthScreen() {
 
       await localDb.saveChart(savedChart);
 
+      // Seal the sensitive birth data in the hardware keychain / keystore.
+      // This runs in parallel with navigation — failure is non-blocking since
+      // the chart is already persisted in localDb.
+      const identity: CosmicIdentity = {
+        name: extra?.chartName ?? 'My Chart',
+        birthDate: birthData.date,
+        birthTime: birthData.time,
+        hasUnknownTime: birthData.hasUnknownTime,
+        locationCity: birthData.place,
+        locationLat: birthData.latitude,
+        locationLng: birthData.longitude,
+        timezone: birthData.timezone,
+      };
+      IdentityVault.sealIdentity(identity).catch((err) =>
+        logger.error('[OnboardingBirth] IdentityVault seal failed:', err)
+      );
+
       router.replace('/(tabs)/mood' as Href);
     } catch (e) {
       logger.error('[OnboardingBirth] failed:', e);
@@ -63,8 +86,7 @@ export default function OnboardingBirthScreen() {
         <BirthDataModal
           visible={visible}
           hideClose={true}
-          title="Birth Details"
-          onClose={() => {
+          title="Birth Details"          initialData={savedName ? { chartName: savedName } : undefined}          onClose={() => {
             // Don’t allow skipping this step if user chose onboarding
             router.replace('/onboarding' as Href);
           }}

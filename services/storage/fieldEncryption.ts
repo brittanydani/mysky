@@ -545,6 +545,21 @@ class FieldEncryptionServiceClass {
   clearCache(): void {
     this.dekCache = null;
   }
+
+  /**
+   * Cryptographic hard reset — permanently deletes the DEK from the hardware
+   * keychain and clears the in-memory cache.
+   *
+   * After this call, all existing encrypted rows in the SQLite database are
+   * permanently unreadable (the key that encrypted them no longer exists).
+   * Call this only as part of a full data-erasure flow alongside
+   * localDb.hardDeleteAllData() and IdentityVault.destroyIdentity().
+   */
+  async destroyDek(): Promise<void> {
+    this.dekCache = null;
+    await SecureStore.deleteItemAsync(DEK_KEY);
+    logger.info('[FieldEncryption] DEK permanently destroyed');
+  }
 }
 
 // Export singleton

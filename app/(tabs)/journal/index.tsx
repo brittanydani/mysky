@@ -1,29 +1,29 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
-import { theme } from '../../constants/theme';
-import NebulaBackground from '../../components/ui/NebulaBackground';
-import { GoldIcon } from '../../components/ui/GoldIcon';
-import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
-import PremiumRequiredScreen from '../../components/PremiumRequiredScreen';
-import { localDb } from '../../services/storage/localDb';
-import { JournalEntry, generateId } from '../../services/storage/models';
-import JournalEntryModal from '../../components/JournalEntryModal';
-import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../services/premium/advancedJournal';
-import { usePremium } from '../../context/PremiumContext';
-import { logger } from '../../utils/logger';
-import { parseLocalDate } from '../../utils/dateUtils';
-import { CheckInService } from '../../services/patterns/checkInService';
-import { DailyCheckIn } from '../../services/patterns/types';
-import ObsidianJournalEntry from '../../components/ui/ObsidianJournalEntry';
-import { analyzeJournalContent } from '../../services/journal/nlp';
+import { theme } from '../../../constants/theme';
+import NebulaBackground from '../../../components/ui/NebulaBackground';
+import { GoldIcon } from '../../../components/ui/GoldIcon';
+import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
+import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
+import { localDb } from '../../../services/storage/localDb';
+import { JournalEntry, generateId } from '../../../services/storage/models';
+import JournalEntryModal from '../../../components/JournalEntryModal';
+import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../../services/premium/advancedJournal';
+import { usePremium } from '../../../context/PremiumContext';
+import { logger } from '../../../utils/logger';
+import { parseLocalDate } from '../../../utils/dateUtils';
+import { CheckInService } from '../../../services/patterns/checkInService';
+import { DailyCheckIn } from '../../../services/patterns/types';
+import ObsidianJournalEntry from '../../../components/ui/ObsidianJournalEntry';
+import { analyzeJournalContent } from '../../../services/journal/nlp';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
@@ -34,6 +34,25 @@ const PALETTE = {
   bg: '#0A0A0C',
   glassBorder: 'rgba(255,255,255,0.08)',
 };
+
+// ── Mood helpers ──
+const MOOD_COLORS: Record<string, string> = {
+  calm: '#6EBF8B',
+  soft: '#8BC4E8',
+  okay: '#D4B872',
+  heavy: '#CD7F5D',
+  stormy: '#9D76C1',
+};
+
+const MOOD_EMOJIS: Record<string, string> = {
+  calm: '🌿',
+  soft: '🌸',
+  okay: '☁️',
+  heavy: '🌧️',
+  stormy: '⚡',
+};
+
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // ── Cinematic Palette ──
 
@@ -88,6 +107,49 @@ export default function JournalScreen() {
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
+
+  // ── Month/Year filter ──
+  const [filterMonth, setFilterMonth] = useState<number>(new Date().getMonth()); // 0-indexed
+  const [filterYear, setFilterYear] = useState<number>(new Date().getFullYear());
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredEntries = useMemo(() => {
+    let filtered = entries.filter(e => {
+      const d = parseLocalDate(e.date);
+      return d.getMonth() === filterMonth && d.getFullYear() === filterYear;
+    });
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(e =>
+        (e.title || '').toLowerCase().includes(q) ||
+        (e.content || '').toLowerCase().includes(q) ||
+        (e.mood || '').toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [entries, filterMonth, filterYear, searchQuery]);
+
+  // Available months for navigation (derived from entries)
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    entries.forEach(e => {
+      const d = parseLocalDate(e.date);
+      months.add(`${d.getFullYear()}-${d.getMonth()}`);
+    });
+    return months;
+  }, [entries]);
+
+  const navigateMonth = useCallback((direction: -1 | 1) => {
+    Haptics.selectionAsync().catch(() => {});
+    setFilterMonth(prev => {
+      let newMonth = prev + direction;
+      let newYear = filterYear;
+      if (newMonth < 0) { newMonth = 11; newYear--; }
+      if (newMonth > 11) { newMonth = 0; newYear++; }
+      setFilterYear(newYear);
+      return newMonth;
+    });
+  }, [filterYear]);
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedEntryIds(prev => {
@@ -286,12 +348,66 @@ export default function JournalScreen() {
             <Text style={styles.title}>Archive</Text>
             <Text style={styles.subtitle}>Subconscious field · Pattern memory</Text>
           </View>
+          <Pressable
+            onPress={() => router.push('/(tabs)/insights' as Href)}
+            accessibilityRole="button"
+            accessibilityLabel="View pattern insights"
+            style={{ paddingTop: 4 }}
+          >
+            <Ionicons name="analytics-outline" size={22} color={theme.textMuted} />
+          </Pressable>
         </View>
 
         <Text style={styles.poeticIntro}>
           Your private subconscious archive. Each entry becomes a data point in your personal pattern architecture — revealing what the conscious mind overlooks.
         </Text>
       </Animated.View>
+
+      {/* ── Month/Year Navigation + Search ── */}
+      {totalCount > 0 && (
+        <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.filterSection}>
+          <View style={styles.monthNav}>
+            <Pressable
+              onPress={() => navigateMonth(-1)}
+              style={styles.monthNavBtn}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Previous month"
+            >
+              <Ionicons name="chevron-back" size={20} color="rgba(255,255,255,0.5)" />
+            </Pressable>
+            <Text style={styles.monthLabel}>
+              {MONTH_NAMES[filterMonth]} {filterYear}
+            </Text>
+            <Pressable
+              onPress={() => navigateMonth(1)}
+              style={styles.monthNavBtn}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Next month"
+            >
+              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
+            </Pressable>
+          </View>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search entries..."
+              placeholderTextColor={theme.textMuted}
+              returnKeyType="search"
+              autoCorrect={false}
+            />
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+                <Ionicons name="close-circle" size={16} color={theme.textMuted} />
+              </Pressable>
+            )}
+          </View>
+        </Animated.View>
+      )}
 
 
 
@@ -349,12 +465,16 @@ export default function JournalScreen() {
 
       <View style={styles.entriesSection}>
         <View style={styles.entriesHeader}>
-          <Text style={styles.sectionTitle}>Recent Entries</Text>
-          <Text style={styles.entriesCount}>{totalCount} entries</Text>
+          <Text style={styles.sectionTitle}>
+            {searchQuery ? 'Search Results' : `${MONTH_NAMES[filterMonth]} Entries`}
+          </Text>
+          <Text style={styles.entriesCount}>
+            {filteredEntries.length}{searchQuery ? ' found' : ''} · {totalCount} total
+          </Text>
         </View>
       </View>
     </>
-  ), [checkIns, isPremium, patternInsights, totalCount, router, width]);
+  ), [checkIns, isPremium, patternInsights, totalCount, router, width, filterMonth, filterYear, searchQuery, filteredEntries.length, navigateMonth]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 
@@ -376,6 +496,21 @@ export default function JournalScreen() {
       return (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading entries...</Text>
+        </View>
+      );
+    }
+    if (totalCount > 0 && filteredEntries.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
+            <Ionicons name="search-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
+            <Text style={styles.emptyTitle}>No entries found</Text>
+            <Text style={styles.emptyDescription}>
+              {searchQuery
+                ? `No entries matching "${searchQuery}" in ${MONTH_NAMES[filterMonth]} ${filterYear}.`
+                : `No entries in ${MONTH_NAMES[filterMonth]} ${filterYear}. Try navigating to another month.`}
+            </Text>
+          </LinearGradient>
         </View>
       );
     }
@@ -411,7 +546,7 @@ export default function JournalScreen() {
         </LinearGradient>
       </View>
     );
-  }, [loading]);
+  }, [loading, totalCount, filteredEntries.length, searchQuery, filterMonth, filterYear]);
 
   const handleSaveEntry = async (data: Partial<JournalEntry>) => {
     try {
@@ -486,7 +621,7 @@ export default function JournalScreen() {
           />
         ) : (
           <FlatList
-            data={entries}
+            data={filteredEntries}
             renderItem={renderEntry}
             keyExtractor={keyExtractor}
             ListHeaderComponent={ListHeader}
@@ -598,6 +733,51 @@ const styles = StyleSheet.create({
   insightDescription: { fontSize: 15, color: theme.textSecondary, lineHeight: 22, marginBottom: 10 },
   insightEvidence: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic', marginBottom: 8 },
   insightActionable: { fontSize: 14, fontWeight: '600', marginTop: 4 },
+
+  filterSection: {
+    marginBottom: 24,
+  },
+  monthNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
+  monthNavBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthLabel: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    minWidth: 140,
+    textAlign: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: theme.textPrimary,
+    padding: 0,
+  },
 
   entriesSection: { marginBottom: 16 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },

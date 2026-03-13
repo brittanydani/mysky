@@ -612,7 +612,9 @@ function buildDayOfWeek(checkIns: DailyCheckIn[]): DayOfWeekCard | null {
   for (let i = 0; i < 7; i++) dayData[i] = { moods: [], stresses: [] };
 
   for (const c of checkIns) {
-    const day = new Date(c.createdAt).getDay(); // 0=Sun
+    // Use the stored date field (local YYYY-MM-DD) at noon to avoid DST and
+    // UTC-offset skew that would occur when parsing the UTC createdAt stamp.
+    const day = new Date(c.date + 'T12:00:00').getDay(); // 0=Sun
     dayData[day].moods.push(c.moodScore);
     dayData[day].stresses.push(stressToNum(c.stressLevel));
   }
@@ -1178,7 +1180,10 @@ function buildJournalThemes(journalEntries: JournalEntry[]): JournalThemesCard |
 
   const wordCounts: Record<string, number> = {};
   for (const entry of journalEntries) {
-    const text = (entry.content ?? '').toLowerCase().replace(/[^a-z\s'-]/g, ' ');
+    const raw = entry.content ?? '';
+    // Skip encrypted entries — processing ciphertext produces meaningless tokens.
+    if (raw.startsWith('ENC2:') || raw.startsWith('ENC1:')) continue;
+    const text = raw.toLowerCase().replace(/[^a-z\s'-]/g, ' ');
     const words = text.split(/\s+/).filter(w => w.length >= 3 && !STOPWORDS.has(w));
     const seen = new Set<string>(); // count each word once per entry
     for (const w of words) {

@@ -52,6 +52,7 @@ const VISIBLE_TABS: Record<string, TabConfig> = {
 };
 
 const DOCK_HEIGHT = 62;
+const DOT_SIZE = 4;
 
 // ── Tab Button ────────────────────────────────────────────────────────────────
 
@@ -64,15 +65,19 @@ interface TabButtonProps {
 }
 
 const TabButton = memo(function TabButton({ isFocused, cfg, onPress, onLayout }: TabButtonProps) {
-  const scale = useSharedValue(1);
+  const scale = useSharedValue(isFocused ? 1.1 : 1.0);
+
+  useEffect(() => {
+    scale.value = withSpring(isFocused ? 1.1 : 1.0, { mass: 0.6, damping: 14, stiffness: 160 });
+  }, [isFocused]);
 
   const handlePressIn = useCallback(() => {
     scale.value = withSpring(0.85, { mass: 0.5, damping: 12 });
   }, []);
 
   const handlePressOut = useCallback(() => {
-    scale.value = withSpring(1, { mass: 0.5, damping: 12 });
-  }, []);
+    scale.value = withSpring(isFocused ? 1.1 : 1.0, { mass: 0.5, damping: 12 });
+  }, [isFocused]);
 
   const animatedIconStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -104,10 +109,7 @@ const TabButton = memo(function TabButton({ isFocused, cfg, onPress, onLayout }:
         {cfg.label}
       </Text>
 
-      {/* Active indicator dot */}
-      {isFocused && (
-        <View style={styles.indicatorDot} />
-      )}
+      {/* Dot placeholder — actual sliding dot is rendered in the parent row */}
     </Pressable>
   );
 });
@@ -130,25 +132,33 @@ export default function GlassDock({ state, navigation }: BottomTabBarProps) {
   const [tabLayouts, setTabLayouts] = useState<Record<string, { x: number; width: number }>>({});
   const indicatorX = useSharedValue(0);
   const indicatorWidth = useSharedValue(0);
+  const indicatorDotX = useSharedValue(0);
   const isInitialLayout = useRef(true);
 
   useEffect(() => {
     const layout = tabLayouts[activeRouteName];
     if (!layout) return;
+    const centerX = layout.x + layout.width / 2 - DOT_SIZE / 2;
     if (isInitialLayout.current) {
       // Snap to position without animation on first render
       indicatorX.value = layout.x;
       indicatorWidth.value = layout.width;
+      indicatorDotX.value = centerX;
       isInitialLayout.current = false;
     } else {
       indicatorX.value = withSpring(layout.x, { mass: 0.8, damping: 15, stiffness: 150 });
       indicatorWidth.value = layout.width;
+      indicatorDotX.value = withSpring(centerX, { mass: 0.8, damping: 15, stiffness: 150 });
     }
   }, [activeRouteName, tabLayouts]);
 
   const animatedIndicatorStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: indicatorX.value }],
     width: indicatorWidth.value,
+  }));
+
+  const animatedDotStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: indicatorDotX.value }],
   }));
 
   return (
@@ -177,7 +187,10 @@ export default function GlassDock({ state, navigation }: BottomTabBarProps) {
         <View style={styles.row}>
           {/* Sliding gold background — rendered first so it sits under icons */}
           {Object.keys(tabLayouts).length === visibleRoutes.length && (
-            <Animated.View style={[styles.activeIndicator, animatedIndicatorStyle]} />
+            <>
+              <Animated.View style={[styles.activeIndicator, animatedIndicatorStyle]} />
+              <Animated.View style={[styles.slidingDot, animatedDotStyle]} />
+            </>
           )}
 
           {visibleRoutes.map((route) => {
@@ -297,13 +310,21 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
 
-  // Active indicator dot below label
-  indicatorDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+  // Sliding glow dot — spring-animated to the active tab center
+  slidingDot: {
+    position: 'absolute',
+    bottom: 5,
+    left: 0,
+    width: DOT_SIZE,
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
     backgroundColor: '#D4B872',
-    marginTop: 1,
+    shadowColor: '#D4B872',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
+    elevation: 6,
+    zIndex: 2,
   },
 
   // Shared sliding indicator — spring-physics pill behind the active tab

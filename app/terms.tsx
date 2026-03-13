@@ -125,7 +125,7 @@ export default function TermsOfServiceScreen() {
             <View style={styles.contactCard}>
               <Text style={styles.sectionTitle}>Contact</Text>
               <Text style={styles.paragraph}>Questions regarding these terms? Reach us at:</Text>
-              <Text style={styles.email}>brittanyapps@outlook.com</Text>
+              <Text style={styles.email}>support@mysky.app</Text>
             </View>
 
           </Animated.View>

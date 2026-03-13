@@ -12,8 +12,8 @@ import Animated, {
 
 const { width, height } = Dimensions.get("window");
 
-const STATIC_COUNT = 48;
-const TWINKLE_COUNT = 15;
+const STATIC_COUNT = 50;
+const TWINKLE_COUNT = 20;
 
 export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
   const { staticStars, twinklingStars } = useMemo(() => {
@@ -48,7 +48,12 @@ export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
   const t12 = useSharedValue(0.2);
   const t13 = useSharedValue(0.2);
   const t14 = useSharedValue(0.2);
-  const twinkleOpacities = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14];
+  const t15 = useSharedValue(0.2);
+  const t16 = useSharedValue(0.2);
+  const t17 = useSharedValue(0.2);
+  const t18 = useSharedValue(0.2);
+  const t19 = useSharedValue(0.2);
+  const twinkleOpacities = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19];
 
   useEffect(() => {
     twinkleOpacities.forEach((sv, i) => {

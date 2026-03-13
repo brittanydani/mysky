@@ -751,16 +751,38 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
-                'rgba(232, 214, 174, 0.2)',
-                'rgba(255, 255, 255, 0.95)',
-                'rgba(232, 214, 174, 0.2)',
-                'rgba(255, 255, 255, 0.65)',
-                'rgba(232, 214, 174, 0.2)'
+                'rgba(232, 214, 174, 0.12)',
+                'rgba(255, 255, 255, 1.0)',
+                'rgba(232, 214, 174, 0.12)',
+                'rgba(255, 255, 255, 0.80)',
+                'rgba(232, 214, 174, 0.12)'
               ]}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
           </Circle>
+
+          {/* Specular arc — house ring upper-left catchlight */}
+          <Path
+            path={makeArcPath(CX, CY, R_HOUSE_OUTER, -130, 55)}
+            style="stroke"
+            strokeWidth={1.6}
+            strokeCap="round"
+            color="rgba(255,255,255,0.35)"
+          >
+            <BlurMask blur={1.5} style="normal" />
+          </Path>
+
+          {/* Specular arc — house inner ring catchlight */}
+          <Path
+            path={makeArcPath(CX, CY, R_HOUSE_INNER, -125, 40)}
+            style="stroke"
+            strokeWidth={1.2}
+            strokeCap="round"
+            color="rgba(255,255,255,0.28)"
+          >
+            <BlurMask blur={1.5} style="normal" />
+          </Path>
         </Group>
 
         {/* Thin specular edge catch — top of wheel */}
@@ -774,6 +796,28 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           <BlurMask blur={2} style="normal" />
         </Path>
 
+        {/* Sharp specular flash — brightest catchlight at upper-left */}
+        <Path
+          path={makeArcPath(CX, CY, R_OUTER - 1, -128, 32)}
+          style="stroke"
+          strokeWidth={3.0}
+          strokeCap="round"
+          color="rgba(255,255,255,0.55)"
+        >
+          <BlurMask blur={1.2} style="normal" />
+        </Path>
+
+        {/* Pinpoint specular flare — peak of reflection */}
+        <Path
+          path={makeArcPath(CX, CY, R_OUTER - 1, -118, 10)}
+          style="stroke"
+          strokeWidth={4.0}
+          strokeCap="round"
+          color="rgba(255,255,255,0.75)"
+        >
+          <BlurMask blur={0.8} style="normal" />
+        </Path>
+
         {/* Secondary specular — bottom-right of wheel */}
         <Path
           path={makeArcPath(CX, CY, R_OUTER - 1, 40, 60)}
@@ -785,25 +829,56 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           <BlurMask blur={1.5} style="normal" />
         </Path>
 
+        {/* Subtle ambient bounce — lower-right rim */}
+        <Path
+          path={makeArcPath(CX, CY, R_OUTER - 1, 50, 28)}
+          style="stroke"
+          strokeWidth={1.8}
+          strokeCap="round"
+          color="rgba(255,245,220,0.22)"
+        >
+          <BlurMask blur={2} style="normal" />
+        </Path>
+
         {/* ── Dotted astronomy diagram rings ── */}
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.8} opacity={0.75}>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.8} opacity={0.85}>
           <SweepGradient
               c={vec(CX, CY)}
-              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.75)', 'rgba(255,255,255,0.2)']}
+              colors={['rgba(255,255,255,0.10)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.10)', 'rgba(255,255,255,0.90)', 'rgba(255,255,255,0.10)']}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
-        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.8} opacity={0.75}>
+        {/* Specular flash on inner dotted ring */}
+        <Path
+          path={makeArcPath(CX, CY, R_DOT_RING_1, -120, 30)}
+          style="stroke"
+          strokeWidth={1.4}
+          strokeCap="round"
+          color="rgba(255,255,255,0.40)"
+        >
+          <BlurMask blur={1} style="normal" />
+        </Path>
+        <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.8} opacity={0.85}>
           <SweepGradient
               c={vec(CX, CY)}
-              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.75)', 'rgba(255,255,255,0.2)']}
+              colors={['rgba(255,255,255,0.10)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.10)', 'rgba(255,255,255,0.90)', 'rgba(255,255,255,0.10)']}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
           <DashPathEffect intervals={[1, 8]} />
         </Circle>
+        {/* Specular flash on outer dotted ring */}
+        <Path
+          path={makeArcPath(CX, CY, R_DOT_RING_2, -115, 30)}
+          style="stroke"
+          strokeWidth={1.4}
+          strokeCap="round"
+          color="rgba(255,255,255,0.35)"
+        >
+          <BlurMask blur={1} style="normal" />
+        </Path>
 
         {/* ── Natal aspect lines (constellation threads) ── */}
         {showAspects && showPerson1 && aspectLines.length > 0 && (
@@ -1216,21 +1291,32 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
         {/* ── Center Hub: Inner Bezel ── */}
         <Group>
-          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} opacity={0.70}>
+          <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} opacity={0.80}>
             <SweepGradient
               c={vec(CX, CY)}
               colors={[
-                'rgba(232, 214, 174, 0.25)', 
-                'rgba(255, 255, 255, 0.9)', 
-                'rgba(232, 214, 174, 0.25)', 
-                'rgba(255, 255, 255, 0.45)', 
-                'rgba(232, 214, 174, 0.25)'
+                'rgba(232, 214, 174, 0.15)', 
+                'rgba(255, 255, 255, 1.0)', 
+                'rgba(232, 214, 174, 0.15)', 
+                'rgba(255, 255, 255, 0.60)', 
+                'rgba(232, 214, 174, 0.15)'
               ]}
               positions={[0, 0.15, 0.5, 0.65, 1]}
               transform={[{rotate: 0.1}]}
             />
             <BlurMask blur={2} style="normal" />
           </Circle>
+
+          {/* Sharp specular flash on inner hub bezel */}
+          <Path
+            path={makeArcPath(CX, CY, R_INNER, -125, 38)}
+            style="stroke"
+            strokeWidth={2.5}
+            strokeCap="round"
+            color="rgba(255,255,255,0.60)"
+          >
+            <BlurMask blur={1} style="normal" />
+          </Path>
           
           {/* Outer edge of inner hub */}
           <Circle cx={CX} cy={CY} r={R_INNER + 1} style="stroke" strokeWidth={1} opacity={0.95}>

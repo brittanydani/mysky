@@ -38,6 +38,7 @@ import type { WarpRef } from '../../components/ui/SkiaWarpTransition';
 import BirthDataModal from '../../components/BirthDataModal';
 import { localDb } from '../../services/storage/localDb';
 import { NatalChart, BirthData } from '../../services/astrology/types';
+import { DailyCheckIn } from '../../services/patterns/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
 import { CheckInService } from '../../services/patterns/checkInService';
@@ -103,6 +104,9 @@ export default function HomeScreen() {
 
   const [latestSleep, setLatestSleep] = useState(7);
 
+  // Weekly check-ins — used by 7-day Stability Map
+  const [weeklyCheckIns, setWeeklyCheckIns] = useState<DailyCheckIn[]>([]);
+
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
 
@@ -140,6 +144,7 @@ export default function HomeScreen() {
           // Hydrate latest check-in data for the aura
           try {
             const checkins = await localDb.getCheckIns(chart.id, 7);
+            setWeeklyCheckIns(checkins);
             if (checkins.length > 0) {
               const latest = checkins[0];
               if (latest.moodScore != null) setMood(latest.moodScore);
@@ -249,6 +254,32 @@ export default function HomeScreen() {
   };
   const insightAccent = ACCENT_MAP[dailyLoop?.todayInsight?.accentColor ?? 'emerald'] ?? PALETTE.emerald;
 
+  // ── Balance Score + Stability Map ──
+
+  const balanceScore = useMemo(() => {
+    const sleepNorm = Math.min((latestSleep / 8) * 10, 10);
+    const raw = (mood + energy + sleepNorm) / 3;
+    return Math.round(raw * 10) / 10;
+  }, [mood, energy, latestSleep]);
+
+  /** Pixel heights (max ~120px) for each of the past 7 days, oldest → today */
+  const stabilityBars = useMemo(() => {
+    const today = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (6 - i));
+      const dateStr = d.toISOString().split('T')[0];
+      const ci = weeklyCheckIns.find(c => c.date === dateStr);
+      return ci ? Math.round((ci.moodScore / 10) * 108) + 12 : 12;
+    });
+  }, [weeklyCheckIns]);
+
+  const stabilityDayLabels = useMemo(() => {
+    const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const todayIndex = new Date().getDay();
+    return Array.from({ length: 7 }, (_, i) => days[(todayIndex - 6 + i + 7) % 7]);
+  }, []);
+
   // ── Loading / Onboarding Gates ──
 
   if (loading) {
@@ -277,6 +308,12 @@ export default function HomeScreen() {
 
       {/* REPLACEMENT: Subtle, drifting cosmic field */}
       <SkiaDynamicCosmos />
+
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
 
       {/* LAYER 3: Interactive UI */}
       <SafeAreaView style={styles.safeArea}>
@@ -346,6 +383,47 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
+          {/* ── Daily Balance Score ── */}
+          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.scoreCard}>
+            <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+            <View style={styles.scoreHeader}>
+              <Text style={styles.cardLabel}>DAILY BALANCE</Text>
+              <View style={styles.trendBadgeScore}>
+                <Ionicons name="trending-up" size={12} color="#8CBEAA" />
+                <Text style={styles.trendTextScore}>Score</Text>
+              </View>
+            </View>
+            <View style={styles.scoreMain}>
+              <Text style={styles.scoreValue}>{balanceScore.toFixed(1)}</Text>
+              <Text style={styles.scoreMax}>/ 10</Text>
+            </View>
+            <View style={styles.pillsRow}>
+              <ScorePill label="Sleep" val={`${latestSleep.toFixed(1)}h`} color="#6E8CB4" />
+              <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
+              <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
+            </View>
+          </Animated.View>
+
+          {/* ── 7-Day Stability Map ── */}
+          <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.graphCard}>
+            <Text style={styles.cardLabel}>7-DAY STABILITY MAP</Text>
+            <View style={styles.graphContainer}>
+              <View style={styles.mockGraph}>
+                {stabilityBars.map((barHeight, i) => (
+                  <View key={i} style={styles.graphCol}>
+                    <View style={[styles.graphBar, { height: barHeight }]}>
+                      <LinearGradient
+                        colors={['rgba(212, 184, 114, 0.45)', 'rgba(212, 184, 114, 0.05)']}
+                        style={[StyleSheet.absoluteFill, { borderRadius: 4 }]}
+                      />
+                    </View>
+                    <Text style={styles.dayText}>{stabilityDayLabels[i]}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </Animated.View>
+
           {/* ── Actionable Insight ── */}
           <Animated.View
             entering={FadeInDown.delay(700).duration(600)}
@@ -365,6 +443,16 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
+              <Pressable
+                style={styles.actionBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                  router.push('/checkin' as Href);
+                }}
+              >
+                <Ionicons name="flash" size={14} color={PALETTE.bg} />
+                <Text style={styles.actionBtnText}>Update your state</Text>
+              </Pressable>
             </View>
           </Animated.View>
 
@@ -544,6 +632,18 @@ export default function HomeScreen() {
   );
 }
 
+// ── Score Pill ──────────────────────────────────────────────────────────────
+
+function ScorePill({ label, val, color }: { label: string; val: string; color: string }) {
+  return (
+    <View style={styles.pill}>
+      <View style={[styles.pillDot, { backgroundColor: color }]} />
+      <Text style={styles.pillLabel}>{label}</Text>
+      <Text style={styles.pillVal}>{val}</Text>
+    </View>
+  );
+}
+
 // ── Luminous Check-In FAB ────────────────────────────────────────────────────
 
 function CheckInFAB() {
@@ -560,7 +660,7 @@ function CheckInFAB() {
       onPressOut={() => { scale.value = withSpring(1, { mass: 0.5, damping: 12 }); }}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-        router.push('/(tabs)/checkin' as Href);
+        router.push('/checkin' as Href);
       }}
       style={fabStyles.container}
       accessibilityLabel="Log check-in"
@@ -860,5 +960,151 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 4,
+  },
+
+  // Nebula background glow orbs
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
+
+  // Daily Balance Score card
+  cardLabel: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '800',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  scoreCard: {
+    padding: 24,
+    borderRadius: 28,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 16,
+  },
+  scoreHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  trendBadgeScore: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(140, 190, 170, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  trendTextScore: {
+    color: '#8CBEAA',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  scoreMain: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 20,
+  },
+  scoreValue: {
+    fontSize: 60,
+    color: '#FFFFFF',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+  scoreMax: {
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.3)',
+    marginLeft: 8,
+  },
+  pillsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 10,
+    borderRadius: 14,
+    gap: 6,
+  },
+  pillDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  pillLabel: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    fontWeight: '700',
+    flex: 1,
+  },
+  pillVal: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  // 7-Day Stability Map
+  graphCard: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 24,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 16,
+  },
+  graphContainer: {
+    height: 140,
+    marginTop: 20,
+  },
+  mockGraph: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  graphCol: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  graphBar: {
+    width: 6,
+    borderRadius: 3,
+    marginBottom: 8,
+    overflow: 'hidden',
+    minHeight: 6,
+  },
+  dayText: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.3)',
+    fontWeight: '700',
+  },
+
+  // Insight card CTA
+  actionBtn: {
+    backgroundColor: PALETTE.gold,
+    height: 46,
+    borderRadius: 23,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 20,
+  },
+  actionBtnText: {
+    color: PALETTE.bg,
+    fontSize: 13,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });

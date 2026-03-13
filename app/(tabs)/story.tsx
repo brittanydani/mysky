@@ -206,29 +206,6 @@ export default function StoryScreen() {
               </View>
             )}
             
-            {chapters.length > 0 && (
-              <Pressable
-                onPress={handleExportPdf}
-                disabled={isExporting}
-                style={({ pressed }) => [styles.exportButton, pressed && { opacity: 0.8 }]}
-                accessibilityRole="button"
-                accessibilityLabel="Export chart as PDF"
-              >
-                <LinearGradient
-                  colors={['rgba(212,184,114,0.12)', 'rgba(212,184,114,0.05)']}
-                  style={styles.exportBtnGradient}
-                >
-                  {isExporting ? (
-                    <ActivityIndicator size="small" color={PALETTE.gold} />
-                  ) : (
-                    <>
-                      <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
-                      <Text style={styles.exportButtonText}>Export Full Architecture (PDF)</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </Pressable>
-            )}
           </Animated.View>
 
           {/* Radar Chart */}
@@ -284,7 +261,7 @@ export default function StoryScreen() {
                   {!isLocked && expandedChapterId === chapter.id && (
                     <Animated.View entering={FadeInDown.duration(400)}>
                       <ChapterCard
-                        chapter={`Chapter ${index + 1}`}
+                        chapter={`Chapter ${toRoman(index + 1)}`}
                         title={applyStoryLabels(chapter.title)}
                         content={applyStoryLabels(chapter.content)}
                         reflection={applyStoryLabels(chapter.reflection)}
@@ -330,6 +307,31 @@ export default function StoryScreen() {
           )}
 
         </ScrollView>
+
+        {/* ── Floating Export FAB ── */}
+        {chapters.length > 0 && (
+          <Pressable
+            onPress={handleExportPdf}
+            disabled={isExporting}
+            style={({ pressed }) => [styles.floatingExportBtn, pressed && { opacity: 0.8 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Export chart as PDF"
+          >
+            <LinearGradient
+              colors={['rgba(212,184,114,0.18)', 'rgba(212,184,114,0.06)']}
+              style={styles.floatingExportGradient}
+            >
+              {isExporting ? (
+                <ActivityIndicator size="small" color={PALETTE.gold} />
+              ) : (
+                <>
+                  <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
+                  <Text style={styles.floatingExportText}>Export as PDF</Text>
+                </>
+              )}
+            </LinearGradient>
+          </Pressable>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -400,24 +402,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  exportButton: {
-    marginTop: 20,
-    borderRadius: 20,
+  // ── Floating Export FAB ──
+  floatingExportBtn: {
+    position: 'absolute',
+    bottom: 32,
+    alignSelf: 'center',
+    borderRadius: 28,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,114,0.35)',
+    shadowColor: '#D4B872',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  exportBtnGradient: {
+  floatingExportGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 28,
   },
-  exportButtonText: {
-    fontSize: 14,
+  floatingExportText: {
+    fontSize: 15,
     fontWeight: '700',
     color: PALETTE.gold,
   },

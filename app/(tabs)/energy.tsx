@@ -44,6 +44,7 @@ import ChakraWheelComponent from '../../components/ui/ChakraWheel';
 import { MoodClimateCloud } from '../../components/ui/MoodClimateCloud';
 import { CorrelationGyroscope } from '../../components/ui/CorrelationGyroscope';
 import { useCorrelationStore } from '../../store/correlationStore';
+import { updateWidgetData } from '../../services/widgets/widgetDataService';
 
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -150,6 +151,28 @@ export default function EnergyScreen() {
 
           const snap = EnergyEngine.generateSnapshot(natal, new Date(), behavior);
           setSnapshot(snap);
+
+          // Push fresh energy state to the Home Screen / Lock Screen widgets.
+          // energyLevel maps Low→0.3, Moderate→0.6, High→0.9 for the energy ring.
+          // transitShort trims "Moon in Pisces activating your 4th house · …" to
+          // just "Moon in Pisces" — the right length for the 9pt widget label.
+          const energyLevelMap: Record<EnergyIntensity, number> = {
+            Low: 0.3, Moderate: 0.6, High: 0.9,
+          };
+          const transitShort = snap.primaryDriver
+            .split(' activating')[0]
+            .split(' ·')[0];
+          const chakraHex = snap.dominantChakra.color.replace('#', '');
+          updateWidgetData({
+            energyLevel: energyLevelMap[snap.intensity],
+            focusTitle:  snap.dominantChakra.name,
+            transit:     transitShort,
+            statusText:  snap.dominantChakra.state,
+            captionText: snap.quickMeaning,
+            orbColorR:   parseInt(chakraHex.substring(0, 2), 16) / 255,
+            orbColorG:   parseInt(chakraHex.substring(2, 4), 16) / 255,
+            orbColorB:   parseInt(chakraHex.substring(4, 6), 16) / 255,
+          });
         } catch (e) {
           logger.error('Energy load failed:', e);
         } finally {
@@ -675,7 +698,7 @@ const styles = StyleSheet.create({
   meaningText: {
     color: 'rgba(255,255,255,0.60)',
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
     marginTop: 12,
   },
   heroToneText: {
@@ -688,7 +711,7 @@ const styles = StyleSheet.create({
   body: {
     color: theme.textSecondary,
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   bodyMuted: {
     color: theme.textMuted,
@@ -788,7 +811,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   domainName: {
     color: theme.textPrimary,

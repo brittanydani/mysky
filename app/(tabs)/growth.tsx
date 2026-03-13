@@ -225,6 +225,26 @@ export default function PatternsScreen() {
             </Pressable>
           )}
 
+          {/* ── Go Deeper: Energy Map ── */}
+          <Animated.View entering={FadeInDown.delay(350).duration(600)} style={{ marginTop: 24 }}>
+            <Pressable
+              onPress={() => router.push('/(tabs)/energy' as Href)}
+              accessibilityRole="button"
+              accessibilityLabel="Open energy map"
+            >
+              <LinearGradient
+                colors={['rgba(139, 196, 232, 0.1)', 'rgba(10, 10, 12, 0.8)']}
+                style={[styles.premiumLock, { justifyContent: 'space-between', paddingHorizontal: 20 }]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Ionicons name="flash-outline" size={20} color={PALETTE.silverBlue} />
+                  <Text style={[styles.premiumText, { color: PALETTE.silverBlue }]}>Go Deeper · Energy Map</Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color={PALETTE.silverBlue} />
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+
         </ScrollView>
       </SafeAreaView>
     </View>

@@ -48,6 +48,20 @@ export const PALETTE = {
   moonstone: '#AAB7C4',
 };
 
+/** Convert a 1-based chapter number to a Roman numeral string */
+function toRoman(n: number): string {
+  const map: [number, string][] = [
+    [10, 'X'], [9, 'IX'], [8, 'VIII'], [7, 'VII'], [6, 'VI'],
+    [5, 'V'],  [4, 'IV'], [3, 'III'],  [2, 'II'],  [1, 'I'],
+  ];
+  let result = '';
+  let remaining = n;
+  for (const [val, sym] of map) {
+    while (remaining >= val) { result += sym; remaining -= val; }
+  }
+  return result;
+}
+
 /** Jewel-tone chapter → accent color mapping (thematic) */
 export const CHAPTER_COLORS: string[] = [
   PALETTE.gold,       // Ch 1: Identity / Core Vitality
@@ -204,14 +218,14 @@ function SkiaStoryGate({
 
         {/* Chapter index badge */}
         <View style={styles.indexBadge}>
-          <Text style={styles.indexText}>{index + 1}</Text>
+          <Text style={styles.indexText}>{toRoman(index + 1)}</Text>
         </View>
       </View>
 
       {/* Text column */}
       <View style={styles.textColumn}>
         <Text style={[styles.chapterLabel, !isUnlocked && styles.lockedText]}>
-          Chapter {index + 1}
+          CHAPTER {toRoman(index + 1)}
         </Text>
         <Text
           style={[styles.chapterTitle, !isUnlocked && styles.lockedText]}

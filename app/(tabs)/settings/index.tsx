@@ -144,6 +144,14 @@ export default function SettingsScreen() {
   const [devBirthInitial, setDevBirthInitial] = useState<Partial<BirthData> & { chartName?: string } | undefined>(undefined);
   const [devChartId, setDevChartId] = useState<string | null>(null);
 
+  // ── Identity state ──
+  const [identityName, setIdentityName] = useState<string>('');
+  const [identityBirthSummary, setIdentityBirthSummary] = useState<string>('');
+  const [identityPlace, setIdentityPlace] = useState<string>('');
+  const [showBirthModal, setShowBirthModal] = useState(false);
+  const [birthInitial, setBirthInitial] = useState<Partial<BirthData> & { chartName?: string } | undefined>(undefined);
+  const [identityChartId, setIdentityChartId] = useState<string | null>(null);
+
   const ensureSettings = useCallback(async () => {
     const existing = await localDb.getSettings();
     if (existing) return existing;
@@ -180,6 +188,35 @@ export default function SettingsScreen() {
       if (reminder !== null) setDailyReminderEnabled(reminder === '1');
       if (mood !== null) setMoodInsightsEnabled(mood === '1');
       if (dream !== null) setDreamLoggingEnabled(dream === '1');
+
+      // Load identity
+      try {
+        const charts = await localDb.getCharts();
+        if (charts.length > 0) {
+          const chart = charts[0];
+          setIdentityChartId(chart.id);
+          setIdentityName(chart.name || '');
+          setIdentityPlace(chart.birthPlace || '');
+          const dateStr = chart.birthDate
+            ? new Date(chart.birthDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            : '';
+          const timeStr = chart.hasUnknownTime ? 'Unknown time' : (chart.birthTime || '');
+          setIdentityBirthSummary([dateStr, timeStr].filter(Boolean).join(' · '));
+          setBirthInitial({
+            chartName: chart.name,
+            date: chart.birthDate,
+            time: chart.birthTime,
+            hasUnknownTime: chart.hasUnknownTime,
+            place: chart.birthPlace,
+            latitude: chart.latitude,
+            longitude: chart.longitude,
+            timezone: chart.timezone,
+            houseSystem: chart.houseSystem as any,
+          });
+        }
+        const storedName = await AsyncStorage.getItem('msky_user_name');
+        if (storedName) setIdentityName(prev => prev || storedName);
+      } catch {}
     } catch (error) {
       logger.error('Failed to load settings:', error);
     }
@@ -303,16 +340,16 @@ export default function SettingsScreen() {
   const disableActions = backupInProgress || restoreInProgress || backupModalVisible || restoreModalVisible;
 
   const openSupportEmail = async () => {
-    const url = 'mailto:brittanyapps@outlook.com?subject=MySky%20Support';
+    const url = 'mailto:support@mysky.app?subject=MySky%20Support';
     try {
       const can = await Linking.canOpenURL(url);
       if (!can) {
-        Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com.');
+        Alert.alert('Unable to Open Mail', 'Please email support@mysky.app.');
         return;
       }
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com.');
+      Alert.alert('Unable to Open Mail', 'Please email support@mysky.app.');
     }
   };
 
@@ -377,6 +414,79 @@ export default function SettingsScreen() {
     router.navigate('/privacy' as Href);
   };
 
+  const handleEditIdentity = useCallback(async () => {
+    try {
+      await Haptics.selectionAsync();
+    } catch {}
+    if (birthInitial) {
+      setShowBirthModal(true);
+    } else {
+      // If no chart data, try to load it fresh
+      try {
+        const charts = await localDb.getCharts();
+        if (charts.length > 0) {
+          const chart = charts[0];
+          setIdentityChartId(chart.id);
+          setBirthInitial({
+            chartName: chart.name,
+            date: chart.birthDate,
+            time: chart.birthTime,
+            hasUnknownTime: chart.hasUnknownTime,
+            place: chart.birthPlace,
+            latitude: chart.latitude,
+            longitude: chart.longitude,
+            timezone: chart.timezone,
+            houseSystem: chart.houseSystem as any,
+          });
+          setShowBirthModal(true);
+        } else {
+          Alert.alert('No Chart', 'Complete onboarding first to set up your birth data.');
+        }
+      } catch {
+        Alert.alert('Error', 'Could not load chart data.');
+      }
+    }
+  }, [birthInitial]);
+
+  const handleIdentitySave = useCallback(async (birthData: BirthData, extra?: { chartName?: string }) => {
+    setShowBirthModal(false);
+    try {
+      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      const now = new Date().toISOString();
+      await localDb.saveChart({
+        id: identityChartId || chart.id,
+        name: extra?.chartName ?? chart.name,
+        birthDate: chart.birthData.date,
+        birthTime: chart.birthData.time,
+        hasUnknownTime: chart.birthData.hasUnknownTime,
+        birthPlace: chart.birthData.place,
+        latitude: chart.birthData.latitude,
+        longitude: chart.birthData.longitude,
+        houseSystem: chart.birthData.houseSystem,
+        timezone: chart.birthData.timezone,
+        createdAt: chart.createdAt,
+        updatedAt: now,
+        isDeleted: false,
+      });
+      // Update local state
+      setIdentityName(extra?.chartName ?? chart.name);
+      setIdentityPlace(chart.birthData.place);
+      const dateStr = chart.birthData.date
+        ? new Date(chart.birthData.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : '';
+      const timeStr = chart.birthData.hasUnknownTime ? 'Unknown time' : (chart.birthData.time || '');
+      setIdentityBirthSummary([dateStr, timeStr].filter(Boolean).join(' · '));
+      setBirthInitial({
+        chartName: extra?.chartName ?? chart.name,
+        ...birthData,
+      });
+      Alert.alert('Birth Data Updated', 'Your chart and insights will recalculate.');
+    } catch (error) {
+      logger.error('Identity save failed:', error);
+      Alert.alert('Error', 'Failed to update birth data.');
+    }
+  }, [identityChartId]);
+
   const openTerms = async () => {
     try {
       await Haptics.selectionAsync();
@@ -397,7 +507,7 @@ export default function SettingsScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-          <Text style={styles.title}>Calibration</Text>
+          <Text style={styles.title}>Settings</Text>
           <Text style={[styles.subtitle, { color: accentGold }]}>Instrument precision · Data sovereignty</Text>
         </Animated.View>
 
@@ -448,6 +558,45 @@ export default function SettingsScreen() {
               </LinearGradient>
             </Animated.View>
           )}
+
+          {/* ── Your Identity ── */}
+          <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.section}>
+            <ObsidianSettingsGroup title="Your Identity" subtitle="Birth chart anchor point">
+              <View style={{ paddingHorizontal: 16 }}>
+                <View style={styles.identityCard}>
+                  <View style={styles.identityRow}>
+                    <View style={styles.identityAvatarContainer}>
+                      <LinearGradient
+                        colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']}
+                        style={styles.identityAvatar}
+                      >
+                        <Ionicons name="person" size={24} color={accentGold} />
+                      </LinearGradient>
+                    </View>
+                    <View style={styles.identityInfo}>
+                      <Text style={styles.identityName}>{identityName || 'Your Chart'}</Text>
+                      {identityBirthSummary ? (
+                        <Text style={styles.identityDetail}>{identityBirthSummary}</Text>
+                      ) : null}
+                      {identityPlace ? (
+                        <Text style={styles.identityDetail}>{identityPlace}</Text>
+                      ) : null}
+                    </View>
+                  </View>
+                </View>
+
+                <Pressable
+                  style={styles.identityEditButton}
+                  onPress={handleEditIdentity}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit birth data"
+                >
+                  <Ionicons name="create-outline" size={16} color={accentGold} />
+                  <Text style={styles.identityEditText}>Edit Birth Data</Text>
+                </Pressable>
+              </View>
+            </ObsidianSettingsGroup>
+          </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key">
@@ -550,6 +699,29 @@ export default function SettingsScreen() {
           {/* ── Calibration (Celestial Toggles) ── */}
           <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Personalization" subtitle="Fine-tune your experience">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={async () => {
+                  try { await Haptics.selectionAsync(); } catch {}
+                  router.push('/settings/notifications' as Href);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Notification schedule settings"
+              >
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <Ionicons name="notifications-outline" size={20} color={accentAmethyst} />
+                      <Text style={styles.settingTitle}>Notification Schedule</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>
+                      Set morning and evening reminder times
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                </View>
+              </Pressable>
+              <ObsidianDivider />
               <Pressable
                 style={{ paddingHorizontal: 16, paddingVertical: 12 }}
                 onPress={async () => {
@@ -927,6 +1099,13 @@ export default function SettingsScreen() {
           initialData={devBirthInitial}
         />
       )}
+
+      <BirthDataModal
+        visible={showBirthModal}
+        onClose={() => setShowBirthModal(false)}
+        onSave={handleIdentitySave}
+        initialData={birthInitial}
+      />
     </View>
   );
 }
@@ -1001,6 +1180,57 @@ const styles = StyleSheet.create({
   },
   syncButtonDisabled: { opacity: 0.6 },
   syncButtonText: { fontSize: 14, color: '#C9AE78', fontWeight: '600', marginLeft: theme.spacing.xs },
+
+  // ── Identity ──
+  identityCard: {
+    marginBottom: 12,
+  },
+  identityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  identityAvatarContainer: {},
+  identityAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(201, 174, 120, 0.2)',
+  },
+  identityInfo: {
+    flex: 1,
+  },
+  identityName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    marginBottom: 2,
+  },
+  identityDetail: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    lineHeight: 18,
+  },
+  identityEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(201, 174, 120, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(201, 174, 120, 0.15)',
+  },
+  identityEditText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#C9AE78',
+  },
 
   premiumCard: {
     borderRadius: theme.borderRadius.lg,
