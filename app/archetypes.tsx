@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     marginBottom: 8,
   },
-  headerSubtitle: { fontSize: 14, color: PALETTE.lavender },
+  headerSubtitle: { fontSize: 14 },
 
   instruction: {
     fontSize: 13,

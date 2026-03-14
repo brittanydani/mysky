@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 8 },
-  headerSubtitle: { fontSize: 14, color: PALETTE.textMuted, fontStyle: 'italic' },
+  headerSubtitle: { fontSize: 14 },
 
   sectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, fontWeight: '800', marginBottom: 16 },
 

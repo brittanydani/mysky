@@ -25,6 +25,9 @@ import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/jour
 import { BreathingMandala } from '../../components/ui/BreathingMandala';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 import { DailyCheckIn } from '../../services/patterns/types';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CHART_W = SCREEN_W - 72;
@@ -135,7 +138,7 @@ export default function PatternsScreen() {
 
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
             <Text style={styles.title}>Patterns</Text>
-            <Text style={styles.subtitle}>Analysis of your internal weather</Text>
+            <GoldSubtitle style={styles.subtitle}>Analysis of your internal weather</GoldSubtitle>
           </Animated.View>
 
           {/* ── Hub 1: Quantitative Snapshot ── */}
@@ -150,7 +153,7 @@ export default function PatternsScreen() {
             <BreathingMandala size={240} />
             {trendCheckIns.length >= 2 && (
               <View style={styles.chartWrapper}>
-                <Text style={styles.chartLabel}>30-DAY STABILITY MAP</Text>
+                <MetallicText style={styles.chartLabel} color={PALETTE.gold}>30-DAY STABILITY MAP</MetallicText>
                 <NeonWaveChart checkIns={trendCheckIns} width={CHART_W} height={200} />
               </View>
             )}
@@ -178,20 +181,28 @@ export default function PatternsScreen() {
                   {enhanced.keywordLift.restores.length > 0 && (
                     <Text style={styles.insightBody}>
                       Your journal suggests that{' '}
-                      <Text style={{ color: PALETTE.emerald, fontWeight: '600' }}>
-                        {enhanced.keywordLift.restores.map(r => r.label).join(', ')}
-                      </Text>{' '}
-                      consistently stabilize your mood.
                     </Text>
+                  )}
+                  {enhanced.keywordLift.restores.length > 0 && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <MetallicText style={{ fontWeight: '600', fontSize: 15, lineHeight: 24 }} variant="green">
+                        {enhanced.keywordLift.restores.map(r => r.label).join(', ')}
+                      </MetallicText>
+                      <Text style={styles.insightBody}>{' '}consistently stabilize your mood.</Text>
+                    </View>
                   )}
                   {enhanced.keywordLift.drains.length > 0 && (
                     <Text style={[styles.insightBody, { marginTop: 12 }]}>
                       Meanwhile,{' '}
-                      <Text style={{ color: PALETTE.copper, fontWeight: '600' }}>
-                        {enhanced.keywordLift.drains.map(d => d.label).join(', ')}
-                      </Text>{' '}
-                      tend to drain your energy.
                     </Text>
+                  )}
+                  {enhanced.keywordLift.drains.length > 0 && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <MetallicText style={{ fontWeight: '600', fontSize: 15, lineHeight: 24 }} variant="copper">
+                        {enhanced.keywordLift.drains.map(d => d.label).join(', ')}
+                      </MetallicText>
+                      <Text style={styles.insightBody}>{' '}tend to drain your energy.</Text>
+                    </View>
                   )}
                 </LinearGradient>
               )}
@@ -219,8 +230,8 @@ export default function PatternsScreen() {
           ) : (
             <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
               <LinearGradient colors={['rgba(212, 184, 114, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.premiumLock}>
-                <Ionicons name="lock-closed" size={20} color={PALETTE.gold} />
-                <Text style={styles.premiumText}>Unlock Neural Pattern Mapping</Text>
+                <MetallicIcon name="lock-closed" size={20} color={PALETTE.gold} />
+                <MetallicText style={styles.premiumText} color={PALETTE.gold}>Unlock Neural Pattern Mapping</MetallicText>
               </LinearGradient>
             </Pressable>
           )}
@@ -237,10 +248,10 @@ export default function PatternsScreen() {
                 style={[styles.premiumLock, { justifyContent: 'space-between', paddingHorizontal: 20 }]}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <Ionicons name="flash-outline" size={20} color={PALETTE.silverBlue} />
-                  <Text style={[styles.premiumText, { color: PALETTE.silverBlue }]}>Go Deeper · Energy Map</Text>
+                  <MetallicIcon name="flash-outline" size={20} variant="blue" />
+                  <MetallicText style={[styles.premiumText, { color: undefined }]} variant="blue">Go Deeper · Energy Map</MetallicText>
                 </View>
-                <Ionicons name="arrow-forward" size={16} color={PALETTE.silverBlue} />
+                <MetallicIcon name="arrow-forward" size={16} variant="blue" />
               </LinearGradient>
             </Pressable>
           </Animated.View>
@@ -253,7 +264,7 @@ export default function PatternsScreen() {
 
 const MetricCard = ({ label, value, color, sub, isText }: { label: string; value: string; color: string; sub?: string; isText?: boolean }) => (
   <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(10, 10, 12, 0.8)']} style={styles.metricCard}>
-    <Text style={[styles.metricLabel, { color }]}>{label}</Text>
+    <MetallicText style={styles.metricLabel} color={color}>{label}</MetallicText>
     <Text style={[styles.metricValue, isText && { fontSize: 16 }]}>{value}</Text>
     {sub && <Text style={styles.metricSub}>{sub}</Text>}
   </LinearGradient>
@@ -261,7 +272,7 @@ const MetricCard = ({ label, value, color, sub, isText }: { label: string; value
 
 const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
   <View style={styles.sectionHeader}>
-    <Ionicons name={icon as any} size={18} color={PALETTE.gold} />
+    <MetallicIcon name={icon as any} size={18} color={PALETTE.gold} />
     <Text style={styles.sectionTitle}>{title}</Text>
   </View>
 );
@@ -271,8 +282,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   header: { marginTop: 20, marginBottom: 32 },
-  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', marginTop: 4 },
+  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  subtitle: { fontSize: 14 },
   snapshotRow: { flexDirection: 'row', gap: 10, marginBottom: 32 },
   metricCard: { flex: 1, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', minHeight: 100 },
   metricLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 8 },
@@ -280,7 +291,7 @@ const styles = StyleSheet.create({
   metricSub: { color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 4, textAlign: 'center' },
   visualSection: { alignItems: 'center', marginBottom: 32 },
   chartWrapper: { width: '100%', marginTop: 24, padding: 20, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
-  chartLabel: { color: PALETTE.gold, fontSize: 10, fontWeight: '800', letterSpacing: 1.8, marginBottom: 20, textAlign: 'center' },
+  chartLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.8, marginBottom: 20, textAlign: 'center' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   sectionTitle: { color: PALETTE.textMain, fontSize: 18, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   insightColumn: { gap: 12 },

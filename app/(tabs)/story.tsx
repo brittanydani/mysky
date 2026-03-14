@@ -21,6 +21,9 @@ import { exportChartToPdf } from '../../services/premium/pdfExport';
 import { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 
 // ── Roman numeral helper ──
 function toRoman(n: number): string {
@@ -206,8 +209,8 @@ export default function StoryScreen() {
           onPress={() => { Haptics.selectionAsync(); router.back(); }}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={20} color={PALETTE.gold} />
-          <Text style={styles.backText}>Blueprint</Text>
+          <MetallicIcon name="arrow-back" size={20} variant="gold" />
+          <MetallicText style={styles.backText} variant="gold">Blueprint</MetallicText>
         </Pressable>
         <ScrollView
           style={styles.scrollView}
@@ -217,14 +220,14 @@ export default function StoryScreen() {
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <Text style={styles.title}>Life Narrative</Text>
-            <Text style={styles.headerSub}>
+            <GoldSubtitle style={styles.headerSub}>
               Your personal blueprint — a structured framework of behavioral patterns, core drives, and growth vectors derived from your unique data.
-            </Text>
+            </GoldSubtitle>
             {chapters.length > 0 && (
               <View style={styles.statsBadge}>
-                <Text style={styles.statsText}>
+                <MetallicText style={styles.statsText} variant="gold">
                   {unlockedCount} / {chapters.length} CHAPTERS MAPPED
-                </Text>
+                </MetallicText>
               </View>
             )}
           </Animated.View>
@@ -233,8 +236,8 @@ export default function StoryScreen() {
           {chart && chapters.length > 0 && (
             <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.radarWrapper}>
               <View style={styles.radarHeaderRow}>
-                <Ionicons name="analytics-outline" size={18} color={PALETTE.silverBlue} />
-                <Text style={styles.radarTitle}>Core Force Map</Text>
+                <MetallicIcon name="analytics-outline" size={18} variant="gold" />
+                <MetallicText style={styles.radarTitle} variant="gold">Core Force Map</MetallicText>
               </View>
               <PsychologicalForcesRadar forces={calculateForces(chart)} size={320} />
             </Animated.View>
@@ -253,7 +256,7 @@ export default function StoryScreen() {
                   onPress={() => { Haptics.selectionAsync(); router.push('/(tabs)/chart' as Href); }}
                   style={styles.emptyButton}
                 >
-                  <Text style={styles.emptyButtonText}>Build Your Blueprint</Text>
+                  <MetallicText style={styles.emptyButtonText} variant="gold">Build Your Blueprint</MetallicText>
                 </Pressable>
               </LinearGradient>
             </Animated.View>
@@ -306,15 +309,15 @@ export default function StoryScreen() {
               <Pressable onPress={() => { Haptics.selectionAsync(); router.push('/(tabs)/premium' as Href); }}>
                 <LinearGradient colors={['rgba(217, 191, 140, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
                   <View style={styles.upsellHeader}>
-                    <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                    <MetallicIcon name="sparkles" size={18} variant="gold" />
                     <Text style={styles.upsellTitle}>7 more dimensions to explore</Text>
                   </View>
                   <Text style={styles.upsellText}>
                     Attachment Style · Conflict Resolution · Inner Child Patterns · Shadow Integration · Growth Vectors — and more.
                   </Text>
                   <View style={styles.unlockRow}>
-                    <Text style={styles.unlockText}>Expand your blueprint</Text>
-                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                    <MetallicText style={styles.unlockText} variant="gold">Expand your blueprint</MetallicText>
+                    <MetallicIcon name="arrow-forward" size={14} variant="gold" />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -339,8 +342,8 @@ export default function StoryScreen() {
                   <ActivityIndicator size="small" color={PALETTE.gold} />
                 ) : (
                   <>
-                    <Ionicons name="share-outline" size={18} color={PALETTE.gold} />
-                    <Text style={styles.floatingExportText}>Export Blueprint to PDF</Text>
+                    <MetallicIcon name="share-outline" size={18} variant="gold" />
+                    <MetallicText style={styles.floatingExportText} variant="gold">Export Blueprint to PDF</MetallicText>
                   </>
                 )}
               </LinearGradient>
@@ -366,8 +369,8 @@ const styles = StyleSheet.create({
   loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14, marginTop: 12 },
 
   header: { alignItems: 'center', marginTop: 20, marginBottom: 40 },
-  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 8 },
-  headerSub: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, fontStyle: 'italic' },
+  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  headerSub: { fontSize: 14 },
 
   statsBadge: { marginTop: 16, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: 'rgba(217,191,140,0.1)', borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)' },
   statsText: { color: PALETTE.gold, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },

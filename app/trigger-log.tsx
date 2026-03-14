@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontFamily: 'Georgia',
     fontWeight: '300',
-    marginBottom: 24,
+    marginBottom: 8,
   },
 
   toggleContainer: {

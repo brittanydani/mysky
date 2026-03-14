@@ -27,6 +27,7 @@ import { localDb } from '../../services/storage/localDb';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { MetallicText } from '../../components/ui/MetallicText';
 
 const PALETTE = {
   gold: '#C9AE78',
@@ -169,13 +170,13 @@ export default function BlueprintScreen() {
                   <LinearGradient colors={card.gradientColors} style={StyleSheet.absoluteFill} />
 
                   <View style={styles.cardContent}>
-                    {card.premium ? (
+                      {card.premium ? (
                       <View style={styles.premiumHeader}>
-                        <Text style={[styles.cardIcon, card.iconStyle]}>{card.icon}</Text>
+                        <MetallicText style={[styles.cardIcon, card.iconStyle]} color={card.iconStyle.color as string}>{card.icon}</MetallicText>
                         <PremiumBadge />
                       </View>
                     ) : (
-                      <Text style={[styles.cardIcon, card.iconStyle]}>{card.icon}</Text>
+                      <MetallicText style={[styles.cardIcon, card.iconStyle]} color={card.iconStyle.color as string}>{card.icon}</MetallicText>
                     )}
                     <View>
                       <Text style={styles.cardTitle}>{card.title}</Text>
@@ -197,8 +198,8 @@ export default function BlueprintScreen() {
 // Premium lock indicator
 const PremiumBadge = () => (
   <View style={styles.badgeContainer}>
-    <Text style={styles.badgeIcon}>✦</Text>
-    <Text style={styles.badgeText}>DEEPER SKY</Text>
+    <MetallicText style={styles.badgeIcon} variant="gold">✦</MetallicText>
+    <MetallicText style={styles.badgeText} variant="gold">DEEPER SKY</MetallicText>
   </View>
 );
 
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 60 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 24 },
 
   // Header
   header: { marginBottom: 32 },
@@ -219,7 +220,7 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     marginBottom: 8,
   },
-  headerSubtitle: { fontSize: 14, color: PALETTE.gold },
+  headerSubtitle: { fontSize: 14 },
 
   // Grid
   grid: { gap: 20 },

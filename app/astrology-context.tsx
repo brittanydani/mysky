@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingTop: 60, paddingHorizontal: 16, paddingBottom: 4 },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   backArrow: { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 40 },
-  headerTitle: { fontSize: 34, color: '#F0EAD6', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 24 },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 8 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },

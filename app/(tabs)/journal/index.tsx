@@ -24,6 +24,7 @@ import { CheckInService } from '../../../services/patterns/checkInService';
 import { DailyCheckIn } from '../../../services/patterns/types';
 import ObsidianJournalEntry from '../../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../../services/journal/nlp';
+import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
@@ -438,7 +439,7 @@ export default function JournalScreen() {
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.title}>Archive</Text>
-            <Text style={styles.subtitle}>Subconscious field · Pattern memory</Text>
+            <GoldSubtitle style={styles.subtitle}>Subconscious field · Pattern memory</GoldSubtitle>
           </View>
           <Pressable
             onPress={() => router.push('/(tabs)/insights' as Href)}
@@ -839,8 +840,8 @@ const styles = StyleSheet.create({
 
   header: { marginTop: 20, marginBottom: 28 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 34, fontWeight: '300', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  subtitle: { fontSize: 14, color: theme.primary, fontStyle: 'italic', marginTop: 2 },
+  title: { fontSize: 34, fontWeight: '300', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  subtitle: { fontSize: 14 },
 
   chartTitle: {
     fontSize: 20,

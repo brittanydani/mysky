@@ -27,6 +27,8 @@ import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { MetallicText } from '../../components/ui/MetallicText';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
@@ -335,11 +337,11 @@ export default function MoodCheckIn() {
       <View style={styles.titleArea}>
         <Text style={styles.headerTitle}>Internal Weather</Text>
         {isEditingExisting && (
-          <Text style={styles.headerEditingBadge}>
+          <MetallicText style={styles.headerEditingBadge} variant="gold">
             {selectedDate === todayStr
               ? "Editing today's entry"
               : `Editing ${formatDisplayDate(selectedDate)}`}
-          </Text>
+          </MetallicText>
         )}
       </View>
 
@@ -370,7 +372,7 @@ export default function MoodCheckIn() {
         <View style={styles.trendCard}>
           <View style={styles.trendHeader}>
             <Text style={styles.sectionLabel}>7-DAY MOOD TREND</Text>
-            <Text style={styles.trendValue}>{isLoading ? '…' : trendLabel}</Text>
+            <MetallicText style={styles.trendValue} color="#E2C27A">{isLoading ? '…' : trendLabel}</MetallicText>
           </View>
           {isLoading ? (
             <View style={styles.trendPlaceholder}>
@@ -419,7 +421,7 @@ export default function MoodCheckIn() {
           <View style={styles.premiumHeaderRow}>
             <Text style={styles.sectionLabel}>EMOTIONAL QUALITY</Text>
             <View style={styles.premiumBadge}>
-              <Text style={styles.premiumBadgeText}>✦ DEEPER SKY</Text>
+              <MetallicText style={styles.premiumBadgeText} variant="gold">✦ DEEPER SKY</MetallicText>
             </View>
           </View>
           <View style={styles.tagGrid}>
@@ -470,18 +472,27 @@ export default function MoodCheckIn() {
                   isDone     && styles.slotIconWrapDone,
                   isSelected && { borderColor: `${iconColor}66` },
                 ]}>
-                  <Ionicons
-                    name={isDone ? 'checkmark' : iconName}
-                    size={15}
-                    color={activeColor}
-                  />
+                  {isDone || isSelected ? (
+                    <MetallicIcon
+                      name={isDone ? 'checkmark' : iconName}
+                      size={15}
+                      color={activeColor}
+                    />
+                  ) : (
+                    <Ionicons
+                      name={iconName}
+                      size={15}
+                      color={activeColor}
+                    />
+                  )}
                 </View>
-                <Text style={[
-                  styles.slotLabel,
-                  isDone     && styles.slotLabelDone,
-                  isSelected && !isDone && { color: iconColor },
-                  isSelected && isDone  && styles.slotLabelDone,
-                ]}>{label}</Text>
+                {isDone ? (
+                  <MetallicText style={[styles.slotLabel, styles.slotLabelDone]} variant="gold">{label}</MetallicText>
+                ) : isSelected ? (
+                  <MetallicText style={styles.slotLabel} color={iconColor}>{label}</MetallicText>
+                ) : (
+                  <Text style={styles.slotLabel}>{label}</Text>
+                )}
               </Pressable>
             );
           })}
@@ -551,7 +562,7 @@ const CustomHapticSlider = ({
     <View style={styles.sliderWrapper}>
       <View style={styles.sliderHeader}>
         <Text style={styles.sliderTitle}>{title}</Text>
-        <Text style={[styles.sliderValue, { color }]}>{value}</Text>
+        <MetallicText style={[styles.sliderValue]} color={color}>{value}</MetallicText>
       </View>
 
       <View style={styles.trackContainer} {...panResponder.panHandlers}>
@@ -631,7 +642,7 @@ const styles = StyleSheet.create({
   titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  headerTitle: { fontSize: 34, color: '#F0EAD6', fontFamily: FONT_SERIF, fontWeight: '300', marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: FONT_SERIF, fontWeight: '300', marginBottom: 8 },
   headerEditingBadge: { fontSize: 10, color: '#D9BF8C', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },

@@ -25,6 +25,8 @@ import {
   ArchetypeKey,
 } from '../../services/insights/selfKnowledgeContext';
 import { usePremium } from '../../context/PremiumContext';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -119,7 +121,7 @@ export default function HealingSpaceScreen() {
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.centered}>
-            <Ionicons name="medical-outline" size={48} color={PALETTE.emerald} style={{ marginBottom: 16 }} />
+            <MetallicIcon name="medical-outline" size={48} color={PALETTE.emerald} style={{ marginBottom: 16 }} />
             <Text style={styles.lockTitle}>The Healing Space</Text>
             <Text style={styles.lockSub}>Deep shadow work and somatic release rituals synthesized from your Blueprint.</Text>
             <Pressable style={styles.premiumBtn} onPress={() => router.push('/(tabs)/premium' as Href)}>
@@ -176,8 +178,8 @@ export default function HealingSpaceScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back" size={20} color={PALETTE.emerald} />
-          <Text style={styles.backText}>Blueprint</Text>
+          <MetallicIcon name="arrow-back" size={20} color={PALETTE.emerald} />
+          <MetallicText style={styles.backText} variant="green">Blueprint</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -193,8 +195,8 @@ export default function HealingSpaceScreen() {
               <LinearGradient colors={['rgba(168, 155, 200, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
-                <Ionicons name="moon-outline" size={16} color={PALETTE.lavender} />
-                <Text style={[styles.cardEyebrow, { color: PALETTE.lavender }]}>SHADOW WORK</Text>
+                <MetallicIcon name="moon-outline" size={16} color={PALETTE.lavender} />
+                <MetallicText style={styles.cardEyebrow} variant="lavender">SHADOW WORK</MetallicText>
               </View>
 
               <Text style={styles.cardTitle}>{archetypeData.title}</Text>
@@ -202,7 +204,7 @@ export default function HealingSpaceScreen() {
 
               <View style={styles.affirmationBox}>
                 <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
-                <Text style={styles.affirmationText}>{'"' + archetypeData.affirmation + '"'}</Text>
+                <MetallicText style={styles.affirmationText} variant=\"gold\">{'"' + archetypeData.affirmation + '"'}</MetallicText>
               </View>
             </Animated.View>
           )}
@@ -214,8 +216,8 @@ export default function HealingSpaceScreen() {
               <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
-                <Ionicons name="body-outline" size={16} color={PALETTE.emerald} />
-                <Text style={[styles.cardEyebrow, { color: PALETTE.emerald }]}>SOMATIC RELEASE</Text>
+                <MetallicIcon name="body-outline" size={16} color={PALETTE.emerald} />
+                <MetallicText style={styles.cardEyebrow} variant="green">SOMATIC RELEASE</MetallicText>
               </View>
 
               <Text style={styles.cardTitle}>
@@ -240,17 +242,17 @@ export default function HealingSpaceScreen() {
               <LinearGradient colors={['rgba(212, 163, 179, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
 
               <View style={styles.cardHeader}>
-                <Ionicons name="git-compare-outline" size={16} color={PALETTE.rose} />
-                <Text style={[styles.cardEyebrow, { color: PALETTE.rose }]}>RELATIONAL RESET</Text>
+                <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.rose} />
+                <MetallicText style={styles.cardEyebrow} variant="rose">RELATIONAL RESET</MetallicText>
               </View>
 
               <Text style={styles.cardTitle}>Pattern Interrupt</Text>
               <Text style={styles.bodyText}>
                 You recently logged a relational trigger. The next time this dynamic arises, do not react immediately.
               </Text>
-              <Text style={[styles.bodyText, { marginTop: 12, fontWeight: '700', color: PALETTE.rose }]}>
+              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} variant="rose">
                 Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
-              </Text>
+              </MetallicText>
             </Animated.View>
           )}
 
@@ -279,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     marginBottom: 8,
   },
-  headerSubtitle: { fontSize: 14, color: PALETTE.emerald, fontStyle: 'italic' },
+  headerSubtitle: { fontSize: 14 },
 
   loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14 },
 
@@ -310,6 +312,6 @@ const styles = StyleSheet.create({
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
   affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  affirmationText: { fontSize: 15, color: PALETTE.gold, lineHeight: 22, fontStyle: 'italic', fontFamily: 'Georgia' },
+  affirmationText: { fontSize: 15, color: '#D9BF8C', lineHeight: 22, fontStyle: 'italic', fontFamily: 'Georgia' },
 });
 

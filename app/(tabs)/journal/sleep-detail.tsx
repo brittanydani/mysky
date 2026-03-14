@@ -331,8 +331,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 34, color: '#F0EAD6', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '300', marginBottom: 20,
+    fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontWeight: '300', marginBottom: 8,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
   saveText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },

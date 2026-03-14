@@ -31,6 +31,8 @@ import { SomaticEnergyOrb } from '../../components/ui/SomaticEnergyOrb';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { usePremium } from '../../context/PremiumContext';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 import {
   EnergyEngine,
   EnergySnapshot,
@@ -41,7 +43,7 @@ import {
 } from '../../services/energy/energyEngine';
 import { logger } from '../../utils/logger';
 import ChakraWheelComponent from '../../components/ui/ChakraWheel';
-import { SkiaChakraGlyph, CHAKRA_VIVID } from '../../components/ui/SkiaChakraNode';
+import { SkiaChakraGlyph } from '../../components/ui/SkiaChakraNode';
 import { MoodClimateCloud } from '../../components/ui/MoodClimateCloud';
 import { CorrelationGyroscope } from '../../components/ui/CorrelationGyroscope';
 import { useCorrelationStore } from '../../store/correlationStore';
@@ -69,13 +71,6 @@ function safeHaptic() {
   Haptics.selectionAsync().catch(() => {});
 }
 
-/** Convert a 6-digit hex color to an rgba() string for gradient use */
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
 
 /* ════════════════════════════════════════════════
    MAIN SCREEN
@@ -93,6 +88,8 @@ export default function EnergyScreen() {
   const [expandedDomain, setExpandedDomain] = useState<number | null>(null);
   const [wheelTooltip, setWheelTooltip] = useState<string | null>(null);
   const wheelTooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // null = no check-in data available, fall back to astrology-based turbulence
+  const [moodTurbulence, setMoodTurbulence] = useState<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -151,6 +148,24 @@ export default function EnergyScreen() {
                 if (moodScores.length > 0) {
                   behavior.averageMood7d = moodScores.reduce((a, b) => a + b, 0) / moodScores.length;
                 }
+              }
+
+              // Derive mood-climate turbulence from real check-in data.
+              // moodScore 1-10: high mood → low turbulence (inverted).
+              // stressLevel adjusts the value: high stress adds weight, low stress reduces it.
+              const STRESS_OFFSET: Record<string, number> = { low: -1, medium: 0, high: 2 };
+              let baseMood: number | null = null;
+              if (checkIn?.moodScore != null) {
+                baseMood = checkIn.moodScore;
+              } else if (behavior.averageMood7d != null) {
+                baseMood = behavior.averageMood7d;
+              }
+              if (baseMood != null) {
+                const stressOffset = checkIn?.stressLevel
+                  ? (STRESS_OFFSET[checkIn.stressLevel] ?? 0)
+                  : 0;
+                const raw = (11 - baseMood) + stressOffset;
+                setMoodTurbulence(Math.max(1, Math.min(10, raw)));
               }
             }
           } catch (e) {
@@ -253,7 +268,9 @@ export default function EnergyScreen() {
 
   /* ── Derived values ── */
   const intensityMeta = INTENSITY_META[snapshot.intensity];
-  const cloudTurbulence = snapshot.intensity === 'Low' ? 2 : snapshot.intensity === 'Moderate' ? 5 : 9;
+  // Use real mood/stress data when available; fall back to astrology-based proxy.
+  const astrologyTurbulence = snapshot.intensity === 'Low' ? 2 : snapshot.intensity === 'Moderate' ? 5 : 9;
+  const cloudTurbulence = moodTurbulence ?? astrologyTurbulence;
 
   return (
     <View style={styles.container}>
@@ -287,9 +304,15 @@ export default function EnergyScreen() {
               style={styles.snapshotCard}
             >
               <Text style={styles.toneLabel}>{snapshot.tone}</Text>
-              <Text style={[styles.intensityBadge, { color: intensityMeta.color }]}>
-                {intensityMeta.label}
-              </Text>
+              {intensityMeta.color === '#FFFFFF' ? (
+                <Text style={[styles.intensityBadge, { color: intensityMeta.color }]}>
+                  {intensityMeta.label}
+                </Text>
+              ) : (
+                <MetallicText style={styles.intensityBadge} color={intensityMeta.color}>
+                  {intensityMeta.label}
+                </MetallicText>
+              )}
               <Text style={styles.meaningText}>{snapshot.quickMeaning}</Text>
             </LinearGradient>
           </Animated.View>
@@ -437,7 +460,7 @@ export default function EnergyScreen() {
                             <Text style={styles.domainWhyText}>{applyEnergyLabels(d.why)}</Text>
                           </View>
                           <View style={styles.domainSuggestionRow}>
-                            <Ionicons name="bulb-outline" size={14} color={theme.energy} />
+                            <MetallicIcon name="bulb-outline" size={14} variant="green" />
                             <Text style={styles.domainSuggestionText}>{d.suggestion}</Text>
                           </View>
                         </Animated.View>
@@ -462,8 +485,8 @@ export default function EnergyScreen() {
                     <View style={styles.divider} />
                     <View style={styles.guidanceRitualBlock}>
                       <View style={styles.guidanceHeader}>
-                        <Ionicons name="sparkles-outline" size={16} color={theme.calm} />
-                        <Text style={[styles.guidanceLabel, { color: theme.calm }]}>Today{'’'}s Micro-Ritual</Text>
+                        <MetallicIcon name="sparkles-outline" size={16} variant="green" />
+                        <MetallicText style={styles.guidanceLabel} variant="green">Today{'’'}s Micro-Ritual</MetallicText>
                       </View>
                       <Text style={styles.guidanceRitualText}>{snapshot.guidance.ritual}</Text>
                     </View>
@@ -529,10 +552,9 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 
   /* ── Background: compact one-liner ── */
   if (resolvedRole === 'background') {
-    const vivid = CHAKRA_VIVID[chakra.name] ?? CHAKRA_VIVID['Solar Plexus'];
     return (
       <LinearGradient
-        colors={[vivid.top, vivid.bottom]}
+        colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
         style={[styles.card, { padding: 14, marginBottom: 6 }]}
       >
         <View style={styles.chakraHeader}>
@@ -551,10 +573,9 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 
   /* ── Secondary: brief with body cue + suggestion ── */
   if (resolvedRole === 'secondary') {
-    const vivid = CHAKRA_VIVID[chakra.name] ?? CHAKRA_VIVID['Solar Plexus'];
     return (
       <LinearGradient
-        colors={[vivid.top, vivid.bottom]}
+        colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
         style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
       >
         <View style={styles.chakraHeader}>
@@ -584,11 +605,9 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
     .map(s => s.trim().replace(/\.$/, ''))
     .filter(s => s.length > 3);
 
-  const vivid = CHAKRA_VIVID[chakra.name] ?? CHAKRA_VIVID['Solar Plexus'];
-
   return (
     <LinearGradient
-      colors={[vivid.top, vivid.bottom]}
+      colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
       style={[styles.card, styles.cardPad, { marginBottom: 10 }]}
     >
       <Text style={[styles.focusRoleLabel, { color: 'rgba(255,255,255,0.75)' }]}>Primary Focus Today</Text>
@@ -643,11 +662,20 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 }
 
 function GuidanceBlock({ icon, label, text, context, color }: { icon: keyof typeof Ionicons.glyphMap; label: string; text: string; context?: string; color: string }) {
+  const isWhite = color === '#FFFFFF';
   return (
     <View style={styles.guidanceBlock}>
       <View style={styles.guidanceHeader}>
-        <Ionicons name={icon} size={16} color={color} />
-        <Text style={[styles.guidanceLabel, { color }]}>{label}</Text>
+        {isWhite ? (
+          <Ionicons name={icon} size={16} color={color} />
+        ) : (
+          <MetallicIcon name={icon} size={16} color={color} />
+        )}
+        {isWhite ? (
+          <Text style={[styles.guidanceLabel, { color }]}>{label}</Text>
+        ) : (
+          <MetallicText style={styles.guidanceLabel} color={color}>{label}</MetallicText>
+        )}
       </View>
       <Text style={styles.guidanceMainText}>{text}</Text>
       {context ? <Text style={styles.guidanceContextText}>{context}</Text> : null}
@@ -667,7 +695,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
-    padding: 8,
+    padding: 4,
     paddingHorizontal: theme.spacing.md,
     alignSelf: 'flex-start',
   },
@@ -679,7 +707,7 @@ const styles = StyleSheet.create({
 
   /* ── Somatic anchor ── */
   somaticHeader: {
-    height: 220,
+    height: 160,
     alignItems: 'center',
     justifyContent: 'center',
   },

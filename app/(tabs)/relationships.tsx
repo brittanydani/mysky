@@ -33,9 +33,12 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import NeedsComparison from '../../components/ui/NeedsComparison';
 import AspectRow from '../../components/ui/AspectRow';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import { useSceneStore } from '../../store/sceneStore';
 import { useResonanceStore } from '../../store/resonanceStore';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 
 // ── Cinematic Palette ──
 
@@ -373,7 +376,7 @@ export default function RelationshipsScreen() {
               <Text style={styles.detailSubtitle}>{userName} + {selectedRelationship.name}</Text>
             </View>
             <Pressable onPress={handleDeleteRelationship} style={styles.deleteButton}>
-              <Ionicons name="trash-outline" size={22} color={'#CD7F5D'} />
+              <MetallicIcon name="trash-outline" size={22} color="#CD7F5D" />
             </Pressable>
           </View>
 
@@ -393,8 +396,8 @@ export default function RelationshipsScreen() {
                 style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#C9AE78'}60`, backgroundColor: `${'#C9AE78'}15` }]}
                 onPress={() => { setSummaryPerson('them'); Haptics.selectionAsync().catch(() => {}); }}
               >
-                <Ionicons name="layers-outline" size={13} color={summaryPerson === 'them' ? '#C9AE78' : theme.textMuted} />
-                <Text style={[styles.personPillText, summaryPerson === 'them' && { color: '#C9AE78' }]}>{selectedRelationship.name}</Text>
+                {summaryPerson === 'them' ? <MetallicIcon name="layers-outline" size={13} color="#C9AE78" /> : <Ionicons name="layers-outline" size={13} color={theme.textMuted} />}
+                {summaryPerson === 'them' ? <MetallicText style={styles.personPillText} color="#C9AE78">{selectedRelationship.name}</MetallicText> : <Text style={styles.personPillText}>{selectedRelationship.name}</Text>}
                 <Text style={styles.personPillType}>{RELATIONSHIP_LABELS[selectedRelationship.relationship]}</Text>
               </Pressable>
 
@@ -486,7 +489,7 @@ export default function RelationshipsScreen() {
               <Animated.View entering={FadeInDown.duration(400)}>
                 <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Ionicons name="heart" size={20} color={'#6EBF8B'} />
+                    <MetallicIcon name="heart" size={20} color="#6EBF8B" />
                     <Text style={styles.insightCardTitle}>Your Connection</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryConnection}</Text>
@@ -494,7 +497,7 @@ export default function RelationshipsScreen() {
 
                 <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Ionicons name="trending-up" size={20} color={'#8BC4E8'} />
+                    <MetallicIcon name="trending-up" size={20} color="#8BC4E8" />
                     <Text style={styles.insightCardTitle}>Your Growth Edge</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryChallenge}</Text>
@@ -527,8 +530,8 @@ export default function RelationshipsScreen() {
                       </View>
                       <Text style={styles.upsellText}>Communication styles, emotional needs comparison, and healing paths for this relationship — with Deeper Sky.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textGold }}>See the full picture</Text>
-                        <Ionicons name="arrow-forward" size={16} color={theme.textGold} />
+                        <MetallicText style={{ fontSize: 14, fontWeight: '600' }} variant="gold">See the full picture</MetallicText>
+                        <MetallicIcon name="arrow-forward" size={16} variant="gold" />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -549,8 +552,8 @@ export default function RelationshipsScreen() {
                       <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 4} more planetary connections</Text>
                       <Text style={styles.upsellText}>Deeper aspects reveal hidden dynamics — the subtle threads that make this relationship unique.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: theme.textGold }}>Unlock all aspects</Text>
-                        <Ionicons name="arrow-forward" size={16} color={theme.textGold} />
+                        <MetallicText style={{ fontSize: 14, fontWeight: '600' }} variant="gold">Unlock all aspects</MetallicText>
+                        <MetallicIcon name="arrow-forward" size={16} variant="gold" />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -629,7 +632,7 @@ export default function RelationshipsScreen() {
         
         <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
           <Text style={styles.title}>Relationships</Text>
-          <Text style={styles.subtitle}>Understanding, not compatibility scores</Text>
+          <GoldSubtitle style={styles.subtitle}>Understanding, not compatibility scores</GoldSubtitle>
         </Animated.View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -662,7 +665,7 @@ export default function RelationshipsScreen() {
                               <View key={i} style={styles.previewAspectRow}>
                                 <View style={[styles.previewDot, { backgroundColor: catColor }]} />
                                 <Text style={styles.previewPlanets} numberOfLines={1}>{aspect.person1Planet.planet.name} {aspect.aspectType.symbol} {aspect.person2Planet.planet.name}</Text>
-                                <Text style={[styles.previewCategory, { color: catColor }]}>{aspect.category}</Text>
+                                <MetallicText style={styles.previewCategory} color={catColor}>{aspect.category}</MetallicText>
                               </View>
                             );
                           })}
@@ -685,7 +688,7 @@ export default function RelationshipsScreen() {
               {(['partner', 'parent', 'child', 'friend', 'sibling', 'other'] as RelationshipType[]).map(type => (
                 <Pressable key={type} style={styles.typeButton} onPress={() => handleAddRelationship(type)}>
                   <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={styles.typeIconContainer}>
-                    <Ionicons name={RELATIONSHIP_ICONS[type]} size={24} color={'#8BC4E8'} />
+                    <MetallicIcon name={RELATIONSHIP_ICONS[type]} size={24} color="#8BC4E8" />
                   </LinearGradient>
                   <Text style={styles.typeLabel}>{RELATIONSHIP_LABELS[type]}</Text>
                 </Pressable>
@@ -709,7 +712,7 @@ export default function RelationshipsScreen() {
               <Text style={styles.discoverTitle}>What You'll Discover</Text>
               
               <View style={styles.discoverItem}>
-                <Ionicons name="chatbubbles" size={20} color={'#8BC4E8'} />
+                <MetallicIcon name="chatbubbles" size={20} color="#8BC4E8" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Communication Styles</Text>
                   <Text style={styles.discoverItemText}>How you each process and express</Text>
@@ -717,7 +720,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <Ionicons name="heart" size={20} color={'#D4A3B3'} />
+                <MetallicIcon name="heart" size={20} color="#D4A3B3" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Emotional Needs</Text>
                   <Text style={styles.discoverItemText}>What makes each person feel safe</Text>
@@ -725,7 +728,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <Ionicons name="git-merge" size={20} color={'#CD7F5D'} />
+                <MetallicIcon name="git-merge" size={20} color="#CD7F5D" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Sources of Ease & Tension</Text>
                   <Text style={styles.discoverItemText}>Where you flow and where you grow</Text>
@@ -733,7 +736,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <Ionicons name="refresh" size={20} color={'#6EBF8B'} />
+                <MetallicIcon name="refresh" size={20} color="#6EBF8B" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Repair Strategies</Text>
                   <Text style={styles.discoverItemText}>How to reconnect after conflict</Text>
@@ -764,8 +767,8 @@ const styles = StyleSheet.create({
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
   
   header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 34, fontWeight: '300', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  subtitle: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic', marginTop: 6 },
+  title: { fontSize: 34, fontWeight: '300', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  subtitle: { fontSize: 14 },
   scrollView: { flex: 1, paddingHorizontal: 24 },
   
   listSectionTitle: { fontSize: 22, color: theme.textPrimary, marginTop: 24, marginBottom: 6, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },

@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     marginBottom: 8,
   },
-  headerSubtitle: { fontSize: 14, color: PALETTE.textMuted, fontStyle: 'italic' },
+  headerSubtitle: { fontSize: 14 },
 
   syncBanner: {
     flexDirection: 'row',

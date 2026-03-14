@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: 'Georgia', fontWeight: '300', marginBottom: 8 },
-  headerSubtitle: { fontSize: 14, color: PALETTE.textMuted, fontStyle: 'italic' },
+  headerSubtitle: { fontSize: 14 },
 
   instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, fontStyle: 'italic', marginBottom: 28 },
 

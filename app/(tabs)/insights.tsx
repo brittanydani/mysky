@@ -30,6 +30,9 @@ import {
   computeSelfKnowledgeCrossRef,
   CrossRefInsight,
 } from '../../utils/selfKnowledgeCrossRef';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 
 // ── Unified 5-Hub Palette ──
 const PALETTE = {
@@ -196,15 +199,15 @@ export default function InsightsScreen() {
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
             <Text style={styles.title}>Insights</Text>
-            <Text style={styles.subtitle}>Personalized patterns & rhythmic guidance</Text>
+            <GoldSubtitle style={styles.subtitle}>Personalized patterns & rhythmic guidance</GoldSubtitle>
           </Animated.View>
 
           {/* ── Hub 1: Daily Reflection Prompt ── */}
           <Animated.View entering={FadeInDown.delay(160)} style={styles.section}>
             <LinearGradient colors={['rgba(212, 184, 114, 0.12)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
               <View style={styles.promptHeader}>
-                <Ionicons name="sparkles-outline" size={14} color={PALETTE.gold} />
-                <Text style={styles.promptEyebrow}>REFLECTION PROMPT</Text>
+                <MetallicIcon name="sparkles-outline" size={14} variant="gold" />
+                <MetallicText style={styles.promptEyebrow} variant="gold">REFLECTION PROMPT</MetallicText>
               </View>
               <Text style={styles.promptText}>{prompt}</Text>
               <View style={styles.actionRow}>
@@ -234,12 +237,12 @@ export default function InsightsScreen() {
                     style={styles.glassCard}
                   >
                     <View style={styles.crossRefHeader}>
-                      <Text style={[styles.insightLabel, { color: accent }]}>
+                      <MetallicText style={styles.insightLabel} color={accent}>
                         {insight.source.toUpperCase()}
-                      </Text>
+                      </MetallicText>
                       {insight.isConfirmed && (
                         <View style={[styles.confirmedBadge, { borderColor: `${accent}50` }]}>
-                          <Text style={[styles.confirmedText, { color: accent }]}>DATA CONFIRMED</Text>
+                          <MetallicText style={styles.confirmedText} color={accent}>DATA CONFIRMED</MetallicText>
                         </View>
                       )}
                     </View>
@@ -267,8 +270,8 @@ export default function InsightsScreen() {
               {enhanced.blended.length > 0 && (
                 <LinearGradient colors={['rgba(139, 196, 232, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
                   <View style={styles.patternLabelRow}>
-                    <Ionicons name="git-merge-outline" size={14} color={PALETTE.silverBlue} />
-                    <Text style={[styles.insightLabel, { color: PALETTE.silverBlue }]}>WHERE IT CONNECTS</Text>
+                    <MetallicIcon name="git-merge-outline" size={14} variant="gold" />
+                    <MetallicText style={styles.insightLabel} variant="gold">WHERE IT CONNECTS</MetallicText>
                   </View>
                   <Text style={styles.patternTitle}>{enhanced.blended[0].title}</Text>
                   <Text style={styles.insightBody}>{enhanced.blended[0].body}</Text>
@@ -277,25 +280,29 @@ export default function InsightsScreen() {
 
               {enhanced.keywordLift.hasData && (
                 <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
-                  <Text style={[styles.insightLabel, { color: PALETTE.emerald }]}>KEYWORD LIFT</Text>
+                  <MetallicText style={styles.insightLabel} variant="gold">KEYWORD LIFT</MetallicText>
                   {enhanced.keywordLift.restores.length > 0 && (
-                    <Text style={styles.insightBody}>
-                      <Text style={{ color: PALETTE.emerald, fontWeight: '600' }}>Restores: </Text>
-                      {enhanced.keywordLift.restores.map(r => r.label).join(', ')}
-                    </Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                      <MetallicText style={{ fontWeight: '600', fontSize: 15, lineHeight: 24 }} variant="gold">Restores: </MetallicText>
+                      <Text style={styles.insightBody}>
+                        {enhanced.keywordLift.restores.map(r => r.label).join(', ')}
+                      </Text>
+                    </View>
                   )}
                   {enhanced.keywordLift.drains.length > 0 && (
-                    <Text style={[styles.insightBody, { marginTop: 8 }]}>
-                      <Text style={{ color: PALETTE.copper, fontWeight: '600' }}>Drains: </Text>
-                      {enhanced.keywordLift.drains.map(d => d.label).join(', ')}
-                    </Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
+                      <MetallicText style={{ fontWeight: '600', fontSize: 15, lineHeight: 24 }} variant="copper">Drains: </MetallicText>
+                      <Text style={styles.insightBody}>
+                        {enhanced.keywordLift.drains.map(d => d.label).join(', ')}
+                      </Text>
+                    </View>
                   )}
                 </LinearGradient>
               )}
 
               {enhanced.emotionToneShift && (
                 <LinearGradient colors={['rgba(212, 184, 114, 0.08)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
-                  <Text style={styles.insightLabel}>EMOTION TONE</Text>
+                  <MetallicText style={styles.insightLabel} variant="gold">EMOTION TONE</MetallicText>
                   <Text style={styles.insightBody}>{enhanced.emotionToneShift.insight}</Text>
                 </LinearGradient>
               )}
@@ -308,10 +315,10 @@ export default function InsightsScreen() {
               <LinearGradient colors={['rgba(212, 184, 114, 0.1)', 'rgba(212, 184, 114, 0.02)']} style={styles.cosmicCard}>
                 <View style={styles.cosmicHeader}>
                   <View style={styles.cosmicIconWrap}>
-                    <Ionicons name="planet-outline" size={18} color={PALETTE.gold} />
+                    <MetallicIcon name="planet-outline" size={18} variant="gold" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.cosmicTitle}>Cosmic Context</Text>
+                    <MetallicText style={styles.cosmicTitle} variant="gold">Cosmic Context</MetallicText>
                     <Text style={styles.cosmicSubtitle}>View today's transits and influences</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
@@ -330,15 +337,15 @@ export default function InsightsScreen() {
 
 const MetricBox = ({ label, value, color, isText }: { label: string; value: string; color: string; isText?: boolean }) => (
   <View style={styles.metricBox}>
-    <Text style={[styles.metricLabel, { color }]}>{label}</Text>
+    <MetallicText style={styles.metricLabel} color={color}>{label}</MetallicText>
     <Text style={[styles.metricValue, isText && { fontSize: 16 }]}>{value}</Text>
   </View>
 );
 
 const ActionPill = ({ label, icon, color, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }) => (
   <Pressable onPress={onPress} style={[styles.actionPill, { borderColor: `${color}40` }]}>
-    <Ionicons name={icon} size={16} color={color} />
-    <Text style={[styles.actionLabel, { color }]}>{label}</Text>
+    <MetallicIcon name={icon} size={16} color={color} />
+    <MetallicText style={styles.actionLabel} color={color}>{label}</MetallicText>
   </Pressable>
 );
 
@@ -351,8 +358,8 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingBottom: 120 },
 
   header: { marginTop: 20, marginBottom: 28 },
-  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginTop: 4 },
+  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  subtitle: { fontSize: 14 },
 
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16 },

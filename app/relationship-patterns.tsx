@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: 'Georgia', fontWeight: '300', marginBottom: 8 },
-  headerSubtitle: { fontSize: 14, color: PALETTE.textMuted, lineHeight: 20, fontStyle: 'italic' },
+  headerSubtitle: { fontSize: 14 },
 
   summaryCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.2)', padding: 24, marginBottom: 24 },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },

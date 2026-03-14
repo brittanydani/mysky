@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   iconButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 22 },
   iconText: { color: '#FFF', fontSize: 24, lineHeight: 28 },
   sealIconText: { color: '#D9BF8C', fontSize: 20, transform: [{ rotate: '45deg' }] },
-  headerTitle: { fontSize: 34, color: '#F0EAD6', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 8 },
 
   editorContainer: { flex: 1, paddingHorizontal: 24 },
   textInput: { flex: 1, fontSize: 18, color: '#FFF', fontFamily: 'Georgia', lineHeight: 28, paddingTop: 20 },

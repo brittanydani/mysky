@@ -316,10 +316,10 @@ const styles = StyleSheet.create({
   backArrow: { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 40 },
   headerTitle: {
     fontSize: 34,
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
-    marginBottom: 32,
+    marginBottom: 8,
   },
 
   content: { paddingHorizontal: 24, paddingTop: 20 },

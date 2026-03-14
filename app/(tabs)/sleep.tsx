@@ -35,6 +35,8 @@ import { localDb } from '../../services/storage/localDb';
 import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { NatalChart } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
@@ -56,6 +58,7 @@ import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SegmentRating from '../../components/ui/SegmentRating';
 import AwakenStateSheet from '../../components/ui/AwakenStateSheet';
 import PremiumPill from '../../components/ui/PremiumPill';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -141,7 +144,7 @@ const FeelingItem = memo(function FeelingItem({
         <Text style={[styles.dreamMoodOptionText, isSelected && styles.dreamMoodOptionTextSelected]}>
           {feel.label}
         </Text>
-        {isSelected && <Ionicons name="checkmark" size={18} color={PALETTE.amethyst} />}
+        {isSelected && <MetallicIcon name="checkmark" size={18} variant="gold" />}
       </Pressable>
       {isSelected && (
         <View style={styles.intensityRow}>
@@ -521,7 +524,7 @@ export default function SleepScreen() {
           {/* ── High-End Typography Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <Text style={styles.title}>Nightly Archive</Text>
-            <Text style={styles.subtitle}>Circadian rest & symbolic memory</Text>
+            <GoldSubtitle style={styles.subtitle}>Circadian rest & symbolic memory</GoldSubtitle>
           </Animated.View>
 
           {/* ── Main Form (Volumetric Glass Card) ── */}
@@ -568,9 +571,11 @@ export default function SleepScreen() {
                     ))}
                   </View>
                   {quality > 0 && (
-                    <Animated.Text entering={FadeIn.duration(300)} style={styles.qualityStateLabel}>
-                      {['Exhausted', 'Restless', 'Moderate', 'Restored', 'Deeply Rested'][quality - 1]}
-                    </Animated.Text>
+                    <Animated.View entering={FadeIn.duration(300)}>
+                      <MetallicText style={styles.qualityStateLabel} variant="gold">
+                        {['Exhausted', 'Restless', 'Moderate', 'Restored', 'Deeply Rested'][quality - 1]}
+                      </MetallicText>
+                    </Animated.View>
                   )}
 
                   {/* ── Hours Slept Picker ── */}
@@ -631,8 +636,8 @@ export default function SleepScreen() {
                           <Text style={styles.premiumLockSub}>AI analysis of archetypes and emotional patterns in your dreams.</Text>
                         </View>
                         <View style={styles.deeperSkyBadge}>
-                          <Ionicons name="sparkles" size={10} color={PALETTE.amethyst} />
-                          <Text style={styles.deeperSkyBadgeText}>DEEPER SKY</Text>
+                          <MetallicIcon name="sparkles" size={10} variant="gold" />
+                          <MetallicText style={styles.deeperSkyBadgeText} variant="gold">DEEPER SKY</MetallicText>
                         </View>
                       </LinearGradient>
                     </Pressable>
@@ -830,7 +835,7 @@ export default function SleepScreen() {
 
                 {saveError && (
                   <View style={styles.errorBanner}>
-                    <Ionicons name="warning-outline" size={18} color={PALETTE.copper} />
+                    <MetallicIcon name="warning-outline" size={18} variant="copper" />
                     <Text style={styles.errorBannerText}>{saveError}</Text>
                     <Pressable onPress={() => setSaveError(null)}>
                       <Ionicons name="close" size={18} color={theme.textMuted} />
@@ -851,7 +856,7 @@ export default function SleepScreen() {
               <Animated.View entering={FadeInDown.delay(180).duration(600)} style={styles.section}>
                 <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.todayInterpretCard}>
                   <View style={styles.todayInterpretHeader}>
-                    <Ionicons name="sparkles" size={18} color={PALETTE.amethyst} />
+                    <MetallicIcon name="sparkles" size={18} variant="gold" />
                     <Text style={styles.todayInterpretTitle}>Your Dream Reflection</Text>
                   </View>
                   <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
@@ -877,19 +882,19 @@ export default function SleepScreen() {
               <View style={styles.statsRow}>
                 <View style={styles.statCard}>
                   <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-                  <Text style={[styles.statLabel, { color: PALETTE.silverBlue }]}>NIGHTS</Text>
+                  <MetallicText style={styles.statLabel} variant="gold">NIGHTS</MetallicText>
                   <Text style={styles.statValue}>{stats.count}</Text>
                   <Text style={styles.statSub}>logged</Text>
                 </View>
                 <View style={styles.statCard}>
                   <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-                  <Text style={[styles.statLabel, { color: PALETTE.gold }]}>AVG SLEEP</Text>
+                  <MetallicText style={styles.statLabel} variant="gold">AVG SLEEP</MetallicText>
                   <Text style={styles.statValue}>{stats.avgDuration != null ? formatDuration(stats.avgDuration) : '—'}</Text>
                   <Text style={styles.statSub}>per night</Text>
                 </View>
                 <View style={styles.statCard}>
                   <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-                  <Text style={[styles.statLabel, { color: PALETTE.emerald }]}>AVG REST</Text>
+                  <MetallicText style={styles.statLabel} variant="gold">AVG REST</MetallicText>
                   <Text style={styles.statValue}>{stats.avgQuality != null ? `${stats.avgQuality.toFixed(1)}/5` : '—'}</Text>
                   <Text style={styles.statSub}>quality</Text>
                 </View>
@@ -904,7 +909,7 @@ export default function SleepScreen() {
               <View style={styles.obsidianCard}>
                 <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.obsidianCardHeader}>
-                  <Ionicons name="moon-outline" size={14} color={PALETTE.silverBlue} />
+                  <MetallicIcon name="moon-outline" size={14} variant="gold" />
                   <Text style={styles.obsidianCardEyebrow}>NIGHTLY ASCENT</Text>
                 </View>
                 <SkiaSleepGraph data={historicalSleep} width={SCREEN_W - 80} height={140} />
@@ -938,7 +943,7 @@ export default function SleepScreen() {
               <View style={styles.obsidianCard}>
                 <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.obsidianCardHeader}>
-                  <Ionicons name="planet-outline" size={14} color={PALETTE.silverBlue} />
+                  <MetallicIcon name="planet-outline" size={14} variant="gold" />
                   <Text style={styles.obsidianCardEyebrow}>RECURRING THEMES</Text>
                 </View>
                 <DreamClusterMap height={280} />
@@ -999,9 +1004,9 @@ export default function SleepScreen() {
                             onPress={() => handleDreamReflect(entry)}
                             style={({ pressed }) => [styles.reflectBtn, pressed && styles.reflectBtnPressed]}
                           >
-                            <Ionicons name={isExpanded ? 'chevron-up' : 'sparkles'} size={14} color={PALETTE.amethyst} />
+                            <MetallicIcon name={isExpanded ? 'chevron-up' : 'sparkles'} size={14} variant="gold" />
                             <Text style={styles.reflectBtnText}>{isExpanded ? 'Close reflection' : 'Reflect on this dream'}</Text>
-                            <Ionicons name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} color={PALETTE.amethyst} style={{ marginLeft: 'auto' }} />
+                            <MetallicIcon name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} variant="gold" style={{ marginLeft: 'auto' }} />
                           </Pressable>
                         ) : null}
                       </LinearGradient>
@@ -1033,7 +1038,7 @@ export default function SleepScreen() {
 
           {loadError && entries.length === 0 && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
-              <Ionicons name="cloud-offline-outline" size={48} color={PALETTE.copper} />
+              <MetallicIcon name="cloud-offline-outline" size={48} variant="copper" />
               <Text style={styles.emptyTitle}>Could not load data</Text>
               <Text style={styles.emptySubtitle}>{loadError}</Text>
             </Animated.View>
@@ -1061,8 +1066,8 @@ const styles = StyleSheet.create({
 
   header: { marginTop: 10, marginBottom: 24, paddingHorizontal: 4 },
   backButton: { padding: 8, paddingHorizontal: 16, alignSelf: 'flex-start' },
-  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
-  subtitle: { color: 'rgba(255,255,255,0.4)', fontSize: 14, fontStyle: 'italic', marginTop: 4 },
+  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  subtitle: { fontSize: 14 },
 
   section: { marginBottom: 32 },
   sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16, paddingLeft: 4 },

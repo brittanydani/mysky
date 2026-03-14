@@ -376,11 +376,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: '#FFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontFamily: 'Georgia',
     fontWeight: '300',
     marginBottom: 8,
   },
-  headerSubtitle: { fontSize: 14, color: '#D9BF8C', letterSpacing: 0.5 },
+  headerSubtitle: { fontSize: 14 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
 

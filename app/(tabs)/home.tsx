@@ -45,6 +45,8 @@ import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop'
 import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 
 const { width } = Dimensions.get('window');
 
@@ -338,20 +340,20 @@ export default function HomeScreen() {
           {dailyLoop && dailyLoop.streak.current > 0 && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.streakRow}>
               <View style={styles.streakPill}>
-                <Ionicons name="flame" size={16} color={PALETTE.gold} />
-                <Text style={styles.streakCount}>{dailyLoop.streak.current}</Text>
+                <MetallicIcon name="flame" size={16} variant="gold" />
+                <MetallicText style={styles.streakCount} variant="gold">{dailyLoop.streak.current}</MetallicText>
                 <Text style={styles.streakLabel}>day streak</Text>
               </View>
               {dailyLoop.streak.milestone && (
                 <View style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}18` }]}>
-                  <Ionicons name="trophy" size={14} color={PALETTE.gold} />
-                  <Text style={[styles.streakLabel, { color: PALETTE.gold }]}>Milestone!</Text>
+                  <MetallicIcon name="trophy" size={14} variant="gold" />
+                  <MetallicText style={styles.streakLabel} variant="gold">Milestone!</MetallicText>
                 </View>
               )}
               {dailyLoop.streak.checkedInToday && (
                 <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
-                  <Ionicons name="checkmark-circle" size={14} color={PALETTE.emerald} />
-                  <Text style={[styles.streakLabel, { color: PALETTE.emerald }]}>Today</Text>
+                  <MetallicIcon name="checkmark-circle" size={14} variant="green" />
+                  <MetallicText style={styles.streakLabel} variant="green">Today</MetallicText>
                 </View>
               )}
             </Animated.View>
@@ -371,8 +373,8 @@ export default function HomeScreen() {
                   <Text style={styles.nudgeText}>{dailyLoop.returnNudge.text}</Text>
                 </View>
                 <View style={styles.nudgeCta}>
-                  <Text style={styles.nudgeCtaText}>{dailyLoop.returnNudge.ctaLabel}</Text>
-                  <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                  <MetallicText style={styles.nudgeCtaText} variant="gold">{dailyLoop.returnNudge.ctaLabel}</MetallicText>
+                  <MetallicIcon name="arrow-forward" size={14} variant="gold" />
                 </View>
               </Pressable>
             </Animated.View>
@@ -384,8 +386,8 @@ export default function HomeScreen() {
             <View style={styles.scoreHeader}>
               <Text style={styles.cardLabel}>DAILY BALANCE</Text>
               <View style={styles.trendBadgeScore}>
-                <Ionicons name="trending-up" size={12} color="#8CBEAA" />
-                <Text style={styles.trendTextScore}>Score</Text>
+                <MetallicIcon name="trending-up" size={12} color="#8CBEAA" />
+                <MetallicText style={styles.trendTextScore} color="#8CBEAA">Score</MetallicText>
               </View>
             </View>
             <View style={styles.scoreMain}>
@@ -426,8 +428,8 @@ export default function HomeScreen() {
           >
             <View style={styles.insightGradient}>
               <View style={styles.insightHeader}>
-                <Ionicons name={insightIcon as any} size={16} color={insightAccent} />
-                <Text style={[styles.insightEyebrow, { color: insightAccent }]}>
+                <MetallicIcon name={insightIcon as any} size={16} color={insightAccent} />
+                <MetallicText style={styles.insightEyebrow} color={insightAccent}>
                   {dailyLoop?.todayInsight?.type === 'milestone'
                     ? 'MILESTONE'
                     : dailyLoop?.todayInsight?.type === 'sleep-mood'
@@ -435,7 +437,7 @@ export default function HomeScreen() {
                       : dailyLoop?.todayInsight?.type === 'pattern'
                         ? 'PATTERN NOTICED'
                         : 'DAILY REFLECTION'}
-                </Text>
+                </MetallicText>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
               <Pressable
@@ -459,16 +461,16 @@ export default function HomeScreen() {
             >
               <View style={styles.weeklyGradient}>
                 <View style={styles.insightHeader}>
-                  <Ionicons name="calendar-outline" size={16} color={PALETTE.silverBlue} />
-                  <Text style={[styles.insightEyebrow, { color: PALETTE.silverBlue }]}>THIS WEEK</Text>
+                  <MetallicIcon name="calendar-outline" size={16} variant="gold" />
+                  <MetallicText style={styles.insightEyebrow} variant="gold">THIS WEEK</MetallicText>
                   {dailyLoop.weeklyReflection.moodDirection === 'up' && (
                     <View style={styles.trendBadge}>
-                      <Ionicons name="trending-up" size={12} color={PALETTE.emerald} />
+                      <MetallicIcon name="trending-up" size={12} variant="green" />
                     </View>
                   )}
                   {dailyLoop.weeklyReflection.moodDirection === 'down' && (
                     <View style={styles.trendBadge}>
-                      <Ionicons name="trending-down" size={12} color={PALETTE.copper} />
+                      <MetallicIcon name="trending-down" size={12} variant="copper" />
                     </View>
                   )}
                 </View>
@@ -509,8 +511,8 @@ export default function HomeScreen() {
             <Animated.View entering={FadeInDown.delay(800).duration(600)} style={styles.weeklyCard}>
               <View style={styles.weeklyGradient}>
                 <View style={styles.insightHeader}>
-                  <Ionicons name="sparkles-outline" size={16} color={PALETTE.gold} />
-                  <Text style={[styles.insightEyebrow, { color: PALETTE.gold }]}>WEEKLY REFLECTION</Text>
+                  <MetallicIcon name="sparkles-outline" size={16} variant="gold" />
+                  <MetallicText style={styles.insightEyebrow} variant="gold">WEEKLY REFLECTION</MetallicText>
                 </View>
                 <Text style={styles.weeklySummaryText}>
                   {dailyLoop.weeklyReflection.summary}
@@ -525,8 +527,8 @@ export default function HomeScreen() {
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                 <View style={styles.premiumPreviewCard}>
                   <View style={styles.premiumPreviewHeader}>
-                    <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
-                    <Text style={styles.premiumPreviewLabel}>Deeper Insight</Text>
+                    <MetallicIcon name="sparkles" size={18} variant="gold" />
+                    <MetallicText style={styles.premiumPreviewLabel} variant="gold">Deeper Insight</MetallicText>
                   </View>
                   <Text style={styles.premiumPreviewTitle}>
                     Unlock the full Personal Reflection Engine
@@ -535,10 +537,10 @@ export default function HomeScreen() {
                     Extended pattern reflections, personal connections, guided breath journaling, and full sleep pattern insights.
                   </Text>
                   <View style={styles.premiumPreviewCta}>
-                    <Text style={[styles.premiumPreviewCtaText, { color: PALETTE.gold }]}>
+                    <MetallicText style={styles.premiumPreviewCtaText} variant="gold">
                       Explore Deeper Insight
-                    </Text>
-                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+                    </MetallicText>
+                    <MetallicIcon name="arrow-forward" size={14} variant="gold" />
                   </View>
                 </View>
               </Pressable>
@@ -609,7 +611,7 @@ function CheckInFAB() {
     >
       <Animated.View style={[fabStyles.glowWrapper, animatedStyle]}>
         <BlurView intensity={60} tint="dark" style={fabStyles.glassCircle}>
-          <Ionicons name="add" size={28} color="#D4B872" />
+          <MetallicIcon name="add" size={28} color="#D4B872" />
         </BlurView>
       </Animated.View>
     </Pressable>

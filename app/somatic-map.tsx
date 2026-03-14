@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     marginBottom: 8,
   },
-  headerSubtitle: { fontSize: 14, color: PALETTE.sage },
+  headerSubtitle: { fontSize: 14 },
 
   sectionLabel: {
     fontSize: 10,

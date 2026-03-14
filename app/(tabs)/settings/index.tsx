@@ -27,6 +27,7 @@ import { FieldEncryptionService } from '../../../services/storage/fieldEncryptio
 import { logger } from '../../../utils/logger';
 import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
+import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -508,7 +509,7 @@ export default function SettingsScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
           <Text style={styles.title}>Settings</Text>
-          <Text style={[styles.subtitle, { color: accentGold }]}>Instrument precision · Data sovereignty</Text>
+          <GoldSubtitle style={styles.subtitle}>Instrument precision · Data sovereignty</GoldSubtitle>
         </Animated.View>
 
         <ScrollView
@@ -1116,13 +1117,13 @@ const styles = StyleSheet.create({
 
   header: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '300',
     color: theme.textPrimary,
-    fontFamily: 'serif',
-    letterSpacing: 0.5,
+    fontFamily: 'Georgia',
+    marginBottom: 8,
   },
-  subtitle: { fontSize: 14, color: theme.primary, fontStyle: 'italic', marginTop: 2 },
+  subtitle: { fontSize: 14 },
 
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: theme.spacing.lg },

@@ -32,6 +32,8 @@ import { getChironInsightFromChart, ChironInsight } from '../../services/journal
 import { getNodeInsight, NodeInsight } from '../../services/journal/nodes';
 import { RelationshipChart, generateId } from '../../services/storage/models';
 import { usePremium } from '../../context/PremiumContext';
+import { MetallicText } from '../../components/ui/MetallicText';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { logger } from '../../utils/logger';
 import { parseLocalDate } from '../../utils/dateUtils';
 
@@ -611,7 +613,7 @@ export default function ChartScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go to Home"
         >
-          <Text style={styles.goHomeText}>Go to Home</Text>
+          <MetallicText style={styles.goHomeText} color="#CFAE73">Go to Home</MetallicText>
         </Pressable>
       </View>
     );
@@ -757,16 +759,16 @@ export default function ChartScreen() {
                     return (
                       <View key={`legend-${overlay.person.id}`} style={styles.legendPill}>
                         <View style={[styles.legendPillDot, { backgroundColor: activeColor }]} />
-                        <Text style={[styles.legendPillText, { color: activeColor }]}>
+                        <MetallicText style={styles.legendPillText} color={activeColor}>
                           {overlay.person.name}'s planets
-                        </Text>
+                        </MetallicText>
                       </View>
                     );
                   })}
                   {activeOverlays.length === 1 && (
                     <View style={styles.legendPill}>
                       <View style={[styles.legendPillDot, { backgroundColor: '#C3CAD6' }]} />
-                      <Text style={[styles.legendPillText, { color: '#C3CAD6' }]}>Cross-aspects</Text>
+                      <MetallicText style={styles.legendPillText} color="#C3CAD6">Cross-aspects</MetallicText>
                     </View>
                   )}
                 </View>
@@ -918,7 +920,7 @@ export default function ChartScreen() {
                 {chironInsight && (
                   <View style={styles.insightBox}>
                     <Text style={styles.insightLabel}>Chiron Theme</Text>
-                    <Text style={styles.insightTitle}>{chironInsight.title}</Text>
+                    <MetallicText style={styles.insightTitle} color="#E8D6AE">{chironInsight.title}</MetallicText>
                     <Text style={styles.insightText}>{chironInsight.theme}</Text>
                   </View>
                 )}
@@ -944,15 +946,27 @@ export default function ChartScreen() {
                 accessibilityLabel={`${tab.charAt(0).toUpperCase() + tab.slice(1)} tab`}
                 accessibilityState={{ selected: activeTab === tab }}
               >
-                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                  {tab === 'planets'
-                    ? `Planets (${planetRows.length})`
-                    : tab === 'houses'
-                      ? `Houses (${houseCusps.length})`
-                      : tab === 'aspects'
-                        ? `Aspects (${sortedAspects.length})`
-                        : `Patterns (${patternCount})`}
-                </Text>
+                {activeTab === tab ? (
+                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">
+                    {tab === 'planets'
+                      ? `Planets (${planetRows.length})`
+                      : tab === 'houses'
+                        ? `Houses (${houseCusps.length})`
+                        : tab === 'aspects'
+                          ? `Aspects (${sortedAspects.length})`
+                          : `Patterns (${patternCount})`}
+                  </MetallicText>
+                ) : (
+                  <Text style={styles.tabText}>
+                    {tab === 'planets'
+                      ? `Planets (${planetRows.length})`
+                      : tab === 'houses'
+                        ? `Houses (${houseCusps.length})`
+                        : tab === 'aspects'
+                          ? `Aspects (${sortedAspects.length})`
+                          : `Patterns (${patternCount})`}
+                  </Text>
+                )}
               </Pressable>
             ))}
           </Animated.View>
@@ -994,7 +1008,7 @@ export default function ChartScreen() {
                         <Text style={[styles.planetName, MULTI_CHAR_PLANETS.has(row.label) && { fontSize: 11 }]}>
                           {row.label}
                         </Text>
-                        {retro && <Text style={styles.retroLabel}>℞ Retrograde</Text>}
+                        {retro && <MetallicText style={styles.retroLabel} color="#E8D6AE">℞ Retrograde</MetallicText>}
                       </View>
                     </View>
 
@@ -1045,7 +1059,7 @@ export default function ChartScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
-                          {pt.retrograde && <Text style={styles.retroLabel}>℞ Retrograde</Text>}
+                          {pt.retrograde && <MetallicText style={styles.retroLabel} color="#E8D6AE">℞ Retrograde</MetallicText>}
                         </View>
                       </View>
 
@@ -1289,9 +1303,9 @@ export default function ChartScreen() {
                     >
                       <LinearGradient colors={['rgba(232, 214, 174,0.1)', 'rgba(232, 214, 174,0.05)']} style={styles.aspectUpsell}>
                         <Ionicons name="sparkles" size={16} color={theme.textPrimary} />
-                        <Text style={styles.aspectUpsellText}>
+                        <MetallicText style={styles.aspectUpsellText} color="#CFAE73">
                           {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
-                        </Text>
+                        </MetallicText>
                         <Ionicons name="chevron-forward" size={16} color={theme.textPrimary} />
                       </LinearGradient>
                     </Pressable>
@@ -1314,9 +1328,9 @@ export default function ChartScreen() {
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={chartPatterns.chartRuler.planetSymbol} fontSize={15} w={18} h={17} />
-                      <Text style={styles.patternHighlightText}> {chartPatterns.chartRuler.planet} in </Text>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.planet} in </MetallicText>
                       <GradientSymbol symbol={chartPatterns.chartRuler.rulerSignSymbol} fontSize={15} w={18} h={17} />
-                      <Text style={styles.patternHighlightText}> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</Text>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
@@ -1340,7 +1354,7 @@ export default function ChartScreen() {
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={partOfFortune.sign?.symbol ?? ''} fontSize={15} w={18} h={17} />
-                      <Text style={styles.patternHighlightText}> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</Text>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>
@@ -1362,11 +1376,11 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Dominant Planet</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <Text style={styles.patternHighlightText}>
+                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                       {safeString((dominantPlanet as any).planet ?? (dominantPlanet as any).name)} in {(dominantPlanet as any).sign?.name} ·{' '}
                       {Math.floor((dominantPlanet as any).degree ?? 0)}°
                       {(dominantPlanet as any).house ? ` · House ${(dominantPlanet as any).house}` : ''}
-                    </Text>
+                    </MetallicText>
                   </View>
                   <Text style={styles.patternDesc}>
                     Your dominant planet is the one most “active” in your chart (aspect involvement + angularity). Its themes tend to color your personality, motivations, and life path more than others.
@@ -1388,7 +1402,7 @@ export default function ChartScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="lock-closed" size={16} color={theme.textPrimary} />
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: '#CFAE73' }}>More patterns in your chart</Text>
+                        <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#CFAE73">More patterns in your chart</MetallicText>
                         <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
                           Stelliums, conjunction clusters, element & modality balance, retrograde emphasis, and Point of Flow
                         </Text>
@@ -1412,7 +1426,7 @@ export default function ChartScreen() {
                       <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
                     </View>
                     <View style={styles.patternHighlight}>
-                      <Text style={styles.patternHighlightText}>{stellium.planets.join(', ')}</Text>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">{stellium.planets.join(', ')}</MetallicText>
                     </View>
                     <Text style={styles.patternDesc}>{stellium.subtitle}</Text>
                     <Text style={[styles.patternDesc, { marginTop: 8 }]}>{stellium.description}</Text>
@@ -1454,7 +1468,7 @@ export default function ChartScreen() {
                       <Text style={styles.patternTitle}>Conjunction Cluster</Text>
                     </View>
                     <View style={styles.patternHighlight}>
-                      <Text style={styles.patternHighlightText}>{cluster.planets.join(' · ')}</Text>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">{cluster.planets.join(' · ')}</MetallicText>
                     </View>
                     <Text style={styles.patternDesc}>{cluster.description}</Text>
                     <View style={styles.tooltipBox}>
@@ -1472,9 +1486,9 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <Text style={styles.patternHighlightText}>
+                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                       {chartPatterns.retrogradeEmphasis.count} planets retrograde: {chartPatterns.retrogradeEmphasis.planets.join(', ')}
-                    </Text>
+                    </MetallicText>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.retrogradeEmphasis.description}</Text>
                 </LinearGradient>
@@ -1488,20 +1502,26 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Element Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }]}>
-                    {Object.entries(chartPatterns.elementBalance.counts).map(([el, count]) => (
-                      <Text
-                        key={el}
-                        style={[
-                          styles.patternHighlightText,
-                          {
-                            color: el === chartPatterns.elementBalance.dominant ? ELEMENT_COLORS[el] || theme.primary : theme.textMuted,
-                            fontSize: el === chartPatterns.elementBalance.dominant ? 15 : 13,
-                          },
-                        ]}
-                      >
-                        {el}: {count as number}
-                      </Text>
-                    ))}
+                    {Object.entries(chartPatterns.elementBalance.counts).map(([el, count]) => {
+                      const isDominant = el === chartPatterns.elementBalance.dominant;
+                      const elColor = ELEMENT_COLORS[el] || theme.primary;
+                      return isDominant ? (
+                        <MetallicText
+                          key={el}
+                          style={[styles.patternHighlightText, { fontSize: 15 }]}
+                          color={elColor}
+                        >
+                          {el}: {count as number}
+                        </MetallicText>
+                      ) : (
+                        <Text
+                          key={el}
+                          style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}
+                        >
+                          {el}: {count as number}
+                        </Text>
+                      );
+                    })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.elementBalance.description}</Text>
                   {chartPatterns.elementBalance.missing && (
@@ -1521,20 +1541,25 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Modality Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 16, justifyContent: 'center' }]}>
-                    {Object.entries(chartPatterns.modalityBalance.counts).map(([mod, count]) => (
-                      <Text
-                        key={mod}
-                        style={[
-                          styles.patternHighlightText,
-                          {
-                            color: mod === chartPatterns.modalityBalance.dominant ? '#CFAE73' : theme.textMuted,
-                            fontSize: mod === chartPatterns.modalityBalance.dominant ? 15 : 13,
-                          },
-                        ]}
-                      >
-                        {mod}: {count as number}
-                      </Text>
-                    ))}
+                    {Object.entries(chartPatterns.modalityBalance.counts).map(([mod, count]) => {
+                      const isDominant = mod === chartPatterns.modalityBalance.dominant;
+                      return isDominant ? (
+                        <MetallicText
+                          key={mod}
+                          style={[styles.patternHighlightText, { fontSize: 15 }]}
+                          color="#CFAE73"
+                        >
+                          {mod}: {count as number}
+                        </MetallicText>
+                      ) : (
+                        <Text
+                          key={mod}
+                          style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}
+                        >
+                          {mod}: {count as number}
+                        </Text>
+                      );
+                    })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.modalityBalance.description}</Text>
                 </LinearGradient>
@@ -1571,7 +1596,7 @@ export default function ChartScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="sparkles" size={16} color={theme.textPrimary} />
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.overlayUpsellText, { fontWeight: '600' }]}>Your chart has more to say</Text>
+                      <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#CFAE73">Your chart has more to say</MetallicText>
                       <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
                         Chiron sensitivity, Node axis depth, chart overlays, and minor aspects
                       </Text>
@@ -1595,16 +1620,16 @@ export default function ChartScreen() {
                 <View style={styles.chartSettingsRow}>
                   <View style={{ flex: 1, marginRight: theme.spacing.md }}>
                     <View style={styles.chartSettingsHeader}>
-                      <Ionicons name="planet" size={20} color={'#E8D6AE'} />
+                      <MetallicIcon name="planet" size={20} color="#E8D6AE" />
                       <Text style={styles.chartSettingsTitle}>Chart Settings</Text>
                     </View>
                     <Text style={styles.chartSettingsDescription}>House system, aspect orbs, and calculation preferences</Text>
                     <View style={styles.chartSettingsTags}>
                       <View style={styles.settingTag}>
-                        <Text style={styles.settingTagText}>{houseSystemLabel}</Text>
+                        <MetallicText style={styles.settingTagText} color="#E8D6AE">{houseSystemLabel}</MetallicText>
                       </View>
                       <View style={styles.settingTag}>
-                        <Text style={styles.settingTagText}>{orbPresetLabel} Orbs</Text>
+                        <MetallicText style={styles.settingTagText} color="#E8D6AE">{orbPresetLabel} Orbs</MetallicText>
                       </View>
                     </View>
                   </View>
@@ -1650,7 +1675,7 @@ export default function ChartScreen() {
                         <Text style={styles.glossaryTerm}>{item.term}</Text>
                         <Ionicons name={expandedTerm === item.term ? 'chevron-up' : 'chevron-down'} size={16} color={theme.textMuted} />
                       </View>
-                      {expandedTerm === item.term && <Text style={styles.glossaryDefinition}>{item.definition}</Text>}
+                      {expandedTerm === item.term && <MetallicText style={styles.glossaryDefinition} color="#E8D6AE">{item.definition}</MetallicText>}
                     </Pressable>
                   ))}
                 </LinearGradient>
@@ -1704,24 +1729,21 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: theme.spacing.lg, alignItems: 'center' },
 
   header: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    alignSelf: 'stretch',
     marginTop: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-    width: '100%',
+    marginBottom: 32,
   },
   title: {
     fontSize: 34,
     fontWeight: '300',
     color: theme.textPrimary,
     fontFamily: 'Georgia',
-    letterSpacing: 0,
-    textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    marginTop: 6,
     fontStyle: 'italic',
-    textAlign: 'center',
   },
   headerFrame: {
     fontSize: 12,

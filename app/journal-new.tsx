@@ -281,8 +281,6 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-    color: PALETTE.textMuted,
-    fontStyle: 'italic',
     marginBottom: 32,
   },
 
