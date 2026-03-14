@@ -1392,7 +1392,6 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           </Group>
         )}
 
-        {/* Film grain overlay (RuntimeShader) temporarily disabled for debugging black screen issue */}
 
       </Canvas>
     </View>

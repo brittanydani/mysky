@@ -2536,20 +2536,6 @@ export class FullNatalStoryGenerator {
   }
   
   /**
-   * Fallback content for any chapter not yet mapped to sign-specific content.
-   */
-  private static getGenericPremiumContent(
-    _chapterId: string,
-    _element: string
-  ): { content: string; reflection: string; affirmation: string } {
-    return {
-      content: 'Full content available for Deeper Sky members.',
-      reflection: 'What resonates with you about this chapter?',
-      affirmation: 'I am learning and growing every day.',
-    };
-  }
-
-  /**
    * Get element overlay for applicable chapters (Ch4, Ch5, Ch6).
    * Returns a paragraph about how the planet's element shapes expression.
    */

@@ -25,6 +25,7 @@ import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
+import * as Notifications from 'expo-notifications';
 
 // ── Cinematic Error Boundary ──
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -237,20 +238,13 @@ export default function RootLayout() {
 
   // Deep-link routing from local notification taps
   useEffect(() => {
-    let sub: { remove(): void } | null = null;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const Notifs = require('expo-notifications') as typeof import('expo-notifications');
-      sub = Notifs.addNotificationResponseReceivedListener(response => {
-        const route = response.notification.request.content.data?.route as string | undefined;
-        if (route) {
-          router.push(route as any);
-        }
-      });
-    } catch {
-      // expo-notifications native module not available
-    }
-    return () => sub?.remove();
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      const route = response.notification.request.content.data?.route as string | undefined;
+      if (route) {
+        router.push(route as any);
+      }
+    });
+    return () => sub.remove();
   }, [router]);
 
   const handlePrivacyConsent = async (granted: boolean) => {
@@ -336,7 +330,6 @@ export default function RootLayout() {
 
                   {/* --- HIDDEN SCREENS (MODALS) --- */}
                   {/* Slide up over the tab bar — dedicated workspaces */}
-                  <Stack.Screen name="sleep" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="checkin" options={{ presentation: 'modal' }} />
                   <Stack.Screen
                     name="sanctuary"
@@ -352,7 +345,6 @@ export default function RootLayout() {
                   <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
                   <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
-                  <Stack.Screen name="settings/notifications" options={{ presentation: 'modal' }} />
                 </Stack>
 
                 {/* Overlay gates (do NOT unmount navigation) */}

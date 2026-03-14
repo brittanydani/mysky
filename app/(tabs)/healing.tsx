@@ -185,7 +185,7 @@ function DetailRow({ label, text, color }: { label: string; text: string; color:
   );
 }
 
-function DeepCard({ icon, title, color, children }: { icon: any, title: string, color: string, children: React.ReactNode }) {
+function DeepCard({ icon, title, color, children }: { icon: React.ComponentProps<typeof Ionicons>['name'], title: string, color: string, children: React.ReactNode }) {
   return (
     <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(10, 10, 12, 0.8)']} style={styles.deepCard}>
       <View style={styles.deepCardHeader}>

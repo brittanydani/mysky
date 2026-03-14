@@ -9,9 +9,16 @@ export default function OnboardingIndex() {
   const router = useRouter();
   const [name, setName] = useState('');
 
+  const trimmedName = name.trim();
+
   const handleContinue = async () => {
+    if (!trimmedName) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await AsyncStorage.setItem('msky_user_name', name.trim());
+    try {
+      await AsyncStorage.setItem('msky_user_name', trimmedName);
+    } catch {
+      // Non-blocking — name can be recovered from chart data if storage fails
+    }
     router.push('/onboarding/consent');
   };
 
@@ -37,6 +44,11 @@ export default function OnboardingIndex() {
           onChangeText={setName}
           autoFocus
           selectionColor="#D9BF8C"
+          returnKeyType="done"
+          onSubmitEditing={handleContinue}
+          maxLength={60}
+          autoCapitalize="words"
+          autoCorrect={false}
         />
       </View>
 
@@ -44,11 +56,14 @@ export default function OnboardingIndex() {
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            !name && styles.buttonDisabled,
+            !trimmedName && styles.buttonDisabled,
             pressed && styles.buttonPressed,
           ]}
-          disabled={!name}
+          disabled={!trimmedName}
           onPress={handleContinue}
+          accessibilityRole="button"
+          accessibilityLabel="Continue to next step"
+          accessibilityState={{ disabled: !trimmedName }}
         >
           <Text style={styles.buttonText}>Continue</Text>
         </Pressable>

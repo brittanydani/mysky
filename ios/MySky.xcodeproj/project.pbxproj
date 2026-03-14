@@ -26,6 +26,7 @@
 		AA050505AA050505AA050505 /* WidgetDataBridgeObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = AA0E0E0EAA0E0E0EAA0E0E0E /* WidgetDataBridgeObjC.m */; };
 		AA060606AA060606AA060606 /* WidgetKit.framework in Frameworks (widget) */ = {isa = PBXBuildFile; fileRef = AA0C0C0CAA0C0C0CAA0C0C0C /* WidgetKit.framework */; };
 		AA065050AA065050AA065050 /* WidgetKit.framework in Frameworks (main) */ = {isa = PBXBuildFile; fileRef = AA0C0C0CAA0C0C0CAA0C0C0C /* WidgetKit.framework */; };
+		AA0A0A0AAA0A0A0AAA0A0A0A /* WidgetDataStore.swift in Sources (main) */ = {isa = PBXBuildFile; fileRef = AA080808AA080808AA080808 /* WidgetDataStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -457,6 +458,7 @@
 				A1B2C31234567890ABCDE010 /* SensoryEngine.swift in Sources */,
 				AA040404AA040404AA040404 /* WidgetDataBridge.swift in Sources */,
 				AA050505AA050505AA050505 /* WidgetDataBridgeObjC.m in Sources */,
+				AA0A0A0AAA0A0A0AAA0A0A0A /* WidgetDataStore.swift in Sources (main) */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

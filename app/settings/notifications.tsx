@@ -12,6 +12,7 @@ import { NotificationEngine } from '../../utils/NotificationEngine';
 
 // ── Persistence keys ──────────────────────────────────────────────────────────
 const KEYS = {
+  enabled:        'notif_enabled',
   morningHour:    'notif_morning_hour',
   morningMinute:  'notif_morning_minute',
   eveningHour:    'notif_evening_hour',
@@ -47,16 +48,8 @@ export default function NotificationSettings() {
   // ── Load persisted prefs on mount ──────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
-      let scheduledLength = 0;
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { getAllScheduledNotificationsAsync } = require('expo-notifications') as typeof import('expo-notifications');
-        const scheduled = await getAllScheduledNotificationsAsync();
-        scheduledLength = scheduled.length;
-      } catch {
-        // expo-notifications native module not available
-      }
-      const [mh, mm, eh, em, mu, eu] = await Promise.all([
+      const [en, mh, mm, eh, em, mu, eu] = await Promise.all([
+        SecureStore.getItemAsync(KEYS.enabled),
         SecureStore.getItemAsync(KEYS.morningHour),
         SecureStore.getItemAsync(KEYS.morningMinute),
         SecureStore.getItemAsync(KEYS.eveningHour),
@@ -64,7 +57,7 @@ export default function NotificationSettings() {
         SecureStore.getItemAsync(KEYS.morningUnknown),
         SecureStore.getItemAsync(KEYS.eveningUnknown),
       ]);
-      setIsRhythmEnabled(scheduledLength > 0);
+      setIsRhythmEnabled(en === 'true');
       if (mh !== null && mm !== null) setMorningTime(makeTime(Number(mh), Number(mm)));
       if (eh !== null && em !== null) setEveningTime(makeTime(Number(eh), Number(em)));
       if (mu !== null) setMorningUnknown(mu === 'true');
@@ -94,7 +87,10 @@ export default function NotificationSettings() {
     await NotificationEngine.clearAllSchedules();
     if (!mu) await NotificationEngine.scheduleMorningRhythm(mt.getHours(), mt.getMinutes());
     if (!eu) await NotificationEngine.scheduleEveningRhythm(et.getHours(), et.getMinutes());
-    await savePrefs(mt, et, mu, eu);
+    await Promise.all([
+      savePrefs(mt, et, mu, eu),
+      SecureStore.setItemAsync(KEYS.enabled, 'true'),
+    ]);
   }, [savePrefs]);
 
   // ── Master toggle ──────────────────────────────────────────────────────────
@@ -111,7 +107,10 @@ export default function NotificationSettings() {
       await reschedule(morningTime, eveningTime, morningUnknown, eveningUnknown);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
-      await NotificationEngine.clearAllSchedules();
+      await Promise.all([
+        NotificationEngine.clearAllSchedules(),
+        SecureStore.setItemAsync(KEYS.enabled, 'false'),
+      ]);
     }
   };
 
@@ -205,21 +204,23 @@ export default function NotificationSettings() {
           </Pressable>
         </View>
 
-        {/* Inline picker (iOS) */}
+        {/* Inline/modal picker */}
         {isOpen && (
           <View>
             <DateTimePicker
               value={pending}
               mode="time"
-              display="spinner"
+              display={Platform.OS === 'android' ? 'default' : 'spinner'}
               onChange={(e, d) => handlePickerChange(slot, e, d)}
               textColor="#FFFFFF"
               themeVariant="dark"
-              style={styles.picker}
+              style={Platform.OS === 'ios' ? styles.picker : undefined}
             />
-            <Pressable style={styles.doneButton} onPress={confirmIOSTime}>
-              <Text style={styles.doneText}>Done</Text>
-            </Pressable>
+            {Platform.OS === 'ios' && (
+              <Pressable style={styles.doneButton} onPress={confirmIOSTime}>
+                <Text style={styles.doneText}>Done</Text>
+              </Pressable>
+            )}
           </View>
         )}
 

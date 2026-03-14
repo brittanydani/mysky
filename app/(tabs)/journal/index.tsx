@@ -14,7 +14,7 @@ import { GoldIcon } from '../../../components/ui/GoldIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
 import { localDb } from '../../../services/storage/localDb';
-import { JournalEntry, generateId } from '../../../services/storage/models';
+import { JournalEntry, SleepEntry, generateId } from '../../../services/storage/models';
 import JournalEntryModal from '../../../components/JournalEntryModal';
 import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../../services/premium/advancedJournal';
 import { usePremium } from '../../../context/PremiumContext';
@@ -55,6 +55,62 @@ const MOOD_EMOJIS: Record<string, string> = {
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // ── Cinematic Palette ──
+
+// ─── Dream card ───────────────────────────────────────────────────────────────
+
+const DREAM_QUALITY_LABELS: Record<number, string> = {
+  1: 'Exhausted',
+  2: 'Restless',
+  3: 'Neutral',
+  4: 'Restored',
+  5: 'Vibrant',
+};
+
+interface DreamCardProps {
+  entry: SleepEntry;
+  formatDate: (s: string) => string;
+  onPress: (entry: SleepEntry) => void;
+}
+
+const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamCardProps) {
+  const hasDream = !!(entry.dreamText?.trim());
+  const moons = entry.quality ? '☽'.repeat(entry.quality) : null;
+  const qualityLabel = entry.quality ? DREAM_QUALITY_LABELS[entry.quality] : null;
+  const durationText = entry.durationHours ? `${entry.durationHours}h` : null;
+
+  return (
+    <Pressable
+      onPress={() => onPress(entry)}
+      style={({ pressed }) => [styles.dreamCard, pressed && { opacity: 0.85 }]}
+      accessibilityRole="button"
+      accessibilityLabel={`Dream entry for ${formatDate(entry.date)}`}
+    >
+      <View style={styles.dreamCardInner}>
+        <View style={styles.dreamAccentBar} />
+        <View style={{ flex: 1 }}>
+          <View style={styles.dreamCardHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.dreamCardDate}>{formatDate(entry.date)}</Text>
+              {(moons || durationText) && (
+                <View style={styles.dreamMeta}>
+                  {moons && <Text style={styles.dreamMoons}>{moons}</Text>}
+                  {qualityLabel && <Text style={styles.dreamQualityLabel}>{qualityLabel}</Text>}
+                  {durationText && <Text style={styles.dreamDuration}> · {durationText}</Text>}
+                </View>
+              )}
+            </View>
+            <Ionicons name="moon" size={16} color="rgba(157,118,193,0.5)" />
+          </View>
+          {hasDream ? (
+            <Text style={styles.dreamExcerpt} numberOfLines={3}>{entry.dreamText}</Text>
+          ) : (
+            <Text style={styles.dreamNone}>No dream recalled</Text>
+          )}
+        </View>
+      </View>
+    </Pressable>
+  );
+});
 
 // ─── Memoized entry card ───────────────────────────────────────────────────────
 
@@ -107,6 +163,8 @@ export default function JournalScreen() {
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
   const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
+  const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
 
   // ── Month/Year filter ──
   const [filterMonth, setFilterMonth] = useState<number>(new Date().getMonth()); // 0-indexed
@@ -128,6 +186,20 @@ export default function JournalScreen() {
     }
     return filtered;
   }, [entries, filterMonth, filterYear, searchQuery]);
+
+  const filteredSleepEntries = useMemo(() => {
+    let filtered = sleepEntries.filter(e => {
+      const d = parseLocalDate(e.date);
+      return d.getMonth() === filterMonth && d.getFullYear() === filterYear;
+    });
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(e =>
+        (e.dreamText ?? '').toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [sleepEntries, filterMonth, filterYear, searchQuery]);
 
   // Available months for navigation (derived from entries)
   const availableMonths = useMemo(() => {
@@ -164,6 +236,7 @@ export default function JournalScreen() {
     useCallback(() => {
       void loadEntries(true);
       void loadCheckIns();
+      void loadSleepEntries();
     }, [])
   );
 
@@ -279,6 +352,17 @@ export default function JournalScreen() {
     }
   };
 
+  const loadSleepEntries = async () => {
+    try {
+      const charts = await localDb.getCharts();
+      if (!charts.length) return;
+      const all = await localDb.getSleepEntries(charts[0].id, 365);
+      setSleepEntries(all.filter(e => !e.isDeleted));
+    } catch (error) {
+      logger.error('Failed to load sleep entries:', error);
+    }
+  };
+
   const handleAddEntry = async () => {
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -316,7 +400,7 @@ export default function JournalScreen() {
   const stableFormatDate = useCallback(formatDate, []);
   const stableFormatTime = useCallback(formatTime, []);
 
-  const keyExtractor = useCallback((item: JournalEntry) => item.id, []);
+  const keyExtractor = useCallback((item: JournalEntry | SleepEntry) => item.id, []);
 
   const renderEntry = useCallback(({ item }: ListRenderItemInfo<JournalEntry>) => {
     return (
@@ -332,11 +416,19 @@ export default function JournalScreen() {
     );
   }, [expandedEntryIds, toggleExpanded, handleEditEntry, handleDeleteEntry, stableFormatDate, stableFormatTime]);
 
+  const renderDreamEntry = useCallback(({ item }: ListRenderItemInfo<SleepEntry>) => (
+    <DreamCard
+      entry={item}
+      formatDate={stableFormatDate}
+      onPress={(e) => router.push((`/(tabs)/journal/sleep-detail?id=${e.id}`) as Href)}
+    />
+  ), [stableFormatDate, router]);
+
   const handleEndReached = useCallback(() => {
-    if (!loadingMore && hasMore) {
+    if (activeTab === 'reflections' && !loadingMore && hasMore) {
       void loadEntries(false);
     }
-  }, [loadingMore, hasMore]);
+  }, [activeTab, loadingMore, hasMore]);
 
   // ── List header ────────────────────────────────────────────────────────────
 
@@ -364,8 +456,32 @@ export default function JournalScreen() {
       </Animated.View>
 
       {/* ── Month/Year Navigation + Search ── */}
-      {totalCount > 0 && (
+      {(totalCount > 0 || sleepEntries.length > 0) && (
         <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.filterSection}>
+          {/* ── Tab Switcher ── */}
+          <View style={styles.segmentedControl}>
+            {(['reflections', 'dreams'] as const).map((tab) => (
+              <Pressable
+                key={tab}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setActiveTab(tab);
+                }}
+                style={[styles.segmentBtn, activeTab === tab && styles.segmentBtnActive]}
+                accessibilityRole="button"
+                accessibilityLabel={`Switch to ${tab} tab`}
+              >
+                <Ionicons
+                  name={tab === 'reflections' ? 'book-outline' : 'moon-outline'}
+                  size={14}
+                  color={activeTab === tab ? '#D4B872' : 'rgba(255,255,255,0.35)'}
+                />
+                <Text style={[styles.segmentText, activeTab === tab && styles.segmentTextActive]}>
+                  {tab === 'reflections' ? 'Reflections' : 'Dreams'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
           <View style={styles.monthNav}>
             <Pressable
               onPress={() => navigateMonth(-1)}
@@ -395,7 +511,7 @@ export default function JournalScreen() {
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search entries..."
+              placeholder={activeTab === 'reflections' ? 'Search entries...' : 'Search dreams...'}
               placeholderTextColor={theme.textMuted}
               returnKeyType="search"
               autoCorrect={false}
@@ -411,7 +527,7 @@ export default function JournalScreen() {
 
 
 
-      {isPremium && patternInsights.length > 0 && (
+      {activeTab === 'reflections' && isPremium && patternInsights.length > 0 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Text style={styles.insightsTitle}>Pattern Insights</Text>
           <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
@@ -439,7 +555,7 @@ export default function JournalScreen() {
         </Animated.View>
       )}
 
-      {!isPremium && totalCount >= 5 && (
+      {activeTab === 'reflections' && !isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
             <LinearGradient colors={['rgba(232, 214, 174, 0.10)', theme.cardGradientEnd]} style={[styles.insightCard, { borderColor: 'rgba(232, 214, 174, 0.18)', borderTopColor: theme.glass.highlight }]}>
@@ -466,20 +582,26 @@ export default function JournalScreen() {
       <View style={styles.entriesSection}>
         <View style={styles.entriesHeader}>
           <Text style={styles.sectionTitle}>
-            {searchQuery ? 'Search Results' : `${MONTH_NAMES[filterMonth]} Entries`}
+            {searchQuery
+              ? 'Search Results'
+              : activeTab === 'reflections'
+              ? `${MONTH_NAMES[filterMonth]} Entries`
+              : `${MONTH_NAMES[filterMonth]} Dreams`}
           </Text>
           <Text style={styles.entriesCount}>
-            {filteredEntries.length}{searchQuery ? ' found' : ''} · {totalCount} total
+            {activeTab === 'reflections'
+              ? `${filteredEntries.length}${searchQuery ? ' found' : ''} · ${totalCount} total`
+              : `${filteredSleepEntries.length}${searchQuery ? ' found' : ''} · ${sleepEntries.length} total`}
           </Text>
         </View>
       </View>
     </>
-  ), [checkIns, isPremium, patternInsights, totalCount, router, width, filterMonth, filterYear, searchQuery, filteredEntries.length, navigateMonth]);
+  ), [checkIns, isPremium, patternInsights, totalCount, sleepEntries.length, router, width, filterMonth, filterYear, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, navigateMonth, setActiveTab]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 
   const ListFooter = useMemo(() => {
-    if (loadingMore) {
+    if (activeTab === 'reflections' && loadingMore) {
       return (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading more...</Text>
@@ -487,7 +609,7 @@ export default function JournalScreen() {
       );
     }
     return null;
-  }, [loadingMore]);
+  }, [activeTab, loadingMore]);
 
   // ── List empty ─────────────────────────────────────────────────────────────
 
@@ -499,6 +621,36 @@ export default function JournalScreen() {
         </View>
       );
     }
+
+    if (activeTab === 'dreams') {
+      if (sleepEntries.length > 0 && filteredSleepEntries.length === 0) {
+        return (
+          <View style={styles.emptyContainer}>
+            <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
+              <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
+              <Text style={styles.emptyTitle}>No dreams this month</Text>
+              <Text style={styles.emptyDescription}>
+                {searchQuery
+                  ? `No dream entries matching "${searchQuery}" in ${MONTH_NAMES[filterMonth]} ${filterYear}.`
+                  : `No sleep entries in ${MONTH_NAMES[filterMonth]} ${filterYear}. Try another month.`}
+              </Text>
+            </LinearGradient>
+          </View>
+        );
+      }
+      return (
+        <View style={styles.emptyContainer}>
+          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
+            <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
+            <Text style={styles.emptyTitle}>No dreams logged yet</Text>
+            <Text style={styles.emptyDescription}>
+              Visit the Sleep tab to record your nightly rest and dream experiences.
+            </Text>
+          </LinearGradient>
+        </View>
+      );
+    }
+
     if (totalCount > 0 && filteredEntries.length === 0) {
       return (
         <View style={styles.emptyContainer}>
@@ -546,7 +698,7 @@ export default function JournalScreen() {
         </LinearGradient>
       </View>
     );
-  }, [loading, totalCount, filteredEntries.length, searchQuery, filterMonth, filterYear]);
+  }, [loading, activeTab, sleepEntries.length, filteredSleepEntries.length, totalCount, filteredEntries.length, searchQuery, filterMonth, filterYear]);
 
   const handleSaveEntry = async (data: Partial<JournalEntry>) => {
     try {
@@ -619,10 +771,27 @@ export default function JournalScreen() {
               />
             }
           />
-        ) : (
-          <FlatList
+        ) : activeTab === 'reflections' ? (
+          <FlatList<JournalEntry>
             data={filteredEntries}
             renderItem={renderEntry}
+            keyExtractor={keyExtractor}
+            ListHeaderComponent={ListHeader}
+            ListFooterComponent={ListFooter}
+            ListEmptyComponent={ListEmpty}
+            contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 20 }}
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.5}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            removeClippedSubviews={true}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <FlatList<SleepEntry>
+            data={filteredSleepEntries}
+            renderItem={renderDreamEntry}
             keyExtractor={keyExtractor}
             ListHeaderComponent={ListHeader}
             ListFooterComponent={ListFooter}
@@ -639,7 +808,7 @@ export default function JournalScreen() {
         )}
 
         {!showPremiumRequired && (
-          entries.length > 0 && 
+          activeTab === 'reflections' && entries.length > 0 &&
           <Animated.View
             entering={FadeInDown.delay(600).duration(600)}
             style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}
@@ -806,5 +975,105 @@ const styles = StyleSheet.create({
   fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', },
   fabPressed: { opacity: 0.9, transform: [{ scale: 0.95 }] },
   fabGradient: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+
+  // ── Segmented control ──
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    padding: 4,
+    marginBottom: 20,
+  },
+  segmentBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+  segmentBtnActive: {
+    backgroundColor: 'rgba(212,184,114,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,114,0.25)',
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.35)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  segmentTextActive: {
+    color: '#D4B872',
+  },
+
+  // ── Dream card ──
+  dreamCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(157,118,193,0.15)',
+    borderTopColor: 'rgba(157,118,193,0.30)',
+    backgroundColor: 'rgba(157,118,193,0.05)',
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  dreamCardInner: {
+    flexDirection: 'row',
+    padding: 16,
+  },
+  dreamAccentBar: {
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(157,118,193,0.55)',
+    marginRight: 14,
+  },
+  dreamCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  dreamCardDate: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    marginBottom: 4,
+  },
+  dreamMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dreamMoons: {
+    fontSize: 13,
+    color: '#9D76C1',
+    letterSpacing: 1,
+  },
+  dreamQualityLabel: {
+    fontSize: 11,
+    color: 'rgba(157,118,193,0.75)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  dreamDuration: {
+    fontSize: 12,
+    color: theme.textMuted,
+  },
+  dreamExcerpt: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    lineHeight: 22,
+    fontStyle: 'italic',
+  },
+  dreamNone: {
+    fontSize: 13,
+    color: theme.textMuted,
+    fontStyle: 'italic',
+  },
 });
 

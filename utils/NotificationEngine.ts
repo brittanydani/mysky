@@ -1,30 +1,24 @@
 // File: utils/NotificationEngine.ts
 
-import type * as NotificationsType from 'expo-notifications';
+import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-let Notifications: typeof NotificationsType | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  Notifications = require('expo-notifications') as typeof NotificationsType;
-  // Configure how notifications behave when the app is in the foreground
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-    } as NotificationsType.NotificationBehavior),
-  });
-} catch {
-  // expo-notifications native module not available in this environment
-}
+// Configure foreground notification presentation once at module load
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export class NotificationEngine {
   /**
    * Requests OS-level notification permission. Required on iOS.
+   * Also creates the Android notification channel on first call.
    */
   static async requestPermissions(): Promise<boolean> {
-    if (!Notifications) return false;
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -54,16 +48,13 @@ export class NotificationEngine {
    * Cancels all scheduled notifications to prevent duplicate triggers.
    */
   static async clearAllSchedules(): Promise<void> {
-    if (!Notifications) return;
     await Notifications.cancelAllScheduledNotificationsAsync();
   }
 
   /**
    * Schedules the morning dream & rest recall prompt.
-   * Default: 8:00 AM daily.
    */
   static async scheduleMorningRhythm(hour: number = 8, minute: number = 0): Promise<void> {
-    if (!Notifications) return;
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Subconscious Recall ✧',
@@ -81,10 +72,8 @@ export class NotificationEngine {
 
   /**
    * Schedules the evening internal weather prompt.
-   * Default: 8:00 PM daily.
    */
   static async scheduleEveningRhythm(hour: number = 20, minute: number = 0): Promise<void> {
-    if (!Notifications) return;
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Internal Weather ☀',
@@ -98,20 +87,5 @@ export class NotificationEngine {
         minute,
       },
     });
-  }
-
-  /**
-   * Master initializer: requests permission, clears stale schedules,
-   * and sets the standard dual daily rhythm.
-   */
-  static async initializeDailyRhythm(): Promise<boolean> {
-    const hasPermission = await this.requestPermissions();
-    if (!hasPermission) return false;
-
-    await this.clearAllSchedules();
-    await this.scheduleMorningRhythm(8, 0);
-    await this.scheduleEveningRhythm(20, 0);
-
-    return true;
   }
 }

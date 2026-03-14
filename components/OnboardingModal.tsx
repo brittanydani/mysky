@@ -30,7 +30,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -39,7 +39,7 @@ import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import TermsConsentModal from './TermsConsentModal';
 
-import { BirthData, HouseSystem } from '../services/astrology/types';
+import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { InputValidator } from '../services/astrology/inputValidator';
 import { localDb } from '../services/storage/localDb';
@@ -172,7 +172,7 @@ function BottomNav({
   canGoBack: boolean;
   isNextDisabled: boolean;
   nextLabel: string;
-  nextIcon: string;
+  nextIcon: React.ComponentProps<typeof Ionicons>['name'];
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -203,7 +203,7 @@ function BottomNav({
         accessibilityLabel={nextLabel}
       >
         <Text style={st.nextButtonText}>{nextLabel}</Text>
-        <Ionicons name={nextIcon as any} size={16} color={ETHEREAL.bgDark} style={{ marginLeft: 6 }} />
+        <Ionicons name={nextIcon} size={16} color={ETHEREAL.bgDark} style={{ marginLeft: 6 }} />
       </Pressable>
     </View>
   );
@@ -215,7 +215,7 @@ function BottomNav({
 
 interface OnboardingModalProps {
   visible: boolean;
-  onComplete: (chart: any) => void;
+  onComplete: (chart: NatalChart) => void;
   needsTermsConsent?: boolean;
   onTermsConsent?: (granted: boolean) => void;
 }
@@ -281,6 +281,7 @@ export default function OnboardingModal({
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      if (abortControllerRef.current) abortControllerRef.current.abort();
     };
   }, []);
 
@@ -633,7 +634,7 @@ export default function OnboardingModal({
                       value={birthDate}
                       mode="date"
                       display="spinner"
-                      onChange={(_: any, selected?: Date) => {
+                      onChange={(_e: DateTimePickerEvent, selected?: Date) => {
                         if (selected) setBirthDate(selected);
                       }}
                       maximumDate={new Date()}
@@ -664,7 +665,7 @@ export default function OnboardingModal({
                       value={birthTime}
                       mode="time"
                       display="spinner"
-                      onChange={(_: any, selected?: Date) => {
+                      onChange={(_e: DateTimePickerEvent, selected?: Date) => {
                         if (selected) {
                           setBirthTime(selected);
                           setHasUnknownTime(false);

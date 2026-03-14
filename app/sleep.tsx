@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { localDb } from '../services/storage/localDb';
 import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
+import { parseLocalDate } from '../utils/dateUtils';
 
 export default function SleepQuickLog() {
   const router = useRouter();
@@ -31,12 +32,13 @@ export default function SleepQuickLog() {
       const charts = await localDb.getCharts();
       if (charts.length > 0) {
         const now = new Date();
+        // Use local date string to avoid UTC midnight offset on YYYY-MM-DD entries
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         await localDb.saveSleepEntry({
           id: generateId(),
           chartId: charts[0].id,
-          date: now.toISOString().split('T')[0],
+          date: dateStr,
           quality,
-          durationHours: 8.0,
           createdAt: now.toISOString(),
           updatedAt: now.toISOString(),
           isDeleted: false,

@@ -40,12 +40,8 @@ import { localDb } from '../../services/storage/localDb';
 import { NatalChart, BirthData } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { ChartDisplayManager } from '../../services/astrology/chartDisplayManager';
-import { CheckInService } from '../../services/patterns/checkInService';
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
-import { config } from '../../constants/config';
 import { logger } from '../../utils/logger';
-import { parseLocalDate } from '../../utils/dateUtils';
 import { usePremium } from '../../context/PremiumContext';
 
 const { width } = Dimensions.get('window');
@@ -234,16 +230,6 @@ export default function HomeScreen() {
     }
   };
 
-  const displayChart = userChart
-    ? ChartDisplayManager.formatChartWithTimeWarnings(userChart)
-    : null;
-
-  // Prefer daily loop insight; fall back to legacy insight engine
-  const insightText = useMemo(() => {
-    if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
-    return generateInsight(75, mood, energy, latestSleep);
-  }, [dailyLoop, mood, energy, latestSleep]);
-
   const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
   const ACCENT_MAP: Record<string, string> = {
     gold: PALETTE.gold,
@@ -261,6 +247,12 @@ export default function HomeScreen() {
     const raw = (mood + energy + sleepNorm) / 3;
     return Math.round(raw * 10) / 10;
   }, [mood, energy, latestSleep]);
+
+  // Prefer daily loop insight; fall back to legacy insight engine
+  const insightText = useMemo(() => {
+    if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
+    return generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep);
+  }, [dailyLoop, balanceScore, mood, energy, latestSleep]);
 
   /** Pixel heights (max ~120px) for each of the past 7 days, oldest → today */
   const stabilityBars = useMemo(() => {
@@ -408,7 +400,7 @@ export default function HomeScreen() {
           <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.graphCard}>
             <Text style={styles.cardLabel}>7-DAY STABILITY MAP</Text>
             <View style={styles.graphContainer}>
-              <View style={styles.mockGraph}>
+              <View style={styles.barsRow}>
                 {stabilityBars.map((barHeight, i) => (
                   <View key={i} style={styles.graphCol}>
                     <View style={[styles.graphBar, { height: barHeight }]}>
@@ -772,43 +764,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
 
-  // Sections
-  sectionBlock: { marginBottom: 32 },
-  sectionTitle: {
-    color: PALETTE.textMain,
-    fontSize: 20,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    marginBottom: 16,
-    paddingLeft: 4,
-  },
-
-  // Quick links
-  quickLinksRow: { flexDirection: 'row', gap: 10 },
-  quickLink: { flex: 1, borderRadius: 16, overflow: 'hidden' },
-  quickLinkGradient: {
-    padding: 12,
-    alignItems: 'flex-start',
-    height: 110,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderRadius: 16,
-  },
-  quickLinkIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  quickLinkTitle: {
-    color: PALETTE.textMain,
-    fontWeight: '600',
-    fontSize: 14,
-    marginBottom: 2,
-  },
-  quickLinkSub: { color: 'rgba(255, 255, 255, 0.85)', fontSize: 11 },
-
   // Premium preview
   premiumPreviewCard: {
     borderRadius: 20,
@@ -1066,7 +1021,7 @@ const styles = StyleSheet.create({
     height: 140,
     marginTop: 20,
   },
-  mockGraph: {
+  barsRow: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1087,6 +1042,55 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: 'rgba(255,255,255,0.3)',
     fontWeight: '700',
+  },
+
+  // Explore Blueprint section
+  sectionBlock: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    marginBottom: 12,
+  },
+  quickLinksRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  quickLink: {
+    flex: 1,
+    borderRadius: 18,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  quickLinkGradient: {
+    padding: 14,
+    gap: 10,
+    alignItems: 'center',
+  },
+  quickLinkIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quickLinkTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  quickLinkSub: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    marginTop: 2,
   },
 
   // Insight card CTA

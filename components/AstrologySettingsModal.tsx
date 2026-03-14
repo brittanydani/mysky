@@ -36,10 +36,8 @@ import SkiaMetallicPill from './ui/SkiaMetallicPill';
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
   textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
 interface AstrologySettingsModalProps {
@@ -108,10 +106,10 @@ export default function AstrologySettingsModal({
     }
   };
 
-  const handleSelect = (type: 'house' | 'orb', value: any) => {
+  const handleSelect = (type: 'house' | 'orb', value: HouseSystem | OrbPreset) => {
     Haptics.selectionAsync().catch(() => {});
-    if (type === 'house') setSelectedHouseSystem(value);
-    else setSelectedOrbPreset(value);
+    if (type === 'house') setSelectedHouseSystem(value as HouseSystem);
+    else setSelectedOrbPreset(value as OrbPreset);
   };
 
   const hasChanges =
@@ -119,117 +117,102 @@ export default function AstrologySettingsModal({
     (settings.houseSystem !== selectedHouseSystem || settings.orbPreset !== selectedOrbPreset);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <Pressable style={styles.dismissArea} onPress={onClose} />
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={styles.container}>
+        <LinearGradient colors={['rgba(30, 35, 50, 0.98)', '#020817']} style={StyleSheet.absoluteFillObject} />
 
-        <View style={styles.modalContainer}>
-          <LinearGradient colors={['rgba(30, 35, 50, 0.98)', '#020817']} style={styles.modalContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerIndicator} />
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Calculation Settings</Text>
+            <Pressable onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={22} color={theme.textMuted} />
+            </Pressable>
+          </View>
+        </View>
+
+        {loading ? (
+          <View style={styles.loadingContainer}><ActivityIndicator color={PALETTE.gold} /></View>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.headerIndicator} />
-              <View style={styles.headerRow}>
-                <Text style={styles.title}>Calculation Settings</Text>
-                <Pressable onPress={onClose} style={styles.closeBtn}>
-                  <Ionicons name="close" size={22} color={theme.textMuted} />
-                </Pressable>
+            {/* House Systems */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>House System</Text>
+              <Text style={styles.sectionSub}>Determines how the 12 houses are mapped to your location.</Text>
+              
+              <View style={styles.optionsList}>
+                {HOUSE_SYSTEM_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[styles.houseCard, selectedHouseSystem === option.value && styles.cardSelected]}
+                    onPress={() => handleSelect('house', option.value)}
+                  >
+                    <View style={styles.cardHeader}>
+                      <Text style={[styles.optionTitle, selectedHouseSystem === option.value && { color: PALETTE.gold }]}>
+                        {option.label}
+                      </Text>
+                      <View style={[styles.radio, selectedHouseSystem === option.value && styles.radioActive]}>
+                        {selectedHouseSystem === option.value && <View style={styles.radioInner} />}
+                      </View>
+                    </View>
+                    <Text style={styles.optionSub}>{option.description}</Text>
+                  </Pressable>
+                ))}
               </View>
             </View>
 
-            {loading ? (
-              <View style={styles.loadingContainer}><ActivityIndicator color={PALETTE.gold} /></View>
-            ) : (
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                
-                {/* House Systems */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>House System</Text>
-                  <Text style={styles.sectionSub}>Determines how the 12 houses are mapped to your location.</Text>
-                  
-                  <View style={styles.optionsList}>
-                    {HOUSE_SYSTEM_OPTIONS.map((option) => (
-                      <Pressable
-                        key={option.value}
-                        style={[styles.houseCard, selectedHouseSystem === option.value && styles.cardSelected]}
-                        onPress={() => handleSelect('house', option.value)}
-                      >
-                        <View style={styles.cardHeader}>
-                          <Text style={[styles.optionTitle, selectedHouseSystem === option.value && { color: PALETTE.gold }]}>
-                            {option.label}
-                          </Text>
-                          <View style={[styles.radio, selectedHouseSystem === option.value && styles.radioActive]}>
-                            {selectedHouseSystem === option.value && <View style={styles.radioInner} />}
-                          </View>
-                        </View>
-                        <Text style={styles.optionSub}>{option.description}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Aspect Orbs */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>Aspect Precision</Text>
-                  <Text style={styles.sectionSub}>Adjust the mathematical tolerance for planetary angles.</Text>
-                  
-                  <View style={styles.orbGrid}>
-                    {ORB_PRESET_OPTIONS.map((option) => (
-                      <Pressable
-                        key={option.value}
-                        style={[styles.orbCard, selectedOrbPreset === option.value && styles.cardSelected]}
-                        onPress={() => handleSelect('orb', option.value)}
-                      >
-                        <Ionicons 
-                          name={option.value === 'tight' ? 'contract' : option.value === 'wide' ? 'expand' : 'remove'} 
-                          size={20} 
-                          color={selectedOrbPreset === option.value ? PALETTE.gold : theme.textMuted} 
-                        />
-                        <Text style={[styles.orbLabel, selectedOrbPreset === option.value && { color: PALETTE.gold }]}>
-                          {option.label}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.infoNote}>
-                  <Ionicons name="information-circle-outline" size={16} color={theme.textMuted} />
-                  <Text style={styles.infoNoteText}>Changes will recalculate your chart and relationship profiles.</Text>
-                </View>
-
-              </ScrollView>
-            )}
-
-            {/* Footer */}
-            <View style={styles.footer}>
-              <SkiaMetallicPill
-                label={saving ? 'Applying…' : 'Apply Changes'}
-                onPress={handleSave}
-                disabled={!hasChanges || saving}
-                icon={saving ? <ActivityIndicator color="#020817" size="small" /> : undefined}
-              />
+            {/* Aspect Orbs */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Aspect Precision</Text>
+              <Text style={styles.sectionSub}>Adjust the mathematical tolerance for planetary angles.</Text>
+              
+              <View style={styles.orbGrid}>
+                {ORB_PRESET_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[styles.orbCard, selectedOrbPreset === option.value && styles.cardSelected]}
+                    onPress={() => handleSelect('orb', option.value)}
+                  >
+                    <Ionicons 
+                      name={option.value === 'tight' ? 'contract' : option.value === 'wide' ? 'expand' : 'remove'} 
+                      size={20} 
+                      color={selectedOrbPreset === option.value ? PALETTE.gold : theme.textMuted} 
+                    />
+                    <Text style={[styles.orbLabel, selectedOrbPreset === option.value && { color: PALETTE.gold }]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
 
-          </LinearGradient>
+            <View style={styles.infoNote}>
+              <Ionicons name="information-circle-outline" size={16} color={theme.textMuted} />
+              <Text style={styles.infoNoteText}>Changes will recalculate your chart and relationship profiles.</Text>
+            </View>
+
+          </ScrollView>
+        )}
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <SkiaMetallicPill
+            label={saving ? 'Applying…' : 'Apply Changes'}
+            onPress={handleSave}
+            disabled={!hasChanges || saving}
+            icon={saving ? <ActivityIndicator color="#020817" size="small" /> : undefined}
+          />
         </View>
+
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end' },
-  dismissArea: { flex: 1 },
-  modalContainer: {
-    maxHeight: '90%',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-  },
-  modalContent: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#020817' },
   header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
   headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginBottom: 20 },
   headerRow: { flexDirection: 'row', width: '100%', paddingHorizontal: 24, justifyContent: 'space-between', alignItems: 'center' },
@@ -277,8 +260,4 @@ const styles = StyleSheet.create({
   infoNoteText: { flex: 1, fontSize: 12, color: theme.textMuted, fontStyle: 'italic' },
 
   footer: { padding: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
-  saveBtn: { borderRadius: 16, overflow: 'hidden' },
-  saveBtnDisabled: { opacity: 0.5 },
-  saveBtnGradient: { paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  saveBtnText: { color: '#020817', fontSize: 16, fontWeight: '700' },
 });

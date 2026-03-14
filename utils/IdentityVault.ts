@@ -1,5 +1,6 @@
 // File: utils/IdentityVault.ts
 import * as SecureStore from 'expo-secure-store';
+import { logger } from './logger';
 
 /**
  * The user's core astrological identity — the most sensitive data in the app.
@@ -34,7 +35,7 @@ export class IdentityVault {
       await SecureStore.setItemAsync(IDENTITY_KEY, JSON.stringify(identity), STORE_OPTIONS);
       return true;
     } catch (error) {
-      console.error('[IdentityVault] Failed to seal identity:', error);
+      logger.error('[IdentityVault] Failed to seal identity:', error);
       return false;
     }
   }
@@ -49,7 +50,7 @@ export class IdentityVault {
       if (!payload) return null;
       return JSON.parse(payload) as CosmicIdentity;
     } catch (error) {
-      console.error('[IdentityVault] Failed to open vault:', error);
+      logger.error('[IdentityVault] Failed to open vault:', error);
       return null;
     }
   }
