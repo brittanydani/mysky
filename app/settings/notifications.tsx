@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';
+import { GoldSubtitle as _GoldSubtitle } from '../../components/ui/GoldSubtitle'; // reserved
 
 // ── Persistence keys ──────────────────────────────────────────────────────────
 const KEYS = {
@@ -254,11 +255,10 @@ export default function NotificationSettings() {
         >
           <Text style={styles.backArrow}>‹</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Daily Rhythm</Text>
-        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.headerTitle}>Daily Rhythm</Text>
 
         {/* Master enable toggle */}
         <Text style={styles.sectionLabel}>LOCAL TRIGGERS</Text>
@@ -308,23 +308,21 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingTop: 60,
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 8,
   },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   backArrow: { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 40 },
   headerTitle: {
-    fontSize: 16,
-    color: '#FFF',
+    fontSize: 34,
+    color: '#F0EAD6',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    opacity: 0.6,
+    fontWeight: '300',
+    marginBottom: 32,
   },
 
-  content: { paddingHorizontal: 24, paddingTop: 4 },
+  content: { paddingHorizontal: 24, paddingTop: 20 },
   sectionLabel: {
     fontSize: 11,
     fontWeight: 'bold',

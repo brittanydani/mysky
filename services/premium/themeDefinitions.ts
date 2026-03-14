@@ -145,7 +145,7 @@ function buildVariants(def: TriggerDefinition): ThemeDefinition[] {
         `What would it mean to let yourself feel ${feelsShort} without needing to fix it?`,
       ],
       integrationPrompts: [
-        `Notice what comes up when you sit with the word "${def.label.toLowerCase()}." No need to solve anything \u2014 just notice.`,
+        `Notice what comes up when you sit with the word "${def.label.toLowerCase()}." No need to solve anything — just notice.`,
       ],
       nervousPreferred: def.typicalNervousSystem,
       attachmentPreferred: def.typicalAttachment,
@@ -169,7 +169,7 @@ function buildVariants(def: TriggerDefinition): ThemeDefinition[] {
       ],
       integrationPrompts: [
         `Place a hand on your chest. Take three slow breaths. Notice what shifts.`,
-        `Scan from head to feet \u2014 where does this theme live in your body?`,
+        `Scan from head to feet — where does this theme live in your body?`,
       ],
       nervousPreferred: def.typicalNervousSystem,
       attachmentPreferred: [],

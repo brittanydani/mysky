@@ -57,7 +57,7 @@ function makeInput(
       vividness: 4,
       lucidity: 2,
       controlLevel: 2,
-      awakenState: 'startled',
+      awakenState: 'shaken',
       recurring: false,
     },
     aggregates: rest.aggregates ?? {

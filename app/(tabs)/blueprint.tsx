@@ -26,14 +26,15 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 
 const PALETTE = {
-  gold: '#D9BF8C',
-  silverBlue: '#6E8CB4',
+  gold: '#C9AE78',
+  silverBlue: '#C9AE78',
   rose: '#D4A3B3',
   sage: '#8CBEAA',
   lavender: '#A89BC8',
-  emerald: '#6EBF8B',
+  emerald: '#C9AE78',
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.6)',
   glassBorder: 'rgba(255,255,255,0.08)',
@@ -146,11 +147,11 @@ export default function BlueprintScreen() {
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Blueprint</Text>
-            <Text style={styles.headerSubtitle}>
+            <GoldSubtitle style={styles.headerSubtitle}>
               {chartName
                 ? `${chartName} · Know yourself deeply`
                 : 'Values, patterns, body & mind'}
-            </Text>
+            </GoldSubtitle>
           </Animated.View>
 
           {/* Cards */}

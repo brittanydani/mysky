@@ -19,7 +19,7 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { theme } from '../../constants/theme';
-import { SkiaChakraNode } from './SkiaChakraNode';
+import { SkiaChakraNode, CHAKRA_COLORS } from './SkiaChakraNode';
 
 export type ChakraState = 'Flowing' | 'Sensitive' | 'Grounding Needed' | 'Quiet';
 
@@ -38,16 +38,8 @@ interface ChakraWheelProps {
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-// ===== Cinematic Jewel-Tone Chakra Palette =====
-export const CHAKRA_COLORS: Record<string, { core: string; glow: string; deep: string }> = {
-  Crown:          { core: '#9D76C1', glow: '#D4A3B3', deep: '#4A3559' }, // Amethyst
-  'Third Eye':    { core: '#6A7391', glow: '#8BC4E8', deep: '#2C365E' }, // Indigo/Silver
-  Throat:         { core: '#5C89A6', glow: '#BEE0F5', deep: '#26466D' }, // Sapphire
-  Heart:          { core: '#6EBF8B', glow: '#A8E6B6', deep: '#2A5C3D' }, // Emerald
-  'Solar Plexus': { core: '#C9AE78', glow: '#FFF4D6', deep: '#6B532E' }, // Champagne Gold
-  Sacral:         { core: '#CD7F5D', glow: '#E8A98C', deep: '#6B3A26' }, // Copper
-  Root:           { core: '#C87878', glow: '#E8A9A9', deep: '#6A2B2B' }, // Garnet
-};
+// Re-export so any existing consumer can still import from ChakraWheel
+export { CHAKRA_COLORS };
 
 // Elegant Champagne Gold Base
 export const GOLD = {

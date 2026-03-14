@@ -14,7 +14,7 @@ import MySkyClipboardSkia from '../components/skia/MySkyClipboardSkia';
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: theme.textGold,
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   textMain: theme.textPrimary,
   glassBorder: theme.cardBorder,

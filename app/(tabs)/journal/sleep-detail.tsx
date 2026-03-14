@@ -198,7 +198,6 @@ export default function SleepDetailScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <ChevronLeft color="#FFF" size={26} />
         </Pressable>
-        <Text style={styles.headerTitle}>Subconscious Depth</Text>
         <Pressable
           onPress={handleSave}
           style={[styles.saveBtn, saving && { opacity: 0.5 }]}
@@ -218,6 +217,8 @@ export default function SleepDetailScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <Text style={styles.headerTitle}>Subconscious Depth</Text>
+
         {/* Meta row — date + quality */}
         {entry && (
           <View style={styles.metaRow}>
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#020817' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 24, paddingBottom: 16,
+    paddingHorizontal: 24, paddingBottom: 8,
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
@@ -330,8 +331,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    color: '#FFF', fontSize: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6,
+    fontSize: 34, color: '#F0EAD6', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontWeight: '300', marginBottom: 20,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
   saveText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },

@@ -230,7 +230,7 @@ class FieldEncryptionServiceClass {
       // Do NOT generate a new key — that would silently orphan all encrypted data.
       logger.error('[FieldEncryption] SecureStore unavailable — cannot load or create DEK');
       throw new Error(
-        'Unable to access your device\u2019s secure storage. ' +
+        'Unable to access your device’s secure storage. ' +
         'Please restart the app. If the problem persists, your encryption key may need to be restored from a backup.'
       );
     }

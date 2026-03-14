@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import {
   SkiaSomaticBody,
   SOMATIC_REGION_IDS,
@@ -158,7 +159,7 @@ export default function SomaticMapScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Somatic Map</Text>
-            <Text style={styles.headerSubtitle}>Where emotions live in your body</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>Where emotions live in your body</GoldSubtitle>
           </Animated.View>
 
           {/* Skia body silhouette — GPU-rendered heat map + selection glow */}
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, color: 'rgba(140,190,170,0.7)', fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 24 },
+  header: { marginBottom: 32 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,

@@ -63,12 +63,12 @@ const SCREEN_W = Dimensions.get('window').width;
 const PALETTE = {
   bg: '#050507',
   cardBg: 'rgba(15, 18, 25, 0.65)',
-  gold: '#D9BF8C',
-  goldGlow: 'rgba(217, 191, 140, 0.15)',
-  silverBlue: '#8BC4E8',
+  gold: '#C9AE78',
+  goldGlow: 'rgba(201, 174, 120, 0.15)',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  amethyst: '#9D76C1',
+  emerald: '#C9AE78',
+  amethyst: '#C9AE78',
   textMain: '#F0EAD6',
   textMuted: 'rgba(240, 234, 214, 0.4)',
   glassBorder: 'rgba(255,255,255,0.08)',
@@ -194,9 +194,26 @@ function fuzzyMatch(text: string, query: string): boolean {
 }
 
 const AWAKEN_STATES: { id: AwakenState; label: string }[] = [
-  { id: 'calm', label: 'Calm' }, { id: 'startled', label: 'Startled' }, { id: 'confused', label: 'Confused' },
-  { id: 'unsettled', label: 'Unsettled' }, { id: 'relieved', label: 'Relieved' }, { id: 'heavy', label: 'Heavy' },
-  { id: 'drained', label: 'Drained' }, { id: 'neutral', label: 'Neutral' }, { id: 'thoughtful', label: 'Thoughtful' },
+  { id: 'calm', label: 'Calm' },
+  { id: 'anxious', label: 'Anxious' },
+  { id: 'scared', label: 'Scared' },
+  { id: 'relieved', label: 'Relieved' },
+  { id: 'confused', label: 'Confused' },
+  { id: 'curious', label: 'Curious' },
+  { id: 'sad', label: 'Sad' },
+  { id: 'happy', label: 'Happy' },
+  { id: 'peaceful', label: 'Peaceful' },
+  { id: 'tired', label: 'Tired' },
+  { id: 'energized', label: 'Energized' },
+  { id: 'shaken', label: 'Shaken' },
+  { id: 'disturbed', label: 'Disturbed' },
+  { id: 'thoughtful', label: 'Thoughtful' },
+  { id: 'inspired', label: 'Inspired' },
+  { id: 'numb', label: 'Numb' },
+  { id: 'grateful', label: 'Grateful' },
+  { id: 'overwhelmed', label: 'Overwhelmed' },
+  { id: 'hopeful', label: 'Hopeful' },
+  { id: 'unsettled', label: 'Unsettled' },
 ];
 
 const DREAM_THEMES: { id: DreamTheme; label: string }[] = [
@@ -211,7 +228,7 @@ function formatDate(dateStr: string): string {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
-  if (dateStr === todayStr) return 'Tonight / Today';
+  if (dateStr === todayStr) return 'Today';
   if (dateStr === yesterdayStr) return 'Yesterday';
   return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
@@ -409,6 +426,7 @@ export default function SleepScreen() {
         if (expandedEntryId === savedId) setExpandedEntryId(null);
       }
       applyEntryToForm(savedEntry);
+      if (isEditingUnlocked) setIsEditingUnlocked(true);
       setSaving(false); setSaved(true);
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
@@ -517,7 +535,7 @@ export default function SleepScreen() {
                   <Text style={styles.formTitle}>
                     {editingEntryId
                       ? editingDate === today
-                        ? (isEditingUnlocked ? 'Editing tonight' : "Tonight's log")
+                        ? (isEditingUnlocked ? 'Editing today' : "Today's log")
                         : `Edit ${formatDate(editingDate!)}`
                       : 'How was last night?'}
                   </Text>
@@ -568,8 +586,13 @@ export default function SleepScreen() {
                       style={styles.hoursCircleDisplay}
                       onLongPress={() => { setHasDuration(false); setDurationHours(7.5); }}
                     >
-                      <Text style={[styles.hoursCircleValue, !hasDuration && { color: PALETTE.textMuted }]}>
-                        {hasDuration ? formatDuration(durationHours) : '\u2014'}
+                      <Text
+                        style={[styles.hoursCircleValue, !hasDuration && { color: PALETTE.textMuted }]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.6}
+                      >
+                        {hasDuration ? formatDuration(durationHours) : '—'}
                       </Text>
                       {hasDuration && (
                         <Text style={styles.hoursCircleQuality}>
@@ -587,33 +610,20 @@ export default function SleepScreen() {
 
                   {/* ── Dream Journal Section ── */}
                   <Text style={[styles.fieldLabel, { marginTop: 32 }]}>Dream Memory</Text>
-                  {isPremium ? (
-                    <View style={[styles.dreamGlassCard, dreamText.length > 0 && styles.dreamGlassCardActive]}>
-                      <TextInput
-                        style={styles.dreamInputInner}
-                        value={dreamText}
-                        onChangeText={setDreamText}
-                        placeholder="Fragments, feelings, or full narratives..."
-                        placeholderTextColor={PALETTE.textMuted}
-                        multiline
-                        textAlignVertical="top"
-                        selectionColor={PALETTE.gold}
-                      />
-                    </View>
-                  ) : (
-                    <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                      <LinearGradient colors={['rgba(217, 191, 140, 0.15)', 'rgba(10, 12, 18, 0.8)']} style={styles.premiumLockCard}>
-                        <Ionicons name="lock-closed" size={16} color={PALETTE.gold} />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                          <Text style={styles.premiumLockTitle}>Dream Journal</Text>
-                          <Text style={styles.premiumLockSub}>Log and decode the symbolic language of your subconscious.</Text>
-                        </View>
-                        <Ionicons name="arrow-forward" size={16} color={PALETTE.gold} />
-                      </LinearGradient>
-                    </Pressable>
-                  )}
+                  <View style={[styles.dreamGlassCard, dreamText.length > 0 && styles.dreamGlassCardActive]}>
+                    <TextInput
+                      style={styles.dreamInputInner}
+                      value={dreamText}
+                      onChangeText={setDreamText}
+                      placeholder="Fragments, feelings, or full narratives..."
+                      placeholderTextColor={PALETTE.textMuted}
+                      multiline
+                      textAlignVertical="top"
+                      selectionColor={PALETTE.gold}
+                    />
+                  </View>
 
-                  {!isPremium && (
+                  {!isPremium && dreamText.trim().length > 0 && (
                     <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} style={{ marginTop: 12 }}>
                       <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(10, 12, 18, 0.8)']} style={styles.premiumLockCard}>
                         <View style={{ flex: 1 }}>
@@ -628,8 +638,8 @@ export default function SleepScreen() {
                     </Pressable>
                   )}
 
-                  {/* ── Dream Feelings Picker (premium, shown when dream text is entered) ── */}
-                  {isPremium && dreamText.trim().length > 0 && (
+                  {/* ── Dream Feelings Picker (shown when dream text is entered) ── */}
+                  {dreamText.trim().length > 0 && (
                     <>
                       <Text style={[styles.fieldLabel, { marginTop: 24 }]}>How did the dream feel?</Text>
                       <Pressable
@@ -641,7 +651,7 @@ export default function SleepScreen() {
                         style={styles.dreamMoodDropdown}
                       >
                         <Text style={selectedFeelings.length > 0 ? styles.dreamMoodDropdownText : styles.dreamMoodDropdownPlaceholder}>
-                          {selectedFeelings.length > 0 ? selectedFeelingLabels : 'Tap to select feelings\u2026'}
+                          {selectedFeelings.length > 0 ? selectedFeelingLabels : 'Tap to select feelings…'}
                         </Text>
                         <Ionicons name={showFeelingPicker ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                       </Pressable>
@@ -683,7 +693,7 @@ export default function SleepScreen() {
                                 style={styles.feelingSearchInput}
                                 value={feelingSearch}
                                 onChangeText={setFeelingSearch}
-                                placeholder="Search feelings\u2026"
+                                placeholder="Search feelings"
                                 placeholderTextColor={theme.textMuted}
                                 autoCorrect={false}
                               />
@@ -874,13 +884,13 @@ export default function SleepScreen() {
                 <View style={styles.statCard}>
                   <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                   <Text style={[styles.statLabel, { color: PALETTE.gold }]}>AVG SLEEP</Text>
-                  <Text style={styles.statValue}>{stats.avgDuration != null ? formatDuration(stats.avgDuration) : '\u2014'}</Text>
+                  <Text style={styles.statValue}>{stats.avgDuration != null ? formatDuration(stats.avgDuration) : '—'}</Text>
                   <Text style={styles.statSub}>per night</Text>
                 </View>
                 <View style={styles.statCard}>
                   <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                   <Text style={[styles.statLabel, { color: PALETTE.emerald }]}>AVG REST</Text>
-                  <Text style={styles.statValue}>{stats.avgQuality != null ? `${stats.avgQuality.toFixed(1)}/5` : '\u2014'}</Text>
+                  <Text style={styles.statValue}>{stats.avgQuality != null ? `${stats.avgQuality.toFixed(1)}/5` : '—'}</Text>
                   <Text style={styles.statSub}>quality</Text>
                 </View>
               </View>
@@ -900,7 +910,7 @@ export default function SleepScreen() {
                 <SkiaSleepGraph data={historicalSleep} width={SCREEN_W - 80} height={140} />
                 <View style={styles.obsidianCardFooter}>
                   <Text style={styles.obsidianCardFooterText}>
-                    {historicalSleep.length} night{historicalSleep.length !== 1 ? 's' : ''} \u00b7 Height = duration \u00b7 Glow = quality
+                    {historicalSleep.length} night{historicalSleep.length !== 1 ? 's' : ''} · Height = duration · Glow = quality
                   </Text>
                 </View>
               </View>
@@ -1017,7 +1027,7 @@ export default function SleepScreen() {
                   </View>
                 );
               })}
-              <Text style={styles.deleteHint}>Tap to edit \u00b7 Long press to delete</Text>
+              <Text style={styles.deleteHint}>Tap to edit · Long press to delete</Text>
             </Animated.View>
           )}
 
@@ -1114,7 +1124,7 @@ const styles = StyleSheet.create({
   intensityLabel: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
   intensityDots: { flexDirection: 'row', gap: 8 },
   intensityDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center' },
-  intensityDotActive: { backgroundColor: 'rgba(157, 118, 193, 0.25)', borderColor: PALETTE.amethyst },
+  intensityDotActive: { backgroundColor: 'rgba(201, 174, 120, 0.25)', borderColor: PALETTE.amethyst },
   intensityDotText: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '600' },
   intensityDotTextActive: { color: PALETTE.amethyst },
 
@@ -1127,7 +1137,7 @@ const styles = StyleSheet.create({
   awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'transparent', justifyContent: 'center', paddingHorizontal: 3, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  toggleTrackActive: { backgroundColor: 'rgba(157, 118, 193, 0.4)', borderColor: PALETTE.amethyst },
+  toggleTrackActive: { backgroundColor: 'rgba(201, 174, 120, 0.4)', borderColor: PALETTE.amethyst },
   toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: PALETTE.textMuted as string },
   toggleThumbActive: { alignSelf: 'flex-end', backgroundColor: PALETTE.amethyst },
 

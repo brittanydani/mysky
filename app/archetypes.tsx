@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const STORAGE_KEY = '@mysky:archetype_profile';
 
@@ -70,7 +71,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'seeker',
     name: 'The Seeker',
     icon: '◎',
-    color: '#8BC4E8',
+    color: '#C9AE78',
     tagline: 'Craves discovery, freedom, and new horizons',
     light: 'Curiosity, adaptability, authentic living',
     shadow: 'Restlessness, avoidance of commitment, feeling never satisfied',
@@ -79,7 +80,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'sage',
     name: 'The Sage',
     icon: '◬',
-    color: '#A89BC8',
+    color: '#C9AE78',
     tagline: 'Seeks truth and understanding above all',
     light: 'Wisdom, clarity, thoughtful perspective',
     shadow: 'Over-analysis, emotional distance, perfectionism',
@@ -88,7 +89,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'rebel',
     name: 'The Rebel',
     icon: '⚡',
-    color: '#6EBF8B',
+    color: '#C9AE78',
     tagline: 'Questions structures and catalyzes change',
     light: 'Authenticity, vision, disrupting what no longer serves',
     shadow: 'Contrarianism for its own sake, difficulty with authority',
@@ -234,7 +235,7 @@ export default function ArchetypesScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Archetypes</Text>
-            <Text style={styles.headerSubtitle}>Your dominant inner patterns</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>Your dominant inner patterns</GoldSubtitle>
           </Animated.View>
 
           {/* Result view */}
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, color: 'rgba(168,155,200,0.7)', fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 20 },
+  header: { marginBottom: 32 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,

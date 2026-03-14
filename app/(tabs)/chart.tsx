@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { SkiaGradient } from '../../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -650,11 +651,11 @@ export default function ChartScreen() {
                 ? (activeOverlays.length > 1 ? 'Group Dynamic' : 'Relationship Chart') 
                 : 'Your Chart'}
             </Text>
-            <Text style={styles.subtitle}>
+            <GoldSubtitle style={styles.subtitle}>
               {activeOverlays.length > 0
                 ? `${(userChart as any).name || 'You'} + ${activeOverlays.length > 1 ? `${activeOverlays.length} Others` : activeOverlays[0].person.name}`
                 : `${(userChart as any).name || 'Your Chart'}${birthDateStr ? ` · Born ${birthDateStr}` : ''}`}
-            </Text>
+            </GoldSubtitle>
             {activeOverlays.length === 0 && (
               <Text style={styles.headerFrame}>
                 Your chart personalizes your reflection and growth prompts throughout MySky.
@@ -1709,17 +1710,16 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '300',
     color: theme.textPrimary,
-    fontFamily: 'serif',
-    letterSpacing: 0.5,
+    fontFamily: 'Georgia',
+    letterSpacing: 0,
     textAlign: 'center',
   },
   subtitle: {
-    color: theme.textSecondary,
-    fontSize: 13,
-    marginTop: 4,
+    fontSize: 14,
+    marginTop: 6,
     fontStyle: 'italic',
     textAlign: 'center',
   },

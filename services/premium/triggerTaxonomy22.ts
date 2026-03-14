@@ -276,7 +276,7 @@ export const TRIGGER_TAXONOMY_22: Record<ShadowTrigger, TriggerDefinition> = {
     typicalNervousSystem: ["flight", "fight", "freeze"],
     subThemes: ["watchfulness", "sensing threat", "unsafe environment", "anticipation", "feeling braced"],
     interpretationFrame:
-      "May reflect something your nervous system is tracking \u2014 a real or perceived sense of threat that hasn't been fully processed. This can show up as stress, vigilance, or feeling on guard.",
+      "May reflect something your nervous system is tracking — a real or perceived sense of threat that hasn't been fully processed. This can show up as stress, vigilance, or feeling on guard.",
   },
 
   intimacy: {

@@ -24,11 +24,12 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Polygon, Line, Circle } from 'react-native-svg';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const STORAGE_KEY = '@mysky:cognitive_style';
 
 const PALETTE = {
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   gold: '#D9BF8C',
   sage: '#8CBEAA',
   textMain: '#FFFFFF',
@@ -111,7 +112,7 @@ const CognitiveSynthesisMap = ({ scores }: { scores: Scores }) => {
         <Line x1={center} y1={center} x2={getPoint(5, 240).x} y2={getPoint(5, 240).y} stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
 
         {/* User Data Polygon */}
-        <Polygon points={polygonPath} fill="rgba(139,196,232,0.2)" stroke={PALETTE.silverBlue} strokeWidth="2" />
+        <Polygon points={polygonPath} fill="rgba(201,174,120,0.2)" stroke={PALETTE.silverBlue} strokeWidth="2" />
 
         {/* Data Points */}
         <Circle cx={p1.x} cy={p1.y} r="4" fill={PALETTE.silverBlue} />
@@ -200,7 +201,7 @@ export default function CognitiveStyleScreen() {
         >
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Cognitive Style</Text>
-            <Text style={styles.headerSubtitle}>How your mind naturally works</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>How your mind naturally works</GoldSubtitle>
           </Animated.View>
 
           {/* Profile Synthesis — appears at top once all dimensions are set */}
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, color: PALETTE.silverBlue, fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 20 },
+  header: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: 'Georgia', fontWeight: '300', marginBottom: 8 },
   headerSubtitle: { fontSize: 14, color: PALETTE.textMuted, fontStyle: 'italic' },
 
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
 
   synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22, textAlign: 'center', marginBottom: 24 },
 
-  saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.silverBlue, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(139,196,232,0.1)' },
+  saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.silverBlue, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(201,174,120,0.1)' },
   saveBtnDone: { borderColor: PALETTE.sage, backgroundColor: 'rgba(140,190,170,0.1)' },
   saveBtnText: { fontSize: 13, color: PALETTE.silverBlue, fontWeight: '700', letterSpacing: 0.5 },
 

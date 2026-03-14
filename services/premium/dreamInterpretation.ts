@@ -120,7 +120,7 @@ function buildDominantProfiles(aggregates: DreamAggregates): DominantProfiles {
 /** Human-readable nervous system branch phrase */
 const BRANCH_LABELS: Record<NervousSystemBranch, string> = {
   ventral_safety: 'a sense of safety and connection',
-  fight: 'activation around boundaries or anger',
+  fight: 'a tension or protectiveness around boundaries',
   flight: 'anxiety or a pull toward escape',
   freeze: 'a sense of being stuck or overwhelmed',
   collapse: 'depletion or a heaviness that is hard to shake',
@@ -135,6 +135,26 @@ const ATTACH_LABELS: Record<AttachmentStyle, string> = {
   disorganized: 'a push-pull tension in how connection felt',
 };
 
+// ─── Prose Helpers ────────────────────────────────────────────────────────────
+
+/** Capitalize the first character of a string (sentence-start formatting). */
+const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+
+/**
+ * Return a person label with an appropriate determiner for natural prose.
+ * Personal relationship terms (mom, dad, partner, etc.) work without an article.
+ * Non-personal nouns (stranger, boss, crowd, etc.) get "a" or "an".
+ */
+function labelWithDeterminer(label: string): string {
+  const PERSONAL = new Set([
+    'mom', 'dad', 'mother', 'father', 'adoptive dad', 'ex', 'friend',
+    'husband', 'wife', 'partner', 'brother', 'sister', 'sibling',
+    'grandma', 'grandpa', 'grandmother', 'grandfather',
+  ]);
+  if (PERSONAL.has(label.toLowerCase())) return label;
+  return /^[aeiou]/i.test(label) ? `an ${label}` : `a ${label}`;
+}
+
 // ─── Grounding Lines (high-distress close) ────────────────────────────────────
 // Somatic, regulating, non-clinical. One is selected deterministically per dream.
 // Voice: co-reflective, parts-aware, trauma-informed. Never instructional.
@@ -143,68 +163,68 @@ const GROUNDING_LINES: readonly string[] = [
   // ── Breath-anchored ──
   'If this dream left you feeling unsettled, it may help to take a slow breath and remind yourself: you are here, and you are safe.',
   'A few slow breaths can help your body remember that the dream is over and you are okay.',
-  'If there\u2019s still tension in your chest or belly, try breathing into that spot slowly. Let it know you\u2019re listening.',
+  'If there’s still tension in your chest or belly, try breathing into that spot slowly. Let it know you’re listening.',
   'Sometimes a single deep breath is enough to let your body know: that was then, this is now.',
-  'Try one long exhale \u2014 longer than your inhale. Your nervous system may soften just a little.',
-  'If your breathing feels shallow right now, that\u2019s your body still holding the dream. A few slow, intentional breaths can help it let go.',
+  'Try one long exhale — longer than your inhale. Your nervous system may soften just a little.',
+  'If your breathing feels shallow right now, that’s your body still holding the dream. A few slow, intentional breaths can help it let go.',
 
   // ── Touch / somatic ──
   'If your body is still holding something from this dream, a hand on your chest and a few slow breaths can help it land.',
-  'Placing a hand somewhere warm on your body \u2014 your chest, your belly \u2014 can remind you that you\u2019re here.',
+  'Placing a hand somewhere warm on your body — your chest, your belly — can remind you that you’re here.',
   'If you notice tension anywhere, try pressing your feet gently into the floor. Let your body feel the ground.',
-  'You might try holding your own hand for a moment. It sounds simple, but it tells your nervous system: I\u2019m here with you.',
+  'You might try holding your own hand for a moment. It sounds simple, but it tells your nervous system: I’m here with you.',
   'Resting both hands on your lap, palms up, can signal to your body that nothing needs to be held right now.',
   'Try gently rubbing your palms together for a few seconds, then placing them over your eyes. Let the warmth settle in.',
 
   // ── Grounding / orientation ──
-  'Notice what shifts in your body as you sit with this \u2014 sometimes that\u2019s all the processing you need.',
+  'Notice what shifts in your body as you sit with this — sometimes that’s all the processing you need.',
   'Look around the room for a moment. Name three things you can see. This small act brings your body back to the present.',
   'Feel your feet on the floor. Feel the surface beneath you. These small anchors remind your body where it actually is.',
   'If this dream pulled you somewhere far, try pressing your fingertips together gently. It brings you back.',
-  'Notice the temperature of the air on your skin right now. That\u2019s the present moment touching you.',
-  'Wiggle your toes. It\u2019s a small thing, but it reconnects you to your body and to right now.',
+  'Notice the temperature of the air on your skin right now. That’s the present moment touching you.',
+  'Wiggle your toes. It’s a small thing, but it reconnects you to your body and to right now.',
 
   // ── Permission / release ──
-  'You don\u2019t have to solve anything this dream brought up. Just notice what\u2019s here.',
-  'Nothing about this dream requires an answer right now. You\u2019re allowed to just let it be.',
-  'You don\u2019t have to understand it all at once. Sometimes a dream just needs to be witnessed.',
-  'Whatever this dream stirred up, it\u2019s okay to set it down for now. You can come back to it when you\u2019re ready.',
-  'There\u2019s no rush to figure this out. Your understanding will come in its own time.',
-  'You\u2019re allowed to close this and go about your day. The insight will be here when you come back.',
-  'This dream doesn\u2019t need to be solved. Sometimes just acknowledging what you felt is enough.',
+  'You don’t have to solve anything this dream brought up. Just notice what’s here.',
+  'Nothing about this dream requires an answer right now. You’re allowed to just let it be.',
+  'You don’t have to understand it all at once. Sometimes a dream just needs to be witnessed.',
+  'Whatever this dream stirred up, it’s okay to set it down for now. You can come back to it when you’re ready.',
+  'There’s no rush to figure this out. Your understanding will come in its own time.',
+  'You’re allowed to close this and go about your day. The insight will be here when you come back.',
+  'This dream doesn’t need to be solved. Sometimes just acknowledging what you felt is enough.',
 
   // ── Parts-aware ──
-  'If a part of you is still unsettled, try speaking to it gently: I see you. I\u2019m here.',
-  'Whatever part of you carried this dream \u2014 it\u2019s safe now. You can remind it of that.',
-  'There may be a part of you that\u2019s still bracing. You can let it know: the dream ended. You\u2019re awake.',
+  'If a part of you is still unsettled, try speaking to it gently: I see you. I’m here.',
+  'Whatever part of you carried this dream — it’s safe now. You can remind it of that.',
+  'There may be a part of you that’s still bracing. You can let it know: the dream ended. You’re awake.',
   'If something in you is still activated, try meeting it with curiosity instead of urgency. It often helps.',
-  'The part of you that felt this so strongly \u2014 it was doing its job. You can thank it and let it rest.',
+  'The part of you that felt this so strongly — it was doing its job. You can thank it and let it rest.',
   'Sometimes a dream like this is a part of you asking to be seen. You just did that by writing it down.',
 
   // ── Somatic awareness ──
-  'Check in with your shoulders. If they\u2019ve crept up toward your ears, let them drop. Your body has permission to soften.',
-  'Notice your jaw right now. If it\u2019s clenched, try letting your lips part slightly. Small releases matter.',
-  'Pay attention to your hands. If they\u2019re tight, open them slowly. Let that be a signal to the rest of your body.',
-  'Scan from your head downward. Where is the dream still living in your body? Just notice it \u2014 no need to fix.',
+  'Check in with your shoulders. If they’ve crept up toward your ears, let them drop. Your body has permission to soften.',
+  'Notice your jaw right now. If it’s clenched, try letting your lips part slightly. Small releases matter.',
+  'Pay attention to your hands. If they’re tight, open them slowly. Let that be a signal to the rest of your body.',
+  'Scan from your head downward. Where is the dream still living in your body? Just notice it — no need to fix.',
   'If your stomach is tight, try placing a hand there and breathing gently. Your body is still processing.',
   'Your body was alongside you in that dream. Give it a moment to arrive back here.',
 
   // ── Temporal anchoring ──
   'This dream happened while you were asleep. You are awake now, and you are safe.',
   'Whatever you felt in the dream is not happening now. Your body may need a moment to catch up to that truth.',
-  'Dreams can feel urgent, but morning is patient. There\u2019s no emergency here.',
-  'The dream is behind you. This moment \u2014 right here, reading this \u2014 is your present.',
-  'Your waking life is yours. Whatever the dream showed you, it\u2019s not a prediction \u2014 it\u2019s a reflection.',
+  'Dreams can feel urgent, but morning is patient. There’s no emergency here.',
+  'The dream is behind you. This moment — right here, reading this — is your present.',
+  'Your waking life is yours. Whatever the dream showed you, it’s not a prediction — it’s a reflection.',
 
   // ── Compassion / warmth ──
-  'Be gentle with yourself after a dream like this. It\u2019s not always easy to carry what sleep brings up.',
-  'A dream this intense deserves gentleness. Whatever you need right now \u2014 give yourself permission to have it.',
+  'Be gentle with yourself after a dream like this. It’s not always easy to carry what sleep brings up.',
+  'A dream this intense deserves gentleness. Whatever you need right now — give yourself permission to have it.',
   'If you feel a little raw after that, it makes sense. Dreams that matter tend to leave a mark.',
-  'You showed up and wrote this down. That takes a kind of courage, even when it doesn\u2019t feel like it.',
-  'However this dream made you feel \u2014 that feeling is valid. You don\u2019t need to justify it.',
+  'You showed up and wrote this down. That takes a kind of courage, even when it doesn’t feel like it.',
+  'However this dream made you feel — that feeling is valid. You don’t need to justify it.',
 
   // ── Movement / action ──
-  'If this dream left energy in your body, moving gently \u2014 stretching, shaking your hands, walking \u2014 can help it discharge.',
+  'If this dream left energy in your body, moving gently — stretching, shaking your hands, walking — can help it discharge.',
   'Sometimes the best thing after an intense dream is something simple: a glass of water, a few stretches, a moment outside.',
   'If you can, try stepping outside for a moment. Fresh air and natural light can help your nervous system recalibrate.',
   'A short walk, even just around your room, can help your body release what the dream left behind.',
@@ -261,43 +281,43 @@ function buildContextLinkedMeaning(
     const placeLabel = placeEntry.entry.keywords[0];
 
     if (isPublicContext) {
-      return `Because the ${placeLabel} was public rather than private, the dream may be exploring what it feels like when something deeply personal happens in a space that doesn\u2019t feel protected \u2014 especially with ${personLabel === 'stranger' ? 'an unfamiliar presence' : personLabel} present. This combination often points to boundary confusion, emotional exposure around ${personLabel === 'father' || personLabel === 'mother' || personLabel === 'boss' || personLabel === 'teacher' ? 'an authority figure' : 'someone significant'}, or discomfort with closeness under observation.`;
+      return `Because the ${placeLabel} was public rather than private, the dream may be exploring what it feels like when something deeply personal happens in a space that doesn’t feel protected — especially with ${labelWithDeterminer(personLabel)} present. This combination often points to boundary confusion, emotional exposure around ${personLabel === 'father' || personLabel === 'mother' || personLabel === 'boss' || personLabel === 'teacher' ? 'an authority figure' : 'someone significant'}, or discomfort with closeness under observation.`;
     }
 
     if (isPrivateContext) {
-      return `The ${placeLabel} setting, combined with ${personLabel}'s presence, may reflect something intimate or hidden being processed \u2014 perhaps a dynamic that only exists behind closed doors, or feelings that haven\u2019t been expressed openly.`;
+      return `The ${placeLabel} setting, combined with ${personLabel}'s presence, may reflect something intimate or hidden being processed — perhaps a dynamic that only exists behind closed doors, or feelings that haven’t been expressed openly.`;
     }
 
     // Default people+places without public/private modifier
-    return `The presence of ${personLabel} in a ${placeLabel} setting may point to relational dynamics tied to that kind of space \u2014 what it means to share, navigate, or feel exposed in environments that carry their own emotional weight.`;
+    return `The presence of ${labelWithDeterminer(personLabel)} in a ${placeLabel} setting may point to relational dynamics tied to that kind of space — what it means to share, navigate, or feel exposed in environments that carry their own emotional weight.`;
   }
 
   // ── People + Relationships: relational action with a specific person ──
   if (hasPeople && hasRelationships && personEntry && relEntry) {
     const personLabel = personEntry.entry.keywords[0];
     const relLabel = relEntry.entry.keywords[0];
-    return `The ${relLabel} dynamic with ${personLabel} in this dream may reflect something unresolved between you and what they represent \u2014 not necessarily the person themselves, but the relational pattern or emotional charge they carry.`;
+    return `The ${relLabel} dynamic with ${labelWithDeterminer(personLabel)} in this dream may reflect something unresolved between you and what they represent — not necessarily the person themselves, but the relational pattern or emotional charge they carry.`;
   }
 
   // ── People + Emotions Expressed: person triggers emotional display ──
   if (hasPeople && hasEmotionsExpressed && personEntry && emotEntry) {
     const personLabel = personEntry.entry.keywords[0];
     const emotLabel = emotEntry.entry.keywords[0];
-    return `Experiencing ${emotLabel} in the presence of ${personLabel} may reflect how that relationship \u2014 or what they represent \u2014 connects to this emotional thread in your inner world.`;
+    return `Experiencing ${emotLabel} in the presence of ${labelWithDeterminer(personLabel)} may reflect how that relationship — or what they represent — connects to this emotional thread in your inner world.`;
   }
 
   // ── Places + Emotions Expressed: setting amplifies emotional tone ──
   if (hasPlaces && hasEmotionsExpressed && placeEntry && emotEntry) {
     const placeLabel = placeEntry.entry.keywords[0];
     const emotLabel = emotEntry.entry.keywords[0];
-    return `Feeling ${emotLabel} in a ${placeLabel} setting may highlight how that kind of environment connects to this emotional experience \u2014 the space itself may carry its own meaning.`;
+    return `Feeling ${emotLabel} in a ${placeLabel} setting may highlight how that kind of environment connects to this emotional experience — the space itself may carry its own meaning.`;
   }
 
   // ── Places + Relationships: setting shapes relational meaning ──
   if (hasPlaces && hasRelationships && placeEntry && relEntry) {
     const placeLabel = placeEntry.entry.keywords[0];
     const relLabel = relEntry.entry.keywords[0];
-    return `The ${relLabel} unfolding in a ${placeLabel} may point to how environment and relational dynamics interact \u2014 the setting may be shaping what feels possible or safe in that connection.`;
+    return `The ${relLabel} unfolding in a ${placeLabel} may point to how environment and relational dynamics interact — the setting may be shaping what feels possible or safe in that connection.`;
   }
 
   return null;
@@ -380,23 +400,23 @@ function buildParagraph(
       const placeMeaning = placeMatch.entry.meaning;
       // Extract the interpretive core from the meaning (after "often" or the first clause)
       const meaningCore = placeMeaning
-        .replace(/^[^—–\u2014]*[—–\u2014]\s*/, '')  // strip before em dash if present
+        .replace(/^[^—–—]*[—–—]\s*/, '')  // strip before em dash if present
         .replace(/\.$/, '');
 
       const settingOpenerVariants = [
-        `Your dream placed you in a ${placeLabel} \u2014 a space often connected to ${meaningCore}. The fact that your mind chose this setting probably isn\u2019t a coincidence.`,
-        `There\u2019s a reason this dream unfolded in a ${placeLabel}. It\u2019s a space that often touches on ${meaningCore}, and the way it showed up here suggests it was carrying something personal.`,
-        `The ${placeLabel} in this dream is worth noticing. It\u2019s often tied to ${meaningCore}, and the emotional weight of the scene suggests something about that space felt meaningful to your inner world.`,
-        `This dream chose a ${placeLabel} as its backdrop \u2014 a setting connected to ${meaningCore}. What happened there seems to matter more than the location itself.`,
+        `Your dream placed you in a ${placeLabel} — a space often connected to ${meaningCore}. The fact that your mind chose this setting probably isn’t a coincidence.`,
+        `There’s a reason this dream unfolded in a ${placeLabel}. It’s a space that often touches on ${meaningCore}, and the way it showed up here suggests it was carrying something personal.`,
+        `The ${placeLabel} in this dream is worth noticing. It’s often tied to ${meaningCore}, and the emotional weight of the scene suggests something about that space felt meaningful to your inner world.`,
+        `This dream chose a ${placeLabel} as its backdrop — a setting connected to ${meaningCore}. What happened there seems to matter more than the location itself.`,
       ] as const;
       sections.push(pickVariant(settingOpenerVariants, seed, 1));
     } else if (topMatches.length >= 2) {
       // No specific place, but multiple symbols — open with thematic overview
       const labels = topMatches.slice(0, 4).map(m => m.entry.keywords[0]);
       const integratedOpenerVariants = [
-        `This dream wove together ${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]} \u2014 and rather than being random, they seem to be circling the same feeling from different angles.`,
+        `This dream wove together ${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]} — and rather than being random, they seem to be circling the same feeling from different angles.`,
         `Several things stood out in this dream: ${labels.join(', ')}. Together, they trace something your inner world seems to be working through.`,
-        `The combination of ${labels.join(', ')} in one dream isn\u2019t accidental. Each piece carries its own weight, but together they\u2019re pointing toward something that matters.`,
+        `The combination of ${labels.join(', ')} in one dream isn’t accidental. Each piece carries its own weight, but together they’re pointing toward something that matters.`,
         `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]} all showed up in this dream, and the way they fit together is worth noticing. They seem to be part of a larger emotional thread.`,
       ] as const;
       sections.push(pickVariant(integratedOpenerVariants, seed, 1));
@@ -408,20 +428,20 @@ function buildParagraph(
       const singleOpenerVariants = [
         `${meaning} In this dream, the ${label} seems to be pointing to something your mind wants you to notice.`,
         `The ${label} in this dream stood out for a reason. ${meaning}`,
-        `Something about the ${label} stayed with you, and that\u2019s usually a sign it\u2019s connected to something real. ${meaning}`,
+        `Something about the ${label} stayed with you, and that’s usually a sign it’s connected to something real. ${meaning}`,
       ] as const;
       sections.push(pickVariant(singleOpenerVariants, seed, 1));
     }
   } else if (dreamText.length > 30) {
     const noSymbolVariants = [
-      'What you described may not have clear symbols, but the feeling you carried out of it is real \u2014 and that\u2019s usually the part that matters most.',
+      'What you described may not have clear symbols, but the feeling you carried out of it is real — and that’s usually the part that matters most.',
       'Even without vivid imagery, something in this dream clearly left an impression. The emotion attached to it is worth paying attention to.',
-      'Sometimes the most important dreams don\u2019t come with stories or symbols. They just leave you with a feeling \u2014 and this one seems to have left you with something.',
+      'Sometimes the most important dreams don’t come with stories or symbols. They just leave you with a feeling — and this one seems to have left you with something.',
     ] as const;
     sections.push(pickVariant(noSymbolVariants, seed, 2));
   } else if (dreamText.length > 0) {
     const briefVariants = [
-      'You caught a brief fragment of something. Even a few words can hold meaning \u2014 your mind chose to remember this, and that\u2019s worth noticing.',
+      'You caught a brief fragment of something. Even a few words can hold meaning — your mind chose to remember this, and that’s worth noticing.',
       'Even this short glimpse seems to carry something. Brief dream fragments often hold more concentrated emotional weight than longer ones.',
       'It was just a flash, but the fact that it stayed with you says something. Short dreams often distill a feeling down to its most essential form.',
     ] as const;
@@ -449,21 +469,23 @@ function buildParagraph(
     } else if (personMatch && scenarioMatches.length > 0) {
       // Person + scenario — weave them together
       const personLabel = personMatch.entry.keywords[0];
+      const dl = labelWithDeterminer(personLabel);
       const scenarioMeaning = scenarioMatches[0].entry.meaning;
       const personScenarioVariants = [
-        `Having ${personLabel} there changes the emotional weight of what happened. ${scenarioMeaning}`,
-        `With ${personLabel} in the scene, the dream takes on a more personal quality. ${scenarioMeaning}`,
-        `${personLabel.charAt(0).toUpperCase() + personLabel.slice(1)} showing up here isn\u2019t random \u2014 they seem to be part of whatever your mind is working through. ${scenarioMeaning}`,
+        `Having ${dl} there changes the emotional weight of what happened. ${scenarioMeaning}`,
+        `With ${dl} in the scene, the dream takes on a more personal quality. ${scenarioMeaning}`,
+        `${capitalize(dl)} showing up here isn’t random — they seem to be part of whatever your mind is working through. ${scenarioMeaning}`,
       ] as const;
       sections.push(pickVariant(personScenarioVariants, seed, 19));
     } else if (personMatch) {
       // Person without scenario — use their meaning connected to the dream
       const personLabel = personMatch.entry.keywords[0];
+      const dl = labelWithDeterminer(personLabel);
       const personMeaning = personMatch.entry.meaning;
       const personOnlyVariants = [
-        `The fact that ${personLabel} was there adds a relational layer to this dream. ${personMeaning}`,
-        `${personLabel.charAt(0).toUpperCase() + personLabel.slice(1)} being present makes this dream feel more personal, more connected to your real life. ${personMeaning}`,
-        `With ${personLabel} in the dream, there\u2019s a relational thread worth paying attention to. ${personMeaning}`,
+        `The fact that ${dl} was there adds a relational layer to this dream. ${personMeaning}`,
+        `${capitalize(dl)} being present makes this dream feel more personal, more connected to your real life. ${personMeaning}`,
+        `With ${dl} in the dream, there’s a relational thread worth paying attention to. ${personMeaning}`,
       ] as const;
       sections.push(pickVariant(personOnlyVariants, seed, 19));
     } else if (scenarioMatches.length >= 2) {
@@ -494,10 +516,10 @@ function buildParagraph(
     if (textEvidence.length > 0) {
       const snippet = textEvidence[0];
       const evidenceVariants = [
-        'Something in the way you put it \u2014 \u201c' + snippet + '\u201d \u2014 feels like it\u2019s carrying more than the words alone suggest.',
-        'The phrase \u201c' + snippet + '\u201d stands out. That kind of language usually surfaces when a feeling is stronger than it looks.',
-        'You wrote \u201c' + snippet + '\u201d \u2014 and that choice of words seems to point to something underneath that\u2019s worth sitting with.',
-        'There\u2019s something in \u201c' + snippet + '\u201d that goes beyond the surface. The words you reach for in a dream often reveal what your waking mind hasn\u2019t named yet.',
+        'Something in the way you put it — “' + snippet + '” — feels like it’s carrying more than the words alone suggest.',
+        'The phrase “' + snippet + '” stands out. That kind of language usually surfaces when a feeling is stronger than it looks.',
+        'You wrote “' + snippet + '” — and that choice of words seems to point to something underneath that’s worth sitting with.',
+        'There’s something in “' + snippet + '” that goes beyond the surface. The words you reach for in a dream often reveal what your waking mind hasn’t named yet.',
       ] as const;
       sections.push(pickVariant(evidenceVariants, seed, 4));
     }
@@ -528,25 +550,25 @@ function buildParagraph(
     if (topFeelings.length > 0) {
       if (topFeelings.length === 1) {
         const singleEmotionVariants = hasSymbols ? [
-          `The ${topFeelings[0].toLowerCase()} you felt isn\u2019t separate from ${dreamRef} \u2014 it\u2019s woven into it. That feeling colored the whole scene and made it land the way it did.`,
-          `There\u2019s a steady thread of ${topFeelings[0].toLowerCase()} running through this dream, and it seems connected to ${dreamRef}. The overall experience had a ${toneWord} quality to it.`,
-          `${topFeelings[0]} seems to be at the heart of this one \u2014 shaping how ${dreamRef} felt and why it stuck with you. The whole thing carried something ${toneWord}.`,
+          `The ${topFeelings[0].toLowerCase()} you felt isn’t separate from ${dreamRef} — it’s woven into it. That feeling colored the whole scene and made it land the way it did.`,
+          `There’s a steady thread of ${topFeelings[0].toLowerCase()} running through this dream, and it seems connected to ${dreamRef}. The overall experience had a ${toneWord} quality to it.`,
+          `${topFeelings[0]} seems to be at the heart of this one — shaping how ${dreamRef} felt and why it stuck with you. The whole thing carried something ${toneWord}.`,
         ] as const : [
-          `The ${topFeelings[0].toLowerCase()} in this dream wasn\u2019t just background noise \u2014 it was the whole atmosphere. The experience had a ${toneWord} quality that\u2019s probably still lingering.`,
-          `There\u2019s a clear thread of ${topFeelings[0].toLowerCase()} here, and it seems to be what your inner world was really sitting with. The overall feeling was ${toneWord}.`,
+          `The ${topFeelings[0].toLowerCase()} in this dream wasn’t just background noise — it was the whole atmosphere. The experience had a ${toneWord} quality that’s probably still lingering.`,
+          `There’s a clear thread of ${topFeelings[0].toLowerCase()} here, and it seems to be what your inner world was really sitting with. The overall feeling was ${toneWord}.`,
           `${topFeelings[0]} ran through this entire dream, and the ${toneWord} quality of it suggests your mind was working on something that matters.`,
         ] as const;
         emotionBlock.push(pickVariant(singleEmotionVariants, seed, 5));
       } else {
         const feelingsList = topFeelings.map(f => f.toLowerCase());
         const multiEmotionVariants = hasSymbols ? [
-          `The combination of ${feelingsList.slice(0, -1).join(', ')} and ${feelingsList[feelingsList.length - 1]} didn\u2019t arrive separately \u2014 they were braided into ${dreamRef}, creating something that felt ${toneWord} and layered.`,
-          `These feelings \u2014 ${feelingsList.join(', ')} \u2014 all showed up around ${dreamRef}, and the way they overlap suggests you were processing something with real depth. The overall experience felt ${toneWord}.`,
-          `Your inner world was holding ${feelingsList.join(' and ')} at the same time around ${dreamRef}. That kind of emotional complexity usually means whatever\u2019s underneath doesn\u2019t have a simple answer.`,
+          `The combination of ${feelingsList.slice(0, -1).join(', ')} and ${feelingsList[feelingsList.length - 1]} didn’t arrive separately — they were braided into ${dreamRef}, creating something that felt ${toneWord} and layered.`,
+          `These feelings — ${feelingsList.join(', ')} — all showed up around ${dreamRef}, and the way they overlap suggests you were processing something with real depth. The overall experience felt ${toneWord}.`,
+          `Your inner world was holding ${feelingsList.join(' and ')} at the same time around ${dreamRef}. That kind of emotional complexity usually means whatever’s underneath doesn’t have a simple answer.`,
         ] as const : [
-          `The blend of ${feelingsList.slice(0, -1).join(', ')} and ${feelingsList[feelingsList.length - 1]} gave this dream a ${toneWord} quality \u2014 not one clean feeling, but something richer and more layered.`,
-          `This dream carried ${feelingsList.slice(0, -1).join(', ')} and ${feelingsList[feelingsList.length - 1]} all at once \u2014 a ${toneWord} mix that suggests your mind was sitting with something that has more than one side to it.`,
-          `Your inner world was working through ${feelingsList.join(', ')} simultaneously \u2014 creating something ${toneWord} that resists easy labels.`,
+          `The blend of ${feelingsList.slice(0, -1).join(', ')} and ${feelingsList[feelingsList.length - 1]} gave this dream a ${toneWord} quality — not one clean feeling, but something richer and more layered.`,
+          `This dream carried ${feelingsList.slice(0, -1).join(', ')} and ${feelingsList[feelingsList.length - 1]} all at once — a ${toneWord} mix that suggests your mind was sitting with something that has more than one side to it.`,
+          `Your inner world was working through ${feelingsList.join(', ')} simultaneously — creating something ${toneWord} that resists easy labels.`,
         ] as const;
         emotionBlock.push(pickVariant(multiEmotionVariants, seed, 6));
       }
@@ -556,8 +578,8 @@ function buildParagraph(
       else if (inferred.valence > 0.3) toneWord = 'tender';
       else toneWord = 'unsettled';
       const inferredVariants = [
-        `Based on the themes that came through, this dream seems to carry a ${toneWord} emotional undercurrent \u2014 the kind of feeling that\u2019s easier to sense than describe.`,
-        `The themes in this dream give it a ${toneWord} quality, even if the feelings weren\u2019t always front and center.`,
+        `Based on the themes that came through, this dream seems to carry a ${toneWord} emotional undercurrent — the kind of feeling that’s easier to sense than describe.`,
+        `The themes in this dream give it a ${toneWord} quality, even if the feelings weren’t always front and center.`,
         `Something about this dream feels ${toneWord}. Even without naming specific emotions, the emotional current is there.`,
       ] as const;
       emotionBlock.push(pickVariant(inferredVariants, seed, 7));
@@ -569,13 +591,13 @@ function buildParagraph(
     const hasNegative = activeFeelings.some(f => FEELING_MAP[f.id]?.valence === -1);
     if (hasPositive && hasNegative && Math.abs(aggregates.valenceScore) < 0.25) {
       const ambivalenceVariants = hasSymbols ? [
-        `The push and pull between these feelings seems connected to ${dreamRef} \u2014 your mind holding two truths at once rather than forcing a resolution.`,
-        `That tension between opposing emotions is part of what makes this dream feel so real. It\u2019s the kind of complexity that doesn\u2019t resolve neatly, and the dream isn\u2019t trying to force it.`,
-        `Holding these conflicting feelings around ${dreamRef} is uncomfortable, but it\u2019s also honest. The dream seems to be saying there\u2019s more than one way to feel about this.`,
+        `The push and pull between these feelings seems connected to ${dreamRef} — your mind holding two truths at once rather than forcing a resolution.`,
+        `That tension between opposing emotions is part of what makes this dream feel so real. It’s the kind of complexity that doesn’t resolve neatly, and the dream isn’t trying to force it.`,
+        `Holding these conflicting feelings around ${dreamRef} is uncomfortable, but it’s also honest. The dream seems to be saying there’s more than one way to feel about this.`,
       ] as const : [
-        'There\u2019s a part of you holding two things at once here, and that tension might actually be the most important part of the dream.',
-        'The push and pull between these feelings suggests you\u2019re sitting at a crossroads \u2014 somewhere between two truths that both feel valid.',
-        'Conflicting emotions in a dream often mean you\u2019re ready to look at something from more than one angle \u2014 even if neither view is comfortable.',
+        'There’s a part of you holding two things at once here, and that tension might actually be the most important part of the dream.',
+        'The push and pull between these feelings suggests you’re sitting at a crossroads — somewhere between two truths that both feel valid.',
+        'Conflicting emotions in a dream often mean you’re ready to look at something from more than one angle — even if neither view is comfortable.',
       ] as const;
       emotionBlock.push(pickVariant(ambivalenceVariants, seed, 8));
     }
@@ -590,25 +612,25 @@ function buildParagraph(
 
     if (metadata.vividness >= 4) {
       const vividHighVariants = [
-        'The vividness of this dream is striking \u2014 your mind turned up the volume on purpose, as if it needed you to really feel this one.',
+        'The vividness of this dream is striking — your mind turned up the volume on purpose, as if it needed you to really feel this one.',
         'This dream was unusually vivid, which usually means something emotional was pressing hard enough to make itself impossible to ignore.',
-        'The sharpness of the imagery here isn\u2019t random. When dreams are this vivid, it\u2019s often because something inside needs your full attention.',
+        'The sharpness of the imagery here isn’t random. When dreams are this vivid, it’s often because something inside needs your full attention.',
       ] as const;
       detailBlock.push(pickVariant(vividHighVariants, seed, 9));
     } else if (metadata.vividness <= 2) {
       const vividLowVariants = [
-        'This dream came through faintly, almost like catching something out of the corner of your eye. That haziness sometimes means the feeling is there, but the mind isn\u2019t quite ready to focus on it directly.',
-        'The dreaminess of this one \u2014 soft, unclear, hard to hold onto \u2014 can mean something is being approached gently, from a distance your mind feels safe with.',
-        'A faint dream doesn\u2019t mean an unimportant one. Sometimes the most delicate feelings surface in the quietest way.',
+        'This dream came through faintly, almost like catching something out of the corner of your eye. That haziness sometimes means the feeling is there, but the mind isn’t quite ready to focus on it directly.',
+        'The dreaminess of this one — soft, unclear, hard to hold onto — can mean something is being approached gently, from a distance your mind feels safe with.',
+        'A faint dream doesn’t mean an unimportant one. Sometimes the most delicate feelings surface in the quietest way.',
       ] as const;
       detailBlock.push(pickVariant(vividLowVariants, seed, 10));
     }
 
     if (metadata.recurring) {
       const recurringVariants = [
-        'This dream keeps coming back, and that means something. Your mind doesn\u2019t repeat itself for no reason \u2014 there\u2019s unfinished emotional business here that hasn\u2019t found its resolution yet.',
-        'The fact that this is a recurring dream is significant. Something in you keeps returning to this material, as if it hasn\u2019t heard the answer it\u2019s looking for.',
-        'When the same dream shows up more than once, it\u2019s usually because your inner world is still circling something it can\u2019t quite let go of.',
+        'This dream keeps coming back, and that means something. Your mind doesn’t repeat itself for no reason — there’s unfinished emotional business here that hasn’t found its resolution yet.',
+        'The fact that this is a recurring dream is significant. Something in you keeps returning to this material, as if it hasn’t heard the answer it’s looking for.',
+        'When the same dream shows up more than once, it’s usually because your inner world is still circling something it can’t quite let go of.',
       ] as const;
       detailBlock.push(pickVariant(recurringVariants, seed, 11));
     }
@@ -616,16 +638,16 @@ function buildParagraph(
     if (metadata.controlLevel != null) {
       if (metadata.controlLevel >= 4) {
         const controlHighVariants = [
-          'You had a real sense of control in this dream, and that\u2019s not nothing. It often shows up when you\u2019re finding your footing with something that used to feel overwhelming.',
-          'The agency you felt here is a good sign \u2014 it usually reflects growing confidence in navigating something that once felt out of reach.',
-          'Having control in a dream like this can mean your inner world is integrating something \u2014 moving from being swept up in it to finding your way through.',
+          'You had a real sense of control in this dream, and that’s not nothing. It often shows up when you’re finding your footing with something that used to feel overwhelming.',
+          'The agency you felt here is a good sign — it usually reflects growing confidence in navigating something that once felt out of reach.',
+          'Having control in a dream like this can mean your inner world is integrating something — moving from being swept up in it to finding your way through.',
         ] as const;
         detailBlock.push(pickVariant(controlHighVariants, seed, 12));
       } else if (metadata.controlLevel <= 2) {
         const controlLowVariants = [
-          'There wasn\u2019t much control in this dream, which can feel unsettling. It often mirrors a place in waking life where you feel at the mercy of something you can\u2019t steer.',
-          'The helplessness in this dream might reflect a real situation where agency feels limited \u2014 where things are happening to you rather than because of you.',
-          'When a dream feels uncontrollable, it\u2019s usually mirroring a place in your life where the ground feels less solid than you\u2019d like.',
+          'There wasn’t much control in this dream, which can feel unsettling. It often mirrors a place in waking life where you feel at the mercy of something you can’t steer.',
+          'The helplessness in this dream might reflect a real situation where agency feels limited — where things are happening to you rather than because of you.',
+          'When a dream feels uncontrollable, it’s usually mirroring a place in your life where the ground feels less solid than you’d like.',
         ] as const;
         detailBlock.push(pickVariant(controlLowVariants, seed, 13));
       }
@@ -639,13 +661,13 @@ function buildParagraph(
     const contextBlock: string[] = [];
 
     const THEME_PHRASES: Record<string, string> = {
-      adventure: 'Something in you is reaching toward the unknown \u2014 possibility, expansion, a life that\u2019s different from the one you\u2019re living now.',
-      conflict: 'There\u2019s tension that hasn\u2019t found its way out yet \u2014 something unresolved that\u2019s still looking for a door.',
+      adventure: 'Something in you is reaching toward the unknown — possibility, expansion, a life that’s different from the one you’re living now.',
+      conflict: 'There’s tension that hasn’t found its way out yet — something unresolved that’s still looking for a door.',
       connection: 'This dream touches on belonging, closeness, or the ache of wanting to really be met by someone.',
-      transformation: 'Something inside is shifting \u2014 not all at once, but enough that a version of you that\u2019s been forming might be ready to take shape.',
-      mystery: 'Part of what makes this dream feel significant is the part you can\u2019t fully name. Something is being sensed but not yet understood.',
-      survival: 'There\u2019s an urgency here \u2014 a feeling of needing to protect yourself or stay ahead of something that feels overwhelming.',
-      loss: 'Grief or the echo of an ending might be running underneath this dream, even if it doesn\u2019t look like loss on the surface.',
+      transformation: 'Something inside is shifting — not all at once, but enough that a version of you that’s been forming might be ready to take shape.',
+      mystery: 'Part of what makes this dream feel significant is the part you can’t fully name. Something is being sensed but not yet understood.',
+      survival: 'There’s an urgency here — a feeling of needing to protect yourself or stay ahead of something that feels overwhelming.',
+      loss: 'Grief or the echo of an ending might be running underneath this dream, even if it doesn’t look like loss on the surface.',
       discovery: 'Something previously hidden is starting to surface. Your mind seems to be uncovering layers that were there all along.',
       mundane: 'This dream stayed close to everyday life, processing logistics and details rather than deep symbolism.',
       surreal: 'The strangeness of this dream might feel confusing, but it often signals the mind working through something too complex for literal imagery.',
@@ -656,14 +678,26 @@ function buildParagraph(
     }
 
     const AWAKEN_PHRASES: Record<string, string> = {
-      startled: 'Waking up startled usually means something in the dream hit close to home \u2014 a tension that hadn\u2019t finished resolving before your eyes opened.',
-      unsettled: 'That lingering unease upon waking is your body\u2019s way of saying the dream touched something real.',
-      confused: 'If you woke up confused, it might be because what the dream was processing doesn\u2019t fit into neat categories yet. That\u2019s okay.',
-      heavy: 'Waking up heavy usually means your body is still holding what the dream carried. Give yourself a moment before rushing into the day.',
-      relieved: 'That wave of relief upon waking \u2014 that\u2019s your mind recognizing it made it through something emotionally dense.',
-      drained: 'If you woke up tired, it\u2019s because your mind was working hard overnight. Emotional processing takes real energy.',
-      neutral: 'Waking neutral might mean the processing happened quietly \u2014 the emotional work got done without making a scene.',
+      calm: 'Waking calm suggests your nervous system finished the night in a regulated state — whatever the dream worked through, it landed gently.',
+      anxious: 'Waking anxious means some unresolved tension from the dream followed you back. Your system is still processing.',
+      scared: 'Waking scared usually means the dream pulled from something that still carries real weight — your body recognized the threat even in sleep.',
+      relieved: 'That wave of relief upon waking — that’s your mind recognizing it made it through something emotionally dense.',
+      confused: 'If you woke up confused, it might be because what the dream was processing doesn’t fit into neat categories yet. That’s okay.',
+      curious: 'Waking curious is a good sign — the dream left you with questions you actually want to investigate.',
+      sad: 'Waking sad means the dream touched something tender. That feeling deserves space, not rush.',
+      happy: 'Waking happy suggests the dream offered something nourishing — connection, resolution, or joy your waking life may be quietly asking for.',
+      peaceful: 'Waking peaceful is your nervous system’s signal that something was genuinely processed and released overnight.',
+      tired: 'Waking tired means your mind was doing real work while you slept. Emotional processing carries a cost.',
+      energized: 'Waking energized suggests the dream tapped into something activating — an unmet drive or desire that’s still alive in you.',
+      shaken: 'Waking shaken means something in the dream hit a frequency your nervous system wasn’t ready for. Give yourself time before the day fully begins.',
+      disturbed: 'Waking disturbed signals the dream accessed material that still carries charge. The feeling itself is informative — it’s worth sitting with.',
       thoughtful: 'Waking up thoughtful is a sign the dream left you with something worth carrying into the day.',
+      inspired: 'Waking inspired suggests the dream activated a part of you that’s ready to create, connect, or move toward something meaningful.',
+      numb: 'Waking numb can mean the dream processed something heavy enough that your system is buffering. The feeling will surface when it’s ready.',
+      grateful: 'Waking grateful means the dream may have shown you something — or someone — you value more than you consciously acknowledge.',
+      overwhelmed: 'Waking overwhelmed suggests the dream carried a lot at once. Your mind is holding more than it has words for right now.',
+      hopeful: 'Waking hopeful is worth noticing — the dream offered your deeper self a glimpse of what’s still possible.',
+      unsettled: 'That lingering unease upon waking is your body’s way of saying the dream touched something real.',
     };
     const awakenPhrase = AWAKEN_PHRASES[metadata.awakenState];
     if (awakenPhrase) contextBlock.push(awakenPhrase);
@@ -679,15 +713,15 @@ function buildParagraph(
     const attachPhrase = ATTACH_LABELS[aggregates.dominantAttachment];
 
     // Connect the body observation to the dream's content for narrative flow
-    const dreamSubject = personMatch ? `what happened with ${personMatch.entry.keywords[0]}` :
+    const dreamSubject = personMatch ? `what happened with ${labelWithDeterminer(personMatch.entry.keywords[0])}` :
                          placeMatch ? `this experience in the ${placeMatch.entry.keywords[0]}` :
-                         'what this dream explored';
+                         'what this dream brought up';
 
     const nsAttachVariants = [
-      `A dream like this \u2014 especially one touching on ${dreamSubject} \u2014 can leave something physical behind. You might notice ${branchPhrase} still lingering in your body, and that\u2019s your system catching up with what the dream processed. On a relational level, ${attachPhrase} seems like part of it too.`,
-      `After ${dreamSubject}, your body might still be carrying some of what the dream stirred up \u2014 ${branchPhrase}. That\u2019s normal. And underneath, there\u2019s likely ${attachPhrase} adding its own texture to the experience.`,
-      `The feelings around ${dreamSubject} don\u2019t just live in your head \u2014 your body holds them too. You might still be feeling ${branchPhrase}, and relationally, ${attachPhrase} seems to be threaded through what the dream was processing.`,
-      `There\u2019s a physical dimension to this dream worth acknowledging. After sitting with ${dreamSubject}, your body may still have ${branchPhrase} running through it. ${attachPhrase.charAt(0).toUpperCase() + attachPhrase.slice(1)} also seems woven into the emotional fabric of the experience.`,
+      `A dream like this — especially one touching on ${dreamSubject} — can leave something physical behind. You might notice ${branchPhrase} still lingering in your body, and that’s your system catching up with what the dream processed. On a relational level, there’s also ${attachPhrase} woven into how this one felt.`,
+      `After ${dreamSubject}, your body might still be carrying some of what the dream stirred up — ${branchPhrase}. That’s normal. And underneath, there’s likely ${attachPhrase} adding its own texture to the experience.`,
+      `The feelings around ${dreamSubject} don’t just live in your head — your body holds them too. You might still be feeling ${branchPhrase}, and relationally, ${attachPhrase} seems to be threaded through what the dream was processing.`,
+      `There’s a physical dimension to this dream worth acknowledging. After sitting with ${dreamSubject}, your body may still have ${branchPhrase} running through it. ${attachPhrase.charAt(0).toUpperCase() + attachPhrase.slice(1)} also seems woven into the emotional fabric of the experience.`,
     ] as const;
     sections.push(pickVariant(nsAttachVariants, seed, 14));
   }
@@ -702,22 +736,22 @@ function buildParagraph(
         .map(id => FEELING_MAP[id]?.label ?? id);
       const plural = labels.length > 1;
       const patternRecurringVariants = [
-        labels.join(' and ') + ' ha' + (plural ? 've' : 's') + ' been showing up across your recent dreams \u2014 your mind keeps returning to this feeling, as if it\u2019s not done with it yet.',
+        labels.join(' and ') + ' ha' + (plural ? 've' : 's') + ' been showing up across your recent dreams — your mind keeps returning to this feeling, as if it’s not done with it yet.',
         labels.join(' and ') + ' keep' + (plural ? '' : 's') + ' appearing in your dreams lately. That kind of repetition usually means something in you is circling around material that needs attention.',
-        'There\u2019s a thread running through your recent dreams: ' + labels.join(' and ') + '. Your inner world seems to be insisting on this one.',
+        'There’s a thread running through your recent dreams: ' + labels.join(' and ') + '. Your inner world seems to be insisting on this one.',
       ] as const;
       patternBlock.push(pickVariant(patternRecurringVariants, seed, 15));
     }
     if (patterns.emotionalTrendDirection === 'increasing') {
       const intensityUpVariants = [
         'The emotional intensity of your recent dreams has been climbing. Something might be building toward a moment where it needs to be acknowledged.',
-        'Your dreams have been getting emotionally louder lately \u2014 as if something in you is turning up the volume because it hasn\u2019t been heard.',
-        'There\u2019s a rising intensity across your recent dreams that\u2019s worth noticing. Something in your inner world is gaining momentum.',
+        'Your dreams have been getting emotionally louder lately — as if something in you is turning up the volume because it hasn’t been heard.',
+        'There’s a rising intensity across your recent dreams that’s worth noticing. Something in your inner world is gaining momentum.',
       ] as const;
       patternBlock.push(pickVariant(intensityUpVariants, seed, 16));
     } else if (patterns.emotionalTrendDirection === 'decreasing') {
       const intensityDownVariants = [
-        'Your recent dreams have been getting quieter, emotionally. That\u2019s often a sign that something is settling \u2014 that your mind found what it needed.',
+        'Your recent dreams have been getting quieter, emotionally. That’s often a sign that something is settling — that your mind found what it needed.',
         'The emotional temperature of your dreams has been cooling, which usually means some kind of integration is happening beneath the surface.',
         'Things seem to be calming in your dream world lately. Whatever was being worked through may be finding its resolution.',
       ] as const;
@@ -728,8 +762,7 @@ function buildParagraph(
 
   // ════ 7. GROUNDING CLOSE (high-distress gate) ═════════════════════════════
   if (aggregates.activationScore === 'high' && aggregates.valenceScore <= -0.3) {
-    const groundIdx = dreamText.length % GROUNDING_LINES.length;
-    sections.push(GROUNDING_LINES[groundIdx]);
+    sections.push(pickVariant(GROUNDING_LINES, seed, 22));
   }
 
   return sections.join('\n\n');

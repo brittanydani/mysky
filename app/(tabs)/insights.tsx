@@ -33,10 +33,10 @@ import {
 
 // ── Unified 5-Hub Palette ──
 const PALETTE = {
-  gold: '#D4B872',
-  silverBlue: '#8BC4E8',
+  gold: '#C9AE78',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
-  emerald: '#6EBF8B',
+  emerald: '#C9AE78',
   rose: '#D4A3B3',
   lavender: '#A89BC8',
   bg: '#0A0A0C',

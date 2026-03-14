@@ -26,15 +26,15 @@ export interface DeeperSkyFeature {
 export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'sleep-dream',
-    name: 'Sleep & Dream Reflection',
+    name: 'Dream Interpretation',
     icon: 'moon',
-    description: 'Encrypted dream journal, symbolic dream reflections, and sleep trend analysis',
-    freeVersion: 'Sleep logging — quality rating and duration',
-    premiumVersion: 'Encrypted dream journal with symbolic dream reflections drawn from your sleep, mood, journal, and check-in data, plus sleep quality trends and what affects your rest over time',
+    description: 'Symbolic dream interpretation, dream symbol cluster map, and sleep trend analysis',
+    freeVersion: 'Sleep logging — quality, duration, and dream narrative',
+    premiumVersion: 'Symbolic dream interpretation drawing from your dream text, feelings, and check-in data, plus a recurring symbol cluster map and sleep quality trend analysis',
     isPremium: true,
     bullets: [
-      'Encrypted dream journal tied to each sleep entry',
-      'Symbolic dream reflections drawn from your data',
+      'Symbolic interpretation of your dream narratives — on-device, private',
+      'Recurring symbol cluster map across all entries',
       'Sleep quality trends over time',
       'See what affects your rest most',
     ],

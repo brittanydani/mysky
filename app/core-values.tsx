@@ -24,6 +24,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const STORAGE_KEY = '@mysky:core_values';
 const MAX_TOP = 5;
@@ -143,7 +144,7 @@ export default function CoreValuesScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Core Values</Text>
-            <Text style={styles.headerSubtitle}>The architecture of your choices</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>The architecture of your choices</GoldSubtitle>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(140).duration(600)}>
@@ -259,7 +260,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, color: PALETTE.gold, fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 24 },
+  header: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 8 },
   headerSubtitle: { fontSize: 14, color: PALETTE.textMuted, fontStyle: 'italic' },
 

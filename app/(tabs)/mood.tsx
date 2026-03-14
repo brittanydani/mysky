@@ -26,6 +26,7 @@ import { usePremium } from '../../context/PremiumContext';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
@@ -314,7 +315,7 @@ export default function MoodCheckIn() {
     { key: 'morning',   label: 'Morning',   iconName: 'sunny-outline',         iconColor: '#F0C87E' },
     { key: 'afternoon', label: 'Afternoon', iconName: 'partly-sunny-outline',  iconColor: '#D9BF8C' },
     { key: 'evening',   label: 'Evening',   iconName: 'cloudy-night-outline',  iconColor: '#A89BC8' },
-    { key: 'night',     label: 'Night',     iconName: 'moon-outline',          iconColor: '#8BC4E8' },
+    { key: 'night',     label: 'Night',     iconName: 'moon-outline',          iconColor: '#C9AE78' },
   ];
 
   return (
@@ -329,17 +330,17 @@ export default function MoodCheckIn() {
         >
           <Text style={styles.closeIcon}>×</Text>
         </Pressable>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Internal Weather</Text>
-          {isEditingExisting && (
-            <Text style={styles.headerEditingBadge}>
-              {selectedDate === todayStr
-                ? "Editing today's entry"
-                : `Editing ${formatDisplayDate(selectedDate)}`}
-            </Text>
-          )}
-        </View>
-        <View style={{ width: 40 }} />
+      </View>
+
+      <View style={styles.titleArea}>
+        <Text style={styles.headerTitle}>Internal Weather</Text>
+        {isEditingExisting && (
+          <Text style={styles.headerEditingBadge}>
+            {selectedDate === todayStr
+              ? "Editing today's entry"
+              : `Editing ${formatDisplayDate(selectedDate)}`}
+          </Text>
+        )}
       </View>
 
       {/* Date Navigator */}
@@ -449,7 +450,7 @@ export default function MoodCheckIn() {
           {ALL_SLOTS.map(({ key, label, iconName, iconColor }) => {
             const isDone      = completedSlots.includes(key);
             const isSelected  = key === selectedSlot;
-            const activeColor = isDone ? '#6EBF8B' : isSelected ? iconColor : 'rgba(255,255,255,0.22)';
+            const activeColor = isDone ? '#C9AE78' : isSelected ? iconColor : 'rgba(255,255,255,0.22)';
             return (
               <Pressable
                 key={key}
@@ -626,11 +627,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 200 },
 
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  headerCenter: { alignItems: 'center', flex: 1 },
-  headerTitle: { fontSize: 16, color: '#FFF', fontFamily: FONT_SERIF, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6 },
+  headerTitle: { fontSize: 34, color: '#F0EAD6', fontFamily: FONT_SERIF, fontWeight: '300', marginBottom: 4 },
   headerEditingBadge: { fontSize: 10, color: '#D9BF8C', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },
@@ -665,9 +666,9 @@ const styles = StyleSheet.create({
 
   tagsSection: { marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(110, 140, 180, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(110, 140, 180, 0.3)', marginTop: -16 },
-  premiumBadgeText: { color: '#6E8CB4', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
-  lockedHint: { fontSize: 11, color: 'rgba(110,140,180,0.5)', fontStyle: 'italic', marginTop: 12 },
+  premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201, 174, 120, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
+  premiumBadgeText: { color: '#C9AE78', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
+  lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.5)', fontStyle: 'italic', marginTop: 12 },
 
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tagButton: {
@@ -751,8 +752,8 @@ const styles = StyleSheet.create({
   },
   slotIconWrapDone: {
     borderColor: 'rgba(110,191,139,0.40)',
-    backgroundColor: 'rgba(110,191,139,0.12)',
+    backgroundColor: 'rgba(201,174,120,0.12)',
   },
   slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: '600', letterSpacing: 0.5 },
-  slotLabelDone: { color: '#6EBF8B' },
+  slotLabelDone: { color: '#C9AE78' },
 });

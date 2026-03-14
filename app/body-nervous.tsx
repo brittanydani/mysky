@@ -18,10 +18,11 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const PALETTE = {
   sage: '#8CBEAA',
-  emerald: '#6EBF8B',
+  emerald: '#C9AE78',
   rose: '#D4A3B3',
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.6)',
@@ -85,7 +86,7 @@ export default function BodyNervousScreen() {
 
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Body & Nervous System</Text>
-            <Text style={styles.headerSubtitle}>Somatic awareness & regulation</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>Somatic awareness & regulation</GoldSubtitle>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.infoCard}>
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, color: 'rgba(140,190,170,0.8)', fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 20 },
+  header: { marginBottom: 32 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,

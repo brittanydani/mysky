@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import {
+  Canvas,
   Circle,
   Group,
   BlurMask,
@@ -9,6 +10,37 @@ import {
   Skia,
 } from '@shopify/react-native-skia';
 import { useDerivedValue, SharedValue } from 'react-native-reanimated';
+
+// ── Chakra jewel-tone palette (source of truth for the wheel) ──
+export const CHAKRA_COLORS: Record<string, { core: string; glow: string; deep: string }> = {
+  Crown:          { core: '#9D76C1', glow: '#D4A3B3', deep: '#4A3559' }, // Amethyst
+  'Third Eye':    { core: '#6A7391', glow: '#8BC4E8', deep: '#2C365E' }, // Indigo/Silver
+  Throat:         { core: '#5C89A6', glow: '#BEE0F5', deep: '#26466D' }, // Sapphire
+  Heart:          { core: '#6EBF8B', glow: '#A8E6B6', deep: '#2A5C3D' }, // Emerald
+  'Solar Plexus': { core: '#C9AE78', glow: '#FFF4D6', deep: '#6B532E' }, // Champagne Gold
+  Sacral:         { core: '#CD7F5D', glow: '#E8A98C', deep: '#6B3A26' }, // Copper
+  Root:           { core: '#C87878', glow: '#E8A9A9', deep: '#6A2B2B' }, // Garnet
+};
+// ── Vivid rainbow palette for card icon badges ──
+const CHAKRA_VIVID_FLAT: Record<string, string> = {
+  Root:           '#D32F2F', // bright red
+  Sacral:         '#E64A19', // bright orange
+  'Solar Plexus': '#F9A825', // bright yellow
+  Heart:          '#388E3C', // bright green
+  Throat:         '#1565C0', // bright blue
+  'Third Eye':    '#283593', // bright indigo
+  Crown:          '#6A1B9A', // bright purple
+};
+// ── Vivid saturated palette — used for card backgrounds in Today's Focus ──
+export const CHAKRA_VIVID: Record<string, { top: string; bottom: string }> = {
+  Crown:          { top: '#9C27B0', bottom: '#6A1B9A' }, // vivid purple
+  'Third Eye':    { top: '#3F51B5', bottom: '#283593' }, // vivid indigo
+  Throat:         { top: '#1E88E5', bottom: '#1565C0' }, // vivid blue
+  Heart:          { top: '#43A047', bottom: '#2E7D32' }, // vivid green
+  'Solar Plexus': { top: '#FFB300', bottom: '#F57F17' }, // vivid amber
+  Sacral:         { top: '#F4511E', bottom: '#BF360C' }, // vivid orange
+  Root:           { top: '#E53935', bottom: '#C62828' }, // vivid red
+};
 
 interface SkiaChakraNodeProps {
   name: string;
@@ -129,8 +161,7 @@ function getSkiaPathsForChakra(name: string, cx: number, cy: number, r: number) 
   return {
     paths: paths.map(p => {
       const skPath = Skia.Path.MakeFromSVGString(p);
-      if (!skPath) throw new Error(`Invalid SVG path: ${p}`);
-      return skPath;
+      return skPath ?? Skia.Path.Make(); // safe fallback — renders nothing
     }),
     circles
   };
@@ -143,7 +174,9 @@ export const SkiaChakraNode = ({ name, color, stateColor, intensity, size, clock
 
   const tuning = CHAKRA_ICON_TUNING[name] ?? { scale: 1.25, sw: 1.3 };
   const yantraSize = (size * 0.86) * tuning.scale / 2;
-  const strokeColor = 'rgba(255, 255, 255, 0.9)';
+  // Scale stroke width with node size so small orbit dots show clear symbols
+  const strokeW = Math.max(0.9, tuning.sw * (size / 68));
+  const strokeColor = 'rgba(255, 255, 255, 0.95)';
 
   const { paths, circles } = useMemo(() => {
     return getSkiaPathsForChakra(name, center, center, yantraSize);
@@ -192,9 +225,13 @@ export const SkiaChakraNode = ({ name, color, stateColor, intensity, size, clock
         style="stroke" strokeWidth={0.8} color={stateColor} opacity={0.5} 
       />
 
-      {/* 4. The Yantra Symbol (Glass Plate) */}
+      {/* 4. The Yantra Symbol (Glass Plate + Sacred Symbol) */}
       <Group>
-        <Circle cx={center} cy={center} r={radius * 0.8} color="rgba(10, 15, 25, 0.85)" />
+        {/* Thin dark base — mostly replaced by the chakra color fill */}
+        <Circle cx={center} cy={center} r={radius * 0.82} color="rgba(4, 7, 16, 0.40)" />
+        {/* Chakra color — fill with deep shade, center bloom to core */}
+        <Circle cx={center} cy={center} r={radius * 0.82} color={color.deep} opacity={0.78} />
+        <Circle cx={center} cy={center} r={radius * 0.52} color={color.core} opacity={0.32} />
         {paths.map((p, i) => (
           <Path 
             key={i} 
@@ -202,7 +239,7 @@ export const SkiaChakraNode = ({ name, color, stateColor, intensity, size, clock
             style="stroke" 
             strokeCap="round"
             strokeJoin="round"
-            strokeWidth={tuning.sw} 
+            strokeWidth={strokeW} 
             color={strokeColor} 
           />
         ))}
@@ -211,7 +248,7 @@ export const SkiaChakraNode = ({ name, color, stateColor, intensity, size, clock
             key={`circle-${i}`} 
             cx={center} cy={center} r={c} 
             style="stroke" 
-            strokeWidth={tuning.sw} 
+            strokeWidth={strokeW} 
             color={strokeColor} 
           />
         ))}
@@ -219,3 +256,139 @@ export const SkiaChakraNode = ({ name, color, stateColor, intensity, size, clock
     </Group>
   );
 };
+
+// ─────────────────────────────────────────────────────────────
+// SkiaChakraGlyph — standalone Canvas for use anywhere in the UI
+// (ChakraCard lists, detail panels, etc.)
+// ─────────────────────────────────────────────────────────────
+
+interface SkiaChakraGlyphProps {
+  name: string;
+  /** Canvas size in px. Default 44. */
+  size?: number;
+  /**
+   * 'sphere' (default) — full 3-D specular sphere with yantra overlay.
+   * 'flat'   — white symbol only on transparent canvas; card supplies color.
+   * 'vivid'  — bright solid chakra-colored disc + white symbol; no sphere.
+   */
+  variant?: 'sphere' | 'flat' | 'vivid';
+}
+
+export function SkiaChakraGlyph({ name, size = 44, variant = 'sphere' }: SkiaChakraGlyphProps) {
+  // ── Flat variant: pure white symbol, no sphere, transparent background ──
+  if (variant === 'flat') {
+    const tuningF = CHAKRA_ICON_TUNING[name] ?? { scale: 1.25, sw: 1.3 };
+    const centerF = size / 2;
+    const yantraRF = size * 0.43;
+    const strokeWF = Math.max(1.4, tuningF.sw * (size / 44));
+    const { paths: fp, circles: fc } = getSkiaPathsForChakra(name, centerF, centerF, yantraRF);
+    return (
+      <Canvas style={{ width: size, height: size }}>
+        {fp.map((p, i) => (
+          <Path key={i} path={p} style="stroke" strokeCap="round" strokeJoin="round"
+            strokeWidth={strokeWF} color="rgba(255,255,255,0.96)" />
+        ))}
+        {fc.map((r, i) => (
+          <Circle key={`fc-${i}`} cx={centerF} cy={centerF} r={r}
+            style="stroke" strokeWidth={strokeWF} color="rgba(255,255,255,0.96)" />
+        ))}
+      </Canvas>
+    );
+  }
+
+  // ── Vivid variant: solid bright-colored disc + white symbol ──
+  if (variant === 'vivid') {
+    const tuningV = CHAKRA_ICON_TUNING[name] ?? { scale: 1.25, sw: 1.3 };
+    const centerV = size / 2;
+    const radius  = size * 0.46;           // disc fills most of the canvas
+    const yantraRV = size * 0.42;          // symbol fills the disc comfortably
+    const strokeWV = Math.max(1.6, tuningV.sw * (size / 42));
+    const vividColor = CHAKRA_VIVID_FLAT[name] ?? '#555577';
+    const { paths: vp, circles: vc } = getSkiaPathsForChakra(name, centerV, centerV, yantraRV);
+    return (
+      <Canvas style={{ width: size, height: size }}>
+        {/* Solid vivid disc */}
+        <Circle cx={centerV} cy={centerV} r={radius} color={vividColor} />
+        {/* Subtle inner highlight to keep it from looking flat */}
+        <Circle cx={centerV} cy={centerV} r={radius * 0.65} color="rgba(255,255,255,0.10)" />
+        {/* White sacred geometry symbol */}
+        {vp.map((p, i) => (
+          <Path key={i} path={p} style="stroke" strokeCap="round" strokeJoin="round"
+            strokeWidth={strokeWV} color="rgba(255,255,255,0.97)" />
+        ))}
+        {vc.map((r, i) => (
+          <Circle key={`vc-${i}`} cx={centerV} cy={centerV} r={r}
+            style="stroke" strokeWidth={strokeWV} color="rgba(255,255,255,0.97)" />
+        ))}
+      </Canvas>
+    );
+  }
+
+  const color = CHAKRA_COLORS[name] ?? CHAKRA_COLORS['Solar Plexus'];
+  const tuning = CHAKRA_ICON_TUNING[name] ?? { scale: 1.25, sw: 1.3 };
+
+  const center  = size / 2;
+  const radius  = size * 0.40;
+  const yantraR = (size * 0.86) * tuning.scale / 2;
+  // Clamp stroke: visible at 32px, comfortable at 64px
+  const strokeW = Math.max(1.1, tuning.sw * (size / 56));
+
+  const specStart = vec(size * 0.28, size * 0.28);
+  const specEnd   = vec(size * 0.95, size * 0.95);
+
+  const { paths: symbolPaths, circles: symbolCircles } = useMemo(
+    () => getSkiaPathsForChakra(name, center, center, yantraR),
+    [name, center, yantraR],
+  );
+
+  return (
+    <Canvas style={{ width: size, height: size }}>
+      {/* 1. Soft outer aura — bloom glow matching chakra color */}
+      <Circle cx={center} cy={center} r={radius * 1.4} color={color.glow} opacity={0.30} blendMode="screen">
+        <BlurMask blur={size * 0.12} style="outer" />
+      </Circle>
+
+      {/* 2. Specular 3-D sphere */}
+      <Circle cx={center} cy={center} r={radius}>
+        <LinearGradient
+          start={specStart}
+          end={specEnd}
+          colors={['#FFFFFF', color.glow, color.core, color.deep, '#020817']}
+          positions={[0, 0.18, 0.50, 0.86, 1.0]}
+        />
+      </Circle>
+
+      {/* 3. Rim light */}
+      <Circle cx={center} cy={center} r={radius} style="stroke" strokeWidth={0.9} color={color.glow} opacity={0.85} />
+
+      {/* 4. Glass plate — chakra color-filled with a center bloom */}
+      <Circle cx={center} cy={center} r={radius * 0.82} color="rgba(4, 7, 16, 0.38)" />
+      <Circle cx={center} cy={center} r={radius * 0.82} color={color.deep} opacity={0.78} />
+      <Circle cx={center} cy={center} r={radius * 0.52} color={color.core} opacity={0.30} />
+
+      {/* 5. Sacred geometry symbol */}
+      {symbolPaths.map((p, i) => (
+        <Path
+          key={i}
+          path={p}
+          style="stroke"
+          strokeCap="round"
+          strokeJoin="round"
+          strokeWidth={strokeW}
+          color="rgba(255,255,255,0.94)"
+        />
+      ))}
+      {symbolCircles.map((r, i) => (
+        <Circle
+          key={`sc-${i}`}
+          cx={center}
+          cy={center}
+          r={r}
+          style="stroke"
+          strokeWidth={strokeW}
+          color="rgba(255,255,255,0.94)"
+        />
+      ))}
+    </Canvas>
+  );
+}

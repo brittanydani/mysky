@@ -41,6 +41,7 @@ import {
 } from '../../services/energy/energyEngine';
 import { logger } from '../../utils/logger';
 import ChakraWheelComponent from '../../components/ui/ChakraWheel';
+import { SkiaChakraGlyph, CHAKRA_VIVID } from '../../components/ui/SkiaChakraNode';
 import { MoodClimateCloud } from '../../components/ui/MoodClimateCloud';
 import { CorrelationGyroscope } from '../../components/ui/CorrelationGyroscope';
 import { useCorrelationStore } from '../../store/correlationStore';
@@ -66,6 +67,14 @@ const CHAKRA_STATE_COLORS: Record<ChakraState, string> = {
 /* ── Helpers ── */
 function safeHaptic() {
   Haptics.selectionAsync().catch(() => {});
+}
+
+/** Convert a 6-digit hex color to an rgba() string for gradient use */
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 /* ════════════════════════════════════════════════
@@ -210,7 +219,7 @@ export default function EnergyScreen() {
               <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
                 <Text style={styles.heroToneText}>Energy needs your birth info</Text>
                 <Text style={[styles.body, { marginTop: 8 }]}>
-                  Add your birth info to unlock your personal energy weather {'\u2014'} chakra awareness, domain tracking, and daily guidance.
+                  Add your birth info to unlock your personal energy weather {'—'} chakra awareness, domain tracking, and daily guidance.
                 </Text>
                 <SkiaMetallicPill
                   label="Create Chart"
@@ -235,7 +244,7 @@ export default function EnergyScreen() {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.loadingContainer}>
             <SomaticEnergyOrb intensity="Low" size={140} />
-            <Text style={[styles.body, { marginTop: 12 }]}>Reading your energy{'\u2026'}</Text>
+            <Text style={[styles.body, { marginTop: 12 }]}>Reading your energy{'…'}</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -293,8 +302,8 @@ export default function EnergyScreen() {
                 safeHaptic();
                 const dc = snapshot.dominantChakra;
                 const stateHint: Record<string, string> = {
-                  'Grounding Needed': 'is overactive \u2014 grounding helps',
-                  'Sensitive': 'is heightened \u2014 move gently',
+                  'Grounding Needed': 'is overactive — grounding helps',
+                  'Sensitive': 'is heightened — move gently',
                   'Flowing': 'is open and moving freely',
                   'Quiet': 'is resting quietly',
                 };
@@ -348,7 +357,7 @@ export default function EnergyScreen() {
                     <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
                   </View>
                   <Text style={{ fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 6 }}>
-                    Your birth data activates specific energy centers {'\u2014'} see which ones need attention today
+                    Your birth data activates specific energy centers {'—'} see which ones need attention today
                   </Text>
                 </LinearGradient>
               )}
@@ -411,7 +420,7 @@ export default function EnergyScreen() {
                         <View style={{ flex: 1 }}>
                           <Text style={[styles.domainName, isLocked && styles.textLocked]}>{d.name}</Text>
                           <Text style={[styles.domainState, isLocked && styles.textLocked]}>
-                            {isLocked ? '\u2022\u2022\u2022\u2022\u2022\u2022' : d.state}
+                            {isLocked ? '••••••' : d.state}
                           </Text>
                         </View>
                         <Ionicons
@@ -454,7 +463,7 @@ export default function EnergyScreen() {
                     <View style={styles.guidanceRitualBlock}>
                       <View style={styles.guidanceHeader}>
                         <Ionicons name="sparkles-outline" size={16} color={theme.calm} />
-                        <Text style={[styles.guidanceLabel, { color: theme.calm }]}>Today{'\u2019'}s Micro-Ritual</Text>
+                        <Text style={[styles.guidanceLabel, { color: theme.calm }]}>Today{'’'}s Micro-Ritual</Text>
                       </View>
                       <Text style={styles.guidanceRitualText}>{snapshot.guidance.ritual}</Text>
                     </View>
@@ -486,7 +495,7 @@ export default function EnergyScreen() {
             {/* ── Footer ── */}
             <Animated.View entering={FadeInDown.delay(620).duration(600)} style={styles.footer}>
               <Text style={styles.footerText}>
-                Energy is not a forecast {'\u2014'} it is a mirror. Your personal framework creates conditions; you decide what to do with them.
+                Energy is not a forecast {'—'} it is a mirror. Your personal framework creates conditions; you decide what to do with them.
               </Text>
             </Animated.View>
           </View>
@@ -520,20 +529,21 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 
   /* ── Background: compact one-liner ── */
   if (resolvedRole === 'background') {
+    const vivid = CHAKRA_VIVID[chakra.name] ?? CHAKRA_VIVID['Solar Plexus'];
     return (
       <LinearGradient
-        colors={['rgba(14, 24, 48,0.40)', 'rgba(10, 18, 36,0.25)']}
+        colors={[vivid.top, vivid.bottom]}
         style={[styles.card, { padding: 14, marginBottom: 6 }]}
       >
         <View style={styles.chakraHeader}>
-          <Text style={[styles.chakraEmoji, { fontSize: 20 }]}>{chakra.emoji}</Text>
+          <SkiaChakraGlyph name={chakra.name} size={34} variant="vivid" />
           <View style={{ flex: 1 }}>
-            <Text style={[styles.chakraName, { fontSize: 14, color: theme.textMuted }]}>{chakra.name}</Text>
-            <Text style={[styles.bodyMuted, { fontSize: 12, marginTop: 1 }]}>
+            <Text style={[styles.chakraName, { fontSize: 14, color: 'rgba(255,255,255,0.95)' }]}>{chakra.name}</Text>
+            <Text style={[styles.bodyMuted, { fontSize: 12, marginTop: 1, color: 'rgba(255,255,255,0.70)' }]}>
               {chakra.state === 'Quiet' ? 'Remains steady' : chakra.state === 'Flowing' ? 'Energy moving freely' : chakra.state}
             </Text>
           </View>
-          <View style={[styles.chakraStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
+          <View style={[styles.chakraStateDot, { backgroundColor: 'rgba(255,255,255,0.60)' }]} />
         </View>
       </LinearGradient>
     );
@@ -541,27 +551,28 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 
   /* ── Secondary: brief with body cue + suggestion ── */
   if (resolvedRole === 'secondary') {
+    const vivid = CHAKRA_VIVID[chakra.name] ?? CHAKRA_VIVID['Solar Plexus'];
     return (
       <LinearGradient
-        colors={['rgba(14, 24, 48,0.50)', 'rgba(10, 18, 36,0.30)']}
+        colors={[vivid.top, vivid.bottom]}
         style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
       >
         <View style={styles.chakraHeader}>
-          <Text style={styles.chakraEmoji}>{chakra.emoji}</Text>
+          <SkiaChakraGlyph name={chakra.name} size={42} variant="vivid" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.chakraName}>{chakra.name}</Text>
+            <Text style={[styles.chakraName, { color: '#fff' }]}>{chakra.name}</Text>
             <View style={styles.chakraStateRow}>
-              <View style={[styles.chakraStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
-              <Text style={[styles.chakraStateText, { color: CHAKRA_STATE_COLORS[chakra.state] }]}>{chakra.state}</Text>
+              <View style={[styles.chakraStateDot, { backgroundColor: 'rgba(255,255,255,0.60)' }]} />
+              <Text style={[styles.chakraStateText, { color: 'rgba(255,255,255,0.85)' }]}>{chakra.state}</Text>
             </View>
           </View>
         </View>
-        <Text style={[styles.bodyMuted, { marginTop: 6, fontStyle: 'italic' }]}>
+        <Text style={[styles.bodyMuted, { marginTop: 6, fontStyle: 'italic', color: 'rgba(255,255,255,0.80)' }]}>
           You may notice: {chakra.bodyCue.charAt(0).toLowerCase() + chakra.bodyCue.slice(1)}
         </Text>
         <View style={styles.chakraDetailRow}>
-          <Ionicons name="heart-outline" size={13} color={theme.calm} />
-          <Text style={styles.chakraDetailText}>{chakra.healingSuggestion}</Text>
+          <Ionicons name="heart-outline" size={13} color="rgba(255,255,255,0.70)" />
+          <Text style={[styles.chakraDetailText, { color: 'rgba(255,255,255,0.85)' }]}>{chakra.healingSuggestion}</Text>
         </View>
       </LinearGradient>
     );
@@ -573,32 +584,34 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
     .map(s => s.trim().replace(/\.$/, ''))
     .filter(s => s.length > 3);
 
+  const vivid = CHAKRA_VIVID[chakra.name] ?? CHAKRA_VIVID['Solar Plexus'];
+
   return (
     <LinearGradient
-      colors={['rgba(18, 32, 64,0.75)', 'rgba(14, 24, 48,0.55)']}
+      colors={[vivid.top, vivid.bottom]}
       style={[styles.card, styles.cardPad, { marginBottom: 10 }]}
     >
-      <Text style={styles.focusRoleLabel}>Primary Focus Today</Text>
+      <Text style={[styles.focusRoleLabel, { color: 'rgba(255,255,255,0.75)' }]}>Primary Focus Today</Text>
       <View style={styles.focusHeaderBlock}>
-        <Text style={styles.focusChakraEmoji}>{chakra.emoji}</Text>
-        <Text style={styles.focusChakraName}>{chakra.name}</Text>
+        <SkiaChakraGlyph name={chakra.name} size={64} variant="vivid" />
+        <Text style={[styles.focusChakraName, { color: '#fff' }]}>{chakra.name}</Text>
       </View>
       <View style={styles.focusStateBadge}>
-        <View style={[styles.focusStateDot, { backgroundColor: CHAKRA_STATE_COLORS[chakra.state] }]} />
-        <Text style={[styles.focusStateText, { color: CHAKRA_STATE_COLORS[chakra.state] }]}>{chakra.state}</Text>
+        <View style={[styles.focusStateDot, { backgroundColor: 'rgba(255,255,255,0.55)' }]} />
+        <Text style={[styles.focusStateText, { color: 'rgba(255,255,255,0.90)' }]}>{chakra.state}</Text>
       </View>
 
-      <View style={styles.focusDivider} />
-      <Text style={styles.focusSectionLabel}>What you may notice</Text>
+      <View style={[styles.focusDivider, { borderTopColor: 'rgba(255,255,255,0.20)', borderTopWidth: StyleSheet.hairlineWidth }]} />
+      <Text style={[styles.focusSectionLabel, { color: 'rgba(255,255,255,0.65)' }]}>What you may notice</Text>
       {cueItems.length > 1 ? (
         cueItems.map((item, i) => (
           <View key={i} style={styles.focusBulletRow}>
-            <Text style={styles.focusBulletDot}>{'\u2022'}</Text>
-            <Text style={styles.focusBulletText}>{item.charAt(0).toUpperCase() + item.slice(1)}</Text>
+            <Text style={[styles.focusBulletDot, { color: 'rgba(255,255,255,0.55)' }]}>{'•'}</Text>
+            <Text style={[styles.focusBulletText, { color: 'rgba(255,255,255,0.90)' }]}>{item.charAt(0).toUpperCase() + item.slice(1)}</Text>
           </View>
         ))
       ) : (
-        <Text style={styles.focusBodyText}>
+        <Text style={[styles.focusBodyText, { color: 'rgba(255,255,255,0.90)' }]}>
           You may notice {chakra.bodyCue.charAt(0).toLowerCase() + chakra.bodyCue.slice(1)}
         </Text>
       )}
@@ -610,19 +623,19 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
       <View style={styles.focusDivider} />
       <Text style={styles.focusSectionLabel}>What helps</Text>
       <View style={styles.focusBulletRow}>
-        <Text style={styles.focusBulletDot}>{'\u2022'}</Text>
+        <Text style={styles.focusBulletDot}>{'•'}</Text>
         <Text style={styles.focusHelpText}>{chakra.healingSuggestion}</Text>
       </View>
       {chakra.groundingTip ? (
         <View style={[styles.focusBulletRow, { marginTop: 4 }]}>
-          <Text style={styles.focusBulletDot}>{'\u2022'}</Text>
+          <Text style={styles.focusBulletDot}>{'•'}</Text>
           <Text style={styles.focusHelpText}>{chakra.groundingTip}</Text>
         </View>
       ) : null}
 
       {chakra.affirmation ? (
         <View style={styles.affirmationWrap}>
-          <Text style={styles.affirmationText}>{'\u201C'}{chakra.affirmation}{'\u201D'}</Text>
+          <Text style={styles.affirmationText}>{'"'}{chakra.affirmation}{'"'}</Text>
         </View>
       ) : null}
     </LinearGradient>
@@ -666,7 +679,7 @@ const styles = StyleSheet.create({
 
   /* ── Somatic anchor ── */
   somaticHeader: {
-    height: 300,
+    height: 220,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -674,7 +687,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.40)',
     fontSize: 13,
     fontStyle: 'italic',
-    marginTop: -30,
+    marginTop: -20,
     textAlign: 'center',
   },
 

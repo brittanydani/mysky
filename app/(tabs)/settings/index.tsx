@@ -47,7 +47,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Where does my backup go?',
     answer:
-      'When you create a backup, an encrypted .msky file is saved to your device\u2019s cache, then your device\u2019s share sheet opens so you choose the destination \u2014 Files, iCloud Drive, AirDrop, email, or any other app. MySky never uploads your backup to any server.',
+      'When you create a backup, an encrypted .msky file is saved to your device’s cache, then your device’s share sheet opens so you choose the destination — Files, iCloud Drive, AirDrop, email, or any other app. MySky never uploads your backup to any server.',
   },
   {
     question: 'What does the PDF export include?',
@@ -67,7 +67,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How does sleep tracking work?',
     answer:
-      'Open the Sleep tab to log your nightly sleep. Rate quality (1\u20135 moons) and log duration \u2014 both are free. The encrypted dream journal and symbolic dream reflections are Deeper Sky (premium) features. When you log a dream, MySky generates a personalized reflection drawn from your sleep, mood, check-in, and journal data \u2014 entirely on your device, with no AI or network calls. You can log one entry per night and edit it any time that day. Free users see basic weekly averages; Deeper Sky members get full trend analysis over time.',
+      'Open the Sleep tab to log your nightly sleep. Rate quality (1–5 moons), log duration, and write a dream narrative — all free. Symbolic dream interpretation and pattern analysis are Deeper Sky (premium) features. When a Deeper Sky member logs a dream, MySky generates a personalized reflection drawn from your sleep, mood, check-in, and journal data — entirely on your device, with no AI or network calls. You can log one entry per night and edit it any time that day. Free users see basic weekly averages; Deeper Sky members get full trend analysis over time.',
   },
   {
     question: 'What behavioral patterns does MySky track?',
@@ -82,7 +82,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Can I cancel my subscription?',
     answer:
-      'Yes. Monthly and yearly subscriptions are managed through your device\u2019s app store. On iOS, go to Settings > Apple ID > Subscriptions. On Android, go to Google Play > Subscriptions. You keep access through the end of your billing period. Lifetime purchases do not renew and do not have a cancellation setting (refunds follow the app store\u2019s policy).',
+      'Yes. Monthly and yearly subscriptions are managed through your device’s app store. On iOS, go to Settings > Apple ID > Subscriptions. On Android, go to Google Play > Subscriptions. You keep access through the end of your billing period. Lifetime purchases do not renew and do not have a cancellation setting (refunds follow the app store’s policy).',
   },
   {
     question: 'How do I change my birth data?',
@@ -102,7 +102,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How do symbolic dream reflections work?',
     answer:
-      'When you log a dream as a Deeper Sky member, MySky scans your dream text for recurring symbols (water, falling, doors, etc.) and maps them to Jungian archetypes. It then weaves in context from your mood check-ins, sleep patterns, and journal entries to shape the reflection. The result is a personalized reflection generated entirely on your device with no AI, no network calls, and no data leaving your phone.',
+      'Anyone can log a dream narrative — just open the Sleep tab and type in the Dream Memory field. Deeper Sky members also get symbolic interpretation: MySky scans your dream text for recurring symbols (water, falling, doors, etc.) and maps them to Jungian archetypes, weaving in context from your mood check-ins, sleep patterns, and journal entries. The result is a personalized reflection generated entirely on your device with no AI, no network calls, and no data leaving your phone.',
   },
 ];
 
@@ -116,10 +116,10 @@ export default function SettingsScreen() {
 
   // ── Accent colors for settings sections ──
   const accentGold = '#C9AE78';
-  const accentAmethyst = '#9D76C1';
-  const accentBlue = '#8BC4E8';
+  const accentAmethyst = '#C9AE78';
+  const accentBlue = '#C9AE78';
   const accentCopper = '#CD7F5D';
-  const accentEmerald = '#6EBF8B';
+  const accentEmerald = '#C9AE78';
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);

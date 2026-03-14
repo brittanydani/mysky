@@ -413,10 +413,10 @@ export class TodayContentEngine {
     );
 
     let greeting = timeOfDay === 'morning'
-      ? 'Good morning. Here\u2019s what today is bringing.'
+      ? 'Good morning. Here’s what today is bringing.'
       : timeOfDay === 'afternoon'
-        ? 'Here\u2019s your energy weather for today.'
-        : 'Settling into evening. Here\u2019s what\u2019s been in the air.';
+        ? 'Here’s your energy weather for today.'
+        : 'Settling into evening. Here’s what’s been in the air.';
     if (selectedGreeting) {
       const item = GREETING_LIBRARY.find(g => g.id === selectedGreeting.id);
       if (item) {

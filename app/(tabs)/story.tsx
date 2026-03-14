@@ -35,8 +35,8 @@ function toRoman(n: number): string {
 
 // ── Cinematic Palette (Harmonized) ──
 const PALETTE = {
-  gold: '#D9BF8C', // Matched to Blueprint Hub
-  silverBlue: '#8BC4E8',
+  gold: '#C9AE78', // Matched to Blueprint Hub
+  silverBlue: '#C9AE78',
   bg: '#0A0A0C',
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',

@@ -176,7 +176,7 @@ export const JournalSanctuaryScreen = () => {
             {saveStatus === 'saved'
               ? 'Encrypted & Saved'
               : saveStatus === 'saving'
-              ? 'Saving\u2026'
+              ? 'Saving…'
               : 'Draft'}
           </Text>
         </View>
@@ -187,7 +187,7 @@ export const JournalSanctuaryScreen = () => {
         style={styles.editor}
         multiline
         autoFocus
-        placeholder="Let ink carry the first draft\u2026"
+        placeholder="Let ink carry the first draft…"
         placeholderTextColor="#4A4A5A"
         value={text}
         onChangeText={setText}

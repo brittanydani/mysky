@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import {
   loadSelfKnowledgeContext,
   SelfKnowledgeContext,
@@ -182,7 +183,7 @@ export default function HealingSpaceScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Healing Space</Text>
-            <Text style={styles.headerSubtitle}>Synthesized from your active patterns</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>Synthesized from your active patterns</GoldSubtitle>
           </Animated.View>
 
           {/* 1. ARCHETYPE SHADOW WORK */}

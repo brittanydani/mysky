@@ -16,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePremium } from '../../context/PremiumContext';
 import BackupPassphraseModal from '../../components/BackupPassphraseModal';
 import { logger } from '../../utils/logger';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 
 /** Wraps a field value safely for CSV output. */
 function csvEscape(value: string): string {
@@ -224,7 +225,7 @@ export default function SettingsHub() {
 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Settings</Text>
-        <Text style={styles.headerSubtitle}>{headerSubtitle}</Text>
+        <GoldSubtitle style={styles.headerSubtitle}>{headerSubtitle}</GoldSubtitle>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

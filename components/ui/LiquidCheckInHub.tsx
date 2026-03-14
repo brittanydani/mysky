@@ -47,7 +47,7 @@ const LiquidCheckInHub = memo(function LiquidCheckInHub() {
           <Circle cx={CENTER} cy={CENTER} r={outerR}>
             <RadialGradient
               c={vec(CENTER, CENTER)}
-              r={76}
+              r={outerR}
               colors={[AMETHYST + '50', GOLD + '18', 'transparent']}
             />
             <BlurMask blur={24} style="normal" />
@@ -59,7 +59,7 @@ const LiquidCheckInHub = memo(function LiquidCheckInHub() {
           <Circle cx={CENTER} cy={CENTER} r={coreR}>
             <RadialGradient
               c={vec(CENTER, CENTER)}
-              r={42}
+              r={coreR}
               colors={[GOLD, AMETHYST + 'AA', 'transparent']}
             />
             <BlurMask blur={8} style="normal" />

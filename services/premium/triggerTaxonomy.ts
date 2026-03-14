@@ -227,10 +227,10 @@ export const TRIGGER_TAXONOMY: Record<ShadowTrigger, TriggerTaxonomyEntry> = {
     associatedAttachment: ['anxious', 'disorganized'],
     reflectionQuestions: [
       'Where in your waking life do you feel most on guard right now?',
-      'What feels unsafe \u2014 emotionally or relationally \u2014 at this time?',
+      'What feels unsafe — emotionally or relationally — at this time?',
       'Is the danger outside of you, or does it feel internal?',
       'What would safety look like in the situation this dream is pointing to?',
-      'How did your body respond to the threat in the dream \u2014 and does that response feel familiar?',
+      'How did your body respond to the threat in the dream — and does that response feel familiar?',
     ],
     evidenceHints: ['chasing', 'weapons', 'falling', 'natural disasters', 'intruders', 'violence'],
   },

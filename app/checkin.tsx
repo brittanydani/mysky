@@ -72,7 +72,7 @@ export default function CheckInHub() {
               colors={['rgba(212, 184, 114, 0.12)', 'rgba(10, 10, 12, 0.8)']}
               style={styles.card}
             >
-              <View style={[styles.iconRing, { borderColor: PALETTE.gold + '40' }]}>
+              <View style={[styles.iconRing, { borderColor: PALETTE.gold + '40', backgroundColor: PALETTE.gold + '10' }]}>
                 <Ionicons name="sparkles-outline" size={26} color={PALETTE.gold} />
               </View>
               <View style={styles.cardText}>
@@ -95,11 +95,11 @@ export default function CheckInHub() {
               colors={['rgba(157, 118, 193, 0.1)', 'rgba(10, 10, 12, 0.8)']}
               style={styles.card}
             >
-              <View style={[styles.iconRing, { borderColor: PALETTE.amethyst + '40' }]}>
+              <View style={[styles.iconRing, { borderColor: PALETTE.amethyst + '40', backgroundColor: PALETTE.amethyst + '10' }]}>
                 <Ionicons name="moon-outline" size={24} color={PALETTE.amethyst} />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardEyebrow}>Nightly Archive</Text>
+                <Text style={[styles.cardEyebrow, { color: PALETTE.amethyst }]}>Nightly Archive</Text>
                 <Text style={styles.cardTitle}>Sleep & Dreams</Text>
                 <Text style={styles.cardDescription}>Log rest quality and capture subconscious imagery.</Text>
               </View>
@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     width: '100%',
+    marginTop: 16,
   },
   title: {
     fontSize: 32,
@@ -197,7 +198,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
     marginRight: 20,
   },
   cardText: {

@@ -28,6 +28,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -170,7 +171,7 @@ export default function RelationshipPatternsScreen() {
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
               <Text style={styles.headerTitle}>Relational Mirror</Text>
-              <Text style={styles.headerSubtitle}>What you notice about yourself in connection</Text>
+              <GoldSubtitle style={styles.headerSubtitle}>What you notice about yourself in connection</GoldSubtitle>
             </Animated.View>
 
             {/* Relational Gravity Visualization */}
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, color: PALETTE.anxious, fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 24 },
+  header: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: 'Georgia', fontWeight: '300', marginBottom: 8 },
   headerSubtitle: { fontSize: 14, color: PALETTE.textMuted, lineHeight: 20, fontStyle: 'italic' },
 

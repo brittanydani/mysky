@@ -95,7 +95,7 @@ export default function SleepQuickLog() {
         </Pressable>
 
         <View style={styles.hoursDisplay}>
-          <Text style={styles.hoursValue}>{formatHours(hours)}</Text>
+          <Text style={styles.hoursValue} numberOfLines={1}>{formatHours(hours)}</Text>
         </View>
 
         <Pressable
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   stepperBtnDisabled: { opacity: 0.3 },
   stepperIcon: { color: '#FFF', fontSize: 22, lineHeight: 26 },
   hoursDisplay: {
-    minWidth: 100, alignItems: 'center',
+    minWidth: 160, alignItems: 'center',
   },
   hoursValue: {
     color: '#D9BF8C', fontSize: 36, fontFamily: 'Georgia', letterSpacing: 0.5,

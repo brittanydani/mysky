@@ -50,10 +50,10 @@ const { width } = Dimensions.get('window');
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4B872',
-  silverBlue: '#8BC4E8',
+  gold: '#C9AE78',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
-  emerald: '#6EBF8B',
+  emerald: '#C9AE78',
   rose: '#D4A3B3',
   bg: '#0A0A0C',
   textMain: '#FFFFFF',
@@ -393,7 +393,7 @@ export default function HomeScreen() {
               <Text style={styles.scoreMax}>/ 10</Text>
             </View>
             <View style={styles.pillsRow}>
-              <ScorePill label="Sleep" val={`${latestSleep.toFixed(1)}h`} color="#6E8CB4" />
+              <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
               <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
               <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
             </View>

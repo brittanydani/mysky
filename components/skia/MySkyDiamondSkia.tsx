@@ -8,7 +8,7 @@ import {
   Group,
   vec,
 } from '@shopify/react-native-skia';
-import { mySkyGold, metallicStopsSoft, metallicPositionsSoft, metallicStopsHero, metallicPositionsHero } from '@/constants/mySkyMetallic';
+import { mySkyGold, metallicStopsSoft, metallicPositionsSoft, metallicStopsHero, metallicPositionsHero, metallicFillColors, metallicFillPositions } from '@/constants/mySkyMetallic';
 
 type Props = {
   size?: number;
@@ -168,17 +168,17 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
   const vBot    = vec(cx, bot.y);
   const vGirdle = vec(cx, gY);
 
-  // Bright for table / crown highlights
-  const crownColors = [mySkyGold.specular, mySkyGold.glossBright, mySkyGold.champagneLight, mySkyGold.champagne, mySkyGold.goldMid];
+  // Bright champagne-gold palette matching the CTA metallic fill
+  const crownColors = ['#E9D9B8', '#C9AE78', '#B8A27A', '#8A7A5A', '#6B532E'];
   const crownPos    = [0, 0.2, 0.45, 0.72, 1];
 
-  // Darker for pavilion (light comes from above, pavilion in shadow)
-  const pavColors   = [mySkyGold.champagne, mySkyGold.goldMid, mySkyGold.goldDeep, mySkyGold.shadow, mySkyGold.shadowDeep];
+  // Pavilion: same warm tones, shifted darker toward the bottom
+  const pavColors   = ['#C9AE78', '#B8A27A', '#8A7A5A', '#6B532E', '#3A2810'];
   const pavPos      = [0, 0.25, 0.52, 0.78, 1];
 
-  // Girdle: bright metallic band
-  const girdleColors = [...metallicStopsSoft];
-  const girdlePos    = [...metallicPositionsSoft];
+  // Girdle: full metallic fill sweep
+  const girdleColors = [...metallicFillColors];
+  const girdlePos    = [...metallicFillPositions];
 
   const { tableFacet, crownL, crownR, crownLLower, crownRLower, crownCenter, pavL, pavLOuter, pavR, pavROuter, pavCenter, girdle } = paths;
 
@@ -186,12 +186,12 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
     <Canvas style={[{ width: size, height: size }, style]}>
       {/* ── Crown facets (bright — light catches top) ── */}
       <Group>
-        {/* Table — brightest facet */}
+        {/* Table — champagne highlight */}
         <Path path={tableFacet}>
           <LinearGradient
             start={vec(cx, tY)}
             end={vec(cx, tY + size * 0.08)}
-            colors={[mySkyGold.specular, mySkyGold.glossBright, mySkyGold.glossSoft]}
+            colors={['#E9D9B8', '#C9AE78', '#B8A27A']}
             positions={[0, 0.4, 1]}
           />
         </Path>
@@ -221,7 +221,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
           <LinearGradient
             start={vec(cx - size * 0.38, cL.y)}
             end={vec(cx, gY)}
-            colors={[mySkyGold.champagneLight, mySkyGold.champagne, mySkyGold.goldMid, mySkyGold.goldDeep]}
+            colors={['#C9AE78', '#B8A27A', '#8A7A5A', '#6B532E']}
             positions={[0, 0.3, 0.65, 1]}
           />
         </Path>
@@ -231,7 +231,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
           <LinearGradient
             start={vec(cx + size * 0.38, cR.y)}
             end={vec(cx, gY)}
-            colors={[mySkyGold.champagneLight, mySkyGold.champagne, mySkyGold.goldMid, mySkyGold.goldDeep]}
+            colors={['#C9AE78', '#B8A27A', '#8A7A5A', '#6B532E']}
             positions={[0, 0.3, 0.65, 1]}
           />
         </Path>
@@ -266,7 +266,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
           <LinearGradient
             start={vec(gL.x, gY)}
             end={vBot}
-            colors={[mySkyGold.goldMid, mySkyGold.goldDeep, mySkyGold.shadow, mySkyGold.shadowDeep]}
+            colors={['#8A7A5A', '#6B532E', '#3A2810', '#1E1208']}
             positions={[0, 0.35, 0.7, 1]}
           />
         </Path>
@@ -277,7 +277,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
           <LinearGradient
             start={vec(gR.x, gY)}
             end={vBot}
-            colors={[mySkyGold.goldMid, mySkyGold.goldDeep, mySkyGold.shadow, mySkyGold.shadowDeep]}
+            colors={['#8A7A5A', '#6B532E', '#3A2810', '#1E1208']}
             positions={[0, 0.35, 0.7, 1]}
           />
         </Path>
@@ -285,7 +285,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
           <LinearGradient
             start={vGirdle}
             end={vBot}
-            colors={[mySkyGold.champagne, mySkyGold.goldMid, mySkyGold.shadow]}
+            colors={['#C9AE78', '#8A7A5A', '#6B532E']}
             positions={[0, 0.45, 1]}
           />
         </Path>
@@ -294,15 +294,15 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
       {/* ── Facet edge lines (crisp metallic definition) ── */}
       {[tableFacet, crownL, crownR, crownLLower, crownRLower, crownCenter, pavL, pavLOuter, pavR, pavROuter, pavCenter].map(
         (p, i) => (
-          <Path key={`fl-${i}`} path={p} style="stroke" strokeWidth={size * 0.004} color={mySkyGold.shadow} opacity={0.55} />
+          <Path key={`fl-${i}`} path={p} style="stroke" strokeWidth={size * 0.004} color="#6B532E" opacity={0.45} />
         )
       )}
 
       {/* ── Outer silhouette border ── */}
-      <Path path={outline} style="stroke" strokeWidth={size * 0.010} color={mySkyGold.shadow} />
+      <Path path={outline} style="stroke" strokeWidth={size * 0.010} color="#6B532E" />
 
       {/* ── Specular highlight on table edge ── */}
-      <Path path={outline} style="stroke" strokeWidth={size * 0.003} color={mySkyGold.specular} opacity={0.45} />
+      <Path path={outline} style="stroke" strokeWidth={size * 0.003} color="#E9D9B8" opacity={0.5} />
     </Canvas>
   );
 });

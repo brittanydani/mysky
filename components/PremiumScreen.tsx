@@ -13,6 +13,7 @@ import MySkyDiamondSkia from './skia/MySkyDiamondSkia';
 import { usePremium } from '../context/PremiumContext';
 import { config } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
+import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
 
 type PlanType = 'monthly' | 'yearly' | 'lifetime';
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -216,7 +217,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               <View style={styles.heroRingOuter} />
               <View style={styles.heroRingInner} />
               <View style={styles.heroCore} />
-              <MySkyDiamondSkia size={60} />
+              <MySkyDiamondSkia size={78} />
             </View>
           </Animated.View>
 
@@ -234,10 +235,10 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* ── Value Propositions ── */}
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
-              { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#9D76C1' },
-              { icon: 'analytics-outline', title: 'Decode your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#8BC4E8' },
-              { icon: 'sparkles-outline', title: 'Daily cosmic guidance', desc: 'Personalized action steps aligned to your natal chart', color: '#D4B872' },
-              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup & restore with end-to-end encryption', color: '#6EBF8B' },
+              { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#C9AE78' },
+              { icon: 'analytics-outline', title: 'Decode your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#C9AE78' },
+              { icon: 'sparkles-outline', title: 'Daily cosmic guidance', desc: 'Personalized action steps aligned to your natal chart', color: '#C9AE78' },
+              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup & restore with end-to-end encryption', color: '#C9AE78' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
@@ -256,8 +257,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
 
           {/* ── Pricing Cards ── */}
           <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.pricingRow}>
-            {resolvedTiers.filter(t => t.id !== 'lifetime').map((tier) => {
+            {resolvedTiers.map((tier) => {
               const isAnnual = tier.id === 'yearly';
+              const isLifetime = tier.id === 'lifetime';
               const isSelected = selectedPlan === tier.id;
               return (
                 <Pressable
@@ -272,13 +274,15 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   accessibilityRole="radio"
                   accessibilityState={{ selected: isSelected }}
                 >
-                  {isAnnual && (
+                  {isAnnual ? (
                     <View style={styles.bestValueBadge}>
                       <Text style={styles.bestValueText}>BEST VALUE</Text>
                     </View>
+                  ) : (
+                    <View style={styles.pricingBadgePlaceholder} />
                   )}
                   <Text style={styles.pricingPeriod}>
-                    {isAnnual ? '12 Months' : '1 Month'}
+                    {isAnnual ? '12 Months' : isLifetime ? 'Lifetime' : '1 Month'}
                   </Text>
                   <Text
                     style={[styles.pricingPrice, isSelected && styles.pricingPriceSelected]}
@@ -288,40 +292,12 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                     {tier.price}
                   </Text>
                   <Text style={[styles.pricingMeta, isSelected && styles.pricingMetaSelected]}>
-                    {isAnnual ? `${tier.period}` : 'Billed monthly'}
+                    {isAnnual ? tier.period : isLifetime ? 'One-time' : 'Billed monthly'}
                   </Text>
                 </Pressable>
               );
             })}
           </Animated.View>
-
-          {/* Lifetime option */}
-          {resolvedTiers.find(t => t.id === 'lifetime') && (
-            <Animated.View entering={FadeInDown.delay(550).duration(500)}>
-              <Pressable
-                onPress={() => handleSelectPlan('lifetime')}
-                disabled={loading || restoring}
-                style={[
-                  styles.lifetimeRow,
-                  selectedPlan === 'lifetime' && styles.lifetimeRowSelected,
-                ]}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: selectedPlan === 'lifetime' }}
-              >
-                <View style={styles.lifetimeTextContainer}>
-                  <Text style={styles.lifetimeLabel}>Lifetime Access</Text>
-                  <Text style={styles.lifetimeDesc}>One-time purchase, forever yours</Text>
-                </View>
-                <Text
-                  style={[styles.lifetimePrice, selectedPlan === 'lifetime' && { color: '#D4B872' }]}
-                  adjustsFontSizeToFit
-                  numberOfLines={1}
-                >
-                  {resolvedTiers.find(t => t.id === 'lifetime')?.price}
-                </Text>
-              </Pressable>
-            </Animated.View>
-          )}
         </ScrollView>
 
         {/* ── Sticky Bottom CTA ── */}
@@ -337,14 +313,17 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               ]}
             >
               <LinearGradient
-                colors={[theme.primary, theme.primaryDark]}
+                colors={[...metallicFillColors]}
+                locations={[...metallicFillPositions]}
+                start={[0, 0]}
+                end={[1, 1]}
                 style={styles.ctaGradient}
               >
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
                   <Text style={styles.ctaText}>
-                    {selectedPlan === 'yearly' ? 'Start 7-Day Free Trial' : `Continue with ${resolvedTiers.find(t => t.id === selectedPlan)?.name}`}
+                    {`Continue with ${resolvedTiers.find(t => t.id === selectedPlan)?.name}`}
                   </Text>
                 )}
               </LinearGradient>
@@ -357,7 +336,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               {restoring ? (
                 <ActivityIndicator size="small" color={theme.textMuted} />
               ) : (
-                <Text style={styles.legalBarLink}>Restore</Text>
+                <Text style={styles.legalBarLink}>Restore Purchases</Text>
               )}
             </Pressable>
             <Text style={styles.legalBarDot}>·</Text>
@@ -371,9 +350,17 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           </View>
 
           <Text style={styles.legalMicro}>
-            {Platform.OS === 'ios'
-              ? 'Auto-renews. Cancel anytime in Settings → Apple ID → Subscriptions.'
-              : 'Auto-renews. Cancel anytime in Google Play → Subscriptions.'}
+            {selectedPlan === 'lifetime'
+              ? Platform.select({
+                  ios: 'This is a one-time purchase. Payment will be charged to your Apple ID account at confirmation of purchase. No recurring charges.',
+                  android: 'This is a one-time purchase. Payment will be charged to your Google Account at confirmation of purchase. No recurring charges.',
+                  default: 'This is a one-time purchase. No recurring charges.',
+                })
+              : Platform.select({
+                  ios: 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel subscriptions in Settings → Apple ID → Subscriptions.',
+                  android: 'Payment will be charged to your Google Account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel subscriptions in Google Play → Subscriptions.',
+                  default: 'Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your app store account settings.',
+                })}
           </Text>
         </View>
       </SafeAreaView>
@@ -427,8 +414,8 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
+    marginTop: 0,
+    marginBottom: 0,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -443,82 +430,81 @@ const styles = StyleSheet.create({
   // ── Hero Eclipse ──
   heroSection: {
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
+    marginTop: -16,
+    marginBottom: 0,
   },
   heroEclipse: {
-    width: 180,
-    height: 180,
+    width: 150,
+    height: 150,
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroRingOuter: {
     position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.04)',
   },
   heroRingInner: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 116,
+    height: 116,
+    borderRadius: 58,
     borderWidth: 1,
-    borderColor: 'rgba(201, 174, 120, 0.15)',
-    shadowColor: '#D4B872',
+    borderColor: 'rgba(201, 174, 120, 0.18)',
+    shadowColor: '#C9AE78',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
   },
   heroCore: {
     position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(201, 174, 120, 0.05)',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: 'rgba(201, 174, 120, 0.06)',
   },
 
   // ── Header ──
   header: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 8,
     alignItems: 'center',
   },
   premiumBadge: {
     fontSize: 12,
     fontWeight: '700',
     color: theme.primary,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: theme.spacing.md,
+    letterSpacing: 1,
+    marginBottom: 8,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     color: theme.textPrimary,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.3,
-    marginBottom: theme.spacing.md,
+    marginBottom: 8,
     textAlign: 'center',
-    lineHeight: 36,
+    lineHeight: 34,
   },
   heroSubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: theme.textSecondary,
-    lineHeight: 24,
+    lineHeight: 21,
     textAlign: 'center',
     paddingHorizontal: 16,
   },
 
   // ── Value Propositions ──
   valueSection: {
-    marginBottom: 32,
+    marginBottom: 12,
   },
   valueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   valueIconContainer: {
     width: 48,
@@ -552,10 +538,14 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 12,
   },
+  pricingBadgePlaceholder: {
+    height: 24,
+    marginBottom: 12,
+  },
   pricingCard: {
     flex: 1,
-    paddingVertical: 24,
-    paddingHorizontal: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 8,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
@@ -659,10 +649,11 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#D4B872',
+    shadowColor: '#C9AE78',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 6,
   },
   ctaGradient: {
     paddingVertical: 18,
@@ -674,7 +665,7 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: '700',
-    color: theme.background,
+    color: '#3A2A10',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   legalBar: {
@@ -694,11 +685,12 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.2)',
   },
   legalMicro: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.3)',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
     marginTop: 10,
-    lineHeight: 14,
+    lineHeight: 16,
+    paddingHorizontal: 4,
   },
 
   // ── Already premium state ──

@@ -249,11 +249,10 @@ export default function CosmicContext() {
         <Pressable onPress={handleBack} style={styles.backButton}>
           <Text style={styles.backArrow}>‹</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Cosmic Context</Text>
-        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Text style={styles.headerTitle}>Cosmic Context</Text>
 
         {/* ── Hero Moon ──────────────────────────────────────────────── */}
         <View style={styles.heroSection}>
@@ -382,14 +381,6 @@ export default function CosmicContext() {
           </View>
         </View>
 
-        {/* ── Acknowledge ────────────────────────────────────────────── */}
-        <Pressable
-          style={({ pressed }) => [styles.acknowledgeBtn, pressed && { opacity: 0.8 }]}
-          onPress={handleBack}
-        >
-          <Text style={styles.acknowledgeBtnText}>Acknowledge</Text>
-        </Pressable>
-
         <View style={{ height: 60 }} />
       </ScrollView>
     </View>
@@ -400,12 +391,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#050507' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingHorizontal: 16, paddingBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 60, paddingHorizontal: 16, paddingBottom: 4 },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   backArrow: { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 40 },
-  headerTitle: { fontSize: 16, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6 },
+  headerTitle: { fontSize: 34, color: '#F0EAD6', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 24 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
 
   // ── Hero Moon ─────────────────────────────────────────────────────────────
@@ -457,7 +448,5 @@ const styles = StyleSheet.create({
   transitImpact: { fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 20, marginLeft: 44 },
 
-  // ── Acknowledge ───────────────────────────────────────────────────────────
-  acknowledgeBtn: { height: 56, borderRadius: 28, backgroundColor: '#D4B872', justifyContent: 'center', alignItems: 'center' },
-  acknowledgeBtnText: { fontSize: 16, fontWeight: '700', color: '#050507', letterSpacing: 0.5 },
+
 });

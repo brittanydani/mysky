@@ -21,13 +21,14 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const STORAGE_KEY = '@mysky:trigger_events';
 
 const PALETTE = {
   bg: '#0A0A0C',
   sage: '#8CBEAA',
-  emerald: '#6EBF8B',
+  emerald: '#C9AE78',
   rose: '#D4A3B3',
   copper: '#CD7F5D',
   lavender: '#A89BC8',
@@ -285,12 +286,12 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  headerRow: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingTop: 10 },
+  headerRow: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingTop: 16 },
   backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-end' },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 10 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 34,
     color: PALETTE.textMain,
     fontFamily: 'Georgia',
     fontWeight: '300',

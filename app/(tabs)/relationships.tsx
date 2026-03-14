@@ -390,11 +390,11 @@ export default function RelationshipsScreen() {
               </Pressable>
 
               <Pressable
-                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#8BC4E8'}60`, backgroundColor: `${'#8BC4E8'}15` }]}
+                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#C9AE78'}60`, backgroundColor: `${'#C9AE78'}15` }]}
                 onPress={() => { setSummaryPerson('them'); Haptics.selectionAsync().catch(() => {}); }}
               >
-                <Ionicons name="layers-outline" size={13} color={summaryPerson === 'them' ? '#8BC4E8' : theme.textMuted} />
-                <Text style={[styles.personPillText, summaryPerson === 'them' && { color: '#8BC4E8' }]}>{selectedRelationship.name}</Text>
+                <Ionicons name="layers-outline" size={13} color={summaryPerson === 'them' ? '#C9AE78' : theme.textMuted} />
+                <Text style={[styles.personPillText, summaryPerson === 'them' && { color: '#C9AE78' }]}>{selectedRelationship.name}</Text>
                 <Text style={styles.personPillType}>{RELATIONSHIP_LABELS[selectedRelationship.relationship]}</Text>
               </Pressable>
 
@@ -407,7 +407,7 @@ export default function RelationshipsScreen() {
             <View style={styles.filterRow}>
               {([
                 { key: 'person1' as const, label: 'Your planets', activeColor: theme.textGold },
-                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#8BC4E8' },
+                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#C9AE78' },
                 { key: 'cross' as const, label: 'Cross-aspects', activeColor: '#E5E4E2' },
               ] as const).map(pill => {
                 const active = filterMode[pill.key];

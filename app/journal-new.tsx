@@ -29,6 +29,7 @@ import {
   type ArchetypeProfile,
   type ArchetypeJournalPrompt,
 } from '../services/journal/archetypeIntegration';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 type MoodKey = 'calm' | 'soft' | 'okay' | 'heavy' | 'stormy';
 
@@ -141,7 +142,7 @@ export default function NewJournalEntryScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(500)}>
             <Text style={styles.headerTitle}>Inner Weather</Text>
-            <Text style={styles.headerSubtitle}>How is your system feeling right now?</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>How is your system feeling right now?</GoldSubtitle>
           </Animated.View>
 
           {/* 1. Mood Selector */}
@@ -265,14 +266,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 16,
   },
-  closeBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'flex-end' },
+  closeBtn: { padding: 4 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 10 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
 
   headerTitle: {
-    fontSize: 32,
+    fontSize: 34,
     color: PALETTE.textMain,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Keyboard, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
+import { GoldSubtitle as _GoldSubtitle } from '../components/ui/GoldSubtitle'; // reserved for future subtitle
 import * as Haptics from 'expo-haptics';
 
 export default function SanctuaryWorkspace() {
@@ -42,16 +43,16 @@ export default function SanctuaryWorkspace() {
       <LinearGradient colors={['rgba(85, 65, 115, 0.08)', 'transparent']} style={styles.ambientTop} />
 
       {/* Header controls fade out when typing for focus */}
-      <View style={[styles.header, isKeyboardVisible && { opacity: 0.3 }]}>
+      <View style={styles.header}>
         <Pressable onPress={() => { Haptics.selectionAsync(); router.back(); }} style={styles.iconButton}>
           <Text style={styles.iconText}>×</Text>
         </Pressable>
-
-        <Text style={styles.headerTitle}>Sanctuary</Text>
-
         <Pressable onPress={handleSeal} style={styles.iconButton}>
           <Text style={styles.sealIconText}>⚲</Text>
         </Pressable>
+      </View>
+      <View style={[styles.titleArea, isKeyboardVisible && { opacity: 0.3 }]}>
+        <Text style={styles.headerTitle}>Sanctuary</Text>
       </View>
 
       <KeyboardAvoidingView style={styles.editorContainer} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -95,11 +96,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 16 },
   iconButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 22 },
   iconText: { color: '#FFF', fontSize: 24, lineHeight: 28 },
   sealIconText: { color: '#D9BF8C', fontSize: 20, transform: [{ rotate: '45deg' }] },
-  headerTitle: { fontSize: 16, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6 },
+  headerTitle: { fontSize: 34, color: '#F0EAD6', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 4 },
 
   editorContainer: { flex: 1, paddingHorizontal: 24 },
   textInput: { flex: 1, fontSize: 18, color: '#FFF', fontFamily: 'Georgia', lineHeight: 28, paddingTop: 20 },

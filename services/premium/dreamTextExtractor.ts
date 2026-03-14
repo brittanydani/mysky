@@ -88,8 +88,8 @@ function excerptAround(sentence: string, matchIndex: number, matchLen: number, m
   const start = Math.max(0, matchIndex - Math.floor(maxLen / 2));
   const end = Math.min(s.length, start + maxLen);
   const slice = s.slice(start, end).trim();
-  const prefix = start > 0 ? "\u2026" : "";
-  const suffix = end < s.length ? "\u2026" : "";
+  const prefix = start > 0 ? "…" : "";
+  const suffix = end < s.length ? "…" : "";
   return `${prefix}${slice}${suffix}`;
 }
 

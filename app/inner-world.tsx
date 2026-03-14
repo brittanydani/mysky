@@ -22,6 +22,7 @@ import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const PALETTE = {
   gold: '#D9BF8C',
@@ -138,7 +139,7 @@ export default function InnerWorldScreen() {
 
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Inner World</Text>
-            <Text style={styles.headerSubtitle}>Mind, values & cognitive patterns</Text>
+            <GoldSubtitle style={styles.headerSubtitle}>Mind, values & cognitive patterns</GoldSubtitle>
           </Animated.View>
 
           {/* Sync Status Banner */}
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, color: PALETTE.lavender, fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 24 },
+  header: { marginBottom: 32 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
