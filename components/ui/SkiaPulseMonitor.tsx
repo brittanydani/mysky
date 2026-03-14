@@ -256,12 +256,12 @@ export default function SkiaPulseMonitor({
 
             </Group>
           </Canvas>
-
-          <Text style={[styles.label, complete && styles.labelComplete]}>
-            {complete ? 'SEALED  ✦' : 'HOLD  TO  SEAL'}
-          </Text>
         </View>
       </GestureDetector>
+
+      <Text style={[styles.label, complete && styles.labelComplete]}>
+        {complete ? 'SEALED  ✶' : 'HOLD  TO  SEAL'}
+      </Text>
     </View>
   );
 }
@@ -275,9 +275,7 @@ const styles = StyleSheet.create({
   },
   container: {
     width:          SIZE,
-    height:         SIZE + 30,
-    justifyContent: 'center',
-    alignItems:     'center',
+    height:         SIZE,
   },
   label: {
     marginTop:     10,

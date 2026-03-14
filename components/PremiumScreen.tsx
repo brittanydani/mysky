@@ -15,6 +15,7 @@ import { config } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
 
 type PlanType = 'monthly' | 'yearly' | 'lifetime';
+type IoniconName = keyof typeof Ionicons.glyphMap;
 
 interface PremiumScreenProps {
   onClose?: () => void;
@@ -27,14 +28,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const [restoring, setRestoring] = useState(false);
 
-  /**
-   * Resolve display prices from live RevenueCat offerings when available,
-   * falling back to hardcoded config.ts prices when offline / loading.
-   * Apple requires the paywall to show the ACTUAL price the store will charge
-   * (Guideline 3.1.2) — live offering prices are locale-aware and currency-correct.
-   */
+  // Resolve display prices from live RevenueCat offerings
   const resolvedTiers = config.premium.tiers.map((tier) => {
-    if (!offerings) return tier; // offline fallback
+    if (!offerings) return tier;
 
     const identifierMap: Record<string, string[]> = {
       monthly: ['monthly', '$rc_monthly', 'mysky_monthly'],
@@ -47,12 +43,12 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       ids.some((id) => p.identifier.toLowerCase().includes(id.toLowerCase()))
     );
 
-    if (!pkg) return tier; // package not in offering — keep fallback
+    if (!pkg) return tier;
 
     return {
       ...tier,
-      price: pkg.product.priceString, // localized, e.g. "$4.99", "€4,99"
-      period: tier.period, // keep human-readable period
+      price: pkg.product.priceString,
+      period: tier.period,
     };
   });
 
@@ -65,6 +61,12 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       router.replace('/(tabs)/settings' as Href);
     }
   }, [router, onClose]);
+
+  const handleSelectPlan = useCallback((plan: PlanType) => {
+    if (loading || restoring) return;
+    setSelectedPlan(plan);
+    Haptics.selectionAsync().catch(() => {});
+  }, [loading, restoring]);
 
   const handlePurchase = useCallback(async () => {
     if (!offerings) {
@@ -95,8 +97,6 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     if (result.success) {
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       Alert.alert('Welcome to Deeper Sky ✨', 'Your premium features are now unlocked.');
-    } else if (result.userCancelled) {
-      // User cancelled — do nothing
     } else if (result.error) {
       Alert.alert('Purchase Failed', result.error);
     }
@@ -117,17 +117,35 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     }
   }, [restore]);
 
-  // Already premium — show confirmation
+  const openSubscriptions = useCallback(async () => {
+    try {
+      const url = Platform.select({
+        ios: 'https://apps.apple.com/account/subscriptions',
+        android: 'https://play.google.com/store/account/subscriptions',
+        default: 'https://apps.apple.com/account/subscriptions',
+      });
+      if (url) await Linking.openURL(url);
+    } catch {
+      // Fall through silently if linking fails
+    }
+  }, []);
+
+  const navigateToLegal = useCallback((path: '/terms' | '/privacy') => {
+    if (onClose) onClose();
+    setTimeout(() => router.push(path as Href), 350);
+  }, [onClose, router]);
+
+  // ── Active Premium State ──
   if (isPremium) {
     return (
       <View style={styles.container}>
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}>
+          <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}>
             <Pressable onPress={safeGoBack} style={styles.backButton}>
               <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
             </Pressable>
-            <View style={{ alignItems: 'center', marginBottom: 4 }}>
+            <View style={styles.diamondContainer}>
               <MySkyDiamondSkia size={140} />
             </View>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
@@ -141,7 +159,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.featureList}>
               {DEEPER_SKY_FEATURES.map((feature) => (
                 <View key={feature.id} style={styles.featureItem}>
-                  <Ionicons name={feature.icon as any} size={20} color={theme.primary} />
+                  <Ionicons name={feature.icon as IoniconName} size={20} color={theme.primary} />
                   <View style={styles.featureInfo}>
                     <Text style={styles.featureName}>{feature.name}</Text>
                     <Text style={styles.featureDesc}>{feature.premiumVersion}</Text>
@@ -152,18 +170,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             </Animated.View>
 
             <Pressable
-              onPress={async () => {
-                try {
-                  const url = Platform.select({
-                    ios: 'https://apps.apple.com/account/subscriptions',
-                    android: 'https://play.google.com/store/account/subscriptions',
-                    default: 'https://apps.apple.com/account/subscriptions',
-                  });
-                  await Linking.openURL(url);
-                } catch {
-                  // fall through to text instructions
-                }
-              }}
+              onPress={openSubscriptions}
               accessibilityRole="link"
               accessibilityLabel="Manage your subscription"
             >
@@ -181,6 +188,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     );
   }
 
+  // ── Paywall State ──
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -194,7 +202,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* Back button */}
@@ -223,7 +231,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             </Text>
           </Animated.View>
 
-          {/* ── Value Propositions (outcome-focused) ── */}
+          {/* ── Value Propositions ── */}
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
               { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#9D76C1' },
@@ -233,7 +241,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
-                  <Ionicons name={item.icon as any} size={22} color={item.color} />
+                  <Ionicons name={item.icon as IoniconName} size={22} color={item.color} />
                 </View>
                 <View style={styles.valueText}>
                   <Text style={styles.valueTitle}>{item.title}</Text>
@@ -243,7 +251,10 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             ))}
           </Animated.View>
 
-          {/* ── Anchor Pricing: Side-by-Side Cards ── */}
+          {/* Flexible space to push pricing to the bottom on larger screens */}
+          <View style={styles.spacer} />
+
+          {/* ── Pricing Cards ── */}
           <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.pricingRow}>
             {resolvedTiers.filter(t => t.id !== 'lifetime').map((tier) => {
               const isAnnual = tier.id === 'yearly';
@@ -251,10 +262,8 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               return (
                 <Pressable
                   key={tier.id}
-                  onPress={() => {
-                    setSelectedPlan(tier.id as PlanType);
-                    Haptics.selectionAsync().catch(() => {});
-                  }}
+                  onPress={() => handleSelectPlan(tier.id as PlanType)}
+                  disabled={loading || restoring}
                   style={[
                     styles.pricingCard,
                     isSelected && styles.pricingCardSelected,
@@ -271,7 +280,11 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   <Text style={styles.pricingPeriod}>
                     {isAnnual ? '12 Months' : '1 Month'}
                   </Text>
-                  <Text style={[styles.pricingPrice, isSelected && styles.pricingPriceSelected]}>
+                  <Text
+                    style={[styles.pricingPrice, isSelected && styles.pricingPriceSelected]}
+                    adjustsFontSizeToFit
+                    numberOfLines={1}
+                  >
                     {tier.price}
                   </Text>
                   <Text style={[styles.pricingMeta, isSelected && styles.pricingMetaSelected]}>
@@ -282,14 +295,12 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             })}
           </Animated.View>
 
-          {/* Lifetime option, smaller */}
+          {/* Lifetime option */}
           {resolvedTiers.find(t => t.id === 'lifetime') && (
             <Animated.View entering={FadeInDown.delay(550).duration(500)}>
               <Pressable
-                onPress={() => {
-                  setSelectedPlan('lifetime');
-                  Haptics.selectionAsync().catch(() => {});
-                }}
+                onPress={() => handleSelectPlan('lifetime')}
+                disabled={loading || restoring}
                 style={[
                   styles.lifetimeRow,
                   selectedPlan === 'lifetime' && styles.lifetimeRowSelected,
@@ -297,11 +308,15 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                 accessibilityRole="radio"
                 accessibilityState={{ selected: selectedPlan === 'lifetime' }}
               >
-                <View style={{ flex: 1 }}>
+                <View style={styles.lifetimeTextContainer}>
                   <Text style={styles.lifetimeLabel}>Lifetime Access</Text>
                   <Text style={styles.lifetimeDesc}>One-time purchase, forever yours</Text>
                 </View>
-                <Text style={[styles.lifetimePrice, selectedPlan === 'lifetime' && { color: '#D4B872' }]}>
+                <Text
+                  style={[styles.lifetimePrice, selectedPlan === 'lifetime' && { color: '#D4B872' }]}
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                >
                   {resolvedTiers.find(t => t.id === 'lifetime')?.price}
                 </Text>
               </Pressable>
@@ -310,12 +325,16 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
         </ScrollView>
 
         {/* ── Sticky Bottom CTA ── */}
-        <View style={[styles.stickyBottom, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.stickyBottom, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <Animated.View entering={FadeInUp.delay(600).duration(600)}>
             <Pressable
               onPress={handlePurchase}
-              disabled={loading}
-              style={({ pressed }) => [styles.ctaButton, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
+              disabled={loading || restoring}
+              style={({ pressed }) => [
+                styles.ctaButton,
+                pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] },
+                (loading || restoring) && { opacity: 0.7 },
+              ]}
             >
               <LinearGradient
                 colors={[theme.primary, theme.primaryDark]}
@@ -334,7 +353,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
 
           {/* Legal bar */}
           <View style={styles.legalBar}>
-            <Pressable onPress={handleRestore} disabled={restoring} hitSlop={12}>
+            <Pressable onPress={handleRestore} disabled={restoring || loading} hitSlop={12}>
               {restoring ? (
                 <ActivityIndicator size="small" color={theme.textMuted} />
               ) : (
@@ -342,23 +361,11 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               )}
             </Pressable>
             <Text style={styles.legalBarDot}>·</Text>
-            <Pressable
-              onPress={() => {
-                if (onClose) onClose();
-                setTimeout(() => router.push('/terms' as Href), 350);
-              }}
-              hitSlop={12}
-            >
+            <Pressable onPress={() => navigateToLegal('/terms')} disabled={loading} hitSlop={12}>
               <Text style={styles.legalBarLink}>Terms</Text>
             </Pressable>
             <Text style={styles.legalBarDot}>·</Text>
-            <Pressable
-              onPress={() => {
-                if (onClose) onClose();
-                setTimeout(() => router.push('/privacy' as Href), 350);
-              }}
-              hitSlop={12}
-            >
+            <Pressable onPress={() => navigateToLegal('/privacy')} disabled={loading} hitSlop={12}>
               <Text style={styles.legalBarLink}>Privacy</Text>
             </Pressable>
           </View>
@@ -386,7 +393,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: theme.spacing.lg,
+    paddingBottom: 24,
+  },
+  spacer: {
+    flex: 1,
+    minHeight: 24,
   },
 
   // ── Atmosphere ──
@@ -419,9 +432,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  diamondContainer: {
+    alignItems: 'center',
+    marginBottom: 4,
   },
 
   // ── Hero Eclipse ──
@@ -522,7 +538,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: theme.textPrimary,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-    marginBottom: 3,
+    marginBottom: 4,
   },
   valueDesc: {
     fontSize: 13,
@@ -561,7 +577,7 @@ const styles = StyleSheet.create({
   bestValueBadge: {
     backgroundColor: '#D4B872',
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 999,
     marginBottom: 12,
   },
@@ -582,6 +598,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.textPrimary,
     marginBottom: 4,
+    textAlign: 'center',
   },
   pricingPriceSelected: {
     color: '#FFF',
@@ -589,6 +606,7 @@ const styles = StyleSheet.create({
   pricingMeta: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.35)',
+    textAlign: 'center',
   },
   pricingMetaSelected: {
     color: '#D4B872',
@@ -604,11 +622,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
     backgroundColor: 'rgba(255,255,255,0.01)',
-    marginBottom: 24,
   },
   lifetimeRowSelected: {
     borderColor: 'rgba(212, 184, 114, 0.3)',
     backgroundColor: 'rgba(212, 184, 114, 0.03)',
+  },
+  lifetimeTextContainer: {
+    flex: 1,
+    paddingRight: 12,
   },
   lifetimeLabel: {
     fontSize: 14,
@@ -618,22 +639,21 @@ const styles = StyleSheet.create({
   lifetimeDesc: {
     fontSize: 12,
     color: theme.textMuted,
-    marginTop: 2,
+    marginTop: 4,
   },
   lifetimePrice: {
     fontSize: 20,
     fontWeight: '700',
     color: theme.textPrimary,
-    marginLeft: 12,
   },
 
   // ── Sticky Bottom ──
   stickyBottom: {
-    paddingTop: 12,
+    paddingTop: 16,
     paddingHorizontal: theme.spacing.lg,
-    backgroundColor: 'rgba(2, 8, 23, 0.85)',
+    backgroundColor: 'rgba(2, 8, 23, 0.95)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.04)',
+    borderTopColor: 'rgba(255,255,255,0.06)',
   },
   ctaButton: {
     width: '100%',
@@ -648,6 +668,8 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 32,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 60,
   },
   ctaText: {
     fontSize: 17,
@@ -659,23 +681,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 14,
+    marginTop: 16,
     gap: 12,
   },
   legalBarLink: {
     fontSize: 12,
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.4)',
   },
   legalBarDot: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.15)',
+    color: 'rgba(255,255,255,0.2)',
   },
   legalMicro: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.25)',
+    color: 'rgba(255,255,255,0.3)',
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 10,
     lineHeight: 14,
   },
 
@@ -684,14 +706,16 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: 'serif',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.3,
     marginBottom: theme.spacing.sm,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: theme.textSecondary,
     lineHeight: 22,
+    textAlign: 'center',
   },
   featureList: {
     marginBottom: theme.spacing.xl,
@@ -700,9 +724,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
+    borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   featureInfo: {
     flex: 1,
@@ -711,7 +735,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: theme.textPrimary,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   featureDesc: {
     fontSize: 13,
@@ -723,17 +747,6 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
     textAlign: 'center',
     marginTop: theme.spacing.xl,
-    fontStyle: 'italic',
-  },
-  trustSection: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    gap: 4,
-  },
-  trustText: {
-    fontSize: 13,
-    color: theme.textMuted,
-    textAlign: 'center',
     fontStyle: 'italic',
   },
 });

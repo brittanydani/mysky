@@ -1,5 +1,6 @@
 import Foundation
 import WidgetKit
+import React
 
 // MARK: - React Native native module
 // Exposed to JS via WidgetDataBridgeObjC.m using RCT_EXTERN_MODULE.

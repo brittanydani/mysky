@@ -8,7 +8,6 @@
 import React from 'react';
 import { Modal, View, StyleSheet, Platform } from 'react-native';
 import PremiumScreen from './PremiumScreen';
-import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 
 interface PremiumModalProps {
   visible: boolean;
@@ -27,11 +26,6 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
       transparent={false}
     >
       <View style={styles.container}>
-        {/* StarField is placed here to provide a consistent backdrop 
-          while PremiumScreen content scrolls on top of it.
-        */}
-        <SkiaDynamicCosmos />
-        
         <View style={styles.content}>
           <PremiumScreen onClose={onClose} />
         </View>

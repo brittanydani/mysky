@@ -219,6 +219,7 @@ export interface CheckInInput {
   wins?: string;
   challenges?: string;
   timeOfDay?: TimeOfDay;       // If not provided, auto-detected from current time
+  date?: string;               // YYYY-MM-DD — if omitted, defaults to today (enables past-day editing)
 }
 
 /** Auto-captured astrology context at the moment of a check-in. */

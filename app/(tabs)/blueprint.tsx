@@ -30,8 +30,10 @@ import { logger } from '../../utils/logger';
 const PALETTE = {
   gold: '#D9BF8C',
   silverBlue: '#6E8CB4',
-  rose: '#D98C8C',
+  rose: '#D4A3B3',
   sage: '#8CBEAA',
+  lavender: '#A89BC8',
+  emerald: '#6EBF8B',
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.6)',
   glassBorder: 'rgba(255,255,255,0.08)',
@@ -49,39 +51,53 @@ interface BlueprintCard {
 
 const CARDS: BlueprintCard[] = [
   {
-    title: 'Natal Chart',
-    description: 'Planets, houses, and aspects mapping your arrival.',
-    icon: '⚝',
-    iconStyle: { color: PALETTE.gold },
-    gradientColors: ['rgba(217, 191, 140, 0.1)', 'transparent'],
-    route: '/(tabs)/chart' as Href,
+    title: 'Inner World',
+    description: 'Core Values, Jungian Archetypes, and Cognitive Style — your mind\'s blueprint.',
+    icon: '◈',
+    iconStyle: { color: PALETTE.lavender },
+    gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
+    route: '/inner-world' as Href,
+  },
+  {
+    title: 'Body & Nervous System',
+    description: 'Somatic map and trigger log — how your body holds experience.',
+    icon: '◍',
+    iconStyle: { color: PALETTE.sage },
+    gradientColors: ['rgba(140, 190, 170, 0.1)', 'transparent'],
+    route: '/body-nervous' as Href,
+  },
+  {
+    title: 'Relational Mirror',
+    description: 'Attachment tendencies and nervous system patterns you notice in connection.',
+    icon: '⚯',
+    iconStyle: { color: PALETTE.rose },
+    gradientColors: ['rgba(212, 163, 179, 0.1)', 'transparent'],
+    route: '/relationship-patterns' as Href,
+  },
+  {
+    title: 'Healing Space',
+    description: 'Shadow work, inner child needs, and restorative anchors.',
+    icon: '⚕',
+    iconStyle: { color: PALETTE.emerald },
+    gradientColors: ['rgba(110, 191, 139, 0.1)', 'transparent'],
+    route: '/(tabs)/healing' as Href,
+    premium: true,
   },
   {
     title: 'Life Narrative',
-    description: '10 psychological chapters written from your cosmic data.',
+    description: '10 psychological chapters drawn from your natal chart.',
     icon: '✧',
     iconStyle: { color: PALETTE.silverBlue },
     gradientColors: ['rgba(110, 140, 180, 0.1)', 'transparent'],
     route: '/(tabs)/story' as Href,
-    premium: true,
   },
   {
-    title: 'Connections',
-    description: 'Synastry, compatibility scores, and relational dynamics.',
-    icon: '⚯',
-    iconStyle: { color: PALETTE.rose },
-    gradientColors: ['rgba(217, 140, 140, 0.1)', 'transparent'],
-    route: '/(tabs)/relationships' as Href,
-    premium: true,
-  },
-  {
-    title: 'Healing Paths',
-    description: 'Shadow work, inner child needs, and restorative anchors.',
-    icon: '⚕',
-    iconStyle: { color: PALETTE.sage },
-    gradientColors: ['rgba(140, 190, 170, 0.1)', 'transparent'],
-    route: '/(tabs)/healing' as Href,
-    premium: true,
+    title: 'Cosmic Blueprint',
+    description: 'Planets, houses, and aspects mapping the moment of your arrival.',
+    icon: '⚝',
+    iconStyle: { color: 'rgba(217,191,140,0.65)' },
+    gradientColors: ['rgba(217, 191, 140, 0.07)', 'transparent'],
+    route: '/(tabs)/chart' as Href,
   },
 ];
 
@@ -132,8 +148,8 @@ export default function BlueprintScreen() {
             <Text style={styles.headerTitle}>Blueprint</Text>
             <Text style={styles.headerSubtitle}>
               {chartName
-                ? `${chartName} · Identity architecture`
-                : 'Identity architecture · Pattern origins'}
+                ? `${chartName} · Know yourself deeply`
+                : 'Values, patterns, body & mind'}
             </Text>
           </Animated.View>
 

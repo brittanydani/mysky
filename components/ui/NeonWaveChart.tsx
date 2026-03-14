@@ -1,14 +1,14 @@
 /**
  * NeonWaveChart.tsx
- * MySky — Smooth Area Line Chart (Skia)
+ * MySky — Premium Smooth Area Line Chart (Skia)
  *
- * Three smooth bezier area series:
- *   Mood   #C9AE78  · soft gold
- *   Energy #6fb3d3  · muted cyan
- *   Stress #CC6666  · dusty rose
+ * Three smooth bezier area series with multi-layer glow:
+ *   Mood   #E2C27A  · rich champagne gold
+ *   Energy #7DD3F0  · bright azure
+ *   Stress #E8807A  · vivid rose coral
  *
  * Layout: Y-axis labels | plot area | X-axis date labels
- * Interaction: pan-scrub → animated vertical line + floating tooltip
+ * Interaction: pan-scrub → animated vertical line + frosted glass tooltip
  *
  * No R3F · No THREE · Pure @shopify/react-native-skia + Reanimated
  */
@@ -24,6 +24,7 @@ import {
   Circle,
   BlurMask,
   Group,
+  Rect,
   vec,
 } from '@shopify/react-native-skia';
 import {
@@ -41,9 +42,9 @@ import { DailyCheckIn } from '../../services/patterns/types';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
-const MOOD_COLOR   = '#C9AE78';
-const ENERGY_COLOR = '#6fb3d3';
-const STRESS_COLOR = '#CC6666';
+const MOOD_COLOR   = '#E2C27A';  // rich champagne gold
+const ENERGY_COLOR = '#7DD3F0';  // bright azure
+const STRESS_COLOR = '#E8807A';  // vivid rose coral
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -252,6 +253,15 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
     <View style={[styles.root, { width, height }]}>
       {/* ── Skia canvas — all chart drawing ── */}
       <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+        {/* Plot area ambient background */}
+        <Rect x={PAD_L} y={PAD_T} width={plotW} height={plotH}>
+          <LinearGradient
+            start={vec(PAD_L, PAD_T)}
+            end={vec(PAD_L, plotBottom)}
+            colors={['rgba(40,30,70,0.30)', 'rgba(8,8,20,0.08)']}
+          />
+        </Rect>
+
         {/* Horizontal grid lines */}
         {gridRows.map((g, i) => (
           <React.Fragment key={i}>
@@ -259,7 +269,7 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
               path={g.path}
               style="stroke"
               strokeWidth={1}
-              color="rgba(255,255,255,0.07)"
+              color="rgba(255,255,255,0.11)"
             />
           </React.Fragment>
         ))}
@@ -273,26 +283,38 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
               <LinearGradient
                 start={vec(PAD_L, PAD_T)}
                 end={vec(PAD_L, plotBottom)}
-                colors={[withAlpha(s.color, 0.22), withAlpha(s.color, 0.00)]}
+                colors={[withAlpha(s.color, 0.38), withAlpha(s.color, 0.14), withAlpha(s.color, 0.00)]}
+                positions={[0, 0.52, 1]}
               />
             </Path>
 
-            {/* Soft glow beneath the line */}
+            {/* Outer whisper glow */}
             <Path
               path={s.linePath}
               style="stroke"
-              strokeWidth={5}
+              strokeWidth={16}
               strokeCap="round"
-              color={withAlpha(s.color, 0.15)}
+              color={withAlpha(s.color, 0.07)}
             >
-              <BlurMask blur={6} style="solid" />
+              <BlurMask blur={20} style="solid" />
+            </Path>
+
+            {/* Inner glow */}
+            <Path
+              path={s.linePath}
+              style="stroke"
+              strokeWidth={7}
+              strokeCap="round"
+              color={withAlpha(s.color, 0.24)}
+            >
+              <BlurMask blur={9} style="solid" />
             </Path>
 
             {/* Crisp line */}
             <Path
               path={s.linePath}
               style="stroke"
-              strokeWidth={2.5}
+              strokeWidth={2.8}
               strokeJoin="round"
               strokeCap="round"
               color={s.color}
@@ -302,10 +324,11 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
             {s.pts.map((pt, i) => (
               <React.Fragment key={i}>
               <Group>
-                <Circle cx={pt.x} cy={pt.y} r={4} color={withAlpha(s.color, 0.12)}>
-                  <BlurMask blur={4} style="normal" />
+                <Circle cx={pt.x} cy={pt.y} r={9} color={withAlpha(s.color, 0.20)}>
+                  <BlurMask blur={9} style="normal" />
                 </Circle>
-                <Circle cx={pt.x} cy={pt.y} r={2} color={s.color} />
+                <Circle cx={pt.x} cy={pt.y} r={2.8} color={s.color} />
+                <Circle cx={pt.x} cy={pt.y} r={1.0} color="rgba(255,255,255,0.80)" />
               </Group>
               </React.Fragment>
             ))}
@@ -316,23 +339,23 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
         {/* ── Animated scrub indicator: glowing dots that snap to each series line ── */}
         <Group opacity={tooltipVisible}>
           {/* Mood — champagne gold */}
-          <Circle cx={scrubX} cy={dotYMood} r={11} color={withAlpha(MOOD_COLOR, 0.15)} blendMode="screen">
-            <BlurMask blur={9} style="solid" />
+          <Circle cx={scrubX} cy={dotYMood} r={18} color={withAlpha(MOOD_COLOR, 0.18)} blendMode="screen">
+            <BlurMask blur={14} style="solid" />
           </Circle>
-          <Circle cx={scrubX} cy={dotYMood} r={4.5} color={MOOD_COLOR} />
-          <Circle cx={scrubX} cy={dotYMood} r={1.8} color="rgba(255,255,255,0.9)" />
-          {/* Energy — soft blue */}
-          <Circle cx={scrubX} cy={dotYEnergy} r={11} color={withAlpha(ENERGY_COLOR, 0.15)} blendMode="screen">
-            <BlurMask blur={9} style="solid" />
+          <Circle cx={scrubX} cy={dotYMood} r={5.5} color={MOOD_COLOR} />
+          <Circle cx={scrubX} cy={dotYMood} r={2.0} color="rgba(255,255,255,0.92)" />
+          {/* Energy — azure */}
+          <Circle cx={scrubX} cy={dotYEnergy} r={18} color={withAlpha(ENERGY_COLOR, 0.18)} blendMode="screen">
+            <BlurMask blur={14} style="solid" />
           </Circle>
-          <Circle cx={scrubX} cy={dotYEnergy} r={4.5} color={ENERGY_COLOR} />
-          <Circle cx={scrubX} cy={dotYEnergy} r={1.8} color="rgba(255,255,255,0.9)" />
+          <Circle cx={scrubX} cy={dotYEnergy} r={5.5} color={ENERGY_COLOR} />
+          <Circle cx={scrubX} cy={dotYEnergy} r={2.0} color="rgba(255,255,255,0.92)" />
           {/* Stress — rose */}
-          <Circle cx={scrubX} cy={dotYStress} r={11} color={withAlpha(STRESS_COLOR, 0.15)} blendMode="screen">
-            <BlurMask blur={9} style="solid" />
+          <Circle cx={scrubX} cy={dotYStress} r={18} color={withAlpha(STRESS_COLOR, 0.18)} blendMode="screen">
+            <BlurMask blur={14} style="solid" />
           </Circle>
-          <Circle cx={scrubX} cy={dotYStress} r={4.5} color={STRESS_COLOR} />
-          <Circle cx={scrubX} cy={dotYStress} r={1.8} color="rgba(255,255,255,0.9)" />
+          <Circle cx={scrubX} cy={dotYStress} r={5.5} color={STRESS_COLOR} />
+          <Circle cx={scrubX} cy={dotYStress} r={2.0} color="rgba(255,255,255,0.92)" />
         </Group>
 
       </Canvas>
@@ -381,6 +404,8 @@ export function NeonWaveChart({ checkIns, width, height = 240 }: NeonWaveChartPr
             <View style={styles.tooltipRim} />
             {/* Top highlight */}
             <View style={styles.tooltipHighlight} />
+            {/* Gold shimmer accent bar */}
+            <View style={styles.tooltipAccentBar} />
             {/* Content */}
             <View style={styles.tooltipContent}>
               <Text style={styles.tooltipDate}>{dateLabel}</Text>
@@ -424,31 +449,31 @@ const styles = StyleSheet.create({
     position:    'absolute',
     left:        0,
     width:       PAD_L - 4,
-    color:       'rgba(255,255,255,0.28)',
+    color:       'rgba(255,255,255,0.40)',
     fontSize:    9,
-    fontWeight:  '600',
+    fontWeight:  '700',
     textAlign:   'right',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   xLabel: {
     position:    'absolute',
     width:       44,
     textAlign:   'center',
-    color:       'rgba(255,255,255,0.28)',
+    color:       'rgba(255,255,255,0.40)',
     fontSize:    9,
-    fontWeight:  '600',
-    letterSpacing: 0.3,
+    fontWeight:  '700',
+    letterSpacing: 0.5,
   },
   scrubLine: {
     position:        'absolute',
-    width:           1.5,
-    backgroundColor: 'rgba(201,174,120,0.75)',  // champagne gold
+    width:           2,
+    backgroundColor: 'rgba(226,194,122,0.92)',  // rich champagne gold
     borderRadius:    1,
-    shadowColor:     '#C9AE78',
+    shadowColor:     '#E2C27A',
     shadowOffset:    { width: 0, height: 0 },
-    shadowOpacity:   0.9,
-    shadowRadius:    5,
-    elevation:       4,
+    shadowOpacity:   1.0,
+    shadowRadius:    9,
+    elevation:       6,
   },
   // ── Tooltip shell (frosted glass) ────────────────────────────────────────
   tooltipShell: {
@@ -459,19 +484,19 @@ const styles = StyleSheet.create({
     // Elevation shadow
     shadowColor:     '#000',
     shadowOffset:    { width: 0, height: 6 },
-    shadowOpacity:   0.45,
-    shadowRadius:    16,
-    elevation:       10,
+    shadowOpacity:   0.65,
+    shadowRadius:    22,
+    elevation:       14,
   },
   tooltipTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 8, 23, 0.55)',
+    backgroundColor: 'rgba(4, 8, 28, 0.65)',
   },
   tooltipRim: {
     ...StyleSheet.absoluteFillObject,
     borderRadius:  14,
     borderWidth:   1,
-    borderColor:   'rgba(255, 244, 214, 0.14)',
+    borderColor:   'rgba(226, 194, 122, 0.22)',
   },
   tooltipHighlight: {
     position:        'absolute',
@@ -479,8 +504,16 @@ const styles = StyleSheet.create({
     left:            12,
     right:           12,
     height:          1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius:    1,
+  },
+  tooltipAccentBar: {
+    height:          2.5,
+    marginHorizontal: 14,
+    marginTop:       10,
+    marginBottom:    -4,
+    backgroundColor: 'rgba(226, 194, 122, 0.38)',
+    borderRadius:    2,
   },
   tooltipContent: {
     padding: 10,

@@ -25,7 +25,6 @@ import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
-import * as Notifications from 'expo-notifications';
 
 // ── Cinematic Error Boundary ──
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -238,13 +237,16 @@ export default function RootLayout() {
 
   // Deep-link routing from local notification taps
   useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener(response => {
-      const route = response.notification.request.content.data?.route as string | undefined;
-      if (route) {
-        router.push(route as any);
-      }
-    });
-    return () => sub.remove();
+    let sub: { remove: () => void } | undefined;
+    import('expo-notifications').then((Notifications) => {
+      sub = Notifications.addNotificationResponseReceivedListener(response => {
+        const route = response.notification.request.content.data?.route as string | undefined;
+        if (route) {
+          router.push(route as any);
+        }
+      });
+    }).catch(() => {});
+    return () => sub?.remove();
   }, [router]);
 
   const handlePrivacyConsent = async (granted: boolean) => {
@@ -279,7 +281,7 @@ export default function RootLayout() {
 
   const handleOnboardingComplete = () => {
     setOnboardingComplete(true);
-    router.replace('/(tabs)/mood');
+    router.replace('/(tabs)/home');
   };
 
   if (checkingConsent || !dbReady) {
@@ -326,11 +328,17 @@ export default function RootLayout() {
 
                   {/* Onboarding & Auth */}
                   <Stack.Screen name="onboarding" />
-                  <Stack.Screen name="(auth)/sign-in" options={{ presentation: 'modal' }} />
+                  <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
 
                   {/* --- HIDDEN SCREENS (MODALS) --- */}
                   {/* Slide up over the tab bar — dedicated workspaces */}
-                  <Stack.Screen name="checkin" options={{ presentation: 'modal' }} />
+                  <Stack.Screen
+                    name="checkin"
+                    options={{
+                      presentation: 'modal',
+                      contentStyle: { backgroundColor: '#0A0A0C' },
+                    }}
+                  />
                   <Stack.Screen
                     name="sanctuary"
                     options={{

@@ -47,6 +47,7 @@ import { ChartTiedPromptsService, ChartTiedPrompt, JournalPromptSet } from '../s
 import { NatalChart } from '../services/astrology/types';
 import { ShadowQuoteEngine, ShadowQuoteResult, ShadowQuote } from '../services/astrology/shadowQuotes';
 import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from '../services/journal/promptEngine';
+import { getArchetypeProfile, getArchetypePrompt, ArchetypeProfile, ArchetypeJournalPrompt } from '../services/journal/archetypeIntegration';
 
 import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
 
@@ -99,6 +100,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [showCloseQuote, setShowCloseQuote] = useState(false);
   const closeQuoteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [archetypeProfile, setArchetypeProfile] = useState<ArchetypeProfile | null>(null);
+  const [archetypePrompt, setArchetypePrompt] = useState<ArchetypeJournalPrompt | null>(null);
+
   useEffect(() => {
     return () => {
       if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
@@ -146,6 +150,22 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   useEffect(() => {
     if (visible) loadUserChart();
   }, [visible]);
+
+  useEffect(() => {
+    if (visible) {
+      getArchetypeProfile().then((profile) => {
+        setArchetypeProfile(profile);
+        if (profile) setArchetypePrompt(getArchetypePrompt(profile, mood));
+      });
+    }
+  }, [visible]);
+
+  // Re-derive prompt whenever the user changes their mood
+  useEffect(() => {
+    if (archetypeProfile) {
+      setArchetypePrompt(getArchetypePrompt(archetypeProfile, mood));
+    }
+  }, [mood, archetypeProfile]);
 
   useEffect(() => {
     if (isPremium && userChart) {
@@ -374,6 +394,31 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
                   {shadowResult && <ShadowQuoteInline text={shadowResult.quote.text} delay={100} />}
 
+                  {/* Archetype Lens — mood-sensitive growth prompt */}
+                  {archetypePrompt && (
+                    <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.archetypePromptCard}>
+                      <View style={[styles.archetypeAccent, { backgroundColor: archetypePrompt.archetypeColor }]} />
+                      <View style={styles.archetypePromptInner}>
+                        <Text style={[styles.archetypeLabel, { color: archetypePrompt.archetypeColor }]}>
+                          {archetypePrompt.archetypeName.toUpperCase()}
+                        </Text>
+                        <Text style={styles.archetypeContext}>{archetypePrompt.context}</Text>
+                        <Pressable
+                          onPress={() => {
+                            setContent((prev) =>
+                              prev.trim()
+                                ? `${prev}\n\n${archetypePrompt.question}`
+                                : archetypePrompt.question,
+                            );
+                            Haptics.selectionAsync().catch(() => {});
+                          }}
+                        >
+                          <Text style={styles.archetypeQuestion}>{archetypePrompt.question}</Text>
+                        </Pressable>
+                      </View>
+                    </Animated.View>
+                  )}
+
                   {/* Prompt Engine UI */}
                   {showPrompts && (isPremium && enginePromptSet ? (
                     <Animated.View entering={FadeInDown.duration(400)} style={styles.promptZone}>
@@ -487,6 +532,14 @@ const styles = StyleSheet.create({
   
   contentBox: { minHeight: 240 },
   contentInput: { padding: 16, color: PALETTE.textMain, fontSize: 16, lineHeight: 26 },
+
+  // ── Archetype lens prompt card ──
+  archetypePromptCard: { flexDirection: 'row', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.025)', marginBottom: 16 },
+  archetypeAccent: { width: 3 },
+  archetypePromptInner: { flex: 1, padding: 14, gap: 4 },
+  archetypeLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
+  archetypeContext: { fontSize: 12, color: 'rgba(255,255,255,0.40)', fontStyle: 'italic', lineHeight: 17 },
+  archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), lineHeight: 21, marginTop: 2 },
   
   footer: { marginTop: 24 },
   saveBtn: { borderRadius: 16, overflow: 'hidden', },

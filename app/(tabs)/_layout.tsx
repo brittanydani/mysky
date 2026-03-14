@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +15,11 @@ const VISIBLE_TABS = new Set(['home', 'growth', 'journal', 'blueprint', 'setting
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
   const visibleRoutes = state.routes.filter((r: any) => VISIBLE_TABS.has(r.name));
+
+  // Hide the tab bar entirely on non-navigational routes (e.g. premium paywall,
+  // modals pushed into the tab stack) so the floating bar doesn't overlay content.
+  const currentRouteName = state.routes[state.index]?.name;
+  if (!VISIBLE_TABS.has(currentRouteName)) return null;
 
   return (
     <View style={[styles.tabBarContainer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
@@ -38,7 +44,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           const size = 22;
           const sw = 1.5;
 
-          const Icon = () => {
+          const icon = (() => {
             switch (route.name) {
               case 'home':      return <Home color={color} size={size} strokeWidth={sw} />;
               case 'growth':    return <Activity color={color} size={size} strokeWidth={sw} />;
@@ -47,12 +53,12 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
               case 'settings':  return <Settings color={color} size={size} strokeWidth={sw} />;
               default:          return null;
             }
-          };
+          })();
 
           return (
             <Pressable key={route.key} onPress={onPress} style={styles.tabItem}>
               <View style={styles.iconWrapper}>
-                <Icon />
+                {icon}
                 {isFocused && <View style={styles.activeIndicator} />}
               </View>
               <Text style={[styles.tabLabel, { color: isFocused ? '#FFF' : 'rgba(255,255,255,0.4)' }]}>
@@ -67,8 +73,9 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 }
 
 export default function TabLayout() {
+  const renderTabBar = useCallback((props: any) => <CustomTabBar {...props} />, []);
   return (
-    <Tabs tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
+    <Tabs tabBar={renderTabBar} screenOptions={{ headerShown: false }}>
       {/* ── 5 visible navigation hubs ── */}
       <Tabs.Screen name="home"      options={{ title: 'Today' }} />
       <Tabs.Screen name="growth"    options={{ title: 'Patterns' }} />

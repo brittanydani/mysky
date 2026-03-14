@@ -92,14 +92,14 @@ export default function SanctuaryWorkspace() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#050507' },
+  container: { flex: 1, backgroundColor: '#020817' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 20 },
   iconButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 22 },
   iconText: { color: '#FFF', fontSize: 24, lineHeight: 28 },
   sealIconText: { color: '#D9BF8C', fontSize: 20, transform: [{ rotate: '45deg' }] },
-  headerTitle: { fontSize: 16, color: '#FFF', fontFamily: 'Georgia', letterSpacing: 2, textTransform: 'uppercase', opacity: 0.5 },
+  headerTitle: { fontSize: 16, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6 },
 
   editorContainer: { flex: 1, paddingHorizontal: 24 },
   textInput: { flex: 1, fontSize: 18, color: '#FFF', fontFamily: 'Georgia', lineHeight: 28, paddingTop: 20 },

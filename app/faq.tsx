@@ -50,7 +50,7 @@ export default function FAQScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 13, 2026</Text>
 
           <View style={styles.faqSection}>
             <View style={styles.faqCard}>
@@ -110,9 +110,17 @@ export default function FAQScreen() {
               Uninstalling the app permanently erases all locally stored data (SQLite database and SecureStore). If you created a backup (.msky file), your data can be restored on a new installation. If you created an account for AI Reflection Insights, you can request account deletion by contacting support.
             </Text>
 
-            <Text style={styles.question}>Is MySky medical or therapeutic advice?</Text>
+            <Text style={styles.question}>Is MySky a mental health app or therapy substitute?</Text>
             <Text style={styles.answer}>
-              No. MySky does not provide medical, psychological, or therapeutic advice. All content — including astrological guidance, dream reflections, healing insights, attachment analysis, and behavioral trends — is for self-reflection purposes only. If you are in crisis, please contact emergency services.
+              No. MySky is a self-reflection and personal growth tool. None of its features — including somatic body mapping, nervous system trigger logs, core values exercises, psychological archetype profiles, cognitive style assessments, astrological guidance, dream reflections, healing path prompts, or emotional pattern analysis — constitute therapy, counseling, psychological diagnosis, or medical advice of any kind. These tools are for self-awareness and personal exploration only.
+            </Text>
+            <Text style={styles.answer}>
+              {'If you are in crisis or need mental health support, please reach out:\n\n'}{'• Call or text 988 (Suicide & Crisis Lifeline, US)\n'}{'• Text HOME to 741741 (Crisis Text Line)\n'}{'• Visit findahelpline.com for international resources\n'}{'• Call 911 or your local emergency number if in immediate danger'}
+            </Text>
+
+            <Text style={styles.question}>What self-discovery tools does MySky include?</Text>
+            <Text style={styles.answer}>
+              MySky includes tools for exploring yourself from multiple angles: a <Text style={styles.highlight}>Core Values Inventory</Text> (rank what matters most and watch contradictions surface over time), a <Text style={styles.highlight}>Jungian Archetype Profile</Text> (discover patterns like Hero, Caregiver, Seeker through reflection prompts — not birth data), a <Text style={styles.highlight}>Cognitive Style</Text> self-assessment, a <Text style={styles.highlight}>Somatic Map</Text> for tracking where emotions live in your body, and a <Text style={styles.highlight}>Trigger Log</Text> for building a personal nervous system profile. All data stays on your device, encrypted.
             </Text>
 
             <Text style={styles.question}>How do I manage my subscription?</Text>
@@ -140,7 +148,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
@@ -152,12 +160,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    color: theme.textPrimary, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
+    fontSize: 16,
+    color: '#FFF',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    opacity: 0.6,
   },
-
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
 

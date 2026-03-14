@@ -253,7 +253,7 @@ export default function OnboardingModal({
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Reset everything when modal hides ──
+  // ── Reset everything when modal hides; refresh date/time defaults when it opens ──
   useEffect(() => {
     if (!visible) {
       setStep('welcome');
@@ -274,6 +274,11 @@ export default function OnboardingModal({
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
       if (abortControllerRef.current) abortControllerRef.current.abort();
       timeoutRef.current = null;
+    } else {
+      // Refresh the time default so the picker reflects "now" rather than the
+      // stale time captured when the component first mounted.
+      setBirthDate(new Date());
+      setBirthTime(new Date());
     }
   }, [visible]);
 

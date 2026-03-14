@@ -28,6 +28,7 @@ import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } fr
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';
+import LunarWeekDropdown from '../../components/ui/LunarWeekDropdown';
 
 
 // ── Custom Skia Suite ──
@@ -41,6 +42,7 @@ import { NatalChart, BirthData } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
+import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 
@@ -159,7 +161,8 @@ export default function HomeScreen() {
 
           // Hydrate daily loop (streak, weekly summary, insights)
           try {
-            const loopData = await getDailyLoopData(chart.id);
+            const selfKnowledge = await loadSelfKnowledgeContext();
+            const loopData = await getDailyLoopData(chart.id, selfKnowledge);
             setDailyLoop(loopData);
           } catch (err) {
             logger.error('Daily loop data failed:', err);
@@ -327,8 +330,8 @@ export default function HomeScreen() {
                 })}
               </Text>
             </View>
-            {/* Balance Aura — biometric signature reacting to mood/energy */}
-            <View style={styles.balanceAura} />
+            {/* Lunar Week Dropdown — tap orb → Cosmic Context · tap ▾ → 7-day forecast */}
+            <LunarWeekDropdown />
           </Animated.View>
 
           {/* ── Streak Row ── */}
@@ -516,60 +519,6 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* ── Explore Cards ── */}
-          <Animated.View
-            entering={FadeInDown.delay(1050).duration(600)}
-            style={styles.sectionBlock}
-          >
-            <Text style={styles.sectionTitle}>Explore Your Blueprint</Text>
-            <View style={styles.quickLinksRow}>
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/story' as Href)}
-              >
-                <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: `${PALETTE.gold}15` }]}>
-                    <Ionicons name="compass-outline" size={22} color={PALETTE.gold} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Story</Text>
-                    <Text style={styles.quickLinkSub}>Your framework</Text>
-                  </View>
-                </View>
-              </Pressable>
-
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/growth' as Href)}
-              >
-                <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: `${PALETTE.emerald}15` }]}>
-                    <Ionicons name="trending-up-outline" size={22} color={PALETTE.emerald} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Patterns</Text>
-                    <Text style={styles.quickLinkSub}>Analysis & connections</Text>
-                  </View>
-                </View>
-              </Pressable>
-
-              <Pressable
-                style={styles.quickLink}
-                onPress={() => router.push('/(tabs)/chart' as Href)}
-              >
-                <View style={styles.quickLinkGradient}>
-                  <View style={[styles.quickLinkIconWrap, { backgroundColor: `${PALETTE.silverBlue}15` }]}>
-                    <Ionicons name="grid-outline" size={22} color={PALETTE.silverBlue} />
-                  </View>
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={styles.quickLinkTitle}>Profile</Text>
-                    <Text style={styles.quickLinkSub}>Your blueprint</Text>
-                  </View>
-                </View>
-              </Pressable>
-            </View>
-          </Animated.View>
-
           {/* ── Premium Teaser ── */}
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
@@ -696,7 +645,7 @@ const fabStyles = StyleSheet.create({
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+  container: { flex: 1, backgroundColor: '#020817' },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: 'rgba(255, 255, 255, 0.9)',
@@ -724,7 +673,7 @@ const styles = StyleSheet.create({
   greeting: {
     color: '#FFFFFF',
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '300',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   dateLabel: {
@@ -791,12 +740,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: PALETTE.textMain,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontWeight: '400',
     lineHeight: 28,
     marginBottom: 8,
   },
   premiumPreviewSub: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: 'rgba(255,255,255,0.6)',
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -1049,11 +999,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.5)',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
+    fontSize: 18,
+    fontWeight: '300',
+    color: '#FFFFFF',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginBottom: 12,
   },
   quickLinksRow: {
@@ -1082,13 +1031,14 @@ const styles = StyleSheet.create({
   },
   quickLinkTitle: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '400',
     color: '#FFFFFF',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     textAlign: 'center',
   },
   quickLinkSub: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     marginTop: 2,
   },

@@ -302,7 +302,7 @@ export default function NotificationSettings() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#050507' },
+  container: { flex: 1, backgroundColor: '#020817' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
   header: {
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 60,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingBottom: 24,
   },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },

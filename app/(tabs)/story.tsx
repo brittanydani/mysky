@@ -4,8 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
+import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
 import { applyStoryLabels } from '../../constants/storyLabels';
@@ -32,20 +33,22 @@ function toRoman(n: number): string {
   return result;
 }
 
-// ── Cinematic Palette ──
+// ── Cinematic Palette (Harmonized) ──
 const PALETTE = {
-  gold: '#D4B872',
-  bg: '#0A0A0C', // Unified OLED Black
+  gold: '#D9BF8C', // Matched to Blueprint Hub
+  silverBlue: '#8BC4E8',
+  bg: '#0A0A0C',
   textMain: '#FFFFFF',
+  textMuted: 'rgba(255,255,255,0.55)',
   glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 const FORCE_COLORS_MAP: Record<string, string> = {
-  'Sun': '#C9AE78',
+  'Sun': '#D9BF8C',
   'Moon': '#8BC4E8',
   'Mars': '#CD7F5D',
-  'Venus': '#F4C2C2',
-  'Saturn': '#A9A9A9',
+  'Venus': '#D4A3B3',
+  'Saturn': '#A89BC8',
   'Jupiter': '#9370DB',
   'Mercury': '#FFEA70',
   'Pluto': '#9D76C1',
@@ -55,12 +58,12 @@ const FORCE_COLORS_MAP: Record<string, string> = {
   'Taurus': '#6EBF8B',
   'Gemini': '#FFEA70',
   'Cancer': '#8BC4E8',
-  'Leo': '#C9AE78',
-  'Virgo': '#A9A9A9',
-  'Libra': '#F4C2C2',
+  'Leo': '#D9BF8C',
+  'Virgo': '#A89BC8',
+  'Libra': '#D4A3B3',
   'Scorpio': '#9D76C1',
   'Sagittarius': '#9370DB',
-  'Capricorn': '#A9A9A9',
+  'Capricorn': '#A89BC8',
   'Aquarius': '#48D1CC',
   'Pisces': '#8BC4E8'
 };
@@ -71,7 +74,7 @@ function calculateForces(chart: NatalChart | null) {
   const scores: Record<string, { label: string, val: number, color: string }> = {};
   
   const addScore = (key: string, points: number) => {
-    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || theme.textGold };
+    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || PALETTE.gold };
     scores[key].val += points;
   };
 
@@ -90,17 +93,14 @@ function calculateForces(chart: NatalChart | null) {
     addScore(chart.risingSign.name, 30);
   }
 
-  // Find top 6 forces
-  const topForces = Object.values(scores)
+  return Object.values(scores)
     .sort((a, b) => b.val - a.val)
     .slice(0, 6)
     .map(f => ({
-      label: f.label, // applyStoryLabels will run inside the radar chart on these technical names
-      value: Math.min(100, (f.val / 60) * 100), // Normalize a bit so it maxes near 100
+      label: f.label,
+      value: Math.min(100, (f.val / 60) * 100),
       color: f.color
     }));
-
-  return topForces;
 }
 
 export default function StoryScreen() {
@@ -134,13 +134,13 @@ export default function StoryScreen() {
         houseSystem: savedChart.houseSystem,
       };
 
-      const chart = AstrologyCalculator.generateNatalChart(birthData);
-      const story = FullNatalStoryGenerator.generateFullStory(chart, isPremium);
+      const natalChart = AstrologyCalculator.generateNatalChart(birthData);
+      const story = FullNatalStoryGenerator.generateFullStory(natalChart, isPremium);
 
-      setChart(chart);
+      setChart(natalChart);
       setChapters(story.chapters);
     } catch (error) {
-      logger.error('Failed to load story data:', error);
+      logger.error('[StoryScreen] Failed to load story data:', error);
       setChapters([]);
     } finally {
       setLoading(false);
@@ -149,18 +149,22 @@ export default function StoryScreen() {
 
   const handleExportPdf = useCallback(async () => {
     if (!isPremium) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       router.push('/(tabs)/premium' as Href);
       return;
     }
-    if (!chart || chapters.length === 0) return;
-    if (isExporting) return;
+    if (!chart || chapters.length === 0 || isExporting) return;
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsExporting(true);
+
     try {
       await exportChartToPdf(chart, chapters);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
-      logger.error('PDF export failed:', err);
+      logger.error('[StoryScreen] PDF export failed:', err);
       Alert.alert('Export failed', 'Something went wrong generating the PDF. Please try again.');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsExporting(false);
     }
@@ -185,7 +189,7 @@ export default function StoryScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <SkiaDynamicCosmos />
-        <ActivityIndicator size="large" color={theme.textGold} style={{ marginBottom: 16 }} />
+        <ActivityIndicator size="large" color={PALETTE.gold} style={{ marginBottom: 16 }} />
         <Text style={styles.loadingText}>Mapping your architecture...</Text>
       </View>
     );
@@ -198,31 +202,40 @@ export default function StoryScreen() {
       <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <Pressable
+          onPress={() => { Haptics.selectionAsync(); router.back(); }}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={20} color={PALETTE.gold} />
+          <Text style={styles.backText}>Blueprint</Text>
+        </Pressable>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 140 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Architecture</Text>
+            <Text style={styles.title}>Life Narrative</Text>
             <Text style={styles.headerSub}>
               Your personal blueprint — a structured framework of behavioral patterns, core drives, and growth vectors derived from your unique data.
             </Text>
             {chapters.length > 0 && (
               <View style={styles.statsBadge}>
                 <Text style={styles.statsText}>
-                  {unlockedCount} / {chapters.length} DIMENSIONS MAPPED
+                  {unlockedCount} / {chapters.length} CHAPTERS MAPPED
                 </Text>
               </View>
             )}
-            
           </Animated.View>
 
           {/* Radar Chart */}
           {chart && chapters.length > 0 && (
             <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.radarWrapper}>
-              <Text style={styles.radarTitle}>Core Force Map</Text>
+              <View style={styles.radarHeaderRow}>
+                <Ionicons name="analytics-outline" size={18} color={PALETTE.silverBlue} />
+                <Text style={styles.radarTitle}>Core Force Map</Text>
+              </View>
               <PsychologicalForcesRadar forces={calculateForces(chart)} size={320} />
             </Animated.View>
           )}
@@ -230,17 +243,15 @@ export default function StoryScreen() {
           {/* Chapters */}
           {chapters.length === 0 ? (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.emptyStateContainer}>
-              <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
-                <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>Your architecture awaits</Text>
+              <LinearGradient colors={['rgba(217, 191, 140, 0.1)', 'rgba(10, 10, 15, 0.6)']} style={styles.emptyCard}>
+                <Ionicons name="book-outline" size={48} color={PALETTE.textMuted} style={{ marginBottom: 16 }} />
+                <Text style={styles.emptyTitle}>Your story awaits</Text>
                 <Text style={styles.emptySubtitle}>
-                  Enter your birth details to build a personalized blueprint of behavioral patterns, drives, and growth directions.
+                  Enter your birth details to generate a highly personalized psychological narrative based on your cosmic placements.
                 </Text>
                 <Pressable
-                  onPress={() => router.push('/(tabs)/chart' as Href)}
+                  onPress={() => { Haptics.selectionAsync(); router.push('/(tabs)/chart' as Href); }}
                   style={styles.emptyButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="Build your blueprint"
                 >
                   <Text style={styles.emptyButtonText}>Build Your Blueprint</Text>
                 </Pressable>
@@ -249,27 +260,31 @@ export default function StoryScreen() {
           ) : (
             chapters.map((chapter, index) => {
               const isLocked = !isPremium && chapter.isPremium;
+              const isExpanded = !isLocked && expandedChapterId === chapter.id;
 
               return (
                 <Animated.View
                   key={chapter.id}
                   entering={FadeInDown.delay(200 + index * 80).duration(500)}
+                  layout={Layout.springify().damping(16).stiffness(120)}
                 >
                   <SkiaStoryGate
                     index={index}
                     title={applyStoryLabels(chapter.title)}
                     isUnlocked={!isLocked}
                     isPremium={isPremium}
-                    accentColor={CHAPTER_COLORS[index]}
+                    accentColor={CHAPTER_COLORS[index] || PALETTE.gold}
                     onPress={() => {
                       if (isLocked) {
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
                         router.push('/(tabs)/premium' as Href);
                       } else {
-                        setExpandedChapterId(prev => prev === chapter.id ? null : chapter.id);
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setExpandedChapterId(isExpanded ? null : chapter.id);
                       }
                     }}
                   />
-                  {!isLocked && expandedChapterId === chapter.id && (
+                  {isExpanded && (
                     <Animated.View entering={FadeInDown.duration(400)}>
                       <ChapterCard
                         chapter={`Chapter ${toRoman(index + 1)}`}
@@ -285,32 +300,21 @@ export default function StoryScreen() {
             })
           )}
 
-          {/* Unlock prompt */}
+          {/* Upsell Prompt */}
           {!isPremium && chapters.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(200 + chapters.length * 80).duration(500)}>
-              <Pressable
-                onPress={() => router.push('/(tabs)/premium' as Href)}
-                accessibilityRole="button"
-                accessibilityLabel="Unlock all chapters"
-              >
-                <LinearGradient
-                  colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']}
-                  style={styles.upsellGradient}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <Ionicons name="sparkles" size={18} color={theme.textGold} />
-                    <Text style={styles.upsellTitle}>
-                      7 more dimensions to explore
-                    </Text>
+            <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+              <Pressable onPress={() => { Haptics.selectionAsync(); router.push('/(tabs)/premium' as Href); }}>
+                <LinearGradient colors={['rgba(217, 191, 140, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
+                  <View style={styles.upsellHeader}>
+                    <Ionicons name="sparkles" size={18} color={PALETTE.gold} />
+                    <Text style={styles.upsellTitle}>7 more dimensions to explore</Text>
                   </View>
-
                   <Text style={styles.upsellText}>
                     Attachment Style · Conflict Resolution · Inner Child Patterns · Shadow Integration · Growth Vectors — and more.
                   </Text>
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
+                  <View style={styles.unlockRow}>
                     <Text style={styles.unlockText}>Expand your blueprint</Text>
-                    <Ionicons name="arrow-forward" size={14} color={theme.textGold} />
+                    <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -319,29 +323,29 @@ export default function StoryScreen() {
 
         </ScrollView>
 
-        {/* ── Floating Export FAB ── */}
+        {/* Floating Export FAB */}
         {chapters.length > 0 && (
-          <Pressable
-            onPress={handleExportPdf}
-            disabled={isExporting}
-            style={({ pressed }) => [styles.floatingExportBtn, pressed && { opacity: 0.8 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Export chart as PDF"
-          >
-            <LinearGradient
-              colors={['rgba(212,184,114,0.18)', 'rgba(212,184,114,0.06)']}
-              style={styles.floatingExportGradient}
+          <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.fabContainer}>
+            <Pressable
+              onPress={handleExportPdf}
+              disabled={isExporting}
+              style={({ pressed }) => [styles.floatingExportBtn, pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }]}
             >
-              {isExporting ? (
-                <ActivityIndicator size="small" color={PALETTE.gold} />
-              ) : (
-                <>
-                  <Ionicons name="share-outline" size={16} color={PALETTE.gold} />
-                  <Text style={styles.floatingExportText}>Export as PDF</Text>
-                </>
-              )}
-            </LinearGradient>
-          </Pressable>
+              <LinearGradient
+                colors={['rgba(217, 191, 140, 0.2)', 'rgba(217, 191, 140, 0.08)']}
+                style={styles.floatingExportGradient}
+              >
+                {isExporting ? (
+                  <ActivityIndicator size="small" color={PALETTE.gold} />
+                ) : (
+                  <>
+                    <Ionicons name="share-outline" size={18} color={PALETTE.gold} />
+                    <Text style={styles.floatingExportText}>Export Blueprint to PDF</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
         )}
       </SafeAreaView>
     </View>
@@ -353,153 +357,41 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
+
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
+  backText: { fontSize: 14, color: PALETTE.gold, fontWeight: '600' },
+
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
-  
-  loadingText: {
-    color: theme.textSecondary,
-    fontStyle: 'italic',
-    fontSize: 15,
-  },
-  
-  header: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: PALETTE.textMain,
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  headerSub: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 16,
-    marginTop: 8,
-  },
-  statsBadge: {
-    marginTop: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(212,184,114,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(212,184,114,0.2)',
-  },
-  statsText: {
-    color: PALETTE.gold,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    fontVariant: ['tabular-nums'],
-  },
 
-  radarWrapper: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  radarTitle: {
-    color: PALETTE.textMain,
-    fontSize: 18,
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    alignSelf: 'flex-start',
-    marginBottom: 20,
-  },
+  loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14, marginTop: 12 },
 
-  // ── Floating Export FAB ──
-  floatingExportBtn: {
-    position: 'absolute',
-    bottom: 32,
-    alignSelf: 'center',
-    borderRadius: 28,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(212,184,114,0.35)',
-    shadowColor: '#D4B872',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  floatingExportGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 28,
-  },
-  floatingExportText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: PALETTE.gold,
-  },
+  header: { alignItems: 'center', marginTop: 20, marginBottom: 40 },
+  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 8 },
+  headerSub: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, fontStyle: 'italic' },
 
-  upsellGradient: {
-    padding: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.18)',
-    marginTop: 16,
-  },
-  upsellTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-  },
-  upsellText: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    lineHeight: 22,
-  },
-  unlockText: {
-    fontSize: 14,
-    color: theme.textGold,
-    fontWeight: '600',
-  },
+  statsBadge: { marginTop: 16, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: 'rgba(217,191,140,0.1)', borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)' },
+  statsText: { color: PALETTE.gold, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
 
-  emptyStateContainer: { marginTop: 32 },
-  emptyCard: {
-    borderRadius: 20,
-    padding: 32,
-    borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: {
-    fontSize: 24,
-    color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    marginBottom: 12,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  emptyButton: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.25)',
-  },
-  emptyButtonText: {
-    color: theme.textGold,
-    fontWeight: '700',
-    fontSize: 15,
-  },
+  radarWrapper: { alignItems: 'center', marginBottom: 48 },
+  radarHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 20 },
+  radarTitle: { color: PALETTE.silverBlue, fontSize: 13, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
+
+  emptyStateContainer: { marginTop: 12 },
+  emptyCard: { borderRadius: 24, padding: 32, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center' },
+  emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 12, textAlign: 'center' },
+  emptySubtitle: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  emptyButton: { backgroundColor: 'transparent', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.4)' },
+  emptyButtonText: { color: PALETTE.gold, fontWeight: '700', fontSize: 14, letterSpacing: 0.5 },
+
+  upsellGradient: { padding: 24, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.2)', marginTop: 16 },
+  upsellHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  upsellTitle: { fontSize: 18, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  upsellText: { fontSize: 14, color: PALETTE.textMuted, lineHeight: 22 },
+  unlockRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16 },
+  unlockText: { fontSize: 13, color: PALETTE.gold, fontWeight: '700', letterSpacing: 0.5 },
+
+  fabContainer: { position: 'absolute', bottom: 40, left: 0, right: 0, alignItems: 'center' },
+  floatingExportBtn: { borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.4)', shadowColor: '#D9BF8C', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 8 },
+  floatingExportGradient: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 28, paddingVertical: 16 },
+  floatingExportText: { fontSize: 14, fontWeight: '800', letterSpacing: 0.5, color: PALETTE.gold },
 });

@@ -39,9 +39,9 @@ export default function OnboardingConsentScreen() {
     return mode === 'restore' ? ('/onboarding/restore' as Href) : ('/onboarding/birth' as Href);
   }, [mode]);
 
-  const openTerms = useCallback(() => router.push('/terms' as Href), [router]);
-  const openPrivacy = useCallback(() => router.push('/privacy' as Href), [router]);
-  const openFaq = useCallback(() => router.push('/faq' as Href), [router]);
+  const openTerms = useCallback(() => router.navigate('/terms' as Href), [router]);
+  const openPrivacy = useCallback(() => router.navigate('/privacy' as Href), [router]);
+  const openFaq = useCallback(() => router.navigate('/faq' as Href), [router]);
 
   const accept = useCallback(async () => {
     if (!checked || saving) return;

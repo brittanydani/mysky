@@ -575,7 +575,7 @@ export default function VisualCalibration() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0C',
+    backgroundColor: '#020817',
     padding: 24,
   },
   safe: {
@@ -603,7 +603,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 32,
+    fontSize: 34,
+    fontWeight: '300',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginTop: 8,
   },

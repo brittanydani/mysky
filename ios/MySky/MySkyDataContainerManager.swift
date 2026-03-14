@@ -39,6 +39,7 @@ final class MySkyDataContainerManager {
     private(set) var container: ModelContainer
 
     /// Convenience accessor for the main-thread ModelContext.
+    @MainActor
     var context: ModelContext {
         container.mainContext
     }

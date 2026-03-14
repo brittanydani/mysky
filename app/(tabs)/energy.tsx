@@ -189,6 +189,14 @@ export default function EnergyScreen() {
       <View style={styles.container}>
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <Pressable
+            onPress={() => { safeHaptic(); router.back(); }}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+          </Pressable>
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
@@ -242,6 +250,14 @@ export default function EnergyScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <Pressable
+          onPress={() => { safeHaptic(); router.back(); }}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+        </Pressable>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={{ paddingBottom: 120 }}
@@ -636,6 +652,11 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  backButton: {
+    padding: 8,
+    paddingHorizontal: theme.spacing.md,
+    alignSelf: 'flex-start',
   },
   loadingContainer: {
     flex: 1,

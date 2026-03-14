@@ -267,11 +267,11 @@ const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   header: { marginTop: 20, marginBottom: 32 },
-  title: { fontSize: 32, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', marginTop: 4 },
   snapshotRow: { flexDirection: 'row', gap: 10, marginBottom: 32 },
   metricCard: { flex: 1, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', minHeight: 100 },
@@ -279,8 +279,8 @@ const styles = StyleSheet.create({
   metricValue: { color: PALETTE.textMain, fontSize: 24, fontWeight: '700', fontVariant: ['tabular-nums'] },
   metricSub: { color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 4, textAlign: 'center' },
   visualSection: { alignItems: 'center', marginBottom: 32 },
-  chartWrapper: { width: '100%', marginTop: 24, padding: 20, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  chartLabel: { color: PALETTE.gold, fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' },
+  chartWrapper: { width: '100%', marginTop: 24, padding: 20, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
+  chartLabel: { color: PALETTE.gold, fontSize: 10, fontWeight: '800', letterSpacing: 1.8, marginBottom: 20, textAlign: 'center' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   sectionTitle: { color: PALETTE.textMain, fontSize: 18, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   insightColumn: { gap: 12 },

@@ -73,7 +73,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
     (route: Href) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       try {
-        router.push(route);
+        router.navigate(route);
       } catch {
         Alert.alert('Unable to open', 'Please try again.');
       }

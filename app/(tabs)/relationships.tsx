@@ -756,17 +756,17 @@ export default function RelationshipsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0C' },
+  container: { flex: 1, backgroundColor: '#020817' },
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
   loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15, fontStyle: 'italic' },
   emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '600', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
   
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 32, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', letterSpacing: 0.5 },
+  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
+  title: { fontSize: 34, fontWeight: '300', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   subtitle: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic', marginTop: 6 },
-  scrollView: { flex: 1, paddingHorizontal: 20 },
+  scrollView: { flex: 1, paddingHorizontal: 24 },
   
   listSectionTitle: { fontSize: 22, color: theme.textPrimary, marginTop: 24, marginBottom: 6, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   listSectionSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20 },

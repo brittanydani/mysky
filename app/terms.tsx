@@ -57,7 +57,7 @@ export default function TermsOfServiceScreen() {
               <MySkyClipboardSkia size={140} />
             </View>
 
-            <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: March 13, 2026</Text>
 
             <Text style={styles.sectionTitle}>Acceptance of Terms</Text>
             <Text style={styles.paragraph}>
@@ -66,7 +66,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Service Description</Text>
             <Text style={styles.paragraph}>
-              MySky provides a local-first personal framework for growth, self-reflection, and astrological insight. It is intended for users aged 13 and older. Core features work fully offline without an account.
+              MySky provides a local-first personal framework for self-knowledge, growth, and reflection. Tools include daily wellness tracking, dream journaling, emotional pattern mapping, self-discovery exercises (values inventory, somatic body mapping, nervous system trigger logs), and optional astrological context. The app is intended for users aged 17 and older. Core features work fully offline without an account.
             </Text>
 
             <View style={styles.glassCard}>
@@ -95,10 +95,16 @@ export default function TermsOfServiceScreen() {
             >
               <View style={styles.disclaimerHeader}>
                 <Ionicons name="medical-outline" size={18} color={PALETTE.copper} />
-                <Text style={[styles.subHeader, { color: PALETTE.copper, marginBottom: 0 }]}>Not Medical Advice</Text>
+                <Text style={[styles.subHeader, { color: PALETTE.copper, marginBottom: 0 }]}>Not Medical or Therapeutic Advice</Text>
               </View>
               <Text style={styles.paragraph}>
-                MySky does not provide medical, psychological, or therapeutic advice. Astrological content, dream reflections, growth insights, attachment awareness, and all other features are for self-reflection purposes only. If you are in crisis, please contact emergency services immediately.
+                MySky is a self-reflection and personal growth tool, not a medical app. None of its features — including astrological content, dream reflections, somatic body mapping, nervous system trigger logs, core values exercises, psychological archetype profiles, emotional pattern analysis, cognitive style assessments, healing path prompts, or any other content — constitute medical advice, psychological diagnosis, therapy, counseling, or treatment of any kind.
+              </Text>
+              <Text style={styles.paragraph}>
+                These tools are designed for self-awareness and personal exploration only. They are not a substitute for professional mental health care, psychotherapy, psychiatry, or medical treatment. Do not use MySky as a replacement for professional support.
+              </Text>
+              <Text style={[styles.paragraph, { marginBottom: 0 }]}>
+                {'If you are experiencing a mental health crisis or are in danger, please reach out immediately:\n\n'}{'• Crisis & Suicide Prevention (US): call or text 988\n'}{'• Crisis Text Line: text HOME to 741741\n'}{'• International resources: findahelpline.com\n'}{'• Emergency services: 911 (US) or your local number'}
               </Text>
             </LinearGradient>
 
@@ -142,17 +148,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    color: theme.textPrimary, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
+    fontSize: 16,
+    color: '#FFF',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    opacity: 0.6,
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },

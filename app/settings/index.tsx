@@ -368,7 +368,7 @@ const SettingsRow = ({
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#050507' },
+  container: { flex: 1, backgroundColor: '#020817' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
   header: { paddingTop: 80, paddingHorizontal: 24, paddingBottom: 20 },

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
   PanResponder,
   Animated,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import SkiaMoodSealButton from '../../components/ui/SkiaMoodSealButton';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -23,10 +25,12 @@ import type { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 import { logger } from '../../utils/logger';
+import { toLocalDateString } from '../../utils/dateUtils';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
 const CARD_INNER_W = width - 88;
+const FONT_SERIF = Platform.select({ ios: 'Georgia', android: 'serif' });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -88,6 +92,26 @@ const EMOTION_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name'
   'Numb':      'water-outline',
 };
 
+function energyLevelToNum(e: EnergyLevel): number {
+  if (e === 'low') return 2;
+  if (e === 'high') return 8;
+  return 5;
+}
+
+function stressLevelToNum(s: StressLevel): number {
+  if (s === 'low') return 2;
+  if (s === 'high') return 8;
+  return 5;
+}
+
+// Reverse maps: stored tag → display label
+const REV_INFLUENCE_TAG: Record<string, string> = Object.fromEntries(
+  Object.entries(INFLUENCE_TAG_MAP).map(([k, v]) => [v, k])
+);
+const REV_EMOTION_TAG: Record<string, string> = Object.fromEntries(
+  Object.entries(EMOTION_TAG_MAP).map(([k, v]) => [v, k])
+);
+
 function computeTrendLabel(checkIns: DailyCheckIn[]): string {
   const scores = checkIns
     .slice()
@@ -100,6 +124,19 @@ function computeTrendLabel(checkIns: DailyCheckIn[]): string {
   if (recent > early + 0.5) return 'Rising';
   if (recent < early - 0.5) return 'Declining';
   return 'Stable';
+}
+
+const MAX_DAYS_BACK = 30;
+
+function formatDisplayDate(dateStr: string): string {
+  const todayStr = toLocalDateString(new Date());
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayStr = toLocalDateString(yesterdayDate);
+  if (dateStr === todayStr) return 'Today';
+  if (dateStr === yesterdayStr) return 'Yesterday';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -120,8 +157,12 @@ export default function MoodCheckIn() {
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  const sealScale = useRef(new Animated.Value(1)).current;
+  const [completedSlots, setCompletedSlots] = useState<string[]>([]);
+  const [isEditingExisting, setIsEditingExisting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(() => toLocalDateString(new Date()));
+  const [selectedSlot, setSelectedSlot] = useState<import('../../services/patterns/types').TimeOfDay>(
+    () => CheckInService.getCurrentTimeSlot()
+  );
 
   const influences = ['Sleep', 'Work', 'Relationships', 'Health', 'Movement', 'Nature', 'Alone time', 'Finances', 'Weather'];
   const premiumEmotions = ['Radiant', 'Grounded', 'Anxious', 'Scattered', 'Inspired', 'Heavy', 'Resilient', 'Numb'];
@@ -169,6 +210,47 @@ export default function MoodCheckIn() {
     }, [])
   );
 
+  // Load the check-in for the currently selected date + slot
+  useEffect(() => {
+    if (!chartId) return;
+    let cancelled = false;
+
+    const loadSlot = async () => {
+      try {
+        const slots = await CheckInService.getCompletedTimeSlotsForDate(chartId, selectedDate);
+        const existing = await CheckInService.getCheckInForDateAndSlot(chartId, selectedDate, selectedSlot);
+
+        if (!cancelled) {
+          setCompletedSlots(slots);
+          if (existing) {
+            setIsEditingExisting(true);
+            setMood(existing.moodScore);
+            setEnergy(energyLevelToNum(existing.energyLevel));
+            setStress(stressLevelToNum(existing.stressLevel));
+            setSelectedInfluences(new Set(
+              existing.tags.map(t => REV_INFLUENCE_TAG[t]).filter(Boolean)
+            ));
+            setSelectedEmotions(new Set(
+              existing.tags.map(t => REV_EMOTION_TAG[t]).filter(Boolean)
+            ));
+          } else {
+            setIsEditingExisting(false);
+            setMood(5);
+            setEnergy(5);
+            setStress(5);
+            setSelectedInfluences(new Set());
+            setSelectedEmotions(new Set());
+          }
+        }
+      } catch (e) {
+        logger.error('[MoodCheckIn] Slot load failed:', e);
+      }
+    };
+
+    loadSlot();
+    return () => { cancelled = true; };
+  }, [chartId, selectedDate, selectedSlot]);
+
   const toggleTag = (
     tag: string,
     set: Set<string>,
@@ -194,19 +276,46 @@ export default function MoodCheckIn() {
         energyLevel: numToEnergyLevel(energy),
         stressLevel: numToStressLevel(stress),
         tags: [...influenceTags, ...emotionTags],
+        timeOfDay: selectedSlot,
+        date: selectedDate,
       };
       await CheckInService.saveCheckIn(input, natalChart, chartId);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
+
+      // Refresh completed slots + recent data so the UI reflects the save
+      const slots = await CheckInService.getCompletedTimeSlotsForDate(chartId, selectedDate);
+      const recent = await localDb.getCheckIns(chartId, 7);
+      setCompletedSlots(slots);
+      setRecentCheckIns(recent);
+      setIsEditingExisting(true);
+      setIsSaving(false);
     } catch (e) {
       logger.error('[MoodCheckIn] Save failed:', e);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setIsSaving(false);
     }
   };
 
   const trendLabel = computeTrendLabel(recentCheckIns);
   const canSeal = !isSaving && !!chartId;
+  const todayStr = toLocalDateString(new Date());
+  const canGoBack = () => {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() - MAX_DAYS_BACK);
+    return new Date(selectedDate + 'T12:00:00') > minDate;
+  };
+  const canGoForward = () => selectedDate < todayStr;
+  const navigateDate = (direction: -1 | 1) => {
+    Haptics.selectionAsync().catch(() => {});
+    const d = new Date(selectedDate + 'T12:00:00');
+    d.setDate(d.getDate() + direction);
+    setSelectedDate(toLocalDateString(d));
+  };
+  const ALL_SLOTS: Array<{ key: string; label: string; iconName: keyof typeof Ionicons.glyphMap; iconColor: string }> = [
+    { key: 'morning',   label: 'Morning',   iconName: 'sunny-outline',         iconColor: '#F0C87E' },
+    { key: 'afternoon', label: 'Afternoon', iconName: 'partly-sunny-outline',  iconColor: '#D9BF8C' },
+    { key: 'evening',   label: 'Evening',   iconName: 'cloudy-night-outline',  iconColor: '#A89BC8' },
+    { key: 'night',     label: 'Night',     iconName: 'moon-outline',          iconColor: '#8BC4E8' },
+  ];
 
   return (
     <View style={styles.container}>
@@ -220,8 +329,38 @@ export default function MoodCheckIn() {
         >
           <Text style={styles.closeIcon}>×</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Internal Weather</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Internal Weather</Text>
+          {isEditingExisting && (
+            <Text style={styles.headerEditingBadge}>
+              {selectedDate === todayStr
+                ? "Editing today's entry"
+                : `Editing ${formatDisplayDate(selectedDate)}`}
+            </Text>
+          )}
+        </View>
         <View style={{ width: 40 }} />
+      </View>
+
+      {/* Date Navigator */}
+      <View style={styles.dateNav}>
+        <Pressable
+          onPress={() => navigateDate(-1)}
+          disabled={!canGoBack()}
+          hitSlop={12}
+          style={styles.dateArrow}
+        >
+          <Ionicons name="chevron-back" size={18} color={canGoBack() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
+        </Pressable>
+        <Text style={styles.dateNavLabel}>{formatDisplayDate(selectedDate)}</Text>
+        <Pressable
+          onPress={() => navigateDate(1)}
+          disabled={!canGoForward()}
+          hitSlop={12}
+          style={styles.dateArrow}
+        >
+          <Ionicons name="chevron-forward" size={18} color={canGoForward() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -305,41 +444,56 @@ export default function MoodCheckIn() {
           )}
         </View>
 
-        {/* Hold to Seal */}
+        {/* Time Slot Tracker — tap a slot to edit it */}
+        <View style={styles.slotRow}>
+          {ALL_SLOTS.map(({ key, label, iconName, iconColor }) => {
+            const isDone      = completedSlots.includes(key);
+            const isSelected  = key === selectedSlot;
+            const activeColor = isDone ? '#6EBF8B' : isSelected ? iconColor : 'rgba(255,255,255,0.22)';
+            return (
+              <Pressable
+                key={key}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setSelectedSlot(key as import('../../services/patterns/types').TimeOfDay);
+                }}
+                style={[
+                  styles.slotPill,
+                  isDone     && styles.slotPillDone,
+                  isSelected && styles.slotPillSelected,
+                  isSelected && isDone && styles.slotPillSelectedDone,
+                ]}
+              >
+                <View style={[
+                  styles.slotIconWrap,
+                  isDone     && styles.slotIconWrapDone,
+                  isSelected && { borderColor: `${iconColor}66` },
+                ]}>
+                  <Ionicons
+                    name={isDone ? 'checkmark' : iconName}
+                    size={15}
+                    color={activeColor}
+                  />
+                </View>
+                <Text style={[
+                  styles.slotLabel,
+                  isDone     && styles.slotLabelDone,
+                  isSelected && !isDone && { color: iconColor },
+                  isSelected && isDone  && styles.slotLabelDone,
+                ]}>{label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Hold to Seal — Premium Skia Orb */}
         <View style={styles.sealContainer}>
-          <Text style={styles.sealInstruction}>
-            {isSaving ? 'Sealing…' : 'Hold to seal your entry'}
-          </Text>
-          <Pressable
+          <SkiaMoodSealButton
+            onSeal={handleSeal}
+            isSaving={isSaving}
             disabled={!canSeal}
-            onPressIn={() => {
-              if (!canSeal) return;
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              Animated.spring(sealScale, { toValue: 1.2, useNativeDriver: true }).start();
-            }}
-            onLongPress={handleSeal}
-            delayLongPress={800}
-            onPressOut={() => {
-              Animated.spring(sealScale, { toValue: 1, useNativeDriver: true }).start();
-            }}
-          >
-            <Animated.View
-              style={[
-                styles.sealButton,
-                { transform: [{ scale: sealScale }] },
-                !canSeal && styles.sealButtonDisabled,
-              ]}
-            >
-              <LinearGradient colors={['#D9BF8C', '#B89B65']} style={StyleSheet.absoluteFill} />
-              {isSaving && (
-                <ActivityIndicator
-                  size="small"
-                  color="rgba(5,5,7,0.8)"
-                  style={StyleSheet.absoluteFill}
-                />
-              )}
-            </Animated.View>
-          </Pressable>
+            isEditing={isEditingExisting}
+          />
         </View>
 
         <View style={{ height: 60 }} />
@@ -469,21 +623,27 @@ const TagButton = ({
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#050507' },
+  container: { flex: 1, backgroundColor: '#020817' },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 200 },
 
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingHorizontal: 20, paddingBottom: 20 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 12 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  headerTitle: { fontSize: 20, color: '#FFF', fontFamily: 'Georgia', fontWeight: '400' },
+  headerCenter: { alignItems: 'center', flex: 1 },
+  headerTitle: { fontSize: 16, color: '#FFF', fontFamily: FONT_SERIF, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6 },
+  headerEditingBadge: { fontSize: 10, color: '#D9BF8C', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
+
+  dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },
+  dateArrow: { padding: 4 },
+  dateNavLabel: { fontSize: 15, color: 'rgba(255,255,255,0.75)', fontWeight: '600', letterSpacing: 0.5, minWidth: 90, textAlign: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
 
-  sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.8, marginBottom: 16 },
 
-  trendCard: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 24 },
-  trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  trendValue: { fontSize: 13, color: '#D9BF8C', fontWeight: '600' },
+  trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
+  trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  trendValue: { fontSize: 13, color: '#E2C27A', fontWeight: '700', letterSpacing: 0.3 },
   trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
   trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', textAlign: 'center' },
 
@@ -547,8 +707,52 @@ const styles = StyleSheet.create({
   tagTextSelected: { color: '#050507', fontWeight: 'bold' },
   tagTextLocked: { color: 'rgba(255,255,255,0.4)' },
 
-  sealContainer: { alignItems: 'center', marginTop: 24 },
-  sealInstruction: { fontSize: 14, color: 'rgba(255,255,255,0.4)', fontFamily: 'Georgia', fontStyle: 'italic', marginBottom: 16 },
-  sealButton: { width: 72, height: 72, borderRadius: 36, overflow: 'hidden', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  sealButtonDisabled: { opacity: 0.4 },
+  sealContainer: { alignItems: 'center', marginTop: 8 },
+
+  slotRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 24,
+    marginBottom: 4,
+  },
+  slotPill: {
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    minWidth: 72,
+  },
+  slotPillDone: {
+    backgroundColor: 'rgba(110,191,139,0.10)',
+    borderColor: 'rgba(110,191,139,0.30)',
+  },
+  slotPillSelected: {
+    borderColor: 'rgba(217,191,140,0.55)',
+    backgroundColor: 'rgba(217,191,140,0.08)',
+  },
+  slotPillSelectedDone: {
+    borderColor: 'rgba(110,191,139,0.55)',
+    backgroundColor: 'rgba(110,191,139,0.14)',
+  },
+  slotIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slotIconWrapDone: {
+    borderColor: 'rgba(110,191,139,0.40)',
+    backgroundColor: 'rgba(110,191,139,0.12)',
+  },
+  slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: '600', letterSpacing: 0.5 },
+  slotLabelDone: { color: '#6EBF8B' },
 });

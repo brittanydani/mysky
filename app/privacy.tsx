@@ -53,7 +53,7 @@ export default function PrivacyPolicyScreen() {
             <MySkyLockSkia size={140} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: March 4, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 13, 2026</Text>
 
           {/* ── Section Wrapper Helper ── */}
           <LinearGradient colors={[theme.cardGradientStart, theme.cardGradientEnd]} style={styles.glassSection}>
@@ -89,6 +89,21 @@ export default function PrivacyPolicyScreen() {
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Relationship Charts</Text>
               <Text style={styles.paragraph}>Synastry partner data (name, birth data) is stored locally and encrypted. Birth place fields use the same AES-256-GCM encryption as your own data.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Self-Discovery Profile Data</Text>
+              <Text style={styles.paragraph}>When you use identity tools such as the Core Values Inventory, Jungian Archetype Profile, or Cognitive Style assessment, your responses and resulting profile data are stored exclusively on your device and encrypted at rest with AES-256-GCM. This data is never transmitted to any server and is never used for advertising, analytics, or AI/ML training.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Somatic & Nervous System Entries</Text>
+              <Text style={styles.paragraph}>Body sensation logs (somatic map entries, body location tags, intensity ratings, linked emotions) and nervous system entries (trigger descriptions, dysregulation context, restoring practice notes) are stored locally and encrypted at rest with AES-256-GCM. This is among the most sensitive data in the app. It is never transmitted, never processed by any external service, and never shared.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Relationship Pattern Entries</Text>
+              <Text style={styles.paragraph}>Self-reported relational pattern notes (recurring dynamics, communication tendencies, attachment observations) are stored locally and encrypted. No synastry or astrological matching is performed on this data.</Text>
             </View>
 
             <View style={styles.dataBlock}>
@@ -233,20 +248,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    color: "#FFFFFF", 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
+    fontSize: 16,
+    color: '#FFF',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    opacity: 0.6,
   },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   lastUpdated: { fontSize: 13, color: "#FFFFFF", marginBottom: 24, fontStyle: 'italic', textAlign: 'center' },
   
   section: { marginBottom: 32 },

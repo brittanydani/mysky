@@ -9,7 +9,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../../constants/theme';
-import NebulaBackground from '../../../components/ui/NebulaBackground';
+import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { GoldIcon } from '../../../components/ui/GoldIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
@@ -449,10 +449,6 @@ export default function JournalScreen() {
             <Ionicons name="analytics-outline" size={22} color={theme.textMuted} />
           </Pressable>
         </View>
-
-        <Text style={styles.poeticIntro}>
-          Your private subconscious archive. Each entry becomes a data point in your personal pattern architecture — revealing what the conscious mind overlooks.
-        </Text>
       </Animated.View>
 
       {/* ── Month/Year Navigation + Search ── */}
@@ -757,7 +753,7 @@ export default function JournalScreen() {
 
   return (
     <View style={styles.container}>
-      <NebulaBackground mood={5} energy={8} />
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
           <FlatList
@@ -838,19 +834,13 @@ export default function JournalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
 
-  header: { paddingVertical: 16, marginBottom: 8 },
+  header: { marginTop: 20, marginBottom: 28 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 32, fontWeight: '700', color: theme.textPrimary, fontFamily: 'serif', letterSpacing: 0.5 },
+  title: { fontSize: 34, fontWeight: '300', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   subtitle: { fontSize: 14, color: theme.primary, fontStyle: 'italic', marginTop: 2 },
-  poeticIntro: {
-    fontSize: 15,
-    color: theme.textSecondary,
-    lineHeight: 24,
-    marginTop: 20,
-  },
 
   chartTitle: {
     fontSize: 20,

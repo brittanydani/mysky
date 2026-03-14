@@ -318,11 +318,11 @@ export default function SleepDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#050507' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#050507' },
+  container: { flex: 1, backgroundColor: '#020817' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#020817' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingBottom: 16,
+    paddingHorizontal: 24, paddingBottom: 16,
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
@@ -330,8 +330,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    color: '#FFF', fontSize: 16, fontFamily: 'Georgia',
-    letterSpacing: 1, opacity: 0.8,
+    color: '#FFF', fontSize: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
   saveText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },

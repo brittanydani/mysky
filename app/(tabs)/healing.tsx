@@ -1,249 +1,314 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform, ActivityIndicator } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { BlurView } from 'expo-blur';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 
-import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import InsightCard from '../../components/ui/InsightCard';
-import { HealingInsightsGenerator, HealingInsights } from '../../services/premium/healingInsights';
-import { ShadowQuoteEngine, ShadowQuote } from '../../services/astrology/shadowQuotes';
-import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { localDb } from '../../services/storage/localDb';
+import {
+  loadSelfKnowledgeContext,
+  SelfKnowledgeContext,
+  ArchetypeKey,
+} from '../../services/insights/selfKnowledgeContext';
 import { usePremium } from '../../context/PremiumContext';
-import { logger } from '../../utils/logger';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#D4B872',
-  silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  rose: '#D4A3B3',
-  sage: '#8CBEAA',
-  bg: '#0A0A0C', // Unified OLED Black
+  emerald: '#6EBF8B',   // Healing / Growth
+  gold: '#D9BF8C',      // Core Values
+  lavender: '#A89BC8',  // Archetypes
+  rose: '#D4A3B3',      // Relational
+  silverBlue: '#8BC4E8',// Cognitive
   textMain: '#FFFFFF',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  sageBorder: 'rgba(140, 190, 170, 0.2)',
-  sageGlass: 'rgba(140, 190, 170, 0.08)',
+  textMuted: 'rgba(255,255,255,0.6)',
+  glassBorder: 'rgba(255,255,255,0.08)',
+  bg: '#0A0A0C',
 };
 
-export default function HealingScreen() {
+// ── Synthesis Logic ──
+const ARCHETYPE_HEALING: Record<ArchetypeKey, { title: string; shadow: string; affirmation: string }> = {
+  hero: {
+    title: "The Hero's Rest",
+    shadow: "Where in your life are you fighting a battle that isn't yours? What would happen if you laid down your armor today?",
+    affirmation: "I am worthy of rest. I do not have to earn my place through struggle.",
+  },
+  caregiver: {
+    title: "The Caregiver's Boundary",
+    shadow: "Whose emotions are you managing right now instead of your own? What do you need that you are giving to others?",
+    affirmation: "My needs are sacred. I can hold space for myself without guilt.",
+  },
+  seeker: {
+    title: "The Seeker's Anchor",
+    shadow: "What uncomfortable feeling are you trying to outrun or out-plan? Can you sit with it for three minutes?",
+    affirmation: "I am safe where I am. I do not need to move to find peace.",
+  },
+  sage: {
+    title: "The Sage's Heart",
+    shadow: "Where are you analyzing a situation to avoid actually feeling the grief or anger underneath it?",
+    affirmation: "My feelings contain wisdom my mind cannot access. I allow myself to feel.",
+  },
+  rebel: {
+    title: "The Rebel's Peace",
+    shadow: "Are you pushing back against something right now out of habit, or out of true necessity? Where can you soften?",
+    affirmation: "I do not have to be in opposition to be authentic. I can exist in harmony.",
+  },
+};
+
+const SOMATIC_RITUALS: Record<string, string> = {
+  chest: "Place your right hand over your heart. Breathe in for 4 seconds, hold for 4, exhale for 6. Visualize the tension dissolving into the air.",
+  throat: "Gently massage the sides of your neck. Hum a low, resonant note for 30 seconds to stimulate your vagus nerve and open your voice.",
+  gut: "Place both hands on your lower belly. Notice if you are clenching. On your next exhale, intentionally let your stomach push out and soften completely.",
+  head: "Close your eyes. Imagine the racing thoughts in your mind are leaves floating on a river, drifting away from your center.",
+  back: "Find a wall. Lean your spine flat against it. Push your feet into the floor and feel the solid structural support holding you upright.",
+  limbs: "Stand up and violently shake your hands and arms for 15 seconds. Let your nervous system physically discharge the stagnant energy.",
+};
+
+export default function HealingSpaceScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
-  const [healingQuote, setHealingQuote] = useState<ShadowQuote | null>(null);
-  const [healingData, setHealingData] = useState<HealingInsights | null>(null);
+  const [context, setContext] = useState<SelfKnowledgeContext | null>(null);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
-      loadHealingData();
+      let isActive = true;
+      const fetchContext = async () => {
+        const data = await loadSelfKnowledgeContext();
+        if (isActive) {
+          setContext(data);
+          setLoading(false);
+        }
+      };
+      fetchContext();
+      return () => { isActive = false; };
     }, [])
   );
-
-  const loadHealingData = async () => {
-    try {
-      const charts = await localDb.getCharts();
-      if (charts.length > 0) {
-        const savedChart = charts[0];
-        const birthData = {
-          date: savedChart.birthDate,
-          time: savedChart.birthTime,
-          hasUnknownTime: savedChart.hasUnknownTime,
-          place: savedChart.birthPlace,
-          latitude: savedChart.latitude,
-          longitude: savedChart.longitude,
-          timezone: savedChart.timezone,
-          houseSystem: savedChart.houseSystem,
-        };
-        const chart = AstrologyCalculator.generateNatalChart(birthData);
-
-        const insights = HealingInsightsGenerator.generateHealingInsights(chart);
-        setHealingData(insights);
-
-        const result = await ShadowQuoteEngine.getDailyShadowQuote(chart);
-        if (result.quote.tone === 'protective' || result.quote.tone === 'release') {
-          setHealingQuote(result.quote);
-        } else if (result.closeQuote) {
-          setHealingQuote(result.closeQuote);
-        }
-      }
-    } catch (e) {
-      logger.error('[Healing] Load Error:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const goToPremium = () => router.push('/(tabs)/premium' as Href);
 
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
         <SkiaDynamicCosmos />
-        <ActivityIndicator size="large" color={PALETTE.sage} style={{ marginBottom: 16 }} />
-        <Text style={styles.loadingText}>Mapping your healing paths...</Text>
+        <ActivityIndicator size="large" color={PALETTE.emerald} style={{ marginBottom: 16 }} />
+        <Text style={styles.loadingText}>Synthesizing your inner world...</Text>
       </View>
     );
   }
 
+  const hasArchetype = !!context?.archetypeProfile;
+  const hasSomatic = (context?.somaticEntries?.length ?? 0) > 0;
+  const hasRelational = (context?.relationshipPatterns?.length ?? 0) > 0;
+  const hasAnyData = hasArchetype || hasSomatic || hasRelational;
+
+  if (!isPremium) {
+    return (
+      <View style={styles.container}>
+        <SkiaDynamicCosmos />
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <View style={styles.centered}>
+            <Ionicons name="medical-outline" size={48} color={PALETTE.emerald} style={{ marginBottom: 16 }} />
+            <Text style={styles.lockTitle}>The Healing Space</Text>
+            <Text style={styles.lockSub}>Deep shadow work and somatic release rituals synthesized from your Blueprint.</Text>
+            <Pressable style={styles.premiumBtn} onPress={() => router.push('/(tabs)/premium' as Href)}>
+              <Ionicons name="sparkles" size={16} color="#0A0A0C" />
+              <Text style={styles.premiumBtnText}>Unlock Deeper Sky</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!hasAnyData) {
+    return (
+      <View style={styles.container}>
+        <SkiaDynamicCosmos />
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <View style={styles.centered}>
+            <Ionicons name="git-network-outline" size={48} color={PALETTE.textMuted} style={{ marginBottom: 16 }} />
+            <Text style={styles.emptyTitle}>Your Sanctuary Awaits</Text>
+            <Text style={styles.emptySub}>
+              The Healing Space generates specific rituals based on your identity profile.
+              Complete your Blueprint to unlock these insights.
+            </Text>
+            <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/blueprint' as Href)}>
+              <Text style={styles.actionBtnText}>Go to Blueprint</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const archetypeData = hasArchetype ? ARCHETYPE_HEALING[context!.archetypeProfile!.dominant] : null;
+
+  const topRegion = hasSomatic
+    ? Object.entries(
+        context!.somaticEntries.reduce((acc, entry) => {
+          acc[entry.region] = (acc[entry.region] ?? 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      ).sort((a, b) => b[1] - a[1])[0][0]
+    : null;
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
+      <LinearGradient colors={['rgba(110, 191, 139, 0.08)', 'transparent']} style={styles.topGlow} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 140 }]}
-          showsVerticalScrollIndicator={false}
+        <Pressable
+          style={styles.backBtn}
+          onPress={() => { Haptics.selectionAsync(); router.back(); }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
-          {/* ── Hub Header ── */}
-          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Healing Pathways</Text>
-            <Text style={styles.headerSub}>
-              Inner needs and emotional patterns, mapped by your blueprint.
-            </Text>
+          <Ionicons name="arrow-back" size={20} color={PALETTE.emerald} />
+          <Text style={styles.backText}>Blueprint</Text>
+        </Pressable>
+
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
+            <Text style={styles.headerTitle}>Healing Space</Text>
+            <Text style={styles.headerSubtitle}>Synthesized from your active patterns</Text>
           </Animated.View>
 
-          {/* ── Daily Shadow Insight ── */}
-          {healingQuote && (
-            <Animated.View entering={FadeInDown.delay(150).duration(800)} style={styles.quoteContainer}>
-              <Text style={styles.quoteMark}>“</Text>
-              <Text style={styles.quoteText}>{healingQuote.text}</Text>
-              <Text style={styles.quoteSub}>DAILY SHADOW PROMPT</Text>
+          {/* 1. ARCHETYPE SHADOW WORK */}
+          {hasArchetype && archetypeData && (
+            <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.card}>
+              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={['rgba(168, 155, 200, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
+
+              <View style={styles.cardHeader}>
+                <Ionicons name="moon-outline" size={16} color={PALETTE.lavender} />
+                <Text style={[styles.cardEyebrow, { color: PALETTE.lavender }]}>SHADOW WORK</Text>
+              </View>
+
+              <Text style={styles.cardTitle}>{archetypeData.title}</Text>
+              <Text style={styles.promptText}>{archetypeData.shadow}</Text>
+
+              <View style={styles.affirmationBox}>
+                <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
+                <Text style={styles.affirmationText}>{'"' + archetypeData.affirmation + '"'}</Text>
+              </View>
             </Animated.View>
           )}
 
-          {/* ── Empty State ── */}
-          {!loading && !healingData && (
-            <View style={styles.emptyStateContainer}>
-              <LinearGradient colors={['rgba(212, 184, 114, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.emptyCard}>
-                <Ionicons name="heart-outline" size={48} color={PALETTE.gold} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>Blueprint Required</Text>
-                <Text style={styles.emptySubtitle}>We need your natal data to map your healing pathways.</Text>
-                <Pressable onPress={() => router.push('/(tabs)/blueprint' as Href)} style={styles.emptyButton}>
-                  <Text style={styles.emptyButtonText}>Calibrate Now</Text>
-                </Pressable>
-              </LinearGradient>
-            </View>
-          )}
+          {/* 2. SOMATIC RELEASE RITUAL */}
+          {hasSomatic && topRegion && SOMATIC_RITUALS[topRegion] && (
+            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.card}>
+              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
 
-          {/* ── Inner Child / Reparenting Hub ── */}
-          {healingData && (
-            <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
-              {isPremium ? (
-                <DeepCard icon="heart" title="Inner Child Architecture" color={PALETTE.sage}>
-                  <Text style={styles.deepCardMain}>{healingData.reparenting.innerChildNeeds}</Text>
-                  <View style={styles.deepDivider} />
-                  <DetailRow label="NURTURE GAP" text={healingData.reparenting.whatWasMissing} color={PALETTE.sage} />
-                  <DetailRow label="REPARENTING PATH" text={healingData.reparenting.howToProvideItNow} color={PALETTE.sage} />
-                  <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.sage }]}>
-                    <Text style={[styles.affirmationText, { color: PALETTE.sage }]}>"{healingData.reparenting.affirmation}"</Text>
-                  </View>
-                </DeepCard>
-              ) : (
-                <InsightCard title="Inner Child Needs" content={healingData.reparenting.innerChildNeeds} icon="heart" variant="featured" />
-              )}
+              <View style={styles.cardHeader}>
+                <Ionicons name="body-outline" size={16} color={PALETTE.emerald} />
+                <Text style={[styles.cardEyebrow, { color: PALETTE.emerald }]}>SOMATIC RELEASE</Text>
+              </View>
+
+              <Text style={styles.cardTitle}>
+                {'Unlocking the ' + topRegion.charAt(0).toUpperCase() + topRegion.slice(1)}
+              </Text>
+              <Text style={styles.bodyText}>
+                Your somatic map indicates you are storing significant energy here. Try this physical reset:
+              </Text>
+
+              <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.emerald }]}>
+                <Text style={[styles.affirmationText, { fontStyle: 'normal', color: PALETTE.textMain }]}>
+                  {SOMATIC_RITUALS[topRegion]}
+                </Text>
+              </View>
             </Animated.View>
           )}
 
-          {/* ── Fear & Protection Patterns ── */}
-          {healingData && (
-            <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Shadow Protection</Text>
-              {isPremium ? (
-                <DeepCard icon="shield-outline" title="Core Defense Pattern" color={PALETTE.sage}>
-                  <Text style={styles.deepCardMain}>{healingData.fears.coreFear}</Text>
-                  <View style={styles.deepDivider} />
-                  <DetailRow label="MECHANISM" text={healingData.fears.howItShows} color={PALETTE.sage} />
-                  <DetailRow label="GENTLE REFRAME" text={healingData.fears.gentleReframe} color={PALETTE.sage} />
-                </DeepCard>
-              ) : (
-                <InsightCard title="Defense Patterns" content="Your blueprint reveals how you protect yourself when unsafe." icon="shield" locked lockedHint="Unlock Shadow Insights" onPress={goToPremium} />
-              )}
+          {/* 3. RELATIONAL PATTERN INTERVENTION */}
+          {hasRelational && (
+            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.card}>
+              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={['rgba(212, 163, 179, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
+
+              <View style={styles.cardHeader}>
+                <Ionicons name="git-compare-outline" size={16} color={PALETTE.rose} />
+                <Text style={[styles.cardEyebrow, { color: PALETTE.rose }]}>RELATIONAL RESET</Text>
+              </View>
+
+              <Text style={styles.cardTitle}>Pattern Interrupt</Text>
+              <Text style={styles.bodyText}>
+                You recently logged a relational trigger. The next time this dynamic arises, do not react immediately.
+              </Text>
+              <Text style={[styles.bodyText, { marginTop: 12, fontWeight: '700', color: PALETTE.rose }]}>
+                Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
+              </Text>
             </Animated.View>
           )}
 
+          <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-// ── Shared Sub-Components ──
-
-function DetailRow({ label, text, color }: { label: string; text: string; color: string }) {
-  return (
-    <View style={styles.detailRow}>
-      <Text style={[styles.detailLabel, { color }]}>{label}</Text>
-      <Text style={styles.detailText}>{text}</Text>
-    </View>
-  );
-}
-
-function DeepCard({ icon, title, color, children }: { icon: React.ComponentProps<typeof Ionicons>['name'], title: string, color: string, children: React.ReactNode }) {
-  return (
-    <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(10, 10, 12, 0.8)']} style={styles.deepCard}>
-      <View style={styles.deepCardHeader}>
-        <Ionicons name={icon} size={20} color={color} />
-        <Text style={styles.deepCardTitle}>{title}</Text>
-      </View>
-      {children}
-    </LinearGradient>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', fontSize: 15 },
   safeArea: { flex: 1 },
-  scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20 },
-  header: { marginTop: 16, marginBottom: 8 },
-  title: { fontSize: 32, fontWeight: '700', color: '#FFFFFF', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  headerSub: { fontSize: 14, color: PALETTE.sage, fontStyle: 'italic', marginTop: 4 },
-  section: { marginTop: 16 },
-  sectionTitle: { fontSize: 18, color: '#FFFFFF', fontFamily: 'serif', marginBottom: 12 },
+  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
 
-  // ── Bespoke shadow quote block ──
-  quoteContainer: { alignItems: 'center', marginBottom: 48, marginTop: 8, paddingHorizontal: 16 },
-  quoteMark: {
-    fontSize: 72,
-    color: 'rgba(140, 190, 170, 0.25)',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    height: 52,
-    lineHeight: 80,
-    overflow: 'hidden',
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
+  backText: { fontSize: 14, color: PALETTE.emerald, fontWeight: '600' },
+
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  header: { marginBottom: 32 },
+  headerTitle: {
+    fontSize: 34,
+    color: PALETTE.textMain,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontWeight: '300',
+    marginBottom: 8,
   },
-  quoteText: {
-    fontSize: 22,
-    color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    textAlign: 'center',
-    lineHeight: 32,
-    marginBottom: 20,
+  headerSubtitle: { fontSize: 14, color: PALETTE.emerald, fontStyle: 'italic' },
+
+  loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14 },
+
+  lockTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12, textAlign: 'center' },
+  lockSub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+  premiumBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: PALETTE.emerald,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 28,
   },
-  quoteSub: { fontSize: 10, color: PALETTE.sage, fontWeight: '800', letterSpacing: 2 },
-  emptyStateContainer: { marginTop: 32 },
-  emptyCard: { borderRadius: 24, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  emptyTitle: { fontSize: 24, color: '#FFFFFF', fontFamily: 'serif', marginBottom: 12 },
-  emptySubtitle: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 24 },
-  emptyButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.gold },
-  emptyButtonText: { color: PALETTE.gold, fontWeight: '700' },
-  deepCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: PALETTE.sageBorder },
-  deepCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
-  deepCardTitle: { fontSize: 18, color: '#FFFFFF', fontWeight: '700' },
-  deepCardMain: { fontSize: 15, color: 'rgba(255,255,255,0.7)', lineHeight: 24 },
-  deepDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 20 },
-  detailRow: { marginBottom: 16 },
-  detailLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 6 },
-  detailText: { fontSize: 15, color: '#FFFFFF', lineHeight: 22 },
-  affirmationBox: { marginTop: 8, padding: 16, borderLeftWidth: 2 },
-  affirmationText: { fontSize: 15, fontStyle: 'italic', lineHeight: 24 },
+  premiumBtnText: { color: '#0A0A0C', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
+
+  emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12, textAlign: 'center' },
+  emptySub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+  actionBtn: { borderWidth: 1, borderColor: PALETTE.glassBorder, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 28 },
+  actionBtnText: { color: PALETTE.textMain, fontSize: 14, fontWeight: '600' },
+
+  card: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 24, marginBottom: 24 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  cardTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12 },
+  promptText: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, fontStyle: 'italic', marginBottom: 24 },
+  bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 24 },
+
+  affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
+  affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
+  affirmationText: { fontSize: 15, color: PALETTE.gold, lineHeight: 22, fontStyle: 'italic', fontFamily: 'Georgia' },
 });
 

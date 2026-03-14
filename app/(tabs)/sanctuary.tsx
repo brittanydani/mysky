@@ -1,7 +1,5 @@
-import { Redirect } from 'expo-router';
-
-// Sanctuary has moved to a root-level full-screen modal (app/sanctuary.tsx).
-// This redirect preserves any existing /(tabs)/sanctuary deep-links.
-export default function SanctuaryTabRedirect() {
-  return <Redirect href="/sanctuary" />;
-}
+// Sanctuary lives at app/sanctuary.tsx (root-level fullScreenModal).
+// Deep-links that land on /(tabs)/sanctuary render the workspace in-place
+// instead of redirecting — a redirect to "/sanctuary" from inside the tabs
+// navigator resolves back to this same file, causing an infinite loop.
+export { default } from '../sanctuary';

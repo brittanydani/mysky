@@ -150,9 +150,11 @@ export class CheckInService {
     const clampedMood = Math.max(1, Math.min(10, Math.round(rawMood)));
 
     const now = new Date();
-    const date = toLocalDateString(now);
+    const date = input.date ?? toLocalDateString(now);
+    // When editing a past date, compute the sky snapshot for noon on that date
+    const snapshotDate = input.date ? new Date(input.date + 'T12:00:00') : now;
     const timeOfDay = input.timeOfDay ?? detectTimeOfDay(now);
-    const sky = captureSkySnapshot(chart, now);
+    const sky = captureSkySnapshot(chart, snapshotDate);
 
     const checkIn: DailyCheckIn = {
       id: generateId(),
@@ -187,6 +189,21 @@ export class CheckInService {
   static async getTodayCheckInForSlot(chartId: string, timeOfDay: TimeOfDay): Promise<DailyCheckIn | null> {
     const today = toLocalDateString(new Date());
     return localDb.getCheckInByDateAndTime(today, chartId, timeOfDay);
+  }
+
+  /**
+   * Get the check-in for any specific date + time slot
+   */
+  static async getCheckInForDateAndSlot(chartId: string, date: string, timeOfDay: TimeOfDay): Promise<DailyCheckIn | null> {
+    return localDb.getCheckInByDateAndTime(date, chartId, timeOfDay);
+  }
+
+  /**
+   * Get which time slots have been filled for any given date
+   */
+  static async getCompletedTimeSlotsForDate(chartId: string, date: string): Promise<TimeOfDay[]> {
+    const checkIns = await localDb.getCheckInsByDate(date, chartId);
+    return checkIns.map(c => c.timeOfDay);
   }
 
   /**

@@ -25,6 +25,11 @@ import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
 import { CircadianRhythmTerrain } from '../../components/ui/CircadianRhythmTerrain';
 import { useCircadianStore } from '../../store/circadianStore';
+import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
+import {
+  computeSelfKnowledgeCrossRef,
+  CrossRefInsight,
+} from '../../utils/selfKnowledgeCrossRef';
 
 // ── Unified 5-Hub Palette ──
 const PALETTE = {
@@ -32,9 +37,20 @@ const PALETTE = {
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
+  rose: '#D4A3B3',
+  lavender: '#A89BC8',
   bg: '#0A0A0C',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
+};
+
+const CROSS_REF_ACCENT: Record<string, string> = {
+  gold:       PALETTE.gold,
+  silverBlue: PALETTE.silverBlue,
+  copper:     PALETTE.copper,
+  emerald:    PALETTE.emerald,
+  rose:       PALETTE.rose,
+  lavender:   PALETTE.lavender,
 };
 
 // ── Rotating daily reflection prompts ──
@@ -70,6 +86,7 @@ export default function InsightsScreen() {
     stressTrend: null,
   });
   const [enhanced, setEnhanced] = useState<EnhancedInsightBundle | null>(null);
+  const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
   const syncRhythm = useCircadianStore((s) => s.syncRhythm);
 
   useFocusEffect(
@@ -108,6 +125,15 @@ export default function InsightsScreen() {
           }
 
           setSnapshot({ avgMood, checkInCount: checkIns.length, stressTrend });
+
+          // ── Self-knowledge cross-reference (all users) ──
+          try {
+            const skContext = await loadSelfKnowledgeContext();
+            const refs = computeSelfKnowledgeCrossRef(skContext, checkIns);
+            setCrossRefs(refs);
+          } catch (e) {
+            logger.error('Self-knowledge cross-ref failed:', e);
+          }
 
           // ── Enhanced insights pipeline (premium) ──
           if (isPremium) {
@@ -157,6 +183,14 @@ export default function InsightsScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <Pressable
+          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+        </Pressable>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
           {/* ── Header ── */}
@@ -187,7 +221,37 @@ export default function InsightsScreen() {
             <MetricBox label="LOGS" value={snapshot.checkInCount.toString()} color={PALETTE.gold} />
           </View>
 
-          {/* ── Hub 3: Circadian Terrain (Premium) ── */}
+          {/* ── Hub 3: Personal Patterns (Self-Knowledge × Behavioral Data) ── */}
+          {crossRefs.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(260)} style={styles.section}>
+              <Text style={styles.sectionTitle}>Personal Patterns</Text>
+              {crossRefs.map((insight) => {
+                const accent = CROSS_REF_ACCENT[insight.accentColor] ?? PALETTE.gold;
+                return (
+                  <LinearGradient
+                    key={insight.id}
+                    colors={[`${accent}18`, 'rgba(10,10,12,0.9)']}
+                    style={styles.glassCard}
+                  >
+                    <View style={styles.crossRefHeader}>
+                      <Text style={[styles.insightLabel, { color: accent }]}>
+                        {insight.source.toUpperCase()}
+                      </Text>
+                      {insight.isConfirmed && (
+                        <View style={[styles.confirmedBadge, { borderColor: `${accent}50` }]}>
+                          <Text style={[styles.confirmedText, { color: accent }]}>DATA CONFIRMED</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.patternTitle}>{insight.title}</Text>
+                    <Text style={styles.insightBody}>{insight.body}</Text>
+                  </LinearGradient>
+                );
+              })}
+            </Animated.View>
+          )}
+
+          {/* ── Hub 4: Circadian Terrain (Premium) ── */}
           {isPremium && (
             <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
               <Text style={styles.sectionTitle}>Circadian Terrain</Text>
@@ -197,7 +261,7 @@ export default function InsightsScreen() {
             </Animated.View>
           )}
 
-          {/* ── Hub 4: Narrative Pattern Insights ── */}
+          {/* ── Hub 5: Narrative Pattern Insights ── */}
           {enhanced && (
             <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
               {enhanced.blended.length > 0 && (
@@ -238,7 +302,7 @@ export default function InsightsScreen() {
             </Animated.View>
           )}
 
-          {/* ── Hub 5: Cosmic Context ── */}
+          {/* ── Hub 6: Cosmic Context ── */}
           <Animated.View entering={FadeInDown.delay(480)} style={[styles.section, { marginTop: 8 }]}>
             <Pressable onPress={() => nav('/astrology-context')}>
               <LinearGradient colors={['rgba(212, 184, 114, 0.1)', 'rgba(212, 184, 114, 0.02)']} style={styles.cosmicCard}>
@@ -281,12 +345,13 @@ const ActionPill = ({ label, icon, color, onPress }: { label: string; icon: keyo
 // ── Styles ──
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
+  backButton: { padding: 8, paddingHorizontal: 16, alignSelf: 'flex-start' },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 120 },
 
   header: { marginTop: 20, marginBottom: 28 },
-  title: { fontSize: 32, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginTop: 4 },
 
   section: { marginBottom: 24 },
@@ -319,5 +384,15 @@ const styles = StyleSheet.create({
   cosmicIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(212, 184, 114, 0.1)', justifyContent: 'center', alignItems: 'center' },
   cosmicTitle: { fontSize: 15, fontWeight: '600', color: PALETTE.gold, marginBottom: 2 },
   cosmicSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.3)' },
+
+  // Cross-reference cards
+  crossRefHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  confirmedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  confirmedText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 });
 

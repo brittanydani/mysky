@@ -71,7 +71,7 @@ export default function OnboardingBirthScreen() {
         logger.error('[OnboardingBirth] IdentityVault seal failed:', err)
       );
 
-      router.replace('/(tabs)/mood' as Href);
+      router.replace('/(tabs)/home' as Href);
     } catch (e) {
       logger.error('[OnboardingBirth] failed:', e);
     }
