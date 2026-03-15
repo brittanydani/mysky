@@ -1008,7 +1008,12 @@ export default function ChartScreen() {
                         <Text style={[styles.planetName, MULTI_CHAR_PLANETS.has(row.label) && { fontSize: 11 }]}>
                           {row.label}
                         </Text>
-                        {retro && <MetallicText style={styles.retroLabel} color="#E8D6AE">℞ Retrograde</MetallicText>}
+                        {retro && (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                            <Ionicons name="arrow-undo-outline" size={10} color="#E8D6AE" />
+                            <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
+                          </View>
+                        )}
                       </View>
                     </View>
 
@@ -1059,7 +1064,12 @@ export default function ChartScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
-                          {pt.retrograde && <MetallicText style={styles.retroLabel} color="#E8D6AE">℞ Retrograde</MetallicText>}
+                          {pt.retrograde && (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+                              <Ionicons name="arrow-undo-outline" size={10} color="#E8D6AE" />
+                              <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
+                            </View>
+                          )}
                         </View>
                       </View>
 
@@ -1486,7 +1496,7 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.retrogradeEmphasis.count >= 3 && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>℞</Text>
+                    <Ionicons name="arrow-undo-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>

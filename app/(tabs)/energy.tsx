@@ -27,7 +27,7 @@ import { theme } from '../../constants/theme';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { applyEnergyLabels } from '../../constants/storyLabels';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import { SomaticEnergyOrb } from '../../components/ui/SomaticEnergyOrb';
+
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { usePremium } from '../../context/PremiumContext';
@@ -209,7 +209,6 @@ export default function EnergyScreen() {
             showsVerticalScrollIndicator={false}
           >
             <Animated.View entering={FadeIn.duration(1000)} style={styles.somaticHeader}>
-              <SomaticEnergyOrb intensity="Low" size={180} />
               <Text style={styles.somaticPrompt}>Your energy mirror awaits</Text>
             </Animated.View>
             <Animated.View entering={FadeInDown.delay(200).duration(600)}>
@@ -240,7 +239,6 @@ export default function EnergyScreen() {
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.loadingContainer}>
-            <SomaticEnergyOrb intensity="Low" size={140} />
             <Text style={[styles.body, { marginTop: 12 }]}>Reading your energy{'…'}</Text>
           </View>
         </SafeAreaView>
@@ -276,7 +274,6 @@ export default function EnergyScreen() {
 
           {/* ═══ HUB 1 — SOMATIC ANCHOR ═══ */}
           <Animated.View entering={FadeIn.duration(1000)} style={styles.somaticHeader}>
-            <SomaticEnergyOrb intensity={snapshot.intensity} />
             <Text style={styles.somaticPrompt}>
               {userName ? `${userName}, focus inward` : 'Focus your awareness internally'}...
             </Text>

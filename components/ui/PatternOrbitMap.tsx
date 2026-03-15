@@ -26,6 +26,8 @@ import {
   Group,
   Text as SkiaText,
   matchFont,
+  LinearGradient,
+  vec,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
@@ -200,6 +202,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   const serifTheme = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 10, fontWeight: '600' }), []);
   const sansMonth = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '500' }), []);
   const sansSummary = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 8, fontWeight: '400' }), []);
+  const sansDimLabel = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 7, fontWeight: '700' }), []);
   useEffect(() => {
     breath.value = withRepeat(
       withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
@@ -257,7 +260,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
       const p = Skia.Path.Make();
       p.moveTo(node.x, node.y);
       p.quadTo(cpX, cpY, next.x, next.y);
-      return { path: p, color: node.color, glow: node.glow, score: node.score };
+      return { path: p, color: node.color, glow: node.glow, score: node.score, x1: node.x, y1: node.y, x2: next.x, y2: next.y };
     });
 
     // Cross-connections: connect every other node for the web effect
@@ -274,7 +277,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
       const cpX = cx + size * 0.04 * Math.cos(offsetAngle + Math.PI / 2);
       const cpY = cy + size * 0.04 * Math.sin(offsetAngle + Math.PI / 2);
       p.quadTo(cpX, cpY, across.x, across.y);
-      return [{ path: p, color: node.color, glow: node.glow, score: avgScore }];
+      return [{ path: p, color: node.color, glow: node.glow, score: avgScore, x1: node.x, y1: node.y, x2: across.x, y2: across.y }];
     });
 
     // Outer decorative ring
@@ -356,14 +359,20 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
               >
                 <BlurMask blur={6} style="solid" />
               </Path>
-              {/* Core stroke */}
+              {/* Core stroke with metallic gradient */}
               <Path
                 path={arc.path}
                 style="stroke"
                 strokeWidth={1.5}
                 strokeCap="round"
-                color={withAlpha(arc.color, 0.35 + arc.score * 0.3)}
-              />
+                opacity={0.35 + arc.score * 0.3}
+              >
+                <LinearGradient
+                  start={vec(arc.x1, arc.y1)}
+                  end={vec(arc.x2, arc.y2)}
+                  colors={[arc.glow, arc.color, '#FFFFFF', arc.color, arc.glow]}
+                />
+              </Path>
             </React.Fragment>
           ))}
         </Group>
@@ -469,11 +478,15 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
         })()}
       </Canvas>
 
-      {/* ── Dimension labels (RN Text for Unicode icon support) ── */}
+      {/* ── Dimension labels ── */}
       {nodes.map((node, i) => {
         const labelR = orbitR + 38;
         const lx = cx + labelR * Math.cos(node.angle);
         const ly = cy + labelR * Math.sin(node.angle);
+        const lines = node.label.split('\n');
+        const canvasW = 72;
+        const lineH = 9;
+        const canvasH = lines.length * lineH;
 
         return (
           <View
@@ -488,9 +501,27 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
             ]}
           >
             <Text style={[styles.dimIcon, { color: node.color }]}>{node.icon}</Text>
-            <Text style={[styles.dimText, { color: node.color }]}>
-              {node.label}
-            </Text>
+            <Canvas style={{ width: canvasW, height: canvasH }}>
+              <Group>
+                <LinearGradient
+                  start={vec(0, 0)}
+                  end={vec(canvasW, canvasH)}
+                  colors={[node.glow, node.color, node.glow]}
+                />
+                {sansDimLabel && lines.map((line, j) => {
+                  const tw = sansDimLabel.getTextWidth(line);
+                  return (
+                    <SkiaText
+                      key={j}
+                      x={(canvasW - tw) / 2}
+                      y={j * lineH + lineH - 1}
+                      text={line}
+                      font={sansDimLabel}
+                    />
+                  );
+                })}
+              </Group>
+            </Canvas>
           </View>
         );
       })}
@@ -524,12 +555,5 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  dimText: {
-    fontSize: 6.5,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    textAlign: 'center',
-    lineHeight: 9,
   },
 });

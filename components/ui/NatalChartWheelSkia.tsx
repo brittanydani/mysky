@@ -1073,7 +1073,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 <SkiaText
                   x={glyphPos.x + 7.5}
                   y={glyphPos.y - 6.5}
-                  text="℞"
+                  text="R"
                   font={sans8}
                   color={theme.warning}
                 />
@@ -1203,7 +1203,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
               {/* Retrograde mark */}
               {planet.isRetrograde && sans8 && (
-                <SkiaText x={glyphPos.x + 6.0} y={glyphPos.y - 5.5} text="℞" font={sans8} color={theme.warning} />
+                <SkiaText x={glyphPos.x + 6.0} y={glyphPos.y - 5.5} text="R" font={sans8} color={theme.warning} />
               )}
             </Group>
           );

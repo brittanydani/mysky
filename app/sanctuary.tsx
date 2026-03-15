@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { GoldSubtitle as _GoldSubtitle } from '../components/ui/GoldSubtitle'; // reserved for future subtitle
 import { MetallicText } from '../components/ui/MetallicText';
+import { localDb } from '../services/storage/localDb';
+import { generateId } from '../services/storage/models';
 import * as Haptics from 'expo-haptics';
 
 export default function SanctuaryWorkspace() {
@@ -31,10 +33,30 @@ export default function SanctuaryWorkspace() {
 
   const wordCount = entryText.trim().split(/\s+/).filter(w => w.length > 0).length;
 
-  const handleSeal = () => {
+  const handleSeal = async () => {
+    if (!entryText.trim()) {
+      Keyboard.dismiss();
+      router.back();
+      return;
+    }
     Keyboard.dismiss();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Trigger your secure save logic here
+    try {
+      const now = new Date().toISOString();
+      await localDb.saveJournalEntry({
+        id: generateId(),
+        date: now.split('T')[0],
+        mood: 'calm',
+        moonPhase: 'waning',
+        content: entryText.trim(),
+        title: 'Sanctuary',
+        createdAt: now,
+        updatedAt: now,
+        isDeleted: false,
+      });
+    } catch (e) {
+      console.error('Failed to seal sanctuary entry:', e);
+    }
     router.back();
   };
 
@@ -48,7 +70,7 @@ export default function SanctuaryWorkspace() {
         <Pressable onPress={() => { Haptics.selectionAsync(); router.back(); }} style={styles.iconButton}>
           <Text style={styles.iconText}>×</Text>
         </Pressable>
-        <Pressable onPress={handleSeal} style={styles.iconButton}>
+        <Pressable onPress={handleSeal} style={[styles.iconButton, { marginRight: 8 }]}>
           <MetallicText style={styles.sealIconText} color="#D9BF8C">⚲</MetallicText>
         </Pressable>
       </View>
