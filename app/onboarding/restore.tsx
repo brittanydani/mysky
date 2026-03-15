@@ -14,6 +14,8 @@ import { BackupService } from '../../services/storage/backupService';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { logger } from '../../utils/logger';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -108,7 +110,7 @@ export default function OnboardingRestoreScreen() {
               style={styles.glassCard}
             >
               <View style={styles.cardHeader}>
-                <Ionicons name="cloud-download" size={32} color={PALETTE.gold} style={{ marginBottom: 12 }} />
+                <MetallicIcon name="cloud-download" size={32} color={PALETTE.gold} style={{ marginBottom: 12 }} />
                 <Text style={styles.cardTitle}>Recover Your Data</Text>
                 <Text style={styles.cardSubtitle}>
                   Select your encrypted .msky backup file and enter the passphrase used to secure it.
@@ -120,14 +122,14 @@ export default function OnboardingRestoreScreen() {
                 onPress={pick} 
                 accessibilityRole="button"
               >
-                <Ionicons 
+                <MetallicIcon 
                   name={backupUri ? "checkmark-circle" : "folder-open-outline"} 
                   size={20} 
                   color={backupUri ? '#6EBF8B' : PALETTE.gold} 
                 />
-                <Text style={[styles.pickText, backupUri && { color: '#6EBF8B' }]}>
+                <MetallicText style={[styles.pickText, backupUri && { fontWeight: '700' }]} color={backupUri ? '#6EBF8B' : PALETTE.gold}>
                   {backupUri ? 'Backup file selected' : 'Choose backup file'}
-                </Text>
+                </MetallicText>
               </Pressable>
 
               <TextInput

@@ -1015,7 +1015,7 @@ export default function ChartScreen() {
                     <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
                       <GradientSymbol symbol={row.p.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.signName, { color: elColor }]}>{row.p.sign.name}</Text>
+                        <MetallicText color={elColor} style={styles.signName}>{row.p.sign.name}</MetallicText>
                         <Text style={styles.elementLabel}>
                           {row.p.sign.element} · {row.p.sign.modality}
                         </Text>
@@ -1066,14 +1066,12 @@ export default function ChartScreen() {
                       <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
                         <GradientSymbol symbol={pt.signSymbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
                         <View style={{ flex: 1 }}>
-                          <Text
-                            style={[
-                              styles.signName,
-                              { color: ELEMENT_COLORS[pt.element] || theme.textSecondary },
-                            ]}
+                          <MetallicText
+                            color={ELEMENT_COLORS[pt.element] || theme.textSecondary}
+                            style={styles.signName}
                           >
                             {pt.sign}
-                          </Text>
+                          </MetallicText>
                           <Text style={styles.elementLabel}>{pt.element}</Text>
                         </View>
                       </View>
@@ -1150,7 +1148,7 @@ export default function ChartScreen() {
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
                           <GradientSymbol symbol={cusp.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
                           <View style={{ flex: 1 }}>
-                            <Text style={[styles.signName, { color: elColor }]}>{cusp.sign.name}</Text>
+                            <MetallicText color={elColor} style={styles.signName}>{cusp.sign.name}</MetallicText>
                           </View>
                         </View>
 
@@ -1244,8 +1242,8 @@ export default function ChartScreen() {
 
                         <View style={[styles.td, { flex: 2, alignItems: 'center' }]}>
                           <GradientSymbol symbol={asp.type.symbol} fontSize={18} w={24} h={24} />
-                          <Text style={[styles.aspectName, { color: natureColor }]}>{asp.type.name}</Text>
-                          <Text style={[styles.aspectNature, { color: natureColor }]}>{asp.type.nature}</Text>
+                          <MetallicText color={natureColor} style={styles.aspectName}>{asp.type.name}</MetallicText>
+                          <MetallicText color={natureColor} style={styles.aspectNature}>{asp.type.nature}</MetallicText>
                         </View>
 
                         <View style={[styles.td, { flex: 2, flexDirection: 'row', alignItems: 'center' }]}>
@@ -1262,16 +1260,22 @@ export default function ChartScreen() {
                         </View>
 
                         <View style={[styles.td, { flex: 1, alignItems: 'center' }]}>
-                          <Text
-                            style={[
-                              styles.orbText,
-                              {
-                                color: asp.orb < 2 ? '#9ACD32' : asp.orb < 5 ? theme.primary : theme.textSecondary,
-                              },
-                            ]}
-                          >
-                            {asp.orb.toFixed(1)}°
-                          </Text>
+                          {asp.orb < 2 ? (
+                            <MetallicText color="#9ACD32" style={styles.orbText}>
+                              {asp.orb.toFixed(1)}°
+                            </MetallicText>
+                          ) : (
+                            <Text
+                              style={[
+                                styles.orbText,
+                                {
+                                  color: asp.orb < 5 ? theme.primary : theme.textSecondary,
+                                },
+                              ]}
+                            >
+                              {asp.orb.toFixed(1)}°
+                            </Text>
+                          )}
                           {asp.isApplying && <Text style={styles.applyingLabel}>applying</Text>}
                         </View>
                       </LinearGradient>
@@ -2107,7 +2111,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
     gap: 8,
-    marginTop: 48,
+    marginTop: 24,
     marginBottom: theme.spacing.xl,
   },
   overlayUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },

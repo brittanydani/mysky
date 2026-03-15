@@ -21,17 +21,40 @@ export interface RetryConfig {
   maxDelayMs: number;
 }
 
+export type ApproximateTimePeriod = 'morning' | 'afternoon' | 'evening' | 'night';
+
 export interface BirthData {
   date: string; // ISO date string (YYYY-MM-DD)
   time?: string; // HH:MM format (optional for unknown time)
   hasUnknownTime: boolean;
+  approximateTime?: ApproximateTimePeriod; // narrows Moon/Asc range when exact time unknown
   place: string;
   latitude: number;
   longitude: number;
   timezone?: string;
   houseSystem?: HouseSystem;
+  zodiacSystem?: ZodiacSystem;
   orbPreset?: string;
   accuracyLevel?: 'exact' | 'approximate' | 'unknown-time';
+}
+
+export type ZodiacSystem = 'tropical' | 'sidereal';
+
+/** Ayanamsa (precession correction) for sidereal zodiac calculations */
+export type Ayanamsa = 'lahiri' | 'raman' | 'krishnamurti' | 'fagan-bradley';
+
+/** Moon position uncertainty range for unknown/approximate birth times */
+export interface MoonUncertainty {
+  /** Earliest possible Moon longitude (0–360) */
+  minLongitude: number;
+  /** Latest possible Moon longitude (0–360) */
+  maxLongitude: number;
+  /** Maximum positional error in degrees */
+  maxErrorDegrees: number;
+  /** Possible sign(s) the Moon could be in */
+  possibleSigns: string[];
+  /** Whether the Moon could change signs within the uncertainty window */
+  signChangesPossible: boolean;
 }
 
 export interface SimpleAspect {
@@ -203,6 +226,9 @@ export interface NatalChart {
 
   // Calculated points
   partOfFortune?: PointPlacement;
+
+  // Moon uncertainty (populated when birth time is unknown or approximate)
+  moonUncertainty?: MoonUncertainty;
 
   // Accuracy metadata
   calculationAccuracy?: {

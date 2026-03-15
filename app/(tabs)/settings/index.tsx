@@ -5,6 +5,8 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from '../../../components/ui/MetallicText';
+import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -139,11 +141,6 @@ export default function SettingsScreen() {
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
   const [dreamLoggingEnabled, setDreamLoggingEnabled] = useState(true);
-
-  // Dev-only: edit birth data for screenshots
-  const [showDevBirthModal, setShowDevBirthModal] = useState(false);
-  const [devBirthInitial, setDevBirthInitial] = useState<Partial<BirthData> & { chartName?: string } | undefined>(undefined);
-  const [devChartId, setDevChartId] = useState<string | null>(null);
 
   // ── Identity state ──
   const [identityName, setIdentityName] = useState<string>('');
@@ -341,72 +338,18 @@ export default function SettingsScreen() {
   const disableActions = backupInProgress || restoreInProgress || backupModalVisible || restoreModalVisible;
 
   const openSupportEmail = async () => {
-    const url = 'mailto:support@mysky.app?subject=MySky%20Support';
+    const url = 'mailto:brittanyapps@outlook.com?subject=MySky%20Support';
     try {
       const can = await Linking.canOpenURL(url);
       if (!can) {
-        Alert.alert('Unable to Open Mail', 'Please email support@mysky.app.');
+        Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com.');
         return;
       }
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Unable to Open Mail', 'Please email support@mysky.app.');
+      Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com.');
     }
   };
-
-  const handleDevEditBirthData = useCallback(async () => {
-    try {
-      const charts = await localDb.getCharts();
-      if (charts.length === 0) {
-        Alert.alert('No Chart', 'No chart found to edit.');
-        return;
-      }
-      const chart = charts[0];
-      setDevChartId(chart.id);
-      setDevBirthInitial({
-        chartName: chart.name,
-        date: chart.birthDate,
-        time: chart.birthTime,
-        hasUnknownTime: chart.hasUnknownTime,
-        place: chart.birthPlace,
-        latitude: chart.latitude,
-        longitude: chart.longitude,
-        timezone: chart.timezone,
-        houseSystem: chart.houseSystem as any,
-      });
-      setShowDevBirthModal(true);
-    } catch (error) {
-      logger.error('Failed to load chart for dev edit:', error);
-      Alert.alert('Error', 'Could not load chart data.');
-    }
-  }, []);
-
-  const handleDevBirthSave = useCallback(async (birthData: BirthData, extra?: { chartName?: string }) => {
-    setShowDevBirthModal(false);
-    try {
-      const chart = AstrologyCalculator.generateNatalChart(birthData);
-      const now = new Date().toISOString();
-      await localDb.saveChart({
-        id: devChartId || chart.id,
-        name: extra?.chartName ?? chart.name,
-        birthDate: chart.birthData.date,
-        birthTime: chart.birthData.time,
-        hasUnknownTime: chart.birthData.hasUnknownTime,
-        birthPlace: chart.birthData.place,
-        latitude: chart.birthData.latitude,
-        longitude: chart.birthData.longitude,
-        houseSystem: chart.birthData.houseSystem,
-        timezone: chart.birthData.timezone,
-        createdAt: chart.createdAt,
-        updatedAt: now,
-        isDeleted: false,
-      });
-      Alert.alert('Birth Data Updated', 'Restart the app or navigate away and back to see changes everywhere.');
-    } catch (error) {
-      logger.error('Dev birth data save failed:', error);
-      Alert.alert('Error', 'Failed to update birth data.');
-    }
-  }, [devChartId]);
 
   const openPrivacyPolicy = async () => {
     try {
@@ -530,8 +473,8 @@ export default function SettingsScreen() {
                 style={styles.keyLossBannerGradient}
               >
                 <View style={styles.keyLossBannerHeader}>
-                  <Ionicons name="warning" size={22} color={errorColor} />
-                  <Text style={[styles.keyLossBannerTitle, { color: errorColor }]}>Encryption Key Unavailable</Text>
+                  <MetallicIcon name="warning" size={22} color={errorColor} />
+                  <MetallicText color={errorColor} style={[styles.keyLossBannerTitle, { color: errorColor }]}>Encryption Key Unavailable</MetallicText>
                 </View>
                 <Text style={styles.keyLossBannerText}>
                   Your encrypted data cannot be read on this device. This can happen after a device migration, OS update, or app reinstall.
@@ -552,8 +495,8 @@ export default function SettingsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Delete all data"
                   >
-                    <Ionicons name="trash" size={16} color={errorColor} />
-                    <Text style={[styles.keyLossBannerButtonText, { color: errorColor }]}>Delete All Data</Text>
+                    <MetallicIcon name="trash" size={16} color={errorColor} />
+                    <MetallicText color={errorColor} style={[styles.keyLossBannerButtonText, { color: errorColor }]}>Delete All Data</MetallicText>
                   </Pressable>
                 </View>
               </LinearGradient>
@@ -571,7 +514,7 @@ export default function SettingsScreen() {
                         colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']}
                         style={styles.identityAvatar}
                       >
-                        <Ionicons name="person" size={24} color={accentGold} />
+                        <MetallicIcon name="person" size={24} color={accentGold} />
                       </LinearGradient>
                     </View>
                     <View style={styles.identityInfo}>
@@ -592,8 +535,8 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Edit birth data"
                 >
-                  <Ionicons name="create-outline" size={16} color={accentGold} />
-                  <Text style={styles.identityEditText}>Edit Birth Data</Text>
+                  <MetallicIcon name="create-outline" size={16} color={accentGold} />
+                  <MetallicText color={accentGold} style={styles.identityEditText}>Edit Birth Data</MetallicText>
                 </Pressable>
               </View>
             </ObsidianSettingsGroup>
@@ -605,7 +548,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="cloud-upload" size={20} color={accentGold} />
+                        <MetallicIcon name="cloud-upload" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Backup & Restore</Text>
                         {!isPremium && (
                           <View style={styles.premiumBadge}>
@@ -632,8 +575,8 @@ export default function SettingsScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Backup now"
                     >
-                      <Ionicons name="cloud-upload" size={16} color={accentGold} />
-                      <Text style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</Text>
+                      <MetallicIcon name="cloud-upload" size={16} color={accentGold} />
+                      <MetallicText color={accentGold} style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</MetallicText>
                     </Pressable>
 
                     <Pressable
@@ -643,8 +586,8 @@ export default function SettingsScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Restore backup"
                     >
-                      <Ionicons name="cloud-download" size={16} color={accentGold} />
-                      <Text style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</Text>
+                      <MetallicIcon name="cloud-download" size={16} color={accentGold} />
+                      <MetallicText color={accentGold} style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</MetallicText>
                     </Pressable>
                   </View>
                 </View>
@@ -656,7 +599,7 @@ export default function SettingsScreen() {
                 <View style={styles.securityGrid}>
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="lock-closed" size={16} color={successColor} />
+                      <MetallicIcon name="lock-closed" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Local Encryption</Text>
@@ -666,7 +609,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="airplane" size={16} color={successColor} />
+                      <MetallicIcon name="airplane" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>No Content Transmitted</Text>
@@ -676,7 +619,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="analytics" size={16} color={successColor} />
+                      <MetallicIcon name="analytics" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Zero Third-Party Analytics</Text>
@@ -686,7 +629,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="document-text" size={16} color={successColor} />
+                      <MetallicIcon name="document-text" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Minimal Event Logging</Text>
@@ -712,7 +655,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="notifications-outline" size={20} color={accentAmethyst} />
+                      <MetallicIcon name="notifications-outline" size={20} color={accentAmethyst} />
                       <Text style={styles.settingTitle}>Notification Schedule</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -735,7 +678,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="color-filter" size={20} color={accentAmethyst} />
+                      <MetallicIcon name="color-filter" size={20} color={accentAmethyst} />
                       <Text style={styles.settingTitle}>Visual Atmosphere</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -782,7 +725,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="shield-checkmark" size={20} color={accentBlue} />
+                      <MetallicIcon name="shield-checkmark" size={20} color={accentBlue} />
                       <Text style={styles.settingTitle}>Privacy Settings</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -795,15 +738,15 @@ export default function SettingsScreen() {
               <ObsidianDivider />
               <View style={[styles.privacyInfo, { marginHorizontal: 16, marginBottom: 8 }]}>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="phone-portrait" size={16} color={accentBlue} />
+                  <MetallicIcon name="phone-portrait" size={16} color={accentBlue} />
                   <Text style={styles.privacyText}>Data stored locally on your device</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="shield" size={16} color={accentEmerald} />
+                  <MetallicIcon name="shield" size={16} color={accentEmerald} />
                   <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="ban" size={16} color={accentAmethyst} />
+                  <MetallicIcon name="ban" size={16} color={accentAmethyst} />
                   <Text style={styles.privacyText}>Never sold or shared</Text>
                 </View>
               </View>
@@ -874,7 +817,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="document-text-outline" size={20} color={accentCopper} />
+                      <MetallicIcon name="shield-half-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>Privacy Policy</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -894,7 +837,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="reader-outline" size={20} color={accentCopper} />
+                      <MetallicIcon name="ribbon-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>Terms of Service</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -914,7 +857,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="help-circle-outline" size={20} color={accentCopper} />
+                      <MetallicIcon name="diamond-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>FAQ</Text>
                     </View>
                     <Text style={styles.settingDescription}>
@@ -938,7 +881,7 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="mail-outline" size={20} color={accentGold} />
+                      <MetallicIcon name="mail-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Contact Us</Text>
                     </View>
                     <Text style={styles.settingDescription}>Get help with MySky</Text>
@@ -964,7 +907,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="sparkles" size={20} color={accentGold} />
+                        <MetallicIcon name="sparkles" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
@@ -1011,7 +954,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="sparkles" size={20} color={accentGold} />
+                        <MetallicIcon name="sparkles" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky Active</Text>
                       </View>
                       <Text style={styles.settingDescription}>
@@ -1019,40 +962,6 @@ export default function SettingsScreen() {
                       </Text>
                     </View>
                     <Ionicons name="open-outline" size={18} color={theme.primary} />
-                  </View>
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
-          )}
-
-          {__DEV__ && (
-            <Animated.View entering={FadeInDown.delay(775).duration(600)} style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: 'rgba(224, 122, 152, 0.5)' }]}>Developer Tools</Text>
-
-              <Pressable
-                style={styles.settingCard}
-                onPress={handleDevEditBirthData}
-                accessibilityRole="button"
-                accessibilityLabel="Edit birth data (dev only)"
-              >
-                <LinearGradient
-                  colors={['rgba(224, 122, 152, 0.12)', 'rgba(224, 122, 152, 0.04)']}
-                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(224, 122, 152, 0.2)' }]}
-                >
-                  <View style={styles.settingRow}>
-                    <View style={styles.settingInfo}>
-                      <View style={styles.settingHeader}>
-                        <Ionicons name="create-outline" size={20} color="rgba(224, 122, 152, 0.8)" />
-                        <Text style={styles.settingTitle}>Edit Birth Data</Text>
-                        <View style={[styles.premiumBadge, { backgroundColor: 'rgba(224, 122, 152, 0.2)' }]}>
-                          <Text style={[styles.premiumText, { color: 'rgba(224, 122, 152, 0.8)' }]}>DEV</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.settingDescription}>
-                        Temporarily change birth data for screenshots. This overwrites your chart.
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -1091,15 +1000,6 @@ export default function SettingsScreen() {
           await performRestore(passphrase);
         }}
       />
-
-      {__DEV__ && (
-        <BirthDataModal
-          visible={showDevBirthModal}
-          onClose={() => setShowDevBirthModal(false)}
-          onSave={handleDevBirthSave}
-          initialData={devBirthInitial}
-        />
-      )}
 
       <BirthDataModal
         visible={showBirthModal}

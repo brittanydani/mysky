@@ -5,6 +5,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from './MetallicText';
+import { MetallicIcon } from './MetallicIcon';
 
 interface NeedsComparisonProps {
   person1Name: string;
@@ -43,9 +45,9 @@ export default function NeedsComparison({
           </View>
           <View style={styles.nameRow}>
             <View style={[styles.avatar, { backgroundColor: 'transparent' }]}>
-              <Ionicons name="person" size={12} color={PALETTE.gold} />
+              <MetallicIcon name="person" size={12} color={PALETTE.gold} />
             </View>
-            <Text style={[styles.name, { color: PALETTE.gold }]} numberOfLines={1}>{person1Name}</Text>
+            <MetallicText style={styles.name} numberOfLines={1} color={PALETTE.gold}>{person1Name}</MetallicText>
           </View>
           <View style={styles.needsList}>
             {person1Needs.slice(0, 3).length > 0 ? (
@@ -65,7 +67,7 @@ export default function NeedsComparison({
         <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
           <View style={styles.dividerIcon}>
-            <Ionicons name="heart" size={10} color={PALETTE.gold} />
+            <MetallicIcon name="heart" size={10} color={PALETTE.gold} />
           </View>
           <View style={styles.dividerLine} />
         </View>
@@ -81,11 +83,11 @@ export default function NeedsComparison({
           </View>
           <View style={styles.nameRow}>
             <View style={[styles.avatar, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
-              <Ionicons name="person" size={12} color={PALETTE.silverBlue} />
+              <MetallicIcon name="person" size={12} color={PALETTE.silverBlue} />
             </View>
-            <Text style={[styles.name, { color: PALETTE.silverBlue }]} numberOfLines={1}>
+            <MetallicText style={styles.name} numberOfLines={1} color={PALETTE.silverBlue}>
               {person2Name}
-            </Text>
+            </MetallicText>
           </View>
           <View style={styles.needsList}>
             {person2Needs.slice(0, 3).length > 0 ? (

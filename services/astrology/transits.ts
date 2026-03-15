@@ -1,6 +1,7 @@
 // File: services/astrology/transits.ts
 import { NatalChart, HouseSystem, SimpleAspect, AspectTypeName } from './types';
 import { normalize360, extractAbsDegree } from './sharedHelpers';
+import { EclipticGeoMoon } from 'astronomy-engine';
 
 // circular-natal-horoscope-js
 const { Origin, Horoscope } = require('circular-natal-horoscope-js');
@@ -131,6 +132,13 @@ export function getTransitInfo(
     const abs = extractAbsDegree(bodies[key]);
     if (abs != null) map[label] = abs;
   }
+
+  // Override Moon longitude with JPL-grade astronomy-engine value.
+  // circular-natal-horoscope-js has a ~2-3° offset that causes wrong sign
+  // at sign boundaries; astronomy-engine is sub-arcsecond accurate.
+  try {
+    map['Moon'] = normalize360(EclipticGeoMoon(date).lon);
+  } catch { /* keep CNH fallback */ }
 
   const retrogrades = detectRetrogrades(map, latitude, longitude, houseSystem, date);
 

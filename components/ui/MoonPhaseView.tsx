@@ -24,6 +24,7 @@ import {
   Circle,
   Path,
   RadialGradient,
+  LinearGradient,
   Group,
   Skia,
   vec,
@@ -38,9 +39,11 @@ interface MoonPhaseViewProps {
   date?: Date;
   /** When false, renders a non-tappable display orb. Defaults to true. */
   interactive?: boolean;
+  /** Apply a warm champagne-gold gradient to the moon disc. */
+  gradient?: boolean;
 }
 
-export default function MoonPhaseView({ size = 40, date, interactive = true }: MoonPhaseViewProps) {
+export default function MoonPhaseView({ size = 40, date, interactive = true, gradient = false }: MoonPhaseViewProps) {
   const router = useRouter();
   const r = size / 2;
 
@@ -99,7 +102,7 @@ export default function MoonPhaseView({ size = 40, date, interactive = true }: M
 
   const moonLayers = (
     <>
-      {/* ── Layer 1: Subtle silver aura ───────────────────────────────────── */}
+      {/* ── Layer 1: Subtle aura (gold when gradient, silver otherwise) ──── */}
       <Canvas
         style={[
           StyleSheet.absoluteFillObject,
@@ -111,7 +114,11 @@ export default function MoonPhaseView({ size = 40, date, interactive = true }: M
           <RadialGradient
             c={vec(offset + r, offset + r)}
             r={r * 1.5}
-            colors={['rgba(190,195,210,0.20)', 'rgba(170,175,190,0.07)', 'transparent']}
+            colors={
+              gradient
+                ? ['rgba(221,186,106,0.22)', 'rgba(185,152,90,0.08)', 'transparent']
+                : ['rgba(190,195,210,0.20)', 'rgba(170,175,190,0.07)', 'transparent']
+            }
             positions={[0, 0.4, 1]}
           />
         </Circle>
@@ -145,21 +152,30 @@ export default function MoonPhaseView({ size = 40, date, interactive = true }: M
         {/* Layer 4 – Illuminated region (elliptical terminator + limb darkening) */}
         <Group clip={discClip}>
           <Path path={litPath}>
-            <RadialGradient
-              c={vec(r, r)}
-              r={r * 0.95}
-              colors={['#E0DCD4', '#C6C2B8', '#98948A', '#565350']}
-              positions={[0, 0.35, 0.72, 1]}
-            />
+            {gradient ? (
+              <LinearGradient
+                start={vec(0, 0)}
+                end={vec(size, size)}
+                colors={['#7A511C', '#C99949', '#DDBA6A', '#EFD596', '#F7E7C6', '#EFD596', '#DDBA6A', '#A8742E']}
+                positions={[0, 0.15, 0.3, 0.48, 0.58, 0.72, 0.86, 1]}
+              />
+            ) : (
+              <RadialGradient
+                c={vec(r, r)}
+                r={r * 0.95}
+                colors={['#E0DCD4', '#C6C2B8', '#98948A', '#565350']}
+                positions={[0, 0.35, 0.72, 1]}
+              />
+            )}
           </Path>
         </Group>
 
-        {/* Layer 5 – Limb rim: thin silver ring */}
+        {/* Layer 5 – Limb rim ring */}
         <Circle
           cx={r}
           cy={r}
           r={r - 0.75}
-          color="rgba(180,185,195,0.25)"
+          color={gradient ? 'rgba(221,186,106,0.30)' : 'rgba(180,185,195,0.25)'}
           style="stroke"
           strokeWidth={0.75}
         />

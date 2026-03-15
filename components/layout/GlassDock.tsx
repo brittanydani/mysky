@@ -30,6 +30,7 @@ import type { ComponentProps } from 'react';
 
 import { Ionicons } from '@expo/vector-icons';
 import MetallicTabIcon from '../skia/MetallicTabIcon';
+import { MetallicText } from '../ui/MetallicText';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -99,15 +100,22 @@ const TabButton = memo(function TabButton({ isFocused, cfg, onPress, onLayout }:
         <MetallicTabIcon name={isFocused ? cfg.iconFocused : cfg.icon} focused={isFocused} size={22} />
       </Animated.View>
 
-      <Text
-        style={[
-          styles.label,
-          isFocused ? styles.labelActive : styles.labelInactive,
-        ]}
-        numberOfLines={1}
-      >
-        {cfg.label}
-      </Text>
+      {isFocused ? (
+        <MetallicText
+          style={styles.label}
+          color="#D4B872"
+          numberOfLines={1}
+        >
+          {cfg.label}
+        </MetallicText>
+      ) : (
+        <Text
+          style={[styles.label, styles.labelInactive]}
+          numberOfLines={1}
+        >
+          {cfg.label}
+        </Text>
+      )}
 
       {/* Dot placeholder — actual sliding dot is rendered in the parent row */}
     </Pressable>

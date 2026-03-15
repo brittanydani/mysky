@@ -154,16 +154,16 @@ export default function SettingsHub() {
 
   // ── Contact Us ───────────────────────────────────────────────────────────────
   const handleContact = async () => {
-    const url = 'mailto:support@mysky.app?subject=MySky%20Support';
+    const url = 'mailto:brittanyapps@outlook.com?subject=MySky%20Support';
     try {
       const can = await Linking.canOpenURL(url);
       if (!can) {
-        Alert.alert('Unable to Open Mail', 'Please email support@mysky.app directly.');
+        Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com directly.');
         return;
       }
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Unable to Open Mail', 'Please email support@mysky.app directly.');
+      Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com directly.');
     }
   };
 
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: '#FFF',
-    fontFamily: 'Georgia',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
     marginBottom: 8,
   },

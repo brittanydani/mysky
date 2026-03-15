@@ -3,6 +3,8 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from './ui/MetallicText';
+import { MetallicIcon } from './ui/MetallicIcon';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -242,7 +244,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
-                  <Ionicons name={item.icon as IoniconName} size={22} color={item.color} />
+                  <MetallicIcon name={item.icon as IoniconName} size={22} color={item.color} />
                 </View>
                 <View style={styles.valueText}>
                   <Text style={styles.valueTitle}>{item.title}</Text>
@@ -275,9 +277,15 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   accessibilityState={{ selected: isSelected }}
                 >
                   {isAnnual ? (
-                    <View style={styles.bestValueBadge}>
+                    <LinearGradient
+                      colors={[...metallicFillColors]}
+                      locations={[...metallicFillPositions]}
+                      start={[0, 0]}
+                      end={[1, 0]}
+                      style={styles.bestValueBadge}
+                    >
                       <Text style={styles.bestValueText}>BEST VALUE</Text>
-                    </View>
+                    </LinearGradient>
                   ) : (
                     <View style={styles.pricingBadgePlaceholder} />
                   )}
@@ -291,9 +299,15 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   >
                     {tier.price}
                   </Text>
-                  <Text style={[styles.pricingMeta, isSelected && styles.pricingMetaSelected]}>
-                    {isAnnual ? tier.period : isLifetime ? 'One-time' : 'Billed monthly'}
-                  </Text>
+                  {isSelected ? (
+                    <MetallicText color="#D4B872" style={[styles.pricingMeta, styles.pricingMetaSelected]}>
+                      {isAnnual ? tier.period : isLifetime ? 'One-time' : 'Billed monthly'}
+                    </MetallicText>
+                  ) : (
+                    <Text style={styles.pricingMeta}>
+                      {isAnnual ? tier.period : isLifetime ? 'One-time' : 'Billed monthly'}
+                    </Text>
+                  )}
                 </Pressable>
               );
             })}
@@ -565,14 +579,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   bestValueBadge: {
-    backgroundColor: '#D4B872',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
     marginBottom: 12,
   },
   bestValueText: {
-    fontSize: 9,
+    fontSize: 7,
     fontWeight: '800',
     color: '#020817',
     letterSpacing: 1,

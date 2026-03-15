@@ -9,7 +9,9 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import MySkyClipboardSkia from '../components/skia/MySkyClipboardSkia';
+import ScrollSealIcon from '../components/ui/ScrollSealIcon';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -54,10 +56,10 @@ export default function TermsOfServiceScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
             <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <MySkyClipboardSkia size={140} />
+              <ScrollSealIcon size={140} />
             </View>
 
-            <Text style={styles.lastUpdated}>Last updated: March 13, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
 
             <Text style={styles.sectionTitle}>Acceptance of Terms</Text>
             <Text style={styles.paragraph}>
@@ -94,8 +96,8 @@ export default function TermsOfServiceScreen() {
               style={styles.disclaimerCard}
             >
               <View style={styles.disclaimerHeader}>
-                <Ionicons name="medical-outline" size={18} color={PALETTE.copper} />
-                <Text style={[styles.subHeader, { color: PALETTE.copper, marginBottom: 0 }]}>Not Medical or Therapeutic Advice</Text>
+                <MetallicIcon name="medical-outline" size={18} color={PALETTE.copper} />
+                <MetallicText style={[styles.subHeader, { marginBottom: 0 }]} color={PALETTE.copper}>Not Medical or Therapeutic Advice</MetallicText>
               </View>
               <Text style={styles.paragraph}>
                 MySky is a self-reflection and personal growth tool, not a medical app. None of its features — including astrological content, dream reflections, somatic body mapping, nervous system trigger logs, core values exercises, psychological archetype profiles, emotional pattern analysis, cognitive style assessments, healing path prompts, or any other content — constitute medical advice, psychological diagnosis, therapy, counseling, or treatment of any kind.
@@ -128,10 +130,45 @@ export default function TermsOfServiceScreen() {
               You may stop using MySky at any time by uninstalling the app, which permanently erases all locally stored data. If you created an account for AI Reflection Insights, you may request account deletion by contacting support.
             </Text>
 
+            <Text style={styles.sectionTitle}>Age Requirement</Text>
+            <Text style={styles.paragraph}>
+              MySky is intended for users aged 17 and older. By using the app, you confirm that you are at least 17 years of age. We do not knowingly collect personal information from anyone under 17.
+            </Text>
+
+            <Text style={styles.sectionTitle}>User Conduct</Text>
+            <Text style={styles.paragraph}>
+              You agree to use MySky only for its intended purpose of personal reflection and self-awareness. You agree not to reverse-engineer, decompile, disassemble, or attempt to derive the source code of the app, or use it to develop a competing product. You are solely responsible for maintaining the confidentiality of any backup passphrases and account credentials.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Changes to These Terms</Text>
+            <Text style={styles.paragraph}>
+              We may update these Terms from time to time. When we make material changes, the "Last updated" date will be revised, and — where required — we will re-request your consent within the app. Continued use of MySky after changes constitutes acceptance of the revised Terms. We encourage you to review this page periodically.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Indemnification</Text>
+            <Text style={styles.paragraph}>
+              You agree to indemnify and hold harmless MySky and its developer from any claims, damages, losses, or expenses arising from your use of the app, your violation of these Terms, or your violation of any third-party rights.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Governing Law</Text>
+            <Text style={styles.paragraph}>
+              These Terms are governed by and construed in accordance with the laws of the United States. Any disputes shall be resolved in the courts of competent jurisdiction.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Severability</Text>
+            <Text style={styles.paragraph}>
+              If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force and effect.
+            </Text>
+
+            <Text style={styles.sectionTitle}>Entire Agreement</Text>
+            <Text style={styles.paragraph}>
+              These Terms, together with our Privacy Policy, constitute the entire agreement between you and MySky regarding the use of the app and supersede all prior agreements, representations, and understandings.
+            </Text>
+
             <View style={styles.contactCard}>
               <Text style={styles.sectionTitle}>Contact</Text>
               <Text style={styles.paragraph}>Questions regarding these terms? Reach us at:</Text>
-              <Text style={styles.email}>support@mysky.app</Text>
+              <Text style={styles.email}>brittanyapps@outlook.com</Text>
             </View>
 
           </Animated.View>

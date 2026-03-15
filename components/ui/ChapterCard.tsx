@@ -4,6 +4,8 @@ import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { luxuryTheme } from '../../constants/luxuryTheme';
+import { MetallicText } from './MetallicText';
+import { MetallicIcon } from './MetallicIcon';
 
 // Mappings for Archetypal Forces to their corresponding aura colors
 const FORCE_COLORS: Record<string, string> = {
@@ -120,13 +122,19 @@ function ChapterCard({
       <View style={styles.gradient}>
         {/* Header Row */}
         <View style={styles.header}>
-          <Text style={[styles.chapterLabel, isLocked && { color: theme.textMuted }]}>
-            {chapter}
-          </Text>
+          {isLocked ? (
+            <Text style={[styles.chapterLabel, { color: theme.textMuted }]}>
+              {chapter}
+            </Text>
+          ) : (
+            <MetallicText style={styles.chapterLabel} color={PALETTE.gold}>
+              {chapter}
+            </MetallicText>
+          )}
           {isLocked && (
             <View style={styles.lockBadge}>
-              <Ionicons name="sparkles" size={10} color={PALETTE.gold} />
-              <Text style={styles.lockBadgeText}>Deeper Sky</Text>
+              <MetallicIcon name="sparkles" size={10} color={PALETTE.gold} />
+              <MetallicText style={styles.lockBadgeText} color={PALETTE.gold}>Deeper Sky</MetallicText>
             </View>
           )}
         </View>
@@ -145,8 +153,8 @@ function ChapterCard({
         {/* Locked Teaser CTA */}
         {isLocked && (
           <View style={styles.lockedCta}>
-            <Text style={styles.lockedCtaText}>Unlock the full narrative</Text>
-            <Ionicons name="arrow-forward" size={14} color={PALETTE.gold} />
+            <MetallicText style={styles.lockedCtaText} color={PALETTE.gold}>Unlock the full narrative</MetallicText>
+            <MetallicIcon name="arrow-forward" size={14} color={PALETTE.gold} />
           </View>
         )}
 
@@ -154,8 +162,8 @@ function ChapterCard({
         {expanded && reflection ? (
           <View style={styles.reflectionBox}>
             <View style={styles.reflectionHeader}>
-              <Ionicons name="journal-outline" size={12} color={PALETTE.gold} />
-              <Text style={styles.reflectionLabel}>Reflection</Text>
+              <MetallicIcon name="journal-outline" size={12} color={PALETTE.gold} />
+              <MetallicText style={styles.reflectionLabel} color={PALETTE.gold}>Reflection</MetallicText>
             </View>
             <Text style={styles.reflectionText}>{reflection}</Text>
           </View>
@@ -171,10 +179,10 @@ function ChapterCard({
         {/* Read More Toggle */}
         {isLong && (
           <View style={styles.readMoreRow}>
-            <Text style={styles.readMoreText}>
+            <MetallicText style={styles.readMoreText} color={PALETTE.gold}>
               {expanded ? 'Show less' : 'Continue reading'}
-            </Text>
-            <Ionicons 
+            </MetallicText>
+            <MetallicIcon 
               name={expanded ? 'chevron-up' : 'chevron-down'} 
               size={14} 
               color={PALETTE.gold} 

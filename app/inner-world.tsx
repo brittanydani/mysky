@@ -23,6 +23,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 const PALETTE = {
   gold: '#D9BF8C',
@@ -131,8 +133,8 @@ export default function InnerWorldScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <Ionicons name="arrow-back" size={20} color={PALETTE.lavender} />
-          <Text style={styles.backText}>Identity</Text>
+          <MetallicIcon name="arrow-back" size={20} color={PALETTE.lavender} />
+          <MetallicText style={styles.backText} color={PALETTE.lavender}>Identity</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -145,8 +147,8 @@ export default function InnerWorldScreen() {
           {/* Sync Status Banner */}
           {allCompleted && (
             <Animated.View entering={FadeInDown.duration(500)} layout={Layout.springify()} style={styles.syncBanner}>
-              <Ionicons name="git-network-outline" size={16} color={PALETTE.emerald} />
-              <Text style={styles.syncText}>INNER WORLD SYNCHRONIZED</Text>
+              <MetallicIcon name="git-network-outline" size={16} color={PALETTE.emerald} />
+              <MetallicText style={styles.syncText} color={PALETTE.emerald}>INNER WORLD SYNCHRONIZED</MetallicText>
             </Animated.View>
           )}
 
@@ -172,14 +174,16 @@ export default function InnerWorldScreen() {
 
                     <View style={styles.cardContent}>
                       <View style={styles.cardHeader}>
-                        <Text style={[styles.cardIcon, { color: tool.iconColor }]}>{tool.icon}</Text>
+                        <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
 
                         {/* Dynamic Completion Badge */}
                         <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.emerald}20`, borderColor: `${PALETTE.emerald}40` } : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
-                          <Text style={[styles.badgeText, isDone ? { color: PALETTE.emerald } : { color: PALETTE.textMuted }]}>
-                            {isDone ? 'SEALED' : 'EXPLORE'}
-                          </Text>
-                          {isDone && <Ionicons name="checkmark" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
+                          {isDone ? (
+                            <MetallicText style={styles.badgeText} color={PALETTE.emerald}>SEALED</MetallicText>
+                          ) : (
+                            <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>EXPLORE</Text>
+                          )}
+                          {isDone && <MetallicIcon name="checkmark" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
                         </View>
                       </View>
 

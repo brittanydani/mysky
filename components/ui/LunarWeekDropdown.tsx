@@ -18,6 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from './MetallicText';
 import * as Haptics from 'expo-haptics';
 import MoonPhaseView from './MoonPhaseView';
 import { getMoonPhaseInfo } from '../../utils/moonPhase';
@@ -77,7 +78,7 @@ export default function LunarWeekDropdown() {
       {/* ── Trigger row ─────────────────────────────────────────────────── */}
       <View style={styles.triggerRow}>
         {/* Moon orb — interactive=true so it retains tap → Cosmic Context */}
-        <MoonPhaseView size={42} />
+        <MoonPhaseView size={42} gradient />
 
         {/* Chevron — separate tap target for the drawer toggle */}
         <Pressable
@@ -108,11 +109,17 @@ export default function LunarWeekDropdown() {
         >
           {weeklyData.map((item, i) => (
             <View key={i} style={styles.dayCard}>
-              <Text style={[styles.dayLabel, i === 0 && styles.todayLabel]}>
-                {item.dayLabel}
-              </Text>
+              {i === 0 ? (
+                <MetallicText style={styles.dayLabel} color="#D4B872">
+                  {item.dayLabel}
+                </MetallicText>
+              ) : (
+                <Text style={styles.dayLabel}>
+                  {item.dayLabel}
+                </Text>
+              )}
               {/* interactive=false: display-only — prevents nested nav confusion */}
-              <MoonPhaseView size={28} date={item.date} interactive={false} />
+              <MoonPhaseView size={28} date={item.date} interactive={false} gradient />
               <Text style={styles.phaseEmoji}>{item.emoji}</Text>
             </View>
           ))}

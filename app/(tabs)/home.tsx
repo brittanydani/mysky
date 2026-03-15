@@ -47,6 +47,7 @@ import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 
 const { width } = Dimensions.get('window');
 
@@ -359,27 +360,6 @@ export default function HomeScreen() {
             </Animated.View>
           )}
 
-          {/* ── Return Nudge ── */}
-          {dailyLoop?.returnNudge && (
-            <Animated.View entering={FadeInDown.delay(250).duration(600)}>
-              <Pressable
-                onPress={() => router.push(dailyLoop.returnNudge!.ctaRoute as Href)}
-                style={[
-                  styles.nudgeCard,
-                  dailyLoop.returnNudge.urgency === 'motivating' && { borderColor: `${PALETTE.gold}30` },
-                ]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.nudgeText}>{dailyLoop.returnNudge.text}</Text>
-                </View>
-                <View style={styles.nudgeCta}>
-                  <MetallicText style={styles.nudgeCtaText} variant="gold">{dailyLoop.returnNudge.ctaLabel}</MetallicText>
-                  <MetallicIcon name="arrow-forward" size={14} variant="gold" />
-                </View>
-              </Pressable>
-            </Animated.View>
-          )}
-
           {/* ── Daily Balance Score ── */}
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.scoreCard}>
             <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
@@ -440,16 +420,6 @@ export default function HomeScreen() {
                 </MetallicText>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
-              <Pressable
-                style={styles.actionBtn}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                  router.push('/checkin' as Href);
-                }}
-              >
-                <Ionicons name="flash" size={14} color={PALETTE.bg} />
-                <Text style={styles.actionBtnText}>Update your state</Text>
-              </Pressable>
             </View>
           </Animated.View>
 
@@ -611,7 +581,7 @@ function CheckInFAB() {
     >
       <Animated.View style={[fabStyles.glowWrapper, animatedStyle]}>
         <BlurView intensity={60} tint="dark" style={fabStyles.glassCircle}>
-          <MetallicIcon name="add" size={28} color="#D4B872" />
+          <MetallicIcon name="add" size={28} variant="gold" />
         </BlurView>
       </Animated.View>
     </Pressable>
@@ -785,39 +755,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-
-  // Return nudge
-  nudgeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 16,
-    gap: 12,
-  },
-  nudgeText: {
-    color: PALETTE.textMain,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  nudgeCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: `${PALETTE.gold}15`,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  nudgeCtaText: {
-    color: PALETTE.gold,
-    fontSize: 12,
-    fontWeight: '700',
   },
 
   // Weekly reflection
@@ -1046,16 +983,6 @@ const styles = StyleSheet.create({
   },
 
   // Insight card CTA
-  actionBtn: {
-    backgroundColor: PALETTE.gold,
-    height: 46,
-    borderRadius: 23,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
   actionBtnText: {
     color: PALETTE.bg,
     fontSize: 13,

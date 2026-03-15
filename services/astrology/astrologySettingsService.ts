@@ -3,14 +3,15 @@
  * 
  * Manages user preferences for chart calculations:
  * - House system selection (7 options)
- * - Zodiac system (Tropical only — sidereal/Vedic is a future roadmap item)
+ * - Zodiac system (Tropical / Sidereal with ayanamsa selection)
  * - Orb presets (tight, normal, wide)
+ * - Asteroid display (Chiron, Juno, Pallas, Vesta, Ceres)
  * 
  * Persists to SecureStore for privacy compliance.
  */
 
 import * as SecureStore from 'expo-secure-store';
-import { HouseSystem } from './types';
+import { HouseSystem, ZodiacSystem, Ayanamsa } from './types';
 import { logger } from '../../utils/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,9 +19,8 @@ import { logger } from '../../utils/logger';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type OrbPreset = 'tight' | 'normal' | 'wide';
-// NOTE: Sidereal (Vedic) zodiac is a future roadmap item.
-// The underlying engine (circular-natal-horoscope-js) only supports tropical.
-export type ZodiacSystem = 'tropical';
+
+export { ZodiacSystem, Ayanamsa } from './types';
 
 export interface OrbConfiguration {
   conjunction: number;
@@ -39,8 +39,11 @@ export interface AstrologySettings {
   // House system: placidus (default), whole-sign, equal-house, koch, etc.
   houseSystem: HouseSystem;
   
-  // Zodiac system: tropical (Western) — the only supported system
+  // Zodiac system: tropical (Western) or sidereal (Vedic/Jyotish)
   zodiacSystem: ZodiacSystem;
+  
+  // Ayanamsa correction for sidereal mode (ignored in tropical)
+  ayanamsa: Ayanamsa;
   
   // Orb preset: affects how wide aspects are considered
   orbPreset: OrbPreset;
@@ -50,7 +53,7 @@ export interface AstrologySettings {
   
   // Display preferences
   showMinorAspects: boolean;
-  showAsteroid: boolean; // Chiron, etc.
+  showAsteroid: boolean; // Chiron, Juno, Pallas, Vesta, Ceres
   
   // Last updated
   updatedAt: string;
@@ -70,6 +73,18 @@ export const HOUSE_SYSTEM_OPTIONS: Array<{ value: HouseSystem; label: string; de
   { value: 'campanus', label: 'Campanus', description: 'Space-based, good for extreme latitudes' },
   { value: 'regiomontanus', label: 'Regiomontanus', description: 'Medieval system, horary astrology' },
   { value: 'topocentric', label: 'Topocentric', description: 'Modern refinement of Placidus' },
+];
+
+export const ZODIAC_SYSTEM_OPTIONS: Array<{ value: ZodiacSystem; label: string; description: string }> = [
+  { value: 'tropical', label: 'Tropical', description: 'Western astrology standard, based on seasons' },
+  { value: 'sidereal', label: 'Sidereal', description: 'Vedic/Jyotish, aligned with fixed stars' },
+];
+
+export const AYANAMSA_OPTIONS: Array<{ value: Ayanamsa; label: string; description: string }> = [
+  { value: 'lahiri', label: 'Lahiri (Chitrapaksha)', description: 'Most common in Indian/Vedic astrology' },
+  { value: 'raman', label: 'B.V. Raman', description: 'Popular alternative in South Indian tradition' },
+  { value: 'krishnamurti', label: 'Krishnamurti (KP)', description: 'Used in Krishnamurti Paddhati system' },
+  { value: 'fagan-bradley', label: 'Fagan-Bradley', description: 'Common in Western sidereal astrology' },
 ];
 
 export const ORB_PRESET_OPTIONS: Array<{ value: OrbPreset; label: string; description: string }> = [
@@ -118,6 +133,7 @@ export const ORB_CONFIGURATIONS: Record<OrbPreset, OrbConfiguration> = {
 const DEFAULT_SETTINGS: AstrologySettings = {
   houseSystem: 'whole-sign',
   zodiacSystem: 'tropical',
+  ayanamsa: 'lahiri',
   orbPreset: 'normal',
   showMinorAspects: false,
   showAsteroid: true,
@@ -201,6 +217,36 @@ class AstrologySettingsServiceClass {
   }
 
   /**
+   * Get zodiac system preference
+   */
+  async getZodiacSystem(): Promise<ZodiacSystem> {
+    const settings = await this.getSettings();
+    return settings.zodiacSystem;
+  }
+
+  /**
+   * Set zodiac system preference
+   */
+  async setZodiacSystem(zodiacSystem: ZodiacSystem): Promise<void> {
+    await this.saveSettings({ zodiacSystem });
+  }
+
+  /**
+   * Get ayanamsa preference (relevant only in sidereal mode)
+   */
+  async getAyanamsa(): Promise<Ayanamsa> {
+    const settings = await this.getSettings();
+    return settings.ayanamsa;
+  }
+
+  /**
+   * Set ayanamsa preference
+   */
+  async setAyanamsa(ayanamsa: Ayanamsa): Promise<void> {
+    await this.saveSettings({ ayanamsa });
+  }
+
+  /**
    * Get orb preset
    */
   async getOrbPreset(): Promise<OrbPreset> {
@@ -261,6 +307,14 @@ class AstrologySettingsServiceClass {
   getCachedOrbConfig(): OrbConfiguration {
     const preset = this.cachedSettings?.orbPreset ?? 'normal';
     return ORB_CONFIGURATIONS[preset] ?? ORB_CONFIGURATIONS.normal;
+  }
+
+  /**
+   * Get full settings synchronously from cache.
+   * Returns null if settings haven't been loaded yet.
+   */
+  getCachedSettings(): AstrologySettings | null {
+    return this.cachedSettings;
   }
 
   /**

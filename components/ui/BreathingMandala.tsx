@@ -26,6 +26,7 @@ import {
   BlurMask,
   vec,
   RadialGradient,
+  SweepGradient,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
@@ -34,8 +35,17 @@ import {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import {
+  METALLIC_GOLD,
+  METALLIC_BLUE,
+  METALLIC_LOVE,
+  METALLIC_PURPLE,
+  METALLIC_GREEN,
+  METALLIC_COPPER,
+} from '../../constants/metallicPalettes';
 
 // ── Ring colours (one per life domain) ──────────────────────────────────────
+// Flat base colours kept for glow tints; metallic gradients used for strokes.
 
 const RING_COLORS = [
   '#C9AE78', // Mood    — champagne gold
@@ -45,6 +55,18 @@ const RING_COLORS = [
   '#6EBF8B', // Rest    — emerald
   '#FF9A3C', // Growth  — amber
 ] as const;
+
+const RING_METALLIC: readonly (readonly string[])[] = [
+  METALLIC_GOLD,   // Mood
+  METALLIC_BLUE,   // Energy
+  METALLIC_LOVE,   // Stress
+  METALLIC_PURPLE, // Focus
+  METALLIC_GREEN,  // Rest
+  METALLIC_COPPER, // Growth
+];
+
+// Sweep positions for 5-stop symmetric metallic: light→mid→core→mid→light
+const METALLIC_POSITIONS = [0.0, 0.25, 0.5, 0.75, 1.0] as const;
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -177,24 +199,35 @@ export const BreathingMandala = memo(function BreathingMandala({ size = 300 }: P
             style="stroke"
             strokeWidth={size * 0.055}
             strokeCap="round"
-            color={RING_COLORS[i] + '28'} // 16% opacity stroke
+            opacity={0.22}
           >
+            <SweepGradient
+              c={vec(ringCenters[i].x, ringCenters[i].y)}
+              colors={[...RING_METALLIC[i]]}
+              positions={[...METALLIC_POSITIONS]}
+            />
             <BlurMask blur={size * 0.04} style="normal" />
           </Path>
         ))}
       </Group>
 
-      {/* ── LAYER 3: thin bright ring lines (normal blend) ────────────────────
+      {/* ── LAYER 3: thin bright ring lines with metallic sweep (normal blend) ─
            These sit on top of the glow layers and give crisp structural
-           definition to each ring.                                            */}
+           definition to each ring with a brushed-metal gradient.              */}
       {ringPaths.map((path, i) => (
         <Path
           key={`ring-line-${i}`}
           path={path}
           style="stroke"
           strokeWidth={1.2}
-          color={RING_COLORS[i] + '70'} // ~44% opacity
-        />
+          opacity={0.65}
+        >
+          <SweepGradient
+            c={vec(ringCenters[i].x, ringCenters[i].y)}
+            colors={[...RING_METALLIC[i]]}
+            positions={[...METALLIC_POSITIONS]}
+          />
+        </Path>
       ))}
 
       {/* ── LAYER 4: Center golden core ──────────────────────────────────────

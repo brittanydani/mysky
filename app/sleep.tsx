@@ -16,6 +16,8 @@ import * as Haptics from 'expo-haptics';
 import { localDb } from '../services/storage/localDb';
 import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
+import { MetallicText } from '../components/ui/MetallicText';
+import SkiaMetallicPill from '../components/ui/SkiaMetallicPill';
 
 const QUALITY_LABELS = ['Exhausted', 'Restless', 'Neutral', 'Restored', 'Deeply Vibrant'];
 const MIN_HOURS = 2;
@@ -95,7 +97,7 @@ export default function SleepQuickLog() {
         </Pressable>
 
         <View style={styles.hoursDisplay}>
-          <Text style={styles.hoursValue} numberOfLines={1}>{formatHours(hours)}</Text>
+          <MetallicText style={styles.hoursValue} numberOfLines={1} color="#D9BF8C">{formatHours(hours)}</MetallicText>
         </View>
 
         <Pressable
@@ -120,24 +122,27 @@ export default function SleepQuickLog() {
             }}
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
-            <Text style={[styles.moon, { opacity: i <= quality ? 1 : 0.2 }]}>☾</Text>
+            {i <= quality ? (
+              <MetallicText style={styles.moon} color="#6E8CB4">☾</MetallicText>
+            ) : (
+              <Text style={[styles.moon, { opacity: 0.2 }]}>☾</Text>
+            )}
           </Pressable>
         ))}
       </View>
 
-      <Text style={styles.qualityLabel}>{QUALITY_LABELS[quality - 1]}</Text>
+      <MetallicText style={styles.qualityLabel} color="#6E8CB4">{QUALITY_LABELS[quality - 1]}</MetallicText>
 
-      <Pressable
-        style={[styles.quickSealBtn, saving && styles.disabledBtn]}
+      <SkiaMetallicPill
+        label={saving ? '' : 'SEAL REST'}
         onPress={handleQuickSeal}
         disabled={saving}
-      >
-        {saving ? (
-          <ActivityIndicator color="#050507" />
-        ) : (
-          <Text style={styles.btnText}>SEAL REST</Text>
-        )}
-      </Pressable>
+        height={60}
+        borderRadius={30}
+        icon={saving ? <ActivityIndicator color="#050507" /> : undefined}
+        labelStyle={{ fontWeight: '800', letterSpacing: 2, fontSize: 14 }}
+        style={{ marginBottom: 16 }}
+      />
 
       <Pressable onPress={() => router.back()} style={styles.cancelBtn}>
         <Text style={styles.cancelText}>Cancel</Text>
@@ -187,14 +192,7 @@ const styles = StyleSheet.create({
     color: '#6E8CB4', fontFamily: 'Georgia', fontStyle: 'italic',
     fontSize: 14, marginBottom: 48,
   },
-  quickSealBtn: {
-    backgroundColor: '#D9BF8C', width: '100%', height: 60,
-    borderRadius: 30, justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#D9BF8C', shadowRadius: 10, shadowOpacity: 0.3,
-    marginBottom: 16,
-  },
-  disabledBtn: { opacity: 0.5 },
-  btnText: { fontWeight: '800', letterSpacing: 2, color: '#050507', fontSize: 14 },
+
   cancelBtn: { paddingVertical: 12, paddingHorizontal: 24 },
   cancelText: { color: 'rgba(255,255,255,0.3)', fontSize: 14 },
 });

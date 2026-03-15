@@ -109,17 +109,17 @@ export default function OnboardingConsentScreen() {
 
             <View style={styles.linkRow}>
               <Pressable style={styles.linkBtn} onPress={openTerms}>
-                <Ionicons name="document-text-outline" size={16} color={theme.textGold} />
+                <Ionicons name="ribbon-outline" size={16} color={theme.textGold} />
                 <Text style={styles.linkText}>View Terms</Text>
               </Pressable>
 
               <Pressable style={styles.linkBtn} onPress={openPrivacy}>
-                <Ionicons name="shield-checkmark-outline" size={16} color={theme.textGold} />
+                <Ionicons name="shield-half-outline" size={16} color={theme.textGold} />
                 <Text style={styles.linkText}>View Privacy</Text>
               </Pressable>
 
               <Pressable style={styles.linkBtn} onPress={openFaq}>
-                <Ionicons name="help-circle-outline" size={16} color={theme.textGold} />
+                <Ionicons name="diamond-outline" size={16} color={theme.textGold} />
                 <Text style={styles.linkText}>View FAQ</Text>
               </Pressable>
             </View>
@@ -147,7 +147,7 @@ export default function OnboardingConsentScreen() {
             />
 
             <Text style={styles.note}>
-              Last updated: March 3, 2026
+              Last updated: March 15, 2026
             </Text>
           </LinearGradient>
         </ScrollView>

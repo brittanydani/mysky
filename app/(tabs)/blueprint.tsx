@@ -13,6 +13,7 @@ import {
   Pressable,
   ScrollView,
   TextStyle,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
     marginBottom: 8,
   },

@@ -44,6 +44,7 @@ import {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+import { MetallicText } from './MetallicText';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = SCREEN_W - 32;
@@ -355,9 +356,9 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
             
             {stabilityDelta !== undefined && (
               <View style={[styles.toneBadge, { backgroundColor: stabilityDelta >= 0 ? 'rgba(110, 191, 139, 0.15)' : 'rgba(205, 127, 93, 0.15)' }]}>
-                <Text style={[styles.toneBadgeText, { color: stabilityDelta >= 0 ? '#6EBF8B' : '#CD7F5D' }]}>
+                <MetallicText style={styles.toneBadgeText} color={stabilityDelta >= 0 ? '#6EBF8B' : '#CD7F5D'}>
                   {stabilityDelta > 0 ? '+' : ''}{stabilityDelta} Stability
-                </Text>
+                </MetallicText>
               </View>
             )}
             
@@ -367,9 +368,9 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
           </View>
           
           <View style={[styles.toneBadge, { backgroundColor: accent + '20' }]}>
-            <Text style={[styles.toneBadgeText, { color: accent }]}>
+            <MetallicText style={styles.toneBadgeText} color={accent}>
               {tone}
-            </Text>
+            </MetallicText>
           </View>
         </View>
       </View>

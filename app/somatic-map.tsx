@@ -11,6 +11,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -23,6 +24,7 @@ import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
 import {
   SkiaSomaticBody,
   SOMATIC_REGION_IDS,
@@ -153,7 +155,7 @@ export default function SomaticMapScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <Text style={styles.backText}>← Body & Nervous System</Text>
+          <MetallicText style={styles.backText} variant="green">← Body & Nervous System</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -196,7 +198,11 @@ export default function SomaticMapScreen() {
                       setSelectedEmotion(isSelected ? null : em);
                     }}
                   >
-                    <Text style={[styles.emotionText, isSelected && { color }]}>{em}</Text>
+                    {isSelected ? (
+                      <MetallicText style={styles.emotionText} color={color}>{em}</MetallicText>
+                    ) : (
+                      <Text style={styles.emotionText}>{em}</Text>
+                    )}
                   </Pressable>
                 );
               })}
@@ -235,7 +241,7 @@ export default function SomaticMapScreen() {
                   colors={['rgba(140,190,170,0.3)', 'rgba(140,190,170,0.1)']}
                   style={StyleSheet.absoluteFill}
                 />
-                <Text style={styles.logBtnText}>Log This Sensation</Text>
+                <MetallicText style={styles.logBtnText} color={PALETTE.sage}>Log This Sensation</MetallicText>
               </Pressable>
             </Animated.View>
           )}
@@ -253,11 +259,10 @@ export default function SomaticMapScreen() {
                       <BlurView intensity={10} tint="dark" style={StyleSheet.absoluteFill} />
                       <View style={[styles.entryDot, { backgroundColor: color }]} />
                       <View style={styles.entryMeta}>
-                        <Text style={styles.entryMain}>
-                          <Text style={{ color }}>{entry.emotion}</Text>
-                          {' · '}
-                          {regionLabel}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <MetallicText style={styles.entryMain} color={color}>{entry.emotion}</MetallicText>
+                          <Text style={styles.entryMain}> · {regionLabel}</Text>
+                        </View>
                         <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
                       </View>
                       <View style={styles.entryIntensity}>
@@ -298,7 +303,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
     marginBottom: 8,
   },

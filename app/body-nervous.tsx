@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -19,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
 
 const PALETTE = {
   sage: '#8CBEAA',
@@ -79,7 +81,7 @@ export default function BodyNervousScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <Text style={styles.backText}>← Identity</Text>
+          <MetallicText style={styles.backText} variant="green">← Identity</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -112,7 +114,7 @@ export default function BodyNervousScreen() {
                     style={StyleSheet.absoluteFill}
                   />
                   <View style={styles.cardContent}>
-                    <Text style={[styles.cardIcon, { color: tool.iconColor }]}>{tool.icon}</Text>
+                    <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
                     <View>
                       <Text style={styles.cardTitle}>{tool.title}</Text>
                       <Text style={styles.cardSubtitle}>{tool.description}</Text>
@@ -143,7 +145,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
     marginBottom: 8,
   },

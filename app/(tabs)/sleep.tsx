@@ -141,9 +141,15 @@ const FeelingItem = memo(function FeelingItem({
         }}
         style={[styles.dreamMoodOption, isSelected && styles.dreamMoodOptionSelected]}
       >
-        <Text style={[styles.dreamMoodOptionText, isSelected && styles.dreamMoodOptionTextSelected]}>
-          {feel.label}
-        </Text>
+        {isSelected ? (
+          <MetallicText color={PALETTE.amethyst} style={[styles.dreamMoodOptionText, styles.dreamMoodOptionTextSelected]}>
+            {feel.label}
+          </MetallicText>
+        ) : (
+          <Text style={styles.dreamMoodOptionText}>
+            {feel.label}
+          </Text>
+        )}
         {isSelected && <MetallicIcon name="checkmark" size={18} variant="gold" />}
       </Pressable>
       {isSelected && (
@@ -159,7 +165,11 @@ const FeelingItem = memo(function FeelingItem({
                 }}
                 style={[styles.intensityDot, n <= intensity && styles.intensityDotActive]}
               >
-                <Text style={[styles.intensityDotText, n <= intensity && styles.intensityDotTextActive]}>{n}</Text>
+                {n <= intensity ? (
+                  <MetallicText color={PALETTE.amethyst} style={[styles.intensityDotText, styles.intensityDotTextActive]}>{n}</MetallicText>
+                ) : (
+                  <Text style={styles.intensityDotText}>{n}</Text>
+                )}
               </Pressable>
             ))}
           </View>
@@ -788,7 +798,7 @@ export default function SleepScreen() {
                               <Text style={styles.awakenDropdownText}>
                                 {AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}
                               </Text>
-                              <Ionicons name="chevron-up" size={16} color={PALETTE.amethyst} />
+                              <MetallicIcon name="chevron-up" size={16} color={PALETTE.amethyst} />
                             </Pressable>
                           </View>
 
@@ -836,7 +846,7 @@ export default function SleepScreen() {
                 {saveError && (
                   <View style={styles.errorBanner}>
                     <MetallicIcon name="warning-outline" size={18} variant="copper" />
-                    <Text style={styles.errorBannerText}>{saveError}</Text>
+                    <MetallicText color={PALETTE.copper} style={styles.errorBannerText}>{saveError}</MetallicText>
                     <Pressable onPress={() => setSaveError(null)}>
                       <Ionicons name="close" size={18} color={theme.textMuted} />
                     </Pressable>
@@ -862,7 +872,7 @@ export default function SleepScreen() {
                   <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
                   {todayInterp.patternAnalysis?.undercurrentLabel ? (
                     <View style={styles.undercurrentBox}>
-                      <Text style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</Text>
+                      <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</MetallicText>
                     </View>
                   ) : null}
                   <View style={styles.sitWithBox}>
@@ -910,7 +920,7 @@ export default function SleepScreen() {
                 <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.obsidianCardHeader}>
                   <MetallicIcon name="moon-outline" size={14} variant="gold" />
-                  <Text style={styles.obsidianCardEyebrow}>NIGHTLY ASCENT</Text>
+                  <MetallicText color={PALETTE.silverBlue} style={styles.obsidianCardEyebrow}>NIGHTLY ASCENT</MetallicText>
                 </View>
                 <SkiaSleepGraph data={historicalSleep} width={SCREEN_W - 80} height={140} />
                 <View style={styles.obsidianCardFooter}>
@@ -944,7 +954,7 @@ export default function SleepScreen() {
                 <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
                 <View style={styles.obsidianCardHeader}>
                   <MetallicIcon name="planet-outline" size={14} variant="gold" />
-                  <Text style={styles.obsidianCardEyebrow}>RECURRING THEMES</Text>
+                  <MetallicText color={PALETTE.silverBlue} style={styles.obsidianCardEyebrow}>RECURRING THEMES</MetallicText>
                 </View>
                 <DreamClusterMap height={280} />
               </View>
@@ -976,9 +986,13 @@ export default function SleepScreen() {
                             )}
                             {entry.quality != null && (
                               <View style={styles.entryMoons}>
-                                {[1, 2, 3, 4, 5].map(n => (
-                                  <Ionicons key={n} name={n <= entry.quality! ? 'moon' : 'moon-outline'} size={12} color={n <= entry.quality! ? PALETTE.silverBlue : 'rgba(255,255,255,0.15)'} />
-                                ))}
+                                {[1, 2, 3, 4, 5].map(n =>
+                                  n <= entry.quality! ? (
+                                    <MetallicIcon key={n} name="moon" size={12} color={PALETTE.silverBlue} />
+                                  ) : (
+                                    <Ionicons key={n} name="moon-outline" size={12} color="rgba(255,255,255,0.15)" />
+                                  )
+                                )}
                               </View>
                             )}
                           </View>
@@ -1005,7 +1019,7 @@ export default function SleepScreen() {
                             style={({ pressed }) => [styles.reflectBtn, pressed && styles.reflectBtnPressed]}
                           >
                             <MetallicIcon name={isExpanded ? 'chevron-up' : 'sparkles'} size={14} variant="gold" />
-                            <Text style={styles.reflectBtnText}>{isExpanded ? 'Close reflection' : 'Reflect on this dream'}</Text>
+                            <MetallicText color={PALETTE.amethyst} style={styles.reflectBtnText}>{isExpanded ? 'Close reflection' : 'Reflect on this dream'}</MetallicText>
                             <MetallicIcon name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} variant="gold" style={{ marginLeft: 'auto' }} />
                           </Pressable>
                         ) : null}
@@ -1018,7 +1032,7 @@ export default function SleepScreen() {
                           <Text style={styles.interpretBody}>{interp.paragraph}</Text>
                           {interp.patternAnalysis?.undercurrentLabel ? (
                             <View style={styles.undercurrentBox}>
-                              <Text style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</Text>
+                              <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</MetallicText>
                             </View>
                           ) : null}
                           <View style={styles.sitWithBox}>

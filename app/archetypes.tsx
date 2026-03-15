@@ -11,6 +11,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -23,6 +24,7 @@ import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
 
 const STORAGE_KEY = '@mysky:archetype_profile';
 
@@ -247,8 +249,8 @@ export default function ArchetypesScreen() {
                   colors={[`${dominant.color}18`, 'transparent']}
                   style={StyleSheet.absoluteFill}
                 />
-                <Text style={[styles.resultIcon, { color: dominant.color }]}>{dominant.icon}</Text>
-                <Text style={[styles.resultName, { color: dominant.color }]}>{dominant.name}</Text>
+                <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
+                <MetallicText style={styles.resultName} color={dominant.color}>{dominant.name}</MetallicText>
                 <Text style={styles.resultTagline}>{dominant.tagline}</Text>
 
                 <View style={styles.divider} />
@@ -273,7 +275,7 @@ export default function ArchetypesScreen() {
                     const score = savedProfile.scores[key];
                     return (
                       <View key={key} style={styles.scoreRow}>
-                        <Text style={[styles.scoreIcon, { color: a.color }]}>{a.icon}</Text>
+                <MetallicText style={styles.scoreIcon} color={a.color}>{a.icon}</MetallicText>
                         <Text style={styles.scoreName}>{a.name}</Text>
                         <View style={styles.scoreBarBg}>
                           <View
@@ -323,11 +325,17 @@ export default function ArchetypesScreen() {
                           ]}
                           onPress={() => pickAnswer(pi, opt.archetype)}
                         >
-                          <Text style={[styles.optionText, isSelected && { color: archColor }]}>
-                            {opt.label}
-                          </Text>
+                          {isSelected ? (
+                            <MetallicText style={styles.optionText} color={archColor}>
+                              {opt.label}
+                            </MetallicText>
+                          ) : (
+                            <Text style={styles.optionText}>
+                              {opt.label}
+                            </Text>
+                          )}
                           {isSelected && (
-                            <Text style={[styles.optionCheck, { color: archColor }]}>✓</Text>
+                            <MetallicText style={styles.optionCheck} color={archColor}>✓</MetallicText>
                           )}
                         </Pressable>
                       );
@@ -343,7 +351,7 @@ export default function ArchetypesScreen() {
                       colors={['rgba(168,155,200,0.35)', 'rgba(168,155,200,0.12)']}
                       style={StyleSheet.absoluteFill}
                     />
-                    <Text style={styles.submitBtnText}>Reveal My Archetype</Text>
+                    <MetallicText style={styles.submitBtnText} color={PALETTE.lavender}>Reveal My Archetype</MetallicText>
                   </Pressable>
                 </Animated.View>
               )}
@@ -370,7 +378,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
     marginBottom: 8,
   },

@@ -3,6 +3,8 @@ import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRen
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from '../../../components/ui/MetallicText';
+import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -94,13 +96,13 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamC
               <Text style={styles.dreamCardDate}>{formatDate(entry.date)}</Text>
               {(moons || durationText) && (
                 <View style={styles.dreamMeta}>
-                  {moons && <Text style={styles.dreamMoons}>{moons}</Text>}
-                  {qualityLabel && <Text style={styles.dreamQualityLabel}>{qualityLabel}</Text>}
+                  {moons && <MetallicText color="#9D76C1" style={styles.dreamMoons}>{moons}</MetallicText>}
+                  {qualityLabel && <MetallicText color="#9D76C1" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
                   {durationText && <Text style={styles.dreamDuration}> · {durationText}</Text>}
                 </View>
               )}
             </View>
-            <Ionicons name="moon" size={16} color="rgba(157,118,193,0.5)" />
+            <MetallicIcon name="moon" size={16} color="#9D76C1" />
           </View>
           {hasDream ? (
             <Text style={styles.dreamExcerpt} numberOfLines={3}>{entry.dreamText}</Text>
@@ -468,14 +470,28 @@ export default function JournalScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Switch to ${tab} tab`}
               >
-                <Ionicons
-                  name={tab === 'reflections' ? 'book-outline' : 'moon-outline'}
-                  size={14}
-                  color={activeTab === tab ? '#D4B872' : 'rgba(255,255,255,0.35)'}
-                />
-                <Text style={[styles.segmentText, activeTab === tab && styles.segmentTextActive]}>
-                  {tab === 'reflections' ? 'Reflections' : 'Dreams'}
-                </Text>
+                {activeTab === tab ? (
+                  <MetallicIcon
+                    name={tab === 'reflections' ? 'book-outline' : 'moon-outline'}
+                    size={14}
+                    color="#D4B872"
+                  />
+                ) : (
+                  <Ionicons
+                    name={tab === 'reflections' ? 'book-outline' : 'moon-outline'}
+                    size={14}
+                    color="rgba(255,255,255,0.35)"
+                  />
+                )}
+                {activeTab === tab ? (
+                  <MetallicText color="#D4B872" style={[styles.segmentText, styles.segmentTextActive]}>
+                    {tab === 'reflections' ? 'Reflections' : 'Dreams'}
+                  </MetallicText>
+                ) : (
+                  <Text style={styles.segmentText}>
+                    {tab === 'reflections' ? 'Reflections' : 'Dreams'}
+                  </Text>
+                )}
               </Pressable>
             ))}
           </View>
@@ -545,7 +561,13 @@ export default function JournalScreen() {
                 </View>
                 <Text style={styles.insightDescription}>{insight.description}</Text>
                 {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
-                {!!insight.actionable && <Text style={[styles.insightActionable, { color: isTransit ? '#D4A3B3' : theme.textGold }]}>{insight.actionable}</Text>}
+                {!!insight.actionable && (
+                  isTransit ? (
+                    <MetallicText color="#D4A3B3" style={styles.insightActionable}>{insight.actionable}</MetallicText>
+                  ) : (
+                    <Text style={[styles.insightActionable, { color: theme.textGold }]}>{insight.actionable}</Text>
+                  )
+                )}
               </LinearGradient>
             );
           })}

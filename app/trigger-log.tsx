@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
 
 const STORAGE_KEY = '@mysky:trigger_events';
 
@@ -142,17 +143,21 @@ export default function TriggerLogScreen() {
               style={[styles.toggleBtn, mode === 'drain' && styles.toggleBtnActiveDrain]}
               onPress={() => toggleMode('drain')}
             >
-              <Text style={[styles.toggleText, mode === 'drain' && { color: PALETTE.rose }]}>
-                Trigger (Drain)
-              </Text>
+              {mode === 'drain' ? (
+                <MetallicText style={styles.toggleText} color={PALETTE.rose}>Trigger (Drain)</MetallicText>
+              ) : (
+                <Text style={styles.toggleText}>Trigger (Drain)</Text>
+              )}
             </Pressable>
             <Pressable
               style={[styles.toggleBtn, mode === 'nourish' && styles.toggleBtnActiveNourish]}
               onPress={() => toggleMode('nourish')}
             >
-              <Text style={[styles.toggleText, mode === 'nourish' && { color: PALETTE.sage }]}>
-                Glimmer (Nourish)
-              </Text>
+              {mode === 'nourish' ? (
+                <MetallicText style={styles.toggleText} color={PALETTE.sage}>Glimmer (Nourish)</MetallicText>
+              ) : (
+                <Text style={styles.toggleText}>Glimmer (Nourish)</Text>
+              )}
             </Pressable>
           </Animated.View>
 
@@ -192,9 +197,11 @@ export default function TriggerLogScreen() {
                     ]}
                     onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState('sympathetic'); }}
                   >
-                    <Text style={[styles.stateTitle, selectedState === 'sympathetic' && { color: PALETTE.copper }]}>
-                      Fight or Flight
-                    </Text>
+                    {selectedState === 'sympathetic' ? (
+                      <MetallicText style={styles.stateTitle} color={PALETTE.copper}>Fight or Flight</MetallicText>
+                    ) : (
+                      <Text style={styles.stateTitle}>Fight or Flight</Text>
+                    )}
                     <Text style={styles.stateSub}>Anxious, frantic, mobilized, angry.</Text>
                   </Pressable>
 
@@ -208,9 +215,11 @@ export default function TriggerLogScreen() {
                     ]}
                     onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState('dorsal'); }}
                   >
-                    <Text style={[styles.stateTitle, selectedState === 'dorsal' && { color: PALETTE.lavender }]}>
-                      Freeze or Fawn
-                    </Text>
+                    {selectedState === 'dorsal' ? (
+                      <MetallicText style={styles.stateTitle} color={PALETTE.lavender}>Freeze or Fawn</MetallicText>
+                    ) : (
+                      <Text style={styles.stateTitle}>Freeze or Fawn</Text>
+                    )}
                     <Text style={styles.stateSub}>Shut down, numb, disconnected, pleasing.</Text>
                   </Pressable>
                 </>
@@ -225,9 +234,11 @@ export default function TriggerLogScreen() {
                   ]}
                   onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState('ventral'); }}
                 >
-                  <Text style={[styles.stateTitle, selectedState === 'ventral' && { color: PALETTE.emerald }]}>
-                    Safe & Social
-                  </Text>
+                  {selectedState === 'ventral' ? (
+                    <MetallicText style={styles.stateTitle} color={PALETTE.emerald}>Safe & Social</MetallicText>
+                  ) : (
+                    <Text style={styles.stateTitle}>Safe & Social</Text>
+                  )}
                   <Text style={styles.stateSub}>Grounded, connected, open, breathing freely.</Text>
                 </Pressable>
               )}
@@ -252,9 +263,11 @@ export default function TriggerLogScreen() {
                       },
                     ]}
                   >
-                    <Text style={[styles.tagText, isSelected && { color: activeColor }]}>
-                      {sensation}
-                    </Text>
+                    {isSelected ? (
+                      <MetallicText style={styles.tagText} color={activeColor}>{sensation}</MetallicText>
+                    ) : (
+                      <Text style={styles.tagText}>{sensation}</Text>
+                    )}
                   </Pressable>
                 );
               })}
@@ -293,7 +306,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
     marginBottom: 8,
   },

@@ -204,7 +204,7 @@ export default function HealingSpaceScreen() {
 
               <View style={styles.affirmationBox}>
                 <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
-                <MetallicText style={styles.affirmationText} variant=\"gold\">{'"' + archetypeData.affirmation + '"'}</MetallicText>
+                <MetallicText style={styles.affirmationText} variant="gold">{'"' + archetypeData.affirmation + '"'}</MetallicText>
               </View>
             </Animated.View>
           )}

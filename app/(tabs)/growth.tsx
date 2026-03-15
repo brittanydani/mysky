@@ -23,7 +23,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
 import { BreathingMandala } from '../../components/ui/BreathingMandala';
-import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
+import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
@@ -31,6 +31,7 @@ import { MetallicText } from '../../components/ui/MetallicText';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CHART_W = SCREEN_W - 72;
+const ORBIT_SIZE = Math.min(SCREEN_W - 24, 380);
 
 const PALETTE = {
   gold: '#D4B872',
@@ -93,7 +94,7 @@ export default function PatternsScreen() {
           }
 
           const sorted = [...checkIns].sort((a, b) => a.date.localeCompare(b.date));
-          setTrendCheckIns(sorted.slice(-20));
+          setTrendCheckIns(sorted);
           setSnapshot({ avgMood, checkInCount: checkIns.length, stressTrend });
 
           // Enhanced insights pipeline
@@ -148,14 +149,12 @@ export default function PatternsScreen() {
             <MetricCard label="LOGGED" value={snapshot.checkInCount.toString()} color={PALETTE.gold} sub="last 30 days" />
           </View>
 
-          {/* ── Hub 2: Visualization ── */}
+          {/* ── Hub 2: Visualization — Cosmic Pattern Orbit ── */}
           <View style={styles.visualSection}>
-            <BreathingMandala size={240} />
-            {trendCheckIns.length >= 2 && (
-              <View style={styles.chartWrapper}>
-                <MetallicText style={styles.chartLabel} color={PALETTE.gold}>30-DAY STABILITY MAP</MetallicText>
-                <NeonWaveChart checkIns={trendCheckIns} width={CHART_W} height={200} />
-              </View>
+            {trendCheckIns.length >= 2 ? (
+              <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />
+            ) : (
+              <BreathingMandala size={240} />
             )}
           </View>
 

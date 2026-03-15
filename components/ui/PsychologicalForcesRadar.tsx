@@ -182,7 +182,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
             <Text
               numberOfLines={1}
               style={{
-                color: 'rgba(226,232,240,0.72)',
+                color: force.color,
                 fontSize: 11,
                 fontWeight: '600',
                 letterSpacing: 0.3,

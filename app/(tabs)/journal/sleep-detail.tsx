@@ -25,6 +25,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 import { Sparkles, ChevronLeft, Moon, BookOpen } from 'lucide-react-native';
+import { MetallicText } from '../../../components/ui/MetallicText';
+import { MetallicLucideIcon } from '../../../components/ui/MetallicLucideIcon';
+import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { localDb } from '../../../services/storage/localDb';
@@ -207,7 +210,7 @@ export default function SleepDetailScreen() {
           {saving ? (
             <ActivityIndicator color="#D9BF8C" size="small" />
           ) : (
-            <Text style={styles.saveText}>Save</Text>
+            <MetallicText color="#D9BF8C" style={styles.saveText}>Save</MetallicText>
           )}
         </Pressable>
       </View>
@@ -237,9 +240,9 @@ export default function SleepDetailScreen() {
                     color={i <= (entry.quality ?? 0) ? '#6E8CB4' : 'rgba(255,255,255,0.15)'}
                   />
                 ))}
-                <Text style={styles.qualityLabel}>
+                <MetallicText color="#6E8CB4" style={styles.qualityLabel}>
                   {QUALITY_LABELS[(entry.quality ?? 1) - 1]}
-                </Text>
+                </MetallicText>
               </View>
             )}
           </View>
@@ -264,8 +267,8 @@ export default function SleepDetailScreen() {
 
         {/* Premium AI section */}
         <View style={[styles.premiumSection, !isPremium && styles.lockedSection]}>
-          <Sparkles color="#D9BF8C" size={20} />
-          <Text style={styles.premiumTitle}>AI Symbolic Interpretation</Text>
+          <MetallicLucideIcon icon={Sparkles} color="#D9BF8C" size={20} />
+          <MetallicText color="#D9BF8C" style={styles.premiumTitle}>AI Symbolic Interpretation</MetallicText>
           {isPremium ? (
             interpreting ? (
               <ActivityIndicator color="#D9BF8C" style={{ marginTop: 8 }} />
@@ -276,17 +279,17 @@ export default function SleepDetailScreen() {
                   <View style={styles.imageryRow}>
                     {interpretation.explicitImagery.map((symbol) => (
                       <View key={symbol} style={styles.imageryChip}>
-                        <Text style={styles.imageryChipText}>{symbol}</Text>
+                        <MetallicText color="#6E8CB4" style={styles.imageryChipText}>{symbol}</MetallicText>
                       </View>
                     ))}
                   </View>
                 )}
-                <Text style={styles.reflectionQuestion}>{interpretation.question}</Text>
+                <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                 <Pressable
                   style={styles.rerunBtn}
                   onPress={() => entry && dreamText.trim() && void runInterpretation(entry, dreamText, allEntries)}
                 >
-                  <Text style={styles.rerunBtnText}>RE-INTERPRET</Text>
+                  <MetallicText color="#D9BF8C" style={styles.rerunBtnText}>RE-INTERPRET</MetallicText>
                 </Pressable>
               </View>
             ) : (
@@ -299,15 +302,16 @@ export default function SleepDetailScreen() {
               <Text style={styles.premiumBody}>
                 Unlock AI-powered symbolic analysis of your dream patterns.
               </Text>
-              <Pressable
-                style={styles.upgradeBtn}
+              <SkiaMetallicPill
+                label="UPGRADE TO DEEPER SKY"
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
                   router.push('/(tabs)/premium' as Href);
                 }}
-              >
-                <Text style={styles.upgradeBtnText}>UPGRADE TO DEEPER SKY</Text>
-              </Pressable>
+                height={44}
+                borderRadius={20}
+                labelStyle={{ fontWeight: '800', fontSize: 11, letterSpacing: 1.5 }}
+              />
             </>
           )}
         </View>
@@ -372,11 +376,7 @@ const styles = StyleSheet.create({
   premiumBody: {
     color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center', lineHeight: 20,
   },
-  upgradeBtn: {
-    backgroundColor: '#D9BF8C', paddingHorizontal: 24, paddingVertical: 12,
-    borderRadius: 20, marginTop: 8,
-  },
-  upgradeBtnText: { fontWeight: '800', fontSize: 11, letterSpacing: 1.5, color: '#050507' },
+
 
   interpretationParagraph: {
     color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 24,

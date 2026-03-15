@@ -25,6 +25,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 const STORAGE_KEY = '@mysky:core_values';
 const MAX_TOP = 5;
@@ -137,8 +139,8 @@ export default function CoreValuesScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable style={styles.backBtn} onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}>
-          <Ionicons name="arrow-back" size={20} color={PALETTE.gold} />
-          <Text style={styles.backText}>Inner World</Text>
+          <MetallicIcon name="arrow-back" size={20} color={PALETTE.gold} />
+          <MetallicText style={styles.backText} color={PALETTE.gold}>Inner World</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -168,9 +170,13 @@ export default function CoreValuesScreen() {
                   onLongPress={() => toggleTop(value)}
                 >
                   {isTop && <Ionicons name="star" size={10} color={PALETTE.bg} style={{ marginRight: 6 }} />}
-                  <Text style={[styles.chipText, isSelected && styles.chipTextSelected, isTop && styles.chipTextTop]}>
-                    {value}
-                  </Text>
+                  {isTop ? (
+                    <Text style={[styles.chipText, styles.chipTextTop]}>{value}</Text>
+                  ) : isSelected ? (
+                    <MetallicText style={styles.chipText} color={PALETTE.gold}>{value}</MetallicText>
+                  ) : (
+                    <Text style={styles.chipText}>{value}</Text>
+                  )}
                 </Pressable>
               );
             })}
@@ -183,15 +189,15 @@ export default function CoreValuesScreen() {
               <LinearGradient colors={['rgba(217,191,140,0.15)', 'transparent']} style={StyleSheet.absoluteFill} />
               
               <View style={styles.summaryHeaderRow}>
-                <Ionicons name="compass-outline" size={18} color={PALETTE.gold} />
-                <Text style={styles.summaryTitle}>YOUR NORTH STAR ({state.topFive.length}/{MAX_TOP})</Text>
+                <MetallicIcon name="compass-outline" size={18} color={PALETTE.gold} />
+                <MetallicText style={styles.summaryTitle} color={PALETTE.gold}>YOUR NORTH STAR ({state.topFive.length}/{MAX_TOP})</MetallicText>
               </View>
 
               <View style={styles.topList}>
                 {state.topFive.map((v, i) => (
                   <Animated.View key={v} layout={Layout.springify()} style={styles.topItemRow}>
                     <View style={styles.topNumberBadge}>
-                      <Text style={styles.topNumberText}>{i + 1}</Text>
+                      <MetallicText style={styles.topNumberText} color={PALETTE.gold}>{i + 1}</MetallicText>
                     </View>
                     <Text style={styles.topItemText}>{v}</Text>
                   </Animated.View>
@@ -209,8 +215,8 @@ export default function CoreValuesScreen() {
             <Animated.View key={paradox.name} layout={Layout.springify()} entering={FadeIn.delay(index * 150).duration(600)} style={styles.paradoxCard}>
               <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
               <View style={styles.paradoxHeader}>
-                <Ionicons name="git-compare-outline" size={16} color={PALETTE.copper} />
-                <Text style={styles.paradoxEyebrow}>CORE PARADOX DETECTED</Text>
+                <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.copper} />
+                <MetallicText style={styles.paradoxEyebrow} color={PALETTE.copper}>CORE PARADOX DETECTED</MetallicText>
               </View>
               <Text style={styles.paradoxTitle}>{paradox.name}</Text>
               <Text style={styles.paradoxBody}>{paradox.desc}</Text>
@@ -237,9 +243,9 @@ export default function CoreValuesScreen() {
                   colors={saved ? ['rgba(140,190,170,0.3)', 'rgba(140,190,170,0.1)'] : ['rgba(217,191,140,0.3)', 'rgba(217,191,140,0.1)']}
                   style={StyleSheet.absoluteFill}
                 />
-                <Text style={[styles.saveBtnText, saved && { color: '#8CBEAA' }]}>
+                <MetallicText style={styles.saveBtnText} color={saved ? '#8CBEAA' : PALETTE.gold}>
                   {saved ? '✓ Values Sealed' : 'Seal My Values'}
-                </Text>
+                </MetallicText>
               </Pressable>
             </Animated.View>
           )}

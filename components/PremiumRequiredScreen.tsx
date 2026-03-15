@@ -6,6 +6,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
 import { useRouter, Href } from 'expo-router';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
+import { MetallicText } from './ui/MetallicText';
+import { MetallicIcon } from './ui/MetallicIcon';
 
 interface PremiumRequiredScreenProps {
   feature?: string;
@@ -47,7 +49,7 @@ export default function PremiumRequiredScreen({
       {/* Hero section */}
       <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.heroSection}>
         <View style={styles.iconGlow}>
-          <Ionicons name="telescope-outline" size={32} color={PALETTE.gold} />
+          <MetallicIcon name="telescope-outline" size={32} color={PALETTE.gold} />
         </View>
         <Text style={styles.title}>
           {feature ? `Unlock ${feature}` : 'Ascend Deeper'}
@@ -71,7 +73,7 @@ export default function PremiumRequiredScreen({
               style={styles.perkRow}
             >
               <View style={styles.perkIconContainer}>
-                <Ionicons name={perk.icon} size={16} color={PALETTE.silverBlue} />
+                <MetallicIcon name={perk.icon} size={16} color={PALETTE.silverBlue} />
               </View>
               <Text style={styles.perkText}>{perk.text}</Text>
             </Animated.View>
@@ -91,11 +93,11 @@ export default function PremiumRequiredScreen({
 
         <View style={styles.legalLinks}>
           <Pressable onPress={() => router.push('/terms' as Href)} hitSlop={12}>
-            <Text style={styles.legalLink}>Terms</Text>
+            <MetallicText style={styles.legalLink} color={PALETTE.silverBlue}>Terms</MetallicText>
           </Pressable>
           <Text style={styles.legalSeparator}>•</Text>
           <Pressable onPress={() => router.push('/privacy' as Href)} hitSlop={12}>
-            <Text style={styles.legalLink}>Privacy</Text>
+            <MetallicText style={styles.legalLink} color={PALETTE.silverBlue}>Privacy</MetallicText>
           </Pressable>
         </View>
 

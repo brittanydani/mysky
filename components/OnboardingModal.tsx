@@ -46,6 +46,8 @@ import { localDb } from '../services/storage/localDb';
 import { BackupService } from '../services/storage/backupService';
 import { toLocalDateString } from '../utils/dateUtils';
 import { logger } from '../utils/logger';
+import { MetallicIcon } from './ui/MetallicIcon';
+import { MetallicText } from './ui/MetallicText';
 
 const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
 
@@ -61,7 +63,7 @@ const ETHEREAL = {
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
-  'User-Agent': 'MySkyApp/1.0 (support@brittanyapps.com)',
+  'User-Agent': 'MySkyApp/1.0 (brittanyapps@outlook.com)',
 };
 
 interface LocationSuggestion {
@@ -138,7 +140,7 @@ function ProcessingOrb() {
       <Animated.View style={[st.processingGlow, glowStyle]} />
       <Animated.View style={[st.processingInnerRing, innerRingStyle]} />
       <Animated.View style={[st.processingOuterRing, outerRingStyle]} />
-      <Ionicons name="sparkles" size={28} color={ETHEREAL.accentGold} style={st.processingSparkle} />
+      <MetallicIcon name="sparkles" size={28} color={ETHEREAL.accentGold} style={st.processingSparkle} />
     </View>
   );
 }
@@ -560,7 +562,7 @@ export default function OnboardingModal({
                     />
                   </View>
                   <Text style={st.welcomeTitle}>Welcome to MySky</Text>
-                  <Text style={st.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
+                  <MetallicText style={st.welcomeSubtitle} color={ETHEREAL.accentGold}>Personal Growth, Mapped to You</MetallicText>
                   <Text style={st.welcomeDescription}>
                     Track your mood, sleep, and energy, journal your thoughts, and uncover personal patterns over time.
                   </Text>
@@ -575,7 +577,7 @@ export default function OnboardingModal({
                   ].map((item, i) => (
                     <View key={i} style={st.feature}>
                       <View style={st.featureIcon}>
-                        <Ionicons name={item.icon} size={18} color={ETHEREAL.accentGold} />
+                        <MetallicIcon name={item.icon} size={18} color={ETHEREAL.accentGold} />
                       </View>
                       <Text style={st.featureText}>{item.text}</Text>
                     </View>
@@ -589,8 +591,8 @@ export default function OnboardingModal({
                     style={{ marginBottom: theme.spacing.md }}
                   />
                   <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button" accessibilityLabel="Restore from backup">
-                    <Ionicons name="cloud-download-outline" size={16} color={ETHEREAL.accentGold} />
-                    <Text style={st.restoreText}>Restore from Backup</Text>
+                    <MetallicIcon name="cloud-download-outline" size={16} color={ETHEREAL.accentGold} />
+                    <MetallicText style={st.restoreText} color={ETHEREAL.accentGold}>Restore from Backup</MetallicText>
                   </Pressable>
                 </Animated.View>
               </View>
@@ -689,7 +691,7 @@ export default function OnboardingModal({
                     accessibilityRole="button"
                     accessibilityLabel="I don't know my exact birth time"
                   >
-                    <Text style={st.unknownTimeText}>I don't know my exact birth time</Text>
+                    <MetallicText style={st.unknownTimeText} color={ETHEREAL.accentGold}>I don't know my exact birth time</MetallicText>
                   </Pressable>
                 </Animated.View>
                 <Animated.View entering={FadeInUp.delay(400).duration(600)}>
@@ -715,7 +717,7 @@ export default function OnboardingModal({
 
                   {/* Search input */}
                   <View style={st.locationSearchRow}>
-                    <Ionicons name="search" size={18} color={ETHEREAL.accentGold} />
+                    <MetallicIcon name="search" size={18} color={ETHEREAL.accentGold} />
                     <TextInput
                       style={st.locationInput}
                       value={locationQuery}
@@ -765,7 +767,7 @@ export default function OnboardingModal({
                   {/* Selected location confirmation */}
                   {locationSelected && (
                     <Animated.View entering={FadeIn.duration(400)} style={st.locationConfirmed}>
-                      <Ionicons name="checkmark-circle" size={18} color={ETHEREAL.accentGold} />
+                      <MetallicIcon name="checkmark-circle" size={18} color={ETHEREAL.accentGold} />
                       <Text style={st.locationConfirmedText} numberOfLines={2}>
                         {locationPlace}
                       </Text>
@@ -785,7 +787,7 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(1000)} style={st.processingContainer}>
                   <ProcessingOrb />
                   <View style={st.processingTextGroup}>
-                    <Text style={st.processingLabel}>CALCULATING COSMIC BLUEPRINT</Text>
+                    <MetallicText style={st.processingLabel} color={ETHEREAL.accentGold}>CALCULATING COSMIC BLUEPRINT</MetallicText>
                     <Text style={st.processingMessage}>
                       {userName.trim()
                         ? `Mapping your subconscious, ${userName.trim()}`
@@ -801,7 +803,7 @@ export default function OnboardingModal({
               <View style={st.centeredFlex}>
                 <Animated.View entering={FadeIn.delay(100).duration(800)} style={st.singleQuestionContainer}>
                   <View style={st.passphraseIconWrap}>
-                    <Ionicons name="lock-closed" size={40} color={ETHEREAL.accentGold} />
+                    <MetallicIcon name="lock-closed" size={40} color={ETHEREAL.accentGold} />
                   </View>
                   <Text style={st.etherealQuestion}>Enter Backup Passphrase</Text>
                   <Text style={st.etherealSubtext}>

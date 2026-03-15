@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { logger } from '../utils/logger';
+import { MetallicIcon } from './ui/MetallicIcon';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -35,7 +36,7 @@ export default function PrivacyConsentModal({
   privacyPolicyUrl,
   contactEmail,
 }: PrivacyConsentModalProps) {
-  const email = contactEmail ?? 'support@mysky.app';
+  const email = contactEmail ?? 'brittanyapps@outlook.com';
   const [showFullPolicy, setShowFullPolicy] = useState(false);
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function PrivacyConsentModal({
                 {/* ── Summary View ── */}
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.headerContainer}>
                   <View style={styles.iconGlow}>
-                    <Ionicons name="shield-checkmark" size={40} color={PALETTE.gold} />
+                    <MetallicIcon name="shield-checkmark" size={40} color={PALETTE.gold} />
                   </View>
                   <Text style={styles.title}>Your Privacy Matters</Text>
                   <Text style={styles.subtitle}>We’re committed to protecting your personal information.</Text>
@@ -80,11 +81,11 @@ export default function PrivacyConsentModal({
                   <View style={styles.glassSection}>
                     <Text style={styles.sectionLabel}>What We Collect</Text>
                     <View style={styles.dataRow}>
-                        <Ionicons name="sparkles-outline" size={16} color={PALETTE.gold} />
+                        <MetallicIcon name="sparkles-outline" size={16} color={PALETTE.gold} />
                         <Text style={styles.dataText}>Birth data & personalization settings</Text>
                     </View>
                     <View style={styles.dataRow}>
-                        <Ionicons name="book-outline" size={16} color={PALETTE.gold} />
+                        <MetallicIcon name="book-outline" size={16} color={PALETTE.gold} />
                         <Text style={styles.dataText}>Journal, mood, and sleep entries</Text>
                     </View>
                   </View>
@@ -92,11 +93,11 @@ export default function PrivacyConsentModal({
                   <View style={[styles.glassSection, { borderColor: 'rgba(139, 196, 232, 0.2)' }]}>
                     <Text style={[styles.sectionLabel, { color: "#FFFFFF" }]}>How We Protect It</Text>
                     <View style={styles.dataRow}>
-                        <Ionicons name="lock-closed-outline" size={16} color={PALETTE.silverBlue} />
+                        <MetallicIcon name="lock-closed-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.dataText}>Core data stays encrypted on your device</Text>
                     </View>
                     <View style={styles.dataRow}>
-                        <Ionicons name="ban-outline" size={16} color={PALETTE.silverBlue} />
+                        <MetallicIcon name="ban-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.dataText}>We never sell or share data for advertising</Text>
                     </View>
                   </View>
@@ -106,7 +107,7 @@ export default function PrivacyConsentModal({
                     onPress={() => setShowFullPolicy(true)}
                   >
                     <Text style={styles.policyLinkText}>Read Full Privacy Policy</Text>
-                    <Ionicons name="chevron-forward" size={14} color={PALETTE.gold} />
+                    <MetallicIcon name="chevron-forward" size={14} color={PALETTE.gold} />
                   </Pressable>
 
                   <View style={styles.footerActions}>
@@ -147,7 +148,7 @@ export default function PrivacyConsentModal({
                   <Text style={styles.policyTitle}>Privacy Policy</Text>
                 </Animated.View>
 
-                <Text style={styles.lastUpdated}>Last updated: March 3, 2026</Text>
+                <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
 
                 <View style={styles.legalContent}>
                     <Text style={styles.policyText}>

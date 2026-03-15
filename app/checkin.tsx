@@ -20,6 +20,9 @@ import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { LiquidCheckInHub } from '../components/ui/LiquidCheckInHub';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const { width } = Dimensions.get('window');
 
@@ -53,7 +56,7 @@ export default function CheckInHub() {
           <View style={styles.dragHandle} />
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Log Entry</Text>
-            <Text style={styles.subtitle}>Select your reflection pathway</Text>
+            <GoldSubtitle style={styles.subtitle}>Select your reflection pathway</GoldSubtitle>
           </View>
         </Animated.View>
 
@@ -73,10 +76,10 @@ export default function CheckInHub() {
               style={styles.card}
             >
               <View style={[styles.iconRing, { borderColor: PALETTE.gold + '40', backgroundColor: PALETTE.gold + '10' }]}>
-                <Ionicons name="sparkles-outline" size={26} color={PALETTE.gold} />
+                <MetallicIcon name="sparkles-outline" size={26} color={PALETTE.gold} />
               </View>
               <View style={styles.cardText}>
-                <Text style={styles.cardEyebrow}>Daily Resonance</Text>
+                <MetallicText style={styles.cardEyebrow} color={PALETTE.gold}>Daily Resonance</MetallicText>
                 <Text style={styles.cardTitle}>Mood & Energy</Text>
                 <Text style={styles.cardDescription}>Sync your current emotional and physical state.</Text>
               </View>
@@ -96,10 +99,10 @@ export default function CheckInHub() {
               style={styles.card}
             >
               <View style={[styles.iconRing, { borderColor: PALETTE.amethyst + '40', backgroundColor: PALETTE.amethyst + '10' }]}>
-                <Ionicons name="moon-outline" size={24} color={PALETTE.amethyst} />
+                <MetallicIcon name="moon-outline" size={24} color={PALETTE.amethyst} />
               </View>
               <View style={styles.cardText}>
-                <Text style={[styles.cardEyebrow, { color: PALETTE.amethyst }]}>Nightly Archive</Text>
+                <MetallicText style={styles.cardEyebrow} color={PALETTE.amethyst}>Nightly Archive</MetallicText>
                 <Text style={styles.cardTitle}>Sleep & Dreams</Text>
                 <Text style={styles.cardDescription}>Log rest quality and capture subconscious imagery.</Text>
               </View>
@@ -152,18 +155,15 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   title: {
-    fontSize: 32,
+    fontSize: 34,
     color: PALETTE.textMain,
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '300',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: PALETTE.textMuted,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    fontWeight: '600',
+    marginBottom: 32,
   },
   orbWrapper: {
     height: 150,

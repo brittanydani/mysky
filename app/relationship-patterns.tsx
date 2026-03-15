@@ -29,6 +29,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -164,8 +166,8 @@ export default function RelationshipPatternsScreen() {
             style={styles.backBtn}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
           >
-            <Ionicons name="arrow-back" size={20} color={PALETTE.anxious} />
-            <Text style={styles.backText}>Identity Hub</Text>
+            <MetallicIcon name="arrow-back" size={20} color={PALETTE.anxious} />
+            <MetallicText style={styles.backText} color={PALETTE.anxious}>Identity Hub</MetallicText>
           </Pressable>
 
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -179,8 +181,8 @@ export default function RelationshipPatternsScreen() {
               <Animated.View entering={FadeIn.duration(600)} style={styles.summaryCard}>
                 <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
                 <View style={styles.summaryHeader}>
-                  <Ionicons name="planet-outline" size={16} color={PALETTE.gold} />
-                  <Text style={styles.summaryTitle}>YOUR RELATIONAL GRAVITY</Text>
+                  <MetallicIcon name="planet-outline" size={16} color={PALETTE.gold} />
+                  <MetallicText style={styles.summaryTitle} color={PALETTE.gold}>YOUR RELATIONAL GRAVITY</MetallicText>
                 </View>
 
                 <Text style={styles.summaryDescription}>
@@ -255,9 +257,15 @@ export default function RelationshipPatternsScreen() {
                       ]}
                       onPress={() => toggleTag(tag.id)}
                     >
-                      <Text style={[styles.patternTagText, isSelected && { color: activeColor, fontWeight: '600' }]}>
-                        {tag.label}
-                      </Text>
+                      {isSelected ? (
+                        <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={activeColor}>
+                          {tag.label}
+                        </MetallicText>
+                      ) : (
+                        <Text style={styles.patternTagText}>
+                          {tag.label}
+                        </Text>
+                      )}
                     </Pressable>
                   );
                 })}
@@ -267,7 +275,7 @@ export default function RelationshipPatternsScreen() {
                 <Animated.View entering={FadeIn.duration(300)}>
                   <Pressable style={styles.submitBtn} onPress={addEntry}>
                     <LinearGradient colors={['rgba(212,163,179,0.3)', 'rgba(212,163,179,0.1)']} style={StyleSheet.absoluteFill} />
-                    <Text style={styles.submitBtnText}>Seal Reflection</Text>
+                    <MetallicText style={styles.submitBtnText} color={PALETTE.anxious}>Seal Reflection</MetallicText>
                   </Pressable>
                 </Animated.View>
               )}
@@ -296,7 +304,7 @@ export default function RelationshipPatternsScreen() {
                             const tagColor = PALETTE[tagData.category];
                             return (
                               <View key={tagId} style={[styles.entryTag, { backgroundColor: `${tagColor}15`, borderColor: `${tagColor}30` }]}>
-                                <Text style={[styles.entryTagText, { color: tagColor }]}>{tagData.label}</Text>
+                                <MetallicText style={styles.entryTagText} color={tagColor}>{tagData.label}</MetallicText>
                               </View>
                             );
                           })}
@@ -326,7 +334,7 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: 'Georgia', fontWeight: '300', marginBottom: 8 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 8 },
   headerSubtitle: { fontSize: 14 },
 
   summaryCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.2)', padding: 24, marginBottom: 24 },

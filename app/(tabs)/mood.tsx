@@ -225,6 +225,14 @@ export default function MoodCheckIn() {
 
         if (!cancelled) {
           setCompletedSlots(slots);
+
+          // When viewing a past date and the current slot has no data,
+          // auto-select the first completed slot so the user sees real data.
+          if (!existing && slots.length > 0 && !slots.includes(selectedSlot)) {
+            setSelectedSlot(slots[0] as import('../../services/patterns/types').TimeOfDay);
+            return; // effect will re-run with the new slot
+          }
+
           if (existing) {
             setIsEditingExisting(true);
             setMood(existing.moodScore);

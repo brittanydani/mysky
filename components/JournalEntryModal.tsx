@@ -50,6 +50,8 @@ import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from
 import { getArchetypeProfile, getArchetypePrompt, ArchetypeProfile, ArchetypeJournalPrompt } from '../services/journal/archetypeIntegration';
 
 import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
+import { MetallicText } from './ui/MetallicText';
+import { MetallicIcon } from './ui/MetallicIcon';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -294,7 +296,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   {pendingSave && (
                     <Animated.View style={[styles.saveIndicator, pulseStyle]}>
                       <View style={styles.saveIndicatorDot} />
-                      <Text style={styles.saveIndicatorText}>Secured</Text>
+                      <MetallicText style={styles.saveIndicatorText} color="#6EBF8B">Secured</MetallicText>
                     </Animated.View>
                   )}
                 </View>
@@ -345,9 +347,11 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                           mood === key && { borderColor: color, backgroundColor: `${color}22` },
                         ]}
                       >
-                        <Text style={[styles.moodChipText, { color: mood === key ? color : 'rgba(255,255,255,0.45)' }]}>
-                          {label}
-                        </Text>
+                        {mood === key ? (
+                          <MetallicText style={styles.moodChipText} color={color}>{label}</MetallicText>
+                        ) : (
+                          <Text style={[styles.moodChipText, { color: 'rgba(255,255,255,0.45)' }]}>{label}</Text>
+                        )}
                       </Pressable>
                     ))}
                   </View>
@@ -357,10 +361,10 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 
                 {/* Date Selection */}
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
-                  <Text style={styles.sectionLabel}>Timeline</Text>
+                  <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Timeline</MetallicText>
                   <Pressable style={styles.glassInteractive} onPress={() => setShowDatePicker(true)}>
                     <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(2,8,23,0.50)']} style={styles.innerGradient}>
-                      <Ionicons name="calendar-outline" size={18} color={PALETTE.silverBlue} />
+                      <MetallicIcon name="calendar-outline" size={18} color={PALETTE.silverBlue} />
                       <Text style={styles.interactiveText}>{formatDate(date)}</Text>
                     </LinearGradient>
                   </Pressable>
@@ -368,7 +372,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
                 {/* Title Input */}
                 <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
-                  <Text style={styles.sectionLabel}>Title (Optional)</Text>
+                  <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Title (Optional)</MetallicText>
                   <View style={styles.glassInput}>
                     <TextInput 
                       style={styles.titleInput} 
@@ -383,11 +387,11 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Main Reflection Area */}
                 <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
                   <View style={styles.reflectionHeader}>
-                    <Text style={styles.sectionLabel}>Reflection</Text>
+                    <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Reflection</MetallicText>
                     {(enginePromptSet || freePrompt) && (
                       <Pressable style={styles.promptsToggle} onPress={() => { Haptics.selectionAsync(); setShowPrompts(!showPrompts); }}>
-                        <Ionicons name={showPrompts ? 'bulb' : 'bulb-outline'} size={16} color={PALETTE.gold} />
-                        <Text style={styles.promptsToggleText}>Guided Prompts</Text>
+                        <MetallicIcon name={showPrompts ? 'bulb' : 'bulb-outline'} size={16} color={PALETTE.gold} />
+                        <MetallicText style={styles.promptsToggleText} color={PALETTE.gold}>Guided Prompts</MetallicText>
                       </Pressable>
                     )}
                   </View>
@@ -399,9 +403,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.archetypePromptCard}>
                       <View style={[styles.archetypeAccent, { backgroundColor: archetypePrompt.archetypeColor }]} />
                       <View style={styles.archetypePromptInner}>
-                        <Text style={[styles.archetypeLabel, { color: archetypePrompt.archetypeColor }]}>
+                        <MetallicText style={styles.archetypeLabel} color={archetypePrompt.archetypeColor}>
                           {archetypePrompt.archetypeName.toUpperCase()}
-                        </Text>
+                        </MetallicText>
                         <Text style={styles.archetypeContext}>{archetypePrompt.context}</Text>
                         <Pressable
                           onPress={() => {
@@ -422,12 +426,12 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   {/* Prompt Engine UI */}
                   {showPrompts && (isPremium && enginePromptSet ? (
                     <Animated.View entering={FadeInDown.duration(400)} style={styles.promptZone}>
-                      <Text style={styles.transitContext}>✨ {enginePromptSet.dailySummary}</Text>
+                      <MetallicText style={styles.transitContext} color={PALETTE.silverBlue}>✨ {enginePromptSet.dailySummary}</MetallicText>
                       <Pressable style={styles.primaryPromptCard} onPress={() => { setContent(prev => prev.trim() ? `${prev}\n\n${enginePromptSet.primary.question}` : enginePromptSet.primary.question); setShowPrompts(false); }}>
                         <Text style={styles.promptContextLabel}>{enginePromptSet.primary.context}</Text>
                         <Text style={styles.primaryPromptText}>{enginePromptSet.primary.question}</Text>
                         {enginePromptSet.primary.chakra && (
-                          <Text style={styles.chakraNote}>{enginePromptSet.primary.chakra.chakra.icon} Focus: {enginePromptSet.primary.chakra.bodyAwareness}</Text>
+                          <MetallicText style={styles.chakraNote} color={PALETTE.gold}>{enginePromptSet.primary.chakra.chakra.icon} Focus: {enginePromptSet.primary.chakra.bodyAwareness}</MetallicText>
                         )}
                       </Pressable>
                     </Animated.View>

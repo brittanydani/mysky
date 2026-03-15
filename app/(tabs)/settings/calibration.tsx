@@ -41,6 +41,8 @@ import { useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { GoldIcon } from '../../../components/ui/GoldIcon';
+import { MetallicText } from '../../../components/ui/MetallicText';
+import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -442,7 +444,11 @@ export default function VisualCalibration() {
                   accessibilityRole="button"
                   accessibilityLabel={`Edit ${cat.label} color`}
                 >
-                  <Ionicons name={cat.icon} size={16} color={isCurrent ? '#C9AE78' : 'rgba(255,255,255,0.4)'} />
+                  {isCurrent ? (
+                    <MetallicIcon name={cat.icon} size={16} color="#C9AE78" />
+                  ) : (
+                    <Ionicons name={cat.icon} size={16} color="rgba(255,255,255,0.4)" />
+                  )}
                   <Text style={[styles.summaryLabel, isCurrent && styles.summaryLabelActive]}>
                     {cat.label}
                   </Text>
@@ -559,10 +565,10 @@ export default function VisualCalibration() {
               exiting={FadeOut.duration(300)}
               style={styles.savedBanner}
             >
-              <Ionicons name="checkmark-circle" size={18} color="#6EBF8B" />
-              <Text style={styles.savedBannerText}>
+              <MetallicIcon name="checkmark-circle" size={18} color="#6EBF8B" />
+              <MetallicText style={styles.savedBannerText} color="#6EBF8B">
                 All color atmospheres saved
-              </Text>
+              </MetallicText>
             </Animated.View>
           )}
         </ScrollView>

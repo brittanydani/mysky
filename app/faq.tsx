@@ -8,6 +8,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { theme } from '../constants/theme';
+import LanternIcon from '../components/ui/LanternIcon';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -50,7 +51,11 @@ export default function FAQScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.lastUpdated}>Last updated: March 13, 2026</Text>
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <LanternIcon size={140} />
+          </View>
+
+          <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
 
           <View style={styles.faqSection}>
             <View style={styles.faqCard}>
@@ -130,7 +135,32 @@ export default function FAQScreen() {
 
             <Text style={styles.question}>How do I contact support or ask privacy questions?</Text>
             <Text style={styles.answer}>
-              Email <Text style={styles.highlight}>support@mysky.app</Text>. We respond to privacy-related inquiries within 30 days.
+              Email <Text style={styles.highlight}>brittanyapps@outlook.com</Text>. We respond to privacy-related inquiries within 30 days.
+            </Text>
+
+            <Text style={styles.question}>How old do I need to be to use MySky?</Text>
+            <Text style={styles.answer}>
+              MySky is intended for users aged 17 and older. By using the app, you confirm that you meet this age requirement. We do not knowingly collect personal information from anyone under 17.
+            </Text>
+
+            <Text style={styles.question}>Does MySky work offline?</Text>
+            <Text style={styles.answer}>
+              Yes. All core features — daily check-ins, journaling, natal chart, dream logging, sleep tracking, somatic map, trigger log, energy readings, personal story, and self-discovery tools — work fully offline with no internet connection. The only features that require a network connection are city name geocoding (when entering a birth place), subscription verification (RevenueCat), and the optional AI Reflection Insights.
+            </Text>
+
+            <Text style={styles.question}>What happens if I withdraw my privacy consent?</Text>
+            <Text style={styles.answer}>
+              You can withdraw your data processing consent at any time in Privacy Settings. When consent is withdrawn, MySky stops writing new personal data but preserves your existing data so nothing is lost. You can restore consent at any time to resume full functionality. You can also perform a Hard Reset at any time to permanently erase all data.
+            </Text>
+
+            <Text style={styles.question}>Do the iOS home screen widgets share my data?</Text>
+            <Text style={styles.answer}>
+              No. MySky's iOS widgets display recent check-in data (mood, energy, sleep scores) using a sandboxed App Group container on your device. This data never leaves your device and is not transmitted to any server or third party.
+            </Text>
+
+            <Text style={styles.question}>Will MySky's terms or privacy policy change?</Text>
+            <Text style={styles.answer}>
+              We may update our Terms of Service or Privacy Policy from time to time. When material changes are made, the "Last updated" date will be revised and — if the change affects how your data is processed — we will re-request your consent within the app. We encourage you to review these documents periodically.
             </Text>
               </View>
           </View>

@@ -19,6 +19,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { localDb } from '../services/storage/localDb';
 import { generateId } from '../services/storage/models';
 import type { JournalEntry } from '../services/storage/models';
@@ -163,19 +165,31 @@ export default function NewJournalEntryScreen() {
                   ]}
                   onPress={() => handleSelectMood(m.id)}
                 >
-                  <Ionicons
-                    name={m.icon as any}
-                    size={24}
-                    color={isSelected ? m.color : PALETTE.textMuted}
-                  />
-                  <Text
-                    style={[
-                      styles.moodLabel,
-                      isSelected && { color: m.color, fontWeight: '700' },
-                    ]}
-                  >
-                    {m.label}
-                  </Text>
+                  {isSelected ? (
+                    <MetallicIcon
+                      name={m.icon as any}
+                      size={24}
+                      color={m.color}
+                    />
+                  ) : (
+                    <Ionicons
+                      name={m.icon as any}
+                      size={24}
+                      color={PALETTE.textMuted}
+                    />
+                  )}
+                  {isSelected ? (
+                    <MetallicText
+                      style={[styles.moodLabel, { fontWeight: '700' }]}
+                      color={m.color}
+                    >
+                      {m.label}
+                    </MetallicText>
+                  ) : (
+                    <Text style={styles.moodLabel}>
+                      {m.label}
+                    </Text>
+                  )}
                 </Pressable>
               );
             })}
@@ -197,10 +211,10 @@ export default function NewJournalEntryScreen() {
                   style={[styles.promptCard, { borderColor: `${prompt.archetypeColor}40` }]}
                 >
                   <View style={styles.promptHeader}>
-                    <Ionicons name="sparkles" size={14} color={prompt.archetypeColor} />
-                    <Text style={[styles.promptContext, { color: prompt.archetypeColor }]}>
+                    <MetallicIcon name="sparkles" size={14} color={prompt.archetypeColor} />
+                    <MetallicText style={styles.promptContext} color={prompt.archetypeColor}>
                       {prompt.context}
-                    </Text>
+                    </MetallicText>
                   </View>
                   <Text style={styles.promptQuestion}>"{prompt.question}"</Text>
                   <View style={styles.promptFooter}>
@@ -249,7 +263,7 @@ export default function NewJournalEntryScreen() {
                 colors={['rgba(217, 191, 140, 0.25)', 'rgba(217, 191, 140, 0.05)']}
                 style={StyleSheet.absoluteFill}
               />
-              <Text style={styles.sealBtnText}>{isSaving ? 'SEALING...' : 'SEAL RECORD'}</Text>
+              <MetallicText style={styles.sealBtnText} color="#D9BF8C">{isSaving ? 'SEALING...' : 'SEAL RECORD'}</MetallicText>
             </Pressable>
           </Animated.View>
         )}

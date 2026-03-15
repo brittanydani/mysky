@@ -18,6 +18,9 @@ import {
   isSwissEphemerisAvailable,
   calculateChart as sweCalculateChart,
   SwissEphChartData,
+  calcMoonUncertainty,
+  setSiderealMode,
+  setTropicalMode,
 } from './swissEphemerisEngine';
 
 import {
@@ -37,6 +40,8 @@ import {
   Planet,
   ZodiacSign,
   PointPlacement,
+  MoonUncertainty,
+  ApproximateTimePeriod,
 } from './types';
 
 import { ZODIAC_SIGNS, PLANETS, ASPECT_TYPES } from './constants';
@@ -54,6 +59,17 @@ import { Origin, Horoscope } from 'circular-natal-horoscope-js';
 
 // Default configuration
 const DEFAULT_HOUSE_SYSTEM: HouseSystem = 'whole-sign';
+
+/** Map approximate time periods to UTC hour windows for Moon uncertainty */
+function getTimeWindowForApproximation(period?: ApproximateTimePeriod): { hourMin: number; hourMax: number } {
+  switch (period) {
+    case 'morning':   return { hourMin: 6, hourMax: 12 };
+    case 'afternoon': return { hourMin: 12, hourMax: 18 };
+    case 'evening':   return { hourMin: 18, hourMax: 24 };
+    case 'night':     return { hourMin: 0, hourMax: 6 };
+    default:          return { hourMin: 0, hourMax: 24 }; // full day when truly unknown
+  }
+}
 
 // Cache for transits to avoid recalculating too frequently
 type TransitCacheEntry = { timestamp: number; data: TransitData };
@@ -189,6 +205,18 @@ export class EnhancedAstrologyCalculator {
   ): NatalChart {
     const includeHouses = !birthData.hasUnknownTime && Boolean(birthData.time);
 
+    // Configure zodiac system (tropical or sidereal)
+    const zodiacSystem = birthData.zodiacSystem ?? 'tropical';
+    if (zodiacSystem === 'sidereal') {
+      const cached = AstrologySettingsService.getCachedSettings();
+      setSiderealMode(cached?.ayanamsa ?? 'lahiri');
+    } else {
+      setTropicalMode();
+    }
+
+    // Determine if asteroids should be included
+    const includeAsteroids = AstrologySettingsService.getCachedSettings()?.showAsteroid ?? true;
+
     // Swiss Ephemeris expects 1-based month; parseBirthDateTime returns 0-based
     const sweMonth = month + 1;
 
@@ -204,7 +232,8 @@ export class EnhancedAstrologyCalculator {
       birthData.latitude,
       birthData.longitude,
       houseSystem,
-      includeHouses
+      includeHouses,
+      includeAsteroids,
     );
 
     // Build the same output structures as the fallback engine
@@ -428,6 +457,46 @@ export class EnhancedAstrologyCalculator {
 
     const timeBasedFeaturesAvailable = this.determineFeatureAvailability(birthData);
 
+    // ── Moon uncertainty (unknown or approximate time) ──
+    let moonUncertainty: MoonUncertainty | undefined;
+    if (birthData.hasUnknownTime || birthData.approximateTime) {
+      try {
+        const utc = timezoneInfo.utcDateTime;
+        const { hourMin, hourMax } = getTimeWindowForApproximation(birthData.approximateTime);
+        if (isSwissEphemerisAvailable()) {
+          moonUncertainty = calcMoonUncertainty(
+            utc.year, utc.month, utc.day, hourMin, hourMax
+          );
+        } else {
+          // Fallback: estimate from Moon's average daily motion (~13.2°/day)
+          const windowHours = hourMax - hourMin;
+          const maxError = (13.2 / 24) * windowHours / 2;
+          const moonPos = planets.find(p => p.planet === 'Moon');
+          if (moonPos) {
+            const minLon = normalize360(moonPos.absoluteDegree - maxError);
+            const maxLon = normalize360(moonPos.absoluteDegree + maxError);
+            const possibleSigns: string[] = [];
+            const steps = Math.max(4, Math.ceil(maxError * 2 / 5));
+            for (let i = 0; i <= steps; i++) {
+              const testLon = normalize360(minLon + (i / steps) * maxError * 2);
+              const signIdx = Math.floor(testLon / 30);
+              const s = ZODIAC_SIGNS[signIdx]?.name ?? 'Aries';
+              if (!possibleSigns.includes(s)) possibleSigns.push(s);
+            }
+            moonUncertainty = {
+              minLongitude: Number(minLon.toFixed(6)),
+              maxLongitude: Number(maxLon.toFixed(6)),
+              maxErrorDegrees: Number(maxError.toFixed(2)),
+              possibleSigns,
+              signChangesPossible: possibleSigns.length > 1,
+            };
+          }
+        }
+      } catch (e) {
+        logger.warn('[Calculator] Moon uncertainty calculation failed:', e);
+      }
+    }
+
     return {
       id: `chart_${Date.now()}`,
       name: birthData.place,
@@ -464,6 +533,9 @@ export class EnhancedAstrologyCalculator {
       // ✅ Calculated point
       partOfFortune,
 
+      // Moon uncertainty range (populated when birth time is unknown/approximate)
+      moonUncertainty,
+
       calculationAccuracy,
       timeBasedFeaturesAvailable,
 
@@ -473,26 +545,52 @@ export class EnhancedAstrologyCalculator {
   }
 
   private static resolveTimezone(birthData: BirthData): TimezoneInfo {
-    const dateTimeString = birthData.hasUnknownTime
-      ? `${birthData.date}T12:00:00`
-      : `${birthData.date}T${birthData.time || '12:00:00'}`;
+    let timeStr: string;
+    if (birthData.hasUnknownTime) {
+      // Use approximate time midpoint if available, otherwise noon
+      const midHour = this.getApproximateMidpointHour(birthData.approximateTime);
+      timeStr = `${birthData.date}T${String(midHour).padStart(2, '0')}:00:00`;
+    } else {
+      timeStr = `${birthData.date}T${birthData.time || '12:00:00'}`;
+    }
 
     return TimezoneHandler.resolveHistoricalTimezone(
-      dateTimeString,
+      timeStr,
       birthData.latitude,
       birthData.longitude,
       birthData.timezone
     );
   }
 
+  /** Get the midpoint hour for an approximate time period */
+  private static getApproximateMidpointHour(period?: ApproximateTimePeriod): number {
+    switch (period) {
+      case 'morning':   return 9;   // midpoint of 6–12
+      case 'afternoon': return 15;  // midpoint of 12–18
+      case 'evening':   return 21;  // midpoint of 18–24
+      case 'night':     return 3;   // midpoint of 0–6
+      default:          return 12;  // noon for truly unknown
+    }
+  }
+
   private static parseBirthDateTime(birthData: BirthData, timezoneInfo: TimezoneInfo) {
     const local = timezoneInfo.localDateTime;
+    if (birthData.hasUnknownTime) {
+      const midHour = this.getApproximateMidpointHour(birthData.approximateTime);
+      return {
+        year: local.year,
+        month: local.month - 1,
+        day: local.day,
+        hour: midHour,
+        minute: 0,
+      };
+    }
     return {
       year: local.year,
       month: local.month - 1, // Origin expects 0-based month (0=Jan, 11=Dec); Luxon returns 1-12
       day: local.day,
-      hour: birthData.hasUnknownTime ? 12 : local.hour,
-      minute: birthData.hasUnknownTime ? 0 : local.minute,
+      hour: local.hour,
+      minute: local.minute,
     };
   }
 

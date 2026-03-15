@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 
 export default function OnboardingIndex() {
   const router = useRouter();
@@ -53,20 +54,13 @@ export default function OnboardingIndex() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            !trimmedName && styles.buttonDisabled,
-            pressed && styles.buttonPressed,
-          ]}
-          disabled={!trimmedName}
+        <SkiaMetallicPill
+          label="Continue"
           onPress={handleContinue}
-          accessibilityRole="button"
-          accessibilityLabel="Continue to next step"
-          accessibilityState={{ disabled: !trimmedName }}
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-        </Pressable>
+          disabled={!trimmedName}
+          height={56}
+          borderRadius={28}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -79,9 +73,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 34, fontWeight: '300', color: '#FFF', marginBottom: 40, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), letterSpacing: 1 },
   input: { fontSize: 32, color: '#D9BF8C', borderBottomWidth: 1, borderColor: 'rgba(217,191,140,0.3)', paddingBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) },
   footer: { paddingHorizontal: 32, paddingBottom: 60 },
-  button: { backgroundColor: '#D9BF8C', height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', shadowColor: '#D9BF8C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
-  buttonDisabled: { opacity: 0.3, shadowOpacity: 0 },
-  buttonPressed: { transform: [{ scale: 0.98 }] },
-  buttonText: { color: '#050507', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5 },
+
 });
 

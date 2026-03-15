@@ -11,6 +11,7 @@ import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { MetallicIcon } from './ui/MetallicIcon';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
@@ -172,7 +173,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
                     <View style={styles.rowLead}>
-                      <Ionicons name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
+                      <MetallicIcon name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
                       <Text style={styles.statusLabel}>Status</Text>
                     </View>
                     <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
@@ -182,7 +183,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   {consentRecord?.timestamp && (
                     <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
                       <View style={styles.rowLead}>
-                        <Ionicons name="time-outline" size={16} color={PALETTE.silverBlue} />
+                        <MetallicIcon name="time-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.statusLabel}>Consented</Text>
                       </View>
                       <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
@@ -192,7 +193,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   )}
                   <View style={[styles.statusRow, { borderBottomWidth: 0 }]}>
                     <View style={styles.rowLead}>
-                      <Ionicons name="document-outline" size={16} color={PALETTE.silverBlue} />
+                      <MetallicIcon name="document-outline" size={16} color={PALETTE.silverBlue} />
                       <Text style={styles.statusLabel}>Policy Version</Text>
                     </View>
                     <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
@@ -203,7 +204,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 {consentRecord?.granted && (
                   <Pressable style={styles.actionCard} onPress={handleWithdrawConsent} disabled={isLoading}>
                     <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
-                      <Ionicons name="close-circle-outline" size={22} color={PALETTE.copper} />
+                      <MetallicIcon name="close-circle-outline" size={22} color={PALETTE.copper} />
                       <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Withdraw Consent</Text>
                       <Text style={styles.actionSub}>Revoke data processing consent. Existing data is preserved.</Text>
                     </LinearGradient>
@@ -218,7 +219,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   <View style={styles.actionGrid}>
                     <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading}>
                       <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
-                        <Ionicons name="download-outline" size={22} color={PALETTE.silverBlue} />
+                        <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
                         <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Export Archive</Text>
                         <Text style={styles.actionSub}>Create a readable backup of all entries.</Text>
                       </LinearGradient>
@@ -226,7 +227,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 
                     <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading}>
                       <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
-                        <Ionicons name="trash-outline" size={22} color={PALETTE.copper} />
+                        <MetallicIcon name="trash-outline" size={22} color={PALETTE.copper} />
                         <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Hard Reset</Text>
                         <Text style={styles.actionSub}>Permanently erase all data from this device.</Text>
                       </LinearGradient>
@@ -251,7 +252,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     'Right to private computation only',
                   ].map((right, i) => (
                     <View key={i} style={styles.rightNode}>
-                      <Ionicons name="checkmark-circle-outline" size={16} color={PALETTE.gold} />
+                      <MetallicIcon name="checkmark-circle-outline" size={16} color={PALETTE.gold} />
                       <Text style={styles.rightNodeText}>{right}</Text>
                     </View>
                   ))}

@@ -9,6 +9,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
+import { MetallicText } from './MetallicText';
 
 export type AspectCategory = 'connection' | 'chemistry' | 'growth' | 'challenge';
 
@@ -39,12 +40,12 @@ const renderZodiacText = (text: string) => {
   return text.split(RE_ZODIAC).map((part, i) => {
     if (i % 2 === 1) {
       return (
-        <Text key={i} style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>
+        <MetallicText key={i} style={{ fontFamily: ZODIAC_FAMILY, fontSize: 12, letterSpacing: 0.5, textTransform: 'uppercase' }} color="#E8D6AE">
           {part}
-        </Text>
+        </MetallicText>
       );
     }
-    return <Text key={i}>{part}</Text>;
+    return <Text key={i} style={{ fontSize: 12, letterSpacing: 0.5, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{part}</Text>;
   });
 };
 
@@ -100,7 +101,7 @@ export default function AspectRow({
           <View style={styles.cardInner}>
             
             {/* Aspect Formula */}
-            <Text style={styles.formula}>{renderZodiacText(description)}</Text>
+            <View style={styles.formulaRow}>{renderZodiacText(description)}</View>
 
             {/* Title */}
             <Text style={styles.title}>{title}</Text>
@@ -114,7 +115,11 @@ export default function AspectRow({
             <View style={styles.badgeRow}>
               {/* Category Badge */}
               <View style={[styles.badge, { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}30` }]}>
+              {category !== 'chemistry' ? (
+                <MetallicText style={styles.badgeText} color={cfg.color}>{cfg.label}</MetallicText>
+              ) : (
                 <Text style={[styles.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+              )}
               </View>
               
               {/* Strength Badge */}
@@ -186,13 +191,11 @@ const styles = StyleSheet.create({
   },
   
   // ── Typography ──
-  formula: {
-    fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif' }),
-    fontSize: 12,
-    letterSpacing: 0.5,
-    color: 'rgba(255,255,255,0.5)',
+  formulaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
     marginBottom: 6,
-    textTransform: 'uppercase',
   },
   title: {
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),

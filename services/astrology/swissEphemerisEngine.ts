@@ -18,8 +18,8 @@
 // ─────────────────────────────────────────────────────────────
 
 import { logger } from '../../utils/logger';
-import { HouseSystem, PlanetPosition } from './types';
-import { normalize360, degreeInSign, signFromLongitude, degMinFromAbs } from './sharedHelpers';
+import { HouseSystem, PlanetPosition, Ayanamsa, MoonUncertainty } from './types';
+import { normalize360, degreeInSign, signFromLongitude, degMinFromAbs, signNameFromLongitude } from './sharedHelpers';
 
 // ── Swiss Ephemeris constants (inline so we don't import at module level) ────
 
@@ -38,10 +38,15 @@ export const SE = {
   MEAN_NODE: 10,
   TRUE_NODE: 11,
   CHIRON: 15,
+  CERES: 17,
+  PALLAS: 18,
+  JUNO: 19,
+  VESTA: 20,
 
   // Calculation flags
   SEFLG_SWIEPH: 2,     // Use Swiss Ephemeris
   SEFLG_SPEED: 256,    // Include speed data
+  SEFLG_SIDEREAL: 64,  // Sidereal zodiac mode
 
   // Calendar
   SE_GREG_CAL: 1,
@@ -80,6 +85,14 @@ const PLANET_BODIES = [
   { id: SE.NEPTUNE, label: 'Neptune' },
   { id: SE.PLUTO, label: 'Pluto' },
   { id: SE.CHIRON, label: 'Chiron' },
+] as const;
+
+/** Asteroid bodies (calculated when showAsteroid setting is enabled) */
+const ASTEROID_BODIES = [
+  { id: SE.CERES, label: 'Ceres' },
+  { id: SE.PALLAS, label: 'Pallas' },
+  { id: SE.JUNO, label: 'Juno' },
+  { id: SE.VESTA, label: 'Vesta' },
 ] as const;
 
 /** Nodes to calculate */
@@ -283,8 +296,9 @@ export function calcHouses(
 /**
  * Calculate all planetary positions for a given Julian Day.
  * Returns PlanetPosition[] plus a speed map for aspect applying/separating logic.
+ * @param includeAsteroids  When true, adds Ceres, Pallas, Juno, Vesta
  */
-export function calcAllPlanets(julianDay: number): {
+export function calcAllPlanets(julianDay: number, includeAsteroids: boolean = false): {
   planets: PlanetPosition[];
   speeds: Map<string, number>;
 } {
@@ -347,6 +361,15 @@ export function calcAllPlanets(julianDay: number): {
     speeds.set('South Node', result.longitudeSpeed);
   }
 
+  // Additional asteroids (Ceres, Pallas, Juno, Vesta)
+  if (includeAsteroids) {
+    const asteroids = calcAsteroids(julianDay);
+    planets.push(...asteroids.planets);
+    for (const [name, speed] of asteroids.speeds) {
+      speeds.set(name, speed);
+    }
+  }
+
   return { planets, speeds };
 }
 
@@ -364,6 +387,7 @@ export function calcAllPlanets(julianDay: number): {
  * @param longitude Geographic longitude (-180 to 180)
  * @param houseSystem House system to use
  * @param includeHouses Whether to calculate houses (false for unknown time)
+ * @param includeAsteroids Whether to include Ceres, Pallas, Juno, Vesta
  */
 export function calculateChart(
   year: number,
@@ -375,10 +399,11 @@ export function calculateChart(
   latitude: number,
   longitude: number,
   houseSystem: HouseSystem,
-  includeHouses: boolean = true
+  includeHouses: boolean = true,
+  includeAsteroids: boolean = false,
 ): SwissEphChartData {
   const julianDay = dateToJulianDay(year, month, day, hour, minute, second);
-  const { planets, speeds } = calcAllPlanets(julianDay);
+  const { planets, speeds } = calcAllPlanets(julianDay, includeAsteroids);
 
   let cusps: number[] | undefined;
   let ascendant: number | undefined;
@@ -398,6 +423,167 @@ export function calculateChart(
     ascendant,
     mc,
     julianDay,
+  };
+}
+
+/**
+ * Ayanamsa codes for Swiss Ephemeris sidereal mode.
+ * See: https://www.astro.com/swisseph/swephprg.htm#_Toc112949014
+ */
+const AYANAMSA_MAP: Record<Ayanamsa, number> = {
+  'lahiri': 1,          // Lahiri (Chitrapaksha) — most common in Indian astrology
+  'raman': 3,           // B.V. Raman
+  'krishnamurti': 5,    // KP (Krishnamurti Paddhati)
+  'fagan-bradley': 0,   // Fagan-Bradley — common in Western sidereal
+};
+
+/**
+ * Configure Swiss Ephemeris for sidereal zodiac with specified ayanamsa.
+ * Must be called before any calculation if sidereal mode is desired.
+ */
+export function setSiderealMode(ayanamsa: Ayanamsa): void {
+  const swe = getSwe();
+  if (!swe) {
+    logger.warn('[SwissEphemeris] Cannot set sidereal mode — native module not available');
+    return;
+  }
+  const ayaCode = AYANAMSA_MAP[ayanamsa] ?? AYANAMSA_MAP['lahiri'];
+  if (typeof swe.sweSetSidMode === 'function') {
+    swe.sweSetSidMode(ayaCode, 0, 0);
+    logger.info(`[SwissEphemeris] Sidereal mode set: ayanamsa=${ayanamsa} (code=${ayaCode})`);
+  } else {
+    logger.warn('[SwissEphemeris] sweSetSidMode not available in this build');
+  }
+}
+
+/**
+ * Reset Swiss Ephemeris back to tropical (default) mode.
+ */
+export function setTropicalMode(): void {
+  const swe = getSwe();
+  if (!swe) return;
+  // Calling sweSetSidMode with -1 or simply not using SEFLG_SIDEREAL resets.
+  // The safest approach is to just not add SEFLG_SIDEREAL in subsequent calcs.
+  // No explicit reset function exists; the flag controls per-call behavior.
+  logger.info('[SwissEphemeris] Tropical mode (default) active');
+}
+
+/**
+ * Calculate a single planet's position in sidereal zodiac.
+ */
+export function calcPlanetSidereal(julianDay: number, planetId: number, ayanamsa: Ayanamsa): SwissEphPlanetResult {
+  const swe = getSwe();
+  if (!swe) {
+    throw new Error('Swiss Ephemeris not available');
+  }
+
+  setSiderealMode(ayanamsa);
+  const iflag = SE.SEFLG_SWIEPH | SE.SEFLG_SPEED | SE.SEFLG_SIDEREAL;
+  const result = swe.sweCalcUt(julianDay, planetId, iflag);
+
+  return {
+    longitude: normalize360(result.longitude),
+    latitude: result.latitude,
+    distance: result.distance,
+    longitudeSpeed: result.longitudeSpeed,
+    latitudeSpeed: result.latitudeSpeed,
+    distanceSpeed: result.distanceSpeed,
+  };
+}
+
+/**
+ * Calculate asteroid positions for a given Julian Day.
+ * Returns positions for Ceres, Pallas, Juno, and Vesta.
+ */
+export function calcAsteroids(julianDay: number): {
+  planets: PlanetPosition[];
+  speeds: Map<string, number>;
+} {
+  const planets: PlanetPosition[] = [];
+  const speeds = new Map<string, number>();
+
+  for (const body of ASTEROID_BODIES) {
+    try {
+      const result = calcPlanet(julianDay, body.id);
+      const sign = signFromLongitude(result.longitude);
+      const degIn = degreeInSign(result.longitude);
+      const isRetrograde = result.longitudeSpeed < 0;
+
+      planets.push({
+        planet: body.label,
+        sign: sign.name,
+        degree: Number(degIn.toFixed(2)),
+        absoluteDegree: Number(result.longitude.toFixed(6)),
+        isRetrograde,
+        retrograde: isRetrograde,
+        speed: result.longitudeSpeed,
+      });
+
+      speeds.set(body.label, result.longitudeSpeed);
+    } catch (e) {
+      logger.warn(`[SwissEphemeris] Failed to calculate ${body.label}:`, e);
+    }
+  }
+
+  return { planets, speeds };
+}
+
+/**
+ * Calculate Moon position uncertainty range for unknown/approximate birth times.
+ * The Moon moves ~12\u201313\u00b0/day, so without an exact time the position can vary significantly.
+ *
+ * @param year   UTC year
+ * @param month  UTC month (1-based)
+ * @param day    UTC day
+ * @param hourMin  Start of the time window (UTC hour, default 0)
+ * @param hourMax  End of the time window (UTC hour, default 24)
+ */
+export function calcMoonUncertainty(
+  year: number,
+  month: number,
+  day: number,
+  hourMin: number = 0,
+  hourMax: number = 24,
+): MoonUncertainty {
+  const swe = getSwe();
+  if (!swe) {
+    throw new Error('Swiss Ephemeris not available for Moon uncertainty calculation');
+  }
+
+  // Calculate Moon position at the start and end of the time window
+  const jdStart = dateToJulianDay(year, month, day, hourMin, 0, 0);
+  const jdEnd = dateToJulianDay(year, month, day, Math.min(hourMax, 23), hourMax >= 24 ? 59 : 0, 0);
+
+  const moonStart = calcPlanet(jdStart, SE.MOON);
+  const moonEnd = calcPlanet(jdEnd, SE.MOON);
+
+  const minLon = normalize360(moonStart.longitude);
+  const maxLon = normalize360(moonEnd.longitude);
+
+  // Calculate max error (half the range since noon is used as midpoint)
+  const range = maxLon >= minLon
+    ? maxLon - minLon
+    : (360 - minLon) + maxLon; // handle wrap-around
+  const maxErrorDegrees = Number((range / 2).toFixed(2));
+
+  // Determine all possible signs
+  const possibleSigns: string[] = [];
+  const steps = Math.max(4, Math.ceil(range / 5)); // check every ~5\u00b0
+  for (let i = 0; i <= steps; i++) {
+    const fraction = i / steps;
+    const testLon = normalize360(minLon + fraction * range);
+    const signName = signNameFromLongitude(testLon);
+    if (!possibleSigns.includes(signName)) {
+      possibleSigns.push(signName);
+    }
+  }
+
+  return {
+    minLongitude: Number(minLon.toFixed(6)),
+    maxLongitude: Number(maxLon.toFixed(6)),
+    maxErrorDegrees,
+    possibleSigns,
+    signChangesPossible: possibleSigns.length > 1,
   };
 }
 

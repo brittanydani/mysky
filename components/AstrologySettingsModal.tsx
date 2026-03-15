@@ -19,6 +19,8 @@ import {
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { MetallicText } from './ui/MetallicText';
+import { MetallicIcon } from './ui/MetallicIcon';
 
 import { theme } from '../constants/theme';
 import {
@@ -139,7 +141,7 @@ export default function AstrologySettingsModal({
             
             {/* House Systems */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>House System</Text>
+              <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>House System</MetallicText>
               <Text style={styles.sectionSub}>Determines how the 12 houses are mapped to your location.</Text>
               
               <View style={styles.optionsList}>
@@ -150,9 +152,11 @@ export default function AstrologySettingsModal({
                     onPress={() => handleSelect('house', option.value)}
                   >
                     <View style={styles.cardHeader}>
-                      <Text style={[styles.optionTitle, selectedHouseSystem === option.value && { color: PALETTE.gold }]}>
-                        {option.label}
-                      </Text>
+                      {selectedHouseSystem === option.value ? (
+                        <MetallicText style={styles.optionTitle} color={PALETTE.gold}>{option.label}</MetallicText>
+                      ) : (
+                        <Text style={styles.optionTitle}>{option.label}</Text>
+                      )}
                       <View style={[styles.radio, selectedHouseSystem === option.value && styles.radioActive]}>
                         {selectedHouseSystem === option.value && <View style={styles.radioInner} />}
                       </View>
@@ -165,7 +169,7 @@ export default function AstrologySettingsModal({
 
             {/* Aspect Orbs */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Aspect Precision</Text>
+              <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Aspect Precision</MetallicText>
               <Text style={styles.sectionSub}>Adjust the mathematical tolerance for planetary angles.</Text>
               
               <View style={styles.orbGrid}>
@@ -175,14 +179,24 @@ export default function AstrologySettingsModal({
                     style={[styles.orbCard, selectedOrbPreset === option.value && styles.cardSelected]}
                     onPress={() => handleSelect('orb', option.value)}
                   >
-                    <Ionicons 
-                      name={option.value === 'tight' ? 'contract' : option.value === 'wide' ? 'expand' : 'remove'} 
-                      size={20} 
-                      color={selectedOrbPreset === option.value ? PALETTE.gold : theme.textMuted} 
-                    />
-                    <Text style={[styles.orbLabel, selectedOrbPreset === option.value && { color: PALETTE.gold }]}>
-                      {option.label}
-                    </Text>
+                    {selectedOrbPreset === option.value ? (
+                      <MetallicIcon 
+                        name={option.value === 'tight' ? 'contract' : option.value === 'wide' ? 'expand' : 'remove'} 
+                        size={20} 
+                        color={PALETTE.gold} 
+                      />
+                    ) : (
+                      <Ionicons 
+                        name={option.value === 'tight' ? 'contract' : option.value === 'wide' ? 'expand' : 'remove'} 
+                        size={20} 
+                        color={theme.textMuted} 
+                      />
+                    )}
+                    {selectedOrbPreset === option.value ? (
+                      <MetallicText style={styles.orbLabel} color={PALETTE.gold}>{option.label}</MetallicText>
+                    ) : (
+                      <Text style={styles.orbLabel}>{option.label}</Text>
+                    )}
                   </Pressable>
                 ))}
               </View>

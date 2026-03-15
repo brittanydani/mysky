@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, KeyboardAvoidingView, Pla
 import { useRouter } from 'expo-router';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { GoldSubtitle as _GoldSubtitle } from '../components/ui/GoldSubtitle'; // reserved for future subtitle
+import { MetallicText } from '../components/ui/MetallicText';
 import * as Haptics from 'expo-haptics';
 
 export default function SanctuaryWorkspace() {
@@ -48,7 +49,7 @@ export default function SanctuaryWorkspace() {
           <Text style={styles.iconText}>×</Text>
         </Pressable>
         <Pressable onPress={handleSeal} style={styles.iconButton}>
-          <Text style={styles.sealIconText}>⚲</Text>
+          <MetallicText style={styles.sealIconText} color="#D9BF8C">⚲</MetallicText>
         </Pressable>
       </View>
       <View style={[styles.titleArea, isKeyboardVisible && { opacity: 0.3 }]}>
@@ -74,17 +75,19 @@ export default function SanctuaryWorkspace() {
             {wordCount > 0 && (
               <Text style={styles.wordCount}>{wordCount} words</Text>
             )}
-            <Animated.Text style={[styles.autoSaveText, { opacity: fadeAnim }]}>
-              Encrypted locally...
-            </Animated.Text>
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <MetallicText style={styles.autoSaveText} color="#8CBEAA">
+                Encrypted locally...
+              </MetallicText>
+            </Animated.View>
           </View>
 
           <Pressable
             style={({ pressed }) => [styles.aiPromptButton, pressed && { opacity: 0.7 }]}
             onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
           >
-            <Text style={styles.aiPromptIcon}>✧</Text>
-            <Text style={styles.aiPromptText}>Prompt Me</Text>
+            <MetallicText style={styles.aiPromptIcon} color="#D9BF8C">✧</MetallicText>
+            <MetallicText style={styles.aiPromptText} color="#D9BF8C">Prompt Me</MetallicText>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

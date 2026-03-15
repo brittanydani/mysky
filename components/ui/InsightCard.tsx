@@ -4,6 +4,7 @@ import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-
 import { Ionicons } from '@expo/vector-icons';
 import { luxuryTheme } from '../../constants/luxuryTheme';
 import { theme } from '../../constants/theme';
+import { MetallicIcon } from './MetallicIcon';
 
 interface InsightCardProps {
   title: string;
@@ -80,7 +81,11 @@ function InsightCard({
         <View style={styles.header}>
           {icon && (
             <View style={[styles.iconContainer, { backgroundColor: `${accentColor}15`, borderColor: `${accentColor}30` }]}>
-              <Ionicons name={icon} size={18} color={accentColor} />
+              {isFeatured ? (
+                <Ionicons name={icon} size={18} color={accentColor} />
+              ) : (
+                <MetallicIcon name={icon} size={18} color={accentColor} />
+              )}
             </View>
           )}
 
@@ -91,14 +96,14 @@ function InsightCard({
 
             {locked && (
               <View style={styles.lockedBadge}>
-                <Ionicons name="sparkles" size={10} color={PALETTE.amethyst} />
+                <MetallicIcon name="sparkles" size={10} color={PALETTE.amethyst} />
                 <Text style={styles.lockedText}>{lockedText}</Text>
               </View>
             )}
           </View>
 
           {locked ? (
-            <Ionicons name="lock-closed-outline" size={16} color={PALETTE.amethyst} style={styles.lockIcon} />
+            <MetallicIcon name="lock-closed-outline" size={16} color={PALETTE.amethyst} style={styles.lockIcon} />
           ) : (
             <Ionicons name="chevron-forward" size={16} color={luxuryTheme.text.muted} />
           )}
@@ -116,7 +121,7 @@ function InsightCard({
             <Text style={styles.lockedHintText}>
               {lockedHint || 'Tap to unlock this insight'}
             </Text>
-            <Ionicons name="arrow-forward" size={12} color={PALETTE.amethyst} />
+            <MetallicIcon name="arrow-forward" size={12} color={PALETTE.amethyst} />
           </View>
         )}
       </View>

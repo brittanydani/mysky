@@ -5,6 +5,10 @@ import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Home, Activity, BookText, Fingerprint, Settings } from 'lucide-react-native';
+import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
+import { SkiaGradient } from '../../components/ui/SkiaGradient';
+import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 
 const VISIBLE_TABS = new Set(['home', 'growth', 'journal', 'blueprint', 'settings']);
 
@@ -40,30 +44,45 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
             }
           };
 
-          const color = isFocused ? '#D9BF8C' : 'rgba(255,255,255,0.3)';
+          const inactiveColor = 'rgba(255,255,255,0.3)';
           const size = 22;
           const sw = 1.5;
 
-          const icon = (() => {
-            switch (route.name) {
-              case 'home':      return <Home color={color} size={size} strokeWidth={sw} />;
-              case 'growth':    return <Activity color={color} size={size} strokeWidth={sw} />;
-              case 'journal':   return <BookText color={color} size={size} strokeWidth={sw} />;
-              case 'blueprint': return <Fingerprint color={color} size={size} strokeWidth={sw} />;
-              case 'settings':  return <Settings color={color} size={size} strokeWidth={sw} />;
-              default:          return null;
-            }
-          })();
+          const LUCIDE_MAP: Record<string, React.ComponentType<any>> = {
+            home: Home, growth: Activity, journal: BookText,
+            blueprint: Fingerprint, settings: Settings,
+          };
+          const IconComponent = LUCIDE_MAP[route.name];
+
+          const icon = IconComponent
+            ? isFocused
+              ? <MetallicLucideIcon icon={IconComponent} size={size} strokeWidth={sw} />
+              : <IconComponent color={inactiveColor} size={size} strokeWidth={sw} />
+            : null;
 
           return (
             <Pressable key={route.key} onPress={onPress} style={styles.tabItem}>
               <View style={styles.iconWrapper}>
                 {icon}
-                {isFocused && <View style={styles.activeIndicator} />}
+                {isFocused && (
+                  <View style={styles.activeIndicator}>
+                    <SkiaGradient
+                      colors={[...metallicFillColors]}
+                      locations={[...metallicFillPositions]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                  </View>
+                )}
               </View>
-              <Text style={[styles.tabLabel, { color: isFocused ? '#FFF' : 'rgba(255,255,255,0.4)' }]}>
-                {options.title}
-              </Text>
+              {isFocused ? (
+                <MetallicText style={styles.tabLabel}>{options.title}</MetallicText>
+              ) : (
+                <Text style={[styles.tabLabel, { color: 'rgba(255,255,255,0.4)' }]}>
+                  {options.title}
+                </Text>
+              )}
             </Pressable>
           );
         })}
@@ -114,7 +133,7 @@ const styles = StyleSheet.create({
   activeIndicator: {
     position: 'absolute', bottom: -8,
     width: 4, height: 4, borderRadius: 2,
-    backgroundColor: '#D9BF8C',
+    overflow: 'hidden',
     shadowColor: '#D9BF8C', shadowRadius: 4, shadowOpacity: 0.8,
   },
   tabLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginTop: 8 },

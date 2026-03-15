@@ -10,6 +10,7 @@ import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';
 import { GoldSubtitle as _GoldSubtitle } from '../../components/ui/GoldSubtitle'; // reserved
+import { MetallicText } from '../../components/ui/MetallicText';
 
 // ── Persistence keys ──────────────────────────────────────────────────────────
 const KEYS = {
@@ -199,9 +200,15 @@ export default function NotificationSettings() {
             onPress={() => !unknown && isRhythmEnabled && openPicker(slot)}
             disabled={unknown || !isRhythmEnabled}
           >
-            <Text style={[styles.timeText, (unknown || !isRhythmEnabled) && styles.dimText]}>
-              {unknown ? '—' : formatTime(time)}
-            </Text>
+            {(unknown || !isRhythmEnabled) ? (
+              <Text style={[styles.timeText, styles.dimText]}>
+                {unknown ? '—' : formatTime(time)}
+              </Text>
+            ) : (
+              <MetallicText color="#D9BF8C" style={styles.timeText}>
+                {formatTime(time)}
+              </MetallicText>
+            )}
           </Pressable>
         </View>
 
@@ -219,7 +226,7 @@ export default function NotificationSettings() {
             />
             {Platform.OS === 'ios' && (
               <Pressable style={styles.doneButton} onPress={confirmIOSTime}>
-                <Text style={styles.doneText}>Done</Text>
+                <MetallicText color="#D9BF8C" style={styles.doneText}>Done</MetallicText>
               </Pressable>
             )}
           </View>
@@ -230,7 +237,7 @@ export default function NotificationSettings() {
         {/* Unknown time option */}
         <Pressable style={styles.unknownRow} onPress={() => toggleUnknown(slot)}>
           <View style={[styles.checkbox, unknown && styles.checkboxActive]}>
-            {unknown && <Text style={styles.checkmark}>✓</Text>}
+            {unknown && <MetallicText color="#D9BF8C" style={styles.checkmark}>✓</MetallicText>}
           </View>
           <Text style={styles.unknownLabel}>
             {isMorning ? "I don't know my wake time" : "I don't know my evening routine"}

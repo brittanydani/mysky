@@ -1,5 +1,5 @@
 import { EnhancedAstrologyCalculator } from './calculator';
-import { BirthData, NatalChart, PlanetPosition } from './types';
+import { BirthData, NatalChart, PlanetPosition, ApproximateTimePeriod } from './types';
 
 export interface FeatureAvailability {
   risingSign: boolean;
@@ -14,6 +14,7 @@ interface UnknownTimeResult {
   featureAvailability: FeatureAvailability;
   warnings: string[];
   solarChartUsed: boolean;
+  approximateTimePeriod?: ApproximateTimePeriod;
 }
 
 const UNKNOWN_TIME_WARNINGS = [
@@ -63,15 +64,40 @@ export class UnknownTimeHandler {
       };
     }
 
+    // Build context-aware warnings
+    const warnings = [
+      'Birth time is unknown - Rising sign cannot be determined',
+      'Birth time is unknown - House positions are not available',
+    ];
+
+    if (birthData.approximateTime) {
+      warnings.push(
+        `Planetary positions calculated using approximate "${birthData.approximateTime}" time window`
+      );
+    } else {
+      warnings.push('Planetary positions calculated using 12:00 noon local time as reference');
+    }
+
+    // Add moon uncertainty info to warnings
+    if (chart.moonUncertainty) {
+      const { possibleSigns, maxErrorDegrees, signChangesPossible } = chart.moonUncertainty;
+      if (signChangesPossible) {
+        warnings.push(
+          `Moon position has ~${maxErrorDegrees}° uncertainty — possible signs: ${possibleSigns.join(' or ')}`
+        );
+      } else {
+        warnings.push(
+          `Moon position has ~${maxErrorDegrees}° uncertainty within ${possibleSigns[0]}`
+        );
+      }
+    }
+
     return {
       chart,
       featureAvailability,
-      warnings: [
-        'Birth time is unknown - Rising sign cannot be determined',
-        'Birth time is unknown - House positions are not available',
-        'Planetary positions calculated using 12:00 noon local time as reference',
-      ],
+      warnings,
       solarChartUsed: true,
+      approximateTimePeriod: birthData.approximateTime,
     };
   }
 

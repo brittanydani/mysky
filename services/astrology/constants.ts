@@ -16,7 +16,11 @@ const PLANET_DEFINITIONS: Record<string, Planet> = {
   pluto: { name: 'Pluto', symbol: '♇', type: 'Transpersonal' },
   ascendant: { name: 'Ascendant', symbol: 'AC', type: 'Point' },
   midheaven: { name: 'Midheaven', symbol: 'MC', type: 'Point' },
-  chiron: { name: 'Chiron', symbol: '⚷', type: 'Point' },
+  chiron: { name: 'Chiron', symbol: '⚷', type: 'Asteroid' },
+  juno: { name: 'Juno', symbol: '⚭', type: 'Asteroid' },
+  pallas: { name: 'Pallas', symbol: '⚴', type: 'Asteroid' },
+  vesta: { name: 'Vesta', symbol: '⚶', type: 'Asteroid' },
+  ceres: { name: 'Ceres', symbol: '⚳', type: 'Asteroid' },
   'north node': { name: 'North Node', symbol: '☊', type: 'Point' },
   'south node': { name: 'South Node', symbol: '☋', type: 'Point' }
 };

@@ -11,6 +11,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -25,6 +26,8 @@ import Svg, { Polygon, Line, Circle } from 'react-native-svg';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 const STORAGE_KEY = '@mysky:cognitive_style';
 
@@ -190,8 +193,8 @@ export default function CognitiveStyleScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <Ionicons name="arrow-back" size={20} color={PALETTE.silverBlue} />
-          <Text style={styles.backText}>Inner World</Text>
+          <MetallicIcon name="arrow-back" size={20} color={PALETTE.silverBlue} />
+          <MetallicText style={styles.backText} color={PALETTE.silverBlue}>Inner World</MetallicText>
         </Pressable>
 
         <ScrollView
@@ -213,8 +216,8 @@ export default function CognitiveStyleScreen() {
             >
               <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
               <View style={styles.synthesisHeader}>
-                <Ionicons name="git-network-outline" size={18} color={PALETTE.silverBlue} />
-                <Text style={styles.synthesisEyebrow}>COGNITIVE BLUEPRINT</Text>
+                <MetallicIcon name="git-network-outline" size={18} color={PALETTE.silverBlue} />
+                <MetallicText style={styles.synthesisEyebrow} color={PALETTE.silverBlue}>COGNITIVE BLUEPRINT</MetallicText>
               </View>
 
               <Text style={styles.synthesisTitle}>{getProfileTitle()}</Text>
@@ -231,9 +234,9 @@ export default function CognitiveStyleScreen() {
                 style={[styles.saveBtn, saved && styles.saveBtnDone]}
                 onPress={handleSave}
               >
-                <Text style={[styles.saveBtnText, saved && { color: PALETTE.sage }]}>
+                <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.silverBlue}>
                   {saved ? '✓ Blueprint Sealed' : 'Seal Blueprint'}
-                </Text>
+                </MetallicText>
               </Pressable>
             </Animated.View>
           )}
@@ -269,9 +272,15 @@ export default function CognitiveStyleScreen() {
                             style={[styles.scaleBtn, isSelected && styles.scaleBtnSelected]}
                             onPress={() => setScore(dim.id, v)}
                           >
-                            <Text style={[styles.scaleBtnText, isSelected && styles.scaleBtnTextSelected]}>
-                              {v}
-                            </Text>
+                            {isSelected ? (
+                              <MetallicText style={styles.scaleBtnText} color={PALETTE.silverBlue}>
+                                {v}
+                              </MetallicText>
+                            ) : (
+                              <Text style={styles.scaleBtnText}>
+                                {v}
+                              </Text>
+                            )}
                           </Pressable>
                         );
                       })}
@@ -279,11 +288,11 @@ export default function CognitiveStyleScreen() {
 
                     <View style={styles.dimLabels}>
                       <View style={styles.dimLabelBlock}>
-                        <Text style={[styles.dimLabelTitle, { color: PALETTE.silverBlue }]}>{dim.left}</Text>
+                        <MetallicText style={styles.dimLabelTitle} color={PALETTE.silverBlue}>{dim.left}</MetallicText>
                         <Text style={styles.dimLabelDetail}>{dim.leftDetail}</Text>
                       </View>
                       <View style={[styles.dimLabelBlock, { alignItems: 'flex-end' }]}>
-                        <Text style={[styles.dimLabelTitle, { color: PALETTE.gold }]}>{dim.right}</Text>
+                        <MetallicText style={styles.dimLabelTitle} color={PALETTE.gold}>{dim.right}</MetallicText>
                         <Text style={[styles.dimLabelDetail, { textAlign: 'right' }]}>{dim.rightDetail}</Text>
                       </View>
                     </View>
@@ -310,7 +319,7 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: 'Georgia', fontWeight: '300', marginBottom: 8 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 8 },
   headerSubtitle: { fontSize: 14 },
 
   instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, fontStyle: 'italic', marginBottom: 28 },

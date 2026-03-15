@@ -20,6 +20,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from './ui/MetallicText';
+import { MetallicIcon } from './ui/MetallicIcon';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
@@ -117,7 +119,7 @@ export default function BackupPassphraseModal({
                 </Text>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Passphrase</Text>
+                  <MetallicText color={PALETTE.gold} style={styles.label}>Passphrase</MetallicText>
                   <TextInput
                     style={[styles.input, validation.isTooShort && styles.inputError]}
                     value={passphrase}
@@ -133,13 +135,13 @@ export default function BackupPassphraseModal({
                     }}
                   />
                   {validation.isTooShort && (
-                    <Text style={styles.warningText}>Required: 8 characters minimum</Text>
+                    <MetallicText color={PALETTE.copper} style={styles.warningText}>Required: 8 characters minimum</MetallicText>
                   )}
                 </View>
 
                 {needsConfirm && (
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Verify Passphrase</Text>
+                    <MetallicText color={PALETTE.gold} style={styles.label}>Verify Passphrase</MetallicText>
                     <TextInput
                       style={[styles.input, validation.mismatch && styles.inputError]}
                       value={confirm}
@@ -153,7 +155,7 @@ export default function BackupPassphraseModal({
                       onSubmitEditing={handleSubmit}
                     />
                     {validation.mismatch && (
-                      <Text style={styles.warningText}>Passphrases do not match</Text>
+                      <MetallicText color={PALETTE.copper} style={styles.warningText}>Passphrases do not match</MetallicText>
                     )}
                   </View>
                 )}
@@ -166,7 +168,7 @@ export default function BackupPassphraseModal({
 
                 {mode === 'backup' && (
                   <View style={styles.securityNote}>
-                    <Ionicons name="shield-checkmark-outline" size={16} color={PALETTE.silverBlue} />
+                    <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.silverBlue} />
                     <Text style={styles.helperText}>
                       We recommend using a phrase of 4+ random words. This encryption happens entirely on your device.
                     </Text>

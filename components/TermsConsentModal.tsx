@@ -5,6 +5,7 @@ import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View, Platform }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicIcon } from './ui/MetallicIcon';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
@@ -123,7 +124,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
                   >
                     <View style={styles.linkLeft}>
                       <View style={styles.linkIcon}>
-                        <Ionicons name={l.icon} size={18} color={PALETTE.silverBlue} />
+                        <MetallicIcon name={l.icon} size={18} color={PALETTE.silverBlue} />
                       </View>
                       <View style={styles.linkTextWrap}>
                         <Text style={styles.linkTitle}>{l.title}</Text>

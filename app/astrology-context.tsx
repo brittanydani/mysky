@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { SkiaGradient } from '../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
@@ -12,6 +14,9 @@ import { getMoonPhaseInfo } from '../utils/moonPhase';
 import { getTransitInfo } from '../services/astrology/transits';
 import { signNameFromLongitude, degreeInSign, normalize360 } from '../services/astrology/sharedHelpers';
 import MoonPhaseView from '../components/ui/MoonPhaseView';
+import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 // Mean lunar velocity ≈ 13.176°/day → hours per degree
 const MOON_DEG_PER_HOUR = 13.176 / 24;
@@ -245,34 +250,37 @@ export default function CosmicContext() {
     <View style={styles.container}>
       <LinearGradient colors={['rgba(110, 140, 180, 0.15)', 'transparent']} style={styles.ambientTop} />
 
-      <View style={styles.header}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
-          <Text style={styles.backArrow}>‹</Text>
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
+        <Pressable onPress={handleBack} style={styles.backBtn}>
+          <MetallicIcon name="arrow-back" size={20} color="#D4B872" />
+          <MetallicText style={styles.backText} color="#D4B872">Home</MetallicText>
         </Pressable>
-      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.headerTitle}>Cosmic Context</Text>
+        <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.titleHeader}>
+          <Text style={styles.headerTitle}>Cosmic Context</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Moon, transits & cosmic weather</GoldSubtitle>
+        </Animated.View>
 
         {/* ── Hero Moon ──────────────────────────────────────────────── */}
         <View style={styles.heroSection}>
-          <MoonPhaseView size={120} />
+          <MoonPhaseView size={120} gradient />
           <Text style={styles.moonTitle}>
             {moonInfo.name}{moonSign ? ` in ${moonSign}` : ''}
           </Text>
           {moonSign != null && moonDegree != null && (
-            <Text style={styles.moonDegree}>
+          <MetallicText style={styles.moonDegree} color="#D4B872">
               {SIGN_SYMBOL[moonSign] ?? ''} {moonDegree}° {moonSign}
-            </Text>
+            </MetallicText>
           )}
 
           {/* Void-of-Course badge */}
           {vocHours != null && vocHours < 24 && (
             <View style={styles.vocBadge}>
               <View style={styles.vocPulse} />
-              <Text style={styles.vocText}>
+              <MetallicText style={styles.vocText} color="#D4B872">
                 VOID-OF-COURSE IN {formatHoursMinutes(vocHours)}
-              </Text>
+              </MetallicText>
             </View>
           )}
         </View>
@@ -299,16 +307,19 @@ export default function CosmicContext() {
           <View style={styles.weekRow}>
             {weeklyPhases.map(({ date, phase, isToday, dayName, dayNum }) => (
               <View key={date.toISOString()} style={styles.weekDayCol}>
-                <Text style={[styles.weekDayName, isToday && styles.weekDayNameToday]}>
-                  {dayName.toUpperCase()}
-                </Text>
-                <Text style={[styles.weekDayNum, isToday && styles.weekDayNumToday]}>
-                  {dayNum}
-                </Text>
+                {isToday ? (
+                  <MetallicText style={styles.weekDayName} color="#D4B872">{dayName.toUpperCase()}</MetallicText>
+                ) : (
+                  <Text style={styles.weekDayName}>{dayName.toUpperCase()}</Text>
+                )}
+                {isToday ? (
+                  <MetallicText style={[styles.weekDayNum, { fontWeight: '800' }]} color="#D4B872">{dayNum}</MetallicText>
+                ) : (
+                  <Text style={styles.weekDayNum}>{dayNum}</Text>
+                )}
                 <View style={isToday ? styles.weekOrbToday : styles.weekOrb}>
-                  <MoonPhaseView size={28} date={date} interactive={false} />
+                  <MoonPhaseView size={28} date={date} interactive={false} gradient />
                 </View>
-                <Text style={styles.weekPhaseEmoji}>{phase.emoji}</Text>
               </View>
             ))}
           </View>
@@ -318,12 +329,12 @@ export default function CosmicContext() {
         {retrogrades.length > 0 && (
           <View style={styles.rxAlertCard}>
             <View style={styles.rxAlertHeader}>
-              <Ionicons name="warning-outline" size={16} color="#D98C8C" />
-              <Text style={styles.rxAlertTitle}>
+              <MetallicIcon name="warning-outline" size={16} color="#D98C8C" />
+              <MetallicText style={styles.rxAlertTitle} color="#D98C8C">
                 {retrogrades.length === 1
                   ? `${retrogrades[0]} is Retrograde`
                   : `${retrogrades.join(' & ')} are Retrograde`}
-              </Text>
+              </MetallicText>
             </View>
             <Text style={styles.rxAlertBody}>
               Revisit, review, and reflect. Avoid launching new initiatives in the domains governed by{' '}
@@ -336,8 +347,8 @@ export default function CosmicContext() {
         <View style={styles.affirmationCard}>
           <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
           <View style={styles.premiumHeaderRow}>
-            <Text style={styles.affirmationLabel}>DAILY ALIGNMENT</Text>
-            <Text style={styles.premiumIcon}>✦</Text>
+            <MetallicText style={styles.affirmationLabel} color="#D9BF8C">DAILY ALIGNMENT</MetallicText>
+            <MetallicText style={styles.premiumIcon} color="#D9BF8C">✦</MetallicText>
           </View>
           <Text style={styles.affirmationText}>
             {moonInfo.emoji}{'  '}{moonInfo.message}
@@ -383,6 +394,7 @@ export default function CosmicContext() {
 
         <View style={{ height: 60 }} />
       </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
@@ -391,10 +403,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#050507' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 60, paddingHorizontal: 16, paddingBottom: 4 },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  backArrow: { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 40 },
+  safeArea: { flex: 1 },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
+  backText: { fontSize: 14, fontWeight: '600' },
+  titleHeader: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '300', marginBottom: 8 },
+  headerSubtitle: { fontSize: 14 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
@@ -413,7 +427,6 @@ const styles = StyleSheet.create({
   weekDayNumToday: { color: '#D4B872', fontWeight: '800' },
   weekOrb: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
   weekOrbToday: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212,184,114,0.4)' },
-  weekPhaseEmoji: { fontSize: 12 },
 
   moonTitle: { fontSize: 22, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginTop: 20, marginBottom: 4 },
   moonDegree: { fontSize: 14, color: '#D4B872', letterSpacing: 1, marginBottom: 16 },

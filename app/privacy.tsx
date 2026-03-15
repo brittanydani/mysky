@@ -8,7 +8,8 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import MySkyLockSkia from '../components/skia/MySkyLockSkia';
+import ShieldCheckIcon from '../components/ui/ShieldCheckIcon';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -50,10 +51,10 @@ export default function PrivacyPolicyScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <MySkyLockSkia size={140} />
+            <ShieldCheckIcon size={140} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: March 13, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
 
           {/* ── Section Wrapper Helper ── */}
           <LinearGradient colors={[theme.cardGradientStart, theme.cardGradientEnd]} style={styles.glassSection}>
@@ -110,13 +111,18 @@ export default function PrivacyPolicyScreen() {
               <Text style={styles.subSectionTitle}>Premium AI Reflections (Optional)</Text>
               <Text style={styles.paragraph}>Only if you opt-in and create an account: aggregated behavioral statistics (mood/stress/energy trends, top tags, correlation data) are sent to a Supabase Edge Function which calls Anthropic Claude. Raw journal text, birth data, dream content, and personal notes are never transmitted. Rate limited to 5 requests per hour.</Text>
             </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>iOS Widgets</Text>
+              <Text style={styles.paragraph}>If you use MySky's iOS home screen widgets, recent check-in data (mood, energy, and sleep scores) is shared with the widget extension via a sandboxed App Group container on your device. This data never leaves your device and is not transmitted to any server.</Text>
+            </View>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Security</Text>
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={styles.securityCard}>
               <View style={styles.securityHeader}>
-                <Ionicons name="lock-closed" size={18} color={PALETTE.emerald} />
+                <MetallicIcon name="lock-closed" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Encryption at Rest</Text>
               </View>
               <Text style={styles.paragraph}>
@@ -126,7 +132,7 @@ export default function PrivacyPolicyScreen() {
 
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
-                <Ionicons name="shield-checkmark" size={18} color={PALETTE.emerald} />
+                <MetallicIcon name="shield-checkmark" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Tamper Detection</Text>
               </View>
               <Text style={styles.paragraph}>
@@ -136,7 +142,7 @@ export default function PrivacyPolicyScreen() {
 
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
-                <Ionicons name="cloud-offline" size={18} color={PALETTE.emerald} />
+                <MetallicIcon name="cloud-offline" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Backup Encryption</Text>
               </View>
               <Text style={styles.paragraph}>
@@ -216,7 +222,14 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Children's Privacy</Text>
             <Text style={styles.paragraph}>
-              MySky is intended for users aged 13 and older. We do not knowingly collect personal information from children under 13.
+              MySky is intended for users aged 17 and older. We do not knowingly collect personal information from children under 17. If we learn we have inadvertently collected data from a user under 17, we will take steps to delete that data promptly.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Changes to This Policy</Text>
+            <Text style={styles.paragraph}>
+              We may update this Privacy Policy from time to time. When we make material changes, the "Last updated" date at the top of this page will be revised, and — if the change affects how your data is processed — we will re-request your privacy consent within the app. Continued use of MySky after a policy update constitutes acceptance of the revised terms.
             </Text>
           </View>
 
@@ -224,10 +237,10 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.sectionTitle}>Contact Us</Text>
             <Pressable
               style={styles.contactCard}
-              onPress={() => Linking.openURL('mailto:support@mysky.app?subject=MySky%20Privacy%20Inquiry')}
+              onPress={() => Linking.openURL('mailto:brittanyapps@outlook.com?subject=MySky%20Privacy%20Inquiry')}
             >
               <Ionicons name="mail-outline" size={20} color={theme.textGold} />
-              <Text style={styles.contactInfo}>support@mysky.app</Text>
+              <Text style={styles.contactInfo}>brittanyapps@outlook.com</Text>
             </Pressable>
             <Text style={[styles.paragraph, { marginTop: 12 }]}>We respond to privacy-related inquiries within 30 days.</Text>
           </View>

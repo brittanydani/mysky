@@ -29,6 +29,7 @@ import Animated, {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicIcon } from './MetallicIcon';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -153,7 +154,7 @@ export default function AwakenStateSheet({
 
             {/* Title */}
             <View style={styles.titleRow}>
-              <Ionicons name="moon-outline" size={16} color={AMETHYST} />
+              <MetallicIcon name="moon-outline" size={16} color={AMETHYST} />
               <Text style={styles.title}>Woke up feeling</Text>
             </View>
 
@@ -180,7 +181,7 @@ export default function AwakenStateSheet({
                       {opt.label}
                     </Text>
                     {isSelected && (
-                      <Ionicons name="checkmark" size={16} color={AMETHYST} />
+                      <MetallicIcon name="checkmark" size={16} color={AMETHYST} />
                     )}
                   </Pressable>
                 );

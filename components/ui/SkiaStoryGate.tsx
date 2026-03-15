@@ -30,6 +30,7 @@ import {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
+import { MetallicText } from './MetallicText';
 
 const { width } = Dimensions.get('window');
 const GATE_SIZE = 120;
@@ -224,9 +225,15 @@ function SkiaStoryGate({
 
       {/* Text column */}
       <View style={styles.textColumn}>
-        <Text style={[styles.chapterLabel, !isUnlocked && styles.lockedText]}>
-          CHAPTER {toRoman(index + 1)}
-        </Text>
+        {isUnlocked ? (
+          <MetallicText style={styles.chapterLabel} color={accentColor}>
+            CHAPTER {toRoman(index + 1)}
+          </MetallicText>
+        ) : (
+          <Text style={[styles.chapterLabel, styles.lockedText]}>
+            CHAPTER {toRoman(index + 1)}
+          </Text>
+        )}
         <Text
           style={[styles.chapterTitle, !isUnlocked && styles.lockedText]}
           numberOfLines={2}
@@ -235,7 +242,7 @@ function SkiaStoryGate({
         </Text>
         {!isPremium && !isUnlocked && (
           <View style={styles.premiumTag}>
-            <Text style={styles.premiumTagText}>DEEPER SKY</Text>
+            <MetallicText style={styles.premiumTagText} color={PALETTE.gold}>DEEPER SKY</MetallicText>
           </View>
         )}
       </View>

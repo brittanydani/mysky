@@ -357,7 +357,7 @@ export default function RootLayout() {
 
                 {/* Overlay gates (do NOT unmount navigation) */}
                 {needsPrivacyConsent && (
-                  <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail="support@mysky.app" />
+                  <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail="brittanyapps@outlook.com" />
                 )}
 
                 {/* IMPORTANT: Terms now happens INSIDE onboarding (after Welcome). */}

@@ -33,6 +33,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import {
   EnergyEngine,
   EnergySnapshot,
@@ -44,7 +45,6 @@ import {
 import { logger } from '../../utils/logger';
 import ChakraWheelComponent from '../../components/ui/ChakraWheel';
 import { SkiaChakraGlyph } from '../../components/ui/SkiaChakraNode';
-import { MoodClimateCloud } from '../../components/ui/MoodClimateCloud';
 import { CorrelationGyroscope } from '../../components/ui/CorrelationGyroscope';
 import { useCorrelationStore } from '../../store/correlationStore';
 import { updateWidgetData } from '../../services/widgets/widgetDataService';
@@ -88,8 +88,6 @@ export default function EnergyScreen() {
   const [expandedDomain, setExpandedDomain] = useState<number | null>(null);
   const [wheelTooltip, setWheelTooltip] = useState<string | null>(null);
   const wheelTooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // null = no check-in data available, fall back to astrology-based turbulence
-  const [moodTurbulence, setMoodTurbulence] = useState<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -150,23 +148,7 @@ export default function EnergyScreen() {
                 }
               }
 
-              // Derive mood-climate turbulence from real check-in data.
-              // moodScore 1-10: high mood → low turbulence (inverted).
-              // stressLevel adjusts the value: high stress adds weight, low stress reduces it.
-              const STRESS_OFFSET: Record<string, number> = { low: -1, medium: 0, high: 2 };
-              let baseMood: number | null = null;
-              if (checkIn?.moodScore != null) {
-                baseMood = checkIn.moodScore;
-              } else if (behavior.averageMood7d != null) {
-                baseMood = behavior.averageMood7d;
-              }
-              if (baseMood != null) {
-                const stressOffset = checkIn?.stressLevel
-                  ? (STRESS_OFFSET[checkIn.stressLevel] ?? 0)
-                  : 0;
-                const raw = (11 - baseMood) + stressOffset;
-                setMoodTurbulence(Math.max(1, Math.min(10, raw)));
-              }
+
             }
           } catch (e) {
             // Behavioral context is optional — continue without it
@@ -268,9 +250,6 @@ export default function EnergyScreen() {
 
   /* ── Derived values ── */
   const intensityMeta = INTENSITY_META[snapshot.intensity];
-  // Use real mood/stress data when available; fall back to astrology-based proxy.
-  const astrologyTurbulence = snapshot.intensity === 'Low' ? 2 : snapshot.intensity === 'Moderate' ? 5 : 9;
-  const cloudTurbulence = moodTurbulence ?? astrologyTurbulence;
 
   return (
     <View style={styles.container}>
@@ -289,6 +268,12 @@ export default function EnergyScreen() {
           contentContainerStyle={{ paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
         >
+          {/* ── Screen Header ── */}
+          <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
+            <Text style={styles.title}>Energy</Text>
+            <GoldSubtitle style={styles.subtitle}>Somatic awareness & energetic weather</GoldSubtitle>
+          </Animated.View>
+
           {/* ═══ HUB 1 — SOMATIC ANCHOR ═══ */}
           <Animated.View entering={FadeIn.duration(1000)} style={styles.somaticHeader}>
             <SomaticEnergyOrb intensity={snapshot.intensity} />
@@ -386,13 +371,7 @@ export default function EnergyScreen() {
               )}
             </Animated.View>
 
-            {/* ═══ HUB 5 — MOOD CLIMATE ═══ */}
-            <SectionHeader icon="cloudy-outline" title="Mood Climate" delay={420} />
-            <Animated.View entering={FadeInDown.delay(440).duration(600)} style={{ marginBottom: 12 }}>
-              <MoodClimateCloud turbulence={cloudTurbulence} height={220} />
-            </Animated.View>
-
-            {/* ═══ HUB 6 — NEURAL PATTERNS (Premium, only with real data) ═══ */}
+            {/* ═══ HUB 5 — NEURAL PATTERNS (Premium, only with real data) ═══ */}
             {isPremium && hasCorrelationData && (
               <>
                 <SectionHeader icon="analytics-outline" title="Neural Patterns" delay={460} />
@@ -721,6 +700,21 @@ const styles = StyleSheet.create({
 
   scroll: {
     flex: 1,
+  },
+  header: {
+    marginTop: 20,
+    marginBottom: 28,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: '300',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
   },
   content: {
     paddingHorizontal: theme.spacing.lg,

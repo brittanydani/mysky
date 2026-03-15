@@ -24,6 +24,8 @@ import { toLocalDateString } from '../utils/dateUtils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from './ui/MetallicText';
+import { MetallicIcon } from './ui/MetallicIcon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -87,7 +89,7 @@ function parseHHMMToDate(hhmm?: string): Date {
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
-  'User-Agent': 'MySkyApp/1.0 (support@brittanyapps.com)',
+  'User-Agent': 'MySkyApp/1.0 (brittanyapps@outlook.com)',
 };
 
 // ─── Custom Time Picker ──────────────────────────────────────────────────────
@@ -148,16 +150,29 @@ function TimeWheelColumn({
       const isSelected = item === selected;
       return (
         <View style={{ height: ITEM_HEIGHT, justifyContent: 'center', alignItems: 'center' }}>
-          <Text
-            style={{
-              fontSize: isSelected ? 24 : 18,
-              fontWeight: isSelected ? '700' : '400',
-              color: isSelected ? PALETTE.gold : 'rgba(255,255,255,0.2)',
-              fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-            }}
-          >
-            {formatItem ? formatItem(item) : String(item)}
-          </Text>
+          {isSelected ? (
+            <MetallicText
+              color={PALETTE.gold}
+              style={{
+                fontSize: 24,
+                fontWeight: '700',
+                fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+              }}
+            >
+              {formatItem ? formatItem(item) : String(item)}
+            </MetallicText>
+          ) : (
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '400',
+                color: 'rgba(255,255,255,0.2)',
+                fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+              }}
+            >
+              {formatItem ? formatItem(item) : String(item)}
+            </Text>
+          )}
         </View>
       );
     },
@@ -372,7 +387,7 @@ export default function BirthDataModal({
                   colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.01)']}
                   style={styles.pickGradient}
                 >
-                  <Ionicons name="calendar-outline" size={18} color={PALETTE.silverBlue} />
+                  <MetallicIcon name="calendar-outline" size={18} color={PALETTE.silverBlue} />
                   <Text style={styles.pickText}>
                     {date.toLocaleDateString('en-US', {
                       month: 'long',
@@ -386,11 +401,11 @@ export default function BirthDataModal({
               <View style={styles.rowBetween}>
                 <Text style={styles.sectionLabel}>Birth Time</Text>
                 <Pressable style={styles.toggle} onPress={() => setHasUnknownTime(!hasUnknownTime)}>
-                  <Ionicons
-                    name={hasUnknownTime ? 'checkbox' : 'square-outline'}
-                    size={18}
-                    color={hasUnknownTime ? PALETTE.gold : theme.textMuted}
-                  />
+                  {hasUnknownTime ? (
+                    <MetallicIcon name="checkbox" size={18} color={PALETTE.gold} />
+                  ) : (
+                    <Ionicons name="square-outline" size={18} color={theme.textMuted} />
+                  )}
                   <Text style={styles.toggleText}>Unknown</Text>
                 </Pressable>
               </View>
@@ -409,7 +424,7 @@ export default function BirthDataModal({
                     colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.01)']}
                     style={styles.pickGradient}
                   >
-                    <Ionicons name="time-outline" size={18} color={PALETTE.gold} />
+                    <MetallicIcon name="time-outline" size={18} color={PALETTE.gold} />
                     <Text style={styles.pickText}>
                       {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                     </Text>
@@ -449,7 +464,7 @@ export default function BirthDataModal({
                         Haptics.selectionAsync().catch(() => {});
                       }}
                     >
-                      <Ionicons name="location-outline" size={16} color={PALETTE.silverBlue} />
+                      <MetallicIcon name="location-outline" size={16} color={PALETTE.silverBlue} />
                       <Text style={styles.suggestionText} numberOfLines={1}>
                         {s.display_name}
                       </Text>
@@ -467,7 +482,7 @@ export default function BirthDataModal({
 
             {onRestore && (
               <Pressable style={styles.restoreBtn} onPress={onRestore}>
-                <Text style={styles.restoreText}>Restore Data</Text>
+                <MetallicText color={PALETTE.gold} style={styles.restoreText}>Restore Data</MetallicText>
               </Pressable>
             )}
           </ScrollView>
@@ -489,12 +504,12 @@ export default function BirthDataModal({
 
                 <View style={styles.sealRows}>
                   <View style={styles.sealRow}>
-                    <Text style={styles.sealLabel}>DATE</Text>
+                    <MetallicText color={PALETTE.gold} style={styles.sealLabel}>DATE</MetallicText>
                     <Text style={styles.sealValue}>{date.toLocaleDateString()}</Text>
                   </View>
 
                   <View style={styles.sealRow}>
-                    <Text style={styles.sealLabel}>TIME</Text>
+                    <MetallicText color={PALETTE.gold} style={styles.sealLabel}>TIME</MetallicText>
                     <Text style={styles.sealValue}>
                       {hasUnknownTime
                         ? 'Unknown'
@@ -503,7 +518,7 @@ export default function BirthDataModal({
                   </View>
 
                   <View style={styles.sealRow}>
-                    <Text style={styles.sealLabel}>PLACE</Text>
+                    <MetallicText color={PALETTE.gold} style={styles.sealLabel}>PLACE</MetallicText>
                     <Text style={styles.sealValue} numberOfLines={1}>
                       {place.split(',')[0]}
                     </Text>
@@ -549,7 +564,7 @@ export default function BirthDataModal({
                 <Text style={styles.pickerTitle}>Set Birth Time</Text>
 
                 <Pressable onPress={confirmTime}>
-                  <Text style={styles.pickerDone}>Done</Text>
+                  <MetallicText color={PALETTE.gold} style={styles.pickerDone}>Done</MetallicText>
                 </Pressable>
               </View>
 
@@ -572,7 +587,7 @@ export default function BirthDataModal({
                 <View style={{ width: 60 }} />
                 <Text style={styles.pickerTitle}>Set Birth Date</Text>
                 <Pressable onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.pickerDone}>Done</Text>
+                  <MetallicText color={PALETTE.gold} style={styles.pickerDone}>Done</MetallicText>
                 </Pressable>
               </View>
 
