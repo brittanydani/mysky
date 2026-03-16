@@ -3,6 +3,7 @@ import { View, StyleSheet, Text } from 'react-native';
 import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient, BlurMask } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
 import { applyStoryLabels } from '../../constants/storyLabels';
+import { MetallicText } from './MetallicText';
 
 interface ForceData {
   label: string;
@@ -179,16 +180,16 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
               width: 100,
               alignItems: isCenter ? 'center' : isLeft ? 'flex-end' : 'flex-start',
             }}>
-            <Text
+            <MetallicText
               numberOfLines={1}
+              color={force.color}
               style={{
-                color: force.color,
                 fontSize: 11,
                 fontWeight: '600',
                 letterSpacing: 0.3,
               }}>
               {textContent}
-            </Text>
+            </MetallicText>
           </View>
         );
       })}

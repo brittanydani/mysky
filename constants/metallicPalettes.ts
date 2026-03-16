@@ -49,6 +49,21 @@ export const METALLIC_CROWN = ['#EDE6F8', '#DDD0EE', '#D0C8E8', '#DDD0EE', '#EDE
 /** Tan / sacral metallic. */
 export const METALLIC_TAN = ['#F5EDD6', '#E8DDB8', '#D8C39A', '#E8DDB8', '#F5EDD6'] as const;
 
+/** Teal / aqua metallic. */
+export const METALLIC_TEAL = ['#CCF5F0', '#80E8DD', '#48D1CC', '#80E8DD', '#CCF5F0'] as const;
+
+/** Amber / orange metallic. */
+export const METALLIC_ORANGE = ['#FFE4CC', '#FFB880', '#FF8C00', '#FFB880', '#FFE4CC'] as const;
+
+/** Bright cyan metallic. */
+export const METALLIC_CYAN = ['#D6F8FF', '#8EEEFF', '#49DFFF', '#8EEEFF', '#D6F8FF'] as const;
+
+/** Indigo / Jupiter metallic. */
+export const METALLIC_INDIGO = ['#E0D6F5', '#BBA8E8', '#9370DB', '#BBA8E8', '#E0D6F5'] as const;
+
+/** Violet / slate-blue metallic. */
+export const METALLIC_VIOLET = ['#E6D6F5', '#C4A8ED', '#7B68EE', '#C4A8ED', '#E6D6F5'] as const;
+
 /** Warm gold accent (#D4B872). */
 export const METALLIC_WARM_GOLD = ['#FFF6DC', '#ECDDBA', '#D4B872', '#ECDDBA', '#FFF6DC'] as const;
 
@@ -73,7 +88,8 @@ export type MetallicVariant =
   | 'rose' | 'red' | 'lavender' | 'love' | 'yellow'
   | 'deepBlue' | 'deepPurple' | 'crown' | 'tan'
   | 'warmGold' | 'paleGold' | 'heroGold' | 'featureGold'
-  | 'challenge' | 'warning';
+  | 'challenge' | 'warning'
+  | 'teal' | 'orange' | 'cyan' | 'indigo' | 'violet';
 
 export const METALLIC_VARIANTS: Record<MetallicVariant, readonly string[]> = {
   gold: METALLIC_GOLD,
@@ -96,6 +112,11 @@ export const METALLIC_VARIANTS: Record<MetallicVariant, readonly string[]> = {
   featureGold: METALLIC_FEATURE_GOLD,
   challenge: METALLIC_CHALLENGE,
   warning: METALLIC_WARNING,
+  teal: METALLIC_TEAL,
+  orange: METALLIC_ORANGE,
+  cyan: METALLIC_CYAN,
+  indigo: METALLIC_INDIGO,
+  violet: METALLIC_VIOLET,
 };
 
 /**
@@ -136,8 +157,12 @@ export function metallicForHex(hex: string): readonly string[] {
     '#8CBEAA': METALLIC_GREEN,
     '#FF7A5C': METALLIC_RED,
     '#9ACD32': METALLIC_GREEN,
-    '#49DFFF': METALLIC_BLUE,
-    '#7B68EE': METALLIC_PURPLE,
+    '#49DFFF': METALLIC_CYAN,
+    '#7B68EE': METALLIC_VIOLET,
+    '#9370DB': METALLIC_INDIGO,
+    '#FFEA70': METALLIC_YELLOW,
+    '#48D1CC': METALLIC_TEAL,
+    '#FF8C00': METALLIC_ORANGE,
   };
   return map[hex.toUpperCase()] ?? map[hex] ?? METALLIC_GOLD;
 }

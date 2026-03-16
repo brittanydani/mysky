@@ -57,18 +57,18 @@ const FORCE_COLORS_MAP: Record<string, string> = {
   'Pluto': '#9D76C1',
   'Neptune': '#48D1CC',
   'Uranus': '#FF8C00',
-  'Aries': '#CD7F5D',
+  'Aries': '#E07A7A',
   'Taurus': '#6EBF8B',
-  'Gemini': '#FFEA70',
-  'Cancer': '#8BC4E8',
-  'Leo': '#D9BF8C',
-  'Virgo': '#A89BC8',
-  'Libra': '#D4A3B3',
-  'Scorpio': '#9D76C1',
-  'Sagittarius': '#9370DB',
-  'Capricorn': '#A89BC8',
-  'Aquarius': '#48D1CC',
-  'Pisces': '#8BC4E8'
+  'Gemini': '#D8C39A',
+  'Cancer': '#7AA8E0',
+  'Leo': '#E8C97A',
+  'Virgo': '#D0C8E8',
+  'Libra': '#E07A98',
+  'Scorpio': '#9B7AE0',
+  'Sagittarius': '#7B68EE',
+  'Capricorn': '#D4B872',
+  'Aquarius': '#49DFFF',
+  'Pisces': '#E3CFA4'
 };
 
 function calculateForces(chart: NatalChart | null) {
