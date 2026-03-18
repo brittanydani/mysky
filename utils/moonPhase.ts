@@ -1,5 +1,5 @@
 // Precise moon phase calculation using astronomy-engine (JPL-grade ephemeris)
-import { MoonPhase as AstroMoonPhase } from 'astronomy-engine';
+import { MoonPhase as AstroMoonPhase, EclipticGeoMoon } from 'astronomy-engine';
 
 export type MoonPhaseName =
   | 'New Moon'
@@ -105,4 +105,19 @@ const TAG_TO_KEY: Record<MoonPhaseTag, MoonPhaseKeyTag> = {
  */
 export function getMoonPhaseKey(date: Date = new Date()): MoonPhaseKeyTag {
   return TAG_TO_KEY[getMoonPhaseInfo(date).tag];
+}
+
+const ZODIAC_SIGNS = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+] as const;
+
+/**
+ * Get the zodiac sign the Moon is transiting for a given date.
+ * Uses astronomy-engine's JPL-grade ephemeris for sub-arcsecond accuracy.
+ */
+export function getMoonSignForDate(date: Date = new Date()): string {
+  const lon = EclipticGeoMoon(date).lon;
+  const normalized = ((lon % 360) + 360) % 360;
+  return ZODIAC_SIGNS[Math.floor(normalized / 30)] ?? 'Aries';
 }

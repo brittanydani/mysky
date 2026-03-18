@@ -525,7 +525,7 @@ export default function ChartScreen() {
 
   // ── Sorted aspects (tightest first), gated by premium ──
   const sortedAspects = useMemo(() => {
-    const FREE_ASPECT_TYPES = new Set(['conjunction', 'opposition', 'trine', 'square']);
+    const FREE_ASPECT_TYPES = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition']);
     if (!activeChart) return [];
     const all = [...(activeChart.aspects ?? [])].sort((a, b) => (a.orb ?? 99) - (b.orb ?? 99));
     if (isPremium) return all;
@@ -543,20 +543,24 @@ export default function ChartScreen() {
     return detectChartPatterns(activeChart);
   }, [activeChart]);
 
-  // ── Pattern count for tab label ──
+  // ── Pattern count for tab label (tier-aware) ──
   const patternCount = useMemo(() => {
     if (!chartPatterns) return 0;
     let count = 0;
+    // Free tier: element + modality + polarity balance always visible
+    if (chartPatterns.elementBalance) count++;
+    if (chartPatterns.modalityBalance) count++;
+    if (chartPatterns.polarityBalance) count++;
+    if (!isPremium) return count;
+    // Premium additions
     if (chartPatterns.chartRuler) count++;
     if (activeChart?.partOfFortune) count++;
-    count++; // dominant planet (always computed)
+    if (chartPatterns.dominantFactors.planet) count++;
     count += chartPatterns.stelliums.length;
     count += chartPatterns.conjunctionClusters.length;
     if (chartPatterns.retrogradeEmphasis.count >= 3) count++;
-    if (chartPatterns.elementBalance) count++;
-    if (chartPatterns.modalityBalance) count++;
     return count;
-  }, [chartPatterns, activeChart]);
+  }, [chartPatterns, activeChart, isPremium]);
 
   // ── Part of Fortune (free) ──
   const partOfFortune = useMemo(() => {
@@ -564,82 +568,13 @@ export default function ChartScreen() {
     return activeChart.partOfFortune;
   }, [activeChart]);
 
-  // ── Dominant Planet (free) — improved scoring (aspects + angularity) ──
-  const dominantPlanet = useMemo(() => {
-    if (!activeChart) return null;
-
-    const majors = new Set([
-      'Sun',
-      'Moon',
-      'Mercury',
-      'Venus',
-      'Mars',
-      'Jupiter',
-      'Saturn',
-      'Uranus',
-      'Neptune',
-      'Pluto',
-    ]);
-
-    const base: { planet?: string; name?: string; sign?: any; degree?: number; house?: number }[] = [];
-
-    if (Array.isArray((activeChart as any).planets) && (activeChart as any).planets.length) {
-      for (const p of (activeChart as any).planets) {
-        const n = safeString((p as any).planet);
-        if (majors.has(n)) base.push(p as any);
-      }
-    } else {
-      base.push(
-        { planet: 'Sun', ...(activeChart.sun as any) },
-        { planet: 'Moon', ...(activeChart.moon as any) },
-        { planet: 'Mercury', ...(activeChart.mercury as any) },
-        { planet: 'Venus', ...(activeChart.venus as any) },
-        { planet: 'Mars', ...(activeChart.mars as any) },
-        { planet: 'Jupiter', ...(activeChart.jupiter as any) },
-        { planet: 'Saturn', ...(activeChart.saturn as any) },
-        { planet: 'Uranus', ...(activeChart.uranus as any) },
-        { planet: 'Neptune', ...(activeChart.neptune as any) },
-        { planet: 'Pluto', ...(activeChart.pluto as any) }
-      );
-    }
-
-    const scores: Record<string, number> = {};
-    for (const p of base) {
-      const n = safeString((p as any).planet ?? (p as any).name);
-      if (!n) continue;
-      scores[n] = 0;
-      const house = (p as any).house;
-      if (house === 1 || house === 4 || house === 7 || house === 10) scores[n] += 2;
-      if (house === 2 || house === 5 || house === 8 || house === 11) scores[n] += 1;
-    }
-
-    if (Array.isArray(activeChart.aspects)) {
-      for (const a of activeChart.aspects) {
-        const p1 = safeString(a.planet1?.name);
-        const p2 = safeString(a.planet2?.name);
-
-        if (p1 && scores[p1] !== undefined) scores[p1] += 1;
-        if (p2 && scores[p2] !== undefined) scores[p2] += 1;
-
-        if ((a.orb ?? 99) < 2) {
-          if (p1 && scores[p1] !== undefined) scores[p1] += 0.5;
-          if (p2 && scores[p2] !== undefined) scores[p2] += 0.5;
-        }
-      }
-    }
-
-    let best: string | null = null;
-    let bestScore = -Infinity;
-    for (const [k, v] of Object.entries(scores)) {
-      if (v > bestScore) {
-        bestScore = v;
-        best = k;
-      }
-    }
-
-    if (!best) return null;
-    return base.find((p) => safeString((p as any).planet ?? (p as any).name) === best) || null;
-  }, [activeChart]);
+  // ── Dominant placement (premium) — from chartPatterns.dominantFactors ──
+  const dominantPlacement = useMemo(() => {
+    if (!activeChart || !chartPatterns) return null;
+    const name = chartPatterns.dominantFactors.planet;
+    if (!name) return null;
+    return (activeChart.planets ?? []).find((p: any) => safeString(p.planet) === name) ?? null;
+  }, [activeChart, chartPatterns]);
 
   if (loading) {
     return (
@@ -950,7 +885,7 @@ export default function ChartScreen() {
                   {sensitivePoints.map((pt) => (
                     <View key={pt.label} style={styles.sensitiveItem}>
                       <View style={{ marginBottom: 4 }}>
-                        {pt.icon ? <GradientIcon size={20}>{pt.icon}</GradientIcon> : null}
+                        {pt.icon ? <GradientIcon size={20}>{pt.icon as React.ReactElement}</GradientIcon> : null}
                       </View>
                       <Text style={styles.sensitiveName}>{pt.label}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
@@ -1086,8 +1021,8 @@ export default function ChartScreen() {
                 );
               })}
 
-              {/* Sensitive Points (table section) */}
-              {sensitivePoints.length > 0 && (
+              {/* Sensitive Points (table section — premium only) */}
+              {isPremium && sensitivePoints.length > 0 && (
                 <>
                   <View style={styles.pointsDivider}>
                     <Text style={styles.pointsLabel}>Sensitive Points</Text>
@@ -1105,7 +1040,7 @@ export default function ChartScreen() {
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
                         <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
-                          {pt.icon ? <GradientIcon size={18}>{pt.icon}</GradientIcon> : null}
+                          {pt.icon ? <GradientIcon size={18}>{pt.icon as React.ReactElement}</GradientIcon> : null}
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>
@@ -1377,8 +1312,8 @@ export default function ChartScreen() {
           {/* ── Patterns Tab ── */}
           {activeTab === 'patterns' && chartPatterns && (
             <Animated.View entering={FadeInDown.delay(300).duration(500)} style={{ width: '100%' }}>
-              {/* Chart Ruler */}
-              {chartPatterns.chartRuler && (
+              {/* Chart Ruler (premium) */}
+              {isPremium && chartPatterns.chartRuler && (
                 <LinearGradient colors={['rgba(232, 214, 174,0.15)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={[styles.patternIcon, { marginTop: -7 }]}>👑</Text>
@@ -1427,8 +1362,8 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Dominant Planet (free) */}
-              {dominantPlanet && (
+              {/* Dominant Planet (premium) */}
+              {isPremium && dominantPlacement && chartPatterns && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>🌟</Text>
@@ -1436,17 +1371,17 @@ export default function ChartScreen() {
                   </View>
                   <View style={styles.patternHighlight}>
                     <MetallicText style={styles.patternHighlightText} color="#CFAE73">
-                      {safeString((dominantPlanet as any).planet ?? (dominantPlanet as any).name)} in {(dominantPlanet as any).sign?.name} ·{' '}
-                      {Math.floor((dominantPlanet as any).degree ?? 0)}°
-                      {(dominantPlanet as any).house ? ` · House ${(dominantPlanet as any).house}` : ''}
+                      {safeString((dominantPlacement as any).planet)} in {(dominantPlacement as any).sign?.name ?? safeString((dominantPlacement as any).sign)} ·{' '}
+                      {Math.floor((dominantPlacement as any).degree ?? 0)}°
+                      {(dominantPlacement as any).house ? ` · House ${(dominantPlacement as any).house}` : ''}
                     </MetallicText>
                   </View>
                   <Text style={styles.patternDesc}>
-                    Your dominant planet is the one most “active” in your chart (aspect involvement + angularity). Its themes tend to color your personality, motivations, and life path more than others.
+                    {chartPatterns.dominantFactors.descriptions.planet}
                   </Text>
                   <View style={styles.tooltipBox}>
                     <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
-                    <Text style={styles.tooltipText}>This is a calculated highlight, not a fate statement — it points to the loudest recurring signal.</Text>
+                    <Text style={styles.tooltipText}>Scored by aspect count, tight aspects (under 2{'\u00b0'}), and angular house placement.</Text>
                   </View>
                 </LinearGradient>
               )}
@@ -1463,7 +1398,7 @@ export default function ChartScreen() {
                       <View style={{ flex: 1 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#CFAE73">More patterns in your chart</MetallicText>
                         <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
-                          Stelliums, conjunction clusters, element & modality balance, retrograde emphasis, and Point of Flow
+                          Chart ruler, dominant planet, sensitive points, stelliums, retrogrades, and Point of Flow
                         </Text>
                       </View>
                       <Ionicons name="arrow-forward" size={16} color={theme.textPrimary} />
@@ -1553,8 +1488,8 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Element Balance (premium) */}
-              {isPremium && chartPatterns.elementBalance && (
+              {/* Element Balance (free) */}
+              {chartPatterns.elementBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>🜂</Text>
@@ -1592,8 +1527,8 @@ export default function ChartScreen() {
                 </LinearGradient>
               )}
 
-              {/* Modality Balance (premium) */}
-              {isPremium && chartPatterns.modalityBalance && (
+              {/* Modality Balance (free) */}
+              {chartPatterns.modalityBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
                     <Text style={styles.patternIcon}>⚖</Text>
@@ -1621,6 +1556,38 @@ export default function ChartScreen() {
                     })}
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.modalityBalance.description}</Text>
+                </LinearGradient>
+              )}
+
+              {/* Polarity Balance (free) */}
+              {chartPatterns.polarityBalance && (
+                <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
+                  <View style={styles.patternHeader}>
+                    <Text style={styles.patternIcon}>{'⚊'}</Text>
+                    <Text style={styles.patternTitle}>Polarity Balance</Text>
+                  </View>
+                  <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 24, justifyContent: 'center' }]}>
+                    {[
+                      { label: 'Masculine', count: chartPatterns.polarityBalance.masculine },
+                      { label: 'Feminine', count: chartPatterns.polarityBalance.feminine },
+                    ].map(({ label, count }) => {
+                      const isDominant = label === chartPatterns.polarityBalance.dominant;
+                      return isDominant ? (
+                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color="#CFAE73">
+                          {label}: {count}
+                        </MetallicText>
+                      ) : (
+                        <Text key={label} style={[styles.patternHighlightText, { color: theme.textMuted, fontSize: 13 }]}>
+                          {label}: {count}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                  <Text style={styles.patternDesc}>{chartPatterns.polarityBalance.description}</Text>
+                  <View style={styles.tooltipBox}>
+                    <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
+                    <Text style={styles.tooltipText}>Masculine = Fire + Air signs. Feminine = Earth + Water signs. Based on your 10 core planets.</Text>
+                  </View>
                 </LinearGradient>
               )}
 
@@ -1657,7 +1624,7 @@ export default function ChartScreen() {
                     <View style={{ flex: 1 }}>
                       <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#CFAE73">Your chart has more to say</MetallicText>
                       <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
-                        Chiron sensitivity, Node axis depth, chart overlays, and minor aspects
+                        Nodes, Chiron, Lilith, Vertex, chart ruler, stelliums, retrogrades, and minor aspects
                       </Text>
                     </View>
                     <Ionicons name="arrow-forward" size={16} color={theme.textPrimary} />

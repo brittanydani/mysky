@@ -30,6 +30,47 @@ import {
 
 import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
 import { theme } from '../../constants/theme';
+// Remove SVG icon imports; will use Skia-native drawing below
+// Skia-native Pholus icon
+function SkiaPholusIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+  const s = size / 24;
+  // Main diagonal slash
+  const path = Skia.Path.Make();
+  path.moveTo(x + 4 * s, y + 20 * s);
+  path.lineTo(x + 20 * s, y + 4 * s);
+  // Dot at lower left
+  const dotCx = x + 6.5 * s, dotCy = y + 17.5 * s, dotR = 2.2 * s;
+  return (
+    <>
+      <Path path={path} style="stroke" strokeWidth={2 * s} color={color} strokeCap="round" />
+      <Circle cx={dotCx} cy={dotCy} r={dotR} color={color} />
+    </>
+  );
+}
+
+// Skia-native Vertex icon
+function SkiaVertexIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+  const s = size / 24;
+  // 'V' path
+  const vPath = Skia.Path.Make();
+  vPath.moveTo(x + 5 * s, y + 6 * s);
+  vPath.lineTo(x + 10.5 * s, y + 18 * s);
+  vPath.lineTo(x + 14.5 * s, y + 9.5 * s);
+  // 'x' paths
+  const x1 = Skia.Path.Make();
+  x1.moveTo(x + 13 * s, y + 12 * s);
+  x1.lineTo(x + 19 * s, y + 18 * s);
+  const x2 = Skia.Path.Make();
+  x2.moveTo(x + 13 * s, y + 18 * s);
+  x2.lineTo(x + 19 * s, y + 12 * s);
+  return (
+    <>
+      <Path path={vPath} style="stroke" strokeWidth={1.8 * s} color={color} strokeCap="round" />
+      <Path path={x1} style="stroke" strokeWidth={1.8 * s} color={color} strokeCap="round" />
+      <Path path={x2} style="stroke" strokeWidth={1.8 * s} color={color} strokeCap="round" />
+    </>
+  );
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -1005,18 +1046,28 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                   <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R - 0.4} style="stroke" strokeWidth={1.4} color="rgba(255,255,255,0.55)" />
                 </>
               )}
-              {/* Icon-only points: just draw the symbol, no sphere */}
-              {isIconOnly && glyphFont && (
-                <SkiaText
-                  x={glyphPos.x - glyphOffsetX}
-                  y={glyphPos.y + glyphOffsetY}
-                  text={glyph}
-                  font={glyphFont}
-                  color={textColor}
-                  style={"fill"}
-                  strokeWidth={0}
-                  opacity={1.0}
-                />
+              {/* Icon-only points: use SVG for Pholus and Vertex, font for others */}
+              {isIconOnly && (
+                planet.label === 'Pholus' ? (
+                  <Group>
+                    <SkiaPholusIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} />
+                  </Group>
+                ) : planet.label === 'Vertex' ? (
+                  <Group>
+                    <SkiaVertexIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} />
+                  </Group>
+                ) : glyphFont ? (
+                  <SkiaText
+                    x={glyphPos.x - glyphOffsetX}
+                    y={glyphPos.y + glyphOffsetY}
+                    text={glyph}
+                    font={glyphFont}
+                    color={textColor}
+                    style={"fill"}
+                    strokeWidth={0}
+                    opacity={1.0}
+                  />
+                ) : null
               )}
 
               {/* Glyph */}

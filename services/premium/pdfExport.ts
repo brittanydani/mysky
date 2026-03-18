@@ -250,10 +250,13 @@ function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
     const reflection = esc(applyStoryLabels(ch.reflection)).replace(/\n/g, '<br>');
     const affirmation = esc(applyStoryLabels(ch.affirmation));
 
+    const astrologyLabel = ch.astrologyLabel ? `<p class="chapter-astro">${esc(ch.astrologyLabel)}</p>` : '';
+
     return `
   <div class="chapter">
     <p class="chapter-num">Chapter ${i + 1}</p>
     <h2 class="chapter-title">${title}</h2>
+    ${astrologyLabel}
     ${subtitle}
     <div class="chapter-content"><p>${content}</p></div>
     <div class="chapter-reflection">
@@ -493,6 +496,13 @@ tr:last-child td { border-bottom: none; }
   color: #FFFFFF;
   margin-bottom: 4px;
   letter-spacing: 0.2px;
+}
+.chapter-astro {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(212, 175, 55,0.6);
+  margin-bottom: 10px;
 }
 .chapter-subtitle {
   font-size: 13px;

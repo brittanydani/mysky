@@ -44,6 +44,7 @@ import {
   BehaviorContext,
 } from '../../services/energy/energyEngine';
 import { logger } from '../../utils/logger';
+import { toLocalDateString } from '../../utils/dateUtils';
 import ChakraWheelComponent from '../../components/ui/ChakraWheel';
 import { SkiaChakraGlyph } from '../../components/ui/SkiaChakraNode';
 import { CorrelationGyroscope } from '../../components/ui/CorrelationGyroscope';
@@ -129,7 +130,7 @@ export default function EnergyScreen() {
           // Load behavioral context for blended calculations
           let behavior: BehaviorContext | undefined;
           try {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = toLocalDateString(new Date());
             const checkIn = await localDb.getCheckInByDate(today, saved.id);
             const recentCheckIns = await localDb.getCheckIns(saved.id, 7);
 
