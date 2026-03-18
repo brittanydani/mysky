@@ -1,3 +1,4 @@
+import 'expo-standard-web-crypto';
 import { GoldIcon } from '../components/ui/GoldIcon';
 // File: app/_layout.tsx
 

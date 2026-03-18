@@ -11,29 +11,42 @@ export interface AstrologyIconProps {
 }
 
 /**
- * Chiron (⚷) — The Wounded Healer
- * Styled with elegant angles and perfect circle anchoring.
+ * Pholus (⯰) — Centaur
+ * Stylized as a unique centaur glyph with a diagonal slash and dot.
  */
-export function ChironIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
+export function PholusIcon({
+  size = 24,
+  color = '#C9AE78',
+  glow = true,
+}: AstrologyIconProps) {
   const elements = (
     <>
-      <Circle cx="12" cy="18.5" r="3.5" fill="none" />
-      <Path d="M12 15 L12 3" fill="none" />
-      <Path d="M12 9.5 L17.5 3" fill="none" />
-      <Path d="M14.5 6 L18.5 11.5" fill="none" />
+      {/* Diagonal slash */}
+      <Path d="M 6 18 L 18 6" fill="none" />
+      {/* Dot at lower left */}
+      <Circle cx="6" cy="18" r="2" fill={color} />
     </>
   );
 
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      {/* Soft Glow Layer */}
       {glow && (
-        <G stroke={color} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.15}>
+        <G
+          stroke={color}
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.15}
+        >
           {elements}
         </G>
       )}
-      {/* Crisp Core Layer */}
-      <G stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <G
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {elements}
       </G>
     </Svg>
@@ -41,10 +54,57 @@ export function ChironIcon({ size = 24, color = '#C9AE78', glow = true }: Astrol
 }
 
 /**
- * North Node (☊) — Ascending Node / True Node
+ * Chiron (⚷) — The Wounded Healer
+ * Styled with elegant angles and perfect circle anchoring.
+ */
+export function ChironIcon({
+  size = 24,
+  color = '#C9AE78',
+  glow = true,
+}: AstrologyIconProps) {
+  const elements = (
+    <>
+      <Circle cx="12" cy="18.5" r="3.5" fill="none" />
+      <Path d="M 12 15 L 12 3" fill="none" />
+      <Path d="M 12 9.5 L 17.5 3" fill="none" />
+      <Path d="M 14.5 6 L 18.5 11.5" fill="none" />
+    </>
+  );
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {glow && (
+        <G
+          stroke={color}
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.15}
+        >
+          {elements}
+        </G>
+      )}
+      <G
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {elements}
+      </G>
+    </Svg>
+  );
+}
+
+/**
+ * North Node (☊) — Ascending Node
  * Features a perfectly swept bezier arch and hollow anchors.
  */
-export function NorthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
+export function NorthNodeIcon({
+  size = 24,
+  color = '#C9AE78',
+  glow = true,
+}: AstrologyIconProps) {
   const elements = (
     <>
       {/* Left and Right Anchors */}
@@ -58,11 +118,22 @@ export function NorthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: Ast
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {glow && (
-        <G stroke={color} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.15}>
+        <G
+          stroke={color}
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.15}
+        >
           {elements}
         </G>
       )}
-      <G stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <G
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {elements}
       </G>
     </Svg>
@@ -73,7 +144,11 @@ export function NorthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: Ast
  * South Node (☋) — Descending Node
  * Inverted arch with hollow anchors at the top.
  */
-export function SouthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
+export function SouthNodeIcon({
+  size = 24,
+  color = '#C9AE78',
+  glow = true,
+}: AstrologyIconProps) {
   const elements = (
     <>
       {/* Left and Right Anchors */}
@@ -87,11 +162,22 @@ export function SouthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: Ast
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {glow && (
-        <G stroke={color} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.15}>
+        <G
+          stroke={color}
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.15}
+        >
           {elements}
         </G>
       )}
-      <G stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <G
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {elements}
       </G>
     </Svg>
@@ -102,7 +188,11 @@ export function SouthNodeIcon({ size = 24, color = '#C9AE78', glow = true }: Ast
  * Lilith (⚸) — Black Moon
  * Elegant intersecting curves forming the crescent, anchored by a structural cross.
  */
-export function LilithIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
+export function LilithIcon({
+  size = 24,
+  color = '#C9AE78',
+  glow = true,
+}: AstrologyIconProps) {
   const elements = (
     <>
       {/* Crescent */}
@@ -117,11 +207,22 @@ export function LilithIcon({ size = 24, color = '#C9AE78', glow = true }: Astrol
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {glow && (
-        <G stroke={color} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.15}>
+        <G
+          stroke={color}
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.15}
+        >
           {elements}
         </G>
       )}
-      <G stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <G
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {elements}
       </G>
     </Svg>
@@ -132,7 +233,11 @@ export function LilithIcon({ size = 24, color = '#C9AE78', glow = true }: Astrol
  * Part of Fortune (⊗) — Pars Fortunae
  * A perfect circle enclosing an intersecting cross.
  */
-export function PartOfFortuneIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
+export function PartOfFortuneIcon({
+  size = 24,
+  color = '#C9AE78',
+  glow = true,
+}: AstrologyIconProps) {
   const elements = (
     <>
       <Circle cx="12" cy="12" r="7.5" fill="none" />
@@ -144,11 +249,22 @@ export function PartOfFortuneIcon({ size = 24, color = '#C9AE78', glow = true }:
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {glow && (
-        <G stroke={color} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.15}>
+        <G
+          stroke={color}
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.15}
+        >
           {elements}
         </G>
       )}
-      <G stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <G
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {elements}
       </G>
     </Svg>
@@ -159,7 +275,11 @@ export function PartOfFortuneIcon({ size = 24, color = '#C9AE78', glow = true }:
  * Vertex (Vx) — Point of Destiny
  * A beautifully woven, continuous-feeling typography piece.
  */
-export function VertexIcon({ size = 24, color = '#C9AE78', glow = true }: AstrologyIconProps) {
+export function VertexIcon({
+  size = 24,
+  color = '#C9AE78',
+  glow = true,
+}: AstrologyIconProps) {
   const elements = (
     <>
       {/* The 'V' */}
@@ -173,11 +293,22 @@ export function VertexIcon({ size = 24, color = '#C9AE78', glow = true }: Astrol
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {glow && (
-        <G stroke={color} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" opacity={0.15}>
+        <G
+          stroke={color}
+          strokeWidth={5.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.15}
+        >
           {elements}
         </G>
       )}
-      <G stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <G
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         {elements}
       </G>
     </Svg>

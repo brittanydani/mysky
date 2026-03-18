@@ -18,7 +18,7 @@ import { metallicFillColors, metallicFillPositions } from '../../constants/mySky
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaBreathingRing from '../../components/ui/SkiaBreathingRing';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
-import { ChironIcon, NorthNodeIcon, SouthNodeIcon } from '../../components/ui/AstrologyIcons';
+import { ChironIcon, NorthNodeIcon, SouthNodeIcon, LilithIcon, PartOfFortuneIcon, VertexIcon, PholusIcon } from '../../components/ui/AstrologyIcons';
 import BirthDataModal from '../../components/BirthDataModal';
 import AstrologySettingsModal from '../../components/AstrologySettingsModal';
 import { localDb } from '../../services/storage/localDb';
@@ -429,38 +429,87 @@ export default function ChartScreen() {
     return list;
   }, [activeChart]);
 
-  // ── Sensitive points (Chiron, Nodes) ──
-  const sensitivePoints = useMemo<SensitivePointRow[]>(() => {
-    if (!activeChart?.planets) return [];
-    const points: SensitivePointRow[] = [];
+  // ── Sensitive points (Chiron, Nodes, Lilith, Vertex, Part of Fortune, Pholus) ──
+  const sensitivePoints = useMemo(() => {
+    if (!activeChart) return [];
+    const points: Array<{
+      label: string;
+      sign: string;
+      signSymbol: string;
+      element: string;
+      degree: number;
+      minute: number;
+      house?: number;
+      retrograde: boolean;
+      icon?: React.ReactNode;
+    }> = [];
 
-    for (const p of activeChart.planets as any[]) {
-      const name = safeString(p.planet).toLowerCase();
-      const signName = safeString(p.sign);
-      const lookup = SIGN_LOOKUP[signName] || { symbol: '', element: '' };
-      const { deg, min } = normalizeDegMin(Number(p.degree ?? 0));
-
-      const baseRow = {
-        sign: signName,
+    // Helper to add a point
+    function addPoint(label: string, sign: string, degree: number, minute: number, house: number | undefined, retrograde: boolean, icon?: React.ReactNode) {
+      const lookup = SIGN_LOOKUP[sign] || { symbol: '', element: '' };
+      points.push({
+        label,
+        sign,
         signSymbol: lookup.symbol,
         element: lookup.element,
-        degree: deg,
-        minute: min,
-        house: typeof p.house === 'number' ? p.house : undefined,
-        retrograde: getRetrogradeFlag(p),
-      };
+        degree,
+        minute,
+        house,
+        retrograde,
+        icon,
+      });
+    }
 
-      if (name === 'chiron') {
-        points.push({ label: 'Chiron', ...baseRow });
-      } else if (name === 'north node' || name === 'northnode' || name === 'true node') {
-        points.push({ label: 'North Node', ...baseRow });
-      } else if (name === 'south node' || name === 'southnode') {
-        points.push({ label: 'South Node', ...baseRow });
+    // Planets array: Chiron, Nodes, Lilith, Pholus
+    if (Array.isArray(activeChart.planets)) {
+      for (const p of activeChart.planets as any[]) {
+        const name = safeString(p.planet).toLowerCase();
+        const signName = safeString(p.sign);
+        const { deg, min } = normalizeDegMin(Number(p.degree ?? 0));
+        const house = typeof p.house === 'number' ? p.house : undefined;
+        const retrograde = getRetrogradeFlag(p);
+        if (name === 'chiron') {
+          addPoint('Chiron', signName, deg, min, house, retrograde, <ChironIcon size={20} color={'#000'} />);
+        } else if (name === 'north node' || name === 'northnode' || name === 'true node') {
+          addPoint('North Node', signName, deg, min, house, retrograde, <NorthNodeIcon size={20} color={'#000'} />);
+        } else if (name === 'south node' || name === 'southnode') {
+          addPoint('South Node', signName, deg, min, house, retrograde, <SouthNodeIcon size={20} color={'#000'} />);
+        } else if (name === 'lilith' || name === 'black moon lilith') {
+          addPoint('Lilith', signName, deg, min, house, retrograde, <LilithIcon size={20} color={'#000'} />);
+        } else if (name === 'pholus') {
+          addPoint('Pholus', signName, deg, min, house, retrograde, <PholusIcon size={20} color={'#000'} />);
+        }
       }
     }
 
-    const order: Record<SensitivePointRow['label'], number> = { 'North Node': 0, 'South Node': 1, Chiron: 2 };
-    return points.sort((a, b) => order[a.label] - order[b.label]);
+    // Vertex (from angles)
+    if (Array.isArray(activeChart.angles)) {
+      for (const angle of activeChart.angles) {
+        if (angle.name === 'Vertex') {
+          const signName = safeString(angle.sign);
+          const { deg, min } = normalizeDegMin(Number(angle.degree ?? 0));
+          addPoint('Vertex', signName, deg, min, undefined, false, <VertexIcon size={20} color={'#000'} />);
+        }
+      }
+    }
+
+    // Part of Fortune (from partOfFortune field)
+    if (activeChart.partOfFortune) {
+      const pf = activeChart.partOfFortune;
+      addPoint('Part of Fortune', safeString(pf.sign?.name ?? pf.sign), pf.degree, pf.minute, pf.house, false, <PartOfFortuneIcon size={20} color={'#000'} />);
+    }
+
+    // Order: North Node, South Node, Chiron, Lilith, Vertex, Part of Fortune, Pholus
+    const order: Record<string, number> = {
+      'North Node': 0,
+      'South Node': 1,
+      'Chiron': 2,
+      'Lilith': 3,
+      'Vertex': 4,
+      'Part of Fortune': 5,
+      'Pholus': 6,
+    };
+    return points.sort((a, b) => (order[a.label] ?? 99) - (order[b.label] ?? 99));
   }, [activeChart]);
 
   // ── Chiron & Node insights (premium) ──
@@ -901,9 +950,7 @@ export default function ChartScreen() {
                   {sensitivePoints.map((pt) => (
                     <View key={pt.label} style={styles.sensitiveItem}>
                       <View style={{ marginBottom: 4 }}>
-                        {pt.label === 'Chiron' && <GradientIcon size={20}><ChironIcon size={20} color={'#000'} /></GradientIcon>}
-                        {pt.label === 'North Node' && <GradientIcon size={20}><NorthNodeIcon size={20} color={'#000'} /></GradientIcon>}
-                        {pt.label === 'South Node' && <GradientIcon size={20}><SouthNodeIcon size={20} color={'#000'} /></GradientIcon>}
+                        {pt.icon ? <GradientIcon size={20}>{pt.icon}</GradientIcon> : null}
                       </View>
                       <Text style={styles.sensitiveName}>{pt.label}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
@@ -1058,9 +1105,7 @@ export default function ChartScreen() {
                     >
                       <View style={[styles.td, { width: 140, flexDirection: 'row', alignItems: 'center' }]}>
                         <View style={{ marginRight: 10, width: 28, alignItems: 'center' }}>
-                          {pt.label === 'Chiron' && <GradientIcon size={18}><ChironIcon size={18} color={'#000'} /></GradientIcon>}
-                          {pt.label === 'North Node' && <GradientIcon size={18}><NorthNodeIcon size={18} color={'#000'} /></GradientIcon>}
-                          {pt.label === 'South Node' && <GradientIcon size={18}><SouthNodeIcon size={18} color={'#000'} /></GradientIcon>}
+                          {pt.icon ? <GradientIcon size={18}>{pt.icon}</GradientIcon> : null}
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.planetName}>{pt.label}</Text>

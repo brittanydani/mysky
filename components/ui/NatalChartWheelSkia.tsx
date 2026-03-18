@@ -117,6 +117,10 @@ const PLANET_SYMBOLS: Record<string, string> = {
   'North Node': '☊',
   'South Node': '☋',
   Chiron: '⚷',
+  Lilith: '⚸',
+  Vertex: 'Vx',
+  'Part of Fortune': '⊗',
+  Pholus: '⯰',
   Ascendant: 'AC',
   Midheaven: 'MC',
 };
@@ -403,7 +407,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   
   // ── Prepare natal planets ──
   const placedPlanets = useMemo(() => {
-    const labels = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron', 'North Node', 'South Node'];
+    const labels = [
+      'Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn',
+      'Uranus', 'Neptune', 'Pluto', 'Chiron', 'North Node', 'South Node',
+      'Lilith', 'Vertex', 'Part of Fortune', 'Pholus'
+    ];
     const raw: { label: string; longitude: number; isRetrograde: boolean }[] = [];
     for (const label of labels) {
       const obj = getChartPlanet(chart, label);
@@ -939,7 +947,10 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
 
         {/* ── Natal planet glyphs (glassy spheres) ── */}
         {showPerson1 && placedPlanets.map((planet) => {
-          const isPoint = ['Ascendant', 'Midheaven', 'North Node', 'South Node', 'Chiron', 'ASC', 'MC'].includes(planet.label);
+          const nonPlanetPoints = ['Chiron', 'North Node', 'South Node', 'Lilith', 'Vertex', 'Part of Fortune', 'Pholus', 'Ascendant', 'Midheaven', 'ASC', 'MC'];
+          const iconOnlyPoints = ['Lilith', 'Vertex', 'Part of Fortune', 'Pholus'];
+          const isPoint = nonPlanetPoints.includes(planet.label);
+          const isIconOnly = iconOnlyPoints.includes(planet.label);
           const actualRadius = isPoint ? R_INNER + 20 : R_PLANET_RING;
           const glyphPos = polarToXY(planet.displayAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
@@ -970,66 +981,42 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 opacity={0.40}
               />
 
-              {/* Sphere rendering — planets only, not chart points */}
+              {/* Sphere rendering — planets only, not icon-only points */}
               {!isPoint && (
                 <>
                   {/* Outer glow halo */}
                   <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 4} color={baseColor} opacity={0.18} />
                   <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R + 2} color={baseColor} opacity={0.10} />
-
                   {/* Drop shadow for depth */}
-                  <Circle cx={glyphPos.x + 1.5} cy={glyphPos.y + 2} r={PLANET_R} color="rgba(0,0,0,0.45)">
-                    <BlurMask blur={4} style="normal" />
-                  </Circle>
-
+                  <Circle cx={glyphPos.x + 1.5} cy={glyphPos.y + 2} r={PLANET_R} color="rgba(0,0,0,0.45)"><BlurMask blur={4} style="normal" /></Circle>
                   {/* Base sphere — lit from upper-left */}
                   <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R}>
-                    <RadialGradient
-                      c={vec(glyphPos.x - PLANET_R * 0.25, glyphPos.y - PLANET_R * 0.25)}
-                      r={PLANET_R * 1.6}
-                      colors={getUserSpherePalette(0)}
-                      positions={[0, 0.2, 0.5, 0.78, 1]}
-                    />
+                    <RadialGradient c={vec(glyphPos.x - PLANET_R * 0.25, glyphPos.y - PLANET_R * 0.25)} r={PLANET_R * 1.6} colors={getUserSpherePalette(0)} positions={[0, 0.2, 0.5, 0.78, 1]} />
                   </Circle>
-
                   {/* Shadow hemisphere — darkens lower-right */}
                   <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R}>
-                    <RadialGradient
-                      c={vec(glyphPos.x + PLANET_R * 0.45, glyphPos.y + PLANET_R * 0.45)}
-                      r={PLANET_R * 1.2}
-                      colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0)']}
-                      positions={[0, 0.5, 1]}
-                    />
+                    <RadialGradient c={vec(glyphPos.x + PLANET_R * 0.45, glyphPos.y + PLANET_R * 0.45)} r={PLANET_R * 1.2} colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0)']} positions={[0, 0.5, 1]} />
                   </Circle>
-
                   {/* Sharp specular dot — pure white point light */}
-                  <Circle
-                    cx={glyphPos.x - PLANET_R * 0.32}
-                    cy={glyphPos.y - PLANET_R * 0.32}
-                    r={PLANET_R * 0.16}
-                    color="rgba(255,255,255,1.0)"
-                  />
-
+                  <Circle cx={glyphPos.x - PLANET_R * 0.32} cy={glyphPos.y - PLANET_R * 0.32} r={PLANET_R * 0.16} color="rgba(255,255,255,1.0)" />
                   {/* Soft halo around specular */}
-                  <Circle
-                    cx={glyphPos.x - PLANET_R * 0.26}
-                    cy={glyphPos.y - PLANET_R * 0.26}
-                    r={PLANET_R * 0.42}
-                    color="rgba(255,255,255,0.30)"
-                  >
-                    <BlurMask blur={2.5} style="normal" />
-                  </Circle>
-
+                  <Circle cx={glyphPos.x - PLANET_R * 0.26} cy={glyphPos.y - PLANET_R * 0.26} r={PLANET_R * 0.42} color="rgba(255,255,255,0.30)"><BlurMask blur={2.5} style="normal" /></Circle>
                   {/* Rim highlight — bright edge catch */}
-                  <Circle
-                    cx={glyphPos.x}
-                    cy={glyphPos.y}
-                    r={PLANET_R - 0.4}
-                    style="stroke"
-                    strokeWidth={1.4}
-                    color="rgba(255,255,255,0.55)"
-                  />
+                  <Circle cx={glyphPos.x} cy={glyphPos.y} r={PLANET_R - 0.4} style="stroke" strokeWidth={1.4} color="rgba(255,255,255,0.55)" />
                 </>
+              )}
+              {/* Icon-only points: just draw the symbol, no sphere */}
+              {isIconOnly && glyphFont && (
+                <SkiaText
+                  x={glyphPos.x - glyphOffsetX}
+                  y={glyphPos.y + glyphOffsetY}
+                  text={glyph}
+                  font={glyphFont}
+                  color={textColor}
+                  style={"fill"}
+                  strokeWidth={0}
+                  opacity={1.0}
+                />
               )}
 
               {/* Glyph */}

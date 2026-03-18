@@ -181,15 +181,47 @@ export class PrivacyComplianceManager {
         secureStorage.getLawfulBasisRecords(),
       ]);
 
+    // Calculate full natal chart data for each chart
+    const { EnhancedAstrologyCalculator } = await import('../astrology/calculator');
+    const { detectChartPatterns } = await import('../astrology/chartPatterns');
+    const fullCharts = charts.map((chart) => {
+      // Compose birth data for calculation
+      const birthData = {
+        date: chart.birthDate,
+        time: chart.birthTime,
+        hasUnknownTime: chart.hasUnknownTime,
+        place: chart.birthPlace,
+        latitude: chart.latitude,
+        longitude: chart.longitude,
+        timezone: chart.timezone,
+        houseSystem: chart.houseSystem,
+      };
+      let natalChart = null;
+      let chartPatterns = null;
+      try {
+        natalChart = EnhancedAstrologyCalculator.generateNatalChart(birthData);
+        chartPatterns = detectChartPatterns(natalChart);
+      } catch (e) {
+        // If calculation fails, include error info
+        natalChart = { error: String(e) };
+        chartPatterns = null;
+      }
+      return {
+        ...chart,
+        natalChart,
+        chartPatterns,
+      };
+    });
+
     await secureStorage.auditDataAccess('gdpr_export_request', {
-      chartsCount: charts.length,
+      chartsCount: fullCharts.length,
       entriesCount: journalEntries.length,
     });
 
     return {
       success: true,
       package: {
-        charts,
+        charts: fullCharts,
         journalEntries,
         settings,
         consentRecord,

@@ -6,7 +6,6 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Crypto from 'expo-crypto';
 
 // Polyfill WebCrypto (crypto.subtle) for Expo
-import 'expo-standard-web-crypto';
 
 import { localDb } from './localDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';

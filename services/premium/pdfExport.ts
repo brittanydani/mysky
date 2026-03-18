@@ -78,6 +78,7 @@ function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
   const birthTime = birthData.hasUnknownTime ? 'Unknown' : (birthData.time ?? 'Unknown');
   const chartName = chart.name ?? 'Your Chart';
 
+
   // Planets table — traditional order
   const sortedPlacements = [...placements].sort((a, b) => {
     const ai = PLANET_ORDER.indexOf(a.planet.name);
@@ -93,6 +94,82 @@ function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
       <td>${p.house > 0 ? String(p.house) : '—'}</td>
       <td class="rx">${p.isRetrograde ? 'Rx' : '—'}</td>
     </tr>`).join('');
+
+  // Sensitive Points (Lilith, Vertex, Part of Fortune, Pholus, Chiron, Nodes)
+  const sensitivePoints: Array<{ label: string; sign: string; degree: number; minute: number; house?: number; retrograde: boolean }> = [];
+  // Helper to add a point
+  function addPoint(label: string, sign: string, degree: number, minute: number, house: number | undefined, retrograde: boolean) {
+    sensitivePoints.push({ label, sign, degree, minute, house, retrograde });
+  }
+  // From planets array
+  if (Array.isArray(chart.planets)) {
+    for (const p of chart.planets as any[]) {
+      const name = String(p.planet).toLowerCase();
+      const sign = String(p.sign);
+      const degree = Math.floor(Number(p.degree ?? 0));
+      const minute = Math.round((Number(p.degree ?? 0) - degree) * 60);
+      const house = typeof p.house === 'number' ? p.house : undefined;
+      const retrograde = Boolean(p.isRetrograde);
+      if (name === 'chiron') {
+        addPoint('Chiron', sign, degree, minute, house, retrograde);
+      } else if (name === 'north node' || name === 'northnode' || name === 'true node') {
+        addPoint('North Node', sign, degree, minute, house, retrograde);
+      } else if (name === 'south node' || name === 'southnode') {
+        addPoint('South Node', sign, degree, minute, house, retrograde);
+      } else if (name === 'lilith' || name === 'black moon lilith') {
+        addPoint('Lilith', sign, degree, minute, house, retrograde);
+      } else if (name === 'pholus') {
+        addPoint('Pholus', sign, degree, minute, house, retrograde);
+      }
+    }
+  }
+  // Vertex (from angles)
+  if (Array.isArray(chart.angles)) {
+    for (const angle of chart.angles) {
+      if (angle.name === 'Vertex') {
+        const sign = String(angle.sign);
+        const degree = Math.floor(Number(angle.degree ?? 0));
+        const minute = Math.round((Number(angle.degree ?? 0) - degree) * 60);
+        addPoint('Vertex', sign, degree, minute, undefined, false);
+      }
+    }
+  }
+  // Part of Fortune (from partOfFortune field)
+  if (chart.partOfFortune) {
+    const pf = chart.partOfFortune;
+    addPoint('Part of Fortune', String(pf.sign?.name ?? pf.sign), pf.degree, pf.minute, pf.house, false);
+  }
+  // Order: North Node, South Node, Chiron, Lilith, Vertex, Part of Fortune, Pholus
+  const order: Record<string, number> = {
+    'North Node': 0,
+    'South Node': 1,
+    'Chiron': 2,
+    'Lilith': 3,
+    'Vertex': 4,
+    'Part of Fortune': 5,
+    'Pholus': 6,
+  };
+  sensitivePoints.sort((a, b) => (order[a.label] ?? 99) - (order[b.label] ?? 99));
+
+  let sensitiveSection = '';
+  if (sensitivePoints.length > 0) {
+    const rows = sensitivePoints.map(pt => `
+      <tr>
+        <td>${esc(pt.label)}</td>
+        <td>${esc(withSign(pt.sign))}</td>
+        <td>${degMin(pt.degree, pt.minute)}</td>
+        <td>${pt.house ? pt.house : '—'}</td>
+        <td class="rx">${pt.retrograde ? 'Rx' : '—'}</td>
+      </tr>`).join('');
+    sensitiveSection = `
+      <div class="section">
+        <h2 class="section-title">Sensitive Points</h2>
+        <table>
+          <thead><tr><th>Point</th><th>Sign</th><th>Degree</th><th>House</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
 
   // House cusps — only when birth time is known
   let houseSection = '';
@@ -516,6 +593,7 @@ tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+
 <div class="section">
   <h2 class="section-title">Planetary Placements</h2>
   <table>
@@ -526,6 +604,8 @@ tr:last-child td { border-bottom: none; }
     </tbody>
   </table>
 </div>
+
+${sensitiveSection}
 
 ${houseSection}
 
