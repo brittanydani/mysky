@@ -116,18 +116,33 @@ export type { CheckInInput, SkySnapshot } from './types';
  */
 function detectTimeOfDay(date: Date = new Date()): TimeOfDay {
   const h = date.getHours();
-  if (h >= 5 && h < 12) return 'morning';
-  if (h >= 12 && h < 17) return 'afternoon';
-  if (h >= 17 && h < 21) return 'evening';
-  return 'night';
+  if (h >= 6  && h < 12) return 'morning';
+  if (h >= 12 && h < 18) return 'afternoon';
+  if (h >= 18 && h < 22) return 'evening';
+  return 'night'; // 22:00–23:59 and 00:00–05:59
 }
 
 export const TIME_OF_DAY_LABELS: Record<TimeOfDay, { label: string; emoji: string; icon: string; hours: string }> = {
-  morning:   { label: 'Morning',   emoji: '🌅', icon: 'sunny-outline',        hours: '5am–12pm' },
-  afternoon: { label: 'Afternoon', emoji: '☀️', icon: 'partly-sunny-outline', hours: '12pm–5pm' },
-  evening:   { label: 'Evening',   emoji: '🌆', icon: 'moon-outline',         hours: '5pm–9pm' },
-  night:     { label: 'Night',     emoji: '🌙', icon: 'cloudy-night-outline', hours: '9pm–5am' },
+  morning:   { label: 'Morning',   emoji: '🌅', icon: 'sunny-outline',        hours: '6am–12pm' },
+  afternoon: { label: 'Afternoon', emoji: '☀️', icon: 'partly-sunny-outline', hours: '12pm–6pm' },
+  evening:   { label: 'Evening',   emoji: '🌆', icon: 'moon-outline',         hours: '6pm–10pm' },
+  night:     { label: 'Night',     emoji: '🌙', icon: 'cloudy-night-outline', hours: '10pm–6am' },
 };
+
+/**
+ * The "logical today" for check-ins.
+ * Between midnight and 5:59am we're still in the previous day's night window,
+ * so editing a night entry before 6am should target yesterday's date.
+ */
+export function getLogicalToday(): string {
+  const now = new Date();
+  if (now.getHours() < 6) {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return toLocalDateString(yesterday);
+  }
+  return toLocalDateString(now);
+}
 
 export const TIME_OF_DAY_ORDER: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'night'];
 

@@ -31,7 +31,7 @@ const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 // Dev-only: force premium ON for local testing. Production builds always use RevenueCat.
-const DEBUG_FORCE_PREMIUM = __DEV__ && false;
+const DEBUG_FORCE_PREMIUM = __DEV__ && true;
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState<boolean>(DEBUG_FORCE_PREMIUM);

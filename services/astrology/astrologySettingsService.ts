@@ -53,8 +53,13 @@ export interface AstrologySettings {
   
   // Display preferences
   showMinorAspects: boolean;
-  showAsteroid: boolean; // Chiron, Juno, Pallas, Vesta, Ceres
-  
+  showAsteroid: boolean; // Ceres, Pallas, Juno, Vesta (+ Pholus in advanced)
+
+  // Lilith calculation method: 'mean' = Black Moon Lilith (Mean Apogee),
+  // 'true' = Black Moon Lilith (Osculating/True Apogee).
+  // Both appear as a single "Lilith" placement; only the calculation differs.
+  lilitMethod: 'mean' | 'true';
+
   // Last updated
   updatedAt: string;
 }
@@ -137,6 +142,7 @@ const DEFAULT_SETTINGS: AstrologySettings = {
   orbPreset: 'normal',
   showMinorAspects: false,
   showAsteroid: true,
+  lilitMethod: 'mean',
   updatedAt: new Date().toISOString(),
 };
 

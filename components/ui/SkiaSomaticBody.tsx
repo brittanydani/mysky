@@ -104,7 +104,8 @@ const REGIONS: Region[] = [
       'M60 120 Q56 124 52 130 L52 210 Q76 218 100 218 Q124 218 148 210 L148 130 Q144 124 140 120 Q118 128 100 128 Q82 128 60 120 Z',
     cx: 100,
     cy: 170,
-    hit: { x: 48, y: 116, w: 104, h: 106 },
+    // extended left/right to include upper arm tap area
+    hit: { x: 22, y: 116, w: 156, h: 106 },
   },
   {
     id: 'gut',
@@ -114,11 +115,12 @@ const REGIONS: Region[] = [
       'M52 210 L52 290 Q76 298 100 298 Q124 298 148 290 L148 210 Q124 218 100 218 Q76 218 52 210 Z',
     cx: 100,
     cy: 254,
-    hit: { x: 48, y: 206, w: 104, h: 96 },
+    // extended left/right to include lower arm tap area
+    hit: { x: 22, y: 206, w: 156, h: 96 },
   },
   {
     id: 'back',
-    label: 'Back & Spine',
+    label: 'Hips & Pelvis',
     icon: '⠿',
     svgPath:
       'M52 290 L52 340 Q70 352 100 352 Q130 352 148 340 L148 290 Q124 298 100 298 Q76 298 52 290 Z',
@@ -128,7 +130,7 @@ const REGIONS: Region[] = [
   },
   {
     id: 'limbs',
-    label: 'Hands & Legs',
+    label: 'Legs',
     icon: '⊕',
     svgPath:
       'M70 352 L58 410 L80 410 L100 368 L120 410 L142 410 L130 352 Q115 358 100 358 Q85 358 70 352 Z',
@@ -148,9 +150,17 @@ export const SOMATIC_REGION_LABEL: Record<string, string> = Object.fromEntries(
 
 // ── Ghost silhouette single compound path ─────────────────────────────────────
 const GHOST_DATA =
+  // Head
   'M100 10 C72 10 54 28 54 52 C54 76 72 94 100 94 C128 94 146 76 146 52 C146 28 128 10 100 10 Z ' +
+  // Neck
   'M82 94 L82 120 Q100 128 118 120 L118 94 Q100 102 82 94 Z ' +
+  // Torso
   'M60 120 Q56 124 52 130 L52 340 Q70 352 100 352 Q130 352 148 340 L148 130 Q144 124 140 120 Q118 128 100 128 Q82 128 60 120 Z ' +
+  // Left arm
+  'M52 130 Q36 132 28 150 L22 256 Q24 284 34 310 L44 308 Q50 282 52 256 L60 148 Z ' +
+  // Right arm
+  'M148 130 Q164 132 172 150 L178 256 Q176 284 166 310 L156 308 Q150 282 148 256 L140 148 Z ' +
+  // Legs
   'M70 352 L58 420 L80 420 L100 368 L120 420 L142 420 L130 352 Q115 358 100 358 Q85 358 70 352 Z';
 
 // ── Sparkle burst constants ────────────────────────────────────────────────────
@@ -329,7 +339,8 @@ export function SkiaSomaticBody({
 
   // ── Sparkle burst ──────────────────────────────────────────────────────────
   // Single SharedValue 0→1 over 600ms drives all 8 particles in the burst.
-  const sparkProg = useSharedValue(0);
+  // Initialized to 1 so spkOp = (1-1)*0.85 = 0 at rest (invisible until triggered).
+  const sparkProg = useSharedValue(1);
   const sparkleCx = useSharedValue(100);
   const sparkleCy = useSharedValue(100);
 
@@ -351,12 +362,40 @@ export function SkiaSomaticBody({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sparkleRegion]);
 
-  // Derived per-particle values (radius + opacity)
-  const spkR = SPARKLE_ANGLES.map((_, idx) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useDerivedValue(() => 4 + sparkProg.value * (16 + idx * 2)),
-  );
-  const spkOp = useDerivedValue(() => (1 - sparkProg.value) * 0.85);
+  // Sparkle radii — one hook per particle (hooks cannot be called in a loop)
+  const spkR0 = useDerivedValue(() => 4 + sparkProg.value * 16);
+  const spkR1 = useDerivedValue(() => 4 + sparkProg.value * 18);
+  const spkR2 = useDerivedValue(() => 4 + sparkProg.value * 20);
+  const spkR3 = useDerivedValue(() => 4 + sparkProg.value * 22);
+  const spkR4 = useDerivedValue(() => 4 + sparkProg.value * 24);
+  const spkR5 = useDerivedValue(() => 4 + sparkProg.value * 26);
+  const spkR6 = useDerivedValue(() => 4 + sparkProg.value * 28);
+  const spkR7 = useDerivedValue(() => 4 + sparkProg.value * 30);
+  // Sparkle cx per particle — must be top-level, not inside JSX or a loop
+  const spkCx0 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[0]) * spkR0.value);
+  const spkCx1 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[1]) * spkR1.value);
+  const spkCx2 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[2]) * spkR2.value);
+  const spkCx3 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[3]) * spkR3.value);
+  const spkCx4 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[4]) * spkR4.value);
+  const spkCx5 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[5]) * spkR5.value);
+  const spkCx6 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[6]) * spkR6.value);
+  const spkCx7 = useDerivedValue(() => sparkleCx.value + Math.cos(SPARKLE_ANGLES[7]) * spkR7.value);
+  const spkCxArr = [spkCx0, spkCx1, spkCx2, spkCx3, spkCx4, spkCx5, spkCx6, spkCx7];
+
+  // Sparkle cy per particle
+  const spkCy0 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[0]) * spkR0.value);
+  const spkCy1 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[1]) * spkR1.value);
+  const spkCy2 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[2]) * spkR2.value);
+  const spkCy3 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[3]) * spkR3.value);
+  const spkCy4 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[4]) * spkR4.value);
+  const spkCy5 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[5]) * spkR5.value);
+  const spkCy6 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[6]) * spkR6.value);
+  const spkCy7 = useDerivedValue(() => sparkleCy.value + Math.sin(SPARKLE_ANGLES[7]) * spkR7.value);
+  const spkCyArr = [spkCy0, spkCy1, spkCy2, spkCy3, spkCy4, spkCy5, spkCy6, spkCy7];
+
+  // Shared dot radius (shrinks as burst expands) + shared opacity
+  const spkDotR = useDerivedValue(() => 2.5 * (1 - sparkProg.value * 0.6));
+  const spkOp   = useDerivedValue(() => (1 - sparkProg.value) * 0.85);
 
   return (
     <View style={styles.root}>
@@ -437,23 +476,21 @@ export function SkiaSomaticBody({
               );
             })}
 
-            {/* Layer 6: Sparkle burst — radial particle bloom on log */}
-            {sparkleRegion && SPARKLE_ANGLES.map((angle, idx) => {
-              const dx = Math.cos(angle);
-              const dy = Math.sin(angle);
-              return (
-                <Circle
-                  key={`sparkle-${idx}`}
-                  cx={useDerivedValue(() => sparkleCx.value + dx * spkR[idx].value)}
-                  cy={useDerivedValue(() => sparkleCy.value + dy * spkR[idx].value)}
-                  r={useDerivedValue(() => 2.5 * (1 - sparkProg.value * 0.6))}
-                  color={sparkleColor}
-                  opacity={spkOp}
-                >
-                  <BlurMask blur={3} style="normal" />
-                </Circle>
-              );
-            })}
+            {/* Layer 6: Sparkle burst — radial particle bloom on log.
+                Always rendered (never conditional) so hook count stays stable.
+                spkOp = 0 at rest (sparkProg initialised to 1). */}
+            {SPARKLE_ANGLES.map((_angle, idx) => (
+              <Circle
+                key={`sparkle-${idx}`}
+                cx={spkCxArr[idx]}
+                cy={spkCyArr[idx]}
+                r={spkDotR}
+                color={sparkleColor}
+                opacity={spkOp}
+              >
+                <BlurMask blur={3} style="normal" />
+              </Circle>
+            ))}
 
             {/* Ghost stroke on top so it reads over heat fills */}
             {ghostPath && (

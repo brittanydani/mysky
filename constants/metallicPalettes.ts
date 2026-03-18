@@ -163,6 +163,13 @@ export function metallicForHex(hex: string): readonly string[] {
     '#FFEA70': METALLIC_YELLOW,
     '#48D1CC': METALLIC_TEAL,
     '#FF8C00': METALLIC_ORANGE,
+    // Core Force Map palette
+    '#E8A838': METALLIC_ORANGE,
+    '#3DD9CF': METALLIC_TEAL,
+    '#E8628C': METALLIC_LOVE,
+    '#8B6BE8': METALLIC_INDIGO,
+    '#5EC87A': METALLIC_GREEN,
+    '#E87050': METALLIC_COPPER,
   };
   return map[hex.toUpperCase()] ?? map[hex] ?? METALLIC_GOLD;
 }

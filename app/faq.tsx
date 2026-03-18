@@ -8,7 +8,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { theme } from '../constants/theme';
-import LanternIcon from '../components/ui/LanternIcon';
+import MySkyLanternSkia from '../components/skia/MySkyLanternSkia';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -52,7 +52,7 @@ export default function FAQScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <LanternIcon size={140} />
+            <MySkyLanternSkia size={140} />
           </View>
 
           <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
@@ -67,7 +67,7 @@ export default function FAQScreen() {
             <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
             <Text style={styles.answer}>
               <Text style={styles.highlight}>Free:</Text> Natal chart, Big Three, daily mood/energy/stress check-ins, basic journaling, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily astrological context with moon phase and transit awareness.{"\n\n"}
-              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship synastry, all 10 personal story chapters, growth and attachment reflections, full 7-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, Chiron and Node depth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
+              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship synastry, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, Chiron and Node depth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
             </Text>
 
             <Text style={styles.question}>What data does MySky store and where?</Text>

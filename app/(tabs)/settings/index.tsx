@@ -12,6 +12,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../../../services/storage/encryptedAsyncStorage';
 
 import { theme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
@@ -212,7 +213,7 @@ export default function SettingsScreen() {
             houseSystem: chart.houseSystem as any,
           });
         }
-        const storedName = await AsyncStorage.getItem('msky_user_name');
+        const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
         if (storedName) setIdentityName(prev => prev || storedName);
       } catch {}
     } catch (error) {

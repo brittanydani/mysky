@@ -32,7 +32,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
@@ -350,7 +350,7 @@ export default function OnboardingModal({
 
     try {
       if (userName.trim()) {
-        await AsyncStorage.setItem('msky_user_name', userName.trim());
+        await EncryptedAsyncStorage.setItem('msky_user_name', userName.trim());
       }
 
       const birthData: BirthData = {

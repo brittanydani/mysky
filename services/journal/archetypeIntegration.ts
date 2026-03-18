@@ -5,7 +5,7 @@
  * reflection prompt used inside the Journal Entry modal.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
 
 const ARCHETYPE_STORAGE_KEY = '@mysky:archetype_profile';
 
@@ -206,7 +206,7 @@ const PROMPTS: Record<ArchetypeKey, Record<MoodKey, ArchetypeJournalPrompt>> = {
 /** Load the saved archetype profile from local storage. Returns null if none. */
 export async function getArchetypeProfile(): Promise<ArchetypeProfile | null> {
   try {
-    const raw = await AsyncStorage.getItem(ARCHETYPE_STORAGE_KEY);
+    const raw = await EncryptedAsyncStorage.getItem(ARCHETYPE_STORAGE_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as ArchetypeProfile;
   } catch {

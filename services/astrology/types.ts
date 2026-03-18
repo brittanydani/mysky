@@ -13,7 +13,8 @@ export type HouseSystem =
   | 'regiomontanus'
   | 'topocentric';
 
-export type AspectTypeName = 'conjunction' | 'opposition' | 'trine' | 'square' | 'sextile';
+export type AspectTypeName = 'conjunction' | 'opposition' | 'trine' | 'square' | 'sextile'
+  | 'quincunx' | 'semisextile' | 'semisquare' | 'sesquiquadrate';
 
 export interface RetryConfig {
   maxRetries: number;
@@ -73,7 +74,7 @@ export interface SimpleAspect {
 export type SignLike = ZodiacSign | string;
 
 export interface AnglePosition {
-  name: 'Ascendant' | 'Midheaven';
+  name: 'Ascendant' | 'Descendant' | 'Midheaven' | 'IC' | 'Vertex' | 'Anti-Vertex';
   sign: SignLike; // ✅ string | ZodiacSign
   degree: number; // 0–29
   absoluteDegree: number; // 0–360

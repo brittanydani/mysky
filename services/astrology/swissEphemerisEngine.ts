@@ -19,7 +19,7 @@
 
 import { logger } from '../../utils/logger';
 import { HouseSystem, PlanetPosition, Ayanamsa, MoonUncertainty } from './types';
-import { normalize360, degreeInSign, signFromLongitude, degMinFromAbs, signNameFromLongitude } from './sharedHelpers';
+import { normalize360, degreeInSign, signFromLongitude, signNameFromLongitude } from './sharedHelpers';
 
 // ── Swiss Ephemeris constants (inline so we don't import at module level) ────
 
@@ -38,10 +38,13 @@ export const SE = {
   MEAN_NODE: 10,
   TRUE_NODE: 11,
   CHIRON: 15,
+  PHOLUS: 16,
   CERES: 17,
   PALLAS: 18,
   JUNO: 19,
   VESTA: 20,
+  LILITH: 12,       // Mean Black Moon Lilith (Mean Apogee)
+  TRUE_LILITH: 13,  // True Black Moon Lilith (Osculating Apogee)
 
   // Calculation flags
   SEFLG_SWIEPH: 2,     // Use Swiss Ephemeris
@@ -85,6 +88,7 @@ const PLANET_BODIES = [
   { id: SE.NEPTUNE, label: 'Neptune' },
   { id: SE.PLUTO, label: 'Pluto' },
   { id: SE.CHIRON, label: 'Chiron' },
+  { id: SE.LILITH, label: 'Lilith' },
 ] as const;
 
 /** Asteroid bodies (calculated when showAsteroid setting is enabled) */
@@ -93,6 +97,7 @@ const ASTEROID_BODIES = [
   { id: SE.PALLAS, label: 'Pallas' },
   { id: SE.JUNO, label: 'Juno' },
   { id: SE.VESTA, label: 'Vesta' },
+  { id: SE.PHOLUS, label: 'Pholus' },
 ] as const;
 
 /** Nodes to calculate */
@@ -125,6 +130,7 @@ export interface SwissEphChartData {
   cusps: number[] | undefined;         // 12 cusp longitudes (undefined if unknown time)
   ascendant: number | undefined;
   mc: number | undefined;
+  vertex: number | undefined;
   julianDay: number;
 }
 
@@ -233,13 +239,13 @@ export function dateToJulianDay(
 /**
  * Calculate a single planet's position using Swiss Ephemeris.
  */
-export function calcPlanet(julianDay: number, planetId: number): SwissEphPlanetResult {
+export function calcPlanet(julianDay: number, planetId: number, sidereal: boolean = false): SwissEphPlanetResult {
   const swe = getSwe();
   if (!swe) {
     throw new Error('Swiss Ephemeris not available');
   }
 
-  const iflag = SE.SEFLG_SWIEPH | SE.SEFLG_SPEED;
+  const iflag = SE.SEFLG_SWIEPH | SE.SEFLG_SPEED | (sidereal ? SE.SEFLG_SIDEREAL : 0);
   const result = swe.sweCalcUt(julianDay, planetId, iflag);
 
   return {
@@ -296,18 +302,25 @@ export function calcHouses(
 /**
  * Calculate all planetary positions for a given Julian Day.
  * Returns PlanetPosition[] plus a speed map for aspect applying/separating logic.
- * @param includeAsteroids  When true, adds Ceres, Pallas, Juno, Vesta
+ * @param includeAsteroids  When true, adds Ceres, Pallas, Juno, Vesta, Pholus
+ * @param lilitMethod       'mean' uses SE_MEAN_APOG (default); 'true' uses SE_OSCU_APOG
  */
-export function calcAllPlanets(julianDay: number, includeAsteroids: boolean = false): {
+export function calcAllPlanets(
+  julianDay: number,
+  includeAsteroids: boolean = false,
+  sidereal: boolean = false,
+  lilitMethod: 'mean' | 'true' = 'mean',
+): {
   planets: PlanetPosition[];
   speeds: Map<string, number>;
 } {
   const planets: PlanetPosition[] = [];
   const speeds = new Map<string, number>();
 
-  // Main celestial bodies
+  // Main celestial bodies — swap Lilith ID based on lilitMethod
   for (const body of PLANET_BODIES) {
-    const result = calcPlanet(julianDay, body.id);
+    const id = body.label === 'Lilith' && lilitMethod === 'true' ? SE.TRUE_LILITH : body.id;
+    const result = calcPlanet(julianDay, id, sidereal);
     const sign = signFromLongitude(result.longitude);
     const degIn = degreeInSign(result.longitude);
     const isRetrograde = result.longitudeSpeed < 0;
@@ -327,7 +340,7 @@ export function calcAllPlanets(julianDay: number, includeAsteroids: boolean = fa
 
   // Lunar nodes
   for (const node of NODE_BODIES) {
-    const result = calcPlanet(julianDay, node.id);
+    const result = calcPlanet(julianDay, node.id, sidereal);
     const sign = signFromLongitude(result.longitude);
     const degIn = degreeInSign(result.longitude);
 
@@ -363,7 +376,7 @@ export function calcAllPlanets(julianDay: number, includeAsteroids: boolean = fa
 
   // Additional asteroids (Ceres, Pallas, Juno, Vesta)
   if (includeAsteroids) {
-    const asteroids = calcAsteroids(julianDay);
+    const asteroids = calcAsteroids(julianDay, sidereal);
     planets.push(...asteroids.planets);
     for (const [name, speed] of asteroids.speeds) {
       speeds.set(name, speed);
@@ -387,7 +400,8 @@ export function calcAllPlanets(julianDay: number, includeAsteroids: boolean = fa
  * @param longitude Geographic longitude (-180 to 180)
  * @param houseSystem House system to use
  * @param includeHouses Whether to calculate houses (false for unknown time)
- * @param includeAsteroids Whether to include Ceres, Pallas, Juno, Vesta
+ * @param includeAsteroids Whether to include Ceres, Pallas, Juno, Vesta, Pholus
+ * @param lilitMethod 'mean' (default) or 'true' — controls Black Moon Lilith calculation
  */
 export function calculateChart(
   year: number,
@@ -401,19 +415,24 @@ export function calculateChart(
   houseSystem: HouseSystem,
   includeHouses: boolean = true,
   includeAsteroids: boolean = false,
+  sidereal: boolean = false,
+  lilitMethod: 'mean' | 'true' = 'mean',
 ): SwissEphChartData {
   const julianDay = dateToJulianDay(year, month, day, hour, minute, second);
-  const { planets, speeds } = calcAllPlanets(julianDay, includeAsteroids);
+  const { planets, speeds } = calcAllPlanets(julianDay, includeAsteroids, sidereal, lilitMethod);
 
   let cusps: number[] | undefined;
   let ascendant: number | undefined;
   let mc: number | undefined;
+
+  let vertex: number | undefined;
 
   if (includeHouses) {
     const houses = calcHouses(julianDay, latitude, longitude, houseSystem);
     cusps = houses.cusps;
     ascendant = houses.ascendant;
     mc = houses.mc;
+    vertex = typeof houses.vertex === 'number' ? normalize360(houses.vertex) : undefined;
   }
 
   return {
@@ -422,6 +441,7 @@ export function calculateChart(
     cusps,
     ascendant,
     mc,
+    vertex,
     julianDay,
   };
 }
@@ -495,7 +515,7 @@ export function calcPlanetSidereal(julianDay: number, planetId: number, ayanamsa
  * Calculate asteroid positions for a given Julian Day.
  * Returns positions for Ceres, Pallas, Juno, and Vesta.
  */
-export function calcAsteroids(julianDay: number): {
+export function calcAsteroids(julianDay: number, sidereal: boolean = false): {
   planets: PlanetPosition[];
   speeds: Map<string, number>;
 } {
@@ -504,7 +524,7 @@ export function calcAsteroids(julianDay: number): {
 
   for (const body of ASTEROID_BODIES) {
     try {
-      const result = calcPlanet(julianDay, body.id);
+      const result = calcPlanet(julianDay, body.id, sidereal);
       const sign = signFromLongitude(result.longitude);
       const degIn = degreeInSign(result.longitude);
       const isRetrograde = result.longitudeSpeed < 0;
@@ -590,7 +610,7 @@ export function calcMoonUncertainty(
 /**
  * Calculate transit positions for a given date (geocentric, no houses).
  */
-export function calculateTransitPositions(date: Date): PlanetPosition[] {
+export function calculateTransitPositions(date: Date, sidereal: boolean = false): PlanetPosition[] {
   const julianDay = dateToJulianDay(
     date.getUTCFullYear(),
     date.getUTCMonth() + 1,   // sweUtcToJd expects 1-based month
@@ -600,7 +620,7 @@ export function calculateTransitPositions(date: Date): PlanetPosition[] {
     date.getUTCSeconds()
   );
 
-  const { planets } = calcAllPlanets(julianDay);
+  const { planets } = calcAllPlanets(julianDay, false, sidereal);
   // Filter out nodes for transit display (keep main bodies only)
   return planets.filter(p => !p.planet.includes('Node'));
 }

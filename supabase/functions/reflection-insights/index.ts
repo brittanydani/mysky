@@ -21,8 +21,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
 // ─── CORS headers ─────────────────────────────────────────────────────────────
 
+// Allow the Expo dev server during local development, restrict to app origin
+// in production. Supabase JWT verification is still the primary auth gate.
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") ?? "https://mysky.app";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

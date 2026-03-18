@@ -8,7 +8,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import ShieldCheckIcon from '../components/ui/ShieldCheckIcon';
+import MySkyShieldSkia from '../components/skia/MySkyShieldSkia';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 // ── Cinematic Palette ──
@@ -51,7 +51,7 @@ export default function PrivacyPolicyScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <ShieldCheckIcon size={140} />
+            <MySkyShieldSkia size={140} />
           </View>
 
           <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>

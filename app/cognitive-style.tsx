@@ -19,7 +19,7 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Polygon, Line, Circle } from 'react-native-svg';
@@ -138,7 +138,7 @@ export default function CognitiveStyleScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
         if (raw) {
           try {
             setScores(JSON.parse(raw));
@@ -159,7 +159,7 @@ export default function CognitiveStyleScreen() {
 
   const handleSave = async () => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch {

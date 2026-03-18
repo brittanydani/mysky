@@ -10,6 +10,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types  (mirror the interfaces defined in each screen — kept here as the
@@ -105,6 +106,16 @@ async function readJson<T>(key: string): Promise<T | null> {
   }
 }
 
+/** Like readJson but reads from encrypted storage (for sensitive personal data). */
+async function readEncryptedJson<T>(key: string): Promise<T | null> {
+  try {
+    const raw = await EncryptedAsyncStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Reads TriggerEvent[] saved by the Trigger Log screen and converts it to
  * the TriggerData shape (drains / restores string arrays) expected by the
@@ -112,7 +123,7 @@ async function readJson<T>(key: string): Promise<T | null> {
  * appears only once.
  */
 async function loadTriggerData(): Promise<TriggerData | null> {
-  const events = await readJson<TriggerEvent[]>(STORAGE_KEYS.triggerEvents);
+  const events = await readEncryptedJson<TriggerEvent[]>(STORAGE_KEYS.triggerEvents);
   if (!events || !Array.isArray(events) || events.length === 0) return null;
 
   const drains = [
@@ -152,11 +163,11 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     relationshipPatterns,
   ] = await Promise.all([
     readJson<CoreValuesData>(STORAGE_KEYS.coreValues),
-    readJson<ArchetypeProfile>(STORAGE_KEYS.archetypeProfile),
-    readJson<CognitiveScores>(STORAGE_KEYS.cognitiveStyle),
-    readJson<SomaticEntry[]>(STORAGE_KEYS.somaticEntries),
+    readEncryptedJson<ArchetypeProfile>(STORAGE_KEYS.archetypeProfile),
+    readEncryptedJson<CognitiveScores>(STORAGE_KEYS.cognitiveStyle),
+    readEncryptedJson<SomaticEntry[]>(STORAGE_KEYS.somaticEntries),
     loadTriggerData(),
-    readJson<RelationshipPatternEntry[]>(STORAGE_KEYS.relationshipPatterns),
+    readEncryptedJson<RelationshipPatternEntry[]>(STORAGE_KEYS.relationshipPatterns),
   ]);
 
   return {

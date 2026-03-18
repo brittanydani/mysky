@@ -19,7 +19,7 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
@@ -170,7 +170,7 @@ export default function ArchetypesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
         if (raw) {
           try {
             const profile: SavedProfile = JSON.parse(raw);
@@ -199,7 +199,7 @@ export default function ArchetypesScreen() {
     );
     const profile: SavedProfile = { dominant, scores, completedAt: new Date().toISOString() };
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     } catch {
       Alert.alert('Error', 'Could not save your profile. Please try again.');
       return;
@@ -213,7 +213,7 @@ export default function ArchetypesScreen() {
     setAnswers({});
     setShowResult(false);
     setSavedProfile(null);
-    AsyncStorage.removeItem(STORAGE_KEY);
+    EncryptedAsyncStorage.removeItem(STORAGE_KEY);
   };
 
   const dominant = savedProfile ? ARCHETYPES[savedProfile.dominant] : null;

@@ -23,7 +23,7 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -91,7 +91,7 @@ export default function RelationshipPatternsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
         if (raw) {
           try { setEntries(JSON.parse(raw)); } catch {}
         }
@@ -117,7 +117,7 @@ export default function RelationshipPatternsScreen() {
     const updated = [newEntry, ...entries];
     setEntries(updated);
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch {
       Alert.alert('Error', 'Could not save entry. Please try again.');
       setEntries(entries);

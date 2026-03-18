@@ -63,6 +63,24 @@ export interface ModalityBalance {
   description: string;
 }
 
+export interface PolarityBalance {
+  masculine: number;   // Fire + Air planet count
+  feminine: number;    // Earth + Water planet count
+  dominant: 'Masculine' | 'Feminine' | 'Balanced';
+  description: string;
+}
+
+export interface DominantFactors {
+  planet: string;        // most emphasized planet by aspect count + angularity
+  sign: string;          // sign with most planets (weighted)
+  house: number | null;  // house with most planets
+  descriptions: {
+    planet: string;
+    sign: string;
+    house: string;
+  };
+}
+
 export interface ChartPatterns {
   stelliums: Stellium[];  // max 2 for display; prioritized
   stelliumOverflow: boolean; // true when additional stelliums were suppressed
@@ -71,6 +89,8 @@ export interface ChartPatterns {
   retrogradeEmphasis: RetrogradeEmphasis;
   elementBalance: ElementBalance;
   modalityBalance: ModalityBalance;
+  polarityBalance: PolarityBalance;
+  dominantFactors: DominantFactors;
 }
 
 // ══════════════════════════════════════════════════
@@ -715,6 +735,119 @@ function analyzeModalityBalance(chart: NatalChart): ModalityBalance {
 }
 
 // ══════════════════════════════════════════════════
+// 7. POLARITY BALANCE
+// ══════════════════════════════════════════════════
+
+function analyzePolarityBalance(chart: NatalChart): PolarityBalance {
+  const planets = getCorePlanets(chart);
+  let masculine = 0;
+  let feminine = 0;
+
+  for (const p of planets) {
+    const el = p.sign?.element;
+    if (el === 'Fire' || el === 'Air') masculine++;
+    else if (el === 'Earth' || el === 'Water') feminine++;
+  }
+
+  const diff = masculine - feminine;
+  const dominant: PolarityBalance['dominant'] =
+    Math.abs(diff) <= 1 ? 'Balanced' : diff > 0 ? 'Masculine' : 'Feminine';
+
+  const descriptions: Record<PolarityBalance['dominant'], string> = {
+    Masculine: `Your chart leans toward masculine (Fire + Air) energy — you tend to express yourself outwardly through action, ideas, and direct engagement with the world. Initiative and social connection come naturally; stillness and inward processing may require more intention.`,
+    Feminine: `Your chart leans toward feminine (Earth + Water) energy — you process experience deeply before acting, and you tend to build meaning from the inside out. Receptivity, depth, and attunement to subtle currents are natural strengths.`,
+    Balanced: `Your chart has a relatively balanced mix of masculine (Fire + Air) and feminine (Earth + Water) energy — you can move between outward expression and inward reflection, between action and receptivity, depending on what the moment calls for.`,
+  };
+
+  return { masculine, feminine, dominant, description: descriptions[dominant] };
+}
+
+// ══════════════════════════════════════════════════
+// 8. DOMINANT FACTORS
+// ══════════════════════════════════════════════════
+
+function detectDominantFactors(chart: NatalChart): DominantFactors {
+  const planets = getCorePlanets(chart);
+
+  // ── Dominant planet: most aspected, with angular bonus ──
+  const aspectCounts = new Map<string, number>();
+  for (const p of planets) aspectCounts.set(p.planet.name, 0);
+
+  for (const aspect of chart.aspects ?? []) {
+    const n1 = aspect.planet1?.name;
+    const n2 = aspect.planet2?.name;
+    if (n1 && aspectCounts.has(n1)) aspectCounts.set(n1, (aspectCounts.get(n1) ?? 0) + 1);
+    if (n2 && aspectCounts.has(n2)) aspectCounts.set(n2, (aspectCounts.get(n2) ?? 0) + 1);
+  }
+
+  // Angular houses (1, 4, 7, 10) get a +2 bonus
+  const ANGULAR = new Set([1, 4, 7, 10]);
+  const scores = new Map<string, number>();
+  for (const p of planets) {
+    const base = aspectCounts.get(p.planet.name) ?? 0;
+    const bonus = p.house && ANGULAR.has(p.house) ? 2 : 0;
+    scores.set(p.planet.name, base + bonus);
+  }
+  const dominantPlanet = [...scores.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Sun';
+
+  // ── Dominant sign: personal planets (Sun–Mars) = 2pts, outer = 1pt ──
+  const PERSONAL_WEIGHT: Record<string, number> = {
+    Sun: 2, Moon: 2, Mercury: 2, Venus: 2, Mars: 2,
+  };
+  const signScores = new Map<string, number>();
+  for (const p of planets) {
+    const signName = typeof p.sign === 'string' ? p.sign : p.sign?.name ?? '';
+    if (!signName) continue;
+    const weight = PERSONAL_WEIGHT[p.planet.name] ?? 1;
+    signScores.set(signName, (signScores.get(signName) ?? 0) + weight);
+  }
+  const dominantSign = [...signScores.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+
+  // ── Dominant house: most planets ──
+  const houseCounts = new Map<number, number>();
+  for (const p of planets) {
+    if (!p.house) continue;
+    houseCounts.set(p.house, (houseCounts.get(p.house) ?? 0) + 1);
+  }
+  const dominantHouseEntry = [...houseCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+  const dominantHouse = dominantHouseEntry?.[1] >= 2 ? dominantHouseEntry[0] : null;
+
+  const PLANET_DESC: Record<string, string> = {
+    Sun: 'The Sun\'s dominance suggests identity, self-expression, and creative purpose are central themes in your chart.',
+    Moon: 'A dominant Moon points to emotional life, instinct, and nurturing as recurring undercurrents in your story.',
+    Mercury: 'Mercury\'s prominence indicates that communication, learning, and mental agility shape much of your experience.',
+    Venus: 'Venus dominance suggests that relationships, aesthetics, and what you value are recurring focal points.',
+    Mars: 'A dominant Mars points to drive, assertion, and direct action as primary engines in your life.',
+    Jupiter: 'Jupiter\'s emphasis points to growth, meaning-making, and expansive vision as guiding forces.',
+    Saturn: 'A dominant Saturn suggests structure, responsibility, and earned mastery are significant themes.',
+    Uranus: 'Uranus dominance points to independence, disruption of norms, and original thinking as underlying currents.',
+    Neptune: 'Neptune\'s prominence suggests idealism, imagination, and spiritual sensitivity run through the chart.',
+    Pluto: 'A dominant Pluto indicates themes of transformation, depth, and power dynamics woven through your story.',
+  };
+
+  const ordinal = (n: number) => {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] ?? s[v] ?? s[0]);
+  };
+
+  return {
+    planet: dominantPlanet,
+    sign: dominantSign,
+    house: dominantHouse,
+    descriptions: {
+      planet: PLANET_DESC[dominantPlanet] ?? `${dominantPlanet} is the most emphasized planet in your chart.`,
+      sign: dominantSign
+        ? `${dominantSign} carries the most weight in your chart — its themes and qualities color many of your core planets.`
+        : '',
+      house: dominantHouse
+        ? `The ${ordinal(dominantHouse)} house is your most populated life area, concentrating planetary energy around its themes.`
+        : '',
+    },
+  };
+}
+
+// ══════════════════════════════════════════════════
 // MAIN EXPORT
 // ══════════════════════════════════════════════════
 
@@ -728,5 +861,7 @@ export function detectChartPatterns(chart: NatalChart): ChartPatterns {
     retrogradeEmphasis: detectRetrogradeEmphasis(chart),
     elementBalance: analyzeElementBalance(chart),
     modalityBalance: analyzeModalityBalance(chart),
+    polarityBalance: analyzePolarityBalance(chart),
+    dominantFactors: detectDominantFactors(chart),
   };
 }

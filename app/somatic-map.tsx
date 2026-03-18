@@ -1,7 +1,6 @@
 // app/somatic-map.tsx
 // MySky — Somatic Map
 // Log where emotions live in the body. Builds a heatmap over time.
-// All entries stored locally via AsyncStorage. Nothing transmitted.
 
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -12,6 +11,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -19,42 +19,69 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 
+import Body, { ExtendedBodyPart, Slug } from 'react-native-body-highlighter';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
-import {
-  SkiaSomaticBody,
-  SOMATIC_REGION_IDS,
-  SOMATIC_REGION_LABEL,
-} from '../components/ui/SkiaSomaticBody';
 
+const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
 
+// Body SVG is 200px wide at scale=1; target ~55% of screen width
+const BODY_SCALE = (SCREEN_W * 0.55) / 200;
+
 const PALETTE = {
-  sage: '#8CBEAA',
-  gold: '#D9BF8C',
-  rose: '#D4A3B3',
-  silverBlue: '#8BC4E8',
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.55)',
+  sage:        '#8CBEAA',
+  textMain:    '#FFFFFF',
+  textMuted:   'rgba(255,255,255,0.55)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#0A0A0C',
+  bg:          '#0A0A0C',
 };
 
 const EMOTIONS = [
-  'Anxiety', 'Sadness', 'Anger', 'Joy',
-  'Fear', 'Peace', 'Tension', 'Numbness',
-  'Grief', 'Excitement', 'Shame', 'Love',
+  'Anxiety', 'Sadness', 'Anger',     'Joy',
+  'Fear',    'Peace',   'Tension',   'Numbness',
+  'Grief',   'Excitement', 'Shame',  'Love',
 ];
 
 const EMOTION_COLORS: Record<string, string> = {
-  Anxiety: '#D9BF8C', Sadness: '#8BC4E8', Anger: '#D4A3B3', Joy: '#8CBEAA',
-  Fear: '#A89BC8',    Peace: '#6EBF8B',   Tension: '#D98C8C', Numbness: '#6E8CB4',
-  Grief: '#9E8FB8',   Excitement: '#E8C97A', Shame: '#B87EA0', Love: '#E8A3B3',
+  Anxiety:    '#D9BF8C', Sadness: '#8BC4E8', Anger:    '#D4A3B3', Joy:       '#8CBEAA',
+  Fear:       '#A89BC8', Peace:   '#6EBF8B', Tension:  '#D98C8C', Numbness:  '#6E8CB4',
+  Grief:      '#9E8FB8', Excitement: '#E8C97A', Shame: '#B87EA0', Love:      '#E8A3B3',
 };
+
+// Sage heat steps: low → high
+const HEAT_COLORS: ReadonlyArray<string> = [
+  'rgba(140,190,170,0.30)',
+  'rgba(140,190,170,0.62)',
+  'rgba(140,190,170,0.92)',
+];
+
+interface Zone {
+  id: string;
+  label: string;
+  frontSlugs: Slug[];
+  backSlugs:  Slug[];
+}
+
+const ZONES: Zone[] = [
+  { id: 'head',   label: 'Head & Mind',    frontSlugs: ['head', 'hair'],                               backSlugs: ['head', 'hair'] },
+  { id: 'throat', label: 'Throat & Jaw',   frontSlugs: ['neck'],                                       backSlugs: ['trapezius'] },
+  { id: 'chest',  label: 'Chest & Heart',  frontSlugs: ['chest', 'deltoids'],                          backSlugs: ['upper-back'] },
+  { id: 'arms',   label: 'Arms & Hands',   frontSlugs: ['biceps', 'forearm', 'hands'],                 backSlugs: ['triceps'] },
+  { id: 'gut',    label: 'Gut & Belly',    frontSlugs: ['abs', 'obliques'],                            backSlugs: [] },
+  { id: 'back',   label: 'Hips & Pelvis',  frontSlugs: ['adductors'],                                  backSlugs: ['lower-back', 'gluteal'] },
+  { id: 'limbs',  label: 'Legs & Feet',    frontSlugs: ['quadriceps', 'tibialis', 'knees', 'ankles', 'feet'], backSlugs: ['hamstring', 'calves'] },
+];
+
+// Flat slug → zone ID lookup (built once at module level)
+const SLUG_TO_ZONE: Record<string, string> = {};
+ZONES.forEach((z) => {
+  [...z.frontSlugs, ...z.backSlugs].forEach((s) => { SLUG_TO_ZONE[s] = z.id; });
+});
 
 interface SomaticEntry {
   id: string;
@@ -62,69 +89,33 @@ interface SomaticEntry {
   region: string;
   emotion: string;
   intensity: number;
-  note?: string;
 }
 
 export default function SomaticMapScreen() {
   const router = useRouter();
 
-  const [entries, setEntries] = useState<SomaticEntry[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [entries,         setEntries]         = useState<SomaticEntry[]>([]);
+  const [selectedRegion,  setSelectedRegion]  = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  const [intensity, setIntensity] = useState<number>(3);
-  const [sparkleRegion, setSparkleRegion] = useState<string | null>(null);
-  const [sparkleColor, setSparkleColor] = useState<string>(PALETTE.sage);
+  const [intensity,       setIntensity]       = useState<number>(3);
+  const [side,            setSide]            = useState<'front' | 'back'>('front');
 
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-        if (raw) {
-          try { setEntries(JSON.parse(raw)); } catch {}
-        }
+      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+        if (raw) { try { setEntries(JSON.parse(raw)); } catch {} }
       });
     }, []),
   );
 
-  // Resolved emotion color — updates Skia canvas glow in real-time as user selects
   const activeEmotionColor =
     (selectedEmotion && EMOTION_COLORS[selectedEmotion]) || PALETTE.sage;
 
-  const logEntry = async () => {
-    if (!selectedRegion || !selectedEmotion) return;
-    // Capture before clearing — used for sparkle burst
-    const loggedRegion = selectedRegion;
-    const loggedColor = activeEmotionColor;
-    const newEntry: SomaticEntry = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      region: selectedRegion,
-      emotion: selectedEmotion,
-      intensity,
-    };
-    const updated = [newEntry, ...entries];
-    setEntries(updated);
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      Alert.alert('Error', 'Could not save entry. Please try again.');
-      setEntries(entries);
-      return;
-    }
-    setSelectedRegion(null);
-    setSelectedEmotion(null);
-    setIntensity(3);
-    setSparkleColor(loggedColor);
-    setSparkleRegion(loggedRegion);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-  };
-
-  // Heatmap — memoized so SkiaSomaticBody only re-runs its useEffects when entries change
   const regionCounts = useMemo(
-    () =>
-      SOMATIC_REGION_IDS.reduce<Record<string, number>>((acc, id) => {
-        acc[id] = entries.filter((e) => e.region === id).length;
-        return acc;
-      }, {}),
+    () => ZONES.reduce<Record<string, number>>((acc, z) => {
+      acc[z.id] = entries.filter((e) => e.region === z.id).length;
+      return acc;
+    }, {}),
     [entries],
   );
 
@@ -133,8 +124,66 @@ export default function SomaticMapScreen() {
     [regionCounts],
   );
 
-  const handleRegionPress = (id: string) => {
-    setSelectedRegion((prev) => (prev === id ? null : id));
+  // Build Body component data — heat layer first, selected zone overrides on top
+  const bodyData = useMemo<ExtendedBodyPart[]>(() => {
+    const map = new Map<string, ExtendedBodyPart>();
+
+    ZONES.forEach((zone) => {
+      const heat = regionCounts[zone.id] / maxCount;
+      if (heat > 0) {
+        const slugs = side === 'front' ? zone.frontSlugs : zone.backSlugs;
+        const level = Math.max(1, Math.ceil(heat * 3)) as 1 | 2 | 3;
+        slugs.forEach((slug) => map.set(slug, { slug, intensity: level }));
+      }
+    });
+
+    if (selectedRegion) {
+      const zone = ZONES.find((z) => z.id === selectedRegion);
+      if (zone) {
+        const slugs = side === 'front' ? zone.frontSlugs : zone.backSlugs;
+        slugs.forEach((slug) =>
+          map.set(slug, { slug, styles: { fill: activeEmotionColor } }),
+        );
+      }
+    }
+
+    return Array.from(map.values());
+  }, [regionCounts, maxCount, selectedRegion, activeEmotionColor, side]);
+
+  const handleBodyPartPress = (bodyPart: ExtendedBodyPart) => {
+    if (!bodyPart.slug) return;
+    const zoneId = SLUG_TO_ZONE[bodyPart.slug];
+    if (!zoneId) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setSelectedRegion((prev) => (prev === zoneId ? null : zoneId));
+  };
+
+  const selectedZoneLabel = selectedRegion
+    ? ZONES.find((z) => z.id === selectedRegion)?.label
+    : null;
+
+  const logEntry = async () => {
+    if (!selectedRegion || !selectedEmotion) return;
+    const newEntry: SomaticEntry = {
+      id:        Date.now().toString(),
+      date:      new Date().toISOString(),
+      region:    selectedRegion,
+      emotion:   selectedEmotion,
+      intensity,
+    };
+    const updated = [newEntry, ...entries];
+    setEntries(updated);
+    try {
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch {
+      Alert.alert('Error', 'Could not save entry. Please try again.');
+      setEntries(entries);
+      return;
+    }
+    setSelectedRegion(null);
+    setSelectedEmotion(null);
+    setIntensity(3);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
   const formatDate = (iso: string) => {
@@ -142,46 +191,83 @@ export default function SomaticMapScreen() {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   };
 
+  const zoneLabel = (zoneId: string) => ZONES.find((z) => z.id === zoneId)?.label ?? zoneId;
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient
-        colors={['rgba(140,190,170,0.07)', 'transparent']}
-        style={styles.topGlow}
-      />
+      <LinearGradient colors={['rgba(140,190,170,0.07)', 'transparent']} style={styles.topGlow} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
           style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+          onPress={() => { Haptics.selectionAsync().catch(() => {}); if (router.canGoBack()) router.back(); }}
         >
           <MetallicText style={styles.backText} variant="green">← Body & Nervous System</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+          {/* Header */}
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
             <Text style={styles.headerTitle}>Somatic Map</Text>
             <GoldSubtitle style={styles.headerSubtitle}>Where emotions live in your body</GoldSubtitle>
           </Animated.View>
 
-          {/* Skia body silhouette — GPU-rendered heat map + selection glow */}
-          <Animated.View entering={FadeInDown.delay(140).duration(500)}>
-            <Text style={styles.sectionLabel}>BODY REGION — tap to select</Text>
-            <SkiaSomaticBody
-              regionCounts={regionCounts}
-              maxCount={maxCount}
-              selectedRegion={selectedRegion}
-              emotionColor={activeEmotionColor}
-              onRegionPress={handleRegionPress}
-              sparkleRegion={sparkleRegion}
-              sparkleColor={sparkleColor}
-              onSparkleComplete={() => setSparkleRegion(null)}
+          {/* Front / Back toggle */}
+          <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.sideToggle}>
+            {(['front', 'back'] as const).map((s) => (
+              <Pressable
+                key={s}
+                style={[styles.sideBtn, side === s && styles.sideBtnActive]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                  setSide(s);
+                }}
+              >
+                <Text style={[styles.sideBtnText, side === s && styles.sideBtnTextActive]}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </Text>
+              </Pressable>
+            ))}
+          </Animated.View>
+
+          {/* Body map */}
+          <Animated.View entering={FadeInDown.delay(160).duration(500)} style={styles.bodyWrap}>
+            <Body
+              data={bodyData}
+              scale={BODY_SCALE}
+              side={side}
+              gender="female"
+              colors={HEAT_COLORS}
+              defaultFill="rgba(22,34,58,0.9)"
+              defaultStroke="rgba(255,255,255,0.13)"
+              defaultStrokeWidth={0.8}
+              border="rgba(255,255,255,0.20)"
+              onBodyPartPress={handleBodyPartPress}
             />
+          </Animated.View>
+
+          {/* Selected zone pill */}
+          <Animated.View entering={FadeIn.duration(300)} style={styles.selectionRow}>
+            {selectedZoneLabel ? (
+              <View style={[styles.selectionPill, { borderColor: `${activeEmotionColor}55` }]}>
+                <View style={[styles.selectionDot, { backgroundColor: activeEmotionColor }]} />
+                <Text style={[styles.selectionText, { color: activeEmotionColor }]}>
+                  {selectedZoneLabel}
+                </Text>
+                <Pressable onPress={() => setSelectedRegion(null)} hitSlop={10}>
+                  <Text style={styles.selectionClear}>×</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Text style={styles.tapHint}>Tap a body region to begin</Text>
+            )}
           </Animated.View>
 
           {/* Emotion selector */}
           <Animated.View entering={FadeInDown.delay(220).duration(500)}>
-            <Text style={[styles.sectionLabel, { marginTop: 28 }]}>EMOTION PRESENT</Text>
+            <Text style={[styles.sectionLabel, { marginTop: 24 }]}>EMOTION PRESENT</Text>
             <View style={styles.emotionWrap}>
               {EMOTIONS.map((em) => {
                 const isSelected = selectedEmotion === em;
@@ -198,11 +284,10 @@ export default function SomaticMapScreen() {
                       setSelectedEmotion(isSelected ? null : em);
                     }}
                   >
-                    {isSelected ? (
-                      <MetallicText style={styles.emotionText} color={color}>{em}</MetallicText>
-                    ) : (
-                      <Text style={styles.emotionText}>{em}</Text>
-                    )}
+                    {isSelected
+                      ? <MetallicText style={styles.emotionText} color={color}>{em}</MetallicText>
+                      : <Text style={styles.emotionText}>{em}</Text>
+                    }
                   </Pressable>
                 );
               })}
@@ -211,7 +296,7 @@ export default function SomaticMapScreen() {
 
           {/* Intensity */}
           <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-            <Text style={[styles.sectionLabel, { marginTop: 28 }]}>INTENSITY</Text>
+            <Text style={[styles.sectionLabel, { marginTop: 24 }]}>INTENSITY</Text>
             <View style={styles.intensityRow}>
               {[1, 2, 3, 4, 5].map((v) => (
                 <Pressable
@@ -224,7 +309,7 @@ export default function SomaticMapScreen() {
                 />
               ))}
               <Text style={styles.intensityLabel}>
-                {intensity === 1 ? 'Subtle' : intensity === 2 ? 'Mild' : intensity === 3 ? 'Moderate' : intensity === 4 ? 'Strong' : 'Intense'}
+                {['Subtle', 'Mild', 'Moderate', 'Strong', 'Intense'][intensity - 1]}
               </Text>
             </View>
           </Animated.View>
@@ -241,7 +326,9 @@ export default function SomaticMapScreen() {
                   colors={['rgba(140,190,170,0.3)', 'rgba(140,190,170,0.1)']}
                   style={StyleSheet.absoluteFill}
                 />
-                <MetallicText style={styles.logBtnText} color={PALETTE.sage}>Log This Sensation</MetallicText>
+                <MetallicText style={styles.logBtnText} color={PALETTE.sage}>
+                  Log This Sensation
+                </MetallicText>
               </Pressable>
             </Animated.View>
           )}
@@ -253,7 +340,6 @@ export default function SomaticMapScreen() {
               <View style={styles.entryList}>
                 {entries.slice(0, 20).map((entry) => {
                   const color = EMOTION_COLORS[entry.emotion] ?? PALETTE.sage;
-                  const regionLabel = SOMATIC_REGION_LABEL[entry.region] ?? entry.region;
                   return (
                     <View key={entry.id} style={styles.entryRow}>
                       <BlurView intensity={10} tint="dark" style={StyleSheet.absoluteFill} />
@@ -261,7 +347,7 @@ export default function SomaticMapScreen() {
                       <View style={styles.entryMeta}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <MetallicText style={styles.entryMain} color={color}>{entry.emotion}</MetallicText>
-                          <Text style={styles.entryMain}> · {regionLabel}</Text>
+                          <Text style={styles.entryMain}> · {zoneLabel(entry.region)}</Text>
                         </View>
                         <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
                       </View>
@@ -269,10 +355,7 @@ export default function SomaticMapScreen() {
                         {Array.from({ length: 5 }, (_, i) => (
                           <View
                             key={i}
-                            style={[
-                              styles.intensityPip,
-                              i < entry.intensity && { backgroundColor: color },
-                            ]}
+                            style={[styles.intensityPip, i < entry.intensity && { backgroundColor: color }]}
                           />
                         ))}
                       </View>
@@ -291,15 +374,15 @@ export default function SomaticMapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
-  safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
+  container:  { flex: 1, backgroundColor: PALETTE.bg },
+  safeArea:   { flex: 1 },
+  topGlow:    { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
 
-  backBtn: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
+  backBtn:  { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   backText: { fontSize: 14, color: 'rgba(140,190,170,0.7)', fontWeight: '600' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 32 },
+  header:        { marginBottom: 24 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
@@ -309,9 +392,58 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: { fontSize: 14 },
 
+  // Front / Back toggle
+  sideToggle: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+    alignSelf: 'center',
+  },
+  sideBtn: {
+    paddingHorizontal: 22,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  sideBtnActive: {
+    borderColor: 'rgba(140,190,170,0.55)',
+    backgroundColor: 'rgba(140,190,170,0.10)',
+  },
+  sideBtnText:       { fontSize: 13, color: 'rgba(255,255,255,0.40)', fontWeight: '600' },
+  sideBtnTextActive: { color: '#8CBEAA' },
+
+  // Body
+  bodyWrap: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+
+  // Selection indicator
+  selectionRow: {
+    alignItems: 'center',
+    marginBottom: 4,
+    minHeight: 36,
+  },
+  selectionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  selectionDot:  { width: 7, height: 7, borderRadius: 3.5 },
+  selectionText: { fontSize: 13, fontWeight: '600' },
+  selectionClear:{ fontSize: 18, color: 'rgba(255,255,255,0.35)', lineHeight: 20 },
+  tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' },
+
   sectionLabel: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.30)',
     fontWeight: '700',
     letterSpacing: 1.5,
     marginBottom: 12,
@@ -330,54 +462,37 @@ const styles = StyleSheet.create({
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   intensityDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.2)',
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.2)',
   },
-  intensityDotFilled: {
-    backgroundColor: PALETTE.sage,
-    borderColor: PALETTE.sage,
-  },
+  intensityDotFilled: { backgroundColor: PALETTE.sage, borderColor: PALETTE.sage },
   intensityLabel: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginLeft: 6 },
 
   logRow: { marginTop: 28, alignItems: 'center' },
   logBtn: {
-    height: 50,
-    paddingHorizontal: 36,
-    borderRadius: 25,
-    overflow: 'hidden',
-    borderWidth: 1,
+    height: 50, paddingHorizontal: 36, borderRadius: 25,
+    overflow: 'hidden', borderWidth: 1,
     borderColor: 'rgba(140,190,170,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  logBtnDim: { opacity: 0.5 },
+  logBtnDim:  { opacity: 0.5 },
   logBtnText: { fontSize: 14, color: PALETTE.sage, fontWeight: '700' },
 
   historySection: { marginTop: 36 },
-  entryList: { gap: 8 },
+  entryList:      { gap: 8 },
   entryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 12,
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: 14, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 14, paddingVertical: 12, gap: 12,
   },
-  entryDot: { width: 8, height: 8, borderRadius: 4 },
+  entryDot:  { width: 8, height: 8, borderRadius: 4 },
   entryMeta: { flex: 1 },
   entryMain: { fontSize: 13, color: PALETTE.textMuted, marginBottom: 2 },
   entryDate: { fontSize: 11, color: 'rgba(255,255,255,0.25)' },
   entryIntensity: { flexDirection: 'row', gap: 3 },
   intensityPip: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+    width: 5, height: 5, borderRadius: 2.5,
     backgroundColor: 'rgba(255,255,255,0.12)',
   },
 });

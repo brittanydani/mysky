@@ -21,7 +21,15 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import {
+  Canvas,
+  Path,
+  Skia,
+  LinearGradient as SkiaLinearGradient,
+  Circle,
+  BlurMask,
+  vec,
+} from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
@@ -381,24 +389,15 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          {/* ── 7-Day Stability Map ── */}
+          {/* ── 7-Day Internal Weather ── */}
           <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.graphCard}>
-            <Text style={styles.cardLabel}>7-DAY STABILITY MAP</Text>
-            <View style={styles.graphContainer}>
-              <View style={styles.barsRow}>
-                {stabilityBars.map((barHeight, i) => (
-                  <View key={i} style={styles.graphCol}>
-                    <View style={[styles.graphBar, { height: barHeight }]}>
-                      <LinearGradient
-                        colors={['rgba(212, 184, 114, 0.45)', 'rgba(212, 184, 114, 0.05)']}
-                        style={[StyleSheet.absoluteFill, { borderRadius: 4 }]}
-                      />
-                    </View>
-                    <Text style={styles.dayText}>{stabilityDayLabels[i]}</Text>
-                  </View>
-                ))}
+            <View style={styles.graphCardHeader}>
+              <Text style={styles.cardLabel}>INTERNAL WEATHER</Text>
+              <View style={styles.graphBadge}>
+                <Text style={styles.graphBadgeText}>7 DAYS</Text>
               </View>
             </View>
+            <MoodTrendGraph bars={stabilityBars} dayLabels={stabilityDayLabels} />
           </Animated.View>
 
           {/* ── Actionable Insight ── */}
@@ -541,6 +540,109 @@ export default function HomeScreen() {
           chartName: userChart.name,
         }}
       />
+    </View>
+  );
+}
+
+// ── Mood Trend Graph ─────────────────────────────────────────────────────────
+
+function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string[] }) {
+  // Canvas spans full card width (card has paddingHorizontal:24, scrollview has paddingHorizontal:24)
+  // So card inner width = screen width - 48. We negate card padding so canvas goes edge-to-edge.
+  const CANVAS_W = width - 48;
+  const CANVAS_H = 160;
+  const PAD_T = 20;
+  const PAD_B = 30;
+  const PAD_X = 16;
+  const plotH = CANVAS_H - PAD_T - PAD_B;
+  const plotW = CANVAS_W - PAD_X * 2;
+  const baseY = PAD_T + plotH;
+
+  const hasData = useMemo(() => bars.map(b => b > 12), [bars]);
+  const normalized = useMemo(() => bars.map(b => (b - 12) / 108), [bars]);
+
+  const pts = useMemo(
+    () => normalized.map((n, i) => ({
+      x: PAD_X + (i / 6) * plotW,
+      y: PAD_T + plotH * (1 - Math.max(n, 0)),
+    })),
+    [normalized, plotW, plotH],
+  );
+
+  const { linePath, fillPath } = useMemo(() => {
+    const lp = Skia.Path.Make();
+    lp.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const dx = (pts[i + 1].x - pts[i].x) * 0.45;
+      lp.cubicTo(pts[i].x + dx, pts[i].y, pts[i + 1].x - dx, pts[i + 1].y, pts[i + 1].x, pts[i + 1].y);
+    }
+    const fp = lp.copy();
+    fp.lineTo(pts[pts.length - 1].x, baseY);
+    fp.lineTo(pts[0].x, baseY);
+    fp.close();
+    return { linePath: lp, fillPath: fp };
+  }, [pts, baseY]);
+
+  return (
+    // Negative margin cancels card's paddingHorizontal so canvas reaches card edges
+    <View style={{ marginHorizontal: -24 }}>
+      <Canvas style={{ width: CANVAS_W, height: CANVAS_H }}>
+        {/* Area fill */}
+        <Path path={fillPath} style="fill">
+          <SkiaLinearGradient
+            start={vec(CANVAS_W / 2, PAD_T)}
+            end={vec(CANVAS_W / 2, baseY)}
+            colors={['rgba(201,174,120,0.22)', 'rgba(201,174,120,0.0)']}
+          />
+        </Path>
+        {/* Glow halo */}
+        <Path path={linePath} color="rgba(201,174,120,0.2)" style="stroke" strokeWidth={10}>
+          <BlurMask blur={10} style="normal" />
+        </Path>
+        {/* Main line */}
+        <Path path={linePath} color="rgba(201,174,120,0.85)" style="stroke" strokeWidth={2} />
+        {/* Data point dots */}
+        {pts.map((pt, i) => (
+          <React.Fragment key={i}>
+            {i === 6 && hasData[i] && (
+              <Circle cx={pt.x} cy={pt.y} r={10} color="rgba(201,174,120,0.14)">
+                <BlurMask blur={6} style="normal" />
+              </Circle>
+            )}
+            <Circle
+              cx={pt.x}
+              cy={pt.y}
+              r={i === 6 ? 4.5 : hasData[i] ? 2.5 : 1.5}
+              color={i === 6 ? '#C9AE78' : hasData[i] ? 'rgba(201,174,120,0.55)' : 'rgba(255,255,255,0.1)'}
+            />
+          </React.Fragment>
+        ))}
+      </Canvas>
+      {/* Day labels sit below canvas, aligned to dot positions */}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          paddingHorizontal: PAD_X,
+          marginTop: -24,
+          paddingBottom: 8,
+        }}
+      >
+        {dayLabels.map((label, i) => (
+          <Text
+            key={i}
+            style={{
+              fontSize: 10,
+              color: i === 6 ? 'rgba(201,174,120,0.85)' : 'rgba(255,255,255,0.28)',
+              fontWeight: '700',
+              width: 20,
+              textAlign: 'center',
+            }}
+          >
+            {label}
+          </Text>
+        ))}
+      </View>
     </View>
   );
 }
@@ -897,40 +999,35 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // 7-Day Stability Map
+  // 7-Day Internal Weather
   graphCard: {
     backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 24,
+    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
     borderRadius: 28,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
     marginBottom: 16,
+    overflow: 'hidden',
   },
-  graphContainer: {
-    height: 140,
-    marginTop: 20,
-  },
-  barsRow: {
-    flex: 1,
+  graphCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  graphCol: {
     alignItems: 'center',
-    flex: 1,
-  },
-  graphBar: {
-    width: 6,
-    borderRadius: 3,
     marginBottom: 8,
-    overflow: 'hidden',
-    minHeight: 6,
   },
-  dayText: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.3)',
+  graphBadge: {
+    backgroundColor: 'rgba(201,174,120,0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  graphBadgeText: {
+    fontSize: 9,
+    color: 'rgba(201,174,120,0.7)',
     fontWeight: '700',
+    letterSpacing: 1.5,
   },
 
   // Explore Blueprint section

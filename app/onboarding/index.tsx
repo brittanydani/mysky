@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 
@@ -16,7 +16,7 @@ export default function OnboardingIndex() {
     if (!trimmedName) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
-      await AsyncStorage.setItem('msky_user_name', trimmedName);
+      await EncryptedAsyncStorage.setItem('msky_user_name', trimmedName);
     } catch {
       // Non-blocking — name can be recovered from chart data if storage fails
     }

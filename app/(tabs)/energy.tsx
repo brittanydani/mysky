@@ -29,6 +29,7 @@ import { applyEnergyLabels } from '../../constants/storyLabels';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 
 import { localDb } from '../../services/storage/localDb';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
@@ -111,7 +112,8 @@ export default function EnergyScreen() {
           }
           setHasChart(true);
           const saved = charts[0];
-          setUserName(saved?.name ?? '');
+          const storedName = await EncryptedAsyncStorage.getItem('msky_user_name').catch(() => null);
+          setUserName(storedName?.trim() || saved?.name?.split(' ')[0] || '');
           const birthData = {
             date: saved.birthDate,
             time: saved.birthTime,
@@ -196,7 +198,7 @@ export default function EnergyScreen() {
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Pressable
-            onPress={() => { safeHaptic(); router.back(); }}
+            onPress={() => { safeHaptic(); if (router.canGoBack()) router.back(); else router.replace('/(tabs)/home' as Href); }}
             style={styles.backButton}
             accessibilityRole="button"
             accessibilityLabel="Go back"
@@ -254,7 +256,7 @@ export default function EnergyScreen() {
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
-          onPress={() => { safeHaptic(); router.back(); }}
+          onPress={() => { safeHaptic(); if (router.canGoBack()) router.back(); else router.replace('/(tabs)/home' as Href); }}
           style={styles.backButton}
           accessibilityRole="button"
           accessibilityLabel="Go back"
@@ -683,7 +685,7 @@ const styles = StyleSheet.create({
 
   /* ── Somatic anchor ── */
   somaticHeader: {
-    height: 160,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -691,7 +693,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.40)',
     fontSize: 13,
     fontStyle: 'italic',
-    marginTop: -20,
     textAlign: 'center',
   },
 

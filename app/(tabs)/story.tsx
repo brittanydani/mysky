@@ -9,7 +9,6 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../constants/theme';
-import { applyStoryLabels } from '../../constants/storyLabels';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import ChapterCard from '../../components/ui/ChapterCard';
 import SkiaStoryGate, { CHAPTER_COLORS } from '../../components/ui/SkiaStoryGate';
@@ -19,6 +18,8 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { FullNatalStoryGenerator, GeneratedChapter } from '../../services/premium/fullNatalStory';
 import { exportChartToPdf } from '../../services/premium/pdfExport';
 import { NatalChart } from '../../services/astrology/types';
+import { DailyCheckIn } from '../../services/patterns/types';
+import { JournalEntry } from '../../services/storage/models';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -46,64 +47,173 @@ const PALETTE = {
   glassBorder: 'rgba(255,255,255,0.08)',
 };
 
-const FORCE_COLORS_MAP: Record<string, string> = {
-  'Sun': '#D9BF8C',
-  'Moon': '#8BC4E8',
-  'Mars': '#CD7F5D',
-  'Venus': '#D4A3B3',
-  'Saturn': '#A89BC8',
-  'Jupiter': '#9370DB',
-  'Mercury': '#FFEA70',
-  'Pluto': '#9D76C1',
-  'Neptune': '#48D1CC',
-  'Uranus': '#FF8C00',
-  'Aries': '#E07A7A',
-  'Taurus': '#6EBF8B',
-  'Gemini': '#D8C39A',
-  'Cancer': '#7AA8E0',
-  'Leo': '#E8C97A',
-  'Virgo': '#D0C8E8',
-  'Libra': '#E07A98',
-  'Scorpio': '#9B7AE0',
-  'Sagittarius': '#7B68EE',
-  'Capricorn': '#D4B872',
-  'Aquarius': '#49DFFF',
-  'Pisces': '#E3CFA4'
+
+// Fixed 6-color palette — one from each color family, maximally distinct
+const FORCE_PALETTE = [
+  '#E07A98', // rose
+  '#CD7F5D', // copper
+  '#FFEA70', // yellow
+  '#6EBF8B', // green
+  '#49DFFF', // cyan
+  '#7B68EE', // violet
+];
+
+const ANGULAR_HOUSES  = new Set([1, 4, 7, 10]);
+const SUCCEDENT_HOUSES = new Set([2, 5, 8, 11]);
+
+// Check-in tags that resonate with each planet / sign archetype
+const FORCE_BEHAVIORAL_TAGS: Record<string, string[]> = {
+  'Sun':         ['joy', 'creativity', 'eq_hopeful', 'eq_open', 'confidence'],
+  'Moon':        ['eq_heavy', 'eq_calm', 'eq_grounded', 'grief', 'loneliness', 'family'],
+  'Mercury':     ['work', 'productivity', 'screens', 'creative', 'clarity'],
+  'Venus':       ['relationships', 'intimacy', 'social', 'eq_open', 'confidence'],
+  'Mars':        ['movement', 'productivity', 'conflict', 'anxiety', 'career'],
+  'Jupiter':     ['travel', 'creative', 'eq_hopeful', 'gratitude', 'joy'],
+  'Saturn':      ['work', 'routine', 'finances', 'boundaries', 'career'],
+  'Uranus':      ['travel', 'overstimulated', 'creative', 'anxiety'],
+  'Neptune':     ['alone_time', 'nature', 'rest', 'eq_calm', 'eq_scattered'],
+  'Pluto':       ['grief', 'conflict', 'health', 'boundaries', 'anxiety'],
+  'Chiron':      ['health', 'grief', 'boundaries', 'family', 'loneliness'],
+  'Aries':       ['movement', 'conflict', 'eq_focused', 'career', 'productivity'],
+  'Taurus':      ['food', 'nature', 'rest', 'finances', 'health'],
+  'Gemini':      ['work', 'social', 'screens', 'creative', 'clarity'],
+  'Cancer':      ['family', 'alone_time', 'eq_heavy', 'eq_calm', 'loneliness'],
+  'Leo':         ['creativity', 'social', 'joy', 'eq_hopeful', 'confidence'],
+  'Virgo':       ['work', 'health', 'routine', 'productivity', 'anxiety'],
+  'Libra':       ['relationships', 'social', 'eq_open', 'conflict', 'confidence'],
+  'Scorpio':     ['grief', 'intimacy', 'boundaries', 'conflict', 'anxiety'],
+  'Sagittarius': ['travel', 'eq_hopeful', 'nature', 'creative', 'joy'],
+  'Capricorn':   ['work', 'routine', 'finances', 'productivity', 'career'],
+  'Aquarius':    ['creative', 'social', 'overstimulated', 'alone_time'],
+  'Pisces':      ['alone_time', 'nature', 'rest', 'eq_calm', 'eq_scattered', 'grief'],
 };
 
-function calculateForces(chart: NatalChart | null) {
-  if (!chart || !chart.placements) return [];
-  
-  const scores: Record<string, { label: string, val: number, color: string }> = {};
-  
-  const addScore = (key: string, points: number) => {
-    if (!scores[key]) scores[key] = { label: key, val: 0, color: FORCE_COLORS_MAP[key] || PALETTE.gold };
-    scores[key].val += points;
-  };
+// Which forces get an additional signal from raw energy/mood levels
+const ENERGY_BOOSTED  = new Set(['Sun', 'Mars', 'Aries', 'Leo', 'Jupiter', 'Sagittarius']);
+const EMOTION_BOOSTED = new Set(['Moon', 'Neptune', 'Cancer', 'Pisces', 'Scorpio', 'Chiron']);
 
-  chart.placements.forEach(p => {
-    const isLuminary = ['Sun', 'Moon'].includes(p.planet.name);
-    const isPersonal = ['Mercury', 'Venus', 'Mars'].includes(p.planet.name);
-    const points = isLuminary ? 30 : isPersonal ? 20 : 10;
-    
-    addScore(p.planet.name, points);
-    if (p.sign && p.sign.name) {
-      addScore(p.sign.name, points);
+function calculateForces(
+  chart: NatalChart | null,
+  checkIns: DailyCheckIn[] = [],
+  journals: JournalEntry[] = [],
+) {
+  if (!chart || !chart.placements) return [];
+
+  // Count tight aspects per planet (orb ≤ 5° = meaningfully aspected)
+  const aspectCounts: Record<string, number> = {};
+  (chart.aspects ?? []).forEach(a => {
+    if (a.orb <= 5) {
+      aspectCounts[a.planet1.name] = (aspectCounts[a.planet1.name] ?? 0) + 1;
+      aspectCounts[a.planet2.name] = (aspectCounts[a.planet2.name] ?? 0) + 1;
     }
   });
 
-  if (chart.risingSign) {
-    addScore(chart.risingSign.name, 30);
+  // Score each planet:
+  //   base (by type) + angular house bonus + aspect activity bonus
+  const planetScores: Record<string, { label: string; val: number; sign: string }> = {};
+  chart.placements.forEach(p => {
+    const base = p.planet.type === 'Luminary'      ? 40
+               : p.planet.type === 'Personal'      ? 25
+               : p.planet.type === 'Social'        ? 15
+               : 10; // Transpersonal / Asteroid / Point
+    const houseBonus   = ANGULAR_HOUSES.has(p.house)   ? 20
+                       : SUCCEDENT_HOUSES.has(p.house) ?  5
+                       : 0;
+    const aspectBonus  = Math.min((aspectCounts[p.planet.name] ?? 0) * 8, 24);
+    planetScores[p.planet.name] = {
+      label: p.planet.name,
+      val:   base + houseBonus + aspectBonus,
+      sign:  p.sign?.name ?? '',
+    };
+  });
+
+  // Score each sign: sum base scores of every planet occupying it.
+  // Rising sign adds 40 (equal weight to a luminary).
+  const signScores: Record<string, { label: string; val: number }> = {};
+  chart.placements.forEach(p => {
+    const sign = p.sign?.name;
+    if (!sign) return;
+    const base = p.planet.type === 'Luminary'  ? 40
+               : p.planet.type === 'Personal'  ? 25
+               : p.planet.type === 'Social'    ? 15
+               : 10;
+    if (!signScores[sign]) signScores[sign] = { label: sign, val: 0 };
+    signScores[sign].val += base;
+  });
+  if (chart.risingSign?.name) {
+    const r = chart.risingSign.name;
+    if (!signScores[r]) signScores[r] = { label: r, val: 0 };
+    signScores[r].val += 40;
   }
 
-  return Object.values(scores)
+  // Pick top planets first, then fill remaining slots with signs that aren't
+  // already represented by a top planet (avoids e.g. "Sun" + "Leo" together).
+  const topPlanets = Object.values(planetScores)
     .sort((a, b) => b.val - a.val)
-    .slice(0, 6)
-    .map(f => ({
+    .slice(0, 4);
+  const occupiedSigns = new Set(topPlanets.map(p => p.sign));
+  const topSigns = Object.values(signScores)
+    .filter(s => !occupiedSigns.has(s.label))
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 4);
+
+  const combined = [...topPlanets, ...topSigns]
+    .sort((a, b) => b.val - a.val)
+    .slice(0, 6);
+
+  const maxVal = combined[0]?.val ?? 100;
+
+  // ── Behavioral augmentation ──────────────────────────────────────────────
+  // How many check-ins and what mix of energy/mood levels
+  const totalCI = checkIns.length;
+  const energyNum = (e: DailyCheckIn['energyLevel']) =>
+    e === 'high' ? 100 : e === 'medium' ? 50 : 0;
+  const avgEnergy = totalCI > 0
+    ? checkIns.reduce((s, c) => s + energyNum(c.energyLevel), 0) / totalCI
+    : 50;
+  const avgMood = totalCI > 0
+    ? checkIns.reduce((s, c) => s + (c.moodScore - 1) * (100 / 9), 0) / totalCI
+    : 50;
+
+  // Journal mood signal: proportion of entries that are 'heavy' or 'stormy'
+  const totalJ = journals.length;
+  const emotionalJournalRate = totalJ > 0
+    ? journals.filter(j => j.mood === 'heavy' || j.mood === 'stormy').length / totalJ
+    : 0.5;
+
+  // Weight natal vs behavioral based on data volume
+  const natalWeight = totalCI < 5 ? 0.85 : 0.60;
+  const behavWeight = 1 - natalWeight;
+
+  return combined.map((f, i) => {
+    const natalValue = Math.min(100, Math.round((f.val / maxVal) * 100));
+
+    let behavioralScore = 50; // neutral baseline
+    if (totalCI > 0) {
+      const relatedTags = new Set(FORCE_BEHAVIORAL_TAGS[f.label] ?? []);
+      const tagMatches = checkIns.filter(c =>
+        c.tags.some(t => relatedTags.has(t as string))
+      ).length;
+      const tagScore = Math.min(100, Math.round((tagMatches / totalCI) * 150));
+
+      // Extra signal from energy or emotional data
+      const bonus = ENERGY_BOOSTED.has(f.label)
+        ? (avgEnergy * 0.3 + avgMood * 0.1)
+        : EMOTION_BOOSTED.has(f.label)
+          ? emotionalJournalRate * 40
+          : 0;
+
+      behavioralScore = Math.min(100, Math.round(tagScore * 0.7 + bonus));
+    }
+
+    return {
       label: f.label,
-      value: Math.min(100, (f.val / 60) * 100),
-      color: f.color
-    }));
+      value: Math.min(100, Math.max(10,
+        Math.round(natalValue * natalWeight + behavioralScore * behavWeight)
+      )),
+      color: FORCE_PALETTE[i],
+    };
+  });
 }
 
 export default function StoryScreen() {
@@ -111,6 +221,8 @@ export default function StoryScreen() {
   const { isPremium } = usePremium();
   const [chapters, setChapters] = useState<GeneratedChapter[]>([]);
   const [chart, setChart] = useState<NatalChart | null>(null);
+  const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
+  const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
@@ -140,8 +252,15 @@ export default function StoryScreen() {
       const natalChart = AstrologyCalculator.generateNatalChart(birthData);
       const story = FullNatalStoryGenerator.generateFullStory(natalChart, isPremium);
 
+      const [recentCheckIns, recentJournals] = await Promise.all([
+        localDb.getCheckIns(savedChart.id, 200),
+        localDb.getJournalEntries(),
+      ]);
+
       setChart(natalChart);
       setChapters(story.chapters);
+      setCheckIns(recentCheckIns);
+      setJournals(recentJournals);
     } catch (error) {
       logger.error('[StoryScreen] Failed to load story data:', error);
       setChapters([]);
@@ -239,7 +358,7 @@ export default function StoryScreen() {
                 <MetallicIcon name="analytics-outline" size={18} variant="gold" />
                 <MetallicText style={styles.radarTitle} variant="gold">Core Force Map</MetallicText>
               </View>
-              <PsychologicalForcesRadar forces={calculateForces(chart)} size={320} />
+              <PsychologicalForcesRadar forces={calculateForces(chart, checkIns, journals)} size={320} />
             </Animated.View>
           )}
 
@@ -273,7 +392,8 @@ export default function StoryScreen() {
                 >
                   <SkiaStoryGate
                     index={index}
-                    title={applyStoryLabels(chapter.title)}
+                    title={chapter.title}
+                    astrologyLabel={chapter.astrologyLabel || undefined}
                     isUnlocked={!isLocked}
                     isPremium={isPremium}
                     accentColor={CHAPTER_COLORS[index] || PALETTE.gold}
@@ -290,11 +410,11 @@ export default function StoryScreen() {
                   {isExpanded && (
                     <Animated.View entering={FadeInDown.duration(400)}>
                       <ChapterCard
-                        chapter={`Chapter ${toRoman(index + 1)}`}
-                        title={applyStoryLabels(chapter.title)}
-                        content={applyStoryLabels(chapter.content)}
-                        reflection={applyStoryLabels(chapter.reflection)}
-                        affirmation={applyStoryLabels(chapter.affirmation)}
+                        chapter={chapter.astrologyLabel || `Chapter ${toRoman(index + 1)}`}
+                        title={chapter.title}
+                        content={chapter.content}
+                        reflection={chapter.reflection}
+                        affirmation={chapter.affirmation}
                       />
                     </Animated.View>
                   )}

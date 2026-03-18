@@ -1,5 +1,6 @@
 import { secureStorage } from '../storage/secureStorage';
 import { localDb } from '../storage/localDb';
+import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
 import {
@@ -212,6 +213,13 @@ export class PrivacyComplianceManager {
     await Promise.all([
       secureStorage.deleteAllUserData(),
       localDb.hardDeleteAllData(),
+      // Clear sensitive personal data from encrypted AsyncStorage
+      EncryptedAsyncStorage.removeItem('msky_user_name'),
+      EncryptedAsyncStorage.removeItem('@mysky:archetype_profile'),
+      EncryptedAsyncStorage.removeItem('@mysky:cognitive_style'),
+      EncryptedAsyncStorage.removeItem('@mysky:somatic_entries'),
+      EncryptedAsyncStorage.removeItem('@mysky:trigger_events'),
+      EncryptedAsyncStorage.removeItem('@mysky:relationship_patterns'),
     ]);
 
     return {

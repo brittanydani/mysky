@@ -82,6 +82,8 @@ interface StoryGateProps {
   index: number;
   /** Chapter title text */
   title: string;
+  /** Astrology-based label e.g. "Sun in Aries · 1st House" */
+  astrologyLabel?: string;
   /** Whether this chapter content is available to view */
   isUnlocked: boolean;
   /** Whether the user holds premium access */
@@ -95,6 +97,7 @@ interface StoryGateProps {
 function SkiaStoryGate({
   index,
   title,
+  astrologyLabel,
   isUnlocked,
   isPremium = false,
   accentColor = PALETTE.gold,
@@ -227,11 +230,11 @@ function SkiaStoryGate({
       <View style={styles.textColumn}>
         {isUnlocked ? (
           <MetallicText style={styles.chapterLabel} color={accentColor}>
-            CHAPTER {toRoman(index + 1)}
+            {astrologyLabel || `CHAPTER ${toRoman(index + 1)}`}
           </MetallicText>
         ) : (
           <Text style={[styles.chapterLabel, styles.lockedText]}>
-            CHAPTER {toRoman(index + 1)}
+            {astrologyLabel || `CHAPTER ${toRoman(index + 1)}`}
           </Text>
         )}
         <Text

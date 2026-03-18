@@ -515,6 +515,8 @@ export interface GeneratedChapter {
   content: string;
   reflection: string;
   affirmation: string;
+  /** Astrology-based label e.g. "Sun in Aries" or "Moon in Scorpio · 4th House" */
+  astrologyLabel: string;
 }
 
 // Chapter definitions
@@ -2313,6 +2315,7 @@ export class FullNatalStoryGenerator {
         content: fullContent,
         reflection: contentObj.reflection,
         affirmation: contentObj.affirmation,
+        astrologyLabel: FullNatalStoryGenerator.getAstrologyLabel(chart, definition.id),
       };
     });
     const sunElement = this.getElement(chart.sunSign?.name || 'Aries');
@@ -2325,6 +2328,45 @@ export class FullNatalStoryGenerator {
   }
 
   // Returns { signLabel, sign } for a chapter id
+  /** Returns a short display label like "Sun in Aries" or "Moon in Scorpio · 4th House" */
+  static getAstrologyLabel(chart: NatalChart, chapterId: string): string {
+    const PLANET_NAMES: Record<string, string> = {
+      'core-self': 'Sun',
+      'emotional-world': 'Moon',
+      'first-impression': 'Rising',
+      'how-you-love': 'Venus',
+      'how-you-fight': 'Mars',
+      'protection-style': 'Moon',
+      'inner-child': 'Mercury',
+      'growth-arc': 'Jupiter',
+      'souls-purpose': 'North Node',
+      'shadow-work': 'Pluto',
+    };
+    const planetName = PLANET_NAMES[chapterId];
+    if (!planetName) return '';
+    let sign = '';
+    let house: number | undefined;
+    switch (chapterId) {
+      case 'core-self':       sign = chart.sunSign?.name ?? '';     house = chart.sun?.house;     break;
+      case 'emotional-world': sign = chart.moonSign?.name ?? '';    house = chart.moon?.house;    break;
+      case 'first-impression':sign = chart.risingSign?.name ?? '';  break;
+      case 'how-you-love':    sign = (chart as any).venus?.sign?.name ?? ''; house = (chart as any).venus?.house; break;
+      case 'how-you-fight':   sign = (chart as any).mars?.sign?.name ?? '';  house = (chart as any).mars?.house;  break;
+      case 'protection-style':sign = chart.moonSign?.name ?? '';    house = chart.moon?.house;    break;
+      case 'inner-child':     sign = (chart as any).mercury?.sign?.name ?? ''; house = (chart as any).mercury?.house; break;
+      case 'growth-arc':      sign = (chart as any).jupiter?.sign?.name ?? ''; house = (chart as any).jupiter?.house; break;
+      case 'souls-purpose': {
+        const nn = (chart as any).planets?.find((p: any) => p.planet?.toLowerCase() === 'north node');
+        sign = nn?.sign ?? '';
+        house = nn?.house;
+        break;
+      }
+      case 'shadow-work':     sign = (chart as any).pluto?.sign?.name ?? '';   house = (chart as any).pluto?.house;   break;
+    }
+    if (!sign) return planetName;
+    return house ? `${planetName} in ${sign} · ${house}th House` : `${planetName} in ${sign}`;
+  }
+
   static getChapterSignLabel(chart: any, chapterId: string): { signLabel: string, sign: string } {
     let sign = '';
     let house: number | string | undefined = undefined;
@@ -2419,6 +2461,7 @@ export class FullNatalStoryGenerator {
         content: definition.freeContent.brief,
         reflection: definition.freeContent.teaser,
         affirmation: '',
+        astrologyLabel: FullNatalStoryGenerator.getAstrologyLabel(chart, definition.id),
       };
     }
     
@@ -2449,6 +2492,7 @@ export class FullNatalStoryGenerator {
       content: fullContent,
       reflection: content.reflection,
       affirmation: content.affirmation,
+      astrologyLabel: FullNatalStoryGenerator.getAstrologyLabel(chart, definition.id),
     };
   }
   

@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
@@ -27,7 +27,7 @@ export default function OnboardingBirthScreen() {
 
   useEffect(() => {
     setVisible(true);
-    AsyncStorage.getItem('msky_user_name')
+    EncryptedAsyncStorage.getItem('msky_user_name')
       .then((v) => { if (v) setSavedName(v); })
       .catch(() => {});
   }, []);

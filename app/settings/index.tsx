@@ -11,6 +11,7 @@ import * as Sharing from 'expo-sharing';
 import { IdentityVault } from '../../utils/IdentityVault';
 import { localDb } from '../../services/storage/localDb';
 import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { BackupService } from '../../services/storage/backupService';
 import { useAuth } from '../../context/AuthContext';
 import { usePremium } from '../../context/PremiumContext';
@@ -182,7 +183,16 @@ export default function SettingsHub() {
       await FieldEncryptionService.destroyDek();
       // 3. Delete all rows from the SQLite database
       await localDb.hardDeleteAllData();
-      // 4. Sign out of Supabase
+      // 4. Clear sensitive AsyncStorage keys (encrypted personal data)
+      await Promise.all([
+        EncryptedAsyncStorage.removeItem('msky_user_name'),
+        EncryptedAsyncStorage.removeItem('@mysky:archetype_profile'),
+        EncryptedAsyncStorage.removeItem('@mysky:cognitive_style'),
+        EncryptedAsyncStorage.removeItem('@mysky:somatic_entries'),
+        EncryptedAsyncStorage.removeItem('@mysky:trigger_events'),
+        EncryptedAsyncStorage.removeItem('@mysky:relationship_patterns'),
+      ]);
+      // 5. Sign out of Supabase
       await signOut();
 
       logger.info('[Settings] Hard reset complete — all data destroyed');

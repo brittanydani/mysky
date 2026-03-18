@@ -7,9 +7,9 @@ import {
   Pressable,
   Dimensions,
   PanResponder,
-  Animated,
   ActivityIndicator,
   Platform,
+  TextInput,
 } from 'react-native';
 import SkiaMoodSealButton from '../../components/ui/SkiaMoodSealButton';
 import { useRouter } from 'expo-router';
@@ -19,14 +19,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { CheckInService } from '../../services/patterns/checkInService';
+import { CheckInService, getLogicalToday } from '../../services/patterns/checkInService';
 import type { DailyCheckIn, EnergyLevel, StressLevel, ThemeTag, CheckInInput } from '../../services/patterns/types';
 import type { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
-import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 
@@ -59,17 +58,40 @@ const INFLUENCE_TAG_MAP: Record<string, ThemeTag> = {
   'Alone time':   'alone_time',
   'Finances':     'finances',
   'Weather':      'weather',
+  'Food':         'food',
+  'Creativity':   'creative',
+  'Family':       'family',
+  'Social media': 'screens',
+  'Rest':         'rest',
+  'News':         'news' as ThemeTag,
+  'Music':        'music' as ThemeTag,
+  'Body':         'health',
+  'Spirit':       'spirit' as ThemeTag,
 };
 
 const EMOTION_TAG_MAP: Record<string, ThemeTag> = {
-  'Radiant':   'eq_hopeful',
-  'Grounded':  'eq_grounded',
-  'Anxious':   'eq_anxious',
-  'Scattered': 'eq_scattered',
-  'Inspired':  'eq_focused',
-  'Heavy':     'eq_heavy',
-  'Resilient': 'eq_open',
-  'Numb':      'eq_disconnected',
+  // Original 8 — kept on their canonical tags
+  'Radiant':    'eq_hopeful',
+  'Grounded':   'eq_grounded',
+  'Anxious':    'eq_anxious',
+  'Scattered':  'eq_scattered',
+  'Inspired':   'eq_focused',
+  'Heavy':      'eq_heavy',
+  'Resilient':  'eq_open',
+  'Numb':       'eq_disconnected',
+  // New 12 — each gets its own unique tag so analytics can distinguish them
+  'Hopeful':    'eq_hopeful',
+  'Content':    'eq_content' as ThemeTag,
+  'Grateful':   'eq_grateful' as ThemeTag,
+  'Melancholy': 'eq_melancholy' as ThemeTag,
+  'Tender':     'eq_tender' as ThemeTag,
+  'Alive':      'eq_alive' as ThemeTag,
+  'Depleted':   'eq_depleted' as ThemeTag,
+  'Curious':    'eq_curious' as ThemeTag,
+  'Peaceful':   'eq_peaceful' as ThemeTag,
+  'Irritable':  'eq_irritable',
+  'Lonely':     'eq_lonely' as ThemeTag,
+  'Connected':  'eq_connected' as ThemeTag,
 };
 
 const INFLUENCE_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
@@ -82,17 +104,38 @@ const INFLUENCE_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['nam
   'Alone time':    'person-outline',
   'Finances':      'cash-outline',
   'Weather':       'partly-sunny-outline',
+  'Food':          'restaurant-outline',
+  'Creativity':    'color-palette-outline',
+  'Family':        'home-outline',
+  'Social media':  'phone-portrait-outline',
+  'Rest':          'bed-outline',
+  'News':          'newspaper-outline',
+  'Music':         'musical-notes-outline',
+  'Body':          'body-outline',
+  'Spirit':        'flower-outline',
 };
 
 const EMOTION_ICONS: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
-  'Radiant':   'sparkles-outline',
-  'Grounded':  'earth-outline',
-  'Anxious':   'pulse-outline',
-  'Scattered': 'shuffle-outline',
-  'Inspired':  'bulb-outline',
-  'Heavy':     'thunderstorm-outline',
-  'Resilient': 'shield-outline',
-  'Numb':      'water-outline',
+  'Radiant':    'sparkles-outline',
+  'Grounded':   'earth-outline',
+  'Anxious':    'pulse-outline',
+  'Scattered':  'shuffle-outline',
+  'Inspired':   'bulb-outline',
+  'Heavy':      'thunderstorm-outline',
+  'Resilient':  'shield-outline',
+  'Numb':       'water-outline',
+  'Hopeful':    'sunny-outline',
+  'Content':    'happy-outline',
+  'Grateful':   'heart-outline',
+  'Melancholy': 'cloudy-outline',
+  'Tender':     'rose-outline',
+  'Alive':      'flash-outline',
+  'Depleted':   'battery-dead-outline',
+  'Curious':    'search-outline',
+  'Peaceful':   'leaf-outline',
+  'Irritable':  'flame-outline',
+  'Lonely':     'person-outline',
+  'Connected':  'link-outline',
 };
 
 function energyLevelToNum(e: EnergyLevel): number {
@@ -119,20 +162,51 @@ function computeTrendLabel(checkIns: DailyCheckIn[]): string {
   const scores = checkIns
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map(c => c.moodScore);
+    .map(c => c.moodScore)
+    .filter((s): s is number => s != null);
   if (scores.length < 3) return 'Early days';
   const half = Math.floor(scores.length / 2);
   const early = scores.slice(0, half).reduce((a, b) => a + b, 0) / half;
   const recent = scores.slice(-half).reduce((a, b) => a + b, 0) / half;
-  if (recent > early + 0.5) return 'Rising';
-  if (recent < early - 0.5) return 'Declining';
-  return 'Stable';
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const delta = recent - early;
+  const rising = delta > 0.5;
+  const declining = delta < -0.5;
+
+  // Low zone (avg < 4)
+  if (avg < 4) {
+    if (rising)    return 'Recovering';
+    if (declining) return 'Dropping';
+    return 'Persistently low';
+  }
+  // Below-neutral zone (4–5.5)
+  if (avg < 5.5) {
+    if (rising)    return 'Lifting';
+    if (declining) return 'Dipping';
+    return 'Holding low';
+  }
+  // Neutral zone (5.5–7)
+  if (avg < 7) {
+    if (rising)    return 'Rising';
+    if (declining) return 'Easing down';
+    return 'Balanced';
+  }
+  // High zone (7–8.5)
+  if (avg < 8.5) {
+    if (rising)    return 'Climbing';
+    if (declining) return 'Softening';
+    return 'Holding well';
+  }
+  // Very high zone (8.5+)
+  if (rising)    return 'Peaking';
+  if (declining) return 'Coming down';
+  return 'Consistently high';
 }
 
 const MAX_DAYS_BACK = 30;
 
 function formatDisplayDate(dateStr: string): string {
-  const todayStr = toLocalDateString(new Date());
+  const todayStr = getLogicalToday();
   const yesterdayDate = new Date();
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);
   const yesterdayStr = toLocalDateString(yesterdayDate);
@@ -154,21 +228,45 @@ export default function MoodCheckIn() {
 
   const [selectedInfluences, setSelectedInfluences] = useState<Set<string>>(new Set());
   const [selectedEmotions, setSelectedEmotions] = useState<Set<string>>(new Set());
+  const [customInfluence, setCustomInfluence] = useState('');
+  const [customEmotion, setCustomEmotion] = useState('');
+  const [emotionSectionOpen, setEmotionSectionOpen] = useState(false);
 
   const [chartId, setChartId] = useState<string | null>(null);
   const [natalChart, setNatalChart] = useState<NatalChart | null>(null);
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
   const [completedSlots, setCompletedSlots] = useState<string[]>([]);
   const [isEditingExisting, setIsEditingExisting] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(() => toLocalDateString(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(() => getLogicalToday());
   const [selectedSlot, setSelectedSlot] = useState<import('../../services/patterns/types').TimeOfDay>(
     () => CheckInService.getCurrentTimeSlot()
   );
 
-  const influences = ['Sleep', 'Work', 'Relationships', 'Health', 'Movement', 'Nature', 'Alone time', 'Finances', 'Weather'];
-  const premiumEmotions = ['Radiant', 'Grounded', 'Anxious', 'Scattered', 'Inspired', 'Heavy', 'Resilient', 'Numb'];
+  // Ref that always holds the latest form values so handleSeal can be a stable
+  // callback (empty deps). A stable onSeal means the LongPress gesture inside
+  // SkiaMoodSealButton never rebuilds mid-hold, preventing premature cancels.
+  const sealRef = useRef({
+    chartId, natalChart, isSaving,
+    mood, energy, stress,
+    selectedInfluences, selectedEmotions,
+    customInfluence, customEmotion,
+    isPremium, selectedSlot, selectedDate,
+  });
+  useEffect(() => {
+    sealRef.current = {
+      chartId, natalChart, isSaving,
+      mood, energy, stress,
+      selectedInfluences, selectedEmotions,
+      customInfluence, customEmotion,
+      isPremium, selectedSlot, selectedDate,
+    };
+  });
+
+  const influences = ['Sleep', 'Work', 'Relationships', 'Health', 'Movement', 'Nature', 'Alone time', 'Finances', 'Weather', 'Food', 'Creativity', 'Family', 'Social media', 'Rest', 'News', 'Music', 'Body', 'Spirit'];
+  const premiumEmotions = ['Radiant', 'Grounded', 'Anxious', 'Scattered', 'Inspired', 'Heavy', 'Resilient', 'Numb', 'Hopeful', 'Content', 'Grateful', 'Melancholy', 'Tender', 'Alive', 'Depleted', 'Curious', 'Peaceful', 'Irritable', 'Lonely', 'Connected'];
 
   useFocusEffect(
     useCallback(() => {
@@ -213,6 +311,10 @@ export default function MoodCheckIn() {
     }, [])
   );
 
+  // Track previous date+chartId so we can distinguish date-navigation from slot-taps.
+  // Use a combined key so the initial chartId load also counts as "dateChanged".
+  const prevNavKeyRef = useRef('');
+
   // Load the check-in for the currently selected date + slot
   useEffect(() => {
     if (!chartId) return;
@@ -220,15 +322,20 @@ export default function MoodCheckIn() {
 
     const loadSlot = async () => {
       try {
+        const navKey = `${chartId}::${selectedDate}`;
+        const dateChanged = prevNavKeyRef.current !== navKey;
+        prevNavKeyRef.current = navKey;
+
         const slots = await CheckInService.getCompletedTimeSlotsForDate(chartId, selectedDate);
         const existing = await CheckInService.getCheckInForDateAndSlot(chartId, selectedDate, selectedSlot);
 
         if (!cancelled) {
           setCompletedSlots(slots);
 
-          // When viewing a past date and the current slot has no data,
-          // auto-select the first completed slot so the user sees real data.
-          if (!existing && slots.length > 0 && !slots.includes(selectedSlot)) {
+          // Only auto-select an existing slot when the user navigated to a new date.
+          // When the user explicitly taps a slot pill (dateChanged=false), stay on it
+          // so they can add a new entry to an unfilled slot on a past day.
+          if (dateChanged && !existing && slots.length > 0 && !slots.includes(selectedSlot)) {
             setSelectedSlot(slots[0] as import('../../services/patterns/types').TimeOfDay);
             return; // effect will re-run with the new slot
           }
@@ -244,6 +351,9 @@ export default function MoodCheckIn() {
             setSelectedEmotions(new Set(
               existing.tags.map(t => REV_EMOTION_TAG[t]).filter(Boolean)
             ));
+            const [noteInfluence = '', noteEmotion = ''] = (existing.note ?? '').split('||EMOTION||');
+            setCustomInfluence(noteInfluence);
+            setCustomEmotion(noteEmotion);
           } else {
             setIsEditingExisting(false);
             setMood(5);
@@ -251,6 +361,8 @@ export default function MoodCheckIn() {
             setStress(5);
             setSelectedInfluences(new Set());
             setSelectedEmotions(new Set());
+            setCustomInfluence('');
+            setCustomEmotion('');
           }
         }
       } catch (e) {
@@ -274,7 +386,23 @@ export default function MoodCheckIn() {
     setSetter(newSet);
   };
 
-  const handleSeal = async () => {
+  // Converts free text into a stable tag slug for the insights pipeline.
+  // Spaces → underscores so "burnt out" → "burnt_out" (readable in insights).
+  // Then strip any remaining non-alphanum chars (punctuation, emoji, etc.).
+  const textToTag = (text: string): ThemeTag =>
+    text.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') as ThemeTag;
+
+  // Stable callback — reads all form state from sealRef so the gesture inside
+  // SkiaMoodSealButton never gets a new onSeal reference mid-hold.
+  const handleSeal = useCallback(async () => {
+    const {
+      chartId, natalChart, isSaving,
+      mood, energy, stress,
+      selectedInfluences, selectedEmotions,
+      customInfluence, customEmotion,
+      isPremium, selectedSlot, selectedDate,
+    } = sealRef.current;
+
     if (!chartId || !natalChart || isSaving) return;
     setIsSaving(true);
     try {
@@ -282,6 +410,14 @@ export default function MoodCheckIn() {
       const emotionTags: ThemeTag[] = isPremium
         ? [...selectedEmotions].map(t => EMOTION_TAG_MAP[t] ?? t)
         : [];
+
+      // Custom free-text words — sanitize and inject directly into tags so the
+      // insights pipeline can pick them up for pattern tracking over time.
+      const inf = customInfluence.trim();
+      const emo = isPremium ? customEmotion.trim() : '';
+      if (inf) influenceTags.push(textToTag(inf));
+      if (emo) emotionTags.push(`eq_${textToTag(emo)}` as ThemeTag);
+
       const input: CheckInInput = {
         moodScore: mood,
         energyLevel: numToEnergyLevel(energy),
@@ -289,6 +425,12 @@ export default function MoodCheckIn() {
         tags: [...influenceTags, ...emotionTags],
         timeOfDay: selectedSlot,
         date: selectedDate,
+        // note stores the original display text for restore on edit
+        note: (() => {
+          if (inf && emo) return `${inf}||EMOTION||${emo}`;
+          if (emo) return `||EMOTION||${emo}`;
+          return inf || undefined;
+        })(),
       };
       await CheckInService.saveCheckIn(input, natalChart, chartId);
 
@@ -304,11 +446,12 @@ export default function MoodCheckIn() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setIsSaving(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const trendLabel = computeTrendLabel(recentCheckIns);
   const canSeal = !isSaving && !!chartId;
-  const todayStr = toLocalDateString(new Date());
+  const todayStr = getLogicalToday();
   const canGoBack = () => {
     const minDate = new Date();
     minDate.setDate(minDate.getDate() - MAX_DAYS_BACK);
@@ -374,7 +517,11 @@ export default function MoodCheckIn() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
 
         {/* 7-Day Trend */}
         <View style={styles.trendCard}>
@@ -387,7 +534,7 @@ export default function MoodCheckIn() {
               <ActivityIndicator size="small" color="rgba(217,191,140,0.5)" />
             </View>
           ) : recentCheckIns.length >= 2 ? (
-            <NeonWaveChart checkIns={recentCheckIns} width={CARD_INNER_W} height={140} />
+            <NeonWaveChart checkIns={recentCheckIns} width={CARD_INNER_W} height={190} />
           ) : (
             <View style={styles.trendPlaceholder}>
               <Text style={styles.trendEmptyText}>
@@ -410,7 +557,7 @@ export default function MoodCheckIn() {
 
         {/* Influence Tags */}
         <View style={styles.tagsSection}>
-          <Text style={styles.sectionLabel}>WHAT’S INFLUENCING THIS?</Text>
+          <Text style={styles.sectionLabel}>WHAT'S INFLUENCING THIS?</Text>
           <View style={styles.tagGrid}>
             {influences.map(tag => (
               <TagButton
@@ -421,37 +568,102 @@ export default function MoodCheckIn() {
                 onPress={() => toggleTag(tag, selectedInfluences, setSelectedInfluences)}
               />
             ))}
+            {customInfluence.trim().length > 0 && (
+              <Pressable
+                style={[styles.tagButton, styles.tagButtonSelected]}
+                onPress={() => { Haptics.selectionAsync(); setCustomInfluence(''); }}
+              >
+                <Ionicons name="add-circle" size={13} color="#050507" style={styles.tagIcon} />
+                <Text style={[styles.tagText, styles.tagTextSelected]}>{customInfluence.trim()}</Text>
+                <Ionicons name="close" size={12} color="#050507" style={{ marginLeft: 3 }} />
+              </Pressable>
+            )}
           </View>
+          <TextInput
+            style={[styles.customInfluenceInput, customInfluence.trim().length > 0 && styles.customInputActive]}
+            placeholder="Anything else on your mind..."
+            placeholderTextColor="rgba(255,255,255,0.2)"
+            value={customInfluence}
+            onChangeText={setCustomInfluence}
+            onSubmitEditing={() => { if (customInfluence.trim()) Haptics.selectionAsync(); }}
+            returnKeyType="done"
+            maxLength={120}
+          />
         </View>
 
-        {/* Emotional Quality Tags (Deeper Sky) */}
+        {/* Emotional Quality Tags (Deeper Sky) — collapsible dropdown */}
         <View style={styles.tagsSection}>
-          <View style={styles.premiumHeaderRow}>
-            <Text style={styles.sectionLabel}>EMOTIONAL QUALITY</Text>
-            <View style={styles.premiumBadge}>
-              <MetallicText style={styles.premiumBadgeText} variant="gold">✦ DEEPER SKY</MetallicText>
+          <Pressable
+            style={styles.emotionDropdownHeader}
+            onPress={() => { Haptics.selectionAsync(); setEmotionSectionOpen(o => !o); }}
+          >
+            <View style={styles.premiumHeaderRow}>
+              <Text style={styles.sectionLabel}>EMOTIONAL QUALITY</Text>
+              <View style={styles.premiumBadge}>
+                <MetallicText style={styles.premiumBadgeText} variant="gold">✦ DEEPER SKY</MetallicText>
+              </View>
             </View>
-          </View>
-          <View style={styles.tagGrid}>
-            {premiumEmotions.map(tag => (
-              <TagButton
-                key={tag}
-                title={tag}
-                icon={EMOTION_ICONS[tag]}
-                isSelected={selectedEmotions.has(tag)}
-                onPress={() => {
-                  if (!isPremium) return;
-                  toggleTag(tag, selectedEmotions, setSelectedEmotions);
-                }}
-                isPremiumVariant
-                isLocked={!isPremium}
+            <View style={styles.emotionDropdownChevronRow}>
+              {selectedEmotions.size > 0 && (
+                <Text style={styles.emotionDropdownCount}>{selectedEmotions.size} selected</Text>
+              )}
+              {customEmotion.trim().length > 0 && (
+                <Text style={styles.emotionDropdownCustom} numberOfLines={1}>{customEmotion.trim()}</Text>
+              )}
+              <Ionicons
+                name={emotionSectionOpen ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color="rgba(255,255,255,0.35)"
               />
-            ))}
-          </View>
-          {!isPremium && (
-            <Text style={styles.lockedHint}>
-              Unlock with Deeper Sky to track emotional quality
-            </Text>
+            </View>
+          </Pressable>
+
+          {emotionSectionOpen && (
+            <>
+              <View style={styles.tagGrid}>
+                {premiumEmotions.map(tag => (
+                  <TagButton
+                    key={tag}
+                    title={tag}
+                    icon={EMOTION_ICONS[tag]}
+                    isSelected={selectedEmotions.has(tag)}
+                    onPress={() => {
+                      if (!isPremium) return;
+                      toggleTag(tag, selectedEmotions, setSelectedEmotions);
+                    }}
+                    isPremiumVariant
+                    isLocked={!isPremium}
+                  />
+                ))}
+                {isPremium && customEmotion.trim().length > 0 && (
+                  <Pressable
+                    style={[styles.tagButton, styles.tagButtonSelectedPremium]}
+                    onPress={() => { Haptics.selectionAsync(); setCustomEmotion(''); }}
+                  >
+                    <Ionicons name="add-circle" size={13} color="#FFF" style={styles.tagIcon} />
+                    <Text style={[styles.tagText, { color: '#FFF', fontWeight: 'bold' }]}>{customEmotion.trim()}</Text>
+                    <Ionicons name="close" size={12} color="#FFF" style={{ marginLeft: 3 }} />
+                  </Pressable>
+                )}
+              </View>
+              {isPremium && (
+                <TextInput
+                  style={[styles.customInfluenceInput, customEmotion.trim().length > 0 && styles.customInputActive]}
+                  placeholder="Your own word..."
+                  placeholderTextColor="rgba(110,140,180,0.35)"
+                  value={customEmotion}
+                  onChangeText={setCustomEmotion}
+                  onSubmitEditing={() => { if (customEmotion.trim()) Haptics.selectionAsync(); }}
+                  returnKeyType="done"
+                  maxLength={60}
+                />
+              )}
+              {!isPremium && (
+                <Text style={styles.lockedHint}>
+                  Unlock with Deeper Sky to track emotional quality
+                </Text>
+              )}
+            </>
           )}
         </View>
 
@@ -681,7 +893,23 @@ const styles = StyleSheet.create({
   thumb: { position: 'absolute', left: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 8, elevation: 4 },
 
   labelsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
-  sliderLabel: { fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: 1, flex: 1 },
+  sliderLabel: { fontSize: 8, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: 0.8, flex: 1 },
+
+  customInfluenceInput: {
+    marginTop: 14,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.75)',
+  },
+  customInputActive: {
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
+  },
 
   tagsSection: { marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -775,4 +1003,25 @@ const styles = StyleSheet.create({
   },
   slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: '600', letterSpacing: 0.5 },
   slotLabelDone: { color: '#C9AE78' },
+
+  emotionDropdownHeader: {
+    marginBottom: 14,
+  },
+  emotionDropdownChevronRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  emotionDropdownCount: {
+    fontSize: 11,
+    color: 'rgba(110,140,180,0.8)',
+    fontWeight: '600',
+  },
+  emotionDropdownCustom: {
+    fontSize: 11,
+    color: 'rgba(110,140,180,0.6)',
+    fontStyle: 'italic',
+    flex: 1,
+  },
 });

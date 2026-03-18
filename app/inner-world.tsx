@@ -18,6 +18,7 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -94,8 +95,8 @@ export default function InnerWorldScreen() {
         try {
           const [valuesRaw, archetypesRaw, cognitiveRaw] = await Promise.all([
             AsyncStorage.getItem('@mysky:core_values'),
-            AsyncStorage.getItem('@mysky:archetype_profile'),
-            AsyncStorage.getItem('@mysky:cognitive_style'),
+            EncryptedAsyncStorage.getItem('@mysky:archetype_profile'),
+            EncryptedAsyncStorage.getItem('@mysky:cognitive_style'),
           ]);
 
           setCompletion({

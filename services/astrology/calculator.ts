@@ -107,19 +107,28 @@ function convertToLegacyPlanetPlacement(
   };
 }
 
-function buildAspectDefs(orbConfig?: OrbConfiguration): Array<{ type: AspectTypeName; angle: number; orb: number }> {
+function buildAspectDefs(orbConfig?: OrbConfiguration, includeMinor: boolean = false): Array<{ type: AspectTypeName; angle: number; orb: number }> {
   const orbs = orbConfig ?? ORB_CONFIGURATIONS.normal;
-  return [
+  const defs: Array<{ type: AspectTypeName; angle: number; orb: number }> = [
     { type: 'conjunction', angle: 0, orb: orbs.conjunction },
     { type: 'sextile', angle: 60, orb: orbs.sextile },
     { type: 'square', angle: 90, orb: orbs.square },
     { type: 'trine', angle: 120, orb: orbs.trine },
     { type: 'opposition', angle: 180, orb: orbs.opposition },
   ];
+  if (includeMinor) {
+    defs.push(
+      { type: 'semisextile', angle: 30, orb: orbs.semisextile ?? 2 },
+      { type: 'semisquare', angle: 45, orb: orbs.semisquare ?? 2 },
+      { type: 'quincunx', angle: 150, orb: orbs.quincunx ?? 3 },
+      { type: 'sesquiquadrate', angle: 135, orb: orbs.sesquiquadrate ?? 2 },
+    );
+  }
+  return defs;
 }
 
-function computeAspects(points: Array<{ name: string; absDeg: number }>, orbConfig?: OrbConfiguration): SimpleAspect[] {
-  const aspectDefs = buildAspectDefs(orbConfig);
+function computeAspects(points: Array<{ name: string; absDeg: number }>, orbConfig?: OrbConfiguration, includeMinor: boolean = false): SimpleAspect[] {
+  const aspectDefs = buildAspectDefs(orbConfig, includeMinor);
   const out: SimpleAspect[] = [];
   for (let i = 0; i < points.length; i++) {
     for (let j = i + 1; j < points.length; j++) {
@@ -215,7 +224,9 @@ export class EnhancedAstrologyCalculator {
     }
 
     // Determine if asteroids should be included
-    const includeAsteroids = AstrologySettingsService.getCachedSettings()?.showAsteroid ?? true;
+    const cachedSettings = AstrologySettingsService.getCachedSettings();
+    const includeAsteroids = cachedSettings?.showAsteroid ?? true;
+    const lilitMethod = cachedSettings?.lilitMethod ?? 'mean';
 
     // Swiss Ephemeris expects 1-based month; parseBirthDateTime returns 0-based
     const sweMonth = month + 1;
@@ -234,6 +245,8 @@ export class EnhancedAstrologyCalculator {
       houseSystem,
       includeHouses,
       includeAsteroids,
+      zodiacSystem === 'sidereal',
+      lilitMethod,
     );
 
     // Build the same output structures as the fallback engine
@@ -284,6 +297,49 @@ export class EnhancedAstrologyCalculator {
           absoluteDegree: Number(mcAbs.toFixed(6)),
         });
         aspectPointsByName.set('Midheaven', mcAbs);
+
+        const icAbs = normalize360(mcAbs + 180);
+        const icS = signFromLongitude(icAbs);
+        angles.push({
+          name: 'IC',
+          sign: icS.name,
+          degree: Number(degreeInSign(icAbs).toFixed(2)),
+          absoluteDegree: Number(icAbs.toFixed(6)),
+        });
+        aspectPointsByName.set('IC', icAbs);
+      }
+
+      if (typeof ascAbs === 'number') {
+        const dscAbs = normalize360(ascAbs + 180);
+        const dscS = signFromLongitude(dscAbs);
+        angles.push({
+          name: 'Descendant',
+          sign: dscS.name,
+          degree: Number(degreeInSign(dscAbs).toFixed(2)),
+          absoluteDegree: Number(dscAbs.toFixed(6)),
+        });
+        aspectPointsByName.set('Descendant', dscAbs);
+      }
+
+      if (typeof sweData.vertex === 'number') {
+        const vxAbs = sweData.vertex;
+        const avxAbs = normalize360(vxAbs + 180);
+        const vs = signFromLongitude(vxAbs);
+        const avs = signFromLongitude(avxAbs);
+        angles.push({
+          name: 'Vertex',
+          sign: vs.name,
+          degree: Number(degreeInSign(vxAbs).toFixed(2)),
+          absoluteDegree: Number(vxAbs.toFixed(6)),
+        });
+        angles.push({
+          name: 'Anti-Vertex',
+          sign: avs.name,
+          degree: Number(degreeInSign(avxAbs).toFixed(2)),
+          absoluteDegree: Number(avxAbs.toFixed(6)),
+        });
+        aspectPointsByName.set('Vertex', vxAbs);
+        aspectPointsByName.set('Anti-Vertex', avxAbs);
       }
 
       // Houses
@@ -412,8 +468,9 @@ export class EnhancedAstrologyCalculator {
 
     // Aspects (include angles if present) — use orb config from user settings
     const orbConfig = AstrologySettingsService.getCachedOrbConfig();
+    const showMinorAspects = AstrologySettingsService.getCachedSettings()?.showMinorAspects ?? false;
     const aspectPoints = Array.from(aspectPointsByName.entries()).map(([name, absDeg]) => ({ name, absDeg }));
-    const aspectsSimple = computeAspects(aspectPoints, orbConfig);
+    const aspectsSimple = computeAspects(aspectPoints, orbConfig, showMinorAspects);
     const aspectsLegacy = this.convertToLegacyAspects(aspectsSimple, legacyPlacements, aspectPointsByName);
 
     // Key placements + sun/moon signs for legacy usage (NO FAKE: Asc/MC must exist when time known)
@@ -447,8 +504,7 @@ export class EnhancedAstrologyCalculator {
           house,
         };
 
-        // If you ever want PoF aspects, uncomment:
-        // aspectPointsByName.set('Part of Fortune', pofAbs);
+        aspectPointsByName.set('Part of Fortune', pofAbs);
       }
     }
 
@@ -721,6 +777,28 @@ export class EnhancedAstrologyCalculator {
           absoluteDegree: Number(mcDeg.toFixed(6)),
         });
         aspectPointsByName.set('Midheaven', mcDeg);
+
+        const icAbs = normalize360(mcDeg + 180);
+        const icS = signFromLongitude(icAbs);
+        angles.push({
+          name: 'IC',
+          sign: icS.name,
+          degree: Number(degreeInSign(icAbs).toFixed(2)),
+          absoluteDegree: Number(icAbs.toFixed(6)),
+        });
+        aspectPointsByName.set('IC', icAbs);
+      }
+
+      if (ascDeg != null) {
+        const dscAbs = normalize360(ascDeg + 180);
+        const dscS = signFromLongitude(dscAbs);
+        angles.push({
+          name: 'Descendant',
+          sign: dscS.name,
+          degree: Number(degreeInSign(dscAbs).toFixed(2)),
+          absoluteDegree: Number(dscAbs.toFixed(6)),
+        });
+        aspectPointsByName.set('Descendant', dscAbs);
       }
 
       const rawHouses: any[] = horoscope.Houses || [];
@@ -782,14 +860,10 @@ export class EnhancedAstrologyCalculator {
     return aspects.map((a) => {
       const planet1 =
         (PLANETS[a.pointA.toLowerCase()] ||
-          (a.pointA.toLowerCase() === 'ascendant' ? ensurePointPlanet('Ascendant') : undefined) ||
-          (a.pointA.toLowerCase() === 'midheaven' ? ensurePointPlanet('Midheaven') : undefined) ||
           { name: a.pointA, symbol: '?', type: 'Personal' }) as Planet;
 
       const planet2 =
         (PLANETS[a.pointB.toLowerCase()] ||
-          (a.pointB.toLowerCase() === 'ascendant' ? ensurePointPlanet('Ascendant') : undefined) ||
-          (a.pointB.toLowerCase() === 'midheaven' ? ensurePointPlanet('Midheaven') : undefined) ||
           { name: a.pointB, symbol: '?', type: 'Personal' }) as Planet;
 
       const aspectType = ASPECT_TYPES.find((at) => at.name.toLowerCase() === a.type) || ASPECT_TYPES[0];
@@ -995,7 +1069,13 @@ export class EnhancedAstrologyCalculator {
       if (isSwissEphemerisAvailable()) {
         // ── Swiss Ephemeris path ──
         const { calculateTransitPositions } = require('./swissEphemerisEngine');
-        const transitPlanets: PlanetPosition[] = calculateTransitPositions(date);
+        const cached = AstrologySettingsService.getCachedSettings();
+        const isSidereal = (cached?.zodiacSystem ?? 'tropical') === 'sidereal';
+        if (isSidereal) {
+          const { setSiderealMode } = require('./swissEphemerisEngine');
+          setSiderealMode(cached?.ayanamsa ?? 'lahiri');
+        }
+        const transitPlanets: PlanetPosition[] = calculateTransitPositions(date, isSidereal);
         placements = transitPlanets.map(p =>
           convertToLegacyPlanetPlacement(p.planet, p.absoluteDegree, p.isRetrograde, 0)
         );

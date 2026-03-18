@@ -41,13 +41,23 @@ export const TAG_LABELS: Record<string, string> = {
   weather: 'Weather', food: 'Food', hormones: 'Hormones',
   screens: 'Screens', kids: 'Kids', productivity: 'Productivity',
   substances: 'Substances', intimacy: 'Intimacy',
+  // New influence tags
+  news: 'News', music: 'Music', spirit: 'Spirit',
+  // Emotional quality — original
   eq_calm: 'Calm', eq_anxious: 'Anxious', eq_focused: 'Focused',
   eq_disconnected: 'Disconnected', eq_hopeful: 'Hopeful', eq_irritable: 'Irritable',
   eq_grounded: 'Grounded', eq_scattered: 'Scattered', eq_heavy: 'Heavy', eq_open: 'Open',
+  // Emotional quality — new unique tags
+  eq_content: 'Content', eq_grateful: 'Grateful', eq_melancholy: 'Melancholy',
+  eq_tender: 'Tender', eq_alive: 'Alive', eq_depleted: 'Depleted',
+  eq_curious: 'Curious', eq_peaceful: 'Peaceful', eq_lonely: 'Lonely',
+  eq_connected: 'Connected',
 };
 
 function tagLabel(tag: string): string {
-  return TAG_LABELS[tag] ?? tag.replace(/_/g, ' ');
+  // Known tags get their proper label; custom user-typed tags get their
+  // slug humanized (underscores → spaces) and capitalized.
+  return TAG_LABELS[tag] ?? capitalize(tag.replace(/_/g, ' '));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -78,6 +78,7 @@ interface SnapshotData {
   avgMood: number | null;
   checkInCount: number;
   stressTrend: 'improving' | 'worsening' | 'stable' | null;
+  avgStress: number | null;
 }
 
 export default function InsightsScreen() {
@@ -87,6 +88,7 @@ export default function InsightsScreen() {
     avgMood: null,
     checkInCount: 0,
     stressTrend: null,
+    avgStress: null,
   });
   const [enhanced, setEnhanced] = useState<EnhancedInsightBundle | null>(null);
   const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
@@ -118,6 +120,9 @@ export default function InsightsScreen() {
           };
           let stressTrend: SnapshotData['stressTrend'] = null;
           const stresses = checkIns.map(c => levelToScore(c.stressLevel)).filter((v): v is number => v != null);
+          const avgStress = stresses.length
+            ? Math.round((stresses.reduce((a, b) => a + b, 0) / stresses.length) * 10) / 10
+            : null;
           if (stresses.length >= 4) {
             const half = Math.floor(stresses.length / 2);
             const older = stresses.slice(half).reduce((a, b) => a + b, 0) / (stresses.length - half);
@@ -127,7 +132,7 @@ export default function InsightsScreen() {
             else stressTrend = 'stable';
           }
 
-          setSnapshot({ avgMood, checkInCount: checkIns.length, stressTrend });
+          setSnapshot({ avgMood, checkInCount: checkIns.length, stressTrend, avgStress });
 
           // ── Self-knowledge cross-reference (all users) ──
           try {
@@ -173,11 +178,40 @@ export default function InsightsScreen() {
     router.push(route as Href);
   };
 
-  const stressLabel = (trend: SnapshotData['stressTrend']): string => {
+  // Describes the actual stress level the user is logging, combined with trend
+  const stressLabel = (avg: number | null, trend: SnapshotData['stressTrend']): string => {
+    if (avg === null) return '—';
+    // avg: low≈2, medium≈5, high≈9
+    if (avg < 3.5) {
+      // Low stress zone
+      if (trend === 'worsening') return 'Rising';
+      return 'Calm';
+    }
+    if (avg < 6.5) {
+      // Medium stress zone
+      if (trend === 'improving') return 'Easing';
+      if (trend === 'worsening') return 'Building';
+      return 'Moderate';
+    }
+    // High stress zone
     if (trend === 'improving') return 'Easing';
-    if (trend === 'worsening') return 'Rising';
-    if (trend === 'stable') return 'Stable';
-    return '—';
+    if (trend === 'worsening') return 'Escalating';
+    return 'High';
+  };
+
+  // Describes mood quality from the actual average score (1–10)
+  const moodLabel = (avg: number | null): string => {
+    if (avg === null) return '—';
+    if (avg < 2) return 'Struggling';
+    if (avg < 3) return 'Heavy';
+    if (avg < 4) return 'Low';
+    if (avg < 4.8) return 'Difficult';
+    if (avg < 5.5) return 'Mixed';
+    if (avg < 6.5) return 'Neutral';
+    if (avg < 7.5) return 'Good';
+    if (avg < 8.5) return 'Lifted';
+    if (avg < 9.3) return 'Vibrant';
+    return 'Radiant';
   };
 
   const prompt = getDailyPrompt();
@@ -219,8 +253,8 @@ export default function InsightsScreen() {
 
           {/* ── Hub 2: Quantitative Snapshot ── */}
           <View style={styles.metricRow}>
-            <MetricBox label="AVG MOOD" value={snapshot.avgMood?.toFixed(1) ?? '—'} color={PALETTE.silverBlue} />
-            <MetricBox label="STRESS" value={stressLabel(snapshot.stressTrend)} color={PALETTE.copper} isText />
+            <MetricBox label="AVG MOOD" value={moodLabel(snapshot.avgMood)} color={PALETTE.silverBlue} isText />
+            <MetricBox label="STRESS" value={stressLabel(snapshot.avgStress, snapshot.stressTrend)} color={PALETTE.copper} isText />
             <MetricBox label="LOGS" value={snapshot.checkInCount.toString()} color={PALETTE.gold} />
           </View>
 

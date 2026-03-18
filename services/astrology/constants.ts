@@ -22,7 +22,13 @@ const PLANET_DEFINITIONS: Record<string, Planet> = {
   vesta: { name: 'Vesta', symbol: '⚶', type: 'Asteroid' },
   ceres: { name: 'Ceres', symbol: '⚳', type: 'Asteroid' },
   'north node': { name: 'North Node', symbol: '☊', type: 'Point' },
-  'south node': { name: 'South Node', symbol: '☋', type: 'Point' }
+  'south node': { name: 'South Node', symbol: '☋', type: 'Point' },
+  lilith: { name: 'Lilith', symbol: '⚸', type: 'Point' },
+  'true lilith': { name: 'True Lilith', symbol: '⚸', type: 'Point' },
+  pholus: { name: 'Pholus', symbol: '⯛', type: 'Asteroid' },
+  vertex: { name: 'Vertex', symbol: 'Vx', type: 'Point' },
+  'anti-vertex': { name: 'Anti-Vertex', symbol: 'AVx', type: 'Point' },
+  'part of fortune': { name: 'Part of Fortune', symbol: '⊗', type: 'Point' },
 };
 
 export const ZODIAC_SIGNS: ZodiacSign[] = [
@@ -160,6 +166,13 @@ export const ASPECT_TYPES: AspectType[] = [
     symbol: '⚹',
     degrees: 60,
     orb: 4,
+    nature: 'Harmonious'
+  },
+  {
+    name: 'Semisextile',
+    symbol: '⚺',
+    degrees: 30,
+    orb: 2,
     nature: 'Harmonious'
   },
   {

@@ -17,11 +17,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 
 const STORAGE_KEY = '@mysky:trigger_events';
@@ -93,9 +92,9 @@ export default function TriggerLogScreen() {
     };
 
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
       const existing: TriggerEvent[] = raw ? JSON.parse(raw) : [];
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([entry, ...existing]));
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify([entry, ...existing]));
     } catch {
       // silent fail — entry lost on storage error, no UX disruption
     }
@@ -274,21 +273,32 @@ export default function TriggerLogScreen() {
             </View>
           </Animated.View>
 
-          <View style={{ height: 100 }} />
-        </ScrollView>
-
-        {/* ── Floating Seal Button ── */}
-        {eventText.trim().length > 0 && selectedState && (
-          <Animated.View entering={FadeIn.duration(400)} style={styles.fabContainer}>
+          {/* ── Submit Button ── */}
+          <Animated.View entering={FadeInDown.delay(280).duration(500)} style={styles.submitSection}>
+            {(!eventText.trim() || !selectedState) && (
+              <Text style={styles.submitHint}>
+                {!eventText.trim() ? 'Describe what happened to log this entry' : 'Select a nervous system state above'}
+              </Text>
+            )}
             <Pressable
-              style={[styles.sealBtn, { backgroundColor: activeColor }]}
+              style={[
+                styles.sealBtn,
+                { backgroundColor: (!eventText.trim() || !selectedState || saving) ? 'rgba(255,255,255,0.08)' : activeColor },
+              ]}
               onPress={handleSeal}
-              disabled={saving}
+              disabled={!eventText.trim() || !selectedState || saving}
             >
-              <Text style={styles.sealBtnText}>{saving ? 'SEALING...' : 'SEAL RECORD'}</Text>
+              <Text style={[
+                styles.sealBtnText,
+                { color: (!eventText.trim() || !selectedState || saving) ? PALETTE.textMuted : '#0A0A0C' },
+              ]}>
+                {saving ? 'SAVING...' : 'SAVE ENTRY'}
+              </Text>
             </Pressable>
           </Animated.View>
-        )}
+
+          <View style={{ height: 48 }} />
+        </ScrollView>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -369,7 +379,14 @@ const styles = StyleSheet.create({
   },
   tagText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
 
-  fabContainer: { position: 'absolute', bottom: 40, left: 24, right: 24 },
+  submitSection: { paddingHorizontal: 0, marginBottom: 8 },
+  submitHint: {
+    fontSize: 12,
+    color: PALETTE.textMuted,
+    textAlign: 'center',
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
   sealBtn: {
     height: 56,
     borderRadius: 28,

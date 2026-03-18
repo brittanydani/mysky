@@ -21,8 +21,6 @@ import {
   BlurMask,
   Path,
   Skia,
-  Line,
-  vec,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
@@ -119,7 +117,6 @@ export default function SkiaMoodSealButton({
   const progress     = useSharedValue(0);
   const breathe      = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
-  const tickPulse    = useSharedValue(0); // drives individual tick brightness
 
   // Rewind the arc when complete resets (so user can seal again)
   useEffect(() => {

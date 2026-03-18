@@ -9,7 +9,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import ScrollSealIcon from '../components/ui/ScrollSealIcon';
+import MySkyScrollSkia from '../components/skia/MySkyScrollSkia';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
@@ -56,7 +56,7 @@ export default function TermsOfServiceScreen() {
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
             <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <ScrollSealIcon size={140} />
+              <MySkyScrollSkia size={140} />
             </View>
 
             <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
@@ -77,7 +77,7 @@ export default function TermsOfServiceScreen() {
                 <Text style={styles.boldText}>Free:</Text> Natal chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily astrological context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship synastry, all 10 personal story chapters, growth and attachment reflections, full 7-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, Chiron and Node depth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship synastry, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, Chiron and Node depth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
               </Text>
             </View>
 

@@ -94,6 +94,10 @@ const ASPECT_WEIGHTS: Record<AspectTypeName, number> = {
   square: 5,
   trine: 4,
   sextile: 3,
+  quincunx: 2,
+  semisextile: 1,
+  semisquare: 2,
+  sesquiquadrate: 2,
 };
 
 // Transiting planet importance
