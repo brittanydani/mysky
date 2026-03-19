@@ -144,13 +144,13 @@ export default PremiumPill;
 
 const styles = StyleSheet.create({
   pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 999,
     borderWidth: 1,
   },
   label: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '500',
     color: 'rgba(226,232,240,0.62)',
     letterSpacing: 0.1,

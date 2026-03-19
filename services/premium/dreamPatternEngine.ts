@@ -124,7 +124,7 @@ const FEATURE_PATTERNS = {
     outdoor: /\b(forest|woods|field|mountain|road|path|highway|bridge|tunnel|cliff)\b/i,
     hospital: /\b(hospital|doctor|surgery|ambulance|clinic|emergency room)\b/i,
     water: /\b(ocean|sea|lake|river|pool|beach|underwater|boat|ship)\b/i,
-    public: /\b(mall|store|restaurant|airport|train|bus|crowd|street|market|park)\b/i,
+    public: /\b(mall|store|restaurant|airport|train|bus|crowd|street|market|park|arena|stadium|venue|concert|theater|theatre|auditorium|gymnasium|gym|bleachers|grandstand|basketball|football|baseball|soccer|hockey|sports|game|event|pavilion|fairground)\b/i,
     dark: /\b(dark|darkness|shadow|fog|mist|dim|pitch black)\b/i,
   },
   characters: {
@@ -154,6 +154,7 @@ const FEATURE_PATTERNS = {
     transformation: /\b(chang(ed|ing)|transform(ed|ing)|became|turning into|morphed|shifting|evolving|growing)\b/i,
     caretaking: /\b(protect(ed|ing)|sav(e|ed|ing)|rescue(d)?|carry(ing)?|caring for|tending|nursing|watching over|responsible for)\b/i,
     repetition: /\b(again and again|keep(s)? happening|loop(ing)?|over and over|can'?t (stop|leave)|same (thing|place)|repeated|cycle|going in circles)\b/i,
+    crowd_pressure: /\b(crowd(ed|ing)?|too (loud|busy|much)|overstimulat(ed|ing)|surrounded|couldn'?t (leave|breathe|focus|relax|settle)|expected to|supposed to (enjoy|be happy|have fun|like it)|felt out of place|didn'?t belong|everyone (else|around|seemed)|felt (wrong|off|disconnected|distant|hollow)|wanted to (leave|go|escape|get out)|had to (stay|be there|act|pretend))\b/i,
   },
   intimacyThemes: {
     desire: /\b(desire|want(ed|ing)|crav(e|ed|ing)|attracted|aroused|drawn to|magnetic|longing)\b/i,
@@ -193,18 +194,20 @@ function inferEndingType(
 ): EndingType {
   const lower = dreamText.toLowerCase();
 
-  // Check for explicit resolution cues
-  if (/\b(resolved|figured out|understood|realized|finally|made it|escaped|got away|woke up relieved)\b/i.test(lower)) {
-    return 'resolved';
+  // Check escape BEFORE resolved — "escaped" and "got away" are escape cues,
+  // not resolution cues, especially with a relieved awaken state.
+  if (/\b(ran away|got out|escaped|fled|managed to leave|got away)\b/i.test(lower) && metadata.awakenState === 'relieved') {
+    return 'escape';
   }
   if (/\b(woke up (suddenly|startled|scared|panicking)|jolted awake|snapped out)\b/i.test(lower)) {
     return 'abrupt';
   }
-  if (/\b(ran away|got out|escaped|fled|managed to leave)\b/i.test(lower) && metadata.awakenState === 'relieved') {
-    return 'escape';
-  }
   if (/\b(faced|confronted|stood up|fought back|spoke up|told them)\b/i.test(lower)) {
     return 'confrontation';
+  }
+  // Resolution cues — without escape-specific words that belong above
+  if (/\b(resolved|figured out|understood|realized|finally|made it|woke up relieved)\b/i.test(lower)) {
+    return 'resolved';
   }
 
   // Infer from awaken state
@@ -212,8 +215,11 @@ function inferEndingType(
   if (metadata.awakenState === 'shaken' || metadata.awakenState === 'scared') return 'abrupt';
   if (metadata.awakenState === 'confused' || metadata.awakenState === 'unsettled' || metadata.awakenState === 'anxious' || metadata.awakenState === 'disturbed' || metadata.awakenState === 'overwhelmed') return 'unresolved';
 
-  // Default: if dream text just stops without conclusion markers
-  if (lower.length > 50 && !/\b(then|finally|eventually|after that|in the end)\b/i.test(lower)) {
+  // Only default to unresolved when other unresolved evidence is present —
+  // many dreams end clearly without explicit narrative transition words.
+  const hasUnresolvedEvidence =
+    /\b(searching|stuck|confused|can'?t find|lost|trapped|going in circles)\b/i.test(lower);
+  if (hasUnresolvedEvidence) {
     return 'unresolved';
   }
 
@@ -375,8 +381,8 @@ const PATTERN_RULES: Record<DreamPattern, PatternRule> = {
   exposure: {
     settings: ['bathroom', 'school', 'stage', 'public'],
     characters: ['group', 'stranger', 'authority'],
-    emotions: ['Exposed', 'Ashamed', 'Embarrassed', 'Humiliated', 'Vulnerable', 'ashamed', 'vulnerable'],
-    tensions: ['exposure'],
+    emotions: ['Exposed', 'Ashamed', 'Embarrassed', 'Humiliated', 'Vulnerable', 'ashamed', 'vulnerable', 'Overwhelmed', 'Uneasy', 'Anxious', 'Uncomfortable', 'Awkward', 'Disconnected'],
+    tensions: ['exposure', 'crowd_pressure'],
     socialContext: ['public', 'judged'],
     actions: [],
     intimacy: [],
@@ -648,11 +654,11 @@ const PATTERN_RULES: Record<DreamPattern, PatternRule> = {
     },
   },
   stuck: {
-    settings: ['house', 'dark'],
+    settings: ['house', 'dark', 'public'],
     characters: [],
-    emotions: ['Frustrated', 'Overwhelmed', 'Exhausted', 'Trapped', 'Helpless'],
-    tensions: ['repetition', 'powerlessness'],
-    socialContext: [],
+    emotions: ['Frustrated', 'Overwhelmed', 'Exhausted', 'Trapped', 'Helpless', 'Uneasy', 'Anxious'],
+    tensions: ['repetition', 'powerlessness', 'crowd_pressure'],
+    socialContext: ['public'],
     actions: [],
     intimacy: [],
     authority: [],
@@ -674,11 +680,60 @@ const PATTERN_RULES: Record<DreamPattern, PatternRule> = {
   },
 };
 
+// ─── Canonical Emotion Buckets ────────────────────────────────────────────────
+
+/**
+ * Map diverse emotion labels to canonical buckets so that synonym differences
+ * between FEELING_MAP labels, inferred emotions, and pattern rule lists
+ * don't silently break scoring.
+ */
+const EMOTION_BUCKETS: Record<string, string[]> = {
+  shame: ['ashamed', 'embarrassed', 'humiliated', 'mortified', 'exposed', 'disgraced'],
+  fear: ['afraid', 'scared', 'terrified', 'alarmed', 'panicked', 'frightened', 'fearful'],
+  anger: ['angry', 'furious', 'enraged', 'irritated', 'resentful', 'frustrated', 'mad'],
+  longing: ['yearning', 'nostalgic', 'missing', 'aching', 'homesick', 'longing', 'bittersweet'],
+  sadness: ['sad', 'grief', 'grieving', 'mourning', 'heartbroken', 'sorrow'],
+  anxiety: ['anxious', 'stressed', 'uneasy', 'pressured', 'overwhelmed', 'nervous', 'worried'],
+  vulnerability: ['vulnerable', 'exposed', 'unprotected', 'open', 'defenseless'],
+  curiosity: ['curious', 'intrigued', 'fascinated', 'wondering', 'drawn'],
+  relief: ['relieved', 'calm', 'peaceful', 'at ease', 'comforted'],
+  confusion: ['confused', 'disoriented', 'bewildered', 'puzzled', 'lost', 'uncertain'],
+  tenderness: ['tender', 'loving', 'caring', 'affectionate', 'warm', 'protective'],
+  powerlessness: ['helpless', 'powerless', 'trapped', 'stuck', 'frozen', 'paralyzed'],
+  excitement: ['excited', 'thrilled', 'electrified', 'awed', 'exhilarated'],
+  disconnection: ['disconnected', 'distant', 'hollow', 'numb', 'detached', 'removed'],
+  awkwardness: ['awkward', 'uncomfortable', 'out of place'],
+};
+
+/** Pre-built reverse lookup: lowercase label → canonical bucket name */
+const LABEL_TO_BUCKET: Map<string, string> = new Map();
+for (const [bucket, labels] of Object.entries(EMOTION_BUCKETS)) {
+  for (const label of labels) {
+    LABEL_TO_BUCKET.set(label.toLowerCase(), bucket);
+  }
+}
+
+/** Resolve an emotion label to its canonical bucket name, or return it lowercased. */
+function canonicalEmotion(label: string): string {
+  return LABEL_TO_BUCKET.get(label.toLowerCase()) ?? label.toLowerCase();
+}
+
 /**
  * Count how many items from `needles` appear in `haystack` (case-insensitive).
+ * When `useEmotionBuckets` is true, both sides are normalized to canonical
+ * emotion buckets before comparison so that synonyms match correctly.
  */
-function countOverlap(haystack: string[], needles: string[]): number {
+function countOverlap(haystack: string[], needles: string[], useEmotionBuckets = false): number {
   if (needles.length === 0) return 0;
+  if (useEmotionBuckets) {
+    const haystackBuckets = new Set(haystack.map(canonicalEmotion));
+    const needleBuckets = new Set(needles.map(canonicalEmotion));
+    let count = 0;
+    for (const b of needleBuckets) {
+      if (haystackBuckets.has(b)) count++;
+    }
+    return count;
+  }
   const haystackLower = new Set(haystack.map(h => h.toLowerCase()));
   return needles.filter(n => haystackLower.has(n.toLowerCase())).length;
 }
@@ -718,9 +773,9 @@ export function scoreDreamPatterns(features: DreamFeatures): PatternResult {
     }
     maxPossible += w.characters;
 
-    // Emotions
+    // Emotions — use canonical buckets so synonyms match
     if (rule.emotions.length > 0) {
-      const hits = countOverlap(allEmotions, rule.emotions);
+      const hits = countOverlap(allEmotions, rule.emotions, true);
       raw += (hits / rule.emotions.length) * w.emotions;
     }
     maxPossible += w.emotions;
@@ -822,11 +877,11 @@ export function scoreDreamPatterns(features: DreamFeatures): PatternResult {
   // Diminishing returns: first 6 features matter most, then it tapers off
   const featureDensity = Math.min(1, featureCount / 6);
 
-  // Composite confidence: weighted blend
-  //   40% raw score (does the dream match the pattern?)
-  //   35% separation  (is the match clearly dominant?)
-  //   25% feature density (does the dream have enough evidence?)
-  const confidence = 0.40 * primary.score + 0.35 * separation + 0.25 * featureDensity;
+  // Composite confidence: feature density acts as a multiplier/cap, not
+  // independent additive fuel. Dense dreams support confidence but can't
+  // inflate it when pattern fit is weak.
+  const evidenceFactor = 0.7 + 0.3 * featureDensity;
+  const confidence = (0.55 * primary.score + 0.45 * separation) * evidenceFactor;
 
   return {
     primaryPattern: primary.pattern,
@@ -897,35 +952,35 @@ export function detectEmotionalContradictions(
 
 const ENDING_MEANINGS: Record<EndingType, string[]> = {
   resolved: [
-    'This dream found its way to something like closure, and that matters. Even if it wasn’t neat, the fact that your mind let it resolve suggests a part of you has found its footing with whatever was being processed.',
-    'The resolution at the end of this dream is a good sign. It doesn’t mean everything is figured out, but it does suggest your inner world is moving toward a new understanding — even if it’s still forming.',
-    'Something settled by the end of this dream, even if just slightly. That resolution hints that your mind may be further along in processing this than you’d think.',
+    'Your dream let itself finish — not perfectly, not neatly, but it found a kind of landing. That willingness to resolve, even loosely, usually means some quiet part of you has already made peace with something your waking mind is still catching up to.',
+    'There’s a settling at the end of this dream, like a breath you didn’t realize you were holding finally letting go. The answers aren’t clear yet — but something inside you has shifted, and the dream knew it before you did.',
+    'The way this dream closed itself carries a quiet weight. Something resolved — not dramatically, but in that slow, honest way things settle when you stop forcing them. You might be further through this than you think.',
   ],
   unresolved: [
-    'This dream didn’t wrap up neatly, and honestly, that’s probably the most honest part of it. Whatever it’s working through doesn’t have a simple answer yet — and the dream is okay with that.',
-    'The open ending here isn’t a failure — it’s a process still in motion. Your mind is still turning something over, still feeling around the edges of it, and the dream reflects that truthfully.',
-    'You may have woken up with the feeling that the dream wasn’t finished. That’s because whatever it’s processing isn’t finished either — not in a bad way, just in a "this needs more time" kind of way.',
+    'This dream didn’t give you an ending, and that’s not a flaw — it’s the truest thing about it. Whatever lives underneath this hasn’t found its shape yet. The dream is honoring that by refusing to pretend otherwise.',
+    'Notice how the dream just… left you there. That open-endedness isn’t emptiness — it’s your mind still circling something it can’t quite name, still running its fingers along the edges of a feeling that hasn’t fully landed.',
+    'If you woke up feeling like something was left mid-sentence, trust that instinct. The dream isn’t broken — it’s being honest about where you are. Some things need to stay unfinished a little longer before they’re ready to be understood.',
   ],
   abrupt: [
-    'Waking up suddenly from this dream probably left you feeling rattled, and that’s because whatever surfaced hit close to something real. When the emotional material gets too intense, the dream just… stops.',
-    'The abrupt ending is actually significant — it usually means the dream touched on something your mind wasn’t quite ready to sit with. That kind of intensity is worth noticing.',
-    'This dream cut off before it finished, which often happens when the feeling underneath it reaches a point your nervous system decides is "enough for now." What was happening right before you woke up might be the most important part.',
+    'The dream pulled the plug on itself, and that sudden silence probably still echoes. Something surfaced that was too close, too real, too charged — and your mind decided mid-sentence that you’d gone far enough for one night.',
+    'Pay attention to what was happening right before everything cut out. That’s where the heat is — the exact moment your deeper mind reached something it wasn’t quite ready to hold. The abruptness isn’t random. It’s a boundary your psyche drew in real time.',
+    'Your nervous system has its own sense of timing, and it decided this dream had gone far enough. That cutoff point — that exact frozen frame where everything stopped — is probably the most honest image the whole dream produced.',
   ],
   escape: [
-    'You found a way out in this dream, and that matters. Whether it was running, flying, or just suddenly being somewhere else, the escape signals that part of you is ready to move past something that’s felt confining.',
-    'The escape at the end is interesting — your dreaming mind gave you an exit, which suggests a growing sense that you don’t have to stay in whatever situation the dream was staging.',
+    'You found the exit. Whether you ran, flew, or simply vanished from the scene, something in you said enough — and meant it. That kind of escape often marks the moment a part of you stops tolerating something it used to endure.',
+    'Your dreaming mind did something interesting — it let you leave. Not everyone’s dreams do that. The fact that yours built a door and pushed you through it says something about readiness, about a growing refusal to stay in spaces that no longer fit.',
   ],
   relief: [
-    'If there was a wave of relief when you woke up, that’s your mind recognizing it just worked through something heavy without having to actually live through it. That’s what dreams are for.',
-    'Waking with relief doesn’t mean the dream was meaningless — it means your deeper mind completed a round of processing and came out the other side. Think of it as emotional exercise.',
+    'That wave of relief when you woke? That’s the feeling of your mind completing a circuit — working all the way through something heavy and coming out intact on the other side. Your body knows the difference between surviving something and merely dreaming it, and right now it’s settling into that distinction.',
+    'The relief isn’t a sign the dream didn’t matter — it’s proof that it did. Something real was processed, metabolized, moved through. You carried it while you slept so you wouldn’t have to carry it into the day.',
   ],
   confrontation: [
-    'This dream moved toward confrontation rather than away from it, and that’s a significant shift. A part of you seems ready to face something head-on instead of working around it.',
-    'The confrontation at the end of this dream might feel intense, but it’s often a sign of readiness — your mind rehearsing the moment of standing your ground.',
+    'Instead of flinching, this dream leaned in. That shift toward confrontation — toward facing something rather than circling it — usually signals that a part of you has grown tired of accommodation. Something inside you is ready to meet what it’s been avoiding.',
+    'Your mind rehearsed a version of courage while you slept. The confrontation may have felt jarring, but it’s the psyche’s way of practicing — testing whether you’re ready to stand somewhere you’ve previously only imagined standing.',
   ],
   unknown: [
-    'The way this dream ended is hard to pin down, and that’s okay. Sometimes the most meaningful thing isn’t the ending itself — it’s what keeps echoing after you wake up.',
-    'However this dream ended, the part that still sits with you is probably the part that matters most.',
+    'The ending slipped away before you could name it — and maybe that’s the point. Sometimes a dream doesn’t want to be resolved. It wants to be remembered. Whatever fragment still echoes is probably the part worth keeping.',
+    'Don’t chase the ending. Chase the feeling that’s still sitting in your chest. That’s where the dream lives now.',
   ],
 };
 
@@ -970,6 +1025,8 @@ const PATTERN_QUESTIONS: Record<DreamPattern, string[]> = {
     'What parts of yourself feel most visible right now — and how does that visibility sit with you?',
     'Is there something you’ve been keeping private that feels like it’s asking to be acknowledged?',
     'What might it feel like to be fully seen without needing to perform or protect?',
+    'Where in your life have you felt expected to enjoy something that actually left you feeling disconnected, overwhelmed, or out of place?',
+    'What part of you knows when an environment looks fine from the outside but feels wrong on the inside?',
   ],
   boundary: [
     'Where in your life right now do boundaries feel unclear or hard to hold?',
@@ -1060,64 +1117,67 @@ function labelWithDeterminer(label: string): string {
  */
 const PATTERN_EXPLANATIONS: Record<DreamPattern, string[]> = {
   exposure: [
-    'You know that feeling of suddenly realizing everyone can see something you thought was hidden? This dream taps into that. It’s not necessarily about embarrassment — it’s about what happens when the walls come down before you’re ready.',
-    'Something private is asking to be seen. This dream seems less about actual exposure and more about standing in that uncomfortable gap between who you show the world and what you’re actually carrying inside.',
-    'There’s a vulnerability in this dream that runs deeper than the images suggest. It’s the feeling of being visible in a way that wasn’t your choice — and that kind of openness, even in a dream, can feel like a lot.',
+    'There’s a moment — you probably know it — when you suddenly realize the thing you thought was hidden is visible to everyone in the room. This dream lives in that moment. Not the embarrassment itself, but the sickening split-second before it, when the walls dissolve and you haven’t decided yet who you are without them.',
+    'Something private is pushing toward the surface, and this dream is the pressure it creates on the way up. Less about being seen and more about the ache of the gap — that widening space between the face you wear outward and the thing you carry alone.',
+    'The vulnerability here goes deeper than the images. It’s the particular rawness of being made visible on someone else’s terms — of having your privacy peeled away not by your own hand, but by circumstance, or worse, by someone who didn’t ask.',
+    'This dream holds a very specific kind of aloneness — the kind that happens in the middle of everything. All that noise, all that energy, and yet you’re somewhere else entirely. That gap between the life happening around you and the silence inside you is what the dream is actually about.',
+    'Surrounded by everything, connected to nothing. The crowd, the sound, the motion — it was all there, and you were watching it from behind glass. That disconnection isn’t about introversion or mood. It’s about the distance between how a life looks from the outside and how it actually registers when you’re the one living it.',
+    'There’s a particular hollowness in this dream that’s hard to explain to anyone who hasn’t felt it — being in the center of something and still somehow outside of it. It’s the loneliness of performing presence, of being somewhere in body while something essential in you stays home.',
   ],
   boundary: [
-    'This dream seems to be sitting with a question you might already be asking yourself: where do I end and someone else begins? That blur between closeness and overwhelm can be hard to navigate, and your dreaming mind seems to be working it out.',
-    'There’s a tension in this dream between wanting to let people in and needing to protect your space. Boundary dreams often show up not when things are falling apart, but when you’re quietly renegotiating what you allow.',
-    'Something about limits — who’s crossing yours, or whether you can hold them — seems to be at the heart of this one. It’s the kind of thing that’s hard to put into words during the day but shows up clearly at night.',
+    'There’s an old question buried in this dream, one you may already be circling in daylight: where do I end and where does someone else begin? The line between closeness and invasion is thinner than most people admit, and your dreaming mind is walking that edge.',
+    'The pull in this dream runs in two directions at once — toward openness and toward self-preservation. These kinds of dreams tend not to arrive during crisis. They arrive during the quieter negotiations, when you’re silently redrawing the lines of what you’ll let in and what you won’t.',
+    'This one is about the geography of closeness — who’s allowed where, and what happens when someone steps past a line you didn’t even know you’d drawn. It’s the kind of tension that stays invisible during the day and turns architectural at night.',
   ],
   authority: [
-    'Power dynamics are running through this dream, and they probably feel familiar. Whether it’s a boss, a parent, or just the weight of someone else’s expectations, the real question underneath isn’t about them — it’s about how much space you’re giving yourself to disagree.',
-    'This dream puts you in a position where someone else holds the power, and that tension between wanting approval and wanting autonomy is real. It’s not always about a specific person — sometimes it’s about the part of you that still asks for permission.',
-    'There’s something here about the gap between what you’re told you should do and what actually feels right. Authority in dreams often isn’t about the person — it’s about the part of you that’s ready to trust your own judgment.',
+    'There’s an old power structure running through this dream, and it probably didn’t need to introduce itself — you recognized it immediately. But the real tension isn’t about whoever held the authority. It’s about the version of you who’s quietly deciding whether you’re still willing to be smaller than you are.',
+    'Someone else held the power in this dream, and you could feel it in your posture, in your voice, in the space you allowed yourself to take up. The tension between wanting to be approved of and wanting to be free of needing it rarely belongs to one person. It belongs to every version of yourself that ever shrank to fit someone else’s expectations.',
+    'The dream is pressing on a nerve between obedience and instinct — between what you’ve been taught to do and what your gut already knows. The authority figure isn’t really the point. The point is the part of you that’s starting to believe your own voice matters more.',
   ],
   pursuit: [
-    'Being chased in a dream is one of the most physically intense experiences your mind can create, and it usually doesn’t mean something is literally after you. More often, it’s something you’ve been avoiding — a feeling, a conversation, a truth — catching up.',
-    'Your mind staged a survival scenario here, and the urgency of it probably still echoes. Pursuit dreams tend to show up when stress has been building quietly, and the thing you’re running from is often the thing most worth turning toward.',
-    'There’s something chasing you in this dream, and the fact that your mind chose running — rather than confronting — might be saying something about where you are right now. Whatever it is, it’s not going away on its own.',
+    'The body remembers this dream. The pounding heart, the legs that wouldn’t move fast enough, the certainty that something was closing the distance. What’s chasing you almost never has a face, because it isn’t a person — it’s the feeling, the conversation, the recognition you’ve been outrunning in daylight.',
+    'Your mind built an entire chase scene just to show you what urgency feels like from the inside. That adrenaline wasn’t random — it belongs to something that’s been building pressure quietly, patiently, waiting for you to turn around and finally look at it.',
+    'Something in this dream wanted to be faced, and you chose to run. That’s not weakness — it’s honest. It tells you exactly where your threshold is right now. But the thing behind you already knows your pace, and it has no intention of giving up.',
   ],
   lost: [
-    'Being lost is such a specific kind of discomfort — it’s not pain, it’s not fear exactly, it’s the unsettling absence of knowing where you are. This dream seems to mirror that same feeling about something in your waking life — maybe a decision, a direction, or just the sense that you’re between chapters.',
-    'This dream dropped you into unfamiliar territory with no map, and that feeling usually isn’t random. It tends to show up when something in your life is genuinely uncertain — when you’re searching for an answer that isn’t clear yet.',
-    'The disorientation in this dream isn’t about the landscape. It’s the feeling of not knowing where you stand — in a relationship, in your career, in your own sense of self. That kind of lostness deserves patience, not panic.',
+    'Being lost is its own frequency of discomfort — not pain, not quite fear, but the hollowing realization that the ground you thought was solid turns out to be unfamiliar. This dream mirrors the same vertigo that lives in uncharted territory — a decision unmade, a path dissolving underfoot, the strange hush between one chapter and the next.',
+    'Your dreaming mind stripped away every landmark and left you standing in the unknown. That disorientation wasn’t cruelty — it was accuracy. Something in your waking life has genuinely lost its map, and the dream is showing you what that uncertainty actually looks like when you stop pretending you know where you’re going.',
+    'The landscape isn’t the thing that’s lost — you are. Not in a dramatic way, but in the quiet, disorienting way of not quite knowing where you stand anymore. In a relationship, in your work, in your own sense of who you’re becoming. That kind of lostness doesn’t need solving. It needs sitting with.',
   ],
   performance: [
-    'The pressure in this dream is palpable, and it probably feels familiar. Whether it’s a test, a presentation, or just the weight of being watched, the anxiety usually isn’t about the task itself — it’s about what failing would say about you.',
-    'You know the feeling of standing in front of people and suddenly doubting everything? This dream seems to be replaying that loop. The question underneath it all usually isn’t "can I do this?" — it’s "what happens if I’m not good enough?"',
-    'Performance dreams hit different because they go straight to self-worth. Your mind isn’t testing your ability — it’s testing how you handle the possibility of being seen as less than you want to be.',
+    'You can still feel the weight of it — the eyes, the expectation, the impossible arithmetic of performing well enough to be safe. The test was never really the test. It was the question underneath: what are you worth if you stumble? That’s the real exam this dream is running.',
+    'Your dream recreated that exact moment — the one where confidence evaporates and every pair of eyes becomes a verdict. The loop it’s replaying isn’t really about ability. It’s about the terrifying possibility that who you are, stripped of achievement, might not be enough.',
+    'Performance dreams are surgically precise — they bypass every defense and go straight for the identity. Your mind isn’t interested in whether you can pass the test. It’s interested in who you become in the moment you believe you might fail.',
   ],
   connection: [
-    'There’s a reaching-toward-someone quality in this dream that’s hard to miss. Whether it’s a reunion, a conversation, or just the presence of someone who matters, the dream seems to be holding space for a kind of closeness that’s missing or incomplete right now.',
-    'This dream carries a quiet ache — the kind that comes from wanting to be understood, to belong, or to be met halfway by someone. That longing often hides during the day, but dreams don’t let it stay buried.',
-    'Something in your relational world seems unfinished — a conversation that didn’t happen, a goodbye that wasn’t enough, or a closeness you’re missing more than you let on. This dream is holding those feelings gently.',
+    'Something in this dream was reaching — across a room, across years, across the distance between how close you are to someone and how close you wish you were. The dream isn’t about the person exactly. It’s about the shape of the space they’d fill if they were here the way you need them to be.',
+    'There’s an ache in this dream that doesn’t announce itself — it just sits there, steady and warm and impossible to ignore. The longing to be understood. To be met, truly met, by someone who doesn’t need you to translate yourself. That feeling buries itself during the day, but your dreams know exactly where to dig.',
+    'Something between you and someone else remains unfinished — a sentence that never got said, a goodbye that didn’t hold enough, or a closeness you pretend you’ve made peace with losing. This dream isn’t rushing you. It’s just holding the door open to what you haven’t let yourself feel yet.',
   ],
   conflict: [
-    'There’s fire in this dream — tension, friction, maybe even anger — and it’s almost certainly about something that hasn’t had space to come out during the day. Dreams will stage the fight your waking self has been avoiding.',
-    'The confrontation in this dream isn’t random. It usually mirrors something that’s been simmering — a frustration you haven’t expressed, a line someone crossed, or a part of you that’s done being quiet about it.',
-    'When a dream turns confrontational, it’s rarely about the other person. It’s usually about you finding the version of yourself that’s ready to push back — against a situation, a pattern, or a dynamic that doesn’t fit anymore.',
+    'There’s heat in this dream — the kind that builds behind closed teeth and swallowed words. Your waking self may be diplomatic, patient, measured. But your dreaming self lit a match, because something in you has been waiting too long for its turn to speak.',
+    'The collision in this dream didn’t come from nowhere. It’s the echo of something that’s been simmering — a boundary that was crossed and never addressed, a frustration that got swallowed instead of spoken, a part of you that’s been keeping the peace at its own expense.',
+    'The fight in this dream isn’t really about the other person. It’s about you — specifically, the version of you that’s done contorting to fit a shape someone else designed. Something in you is rehearsing what it looks like to stop accommodating and start taking up space.',
   ],
   caretaking: [
-    'This dream puts you in the role of protector, and if you’re honest, that probably doesn’t surprise you. The question it raises isn’t whether you care too much — it’s whether you ever let someone care for you the same way.',
-    'There’s a deep sense of responsibility running through this dream, and it feels like more than just kindness. It might be pointing to a pattern where you define your worth by how well you hold others together — sometimes at your own expense.',
-    'The person you’re protecting in this dream might be someone real, or they might be a part of you. Either way, the dream is asking you to notice how naturally you step into the caretaking role — and what it costs you.',
+    'You were the protector in this dream, and some part of you probably slipped into that role as naturally as breathing. But the dream is asking a harder question than whether you care. It’s asking who holds you when your arms are full of everyone else.',
+    'The weight of responsibility in this dream runs deeper than obligation — it feels almost like identity. There may be a pattern here worth examining: the one where your value quietly becomes inseparable from how well you hold other people together, as if your own needs are a luxury you haven’t earned.',
+    'The person you were protecting might be someone you know, or they might be a younger, softer part of yourself that still needs sheltering. Either way, the dream is quietly pointing at the price tag — the one you never look at, attached to every time you choose someone else’s needs over your own.',
   ],
   transformation: [
-    'Something is changing in this dream — maybe you, maybe the world around you — and the feeling is probably equal parts exciting and terrifying. Transformation dreams tend to arrive when you’re at a threshold, even if you haven’t fully stepped through yet.',
-    'Your dreaming mind seems to be rehearsing a shift. Whether it’s an ending, a beginning, or that disorienting space between the two, this dream is processing the reality that you’re becoming someone slightly different from who you were.',
-    'There’s a before-and-after quality to this dream. Something old is falling away and something new is taking shape, and the mixed feelings that come with that — grief and excitement, loss and possibility — are all part of it.',
+    'Something is shedding its skin in this dream — maybe the world, maybe you. Transformation announces itself with a feeling that lives exactly between terror and awe, and that’s probably what you felt. These dreams arrive at thresholds, in the hallway between who you’ve been and who you haven’t yet allowed yourself to become.',
+    'Your dreaming mind is rehearsing a metamorphosis. There’s an ending somewhere in this dream, and a beginning trying to form on the other side of it, and you’re standing in the disorienting space where both exist at once — no longer who you were, not yet who you’ll be.',
+    'This dream has a fault line running through it — a before and an after. Something familiar is dissolving, and something unnamed is taking its place. The grief and the excitement are arriving in the same breath, because that’s how real change always feels.',
   ],
   house_self: [
-    'In dreams, houses are almost always about you — each room a different part of who you are. Discovering a hidden room, finding a door you’d forgotten, or wandering through unfamiliar hallways usually means there’s something inside you that’s asking to be explored.',
-    'Your dream turned your inner world into a physical space, and the parts you lingered in probably matter. The rooms that felt familiar are the parts of yourself you know well; the ones that made you uneasy might be the ones worth opening.',
-    'There’s something deeply personal about a house dream. It’s your mind building a map of who you are right now — which parts feel like home, which feel abandoned, and which might be ready to be lived in again.',
+    'Your mind built you a house, and then it watched where you wandered. In dreams like this, every room is an interior you carry — some lived in, some locked, some you forgot existed. Whatever door caught your attention is probably the part of yourself that’s been knocking from the other side.',
+    'Your inner world became architecture while you slept. The rooms you recognized are the parts of yourself you visit often — the habits, the identity, the comfortable self. But the rooms that unsettled you, the hallways that felt too long? Those are the unopened letters from yourself.',
+    'A house dream is your psyche’s self-portrait, rendered in walls and doorways. It’s mapping you — which parts feel like home, which have gone cold from disuse, and which are quietly renovating themselves in the dark, preparing to be lived in again.',
   ],
   stuck: [
-    'If this dream felt like you were running in place, that’s because the feeling it’s processing is exactly that. Something in your life might be cycling without moving forward, and your dreaming mind is showing you the frustration your waking self keeps pushing aside.',
-    'The repetition in this dream isn’t a glitch — it’s a message. There’s something your mind keeps circling back to, some question or situation it can’t let go of yet, and the dream is asking you to stop trying to push through and instead look at what’s holding you in place.',
-    'Feeling stuck is one of the most universally frustrating experiences, and your dream captured it perfectly. The loop isn’t there to punish you — it’s there because something unresolved keeps asking for your attention.',
+    'The dream gave you the physical sensation of going nowhere, and that’s because something in your life is doing exactly that. A loop. A holding pattern. Your waking mind keeps pushing forward, but your dreaming mind pulled back the curtain and showed you the treadmill underneath.',
+    'The repetition isn’t a malfunction — it’s a mirror. There’s something your mind keeps returning to, some unresolved gravity that pulls you back before you can get clear. The dream isn’t asking you to push harder. It’s asking you to look down and see what your feet are stuck in.',
+    'Few things are more maddening than effort without movement, and your dream rendered that frustration perfectly. But the loop isn’t punishment — it’s persistence. Something unresolved keeps circling back, again and again, because it’s not done with you yet.',
   ],
 };
 
@@ -1146,7 +1206,16 @@ export function generatePatternNarrative(
   seed: number,
 ): { narrative: string; undercurrentLabel: string; reflectionQuestion: string } {
   const sections: string[] = [];
-  const { primaryPattern, secondaryPatterns } = patternResult;
+  const { primaryPattern, secondaryPatterns, confidence } = patternResult;
+
+  // Confidence-aware tone helpers — vary certainty of language by band
+  const toneVerb = confidence >= 0.65 ? 'seems to be' : confidence >= 0.45 ? 'may be' : 'could be';
+  const toneAdverb = confidence >= 0.65 ? '' : confidence >= 0.45 ? 'possibly ' : 'perhaps ';
+  const toneQualifier = confidence >= 0.65
+    ? 'and that thread runs clearly through the experience'
+    : confidence >= 0.45
+      ? 'though the thread is still taking shape'
+      : 'though this is one of several possible readings';
 
   // Key data
   const topMatches = keywordMatches.slice(0, 6);
@@ -1176,17 +1245,17 @@ export function generatePatternNarrative(
 
     if (settingPhrase) {
       const overviewVariants = [
-        `Your dream placed you ${settingPhrase}${characterPhrase}, and even now, something about that scene probably still lingers. The ${atmosphereWord} quality of it wasn’t accidental — there’s a thread of ${patternLabel.toLowerCase()} running through the whole experience.`,
-        `There’s a reason this dream chose ${settingPhrase.replace('in a ', 'a ')} as its stage${characterPhrase}. The atmosphere felt ${atmosphereWord}, and underneath the surface details, it seems to be working through something about ${patternLabel.toLowerCase()}.`,
-        `This dream unfolded ${settingPhrase}${characterPhrase} — and the fact that it felt ${atmosphereWord} matters. More than any single detail, the dream as a whole seems to be sitting with ${patternLabel.toLowerCase()}.`,
-        `Something about being ${settingPhrase}${characterPhrase} clearly stayed with you. The ${atmosphereWord} feeling that came with it points to something deeper — what looks like ${patternLabel.toLowerCase()} woven through the experience.`,
+        `Your dream placed you ${settingPhrase}${characterPhrase}, and something about that scene is probably still with you — a residue the waking mind can’t quite wash off. The ${atmosphereWord} quality of it wasn’t accidental — there ${toneVerb} a thread of ${patternLabel.toLowerCase()} running through the experience, ${toneQualifier}.`,
+        `There’s a reason this dream chose ${settingPhrase.replace('in a ', 'a ')} as its stage${characterPhrase}. The atmosphere felt ${atmosphereWord}, and underneath the surface details, it ${toneVerb} ${toneAdverb}working through something about ${patternLabel.toLowerCase()}.`,
+        `This dream unfolded ${settingPhrase}${characterPhrase} — and the ${atmosphereWord} quality of the whole thing isn’t decoration — it’s information. More than any single detail, the dream as a whole ${toneVerb} ${toneAdverb}sitting with ${patternLabel.toLowerCase()}.`,
+        `Something about being ${settingPhrase}${characterPhrase} clearly stayed with you. The ${atmosphereWord} feeling that came with it ${toneAdverb}points to something deeper — what ${confidence >= 0.65 ? 'looks like' : 'might be'} ${patternLabel.toLowerCase()} woven through the experience.`,
       ] as const;
       sections.push(pickVariant(overviewVariants, seed, 1));
     } else {
       const noSettingVariants = [
-        `Even without a vivid setting, this dream carries a ${atmosphereWord} emotional weight that’s hard to shake. What comes through most clearly is a sense of ${patternLabel.toLowerCase()} — the kind of thing that lingers after waking.`,
-        `The details may feel fuzzy, but the feeling is clear. There’s a thread of ${patternLabel.toLowerCase()} running through this dream, and the ${atmosphereWord} quality of it suggests your inner world was working on something that matters.`,
-        `What’s interesting about this dream isn’t the imagery — it’s the feeling. Something about ${patternLabel.toLowerCase()} seems to be at the center, even if the dream didn’t hand you a neat storyline to go with it.`,
+        `The setting may have been vague, but the feeling wasn’t. This dream carries a ${atmosphereWord} emotional weight that clings to you after waking. What comes through most clearly is ${confidence >= 0.65 ? 'a sense of' : 'what might be'} ${patternLabel.toLowerCase()} — the kind of thing that lingers after waking.`,
+        `The images blur, but the feeling stays sharp. There ${toneVerb} a thread of ${patternLabel.toLowerCase()} running through this dream, and the ${atmosphereWord} quality of it suggests your inner world was working on something that matters.`,
+        `The most interesting thing about this dream isn’t what you saw — it’s what you felt. Something about ${patternLabel.toLowerCase()} ${toneVerb} at the center, even if the dream didn’t hand you a neat storyline to go with it.`,
       ] as const;
       sections.push(pickVariant(noSettingVariants, seed, 1));
     }
@@ -1208,9 +1277,9 @@ export function generatePatternNarrative(
         .replace(/\.$/, '');
 
       const placeContextVariants = [
-        `The fact that it happened in a ${placeLabel} adds something — ${placeLabel}s are often tied to ${placeMeaning}, which deepens the feeling of what the dream was exploring.`,
-        `And the ${placeLabel} setting isn’t just backdrop. It’s a space that often carries feelings of ${placeMeaning}, which makes the pattern feel even more personal.`,
-        `Setting this in a ${placeLabel} — a place connected to ${placeMeaning} — grounds the pattern in something specific and makes the vulnerability feel more concrete.`,
+        `The fact that it unfolded in a ${placeLabel} adds a specific emotional texture. These spaces tend to carry associations with ${placeMeaning}, which sharpens what the dream was really exploring.`,
+        `And the ${placeLabel} isn’t just scenery — it’s emotionally loaded. It’s the kind of space that tends to hold feelings of ${placeMeaning}, which makes this dream feel less abstract and more like it’s pointing at something specific.`,
+        `Placing this in a ${placeLabel} — a space woven with ${placeMeaning} — gives the dream a specificity that makes the vulnerability feel less theoretical and more like something you’ve actually lived.`,
       ] as const;
       explanation += ' ' + pickVariant(placeContextVariants, seed, 21);
     }
@@ -1219,7 +1288,7 @@ export function generatePatternNarrative(
     if (secondaryPatterns.length > 0) {
       const secondaryLabels = secondaryPatterns.map(p => PATTERN_DISPLAY_LABELS[p].toLowerCase());
       if (secondaryLabels.length === 1) {
-        explanation += ` There’s also a quieter thread of ${secondaryLabels[0]} running underneath — not the main theme, but present enough to add texture to the experience.`;
+        explanation += ` There’s also a quieter thread of ${secondaryLabels[0]} moving underneath — not the dominant note, but persistent enough to give the dream a second dimension, a depth the primary pattern alone can’t explain.`;
       } else {
         explanation += ` Threads of ${secondaryLabels.join(' and ')} are woven in too, giving the dream more emotional range than a single pattern could hold.`;
       }
@@ -1244,30 +1313,30 @@ export function generatePatternNarrative(
     const mc = labelWithDeterminer(mainCharacter);
     if (primaryPattern === 'boundary' || primaryPattern === 'exposure') {
       const boundaryRelVariants = [
-        `Having ${mc} there makes this dream more personal. When someone you know shows up in a dream about vulnerability or boundaries, it usually isn’t about them specifically — it’s about what the space between you feels like, and whether it feels safe.`,
-        `The fact that ${mc} was part of this matters. Their presence seems to bring up something about the unspoken rules between you — about closeness, distance, and which parts of yourself feel okay to show.`,
-        `${capitalize(mc)} being in this dream adds a layer that’s worth sitting with. It’s less about them and more about the emotional dynamic — the question of who gets to see you when your guard is down.`,
+        `Having ${mc} there changes everything. In a dream about vulnerability, a familiar face isn’t a casting choice — it’s an emotional coordinate. The dream isn’t asking what you think of them. It’s asking what happens to you in the space between.`,
+        `${capitalize(mc)} didn’t wander into this dream by accident. Their presence activates something specific — the unspoken contract between you about what’s allowed, what’s hidden, and how much of yourself you can safely reveal in their orbit.`,
+        `${capitalize(mc)} being in this dream adds a layer that doesn’t have simple answers. It’s less about who they are and more about what proximity to them does to you — who you become, what you protect, and what you involuntarily reveal when your guard comes down.`,
       ] as const;
       sections.push(pickVariant(boundaryRelVariants, seed, 3));
     } else if (primaryPattern === 'authority' && isAuthority) {
       const authRelVariants = [
         `${capitalize(mc)} showing up here isn’t a coincidence. ${isFamily ? 'Family figures' : 'Authority figures'} in dreams rarely mean exactly what they seem — they tend to carry the full weight of your history with power, approval, and whether you felt free to be yourself around them.`,
-        `There’s something about ${mc} that your dreaming mind needed to revisit. They may not represent the person exactly — more likely, they’re standing in for a whole pattern of how you relate to authority, judgment, or the need to be seen as capable.`,
+        `There’s something about ${mc} that your dreaming mind needed to revisit. They may not represent the actual person so much as the shape they left on you — a whole pattern of how you stand in the presence of judgment, how you hold yourself when someone else decides whether you’re enough.`,
       ] as const;
       sections.push(pickVariant(authRelVariants, seed, 3));
     } else if (primaryPattern === 'connection') {
       const connectRelVariants = [
-        `${capitalize(mc)} being part of this dream gives the longing a face. Whether the connection felt warm or incomplete, what you felt in their presence says something about what closeness means to you right now.`,
-        `The fact that ${mc} was there changes the texture of this dream. It’s not abstract longing — it’s something about this specific relationship, or the kind of connection they represent, that your dreaming mind wanted to spend time with.`,
-        `${capitalize(mc)} seems to embody something your heart is reaching for right now. The dream may be less about the person and more about the quality of connection they bring — and whether you’re getting enough of it.`,
+        `${capitalize(mc)} being in this dream turns abstract longing into something you can almost touch. What you felt in their presence — the warmth, the incompleteness, the distance that somehow still ached — says more about what your heart is really asking for than any waking thought could.`,
+        `${capitalize(mc)} being there changes everything about this dream. The longing stops being theoretical and becomes specific — tethered to a real face, a real history, a particular quality of closeness your dreaming mind isn’t ready to let go of.`,
+        `${capitalize(mc)} seems to carry something your heart recognizes and reaches for. The dream may be less about the person and more about the particular flavor of being known, being held, being met — and the quiet hunger when that flavor goes missing from your days.`,
       ] as const;
       sections.push(pickVariant(connectRelVariants, seed, 3));
     } else if (personMatch) {
       // Generic character interpretation through the pattern lens
       const genericRelVariants = [
-        `${capitalize(mc)} showing up in this dream adds something personal to what might otherwise feel abstract. Your dreaming mind chose them for a reason — not necessarily because of who they are, but because of the feelings and history they carry.`,
-        `With ${mc} in the scene, the dream becomes less about concepts and more about relationships. Whatever they represent in your inner world — safety, unfinished business, comfort, tension — is probably part of what the dream is working through.`,
-        `The presence of ${mc} grounds this dream in something real. They may not represent themselves literally, but the emotions tied to them — the history, the dynamics — are very much part of what’s being processed here.`,
+        `${capitalize(mc)} showing up in this dream pulls the whole experience out of abstraction and into something personal. Your dreaming mind cast them deliberately — not for who they are on the surface, but for the emotional weight they carry in your inner world.`,
+        `With ${mc} in the scene, the dream shifts from metaphor to memory. Whatever they represent in your interior — safety, unfinished business, the particular ache of a certain kind of closeness — is woven into everything the dream was trying to process.`,
+        `The presence of ${mc} anchors this dream to something lived and felt. They may not represent themselves literally, but the emotional residue they carry in you — the history, the unresolved notes, the particular way they make you feel — is threaded through everything that happened here.`,
       ] as const;
       sections.push(pickVariant(genericRelVariants, seed, 3));
     }
@@ -1285,26 +1354,26 @@ export function generatePatternNarrative(
       // Lead with the emotional contradiction — this is the deepest insight
       const c = contradictions[0];
       const contradictionVariants = [
-        `Here’s what makes this dream interesting: you felt both ${c.poleA} and ${c.poleB}, and your mind didn’t try to pick one. Dreams do this when a feeling is too layered for a simple label — when the honest answer is "both." That doesn’t mean you’re confused. It means you’re processing something real.`,
-        `The tension between ${c.poleA} and ${c.poleB} in this dream is worth noticing. Most of the time, we pressure ourselves to feel one thing at a time — but your dreaming mind let both exist side by side, which usually happens when something genuinely complex is being worked through.`,
-        `There’s a push-pull between ${c.poleA} and ${c.poleB} in this dream that your waking mind might try to smooth over. But the dream didn’t. It held both feelings at once, which is often how the mind processes experiences that don’t fit neatly into boxes.`,
-        `You were feeling ${c.poleA} and ${c.poleB} at the same time, which might sound contradictory — but it’s actually one of the most honest things a dream can do. It means the experience it’s processing has more than one side, and your mind isn’t rushing to simplify it.`,
+        `Here’s what makes this dream worth paying attention to: you felt both ${c.poleA} and ${c.poleB}, and your dreaming mind didn’t try to resolve the contradiction. It let both exist. That’s rare — in waking life we’re always pressured to pick a lane. But the dream knows the honest answer is both, and it’s not afraid of that.`,
+        `${capitalize(c.poleA)} and ${c.poleB} don’t usually share a room — but in this dream, they did. That tension is worth noticing, because it means whatever your mind is processing is too layered to flatten into a single feeling. The dream is holding complexity your waking mind might try to simplify.`,
+        `There’s a pull between ${c.poleA} and ${c.poleB} in this dream that your waking mind would probably try to smooth over. But the dream refused to choose. It held the contradiction open, the way you’d hold a wound open to let it breathe. That’s not confusion — that’s courage.`,
+        `${capitalize(c.poleA)} and ${c.poleB} at the same time — it sounds impossible, but it’s actually one of the most honest states a dream can produce. It means whatever you’re processing has real depth, real texture, and your mind respects it enough not to flatten it into something easier to carry.`,
       ] as const;
       sections.push(pickVariant(contradictionVariants, seed, 4));
     } else if (uniqueEmotions.length >= 2) {
       // Multiple emotions — narrate them in context
       const emotionList = uniqueEmotions.map(e => e.toLowerCase());
       const multiEmotionVariants = [
-        `The feelings of ${emotionList.slice(0, -1).join(', ')} and ${emotionList[emotionList.length - 1]} didn’t arrive separately — they were braided together, and that blend matters. It suggests your mind was sitting with something that doesn’t have a simple emotional label, the kind of thing that takes more than one feeling to hold.`,
-        `You can feel the emotional range in this dream: ${emotionList.join(', ')}. That combination doesn’t mean anything went wrong — it means whatever your mind was processing has real depth to it, the kind of depth that one emotion alone can’t capture.`,
-        `The ${emotionList.join(' and ')} woven through this dream suggest you were working through something that matters. When feelings show up in clusters like this, it’s usually a sign that the experience underneath them is rich and layered rather than simple.`,
+        `The feelings of ${emotionList.slice(0, -1).join(', ')} and ${emotionList[emotionList.length - 1]} didn’t arrive separately — they bled into each other, the way colors do in water. That’s not emotional noise. It’s your dreaming mind refusing to simplify something your waking mind keeps trying to file under one label. The truth of what you’re carrying needs all of them at once.`,
+        `You can feel the emotional range in this dream: ${emotionList.join(', ')}. That combination is a fingerprint — no one else would dream this exact emotional chord. Whatever you’re processing lives at the intersection of all of them, in a place no single feeling can reach alone. The dream didn’t simplify it because it can’t be simplified.`,
+        `The ${emotionList.join(' and ')} woven through this dream suggest your dreaming mind was holding something the size of a whole season of your life — not a single event, but a current running underneath everything. When this many feelings converge in one dream, it’s because what you’re processing is too alive, too real, too yours to reduce to just one.`,
       ] as const;
       sections.push(pickVariant(multiEmotionVariants, seed, 4));
     } else if (uniqueEmotions.length === 1) {
       const soloEmotionVariants = [
-        `The ${uniqueEmotions[0].toLowerCase()} running through this dream wasn’t just background noise — it was the whole atmosphere. That single, steady feeling is usually the thing your inner world most needs you to notice.`,
-        `${uniqueEmotions[0]} colored everything in this dream, and it’s worth paying attention to. When one feeling dominates that completely, it’s often pointing to something your mind is actively sitting with in waking life too.`,
-        `Everything in this dream seems to circle back to ${uniqueEmotions[0].toLowerCase()}. That kind of emotional clarity — one feeling holding the whole dream together — usually means it’s something your mind really wants you to acknowledge.`,
+        `The ${uniqueEmotions[0].toLowerCase()} in this dream wasn’t background noise — it was the entire weather system. When a single emotion saturates a dream this completely, it’s usually the one feeling your waking mind has been holding at arm’s length. The dream brought it close.`,
+        `${uniqueEmotions[0]} colored everything in this dream — every image, every interaction, every transition. When one feeling dominates that completely, it’s not a mood. It’s a message. Something in your waking life is carrying this same frequency, and the dream is turning up the volume so you’ll finally hear it.`,
+        `Everything in this dream circles back to ${uniqueEmotions[0].toLowerCase()}, like a gravitational center the whole experience orbits. That kind of emotional singularity — one feeling holding an entire dream in its gravity — usually means your mind has decided this is the thing that needs acknowledging, whether you’re ready for it or not.`,
       ] as const;
       sections.push(pickVariant(soloEmotionVariants, seed, 4));
     }
@@ -1319,9 +1388,9 @@ export function generatePatternNarrative(
   // If high distress, add a gentle somatic close
   if (aggregates.activationScore === 'high' && aggregates.valenceScore <= -0.3) {
     const somaticVariants = [
-      'If your body is still holding any of that tension, a few slow breaths can help — just enough to remind yourself you’re here now, not there.',
-      'If any of that intensity is still lingering in your body, try placing a hand on your chest and breathing slowly. It helps your nervous system catch up to the fact that the dream is over.',
-      'Dreams this intense can leave a physical echo. If you notice tightness or restlessness, a few deep breaths can gently close the door on what surfaced.',
+      'If your body is still holding any of that — a tightness in the chest, a restlessness in the limbs — a few slow breaths can help bridge you back. You’re here now. The dream is behind you.',
+      'If any of that intensity is still humming in your body, try placing a hand on your chest and breathing slowly. Your nervous system sometimes needs a physical signal that the dream is over — that you made it through.',
+      'Dreams this vivid leave traces in the body. If you notice tension, heaviness, or a restlessness you can’t quite name, a few deep breaths can help close the circuit — letting your body know it’s safe to set the dream down.',
     ] as const;
     sections.push(pickVariant(somaticVariants, seed, 5));
   }
@@ -1377,7 +1446,9 @@ export function analyzeDreamPattern(
   // ── Minimum evidence gate ───────────────────────────────────────────────
   // If the dream text produced almost nothing to analyze, the pattern
   // engine can't do meaningful work. Fall back early.
-  const totalFeatures =
+  // Emotional features count at half weight — a dream can be short but
+  // emotionally rich and still deserve pattern analysis.
+  const structuralFeatures =
     features.settings.length +
     features.characters.length +
     features.actions.length +
@@ -1387,7 +1458,11 @@ export function analyzeDreamPattern(
     features.authorityThemes.length +
     features.privacyThemes.length +
     features.safetyThemes.length;
-  if (totalFeatures < 2) return null;
+  const emotionalFeatures =
+    features.emotionsExplicit.length +
+    features.emotionsInferred.length;
+  const totalEvidence = structuralFeatures + emotionalFeatures * 0.5;
+  if (totalEvidence < 2) return null;
 
   // 2. Pattern scoring
   const patternResult = scoreDreamPatterns(features);

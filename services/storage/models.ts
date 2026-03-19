@@ -44,6 +44,8 @@ export interface JournalEntry {
   contentWordCount?: number;    // plaintext word count
   contentReadingMinutes?: number; // estimated reading time
 
+  tags?: string[];       // user-selected tags (e.g. ['gratitude', 'growth'])
+
   createdAt: string;
   updatedAt: string;
 

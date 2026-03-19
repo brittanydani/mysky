@@ -99,6 +99,7 @@ export default function SomaticMapScreen() {
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const [intensity,       setIntensity]       = useState<number>(3);
   const [side,            setSide]            = useState<'front' | 'back'>('front');
+  const [gender,          setGender]          = useState<'female' | 'male'>('female');
 
   useFocusEffect(
     useCallback(() => {
@@ -124,10 +125,12 @@ export default function SomaticMapScreen() {
     [regionCounts],
   );
 
-  // Build Body component data — heat layer first, selected zone overrides on top
+  // Build Body component data — heat layer first, selected zone overrides on top.
+  // Nothing is highlighted until the user taps a region (selectedRegion starts null).
   const bodyData = useMemo<ExtendedBodyPart[]>(() => {
     const map = new Map<string, ExtendedBodyPart>();
 
+    // Heat layer: only shows regions with logged entries (empty on first use)
     ZONES.forEach((zone) => {
       const heat = regionCounts[zone.id] / maxCount;
       if (heat > 0) {
@@ -137,6 +140,7 @@ export default function SomaticMapScreen() {
       }
     });
 
+    // Selection layer: only applied after user taps a region
     if (selectedRegion) {
       const zone = ZONES.find((z) => z.id === selectedRegion);
       if (zone) {
@@ -214,22 +218,41 @@ export default function SomaticMapScreen() {
             <GoldSubtitle style={styles.headerSubtitle}>Where emotions live in your body</GoldSubtitle>
           </Animated.View>
 
-          {/* Front / Back toggle */}
-          <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.sideToggle}>
-            {(['front', 'back'] as const).map((s) => (
-              <Pressable
-                key={s}
-                style={[styles.sideBtn, side === s && styles.sideBtnActive]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                  setSide(s);
-                }}
-              >
-                <Text style={[styles.sideBtnText, side === s && styles.sideBtnTextActive]}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </Text>
-              </Pressable>
-            ))}
+          {/* Front / Back + Female / Male toggles */}
+          <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.toggleRow}>
+            <View style={styles.sideToggle}>
+              {(['front', 'back'] as const).map((s) => (
+                <Pressable
+                  key={s}
+                  style={[styles.sideBtn, side === s && styles.sideBtnActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                    setSide(s);
+                  }}
+                >
+                  <Text style={[styles.sideBtnText, side === s && styles.sideBtnTextActive]}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <View style={styles.sideToggle}>
+              {(['female', 'male'] as const).map((g) => (
+                <Pressable
+                  key={g}
+                  style={[styles.sideBtn, gender === g && styles.sideBtnActive]}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                    setGender(g);
+                  }}
+                >
+                  <Text style={[styles.sideBtnText, gender === g && styles.sideBtnTextActive]}>
+                    {g.charAt(0).toUpperCase() + g.slice(1)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </Animated.View>
 
           {/* Body map */}
@@ -238,7 +261,7 @@ export default function SomaticMapScreen() {
               data={bodyData}
               scale={BODY_SCALE}
               side={side}
-              gender="female"
+              gender={gender}
               colors={HEAT_COLORS}
               defaultFill="rgba(22,34,58,0.9)"
               defaultStroke="rgba(255,255,255,0.13)"
@@ -392,12 +415,18 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: { fontSize: 14 },
 
+  toggleRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+    alignSelf: 'center',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
   // Front / Back toggle
   sideToggle: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 20,
-    alignSelf: 'center',
   },
   sideBtn: {
     paddingHorizontal: 22,
@@ -429,15 +458,15 @@ const styles = StyleSheet.create({
   selectionPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
   selectionDot:  { width: 7, height: 7, borderRadius: 3.5 },
-  selectionText: { fontSize: 13, fontWeight: '600' },
+  selectionText: { fontSize: 11, fontWeight: '600' },
   selectionClear:{ fontSize: 18, color: 'rgba(255,255,255,0.35)', lineHeight: 20 },
   tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' },
 
@@ -451,14 +480,14 @@ const styles = StyleSheet.create({
 
   emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   emotionChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.09)',
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  emotionText: { fontSize: 13, color: PALETTE.textMuted },
+  emotionText: { fontSize: 11, color: PALETTE.textMuted },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   intensityDot: {

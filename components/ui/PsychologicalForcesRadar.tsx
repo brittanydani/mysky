@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient, BlurMask } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
-import { applyStoryLabels } from '../../constants/storyLabels';
 import { MetallicText } from './MetallicText';
 
 interface ForceData {
@@ -168,7 +167,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
         const leftOffset = isCenter ? -50 : isLeft ? -108 : 8;
         const topOffset  = isCenter ? (isAbove ? -22 : 4) : -10;
 
-        const textContent = SHORT_FORCE_LABELS[force.label] ? SHORT_FORCE_LABELS[force.label] : applyStoryLabels(force.label);
+        const textContent = SHORT_FORCE_LABELS[force.label] ?? force.label;
 
         return (
           <View

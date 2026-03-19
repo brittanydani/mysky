@@ -4,8 +4,9 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Crypto from 'expo-crypto';
-
-// Polyfill WebCrypto (crypto.subtle) for Expo
+import { gcm } from '@noble/ciphers/aes.js';
+import { pbkdf2Async } from '@noble/hashes/pbkdf2';
+import { sha256 } from '@noble/hashes/sha2';
 
 import { localDb } from './localDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
@@ -50,7 +51,7 @@ type BackupEnvelope = {
  * ============================================================================
  */
 
-const KDF_ITERATIONS = 600_000;
+const KDF_ITERATIONS = 100_000;
 const KEY_LEN = 32; // bytes (AES-256)
 const SALT_LEN = 16;
 const IV_LEN = 12;
@@ -83,105 +84,38 @@ const decodeUtf8 = (value: Uint8Array): string =>
   new TextDecoder().decode(value);
 
 /* ============================================================================
- * WebCrypto helpers (TS-safe)
- * ============================================================================
- */
-
-type SubtleLike = {
-  importKey: (...args: any[]) => Promise<any>;
-  deriveKey: (...args: any[]) => Promise<any>;
-  encrypt: (...args: any[]) => Promise<ArrayBuffer>;
-  decrypt: (...args: any[]) => Promise<ArrayBuffer>;
-};
-
-function getSubtle(): SubtleLike {
-  const cryptoObj = (globalThis as any)?.crypto;
-  const subtle = cryptoObj?.subtle as SubtleLike | undefined;
-
-  if (!subtle) {
-    throw new Error(
-      'WebCrypto (crypto.subtle) is not available. Ensure expo-standard-web-crypto is installed and imported.'
-    );
-  }
-  return subtle;
-}
-
-/**
- * IMPORTANT:
- * We must COPY bytes into a fresh ArrayBuffer to avoid
- * ArrayBuffer | SharedArrayBuffer TypeScript errors.
- */
-function u8ToArrayBuffer(u8: Uint8Array): ArrayBuffer {
-  const copy = new Uint8Array(u8.byteLength);
-  copy.set(u8);
-  return copy.buffer;
-}
-
-function arrayBufferToU8(buf: ArrayBuffer | SharedArrayBuffer): Uint8Array {
-  return new Uint8Array(buf as ArrayBuffer);
-}
-
-/* ============================================================================
- * Crypto primitives
+ * Crypto primitives — pure JS via @noble/ciphers + @noble/hashes
+ * (no WebCrypto / expo-standard-web-crypto polyfill required)
  * ============================================================================
  */
 
 async function deriveAesKeyPBKDF2(
   passphrase: string,
   salt: Uint8Array
-): Promise<any> {
-  const subtle = getSubtle();
-
+): Promise<Uint8Array> {
   const passBytes = encodeUtf8(passphrase);
-
-  const baseKey = await subtle.importKey(
-    'raw',
-    u8ToArrayBuffer(passBytes),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveKey']
-  );
-
-  return subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: u8ToArrayBuffer(salt),
-      iterations: KDF_ITERATIONS,
-      hash: 'SHA-256',
-    },
-    baseKey,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
+  return pbkdf2Async(sha256, passBytes, salt, {
+    c: KDF_ITERATIONS,
+    dkLen: KEY_LEN,
+  });
 }
 
-async function encryptAesGcm(
+function encryptAesGcm(
   plaintext: Uint8Array,
-  key: any,
+  key: Uint8Array,
   iv: Uint8Array
-): Promise<Uint8Array> {
-  const subtle = getSubtle();
-  const ciphertext = await subtle.encrypt(
-    { name: 'AES-GCM', iv: u8ToArrayBuffer(iv) },
-    key,
-    u8ToArrayBuffer(plaintext)
-  );
-  return arrayBufferToU8(ciphertext);
+): Uint8Array {
+  const cipher = gcm(key, iv);
+  return cipher.encrypt(plaintext);
 }
 
-async function decryptAesGcm(
+function decryptAesGcm(
   ciphertext: Uint8Array,
-  key: any,
+  key: Uint8Array,
   iv: Uint8Array
-): Promise<Uint8Array> {
-  const subtle = getSubtle();
-  const plaintext = await subtle.decrypt(
-    { name: 'AES-GCM', iv: u8ToArrayBuffer(iv) },
-    key,
-    u8ToArrayBuffer(ciphertext)
-  );
-  return arrayBufferToU8(plaintext);
+): Uint8Array {
+  const cipher = gcm(key, iv);
+  return cipher.decrypt(ciphertext);
 }
 
 /* ============================================================================
@@ -219,16 +153,18 @@ export class BackupService {
     const insightHistory: SavedInsight[] = [];
     const sleepEntries: SleepEntry[] = [];
     const checkIns: import('../patterns/types').DailyCheckIn[] = [];
-    for (const chart of charts) {
-      const rels = await localDb.getRelationshipCharts(chart.id);
+    await Promise.all(charts.map(async (chart) => {
+      const [rels, insights, sleep, dailyCheckIns] = await Promise.all([
+        localDb.getRelationshipCharts(chart.id),
+        localDb.getInsightHistory(chart.id),
+        localDb.getSleepEntries(chart.id, 10000),
+        localDb.getCheckIns(chart.id, 10000),
+      ]);
       relationshipCharts.push(...rels);
-      const insights = await localDb.getInsightHistory(chart.id);
       insightHistory.push(...insights);
-      const sleep = await localDb.getSleepEntries(chart.id, 10000);
       sleepEntries.push(...sleep);
-      const dailyCheckIns = await localDb.getCheckIns(chart.id, 10000);
       checkIns.push(...dailyCheckIns);
-    }
+    }));
 
     // Refuse to proceed if any decrypted field returned the failure placeholder.
     // This prevents exporting a backup with corrupted/placeholder content.
@@ -262,6 +198,9 @@ export class BackupService {
 
     const salt = await Crypto.getRandomBytesAsync(SALT_LEN);
     const iv = await Crypto.getRandomBytesAsync(IV_LEN);
+
+    // Yield to the macrotask queue so the UI can update before heavy crypto work
+    await new Promise<void>((r) => setTimeout(r, 50));
 
     const key = await deriveAesKeyPBKDF2(passphrase, salt);
     const ciphertext = await encryptAesGcm(plaintext, key, iv);

@@ -28,7 +28,6 @@ import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
-import { getMoonPhaseInfo, getMoonSignForDate } from '../../utils/moonPhase';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
@@ -561,7 +560,6 @@ export default function MoodCheckIn() {
               </Text>
             </View>
           )}
-          {!isLoading && <MoonWeekStrip width={CARD_INNER_W} />}
         </View>
 
         {/* 1–10 Haptic Sliders */}
@@ -751,121 +749,6 @@ export default function MoodCheckIn() {
     </View>
   );
 }
-
-// ─── Moon Week Strip ──────────────────────────────────────────────────────────
-
-interface MoonDayInfo {
-  emoji: string;
-  phaseName: string;
-  sign: string;
-  isToday: boolean;
-}
-
-function buildMoonWeekData(): MoonDayInfo[] {
-  const today = new Date();
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    const info = getMoonPhaseInfo(d);
-    return {
-      emoji: info.emoji,
-      phaseName: info.name,
-      sign: getMoonSignForDate(d),
-      isToday: i === 6,
-    };
-  });
-}
-
-function MoonWeekStrip({ width: _width }: { width: number }) {
-  const [activeIdx, setActiveIdx] = useState<number | null>(null);
-  const moonData = React.useMemo(() => buildMoonWeekData(), []);
-  const active = activeIdx !== null ? moonData[activeIdx] : null;
-
-  return (
-    <View style={{ marginTop: 10 }}>
-      <Text style={moonStripStyles.label}>MOON THIS WEEK</Text>
-      {/* flex:1 per cell gives each button a large, reliable tap target */}
-      <View style={moonStripStyles.row}>
-        {moonData.map((day, i) => {
-          const isActive = activeIdx === i;
-          return (
-            <Pressable
-              key={i}
-              hitSlop={8}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setActiveIdx(prev => (prev === i ? null : i));
-              }}
-              style={[
-                moonStripStyles.dayBtn,
-                day.isToday && moonStripStyles.dayBtnToday,
-                isActive && moonStripStyles.dayBtnActive,
-              ]}
-            >
-              <Text style={moonStripStyles.emoji}>{day.emoji}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      {/* Inline info row shown below when a day is tapped */}
-      {active !== null && (
-        <View style={moonStripStyles.infoRow}>
-          <Text style={moonStripStyles.tooltipPhase}>{active.emoji}  {active.phaseName}</Text>
-          <Text style={moonStripStyles.tooltipSign}>Moon in {active.sign}</Text>
-        </View>
-      )}
-    </View>
-  );
-}
-
-const moonStripStyles = StyleSheet.create({
-  label: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.3)',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  dayBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  dayBtnToday: {
-    backgroundColor: 'rgba(217,191,140,0.06)',
-    borderColor: 'rgba(217,191,140,0.18)',
-  },
-  dayBtnActive: {
-    backgroundColor: 'rgba(217,191,140,0.14)',
-    borderColor: 'rgba(217,191,140,0.38)',
-  },
-  emoji: { fontSize: 16 },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingTop: 8,
-    paddingBottom: 2,
-  },
-  tooltipPhase: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  tooltipSign: {
-    color: 'rgba(217,191,140,0.8)',
-    fontSize: 11,
-  },
-});
 
 // ─── Custom Haptic Slider ─────────────────────────────────────────────────────
 

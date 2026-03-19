@@ -29,6 +29,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { SynastryEngine, SynastryReport, SynastryAspect } from '../../services/astrology/synastryEngine';
 import { RelationshipInsightGenerator, RelationshipInsight } from '../../services/astrology/relationshipInsights';
 import { PremiumRelationshipService, RelationshipComparison } from '../../services/premium/relationshipCharts';
+import { exportChartToPdf } from '../../services/premium/pdfExport';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import NeedsComparison from '../../components/ui/NeedsComparison';
@@ -88,6 +89,9 @@ export default function RelationshipsScreen() {
   
   // Synastry preview for list cards
   const [synastryPreviews, setSynastryPreviews] = useState<Record<string, { aspects: SynastryAspect[]; connection: string }>>({});
+
+  // Export state
+  const [isExporting, setIsExporting] = useState(false);
 
   // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -294,6 +298,29 @@ export default function RelationshipsScreen() {
     setSummaryPerson('them');
   };
 
+  const handleExportPdf = useCallback(async () => {
+    if (!isPremium) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      router.push('/(tabs)/premium' as Href);
+      return;
+    }
+    if (!selectedChart || isExporting) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsExporting(true);
+
+    try {
+      await exportChartToPdf(selectedChart);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (err) {
+      logger.error('[Relationships] PDF export failed:', err);
+      Alert.alert('Export failed', 'Something went wrong generating the PDF. Please try again.');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [isPremium, selectedChart, isExporting, router]);
+
   const handleDeleteRelationship = () => {
     if (!selectedRelationship) return;
     confirmDeleteRelationship(selectedRelationship, true);
@@ -375,6 +402,11 @@ export default function RelationshipsScreen() {
               <Text style={styles.detailTitle}>Relationship Chart</Text>
               <Text style={styles.detailSubtitle}>{userName} + {selectedRelationship.name}</Text>
             </View>
+            <Pressable onPress={handleExportPdf} disabled={isExporting} style={styles.exportButton}>
+              {isExporting
+                ? <ActivityIndicator size="small" color={theme.textGold} />
+                : <MetallicIcon name="share-outline" size={22} variant="gold" />}
+            </Pressable>
             <Pressable onPress={handleDeleteRelationship} style={styles.deleteButton}>
               <MetallicIcon name="trash-outline" size={22} color="#CD7F5D" />
             </Pressable>
@@ -802,6 +834,7 @@ const styles = StyleSheet.create({
   detailHeaderCenter: { flex: 1, alignItems: 'center' },
   detailTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   detailSubtitle: { fontSize: 13, color: theme.textSecondary, marginTop: 4, fontStyle: 'italic' },
+  exportButton: { padding: 8 },
   deleteButton: { padding: 8 },
   detailScroll: { flex: 1 },
   detailScrollContent: { paddingHorizontal: 20, paddingTop: 16 },

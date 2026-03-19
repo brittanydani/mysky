@@ -122,6 +122,8 @@ function buildAspectDefs(orbConfig?: OrbConfiguration, includeMinor: boolean = f
       { type: 'semisquare', angle: 45, orb: orbs.semisquare ?? 2 },
       { type: 'quincunx', angle: 150, orb: orbs.quincunx ?? 3 },
       { type: 'sesquiquadrate', angle: 135, orb: orbs.sesquiquadrate ?? 2 },
+      { type: 'quintile', angle: 72, orb: orbs.quintile ?? 2 },
+      { type: 'biquintile', angle: 144, orb: orbs.biquintile ?? 2 },
     );
   }
   return defs;

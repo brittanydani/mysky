@@ -273,10 +273,10 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, fontWeight: '800', marginBottom: 16 },
 
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
-  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
+  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
   chipSelected: { borderColor: 'rgba(217,191,140,0.4)', backgroundColor: 'rgba(217,191,140,0.1)' },
   chipTop: { borderColor: PALETTE.gold, backgroundColor: PALETTE.gold },
-  chipText: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '500' },
+  chipText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '500' },
   chipTextSelected: { color: PALETTE.gold, fontWeight: '600' },
   chipTextTop: { color: PALETTE.bg, fontWeight: '800' },
 

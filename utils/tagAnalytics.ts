@@ -18,6 +18,7 @@
 import { DailyAggregate, ChartProfile, Element } from '../services/insights/types';
 import { regulationStyle } from '../services/insights/chartProfile';
 import type { ConfidenceLevel } from './insightsEngine';
+import { ordinal } from './insightsEngine';
 import { mean, confidence } from './stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -671,7 +672,7 @@ export function computeTagChartAgreement(
       return null;
     },
     social: (p) => {
-      if (p.moonHouse === 7 || p.moonHouse === 11) return `Your Moon in the ${p.moonHouse}th house finds regulation through connection`;
+      if (p.moonHouse === 7 || p.moonHouse === 11) return `Your Moon in the ${ordinal(p.moonHouse)} house finds regulation through connection`;
       if (p.dominantElement === 'Air') return 'Your Air-dominant chart processes through dialogue and relationship';
       return null;
     },

@@ -7,7 +7,6 @@ import * as FileSystem from 'expo-file-system/legacy';
 
 import { NatalChart, Aspect } from '../astrology/types';
 import { GeneratedChapter } from './fullNatalStory';
-import { applyStoryLabels } from '../../constants/storyLabels';
 
 // ─── Symbol maps ──────────────────────────────────────────────────────────────
 
@@ -70,9 +69,304 @@ function degMin(deg: number, min: number): string {
   return `${deg}° ${String(min).padStart(2, '0')}'`;
 }
 
+// ─── SVG Natal Chart ──────────────────────────────────────────────────────────
+
+const SIGN_OFFSETS_SVG: Record<string, number> = {
+  Aries: 0, Taurus: 30, Gemini: 60, Cancer: 90, Leo: 120, Virgo: 150,
+  Libra: 180, Scorpio: 210, Sagittarius: 240, Capricorn: 270, Aquarius: 300, Pisces: 330,
+};
+const SIGN_SYMS_SVG = ['♈\uFE0E','♉\uFE0E','♊\uFE0E','♋\uFE0E','♌\uFE0E','♍\uFE0E','♎\uFE0E','♏\uFE0E','♐\uFE0E','♑\uFE0E','♒\uFE0E','♓\uFE0E'];
+const ELEMENT_FILLS_SVG = [
+  'rgba(200,80,60,0.22)',   // Aries   — Fire
+  'rgba(90,160,90,0.20)',   // Taurus  — Earth
+  'rgba(70,150,210,0.20)',  // Gemini  — Air
+  'rgba(70,120,200,0.22)',  // Cancer  — Water
+  'rgba(210,100,50,0.22)',  // Leo     — Fire
+  'rgba(110,170,90,0.20)',  // Virgo   — Earth
+  'rgba(90,170,210,0.20)',  // Libra   — Air
+  'rgba(100,60,180,0.22)',  // Scorpio — Water
+  'rgba(200,110,50,0.22)',  // Sagittarius — Fire
+  'rgba(130,160,110,0.20)', // Capricorn   — Earth
+  'rgba(70,180,210,0.20)',  // Aquarius    — Air
+  'rgba(80,110,200,0.22)',  // Pisces      — Water
+];
+// Planet symbols for HTML/WebKit context — append \uFE0E to prevent emoji rendering
+const PLANET_SVG_SYMS: Record<string, string> = {
+  Sun: '☉\uFE0E', Moon: '☽\uFE0E', Mercury: '☿\uFE0E', Venus: '♀\uFE0E', Mars: '♂\uFE0E',
+  Jupiter: '♃\uFE0E', Saturn: '♄\uFE0E', Uranus: '♅\uFE0E', Neptune: '♆\uFE0E', Pluto: '♇\uFE0E',
+  'North Node': '☊\uFE0E', 'South Node': '☋\uFE0E',
+  Chiron: 'Ch', Lilith: 'Li', 'Part of Fortune': '⊗\uFE0E', Pholus: 'Ph',
+};
+const ASPECT_SVG_COLORS: Record<string, { line: string; glow: string }> = {
+  Harmonious: { line: 'rgba(170,210,185,0.55)', glow: 'rgba(170,210,185,0.18)' },
+  Challenging: { line: 'rgba(210,170,160,0.55)', glow: 'rgba(210,170,160,0.18)' },
+  Neutral: { line: 'rgba(203,184,146,0.55)', glow: 'rgba(203,184,146,0.18)' },
+};
+
+// ── Planet collision avoidance for SVG chart ──
+function spreadPlanetsSvg(
+  items: { name: string; lon: number }[],
+  minSepDeg: number = 8,
+): { name: string; lon: number; displayDeg: number; lane: number }[] {
+  const sorted = [...items].sort((a, b) => a.lon - b.lon);
+  const result = sorted.map(p => ({ ...p, displayDeg: p.lon, lane: 0 }));
+
+  // Group nearby planets into clusters
+  const clusters: number[][] = [];
+  let current: number[] = [];
+  for (let i = 0; i < result.length; i++) {
+    if (current.length === 0) { current.push(i); continue; }
+    const prev = result[current[current.length - 1]];
+    let gap = result[i].lon - prev.lon;
+    if (gap < 0) gap += 360;
+    if (gap <= minSepDeg) { current.push(i); }
+    else { clusters.push(current); current = [i]; }
+  }
+  if (current.length > 0) clusters.push(current);
+
+  // Merge first+last cluster if they wrap around 360
+  if (clusters.length > 1) {
+    const first = result[clusters[0][0]];
+    const last = result[clusters[clusters.length - 1][clusters[clusters.length - 1].length - 1]];
+    let wrapGap = (first.lon + 360) - last.lon;
+    if (wrapGap <= minSepDeg) {
+      clusters[0] = [...clusters[clusters.length - 1], ...clusters[0]];
+      clusters.pop();
+    }
+  }
+
+  const lanePattern = [0, -1, 1, -2, 2];
+  for (const cluster of clusters) {
+    if (cluster.length <= 1) continue;
+    for (let i = 0; i < cluster.length; i++) {
+      result[cluster[i]].lane = lanePattern[i % lanePattern.length] ?? 0;
+    }
+  }
+  return result;
+}
+
+function buildChartSvg(chart: NatalChart): string {
+  const S = 480;
+  const CX = S / 2, CY = S / 2;
+  const R_RIM = 218;   // outer metallic rim
+  const R_OUT = 208;    // outer edge of zodiac band
+  const R_ZOD = 182;    // inner edge of zodiac band
+  const R_PLN = 146;    // planet glyph ring
+  const R_ASP = 110;    // aspect lines bound to this radius
+  const R_INN = 70;     // inner circle
+  const R_DOT1 = R_PLN - 16;  // dotted reference ring 1
+  const R_DOT2 = R_ASP + 8;   // dotted reference ring 2
+  const LANE_STEP = 14; // radial offset per collision lane
+
+  // ASC longitude: prefer chart.ascendant (same source as Skia), fall back to house 1 cusp
+  const ascLon =
+    (chart.ascendant as any)?.longitude ??
+    chart.houseCusps?.find(c => c.house === 1)?.longitude ??
+    chart.houseCusps?.[0]?.longitude ?? 0;
+  const hasHouses = (chart.houseCusps?.length ?? 0) >= 12;
+
+  /** Map ecliptic longitude → SVG angle (degrees). ASC sits at 9 o'clock. */
+  function toSvgDeg(lon: number): number {
+    const d = ((lon - ascLon) % 360 + 360) % 360;
+    return ((180 - d) % 360 + 360) % 360;
+  }
+  function pol(deg: number, r: number): { x: string; y: string } {
+    const rad = (deg * Math.PI) / 180;
+    return { x: (CX + r * Math.cos(rad)).toFixed(1), y: (CY + r * Math.sin(rad)).toFixed(1) };
+  }
+  /** Get precise longitude from a PlanetPlacement. Uses the direct longitude
+   *  field for full floating-point accuracy instead of reconstructing from
+   *  sign + degree + minute (which rounds to arcminutes). */
+  function getLon(p: any): number {
+    // Prefer the precise longitude field (PlanetPlacement.longitude: 0–360)
+    if (typeof p.longitude === 'number' && Number.isFinite(p.longitude)) {
+      return ((p.longitude % 360) + 360) % 360;
+    }
+    // Fallback: reconstruct from sign + degree + minute
+    return (SIGN_OFFSETS_SVG[p.sign?.name] ?? 0) + (p.degree ?? 0) + (p.minute ?? 0) / 60;
+  }
+
+  let o = '';
+
+  // ── SVG Definitions (gradients, filters) ──
+  o += `<defs>`;
+  // Metallic rim sweep gradient (simulated with a rotated linear gradient)
+  o += `<radialGradient id="rimGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="92%" stop-color="transparent"/>
+    <stop offset="96%" stop-color="rgba(232,214,174,0.12)"/>
+    <stop offset="100%" stop-color="transparent"/>
+  </radialGradient>`;
+  // Glow filter for aspect lines
+  o += `<filter id="aspectGlow" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/>
+  </filter>`;
+  // Dotted line pattern
+  o += `</defs>`;
+
+  // ── Background ──
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_RIM + 4}" fill="#0D1421"/>`;
+
+  // ── Outer metallic rim ──
+  // Underglow
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_RIM + 2}" fill="none" stroke="rgba(232,214,174,0.15)" stroke-width="6" opacity="0.5"/>`;
+  // Main rim - outer edge
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_RIM}" fill="none" stroke="rgba(212,175,55,0.55)" stroke-width="1.5"/>`;
+  // Inner edge of rim
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_OUT + 2}" fill="none" stroke="rgba(212,175,55,0.35)" stroke-width="0.8"/>`;
+  // Rim fill band
+  for (let a = 0; a < 360; a += 3) {
+    const rad = (a * Math.PI) / 180;
+    // Simulated sweep gradient: brightness varies around the circle
+    const brightness = 0.15 + 0.2 * Math.sin(rad * 2.7 + 0.5) + 0.1 * Math.cos(rad * 1.3 - 0.8);
+    const alpha = Math.max(0.05, Math.min(0.4, brightness)).toFixed(2);
+    const p1 = pol(a, R_OUT + 2);
+    const p2 = pol(a, R_RIM);
+    o += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="rgba(212,175,55,${alpha})" stroke-width="3.5"/>`;
+  }
+  // Specular highlight arc (upper-left catchlight)
+  const specStart = pol(200, R_RIM - 1);
+  const specEnd = pol(240, R_RIM - 1);
+  o += `<path d="M ${specStart.x} ${specStart.y} A ${R_RIM - 1} ${R_RIM - 1} 0 0 0 ${specEnd.x} ${specEnd.y}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/>`;
+
+  // ── Zodiac segments (12 × 30°) ──
+  for (let i = 0; i < 12; i++) {
+    const startDeg = toSvgDeg(i * 30);
+    const endDeg   = toSvgDeg((i + 1) * 30);
+    const oS = pol(startDeg, R_OUT), oE = pol(endDeg, R_OUT);
+    const iE = pol(endDeg, R_ZOD), iS = pol(startDeg, R_ZOD);
+    o += `<path d="M ${oS.x} ${oS.y} A ${R_OUT} ${R_OUT} 0 0 0 ${oE.x} ${oE.y} L ${iE.x} ${iE.y} A ${R_ZOD} ${R_ZOD} 0 0 1 ${iS.x} ${iS.y} Z" fill="${ELEMENT_FILLS_SVG[i]}"/>`;
+    // Separator line
+    o += `<line x1="${oS.x}" y1="${oS.y}" x2="${iS.x}" y2="${iS.y}" stroke="rgba(232,214,174,0.18)" stroke-width="0.6"/>`;
+    // Sign glyph
+    const mp = pol(toSvgDeg(i * 30 + 15), (R_OUT + R_ZOD) / 2);
+    o += `<text x="${mp.x}" y="${mp.y}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="rgba(240,234,214,0.82)" font-family="Apple Symbols,Segoe UI Symbol,Noto Sans Symbols2,serif">${SIGN_SYMS_SVG[i]}</text>`;
+  }
+
+  // ── Rim circles ──
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_OUT}" fill="none" stroke="rgba(212,175,55,0.45)" stroke-width="1.2"/>`;
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_ZOD}" fill="none" stroke="rgba(232,214,174,0.2)" stroke-width="0.6"/>`;
+
+  // ── Dotted reference rings ──
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_DOT1}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.6" stroke-dasharray="1.5 7"/>`;
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_DOT2}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.6" stroke-dasharray="1.5 7"/>`;
+
+  // ── House cusp lines + house numbers ──
+  if (hasHouses) {
+    chart.houseCusps!.forEach((cusp) => {
+      const houseNum = cusp.house;
+      const svgDeg = toSvgDeg(cusp.longitude);
+      const angular = [1, 4, 7, 10].includes(houseNum);
+      const outerP = pol(svgDeg, R_ZOD - 1);
+      const innerP = pol(svgDeg, R_INN);
+      o += `<line x1="${outerP.x}" y1="${outerP.y}" x2="${innerP.x}" y2="${innerP.y}" stroke="${angular ? 'rgba(232,214,174,0.65)' : 'rgba(232,214,174,0.2)'}" stroke-width="${angular ? 1.2 : 0.5}"/>`;
+      // House number at midpoint between this cusp and next
+      const nextHouseNum = (houseNum % 12) + 1;
+      const nextCusp = chart.houseCusps!.find(c => c.house === nextHouseNum);
+      let midLon = cusp.longitude + 15; // fallback
+      if (nextCusp) {
+        let span = nextCusp.longitude - cusp.longitude;
+        if (span < 0) span += 360;
+        midLon = cusp.longitude + span / 2;
+        if (midLon >= 360) midLon -= 360;
+      }
+      const numR = (R_ZOD + R_PLN) / 2 + 2;
+      const numP = pol(toSvgDeg(midLon), numR);
+      o += `<text x="${numP.x}" y="${numP.y}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="rgba(240,234,214,0.4)" font-family="sans-serif">${houseNum}</text>`;
+    });
+  }
+
+  // ── Aspect lines (glow + line) ──
+  chart.aspects?.slice(0, 80).forEach(a => {
+    const p1 = chart.placements.find(p => p.planet.name === a.planet1.name);
+    const p2 = chart.placements.find(p => p.planet.name === a.planet2.name);
+    if (!p1 || !p2) return;
+    const pt1 = pol(toSvgDeg(getLon(p1)), R_ASP);
+    const pt2 = pol(toSvgDeg(getLon(p2)), R_ASP);
+    const colors = ASPECT_SVG_COLORS[a.type.nature] ?? { line: 'rgba(150,150,150,0.4)', glow: 'rgba(150,150,150,0.12)' };
+    // Glow layer
+    o += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${colors.glow}" stroke-width="2.5" filter="url(#aspectGlow)"/>`;
+    // Main line
+    const orb = a.orb ?? 99;
+    const sw = orb < 3 ? 0.9 : 0.55;
+    o += `<line x1="${pt1.x}" y1="${pt1.y}" x2="${pt2.x}" y2="${pt2.y}" stroke="${colors.line}" stroke-width="${sw}"/>`;
+  });
+
+  // ── Inner circle ──
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_INN}" fill="#080F1C" stroke="rgba(232,214,174,0.12)" stroke-width="0.6"/>`;
+  // Planet ring guide
+  o += `<circle cx="${CX}" cy="${CY}" r="${R_PLN}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>`;
+
+  // ── Planet glyphs with collision avoidance ──
+  const planetItems = chart.placements.map(p => ({
+    name: p.planet.name,
+    lon: getLon(p),
+    placement: p,
+  }));
+  const spread = spreadPlanetsSvg(
+    planetItems.map(p => ({ name: p.name, lon: p.lon })),
+    9,
+  );
+  const placementMap = new Map(planetItems.map(p => [p.name, p.placement]));
+
+  spread.forEach(sp => {
+    const p = placementMap.get(sp.name);
+    if (!p) return;
+    const svgDeg = toSvgDeg(sp.lon);
+    const radialR = R_PLN + sp.lane * LANE_STEP;
+    const pos = pol(svgDeg, radialR);
+    const tick1 = pol(svgDeg, R_ZOD - 3);
+    const tick2 = pol(svgDeg, R_PLN + 16);
+    o += `<line x1="${tick1.x}" y1="${tick1.y}" x2="${tick2.x}" y2="${tick2.y}" stroke="rgba(232,214,174,0.2)" stroke-width="0.5"/>`;
+    const sym = esc(PLANET_SVG_SYMS[p.planet.name] ?? p.planet.name.substring(0, 2));
+    const isAbbrev = !PLANET_SVG_SYMS[p.planet.name] || sym.length > 2;
+    const col = p.planet.type === 'Luminary' ? '#D8C39A' : 'rgba(212,175,55,0.9)';
+    const fam = isAbbrev ? 'sans-serif' : 'Apple Symbols,Segoe UI Symbol,Noto Sans Symbols2,serif';
+    // Small sphere background for major planets
+    const isMajor = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'].includes(p.planet.name);
+    if (isMajor) {
+      o += `<circle cx="${pos.x}" cy="${pos.y}" r="10" fill="rgba(30,45,71,0.7)" stroke="rgba(232,214,174,0.25)" stroke-width="0.6"/>`;
+    }
+    o += `<text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="central" font-size="${isAbbrev ? 7.5 : 11}" fill="${col}" font-family="${fam}">${sym}</text>`;
+    // Retrograde indicator
+    if (p.isRetrograde) {
+      const rx = (parseFloat(pos.x) + 8).toFixed(1);
+      const ry = (parseFloat(pos.y) - 7).toFixed(1);
+      o += `<text x="${rx}" y="${ry}" text-anchor="middle" dominant-baseline="central" font-size="5.5" fill="rgba(212,175,55,0.7)" font-style="italic" font-family="sans-serif">R</text>`;
+    }
+  });
+
+  // ── ASC label ──
+  const ascDeg = toSvgDeg(ascLon);
+  const ascP = pol(ascDeg, R_ZOD - 12);
+  o += `<text x="${ascP.x}" y="${ascP.y}" text-anchor="middle" dominant-baseline="central" font-size="7.5" fill="rgba(232,214,174,0.9)" font-weight="bold" font-family="sans-serif">AC</text>`;
+
+  // ── MC label (house 10 cusp) ──
+  const mcCusp = chart.houseCusps?.find(c => c.house === 10);
+  if (mcCusp) {
+    const mcP = pol(toSvgDeg(mcCusp.longitude), R_ZOD - 12);
+    o += `<text x="${mcP.x}" y="${mcP.y}" text-anchor="middle" dominant-baseline="central" font-size="7.5" fill="rgba(232,214,174,0.9)" font-weight="bold" font-family="sans-serif">MC</text>`;
+  }
+
+  // ── DC label (house 7 cusp) ──
+  const dcCusp = chart.houseCusps?.find(c => c.house === 7);
+  if (dcCusp) {
+    const dcP = pol(toSvgDeg(dcCusp.longitude), R_ZOD - 12);
+    o += `<text x="${dcP.x}" y="${dcP.y}" text-anchor="middle" dominant-baseline="central" font-size="7.5" fill="rgba(232,214,174,0.65)" font-weight="bold" font-family="sans-serif">DC</text>`;
+  }
+
+  // ── IC label (house 4 cusp) ──
+  const icCusp = chart.houseCusps?.find(c => c.house === 4);
+  if (icCusp) {
+    const icP = pol(toSvgDeg(icCusp.longitude), R_ZOD - 12);
+    o += `<text x="${icP.x}" y="${icP.y}" text-anchor="middle" dominant-baseline="central" font-size="7.5" fill="rgba(232,214,174,0.65)" font-weight="bold" font-family="sans-serif">IC</text>`;
+  }
+
+  return `<svg viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;max-width:100%;height:auto;">${o}</svg>`;
+}
+
 // ─── HTML builder ─────────────────────────────────────────────────────────────
 
-function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
+function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[] = []): string {
   const { birthData, sunSign, moonSign, risingSign, placements, houseCusps, aspects } = chart;
 
   const birthTime = birthData.hasUnknownTime ? 'Unknown' : (birthData.time ?? 'Unknown');
@@ -244,11 +538,11 @@ function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[]): string {
 
   // Story chapters
   const chapterHtml = chapters.map((ch, i) => {
-    const title = esc(applyStoryLabels(ch.title));
-    const subtitle = ch.subtitle ? `<p class="chapter-subtitle">${esc(applyStoryLabels(ch.subtitle))}</p>` : '';
-    const content = esc(applyStoryLabels(ch.content)).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-    const reflection = esc(applyStoryLabels(ch.reflection)).replace(/\n/g, '<br>');
-    const affirmation = esc(applyStoryLabels(ch.affirmation));
+    const title = esc(ch.title);
+    const subtitle = ch.subtitle ? `<p class="chapter-subtitle">${esc(ch.subtitle)}</p>` : '';
+    const content = esc(ch.content).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+    const reflection = esc(ch.reflection).replace(/\n/g, '<br>');
+    const affirmation = esc(ch.affirmation);
 
     const astrologyLabel = ch.astrologyLabel ? `<p class="chapter-astro">${esc(ch.astrologyLabel)}</p>` : '';
 
@@ -424,6 +718,13 @@ body {
 
 /* ── Sections ── */
 .section { margin-bottom: 40px; }
+.chart-section { page-break-inside: avoid; }
+.chart-wrap {
+  text-align: center;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.chart-wrap svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
 .section-title {
   font-size: 17px;
   font-weight: 600;
@@ -604,6 +905,11 @@ tr:last-child td { border-bottom: none; }
 </div>
 
 
+<div class="section chart-section">
+  <h2 class="section-title">Natal Chart</h2>
+  <div class="chart-wrap">${buildChartSvg(chart)}</div>
+</div>
+
 <div class="section">
   <h2 class="section-title">Planetary Placements</h2>
   <table>
@@ -624,8 +930,8 @@ ${houseSection}
   ${aspectsContent}
 </div>
 
-<h2 class="chapters-header">Your Themes</h2>
-${chapterHtml}
+${chapters.length > 0 ? `<h2 class="chapters-header">Your Themes</h2>
+${chapterHtml}` : ''}
 
 <div class="footer">
   <p>Generated by MySky &middot; ${generatedDate}</p>
@@ -644,7 +950,7 @@ ${chapterHtml}
  */
 export async function exportChartToPdf(
   chart: NatalChart,
-  chapters: GeneratedChapter[],
+  chapters: GeneratedChapter[] = [],
 ): Promise<void> {
   const html = buildPdfHtml(chart, chapters);
 

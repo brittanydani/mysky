@@ -195,6 +195,20 @@ export const ASPECT_TYPES: AspectType[] = [
     degrees: 135,
     orb: 2,
     nature: 'Challenging'
+  },
+  {
+    name: 'Quintile',
+    symbol: 'Q',
+    degrees: 72,
+    orb: 2,
+    nature: 'Harmonious'
+  },
+  {
+    name: 'Biquintile',
+    symbol: 'bQ',
+    degrees: 144,
+    orb: 2,
+    nature: 'Harmonious'
   }
 ];
 

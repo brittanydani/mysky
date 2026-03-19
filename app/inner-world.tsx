@@ -26,6 +26,7 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { isTodaySealed, getCurrentStreak } from '../services/insights/dailyReflectionService';
 
 const PALETTE = {
   gold: '#D9BF8C',
@@ -38,7 +39,7 @@ const PALETTE = {
   bg: '#0A0A0C',
 };
 
-type ToolId = 'values' | 'archetypes' | 'cognitive';
+type ToolId = 'values' | 'archetypes' | 'cognitive' | 'reflection';
 
 interface ToolCard {
   id: ToolId;
@@ -78,6 +79,15 @@ const TOOLS: ToolCard[] = [
     accentRgb: '139, 196, 232',
     route: '/cognitive-style' as Href,
   },
+  {
+    id: 'reflection',
+    title: 'Daily Reflection',
+    description: 'Answer new questions each day. Over 365 days, the system deeply learns who you are.',
+    icon: '✦',
+    iconColor: PALETTE.gold,
+    accentRgb: '217, 191, 140',
+    route: '/daily-reflection' as Href,
+  },
 ];
 
 export default function InnerWorldScreen() {
@@ -86,24 +96,30 @@ export default function InnerWorldScreen() {
     values: false,
     archetypes: false,
     cognitive: false,
+    reflection: false,
   });
+  const [reflectionStreak, setReflectionStreak] = useState(0);
 
   // Check storage on focus to dynamically update completion badges
   useFocusEffect(
     useCallback(() => {
       const checkProgress = async () => {
         try {
-          const [valuesRaw, archetypesRaw, cognitiveRaw] = await Promise.all([
+          const [valuesRaw, archetypesRaw, cognitiveRaw, todaySealed, streak] = await Promise.all([
             AsyncStorage.getItem('@mysky:core_values'),
             EncryptedAsyncStorage.getItem('@mysky:archetype_profile'),
             EncryptedAsyncStorage.getItem('@mysky:cognitive_style'),
+            isTodaySealed(),
+            getCurrentStreak(),
           ]);
 
           setCompletion({
             values: !!valuesRaw && JSON.parse(valuesRaw).topFive?.length > 0,
             archetypes: !!archetypesRaw,
             cognitive: !!cognitiveRaw && Object.keys(JSON.parse(cognitiveRaw)).length === 3,
+            reflection: todaySealed,
           });
+          setReflectionStreak(streak);
         } catch (e) {
           console.warn('[InnerWorld] Failed to load progress', e);
         }
@@ -180,9 +196,13 @@ export default function InnerWorldScreen() {
                         {/* Dynamic Completion Badge */}
                         <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.emerald}20`, borderColor: `${PALETTE.emerald}40` } : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
                           {isDone ? (
-                            <MetallicText style={styles.badgeText} color={PALETTE.emerald}>SEALED</MetallicText>
+                            <MetallicText style={styles.badgeText} color={PALETTE.emerald}>
+                              {tool.id === 'reflection' ? 'TODAY DONE' : 'SEALED'}
+                            </MetallicText>
                           ) : (
-                            <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>EXPLORE</Text>
+                            <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>
+                              {tool.id === 'reflection' ? 'NEW TODAY' : 'EXPLORE'}
+                            </Text>
                           )}
                           {isDone && <MetallicIcon name="checkmark" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
                         </View>
@@ -191,6 +211,13 @@ export default function InnerWorldScreen() {
                       <View>
                         <Text style={styles.cardTitle}>{tool.title}</Text>
                         <Text style={styles.cardSubtitle}>{tool.description}</Text>
+                        {tool.id === 'reflection' && reflectionStreak > 0 && (
+                          <View style={styles.streakRow}>
+                            <MetallicText style={styles.streakText} color={PALETTE.gold}>
+                              🔥 {reflectionStreak} day streak
+                            </MetallicText>
+                          </View>
+                        )}
                       </View>
                     </View>
                   </Pressable>
@@ -275,5 +302,13 @@ const styles = StyleSheet.create({
     color: PALETTE.textMuted,
     lineHeight: 18,
     paddingRight: 10,
+  },
+  streakRow: {
+    marginTop: 6,
+  },
+  streakText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

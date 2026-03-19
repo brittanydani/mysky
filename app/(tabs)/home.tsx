@@ -896,10 +896,10 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.3,
   },
   trendBadge: {
     marginLeft: 'auto',
@@ -977,9 +977,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 14,
-    gap: 6,
+    gap: 4,
   },
   pillDot: {
     width: 5,
@@ -987,7 +988,7 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
   },
   pillLabel: {
-    fontSize: 9,
+    fontSize: 8,
     color: 'rgba(255,255,255,0.5)',
     textTransform: 'uppercase',
     fontWeight: '700',

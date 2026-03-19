@@ -34,7 +34,7 @@ import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import MySkyCompassSkia from './skia/MySkyCompassSkia';
-import MySkyShieldSkia from './skia/MySkyShieldSkia';
+import MySkyVerifySealSkia from './skia/MySkyVerifySealSkia';
 import { BirthData, HouseSystem } from '../services/astrology/types';
 import { InputValidator } from '../services/astrology/inputValidator';
 
@@ -492,8 +492,8 @@ export default function BirthDataModal({
           <View style={StyleSheet.absoluteFill}>
             <LinearGradient colors={['rgba(7, 9, 15, 0.95)', '#020817']} style={styles.confirmOverlay}>
               <Animated.View entering={FadeInUp} style={styles.confirmCard}>
-                <MySkyShieldSkia 
-                  size={64} 
+                <MySkyVerifySealSkia 
+                  size={96} 
                   style={{ marginBottom: 16 }} 
                 />
 

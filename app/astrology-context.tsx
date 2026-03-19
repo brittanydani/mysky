@@ -10,7 +10,7 @@ import { BlurView } from 'expo-blur';
 import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { getMoonPhaseInfo } from '../utils/moonPhase';
+import { getMoonPhaseInfo, getMoonSignForDate } from '../utils/moonPhase';
 import { getTransitInfo } from '../services/astrology/transits';
 import { signNameFromLongitude, degreeInSign, normalize360 } from '../services/astrology/sharedHelpers';
 import MoonPhaseView from '../components/ui/MoonPhaseView';
@@ -219,6 +219,7 @@ export default function CosmicContext() {
   const retrogrades = transitInfo.retrogrades;
 
   const [weekExpanded, setWeekExpanded] = useState(false);
+  const [activeDayIdx, setActiveDayIdx] = useState<number | null>(null);
 
   // Build moon phase info for each day of the current week (Mon–Sun)
   const weeklyPhases = useMemo(() => {
@@ -234,6 +235,7 @@ export default function CosmicContext() {
       return {
         date: d,
         phase: getMoonPhaseInfo(d),
+        sign: getMoonSignForDate(d),
         isToday: d.toDateString() === today.toDateString(),
         dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
         dayNum: d.getDate(),
@@ -304,25 +306,57 @@ export default function CosmicContext() {
         </Pressable>
 
         {weekExpanded && (
-          <View style={styles.weekRow}>
-            {weeklyPhases.map(({ date, phase, isToday, dayName, dayNum }) => (
-              <View key={date.toISOString()} style={styles.weekDayCol}>
-                {isToday ? (
-                  <MetallicText style={styles.weekDayName} color="#D4B872">{dayName.toUpperCase()}</MetallicText>
-                ) : (
-                  <Text style={styles.weekDayName}>{dayName.toUpperCase()}</Text>
-                )}
-                {isToday ? (
-                  <MetallicText style={[styles.weekDayNum, { fontWeight: '800' }]} color="#D4B872">{dayNum}</MetallicText>
-                ) : (
-                  <Text style={styles.weekDayNum}>{dayNum}</Text>
-                )}
-                <View style={isToday ? styles.weekOrbToday : styles.weekOrb}>
-                  <MoonPhaseView size={28} date={date} interactive={false} gradient />
-                </View>
+          <>
+            <View style={styles.weekRow}>
+              {weeklyPhases.map(({ date, phase, isToday, dayName, dayNum }, i) => {
+                const isActive = activeDayIdx === i;
+                return (
+                  <Pressable
+                    key={date.toISOString()}
+                    style={[styles.weekDayCol, isActive && styles.weekDayColActive]}
+                    onPress={() => {
+                      Haptics.selectionAsync();
+                      setActiveDayIdx(prev => (prev === i ? null : i));
+                    }}
+                    hitSlop={4}
+                  >
+                    {isToday ? (
+                      <MetallicText style={styles.weekDayName} color="#D4B872">{dayName.toUpperCase()}</MetallicText>
+                    ) : (
+                      <Text style={styles.weekDayName}>{dayName.toUpperCase()}</Text>
+                    )}
+                    {isToday ? (
+                      <MetallicText style={[styles.weekDayNum, { fontWeight: '800' }]} color="#D4B872">{dayNum}</MetallicText>
+                    ) : (
+                      <Text style={styles.weekDayNum}>{dayNum}</Text>
+                    )}
+                    <View style={isToday ? styles.weekOrbToday : styles.weekOrb}>
+                      <MoonPhaseView size={28} date={date} interactive={false} gradient />
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {activeDayIdx !== null && weeklyPhases[activeDayIdx] && (
+              <View style={styles.weekInfoStrip}>
+                <MoonPhaseView
+                  size={72}
+                  date={weeklyPhases[activeDayIdx].date}
+                  interactive={false}
+                  gradient
+                />
+                <Text style={styles.weekInfoPhase}>
+                  {weeklyPhases[activeDayIdx].phase.name}
+                </Text>
+                <Text style={styles.weekInfoSign}>
+                  Moon in {weeklyPhases[activeDayIdx].sign}
+                </Text>
+                <Text style={styles.weekInfoMessage}>
+                  {weeklyPhases[activeDayIdx].phase.message}
+                </Text>
               </View>
-            ))}
-          </View>
+            )}
+          </>
         )}
 
         {/* ── Retrograde Alerts ──────────────────────────────────────── */}
@@ -427,6 +461,23 @@ const styles = StyleSheet.create({
   weekDayNumToday: { color: '#D4B872', fontWeight: '800' },
   weekOrb: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
   weekOrbToday: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212,184,114,0.4)' },
+  weekDayColActive: { backgroundColor: 'rgba(212,184,114,0.08)', borderRadius: 12 },
+  weekInfoStrip: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,114,0.18)',
+    paddingTop: 20,
+    paddingBottom: 16,
+    paddingHorizontal: 18,
+    marginTop: -8,
+    marginBottom: 28,
+    alignItems: 'center',
+    gap: 6,
+  },
+  weekInfoPhase: { fontSize: 15, color: '#FFF', fontWeight: '700' },
+  weekInfoSign: { fontSize: 13, color: 'rgba(212,184,114,0.85)', fontWeight: '600' },
+  weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', fontStyle: 'italic', textAlign: 'center', marginTop: 2 },
 
   moonTitle: { fontSize: 22, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginTop: 20, marginBottom: 4 },
   moonDegree: { fontSize: 14, color: '#D4B872', letterSpacing: 1, marginBottom: 16 },

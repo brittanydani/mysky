@@ -356,8 +356,8 @@ const styles = StyleSheet.create({
   tagSectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 12 },
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
 
-  patternTag: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(255,255,255,0.02)' },
-  patternTagText: { fontSize: 13, color: PALETTE.textMuted },
+  patternTag: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  patternTagText: { fontSize: 11, color: PALETTE.textMuted },
 
   submitBtn: { height: 52, borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.5)', justifyContent: 'center', alignItems: 'center' },
   submitBtnText: { fontSize: 14, color: PALETTE.anxious, fontWeight: '800', letterSpacing: 0.5 },

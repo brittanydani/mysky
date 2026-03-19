@@ -19,6 +19,11 @@ import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { useDreamMapStore, DreamNodeData, DreamLinkData } from '../../store/dreamMapStore';
 
+// Stable fallbacks — must be module-level constants so Object.is comparisons
+// in useSyncExternalStore never see a new reference when data is null.
+const EMPTY_NODES: DreamNodeData[] = [];
+const EMPTY_LINKS: DreamLinkData[] = [];
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type DreamTone =
@@ -211,15 +216,14 @@ export function DreamClusterMap({
   nodes,
   height = 300,
 }: DreamClusterMapProps) {
-  // Prefer live data from the store; then explicit prop; then nothing
-  const storeNodes = useDreamMapStore((s) => s.data?.nodes ?? []);
-  const storeLinks = useDreamMapStore((s) => s.data?.links ?? []);
+  // Prefer live data from the store; then explicit prop; then nothing.
+  // Selectors use module-level EMPTY_* fallbacks so useSyncExternalStore never
+  // receives a new array reference when data is null (avoids infinite loop).
+  const storeNodes = useDreamMapStore((s) => s.data?.nodes ?? EMPTY_NODES);
+  const storeLinks = useDreamMapStore((s) => s.data?.links ?? EMPTY_LINKS);
 
-  // If there is no store data and no explicit prop, render nothing
-  if (storeNodes.length === 0 && (!nodes || nodes.length === 0)) {
-    return null;
-  }
-
+  // useMemo must be called unconditionally (Rules of Hooks).
+  // The early-return for "nothing to show" moves to after this hook.
   const { renderNodes, connectorPairs } = useMemo(() => {
     if (storeNodes.length > 0) {
       // ── Live path: data from RPC via useSyncDreamData ──
@@ -272,6 +276,9 @@ export function DreamClusterMap({
 
     return { renderNodes: rNodes, connectorPairs: pairs };
   }, [storeNodes, storeLinks, nodes]);
+
+  // Nothing to render — all hooks have already been called above.
+  if (renderNodes.length === 0) return null;
 
   return (
     <View style={{ height, width: '100%' }}>

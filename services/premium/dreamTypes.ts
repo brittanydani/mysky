@@ -2735,4 +2735,6 @@ export interface DreamInterpretationInput {
   metadata: DreamMetadata;
   aggregates: DreamAggregates;
   patterns: DreamPatternData;
+  /** Optional suffix appended to the deterministic seed so RE-INTERPRET can produce a fresh variant. */
+  seedSuffix?: string;
 }

@@ -24,14 +24,12 @@
  */
 
 import {
-  AttachmentStyle,
   DreamAggregates,
   DreamInterpretation,
   DreamInterpretationInput,
   DreamMetadata,
   DreamPatternData,
   FEELING_MAP,
-  NervousSystemBranch,
   SelectedFeeling,
   ShadowTrigger,
 } from './dreamTypes';
@@ -117,23 +115,6 @@ function buildDominantProfiles(aggregates: DreamAggregates): DominantProfiles {
 
 // ─── Unified Paragraph Builder ────────────────────────────────────────────────
 
-/** Human-readable nervous system branch phrase */
-const BRANCH_LABELS: Record<NervousSystemBranch, string> = {
-  ventral_safety: 'a sense of safety and connection',
-  fight: 'a tension or protectiveness around boundaries',
-  flight: 'anxiety or a pull toward escape',
-  freeze: 'a sense of being stuck or overwhelmed',
-  collapse: 'depletion or a heaviness that is hard to shake',
-  mixed: 'an inner conflict between different emotional states',
-};
-
-/** Human-readable attachment label */
-const ATTACH_LABELS: Record<AttachmentStyle, string> = {
-  secure: 'a grounded relational tone',
-  anxious: 'a pull toward closeness or reassurance',
-  avoidant: 'a pull toward distance or self-reliance',
-  disorganized: 'a push-pull tension in how connection felt',
-};
 
 // ─── Prose Helpers ────────────────────────────────────────────────────────────
 
@@ -488,17 +469,13 @@ function buildParagraph(
         `With ${dl} in the dream, there’s a relational thread worth paying attention to. ${personMeaning}`,
       ] as const;
       sections.push(pickVariant(personOnlyVariants, seed, 19));
-    } else if (scenarioMatches.length >= 2) {
-      // Multiple scenarios — weave their meanings
-      sections.push(scenarioMatches[0].entry.meaning + ' ' + scenarioMatches[1].entry.meaning);
-    } else if (scenarioMatches.length === 1) {
+    } else if (scenarioMatches.length >= 1) {
       sections.push(scenarioMatches[0].entry.meaning);
     }
 
     // Additional symbol meanings not covered above (body, objects, nature, etc.)
     if (otherMatches.length > 0 && !personMatch) {
-      const extraMeanings = otherMatches.slice(0, 2).map(m => m.entry.meaning);
-      sections.push(extraMeanings.join(' '));
+      sections.push(otherMatches[0].entry.meaning);
     }
   } else if (topMatches.length === 1 && topMatches[0] !== placeMatch) {
     // Single non-place symbol already handled in opening — skip
@@ -530,9 +507,6 @@ function buildParagraph(
     const topCard = rawThemeCards[0];
     if (keywordMatches.length === 0) {
       sections.push(topCard.meaning);
-    }
-    if (rawThemeCards.length >= 2 && rawThemeCards[1].score >= 0.32) {
-      sections.push(rawThemeCards[1].meaning);
     }
   }
 
@@ -705,27 +679,6 @@ function buildParagraph(
     if (contextBlock.length > 0) sections.push(contextBlock.join(' '));
   }
 
-  // ════ 5. SOMATIC CLOSE — connected to the dream ══════════════════════════
-
-  {
-    const branch = aggregates.dominantBranch;
-    const branchPhrase = BRANCH_LABELS[branch];
-    const attachPhrase = ATTACH_LABELS[aggregates.dominantAttachment];
-
-    // Connect the body observation to the dream's content for narrative flow
-    const dreamSubject = personMatch ? `what happened with ${labelWithDeterminer(personMatch.entry.keywords[0])}` :
-                         placeMatch ? `this experience in the ${placeMatch.entry.keywords[0]}` :
-                         'what this dream brought up';
-
-    const nsAttachVariants = [
-      `A dream like this — especially one touching on ${dreamSubject} — can leave something physical behind. You might notice ${branchPhrase} still lingering in your body, and that’s your system catching up with what the dream processed. On a relational level, there’s also ${attachPhrase} woven into how this one felt.`,
-      `After ${dreamSubject}, your body might still be carrying some of what the dream stirred up — ${branchPhrase}. That’s normal. And underneath, there’s likely ${attachPhrase} adding its own texture to the experience.`,
-      `The feelings around ${dreamSubject} don’t just live in your head — your body holds them too. You might still be feeling ${branchPhrase}, and relationally, ${attachPhrase} seems to be threaded through what the dream was processing.`,
-      `There’s a physical dimension to this dream worth acknowledging. After sitting with ${dreamSubject}, your body may still have ${branchPhrase} running through it. ${attachPhrase.charAt(0).toUpperCase() + attachPhrase.slice(1)} also seems woven into the emotional fabric of the experience.`,
-    ] as const;
-    sections.push(pickVariant(nsAttachVariants, seed, 14));
-  }
-
   // ════ 6. PATTERNS ═════════════════════════════════════════════════════════
 
   if (patterns.comparisonCount >= 2) {
@@ -822,10 +775,10 @@ function hashSeed(seed: string): number {
 export function generateDreamInterpretation(
   input: DreamInterpretationInput,
 ): DreamInterpretation {
-  const { entry, dreamText, feelings, metadata, aggregates, patterns } = input;
+  const { entry, dreamText, feelings, metadata, aggregates, patterns, seedSuffix } = input;
 
   // Stable seed for deterministic variant selection
-  const seed = entry.id + (dreamText.slice(0, 20));
+  const seed = entry.id + (dreamText.slice(0, 20)) + (seedSuffix ?? '');
 
   // ── Extract text signals (Wt = 0.55) ────────────────────────────────
   const textSignals = extractDreamTextSignals(dreamText);

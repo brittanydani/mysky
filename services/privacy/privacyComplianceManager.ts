@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '../storage/secureStorage';
 import { localDb } from '../storage/localDb';
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
@@ -252,6 +253,9 @@ export class PrivacyComplianceManager {
       EncryptedAsyncStorage.removeItem('@mysky:somatic_entries'),
       EncryptedAsyncStorage.removeItem('@mysky:trigger_events'),
       EncryptedAsyncStorage.removeItem('@mysky:relationship_patterns'),
+      EncryptedAsyncStorage.removeItem('@mysky:daily_reflections'),
+      // Core values uses plain AsyncStorage (not encrypted)
+      AsyncStorage.removeItem('@mysky:core_values'),
     ]);
 
     return {

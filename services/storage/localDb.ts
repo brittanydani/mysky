@@ -7,7 +7,7 @@ import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 
-const CURRENT_DB_VERSION = 19;
+const CURRENT_DB_VERSION = 20;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -141,6 +141,7 @@ class LocalDatabase {
       { version: 17, fn: () => this.migrateToVersion17() },
       { version: 18, fn: () => this.migrateToVersion18() },
       { version: 19, fn: () => this.migrateToVersion19() },
+      { version: 20, fn: () => this.migrateToVersion20() },
     ];
 
     for (const step of steps) {
@@ -1001,6 +1002,24 @@ class LocalDatabase {
     logger.info(`[LocalDB] Version 19 migration complete — encrypted ${pending.length} coordinate pairs`);
   }
 
+  /**
+   * Version 20 — Add tags column to journal_entries.
+   * Stores a JSON array of user-selected tag strings (plaintext; not PII).
+   */
+  private async migrateToVersion20(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 20 (journal tags)...');
+
+    const tableInfo = (await db.getAllAsync('PRAGMA table_info(journal_entries)')) as any[];
+    const columns = tableInfo.map((col) => col.name);
+    if (!columns.includes('tags')) {
+      await db.execAsync('ALTER TABLE journal_entries ADD COLUMN tags TEXT;');
+      logger.info('[LocalDB] Added tags column to journal_entries');
+    }
+
+    logger.info('[LocalDB] Version 20 migration complete');
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1122,9 +1141,9 @@ class LocalDatabase {
       `INSERT INTO journal_entries
        (id, date, mood, moon_phase, title, content, chart_id, transit_snapshot,
         content_keywords_enc, content_emotions_enc, content_sentiment_enc,
-        content_word_count, content_reading_minutes,
+        content_word_count, content_reading_minutes, tags,
         created_at, updated_at, is_deleted)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         entry.id,
         entry.date,
@@ -1139,6 +1158,7 @@ class LocalDatabase {
         encSentiment,
         entry.contentWordCount ?? null,
         entry.contentReadingMinutes ?? null,
+        entry.tags && entry.tags.length > 0 ? JSON.stringify(entry.tags) : null,
         entry.createdAt,
         entry.updatedAt,
         entry.isDeleted ? 1 : 0,
@@ -1223,6 +1243,7 @@ class LocalDatabase {
         : undefined,
       contentWordCount: row.content_word_count ?? undefined,
       contentReadingMinutes: row.content_reading_minutes ?? undefined,
+      tags: row.tags ? (() => { try { return JSON.parse(row.tags); } catch { return undefined; } })() : undefined,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       isDeleted: row.is_deleted === 1,
@@ -1242,7 +1263,7 @@ class LocalDatabase {
       `UPDATE journal_entries
        SET mood = ?, moon_phase = ?, title = ?, content = ?, chart_id = ?, transit_snapshot = ?,
            content_keywords_enc = ?, content_emotions_enc = ?, content_sentiment_enc = ?,
-           content_word_count = ?, content_reading_minutes = ?,
+           content_word_count = ?, content_reading_minutes = ?, tags = ?,
            updated_at = ?
        WHERE id = ?`,
       [
@@ -1257,6 +1278,7 @@ class LocalDatabase {
         encSentiment,
         entry.contentWordCount ?? null,
         entry.contentReadingMinutes ?? null,
+        entry.tags && entry.tags.length > 0 ? JSON.stringify(entry.tags) : null,
         entry.updatedAt,
         entry.id,
       ]

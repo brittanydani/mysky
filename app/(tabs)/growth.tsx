@@ -59,9 +59,11 @@ export default function PatternsScreen() {
   });
   const [enhanced, setEnhanced] = useState<EnhancedInsightBundle | null>(null);
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true);
       (async () => {
         try {
           const charts = await localDb.getCharts();
@@ -119,6 +121,8 @@ export default function PatternsScreen() {
           }
         } catch (e) {
           logger.error('Patterns load failed:', e);
+        } finally {
+          setLoading(false);
         }
       })();
     }, [isPremium])
@@ -151,7 +155,7 @@ export default function PatternsScreen() {
 
           {/* ── Hub 2: Visualization — Cosmic Pattern Orbit ── */}
           <View style={styles.visualSection}>
-            {trendCheckIns.length >= 2 ? (
+            {!loading && trendCheckIns.length >= 2 ? (
               <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />
             ) : (
               <BreathingMandala size={240} />

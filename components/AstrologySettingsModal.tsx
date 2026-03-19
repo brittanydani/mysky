@@ -1,6 +1,8 @@
 /**
  * Astrology Settings Modal
  * * Allows users to configure:
+ * - Zodiac system (Tropical, Sidereal)
+ * - Ayanamsa (Lahiri, Fagan-Bradley, etc.) — only when sidereal
  * - House system (Placidus, Whole Sign, etc.)
  * - Orb presets (Tight, Normal, Wide)
  */
@@ -27,10 +29,12 @@ import {
   AstrologySettingsService,
   AstrologySettings,
   HOUSE_SYSTEM_OPTIONS,
+  ZODIAC_SYSTEM_OPTIONS,
+  AYANAMSA_OPTIONS,
   ORB_PRESET_OPTIONS,
   OrbPreset,
 } from '../services/astrology/astrologySettingsService';
-import { HouseSystem } from '../services/astrology/types';
+import { HouseSystem, ZodiacSystem, Ayanamsa } from '../services/astrology/types';
 import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
@@ -56,6 +60,8 @@ export default function AstrologySettingsModal({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<AstrologySettings | null>(null);
+  const [selectedZodiacSystem, setSelectedZodiacSystem] = useState<ZodiacSystem>('tropical');
+  const [selectedAyanamsa, setSelectedAyanamsa] = useState<Ayanamsa>('lahiri');
   const [selectedHouseSystem, setSelectedHouseSystem] = useState<HouseSystem>('placidus');
   const [selectedOrbPreset, setSelectedOrbPreset] = useState<OrbPreset>('normal');
 
@@ -70,6 +76,8 @@ export default function AstrologySettingsModal({
       setLoading(true);
       const current = await AstrologySettingsService.getSettings();
       setSettings(current);
+      setSelectedZodiacSystem(current.zodiacSystem);
+      setSelectedAyanamsa(current.ayanamsa);
       setSelectedHouseSystem(current.houseSystem);
       setSelectedOrbPreset(current.orbPreset);
     } catch (error) {
@@ -85,6 +93,8 @@ export default function AstrologySettingsModal({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
       const updated = await AstrologySettingsService.saveSettings({
+        zodiacSystem: selectedZodiacSystem,
+        ayanamsa: selectedAyanamsa,
         houseSystem: selectedHouseSystem,
         orbPreset: selectedOrbPreset,
       });
@@ -108,15 +118,25 @@ export default function AstrologySettingsModal({
     }
   };
 
-  const handleSelect = (type: 'house' | 'orb', value: HouseSystem | OrbPreset) => {
+  const handleSelect = (type: 'zodiac' | 'ayanamsa' | 'house' | 'orb', value: string) => {
     Haptics.selectionAsync().catch(() => {});
-    if (type === 'house') setSelectedHouseSystem(value as HouseSystem);
-    else setSelectedOrbPreset(value as OrbPreset);
+    if (type === 'zodiac') {
+      setSelectedZodiacSystem(value as ZodiacSystem);
+    } else if (type === 'ayanamsa') {
+      setSelectedAyanamsa(value as Ayanamsa);
+    } else if (type === 'house') {
+      setSelectedHouseSystem(value as HouseSystem);
+    } else {
+      setSelectedOrbPreset(value as OrbPreset);
+    }
   };
 
   const hasChanges =
     settings &&
-    (settings.houseSystem !== selectedHouseSystem || settings.orbPreset !== selectedOrbPreset);
+    (settings.zodiacSystem !== selectedZodiacSystem ||
+      settings.ayanamsa !== selectedAyanamsa ||
+      settings.houseSystem !== selectedHouseSystem ||
+      settings.orbPreset !== selectedOrbPreset);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -139,6 +159,64 @@ export default function AstrologySettingsModal({
         ) : (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             
+            {/* Zodiac System */}
+            <View style={styles.section}>
+              <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Zodiac System</MetallicText>
+              <Text style={styles.sectionSub}>Determines where the zodiac signs are measured.</Text>
+              
+              <View style={styles.optionsList}>
+                {ZODIAC_SYSTEM_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[styles.houseCard, selectedZodiacSystem === option.value && styles.cardSelected]}
+                    onPress={() => handleSelect('zodiac', option.value)}
+                  >
+                    <View style={styles.cardHeader}>
+                      {selectedZodiacSystem === option.value ? (
+                        <MetallicText style={styles.optionTitle} color={PALETTE.gold}>{option.label}</MetallicText>
+                      ) : (
+                        <Text style={styles.optionTitle}>{option.label}</Text>
+                      )}
+                      <View style={[styles.radio, selectedZodiacSystem === option.value && styles.radioActive]}>
+                        {selectedZodiacSystem === option.value && <View style={styles.radioInner} />}
+                      </View>
+                    </View>
+                    <Text style={styles.optionSub}>{option.description}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Ayanamsa — only visible in sidereal mode */}
+            {selectedZodiacSystem === 'sidereal' && (
+              <View style={styles.section}>
+                <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Ayanamsa</MetallicText>
+                <Text style={styles.sectionSub}>The sidereal reference point used to align the zodiac with fixed stars.</Text>
+                
+                <View style={styles.optionsList}>
+                  {AYANAMSA_OPTIONS.map((option) => (
+                    <Pressable
+                      key={option.value}
+                      style={[styles.houseCard, selectedAyanamsa === option.value && styles.cardSelected]}
+                      onPress={() => handleSelect('ayanamsa', option.value)}
+                    >
+                      <View style={styles.cardHeader}>
+                        {selectedAyanamsa === option.value ? (
+                          <MetallicText style={styles.optionTitle} color={PALETTE.gold}>{option.label}</MetallicText>
+                        ) : (
+                          <Text style={styles.optionTitle}>{option.label}</Text>
+                        )}
+                        <View style={[styles.radio, selectedAyanamsa === option.value && styles.radioActive]}>
+                          {selectedAyanamsa === option.value && <View style={styles.radioInner} />}
+                        </View>
+                      </View>
+                      <Text style={styles.optionSub}>{option.description}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
+
             {/* House Systems */}
             <View style={styles.section}>
               <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>House System</MetallicText>

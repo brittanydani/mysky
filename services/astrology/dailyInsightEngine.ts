@@ -98,6 +98,8 @@ const ASPECT_WEIGHTS: Record<AspectTypeName, number> = {
   semisextile: 1,
   semisquare: 2,
   sesquiquadrate: 2,
+  quintile: 2,
+  biquintile: 2,
 };
 
 // Transiting planet importance

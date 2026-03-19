@@ -29,7 +29,6 @@ import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaRestorationField from '../../components/ui/SkiaRestorationField';
 import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
-import { DreamSymbolChips } from '../../components/ui/DreamSymbolChips';
 
 import { localDb } from '../../services/storage/localDb';
 import { SleepEntry, generateId } from '../../services/storage/models';
@@ -41,6 +40,11 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { NatalChart } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { generateDreamInterpretation } from '../../services/premium/dreamInterpretation';
+import {
+  generateGeminiDreamInterpretation,
+  isGeminiAvailable,
+  GeminiDreamResult,
+} from '../../services/premium/geminiDreamInterpretation';
 import {
   DreamInterpretation,
   DreamMetadata,
@@ -275,6 +279,11 @@ export default function SleepScreen() {
   const [interpretations, setInterpretations] = useState<Record<string, DreamInterpretation>>({});
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
+  // Gemini AI interpretation state
+  const [aiInterpretations, setAiInterpretations] = useState<Record<string, GeminiDreamResult>>({});
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
   const [quality, setQuality] = useState(0);
   const [durationHours, setDurationHours] = useState(7.5);
   const [hasDuration, setHasDuration] = useState(false);
@@ -336,10 +345,11 @@ export default function SleepScreen() {
     setSelectedFeelings(prev => prev.map(f => (f.id === id ? { ...f, intensity } : f)));
   }, []);
 
-  const selectedFeelingLabels = useMemo(
-    () => selectedFeelings.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id).join(', '),
-    [selectedFeelings],
-  );
+  const selectedFeelingLabels = useMemo(() => {
+    const labels = selectedFeelings.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id);
+    if (labels.length <= 4) return labels.join(', ');
+    return `${labels.slice(0, 4).join(', ')} +${labels.length - 4} more`;
+  }, [selectedFeelings]);
 
   const applyEntryToForm = useCallback((entry: SleepEntry | undefined) => {
     if (entry) {
@@ -434,12 +444,32 @@ export default function SleepScreen() {
           const result = generateDreamInterpretation({ entry: savedEntry, dreamText: savedEntry.dreamText, feelings: selectedFeelings, metadata: dreamMetadata, aggregates, patterns });
           setInterpretations(prev => ({ ...prev, [savedEntry.id]: result }));
           setExpandedEntryId(savedEntry.id);
+          // Auto-trigger Gemini AI interpretation for premium users
+          if (isGeminiAvailable()) {
+            setAiLoading(savedEntry.id);
+            generateGeminiDreamInterpretation({
+              dreamText: savedEntry.dreamText,
+              feelings: selectedFeelings,
+              onDeviceSummary: result.paragraph,
+              symbols: result.extractedSymbols,
+              interpretiveThemes: result.interpretiveThemes,
+              patternAnalysis: result.patternAnalysis ? {
+                primaryPattern: result.patternAnalysis.primaryPattern,
+                undercurrentLabel: result.patternAnalysis.undercurrentLabel,
+                endingType: result.patternAnalysis.endingType,
+              } : undefined,
+            }).then(aiRes => {
+              setAiInterpretations(prev => ({ ...prev, [savedEntry.id]: aiRes }));
+            }).catch(e => {
+              logger.error('[Sleep] Auto AI interpretation failed:', e);
+              setAiError(e.message ?? 'AI interpretation failed');
+            }).finally(() => setAiLoading(null));
+          }
         } catch (e) { logger.error('Auto dream interpretation failed:', e); }
       } else {
         if (expandedEntryId === savedId) setExpandedEntryId(null);
       }
       applyEntryToForm(savedEntry);
-      if (isEditingUnlocked) setIsEditingUnlocked(true);
       setSaving(false); setSaved(true);
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
@@ -466,6 +496,26 @@ export default function SleepScreen() {
       const patterns = computeDreamPatterns(feelings, entries.filter(e => e.id !== entry.id));
       const result = generateDreamInterpretation({ entry, dreamText: entry.dreamText, feelings, metadata, aggregates, patterns });
       setInterpretations(prev => ({ ...prev, [entry.id]: result }));
+      // Auto-trigger Gemini AI interpretation for premium users
+      if (isGeminiAvailable()) {
+        setAiLoading(entry.id);
+        generateGeminiDreamInterpretation({
+          dreamText: entry.dreamText,
+          feelings,
+          onDeviceSummary: result.paragraph,
+          symbols: result.extractedSymbols,
+          interpretiveThemes: result.interpretiveThemes,
+          patternAnalysis: result.patternAnalysis ? {
+            primaryPattern: result.patternAnalysis.primaryPattern,
+            undercurrentLabel: result.patternAnalysis.undercurrentLabel,
+            endingType: result.patternAnalysis.endingType,
+          } : undefined,
+        }).then(aiRes => {
+          setAiInterpretations(prev => ({ ...prev, [entry.id]: aiRes }));
+        }).catch(e => {
+          logger.error('[Sleep] Auto AI interpretation failed:', e);
+        }).finally(() => setAiLoading(null));
+      }
     } catch (e) {
       logger.error('Dream interpretation failed:', e);
       setExpandedEntryId(null);
@@ -643,7 +693,7 @@ export default function SleepScreen() {
                       <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(10, 12, 18, 0.8)']} style={styles.premiumLockCard}>
                         <View style={{ flex: 1 }}>
                           <Text style={[styles.premiumLockTitle, { color: PALETTE.textMain }]}>Symbolic Interpretation</Text>
-                          <Text style={styles.premiumLockSub}>AI analysis of archetypes and emotional patterns in your dreams.</Text>
+                          <Text style={styles.premiumLockSub}>Deep analysis of archetypes and emotional patterns in your dreams.</Text>
                         </View>
                         <View style={styles.deeperSkyBadge}>
                           <MetallicIcon name="sparkles" size={10} variant="gold" />
@@ -869,17 +919,60 @@ export default function SleepScreen() {
                     <MetallicIcon name="sparkles" size={18} variant="gold" />
                     <Text style={styles.todayInterpretTitle}>Your Dream Reflection</Text>
                   </View>
-                  <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
-                  {todayInterp.patternAnalysis?.undercurrentLabel ? (
-                    <View style={styles.undercurrentBox}>
-                      <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</MetallicText>
-                    </View>
-                  ) : null}
-                  <View style={styles.sitWithBox}>
-                    <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                    <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
-                  </View>
-                  <DreamSymbolChips symbols={todayInterp.extractedSymbols} />
+                  {/* Show AI result as primary when available, on-device as fallback */}
+                  {(() => {
+                    const aiResult = aiInterpretations[todayEntry.id];
+                    const isLoadingAi = aiLoading === todayEntry.id;
+                    if (aiResult) {
+                      return (
+                        <>
+                          <Text style={styles.interpretBody}>{aiResult.paragraph}</Text>
+                          <View style={styles.sitWithBox}>
+                            <Text style={styles.sitWithLabel}>A question to sit with</Text>
+                            <Text style={styles.sitWithText}>"{aiResult.question}"</Text>
+                          </View>
+                        </>
+                      );
+                    }
+                    if (isLoadingAi) {
+                      return (
+                        <>
+                          <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
+                          {todayInterp.patternAnalysis?.undercurrentLabel ? (
+                            <View style={styles.undercurrentBox}>
+                              <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</MetallicText>
+                            </View>
+                          ) : null}
+                          <View style={styles.sitWithBox}>
+                            <Text style={styles.sitWithLabel}>A question to sit with</Text>
+                            <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
+                          </View>
+                          <View style={styles.aiLoadingRow}>
+                            <MetallicIcon name="hourglass-outline" size={14} variant="gold" />
+                            <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
+                          </View>
+                        </>
+                      );
+                    }
+                    // Gemini not available or failed — show on-device interpretation
+                    return (
+                      <>
+                        <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
+                        {todayInterp.patternAnalysis?.undercurrentLabel ? (
+                          <View style={styles.undercurrentBox}>
+                            <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</MetallicText>
+                          </View>
+                        ) : null}
+                        <View style={styles.sitWithBox}>
+                          <Text style={styles.sitWithLabel}>A question to sit with</Text>
+                          <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
+                        </View>
+                        {aiError && (
+                          <Text style={styles.aiErrorText}>{aiError}</Text>
+                        )}
+                      </>
+                    );
+                  })()}
                 </LinearGradient>
               </Animated.View>
             );
@@ -1039,7 +1132,6 @@ export default function SleepScreen() {
                             <Text style={styles.sitWithLabel}>A question to sit with</Text>
                             <Text style={styles.sitWithText}>"{interp.question}"</Text>
                           </View>
-                          <DreamSymbolChips symbols={interp.extractedSymbols} />
                         </LinearGradient>
                       </Animated.View>
                     )}
@@ -1120,7 +1212,7 @@ const styles = StyleSheet.create({
 
   // Feeling picker
   dreamMoodDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  dreamMoodDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
+  dreamMoodDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500', flex: 1, marginRight: 8 },
   dreamMoodDropdownPlaceholder: { color: PALETTE.textMuted, fontSize: 15 },
   dreamMoodOptions: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, overflow: 'hidden' },
   dreamMoodOption: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
@@ -1132,9 +1224,9 @@ const styles = StyleSheet.create({
   feelingSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, height: 40 },
 
   tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
-  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'transparent' },
+  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'transparent' },
   tierDot: { width: 8, height: 8, borderRadius: 4 },
-  tierPillText: { color: PALETTE.textMuted, fontSize: 14, fontWeight: '600' },
+  tierPillText: { color: PALETTE.textMuted, fontSize: 12, fontWeight: '600' },
   tierBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
   tierBadgeText: { color: '#020817', fontSize: 11, fontWeight: '700' },
   tierHint: { color: PALETTE.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16, fontStyle: 'italic' },
@@ -1216,6 +1308,18 @@ const styles = StyleSheet.create({
   sitWithBox: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(157, 118, 193, 0.15)' },
   sitWithLabel: { fontSize: 11, fontWeight: '700', color: PALETTE.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24, fontStyle: 'italic', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+
+  // AI Gemini interpretation
+  aiSection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(201, 174, 120, 0.15)' },
+  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(201, 174, 120, 0.08)', borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.25)' },
+  aiBtnPressed: { opacity: 0.7 },
+  aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
+  aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
+  aiLoadingText: { fontSize: 13, color: PALETTE.textMuted, fontStyle: 'italic' },
+  aiErrorText: { fontSize: 13, color: PALETTE.copper, textAlign: 'center', paddingVertical: 8 },
+  aiResultBox: { marginTop: 4 },
+  aiResultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  aiResultLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' },
 
   emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyTitle: { fontSize: 22, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 12 },

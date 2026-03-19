@@ -48,6 +48,46 @@ function SkiaPholusIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: 
   );
 }
 
+// Skia-native Lilith (Black Moon Lilith) icon — crescent on stem with crossbar
+function SkiaLilithIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+  const s = size / 24;
+  const cx = x + 12 * s;
+  const cresR = 4 * s;
+  const cresCY = (y + 12 * s) - 5 * s;
+  const stemTop = cresCY;
+  const stemBot = (y + 12 * s) + 4 * s;
+  // Crescent: lower arc of a circle (concave side up) using addArc sweep 180° CW from left
+  const cresPath = Skia.Path.Make();
+  cresPath.addArc({ x: cx - cresR, y: cresCY - cresR, width: cresR * 2, height: cresR * 2 }, 180, 180);
+  // Stem + crossbar
+  const stemPath = Skia.Path.Make();
+  stemPath.moveTo(cx, stemTop);
+  stemPath.lineTo(cx, stemBot);
+  stemPath.moveTo(cx - 4 * s, stemBot);
+  stemPath.lineTo(cx + 4 * s, stemBot);
+  return (
+    <>
+      <Path path={cresPath} style="stroke" strokeWidth={1.5 * s} color={color} strokeCap="round" />
+      <Path path={stemPath} style="stroke" strokeWidth={1.5 * s} color={color} strokeCap="round" />
+    </>
+  );
+}
+
+// Skia-native Part of Fortune icon — circle with X inside
+function SkiaPartOfFortuneIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+  const s = size / 24;
+  const cx = x + 12 * s, cy = y + 12 * s;
+  const r = 5 * s;
+  const path = Skia.Path.Make();
+  path.addCircle(cx, cy, r);
+  const d = r * 0.65;
+  path.moveTo(cx - d, cy - d);
+  path.lineTo(cx + d, cy + d);
+  path.moveTo(cx + d, cy - d);
+  path.lineTo(cx - d, cy + d);
+  return <Path path={path} style="stroke" strokeWidth={1.3 * s} color={color} strokeCap="round" />;
+}
+
 // Skia-native Vertex icon
 function SkiaVertexIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
   const s = size / 24;
@@ -329,6 +369,10 @@ function normalizePlanetName(name: unknown): string {
   if (low === 'chiron') return 'Chiron';
   if (low === 'north node' || low === 'northnode' || low === 'true node') return 'North Node';
   if (low === 'south node' || low === 'southnode') return 'South Node';
+  if (low === 'lilith' || low === 'black moon lilith' || low === 'mean lilith') return 'Lilith';
+  if (low === 'pholus') return 'Pholus';
+  if (low === 'vertex') return 'Vertex';
+  if (low === 'part of fortune' || low === 'partoffortune') return 'Part of Fortune';
 
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -337,9 +381,27 @@ function getChartPlanet(chart: NatalChart, name: string): any | null {
   const direct = (chart as any)[name.toLowerCase()] ?? (chart as any)[name];
   if (direct) return direct;
 
+  // Part of Fortune is stored as chart.partOfFortune
+  if (name === 'Part of Fortune' && (chart as any).partOfFortune) {
+    return (chart as any).partOfFortune;
+  }
+
+  // Vertex is stored in chart.angles[]
+  if (name === 'Vertex' && Array.isArray((chart as any).angles)) {
+    const found = (chart as any).angles.find((a: any) => a?.name === 'Vertex');
+    if (found) return found;
+  }
+
   const list = (chart as any).planets;
   if (Array.isArray(list)) {
     const found = list.find((p: any) => normalizePlanetName(p?.planet ?? p?.name ?? p?.key) === name);
+    return found ?? null;
+  }
+
+  // Also search placements array (fallback engine stores planets here)
+  const placements = (chart as any).placements;
+  if (Array.isArray(placements)) {
+    const found = placements.find((p: any) => normalizePlanetName(p?.planet?.name ?? p?.name ?? p?.key) === name);
     return found ?? null;
   }
 
@@ -356,6 +418,7 @@ interface PlacedPlanet {
   color: string;
   originalAngle: number;
   displayAngle: number;
+  radialOffset: number;
   longitude: number;
   isRetrograde: boolean;
 }
@@ -363,7 +426,9 @@ interface PlacedPlanet {
 function spreadPlanets(
   planets: { label: string; longitude: number; isRetrograde: boolean }[],
   ascLongitude: number,
-  minSeparationDeg: number = 8
+  minSeparationDeg: number = 8,
+  radialStepPx: number = 14,
+  baseRadius: number = R_PLANET_RING
 ): PlacedPlanet[] {
   const items: PlacedPlanet[] = planets.map((p) => {
     const angle = astroToAngle(p.longitude, ascLongitude);
@@ -373,6 +438,7 @@ function spreadPlanets(
       color: PLANET_COLORS[p.label] || theme.textPrimary,
       originalAngle: angle,
       displayAngle: angle,
+      radialOffset: 0,
       longitude: p.longitude,
       isRetrograde: p.isRetrograde,
     };
@@ -381,24 +447,56 @@ function spreadPlanets(
   items.sort((a, b) => a.originalAngle - b.originalAngle);
 
   const minSepRad = (minSeparationDeg * Math.PI) / 180;
-  for (let pass = 0; pass < 5; pass++) {
-    for (let i = 0; i < items.length; i++) {
-      for (let j = i + 1; j < items.length; j++) {
-        let diff = items[j].displayAngle - items[i].displayAngle;
-        while (diff > Math.PI) diff -= 2 * Math.PI;
-        while (diff < -Math.PI) diff += 2 * Math.PI;
 
-        if (Math.abs(diff) < minSepRad) {
-          const push = (minSepRad - Math.abs(diff)) / 2;
-          if (diff >= 0) {
-            items[i].displayAngle -= push;
-            items[j].displayAngle += push;
-          } else {
-            items[i].displayAngle += push;
-            items[j].displayAngle -= push;
-          }
-        }
-      }
+  // Circular angular distance helper
+  const circularGap = (a: number, b: number): number => {
+    let d = Math.abs(a - b) % (2 * Math.PI);
+    if (d > Math.PI) d = 2 * Math.PI - d;
+    return d;
+  };
+
+  // Group nearby planets into clusters.
+  const clusters: PlacedPlanet[][] = [];
+  let currentCluster: PlacedPlanet[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (currentCluster.length === 0) {
+      currentCluster.push(item);
+      continue;
+    }
+
+    const prev = items[i - 1];
+    const gap = circularGap(item.originalAngle, prev.originalAngle);
+    if (gap <= minSepRad) {
+      currentCluster.push(item);
+    } else {
+      clusters.push(currentCluster);
+      currentCluster = [item];
+    }
+  }
+  if (currentCluster.length > 0) clusters.push(currentCluster);
+
+  // Merge first+last cluster if close across the 360→0 seam.
+  if (clusters.length > 1) {
+    const firstItem = clusters[0][0];
+    const lastItem = clusters[clusters.length - 1][clusters[clusters.length - 1].length - 1];
+    if (circularGap(firstItem.originalAngle, lastItem.originalAngle) <= minSepRad) {
+      clusters[0] = [...clusters[clusters.length - 1], ...clusters[0]];
+      clusters.pop();
+    }
+  }
+
+  // Bias inward first: more room toward aspect ring (24px) than house numbers (16px).
+  const lanePattern = [0, -1, 1, -2, 2, -3, 3];
+
+  for (const cluster of clusters) {
+    if (cluster.length <= 1) continue;
+
+    // Only radial offset — no angular nudge. Exact degree stays locked.
+    for (let i = 0; i < cluster.length; i++) {
+      const lane = lanePattern[i % lanePattern.length] ?? 0;
+      cluster[i].radialOffset = lane * radialStepPx;
     }
   }
 
@@ -460,7 +558,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
       if (lon === null) continue;
       raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    return spreadPlanets(raw, ascLongitude);
+    return spreadPlanets(raw, ascLongitude, 10, 14, R_PLANET_RING);
   }, [chart, ascLongitude]);
 
   // ── Planet longitude map for aspect lookups ──
@@ -491,7 +589,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
       if (lon === null) continue;
       raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    const placed = spreadPlanets(raw, ascLongitude, 8);
+    const placed = spreadPlanets(raw, ascLongitude, 10, 12, R_OVERLAY_RING);
     return placed.map((p) => ({
       ...p,
       color: OVERLAY_PLANET_COLORS[p.label] || '#9C8FD2',
@@ -992,10 +1090,13 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           const iconOnlyPoints = ['Lilith', 'Vertex', 'Part of Fortune', 'Pholus'];
           const isPoint = nonPlanetPoints.includes(planet.label);
           const isIconOnly = iconOnlyPoints.includes(planet.label);
-          const actualRadius = isPoint ? R_INNER + 20 : R_PLANET_RING;
-          const glyphPos = polarToXY(planet.displayAngle, actualRadius);
+          const baseRadius = isPoint ? R_INNER + 20 : R_PLANET_RING;
+          const actualRadius = baseRadius + planet.radialOffset;
+          const glyphPos = polarToXY(planet.originalAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
-          const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : R_PLANET_RING + 10);
+          // Tick extends from the rim to the glyph; use originalAngle endpoint so the
+          // hair-line visually connects to the sphere at exact degree.
+          const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : actualRadius + PLANET_R + 2);
           const textColor = isPoint ? "#FFFFFF" : "#000000";
           const textOpacity = 1.0;
           const textStyle = isPoint ? "fill" : "stroke";
@@ -1055,6 +1156,14 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
                 ) : planet.label === 'Vertex' ? (
                   <Group>
                     <SkiaVertexIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} />
+                  </Group>
+                ) : planet.label === 'Lilith' ? (
+                  <Group>
+                    <SkiaLilithIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} />
+                  </Group>
+                ) : planet.label === 'Part of Fortune' ? (
+                  <Group>
+                    <SkiaPartOfFortuneIcon x={glyphPos.x - 12} y={glyphPos.y - 12} size={24} color={textColor} />
                   </Group>
                 ) : glyphFont ? (
                   <SkiaText
@@ -1123,10 +1232,11 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         {/* ── Overlay planets (velvet spheres, secondary hierarchy) ── */}
         {showPerson2 && placedOverlayPlanets.map((planet) => {
           const isPoint = ['Ascendant', 'Midheaven', 'North Node', 'South Node', 'Chiron', 'ASC', 'MC'].includes(planet.label);
-          const actualRadius = isPoint ? R_INNER + 36 : R_OVERLAY_RING;
-          const glyphPos = polarToXY(planet.displayAngle, actualRadius);
+          const baseRadius = isPoint ? R_INNER + 36 : R_OVERLAY_RING;
+          const actualRadius = baseRadius + planet.radialOffset;
+          const glyphPos = polarToXY(planet.originalAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
-          const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : R_OVERLAY_RING + 10);
+          const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : actualRadius + (PLANET_R * 0.75) + 2);
           const textColor = isPoint ? "#FFFFFF" : "#000000";
           const textOpacity = 1.0;
           const textStyle = isPoint ? "fill" : "stroke";

@@ -14,7 +14,8 @@ export type HouseSystem =
   | 'topocentric';
 
 export type AspectTypeName = 'conjunction' | 'opposition' | 'trine' | 'square' | 'sextile'
-  | 'quincunx' | 'semisextile' | 'semisquare' | 'sesquiquadrate';
+  | 'quincunx' | 'semisextile' | 'semisquare' | 'sesquiquadrate'
+  | 'quintile' | 'biquintile';
 
 export interface RetryConfig {
   maxRetries: number;
@@ -174,7 +175,7 @@ export interface PlanetPosition {
  * Generic sensitive / calculated point (e.g. Part of Fortune)
  */
 export interface PointPlacement {
-  name: 'Part of Fortune';
+  name: string;
   longitude: number; // 0–360
   sign: ZodiacSign;
   degree: number; // 0–29

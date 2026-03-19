@@ -485,6 +485,7 @@ const ELEMENTAL_INSIGHT_LIBRARY: Record<string, Record<string, { label: string; 
  */
 
 import { NatalChart } from '../astrology/types';
+import { ordinal } from '../../utils/insightsEngine';
 
 export interface NatalChapter {
   id: string;
@@ -2364,7 +2365,7 @@ export class FullNatalStoryGenerator {
       case 'shadow-work':     sign = (chart as any).pluto?.sign?.name ?? '';   house = (chart as any).pluto?.house;   break;
     }
     if (!sign) return planetName;
-    return house ? `${planetName} in ${sign} · ${house}th House` : `${planetName} in ${sign}`;
+    return house ? `${planetName} in ${sign} · ${ordinal(house as number)} House` : `${planetName} in ${sign}`;
   }
 
   static getChapterSignLabel(chart: any, chapterId: string): { signLabel: string, sign: string } {
@@ -2420,7 +2421,7 @@ export class FullNatalStoryGenerator {
     }
     if (sign) {
       signLabel = `Your ${getChapterPlanetName(chapterId)} in ${sign}`;
-      if (house) signLabel += ` · ${house}th House`;
+      if (house) signLabel += ` · ${ordinal(house as number)} House`;
       signLabel += `.\n\n`;
     }
     return { signLabel, sign };

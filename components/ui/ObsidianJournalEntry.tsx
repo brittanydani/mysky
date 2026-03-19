@@ -89,7 +89,7 @@ function toneColor(tone: ArchetoneTone): string {
     energised: GLASS.gold,
     heavy: GLASS.copper,
     calm: GLASS.emerald,
-    stormy: GLASS.amethyst,
+    stormy: '#E07A7A',
     neutral: GLASS.gold,
   };
   return map[tone];

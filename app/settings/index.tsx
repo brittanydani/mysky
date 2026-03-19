@@ -11,6 +11,7 @@ import * as Sharing from 'expo-sharing';
 import { IdentityVault } from '../../utils/IdentityVault';
 import { localDb } from '../../services/storage/localDb';
 import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { BackupService } from '../../services/storage/backupService';
 import { useAuth } from '../../context/AuthContext';
@@ -191,6 +192,9 @@ export default function SettingsHub() {
         EncryptedAsyncStorage.removeItem('@mysky:somatic_entries'),
         EncryptedAsyncStorage.removeItem('@mysky:trigger_events'),
         EncryptedAsyncStorage.removeItem('@mysky:relationship_patterns'),
+        EncryptedAsyncStorage.removeItem('@mysky:daily_reflections'),
+        // Core values uses plain AsyncStorage (not encrypted)
+        AsyncStorage.removeItem('@mysky:core_values'),
       ]);
       // 5. Sign out of Supabase
       await signOut();

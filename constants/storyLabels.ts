@@ -27,7 +27,7 @@ export const HOUSE_THEMES: Record<number, string> = {
 
 // Ordered list of ordinal strings as they appear in generated story text.
 // Includes both correct ordinals (1st/2nd/3rd) AND the malformed "1th/2th/3th"
-// produced by the signLabel generator's `${house}th House` template for houses 1–3.
+// that were previously produced by the signLabel generator for houses 1–3.
 const HOUSE_ORDINALS: [string, number][] = [
   ['1st', 1], ['1th', 1],
   ['2nd', 2], ['2th', 2],

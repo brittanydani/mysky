@@ -7,7 +7,7 @@
  * Navigate to this screen via router.push('/(tabs)/journal/sleep-detail').
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,11 @@ import { usePremium } from '../../../context/PremiumContext';
 import { logger } from '../../../utils/logger';
 import { parseLocalDate } from '../../../utils/dateUtils';
 import { generateDreamInterpretation } from '../../../services/premium/dreamInterpretation';
+import {
+  generateGeminiDreamInterpretation,
+  isGeminiAvailable,
+  GeminiDreamResult,
+} from '../../../services/premium/geminiDreamInterpretation';
 import { computeDreamAggregates, computeDreamPatterns } from '../../../services/premium/dreamAggregates';
 import {
   DreamInterpretation,
@@ -66,6 +71,19 @@ export default function SleepDetailScreen() {
   const [loading, setLoading] = useState(!!id);
   const [interpretation, setInterpretation] = useState<DreamInterpretation | null>(null);
   const [interpreting, setInterpreting] = useState(false);
+  const [reinterpretCount, setReinterpretCount] = useState(0);
+
+  // Gemini AI state
+  const [aiResult, setAiResult] = useState<GeminiDreamResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (reinterpretCount > 0 && entry && dreamText.trim()) {
+      void runInterpretation(entry, dreamText, allEntries);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reinterpretCount]);
 
   useFocusEffect(
     useCallback(() => {
@@ -122,8 +140,31 @@ export default function SleepDetailScreen() {
         metadata,
         aggregates,
         patterns,
+        seedSuffix: reinterpretCount > 0 ? String(reinterpretCount) : undefined,
       });
       setInterpretation(result);
+      // Auto-trigger Gemini AI interpretation for premium users
+      if (isGeminiAvailable()) {
+        setAiLoading(true);
+        setAiError(null);
+        generateGeminiDreamInterpretation({
+          dreamText: text,
+          feelings,
+          onDeviceSummary: result.paragraph,
+          symbols: result.extractedSymbols,
+          interpretiveThemes: result.interpretiveThemes,
+          patternAnalysis: result.patternAnalysis ? {
+            primaryPattern: result.patternAnalysis.primaryPattern,
+            undercurrentLabel: result.patternAnalysis.undercurrentLabel,
+            endingType: result.patternAnalysis.endingType,
+          } : undefined,
+        }).then(aiRes => {
+          setAiResult(aiRes);
+        }).catch(e => {
+          logger.error('[SleepDetail] Auto AI interpretation failed:', e);
+          setAiError(e.message ?? 'AI interpretation failed');
+        }).finally(() => setAiLoading(false));
+      }
     } catch (e) {
       logger.error('[SleepDetail] Interpretation failed:', e);
     } finally {
@@ -268,26 +309,45 @@ export default function SleepDetailScreen() {
         {/* Premium AI section */}
         <View style={[styles.premiumSection, !isPremium && styles.lockedSection]}>
           <MetallicLucideIcon icon={Sparkles} color="#D9BF8C" size={20} />
-          <MetallicText color="#D9BF8C" style={styles.premiumTitle}>AI Symbolic Interpretation</MetallicText>
+          <MetallicText color="#D9BF8C" style={styles.premiumTitle}>Symbolic Interpretation</MetallicText>
           {isPremium ? (
             interpreting ? (
               <ActivityIndicator color="#D9BF8C" style={{ marginTop: 8 }} />
             ) : interpretation ? (
               <View style={{ gap: 16, width: '100%' }}>
-                <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                {interpretation.explicitImagery.length > 0 && (
-                  <View style={styles.imageryRow}>
-                    {interpretation.explicitImagery.map((symbol) => (
-                      <View key={symbol} style={styles.imageryChip}>
-                        <MetallicText color="#6E8CB4" style={styles.imageryChipText}>{symbol}</MetallicText>
-                      </View>
-                    ))}
-                  </View>
+                {/* Show AI result as primary when available, on-device as fallback */}
+                {aiResult ? (
+                  <>
+                    <Text style={styles.interpretationParagraph}>{aiResult.paragraph}</Text>
+                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
+                  </>
+                ) : aiLoading ? (
+                  <>
+                    <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
+                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                    <View style={styles.aiLoadingRow}>
+                      <ActivityIndicator color="#D9BF8C" size="small" />
+                      <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
+                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                    {aiError && (
+                      <Text style={styles.aiErrorText}>{aiError}</Text>
+                    )}
+                  </>
                 )}
-                <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                 <Pressable
                   style={styles.rerunBtn}
-                  onPress={() => entry && dreamText.trim() && void runInterpretation(entry, dreamText, allEntries)}
+                  onPress={() => {
+                    if (entry && dreamText.trim()) {
+                      setAiResult(null);
+                      setAiError(null);
+                      setReinterpretCount(c => c + 1);
+                    }
+                  }}
                 >
                   <MetallicText color="#D9BF8C" style={styles.rerunBtnText}>RE-INTERPRET</MetallicText>
                 </Pressable>
@@ -300,7 +360,7 @@ export default function SleepDetailScreen() {
           ) : (
             <>
               <Text style={styles.premiumBody}>
-                Unlock AI-powered symbolic analysis of your dream patterns.
+                Unlock deep symbolic analysis of your dream patterns.
               </Text>
               <SkiaMetallicPill
                 label="UPGRADE TO DEEPER SKY"
@@ -382,13 +442,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 24,
     fontFamily: 'Georgia', fontStyle: 'italic',
   },
-  imageryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  imageryChip: {
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
-    backgroundColor: 'rgba(110,140,180,0.15)',
-    borderWidth: 1, borderColor: 'rgba(110,140,180,0.3)',
-  },
-  imageryChipText: { color: '#6E8CB4', fontSize: 12, fontWeight: '600' },
   reflectionQuestion: {
     color: '#D9BF8C', fontSize: 14, fontFamily: 'Georgia',
     fontStyle: 'italic', lineHeight: 22,
@@ -401,4 +454,15 @@ const styles = StyleSheet.create({
     borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)',
   },
   rerunBtnText: { color: '#D9BF8C', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+
+  // AI Gemini interpretation
+  aiSection: { marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(217,191,140,0.2)', width: '100%' },
+  aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(217,191,140,0.08)', borderWidth: 1, borderColor: 'rgba(217,191,140,0.25)' },
+  aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
+  aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
+  aiLoadingText: { fontSize: 13, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' },
+  aiErrorText: { fontSize: 13, color: '#CD7F5D', textAlign: 'center', paddingVertical: 8 },
+  aiResultBox: { marginTop: 4, width: '100%' },
+  aiResultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  aiResultLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
 });

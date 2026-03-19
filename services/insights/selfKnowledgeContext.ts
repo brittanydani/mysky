@@ -11,6 +11,10 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import {
+  getReflectionSummary,
+  ReflectionAnswer,
+} from './dailyReflectionService';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types  (mirror the interfaces defined in each screen — kept here as the
@@ -61,6 +65,16 @@ export interface RelationshipPatternEntry {
   tags: string[];
 }
 
+export interface DailyReflectionSummary {
+  totalAnswers: number;
+  totalDays: number;
+  streak: number;
+  byCategory: Record<string, number>;
+  recentAnswers: ReflectionAnswer[];
+  /** All unique YYYY-MM-DD dates the user has sealed reflections */
+  reflectionDates: string[];
+}
+
 export interface SelfKnowledgeContext {
   coreValues: CoreValuesData | null;
   archetypeProfile: ArchetypeProfile | null;
@@ -68,6 +82,7 @@ export interface SelfKnowledgeContext {
   somaticEntries: SomaticEntry[];
   triggers: TriggerData | null;
   relationshipPatterns: RelationshipPatternEntry[];
+  dailyReflections: DailyReflectionSummary | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -161,6 +176,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     somaticEntries,
     triggers,
     relationshipPatterns,
+    reflectionSummary,
   ] = await Promise.all([
     readJson<CoreValuesData>(STORAGE_KEYS.coreValues),
     readEncryptedJson<ArchetypeProfile>(STORAGE_KEYS.archetypeProfile),
@@ -168,6 +184,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     readEncryptedJson<SomaticEntry[]>(STORAGE_KEYS.somaticEntries),
     loadTriggerData(),
     readEncryptedJson<RelationshipPatternEntry[]>(STORAGE_KEYS.relationshipPatterns),
+    getReflectionSummary().catch(() => null),
   ]);
 
   return {
@@ -177,5 +194,6 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     somaticEntries: somaticEntries ?? [],
     triggers,
     relationshipPatterns: relationshipPatterns ?? [],
+    dailyReflections: reflectionSummary,
   };
 }

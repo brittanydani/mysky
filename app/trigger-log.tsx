@@ -370,14 +370,14 @@ const styles = StyleSheet.create({
 
   tagCloud: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tagChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
-  tagText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
+  tagText: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '500' },
 
   submitSection: { paddingHorizontal: 0, marginBottom: 8 },
   submitHint: {

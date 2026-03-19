@@ -25,6 +25,7 @@
 import {
   SelfKnowledgeContext,
   ArchetypeKey,
+  DailyReflectionSummary,
 } from '../services/insights/selfKnowledgeContext';
 import { DailyCheckIn } from '../services/patterns/types';
 
@@ -38,7 +39,7 @@ export interface CrossRefInsight {
   body: string;
   /** Accent color key — map against your palette in the UI layer */
   accentColor: 'gold' | 'emerald' | 'silverBlue' | 'copper' | 'rose' | 'lavender';
-  source: 'triggers' | 'somatic' | 'archetype' | 'values' | 'cognitive' | 'relationship';
+  source: 'triggers' | 'somatic' | 'archetype' | 'values' | 'cognitive' | 'relationship' | 'reflection';
   /**
    * true  → insight is confirmed by behavioral check-in data
    * false → insight is a profile reflection (still valuable, not data-backed)
@@ -421,6 +422,60 @@ function buildCognitiveInsight(scores: NonNullable<SelfKnowledgeContext['cogniti
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 8. Daily Reflection Depth
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildReflectionInsight(
+  summary: DailyReflectionSummary,
+  checkIns: DailyCheckIn[],
+): CrossRefInsight | null {
+  if (summary.totalDays < 3) return null;
+
+  const pct = Math.round((summary.totalDays / 365) * 100);
+  const dominantCategory = (
+    Object.entries(summary.byCategory) as [string, number][]
+  ).sort((a, b) => b[1] - a[1])[0];
+
+  let crossNote = '';
+  let isConfirmed = false;
+
+  // Cross-ref: compare mood on reflection days vs non-reflection days
+  // Uses ALL reflection dates (not just recent answers) for accurate comparison
+  if (checkIns.length >= 7 && summary.reflectionDates.length >= 5) {
+    const reflectionDates = new Set(summary.reflectionDates);
+    const reflectionDayMoods = checkIns
+      .filter(c => reflectionDates.has(c.date) && c.moodScore != null)
+      .map(c => c.moodScore as number);
+    const nonReflectionMoods = checkIns
+      .filter(c => !reflectionDates.has(c.date) && c.moodScore != null)
+      .map(c => c.moodScore as number);
+
+    if (reflectionDayMoods.length >= 3 && nonReflectionMoods.length >= 3) {
+      const reflAvg = avg(reflectionDayMoods);
+      const nonReflAvg = avg(nonReflectionMoods);
+      const diff = reflAvg - nonReflAvg;
+      if (diff >= 0.3) {
+        crossNote = ` On days you reflect, your mood averages ${diff.toFixed(1)} points higher than on days you don\u2019t. Self-inquiry appears to have a measurable effect on your wellbeing.`;
+        isConfirmed = true;
+      }
+    }
+  }
+
+  const streakNote = summary.streak >= 7
+    ? ` Your ${summary.streak}-day streak shows real commitment to self-knowledge.`
+    : '';
+
+  return {
+    id: 'reflection-depth',
+    title: 'Your Reflection Practice',
+    body: `You\u2019ve reflected on ${summary.totalDays} days (${pct}% of a full 365-day cycle), with ${summary.totalAnswers} total answers. Your deepest exploration is in ${dominantCategory[0]} (${dominantCategory[1]} answers).${streakNote}${crossNote}`,
+    accentColor: 'gold',
+    source: 'reflection',
+    isConfirmed,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main entry point
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -469,9 +524,15 @@ export function computeSelfKnowledgeCrossRef(
     all.push(buildCognitiveInsight(context.cognitiveStyle));
   }
 
-  // Confirmed insights lead; cap at 6 total
+  // Daily reflection depth (data-backed when mood correlation exists)
+  if (context.dailyReflections) {
+    const refl = buildReflectionInsight(context.dailyReflections, checkIns);
+    if (refl) all.push(refl);
+  }
+
+  // Confirmed insights lead; cap at 7 total
   return [
     ...all.filter(i => i.isConfirmed),
     ...all.filter(i => !i.isConfirmed),
-  ].slice(0, 6);
+  ].slice(0, 7);
 }

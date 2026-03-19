@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform, TextInput } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { GoldIcon } from '../../../components/ui/GoldIcon';
-import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
 import { localDb } from '../../../services/storage/localDb';
 import { JournalEntry, SleepEntry, generateId } from '../../../services/storage/models';
@@ -44,7 +44,7 @@ const MOOD_COLORS: Record<string, string> = {
   soft: '#8BC4E8',
   okay: '#D4B872',
   heavy: '#CD7F5D',
-  stormy: '#9D76C1',
+  stormy: '#E07A7A',
 };
 
 const MOOD_EMOJIS: Record<string, string> = {
@@ -184,7 +184,8 @@ export default function JournalScreen() {
       filtered = filtered.filter(e =>
         (e.title || '').toLowerCase().includes(q) ||
         (e.content || '').toLowerCase().includes(q) ||
-        (e.mood || '').toLowerCase().includes(q)
+        (e.mood || '').toLowerCase().includes(q) ||
+        (e.tags || []).some((t) => t.toLowerCase().includes(q))
       );
     }
     return filtered;
@@ -370,7 +371,8 @@ export default function JournalScreen() {
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
-    router.push('/sanctuary' as Href);
+    setEditingEntry(undefined);
+    setShowEntryModal(true);
   };
 
   const handleEditEntry = useCallback(async (entry: JournalEntry) => {
@@ -743,6 +745,7 @@ export default function JournalScreen() {
           date: (data.date ?? editingEntry.date) as string,
           chartId: data.chartId ?? editingEntry.chartId,
           transitSnapshot: data.transitSnapshot ?? editingEntry.transitSnapshot,
+          tags: data.tags ?? editingEntry.tags,
         } as JournalEntry;
 
         await localDb.updateJournalEntry(updated);
@@ -759,6 +762,7 @@ export default function JournalScreen() {
           isDeleted: false,
           chartId: data.chartId,
           transitSnapshot: data.transitSnapshot,
+          tags: data.tags,
           ...nlpFields,
         } as JournalEntry;
 
@@ -828,21 +832,7 @@ export default function JournalScreen() {
 
         {!showPremiumRequired && (
           activeTab === 'reflections' && entries.length > 0 &&
-          <Animated.View
-            entering={FadeInDown.delay(600).duration(600)}
-            style={[styles.fabContainer, { bottom: insets.bottom + 20 }]}
-          >
-            <Pressable style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]} onPress={() => void handleAddEntry()} accessibilityRole="button" accessibilityLabel="Add new journal entry">
-              <SkiaMetallicPill
-                label=""
-                onPress={() => void handleAddEntry()}
-                height={60}
-                borderRadius={30}
-                icon={<Ionicons name="add" size={32} color="#020817" style={{ fontWeight: '900' }} />}
-                style={{ width: 60 }}
-              />
-            </Pressable>
-          </Animated.View>
+          <JournalFAB onPress={() => void handleAddEntry()} />
         )}
 
         <JournalEntryModal
@@ -855,6 +845,62 @@ export default function JournalScreen() {
     </View>
   );
 }
+
+// ── Luminous Journal FAB (identical to Today) ────────────────────────────────
+
+function JournalFAB({ onPress }: { onPress: () => void }) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Pressable
+      onPressIn={() => { scale.value = withSpring(0.88, { mass: 0.5, damping: 12 }); }}
+      onPressOut={() => { scale.value = withSpring(1, { mass: 0.5, damping: 12 }); }}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+        onPress();
+      }}
+      style={journalFabStyles.container}
+      accessibilityLabel="Add new journal entry"
+      accessibilityRole="button"
+    >
+      <Animated.View style={[journalFabStyles.glowWrapper, animatedStyle]}>
+        <BlurView intensity={60} tint="dark" style={journalFabStyles.glassCircle}>
+          <MetallicIcon name="add" size={28} variant="gold" />
+        </BlurView>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+const journalFabStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 120,
+    right: 24,
+    zIndex: 100,
+  },
+  glowWrapper: {
+    shadowColor: '#D4B872',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 12,
+  },
+  glassCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 244, 214, 0.18)',
+    overflow: 'hidden',
+  },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
@@ -951,7 +997,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 12,
+    paddingLeft: 8,
+    paddingRight: 12,
     paddingVertical: 8,
   },
   searchInput: {
@@ -984,10 +1031,7 @@ const styles = StyleSheet.create({
   entryContent: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
 
-  fabContainer: { position: 'absolute', right: 20, zIndex: 1000 },
-  fab: { width: 60, height: 60, borderRadius: 30, overflow: 'hidden', },
-  fabPressed: { opacity: 0.9, transform: [{ scale: 0.95 }] },
-  fabGradient: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+
 
   // ── Segmented control ──
   segmentedControl: {

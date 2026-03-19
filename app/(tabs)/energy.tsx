@@ -25,7 +25,6 @@ import { useFocusEffect } from '@react-navigation/core';
 
 import { theme } from '../../constants/theme';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
-import { applyEnergyLabels } from '../../constants/storyLabels';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 
 import { localDb } from '../../services/storage/localDb';
@@ -436,7 +435,7 @@ export default function EnergyScreen() {
                           <Text style={styles.body}>{d.feeling}</Text>
                           <View style={styles.domainWhyRow}>
                             <Ionicons name="information-circle-outline" size={14} color={theme.primary} />
-                            <Text style={styles.domainWhyText}>{applyEnergyLabels(d.why)}</Text>
+                            <Text style={styles.domainWhyText}>{d.why}</Text>
                           </View>
                           <View style={styles.domainSuggestionRow}>
                             <MetallicIcon name="bulb-outline" size={14} variant="green" />

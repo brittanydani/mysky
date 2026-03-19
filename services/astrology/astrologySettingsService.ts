@@ -33,6 +33,9 @@ export interface OrbConfiguration {
   semisextile?: number;
   semisquare?: number;
   sesquiquadrate?: number;
+  // Creative aspects
+  quintile?: number;
+  biquintile?: number;
 }
 
 export interface AstrologySettings {
@@ -110,6 +113,8 @@ export const ORB_CONFIGURATIONS: Record<OrbPreset, OrbConfiguration> = {
     semisextile: 1,
     semisquare: 1,
     sesquiquadrate: 1,
+    quintile: 1,
+    biquintile: 1,
   },
   normal: {
     conjunction: 8,
@@ -121,6 +126,8 @@ export const ORB_CONFIGURATIONS: Record<OrbPreset, OrbConfiguration> = {
     semisextile: 2,
     semisquare: 2,
     sesquiquadrate: 2,
+    quintile: 2,
+    biquintile: 2,
   },
   wide: {
     conjunction: 10,
@@ -132,6 +139,8 @@ export const ORB_CONFIGURATIONS: Record<OrbPreset, OrbConfiguration> = {
     semisextile: 3,
     semisquare: 3,
     sesquiquadrate: 3,
+    quintile: 2,
+    biquintile: 2,
   },
 };
 

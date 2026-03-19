@@ -345,7 +345,7 @@ function daysBetween(a: string, b: string): number {
   );
 }
 
-function ordinal(n: number): string {
+export function ordinal(n: number): string {
   if (n <= 0) return `${n}`;
   const s = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;
