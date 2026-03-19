@@ -497,7 +497,7 @@ export default function SleepScreen() {
       const result = generateDreamInterpretation({ entry, dreamText: entry.dreamText, feelings, metadata, aggregates, patterns });
       setInterpretations(prev => ({ ...prev, [entry.id]: result }));
       // Auto-trigger Gemini AI interpretation for premium users
-      if (isGeminiAvailable()) {
+      if (isPremium && isGeminiAvailable()) {
         setAiLoading(entry.id);
         generateGeminiDreamInterpretation({
           dreamText: entry.dreamText,

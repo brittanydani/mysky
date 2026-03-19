@@ -23,11 +23,19 @@ import {
   generateCareerProfile,
   generateEmotionalProfile,
   generateShadowGrowth,
+  generateCommunicationProfile,
+  generateSpiritualProfile,
+  generateIntimacyProfile,
+  generateLifePathSummary,
   CoreIdentitySummary,
   RelationshipProfile,
   CareerProfile,
   EmotionalProfile,
   ShadowGrowthProfile,
+  CommunicationProfile,
+  SpiritualProfile,
+  IntimacyProfile,
+  LifePathSummary,
 } from './natalSynthesis';
 import {
   generateAdvancedLayers,
@@ -38,6 +46,12 @@ import {
   SabianSymbolInfo,
   ArabicLot,
   Midpoint,
+  TermInfo,
+  FaceInfo,
+  OrientalOccidental,
+  AspectGridCell,
+  AnnualProfection,
+  PlanetStrength,
 } from './advancedLayers';
 
 // ── Report Types ────────────────────────────────────────────────────
@@ -163,12 +177,22 @@ export interface ComprehensiveNatalReport {
   sabianSymbols: SabianSymbolInfo[];
   arabicLots: ArabicLot[];
   midpoints: { keyMidpoints: Midpoint[]; activatedMidpoints: Midpoint[] };
+  terms: TermInfo[];
+  faces: FaceInfo[];
+  orientalOccidental: OrientalOccidental[];
+  aspectGrid: { points: string[]; grid: (AspectGridCell | null)[][] };
+  profection: AnnualProfection | null;
+  planetStrengths: PlanetStrength[];
 
   // ── Interpretive profiles
   relationships: RelationshipProfile;
   career: CareerProfile;
   emotional: EmotionalProfile;
   shadowGrowth: ShadowGrowthProfile;
+  communication: CommunicationProfile;
+  spiritual: SpiritualProfile;
+  intimacy: IntimacyProfile;
+  lifePath: LifePathSummary;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -223,6 +247,10 @@ export function generateComprehensiveNatalReport(chart: NatalChart): Comprehensi
   const career = generateCareerProfile(chart);
   const emotional = generateEmotionalProfile(chart);
   const shadowGrowth = generateShadowGrowth(chart);
+  const communication = generateCommunicationProfile(chart);
+  const spiritual = generateSpiritualProfile(chart);
+  const intimacy = generateIntimacyProfile(chart);
+  const lifePath = generateLifePathSummary(chart);
   const advanced = generateAdvancedLayers(chart);
 
   const hasExactTime = !chart.birthData.hasUnknownTime && !!chart.birthData.time;
@@ -379,12 +407,22 @@ export function generateComprehensiveNatalReport(chart: NatalChart): Comprehensi
     sabianSymbols: advanced.sabianSymbols,
     arabicLots: advanced.arabicLots,
     midpoints: advanced.midpoints,
+    terms: advanced.terms,
+    faces: advanced.faces,
+    orientalOccidental: advanced.orientalOccidental,
+    aspectGrid: advanced.aspectGrid,
+    profection: advanced.profection,
+    planetStrengths: advanced.planetStrengths,
 
     // Interpretive profiles
     relationships,
     career,
     emotional,
     shadowGrowth,
+    communication,
+    spiritual,
+    intimacy,
+    lifePath,
   };
 }
 

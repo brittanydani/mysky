@@ -468,3 +468,255 @@ export function generateShadowGrowth(chart: NatalChart): ShadowGrowthProfile {
 
   return { saturnLessons, chironWound, plutoTransformation, nodeAxis, growthEdges, synthesis };
 }
+
+// ── 6. Communication Style ──────────────────────────────────────────
+
+export interface CommunicationProfile {
+  mercurySign: string;
+  mercuryHouse: number;
+  mercuryRetrograde: boolean;
+  learningStyle: string;
+  expressionStyle: string;
+  listeningStyle: string;
+  thirdHouseInfluence: string;
+  synthesis: string;
+}
+
+const MERCURY_EXPRESSION: Record<string, string> = {
+  Aries:       'direct, spontaneous, and sometimes blunt — you lead with bold ideas and think on your feet',
+  Taurus:      'deliberate and grounded — you prefer to think things through slowly before speaking',
+  Gemini:      'quick, curious, and verbally agile — words are your element and you can talk about anything',
+  Cancer:      'intuitive and emotionally attuned — you communicate through feeling and read between the lines',
+  Leo:         'dramatic, warm, and expressive — your words carry warmth and you enjoy storytelling',
+  Virgo:       'precise, analytical, and detail-oriented — you choose your words carefully and notice everything',
+  Libra:       'diplomatic, balanced, and socially graceful — you naturally consider multiple perspectives',
+  Scorpio:     'probing, strategic, and perceptive — you go deep and can read hidden motives easily',
+  Sagittarius: 'expansive, philosophical, and enthusiastic — you communicate big ideas with infectious energy',
+  Capricorn:   'structured, pragmatic, and authoritative — you communicate with purpose and gravitas',
+  Aquarius:    'original, unconventional, and intellectually stimulating — your ideas often surprise people',
+  Pisces:      'poetic, imaginative, and impressionistic — you communicate through metaphor and feeling',
+};
+
+const MERCURY_LEARNING: Record<string, string> = {
+  Aries: 'hands-on experimentation', Taurus: 'repeated practice and sensory engagement',
+  Gemini: 'reading, conversation, and variety', Cancer: 'emotional connection to the material',
+  Leo: 'creative projects and performance', Virgo: 'systematic study and analysis',
+  Libra: 'discussion and debate', Scorpio: 'deep research and investigation',
+  Sagittarius: 'exploration and big-picture frameworks', Capricorn: 'structured curriculum and mastery',
+  Aquarius: 'independent study and innovation', Pisces: 'intuitive absorption and visualization',
+};
+
+export function generateCommunicationProfile(chart: NatalChart): CommunicationProfile {
+  const mercury = chart.mercury;
+  const mercSign = signName(mercury.sign);
+  const mercHouse = mercury.house;
+
+  const expressionStyle = `Mercury in ${mercSign}: ${MERCURY_EXPRESSION[mercSign] ?? `you communicate with ${mercSign} qualities`}.`;
+
+  const learningStyle = `Your mind learns best through ${MERCURY_LEARNING[mercSign] ?? 'varied approaches'}.`;
+
+  const el = signElement(mercury.sign);
+  const listeningStyle = el === 'Water'
+    ? 'You listen with empathy and emotional attunement — you absorb not just words but the feeling behind them.'
+    : el === 'Fire'
+      ? 'You listen actively and energetically — impatient with slow explanations, you prefer the headline first.'
+      : el === 'Earth'
+        ? 'You listen for practical relevance and concrete details — abstract theory without application loses you.'
+        : 'You listen for ideas and connections — you naturally cross-reference what you hear with what you already know.';
+
+  const h3Planets = findPlanetsByHouse(chart, 3);
+  const thirdHouseInfluence = h3Planets.length > 0
+    ? `${h3Planets.join(' and ')} in the 3rd house ${h3Planets.length === 1 ? 'adds' : 'add'} ${h3Planets.includes('Mars') ? 'assertiveness' : h3Planets.includes('Venus') ? 'charm and diplomacy' : h3Planets.includes('Saturn') ? 'seriousness and caution' : h3Planets.includes('Jupiter') ? 'enthusiasm and breadth' : 'additional texture'} to your communication style.`
+    : 'No planets in the 3rd house — your communication style is primarily colored by Mercury\'s sign and aspects.';
+
+  const retroNote = mercury.isRetrograde
+    ? ' Mercury retrograde natally gives you a reflective, inward-processing mind — you may revise your thoughts before speaking and often come up with insights after conversations.'
+    : '';
+
+  const synthesis = `${expressionStyle} ${learningStyle} ${listeningStyle} ${thirdHouseInfluence}${retroNote}`;
+
+  return { mercurySign: mercSign, mercuryHouse: mercHouse, mercuryRetrograde: mercury.isRetrograde, learningStyle, expressionStyle, listeningStyle, thirdHouseInfluence, synthesis };
+}
+
+// ── 7. Spiritual Profile ────────────────────────────────────────────
+
+export interface SpiritualProfile {
+  neptunePlacement: string;
+  twelfthHouseThemes: string;
+  ninthHouseThemes: string;
+  nodeSpiritual: string;
+  spiritualGifts: string[];
+  synthesis: string;
+}
+
+export function generateSpiritualProfile(chart: NatalChart): SpiritualProfile {
+  const neptune = chart.neptune;
+  const neptSign = signName(neptune.sign);
+
+  const neptunePlacement = `Neptune in ${neptSign} (House ${neptune.house}) shapes your spiritual imagination and connection to the transcendent. ${neptune.house === 12 ? 'In its natural home, Neptune dissolves ego boundaries — meditation, dreams, and solitude are portals.' : neptune.house === 9 ? 'In the 9th house, your spirituality is expansive and seeking — you are drawn to philosophies, pilgrimages, and higher learning.' : neptune.house === 4 ? 'In the 4th house, your spiritual life is deeply private and rooted in family or ancestral patterns.' : neptune.house === 1 ? 'In the 1st house, you radiate a dreamy, compassionate, or otherworldly presence.' : `In house ${neptune.house}, spirituality intersects with ${['partnerships', 'values', 'communication', 'home', 'creativity', 'work', 'relationships', 'transformation', 'beliefs', 'career', 'community', 'transcendence'][neptune.house - 1] ?? 'life'} themes.`}`;
+
+  const h12Planets = findPlanetsByHouse(chart, 12);
+  const twelfthHouseThemes = h12Planets.length > 0
+    ? `${h12Planets.join(', ')} in the 12th house ${h12Planets.length === 1 ? 'indicates' : 'indicate'} significant energy operating beneath the surface of consciousness — dreams, solitude, and spiritual practice may reveal profound insights.`
+    : 'No planets in the 12th house — your spiritual development comes through other channels rather than a strong pull toward solitude or transcendence.';
+
+  const h9Planets = findPlanetsByHouse(chart, 9);
+  const ninthHouseThemes = h9Planets.length > 0
+    ? `${h9Planets.join(', ')} in the 9th house ${h9Planets.length === 1 ? 'brings' : 'bring'} a quest for meaning through philosophy, travel, or higher education.`
+    : 'No planets in the 9th house — your belief system develops gradually through lived experience rather than formal seeking.';
+
+  // Nodes for spiritual growth direction
+  const northNode = Array.isArray(chart.planets)
+    ? (chart.planets as any[]).find(p => { const n = String(p.planet ?? '').toLowerCase(); return n === 'north node' || n === 'northnode' || n === 'true node'; })
+    : null;
+  const nnSign = northNode ? String(northNode.sign ?? '') : '';
+  const nnHouse = northNode && typeof northNode.house === 'number' ? northNode.house : 0;
+  const nodeSpiritual = nnSign
+    ? `The North Node in ${nnSign}${nnHouse ? ` (House ${nnHouse})` : ''} suggests your spiritual evolution moves toward ${SIGN_IDENTITY[nnSign] ?? nnSign} qualities.`
+    : 'Node positions were not calculated — spiritual direction is reflected through Neptune and 12th house themes.';
+
+  // Spiritual gifts
+  const gifts: string[] = [];
+  if (h12Planets.includes('Moon')) gifts.push('Psychic sensitivity and dream recall');
+  if (h12Planets.includes('Neptune')) gifts.push('Deep meditative and transcendent capacity');
+  if (h12Planets.includes('Sun')) gifts.push('Spiritual vocation — your identity is deeply connected to something larger');
+  if (h12Planets.includes('Jupiter')) gifts.push('Grace and faith — an innate sense of being guided or protected');
+  const nepAspects = findAspectsInvolving(chart, 'Neptune');
+  const nepMoonAsp = nepAspects.find(a => a.planet1.name === 'Moon' || a.planet2.name === 'Moon');
+  if (nepMoonAsp && nepMoonAsp.type.nature === 'Harmonious') gifts.push('Moon-Neptune harmony — natural empathic and intuitive abilities');
+  const nepSunAsp = nepAspects.find(a => a.planet1.name === 'Sun' || a.planet2.name === 'Sun');
+  if (nepSunAsp && nepSunAsp.type.nature === 'Harmonious') gifts.push('Sun-Neptune harmony — creative inspiration and spiritual vision');
+  if (gifts.length === 0) gifts.push('Your spirituality develops through life experience rather than innate psychic gifts');
+
+  const synthesis = `${neptunePlacement} ${twelfthHouseThemes} ${nodeSpiritual}`;
+
+  return { neptunePlacement, twelfthHouseThemes, ninthHouseThemes, nodeSpiritual, spiritualGifts: gifts, synthesis };
+}
+
+// ── 8. Intimacy & Sexuality Profile ─────────────────────────────────
+
+export interface IntimacyProfile {
+  marsExpression: string;
+  plutoInfluence: string;
+  eighthHouseThemes: string;
+  venusMarsDynamic: string;
+  intimacyStyle: string;
+  synthesis: string;
+}
+
+export function generateIntimacyProfile(chart: NatalChart): IntimacyProfile {
+  const mars = chart.mars;
+  const marsSign = signName(mars.sign);
+  const pluto = chart.pluto;
+  const plutoSign = signName(pluto.sign);
+  const venus = chart.venus;
+
+  const marsExpression = `Mars in ${marsSign} (House ${mars.house}) shapes your desire nature and how you pursue what you want. ${marsSign === 'Scorpio' || marsSign === 'Aries' ? 'This is a powerful Mars — intense, magnetic, and unapologetically passionate.' : marsSign === 'Taurus' || marsSign === 'Cancer' ? 'You approach physical intimacy slowly, with sensuality and emotional depth.' : marsSign === 'Leo' || marsSign === 'Sagittarius' ? 'Your desire nature is warm, generous, and playful — you approach intimacy with enthusiasm.' : marsSign === 'Capricorn' || marsSign === 'Virgo' ? 'You approach desire with self-control and discernment — quality over quantity.' : marsSign === 'Gemini' || marsSign === 'Aquarius' ? 'Mental stimulation is foreplay — you need intellectual connection alongside physical.' : marsSign === 'Pisces' || marsSign === 'Libra' ? 'Your desires are interwoven with romance, beauty, and emotional surrender.' : 'You express desire uniquely.'}`;
+
+  const plutoInfluence = `Pluto in ${plutoSign} (House ${pluto.house}) adds depth and intensity to your intimacy patterns. ${pluto.house === 8 ? 'Pluto in the 8th house deepens intimacy profoundly — you desire soul-level merging and may experience powerful transformations through partnership.' : pluto.house === 1 ? 'Pluto in the 1st house gives you a magnetic, penetrating presence that others find hard to ignore.' : pluto.house === 7 ? 'Pluto in the 7th house creates intense partnerships where power dynamics are a central theme to navigate.' : `In house ${pluto.house}, Pluto's transformative intensity colors your experience of ${['identity', 'values', 'communication', 'home', 'creativity', 'health', 'relationships', 'intimacy', 'beliefs', 'career', 'community', 'the subconscious'][pluto.house - 1] ?? 'life'}.`}`;
+
+  const h8Planets = findPlanetsByHouse(chart, 8);
+  const eighthHouseThemes = h8Planets.length > 0
+    ? `${h8Planets.join(', ')} in the 8th house ${h8Planets.length === 1 ? 'intensifies' : 'intensify'} your experience of intimacy, shared resources, and psychological depth. You are drawn to experiences that transform you at a deep level.`
+    : 'No planets in the 8th house — intimacy themes are primarily shaped by Mars, Pluto, and Venus rather than concentrated 8th house energy.';
+
+  // Venus-Mars dynamic
+  const venusSign = signName(venus.sign);
+  const venusMarsAspect = hasAspectBetween(chart, 'Venus', 'Mars');
+  let venusMarsDynamic: string;
+  if (venusMarsAspect) {
+    const nature = venusMarsAspect.type.nature;
+    venusMarsDynamic = nature === 'Harmonious'
+      ? `Venus (${venusSign}) and Mars (${marsSign}) in ${venusMarsAspect.type.name.toLowerCase()} create a harmonious flow between your romantic and physical desires — what you want to receive and what you want to express align naturally.`
+      : `Venus (${venusSign}) and Mars (${marsSign}) in ${venusMarsAspect.type.name.toLowerCase()} create dynamic tension between your romantic ideals and your desire nature — this friction can generate magnetic chemistry but also internal conflict.`;
+  } else {
+    venusMarsDynamic = `Venus in ${venusSign} and Mars in ${marsSign} operate somewhat independently — your romantic style and desire nature may feel like two different dialects of the same language.`;
+  }
+
+  // Intimacy style
+  const scorpioEmphasis = [chart.sun, chart.moon, chart.venus, chart.mars, chart.pluto].filter(p => signName(p.sign) === 'Scorpio').length;
+  const intimacyStyle = scorpioEmphasis >= 2
+    ? 'With strong Scorpio energy, you approach intimacy with depth, intensity, and a desire for complete emotional and physical honesty. Surface-level connections feel unsatisfying.'
+    : h8Planets.length >= 2
+      ? 'Significant 8th house activity suggests you are drawn to deep, transformative intimate connections. Trust and vulnerability are central themes.'
+      : signElement(mars.sign) === 'Water'
+        ? 'Your intimacy style prioritizes emotional connection — physical closeness follows emotional safety.'
+        : signElement(mars.sign) === 'Fire'
+          ? 'Your intimacy style is passionate and spontaneous — you bring energy, warmth, and directness to physical connection.'
+          : signElement(mars.sign) === 'Earth'
+            ? 'Your intimacy style is sensual and grounded — you value physical comfort, touch, and presence.'
+            : 'Your intimacy style emphasizes mental connection and variety — curiosity keeps things alive.';
+
+  const synthesis = `${marsExpression} ${venusMarsDynamic} ${intimacyStyle}`;
+
+  return { marsExpression, plutoInfluence, eighthHouseThemes, venusMarsDynamic, intimacyStyle, synthesis };
+}
+
+// ── 9. Life Path Summary ────────────────────────────────────────────
+
+export interface LifePathSummary {
+  corePurpose: string;
+  keyStrengths: string[];
+  keyChallenges: string[];
+  growthArc: string;
+  synthesis: string;
+}
+
+export function generateLifePathSummary(chart: NatalChart): LifePathSummary {
+  const sunSign = signName(chart.sun.sign);
+  const moonSign = signName(chart.moon.sign);
+  const ascSign = chart.ascendant ? signName(chart.ascendant.sign) : '';
+
+  // Chart ruler
+  const patterns = detectChartPatterns(chart);
+  const chartRuler = patterns.chartRuler;
+
+  // Nodes
+  const northNode = Array.isArray(chart.planets)
+    ? (chart.planets as any[]).find(p => { const n = String(p.planet ?? '').toLowerCase(); return n === 'north node' || n === 'northnode' || n === 'true node'; })
+    : null;
+  const nnSign = northNode ? String(northNode.sign ?? '') : '';
+
+  // Core purpose from Sun + North Node
+  const corePurpose = nnSign
+    ? `Your Sun in ${sunSign} provides your vital energy and creative identity, while the North Node in ${nnSign} points the direction of growth. Together, they suggest a life path that integrates ${SIGN_IDENTITY[sunSign] ?? sunSign} self-expression with a growing capacity for ${SIGN_IDENTITY[nnSign] ?? nnSign} qualities. ${chartRuler ? `${chartRuler} as chart ruler guides how you navigate this path in the world.` : ''}`
+    : `Your Sun in ${sunSign} is the central engine of your life path — you are here to develop and express ${SIGN_IDENTITY[sunSign] ?? sunSign} qualities with increasing authenticity. ${chartRuler ? `${chartRuler} as chart ruler shapes the specific way you move through the world.` : ''}`;
+
+  // Key strengths
+  const strengths: string[] = [];
+  const sunEl = signElement(chart.sun.sign);
+  const moonEl = signElement(chart.moon.sign);
+  if (sunEl === moonEl) strengths.push(`Aligned Sun-Moon element (${sunEl}) — internal coherence between your will and your emotional needs`);
+  const jupAspects = findAspectsInvolving(chart, 'Jupiter').filter(a => a.type.nature === 'Harmonious');
+  if (jupAspects.length >= 2) strengths.push('Strong Jupiter support — natural optimism, luck, and expansion');
+  if (ascSign) strengths.push(`${ascSign} rising — your outward presence carries ${SIGN_IDENTITY[ascSign] ?? ascSign} energy`);
+
+  const sunAspects = findAspectsInvolving(chart, 'Sun');
+  const sunTrines = sunAspects.filter(a => a.type.name.toLowerCase() === 'trine');
+  if (sunTrines.length > 0) strengths.push(`Sun trines to ${sunTrines.map(a => a.planet1.name === 'Sun' ? a.planet2.name : a.planet1.name).join(', ')} — natural talents you can lean into`);
+
+  const saturnTrines = findAspectsInvolving(chart, 'Saturn').filter(a => a.type.name.toLowerCase() === 'trine' || a.type.name.toLowerCase() === 'sextile');
+  if (saturnTrines.length >= 2) strengths.push('Well-aspected Saturn — natural discipline and ability to build lasting structures');
+
+  if (strengths.length === 0) strengths.push(`${sunSign} Sun in House ${chart.sun.house} — your core identity and creative drive`);
+
+  // Key challenges
+  const challenges: string[] = [];
+  const squares = (chart.aspects ?? []).filter(a => a.type.name.toLowerCase() === 'square');
+  if (squares.length >= 4) challenges.push(`Multiple squares (${squares.length}) — dynamic tension drives action but requires conscious integration`);
+  const saturnSquares = findAspectsInvolving(chart, 'Saturn').filter(a => a.type.name.toLowerCase() === 'square' || a.type.name.toLowerCase() === 'opposition');
+  if (saturnSquares.length > 0) challenges.push('Saturn hard aspects — areas where discipline must be earned through effort and patience');
+  const plutoSquares = findAspectsInvolving(chart, 'Pluto').filter(a => a.type.nature === 'Challenging');
+  if (plutoSquares.length > 0) challenges.push('Pluto challenges — power dynamics and transformation themes that demand surrender and rebirth');
+  const retroPlanets = [chart.mercury, chart.venus, chart.mars, chart.jupiter, chart.saturn].filter(p => p.isRetrograde);
+  if (retroPlanets.length >= 3) challenges.push(`${retroPlanets.length} retrograde planets — significant internal processing before outward expression`);
+  if (challenges.length === 0) challenges.push('Your chart has relatively few hard aspects — growth comes through intentionally seeking challenge rather than being pushed by it');
+
+  // Growth arc: synthesize the big 3 + nodes + Saturn
+  const saturnSign = signName(chart.saturn.sign);
+  const growthArc = `Your growth arc moves from the instinctive patterns of Moon in ${moonSign} through the conscious development of Sun in ${sunSign}, all while learning Saturn's lessons in ${saturnSign}.${nnSign ? ` The North Node in ${nnSign} adds a soul-level direction, pulling you beyond comfort toward a fuller expression of your potential.` : ''} This is not a linear journey — it spirals, revisiting themes at deeper levels as you mature.`;
+
+  const synthesis = `${corePurpose} ${growthArc}`;
+
+  return { corePurpose, keyStrengths: strengths, keyChallenges: challenges, growthArc, synthesis };
+}

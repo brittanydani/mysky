@@ -1145,9 +1145,8 @@ export interface AdvancedNatalLayers {
 }
 
 export function generateAdvancedLayers(chart: NatalChart): AdvancedNatalLayers {
-  // Gather essential dignity scores for strength ranking
+  // Gather essential dignity scores for strength ranking (inlined to avoid circular import)
   const essentialScores = new Map<string, number>();
-  const { analyzeChartDignity: _unused, ...rest } = {} as any; // avoid circular — inline logic
   const RULERS: Record<string, string[]> = {
     Aries: ['Mars'], Taurus: ['Venus'], Gemini: ['Mercury'], Cancer: ['Moon'],
     Leo: ['Sun'], Virgo: ['Mercury'], Libra: ['Venus'], Scorpio: ['Pluto', 'Mars'],

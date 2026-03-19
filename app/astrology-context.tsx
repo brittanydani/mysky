@@ -266,7 +266,7 @@ export default function CosmicContext() {
 
         {/* ── Hero Moon ──────────────────────────────────────────────── */}
         <View style={styles.heroSection}>
-          <MoonPhaseView size={120} gradient />
+          <MoonPhaseView size={120} gradient interactive={false} />
           <Text style={styles.moonTitle}>
             {moonInfo.name}{moonSign ? ` in ${moonSign}` : ''}
           </Text>

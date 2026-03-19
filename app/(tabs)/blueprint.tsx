@@ -87,12 +87,12 @@ const CARDS: BlueprintCard[] = [
     premium: true,
   },
   {
-    title: 'Life Narrative',
-    description: '10 psychological chapters drawn from your natal chart.',
-    icon: '✧',
-    iconStyle: { color: PALETTE.silverBlue },
-    gradientColors: ['rgba(110, 140, 180, 0.1)', 'transparent'],
-    route: '/(tabs)/story' as Href,
+    title: 'Inner Tensions',
+    description: 'Nervous system conflict, ambivalence, and shadow triggers.',
+    icon: '⊗',
+    iconStyle: { color: PALETTE.lavender },
+    gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
+    route: '/(tabs)/inner-tensions' as Href,
   },
   {
     title: 'Cosmic Blueprint',

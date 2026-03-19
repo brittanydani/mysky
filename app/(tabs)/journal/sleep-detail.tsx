@@ -79,7 +79,7 @@ export default function SleepDetailScreen() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (reinterpretCount > 0 && entry && dreamText.trim()) {
+    if (isPremium && reinterpretCount > 0 && entry && dreamText.trim()) {
       void runInterpretation(entry, dreamText, allEntries);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,7 +144,7 @@ export default function SleepDetailScreen() {
       });
       setInterpretation(result);
       // Auto-trigger Gemini AI interpretation for premium users
-      if (isGeminiAvailable()) {
+      if (isPremium && isGeminiAvailable()) {
         setAiLoading(true);
         setAiError(null);
         generateGeminiDreamInterpretation({
