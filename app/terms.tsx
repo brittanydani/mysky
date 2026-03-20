@@ -74,10 +74,10 @@ export default function TermsOfServiceScreen() {
             <View style={styles.glassCard}>
               <Text style={[styles.subHeader, { color: PALETTE.gold }]}>Free & Premium Features</Text>
               <Text style={styles.paragraph}>
-                <Text style={styles.boldText}>Free:</Text> Natal chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily astrological context.
+                <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship synastry, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, Chiron and Node depth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
               </Text>
             </View>
 
@@ -100,7 +100,7 @@ export default function TermsOfServiceScreen() {
                 <MetallicText style={[styles.subHeader, { marginBottom: 0 }]} color={PALETTE.copper}>Not Medical or Therapeutic Advice</MetallicText>
               </View>
               <Text style={styles.paragraph}>
-                MySky is a self-reflection and personal growth tool, not a medical app. None of its features — including astrological content, dream reflections, somatic body mapping, nervous system trigger logs, core values exercises, psychological archetype profiles, emotional pattern analysis, cognitive style assessments, healing path prompts, or any other content — constitute medical advice, psychological diagnosis, therapy, counseling, or treatment of any kind.
+                MySky is a self-reflection and personal growth tool, not a medical app. None of its features — including chart-based content, dream reflections, somatic body mapping, nervous system trigger logs, core values exercises, psychological archetype profiles, emotional pattern analysis, cognitive style assessments, healing path prompts, or any other content — constitute medical advice, psychological diagnosis, therapy, counseling, or treatment of any kind.
               </Text>
               <Text style={styles.paragraph}>
                 These tools are designed for self-awareness and personal exploration only. They are not a substitute for professional mental health care, psychotherapy, psychiatry, or medical treatment. Do not use MySky as a replacement for professional support.
@@ -112,7 +112,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Intellectual Property</Text>
             <Text style={styles.paragraph}>
-              You retain full ownership of your personal data, including journal entries, check-ins, sleep logs, and dream content. MySky owns the app code, design, generalized interpretations, symbolic pattern mappings, and all generated astrological content.
+              You retain full ownership of your personal data, including journal entries, check-ins, sleep logs, and dream content. MySky owns the app code, design, generalized interpretations, symbolic pattern mappings, and all generated chart-based content.
             </Text>
 
             <Text style={styles.sectionTitle}>Data & Privacy</Text>
@@ -122,7 +122,7 @@ export default function TermsOfServiceScreen() {
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
             <Text style={styles.paragraph}>
-              MySky is provided "as is" without warranties of any kind. We are not liable for incidental, consequential, or indirect damages, or for any decisions or choices made based on astrological content, reflective prompts, dream interpretations, or behavioral insights provided by the app.
+              MySky is provided "as is" without warranties of any kind. We are not liable for incidental, consequential, or indirect damages, or for any decisions or choices made based on personalized reflective content, dream interpretations, or behavioral insights provided by the app.
             </Text>
 
             <Text style={styles.sectionTitle}>Termination</Text>

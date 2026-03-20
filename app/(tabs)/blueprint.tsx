@@ -171,14 +171,10 @@ export default function BlueprintScreen() {
                   <LinearGradient colors={card.gradientColors} style={StyleSheet.absoluteFill} />
 
                   <View style={styles.cardContent}>
-                      {card.premium ? (
-                      <View style={styles.premiumHeader}>
-                        <MetallicText style={[styles.cardIcon, card.iconStyle]} color={card.iconStyle.color as string}>{card.icon}</MetallicText>
-                        <PremiumBadge />
-                      </View>
-                    ) : (
+                    <View style={styles.cardIconRow}>
                       <MetallicText style={[styles.cardIcon, card.iconStyle]} color={card.iconStyle.color as string}>{card.icon}</MetallicText>
-                    )}
+                      {card.premium && <PremiumBadge />}
+                    </View>
                     <View>
                       <Text style={styles.cardTitle}>{card.title}</Text>
                       <Text style={styles.cardSubtitle}>{card.description}</Text>
@@ -237,7 +233,7 @@ const styles = StyleSheet.create({
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
   cardContent: { flex: 1, padding: 24, justifyContent: 'space-between' },
 
-  premiumHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
 
   cardIcon: { fontSize: 32 },
   cardTitle: {
@@ -258,6 +254,7 @@ const styles = StyleSheet.create({
   badgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
     backgroundColor: 'rgba(217, 191, 140, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -265,6 +262,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(217, 191, 140, 0.3)',
   },
-  badgeIcon: { color: PALETTE.gold, fontSize: 10, marginRight: 4 },
-  badgeText: { color: PALETTE.gold, fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
+  badgeIcon: { fontSize: 10 },
+  badgeText: { fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
 });

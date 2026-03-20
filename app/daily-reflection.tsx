@@ -3,7 +3,7 @@
 // Presents 2–3 rotating questions per category each day.
 // Answers are encrypted, sealed, and feed the insights engine.
 
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -29,7 +30,9 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import {
   getAllTodayQuestions,
   getTodayKey,
-  sealTodayAnswers,
+  getReflectionDate,
+  sealCategoryAnswers,
+  getCategorySealStatus,
   loadReflections,
   getCurrentStreak,
   DayQuestions,
@@ -41,6 +44,7 @@ import {
   ANSWER_SCALES,
   CATEGORY_SCALE,
   ReflectionCategory,
+  ScaleOption,
 } from '../constants/dailyReflectionQuestions';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,6 +76,185 @@ const CATEGORY_RGB: Record<ReflectionCategory, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Discrete Slider
+// ─────────────────────────────────────────────────────────────────────────────
+
+const THUMB = 22;
+const TRACK_PAD = THUMB / 2; // 11 — centers thumb over end stops
+const TRACK_H = 3;
+const STOP_SIZE = 8;
+
+interface SliderProps {
+  value: number | undefined;
+  onChange: (v: number) => void;
+  scale: ScaleOption[];
+  color: string;
+  disabled: boolean;
+}
+
+function ReflectionSlider({ value, onChange, scale, color, disabled }: SliderProps) {
+  const [cw, setCw] = useState(0);
+  const cwRef = useRef(0);
+  const startXRef = useRef(0);
+  const lastRef = useRef<number | undefined>(undefined);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+
+  const steps = scale.length - 1; // 3
+
+  // Map raw X (relative to track view) → snapped 0..steps value
+  const xToValue = (x: number): number => {
+    const eff = cwRef.current - TRACK_PAD * 2;
+    if (eff <= 0) return 0;
+    const clamped = Math.max(TRACK_PAD, Math.min(x, TRACK_PAD + eff));
+    return Math.round(((clamped - TRACK_PAD) / eff) * steps);
+  };
+
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => !disabled,
+    onMoveShouldSetPanResponder: () => !disabled,
+    onPanResponderGrant: (e) => {
+      startXRef.current = e.nativeEvent.locationX;
+      const v = xToValue(e.nativeEvent.locationX);
+      if (v !== lastRef.current) {
+        lastRef.current = v;
+        Haptics.selectionAsync().catch(() => {});
+      }
+      onChangeRef.current(v);
+    },
+    onPanResponderMove: (_, gs) => {
+      const v = xToValue(startXRef.current + gs.dx);
+      if (v !== lastRef.current) {
+        lastRef.current = v;
+        Haptics.selectionAsync().catch(() => {});
+        onChangeRef.current(v);
+      }
+    },
+  }), [disabled]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onLayout = (e: { nativeEvent: { layout: { width: number } } }) => {
+    cwRef.current = e.nativeEvent.layout.width;
+    setCw(e.nativeEvent.layout.width);
+  };
+
+  const eff = cw - TRACK_PAD * 2;
+  const stopX = (i: number) => (eff > 0 ? TRACK_PAD + (i / steps) * eff : TRACK_PAD);
+  const hasValue = value !== undefined;
+
+  return (
+    <View style={[sStyles.outer, disabled && sStyles.outerDisabled]}>
+      {/* Track area — panHandlers here so label taps don't conflict */}
+      <View
+        onLayout={onLayout}
+        style={sStyles.trackArea}
+        {...panResponder.panHandlers}
+      >
+        {/* Background track */}
+        <View style={[sStyles.trackBg, { left: TRACK_PAD, right: TRACK_PAD }]} />
+
+        {/* Colored fill */}
+        {hasValue && eff > 0 && (
+          <View style={[sStyles.fill, {
+            left: TRACK_PAD,
+            width: (value / steps) * eff,
+            backgroundColor: color,
+          }]} />
+        )}
+
+        {/* Stop dots */}
+        {cw > 0 && scale.map((_, i) => (
+          <View key={i} style={[sStyles.stop, {
+            left: stopX(i) - STOP_SIZE / 2,
+            backgroundColor: hasValue && i <= value! ? color : 'rgba(255,255,255,0.2)',
+          }]} />
+        ))}
+
+        {/* Thumb */}
+        {hasValue && cw > 0 && (
+          <View style={[sStyles.thumb, {
+            left: stopX(value) - THUMB / 2,
+            backgroundColor: color,
+            shadowColor: color,
+          }]} />
+        )}
+      </View>
+
+      {/* Labels */}
+      {cw > 0 && (
+        <View style={sStyles.labelsRow}>
+          {scale.map((opt, i) => (
+            <Text key={i} style={[
+              sStyles.label,
+              i === 0 && sStyles.labelFirst,
+              i === steps && sStyles.labelLast,
+              hasValue && i === value && { color, fontWeight: '700' as const },
+            ]}>
+              {opt.label}
+            </Text>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const sStyles = StyleSheet.create({
+  outer: { marginTop: 8, marginBottom: 4 },
+  outerDisabled: { opacity: 0.6 },
+  trackArea: {
+    height: THUMB,
+    position: 'relative',
+  },
+  trackBg: {
+    position: 'absolute',
+    top: (THUMB - TRACK_H) / 2,
+    height: TRACK_H,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: TRACK_H / 2,
+  },
+  fill: {
+    position: 'absolute',
+    top: (THUMB - TRACK_H) / 2,
+    height: TRACK_H,
+    borderRadius: TRACK_H / 2,
+  },
+  stop: {
+    position: 'absolute',
+    top: (THUMB - STOP_SIZE) / 2,
+    width: STOP_SIZE,
+    height: STOP_SIZE,
+    borderRadius: STOP_SIZE / 2,
+  },
+  thumb: {
+    position: 'absolute',
+    top: 0,
+    width: THUMB,
+    height: THUMB,
+    borderRadius: THUMB / 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.55,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  labelsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: TRACK_PAD - 2,
+    marginTop: 6,
+  },
+  label: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.45)',
+    fontWeight: '500',
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    flex: 1,
+  },
+  labelFirst: { textAlign: 'left' },
+  labelLast: { textAlign: 'right' },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -81,32 +264,39 @@ export default function DailyReflectionScreen() {
 
   const [dayQuestions, setDayQuestions] = useState<DayQuestions[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [sealed, setSealed] = useState(false);
+  const [categorySealed, setCategorySealed] = useState<Record<ReflectionCategory, boolean>>({
+    values: false,
+    archetypes: false,
+    cognitive: false,
+  });
   const [streak, setStreak] = useState(0);
   const [totalDays, setTotalDays] = useState(0);
   // Capture the date when questions were loaded — prevents midnight edge case
   // where sealing after midnight would file old questions under the new date
-  const loadedDateRef = useRef<string>(getTodayKey());
+  const loadedDateRef = useRef<string>(getTodayKey(getReflectionDate()));
 
   // Load today's questions & check if already sealed
   useFocusEffect(
     useCallback(() => {
       const init = async () => {
-        const today = getTodayKey();
+        const refDate = getReflectionDate();
+        const today = getTodayKey(refDate);
         loadedDateRef.current = today;
         const questions = getAllTodayQuestions();
         setDayQuestions(questions);
 
-        const data = await loadReflections();
-        const todayAnswers = data.answers.filter(a => a.date === today);
-        const alreadySealed = todayAnswers.length > 0;
+        const [sealStatus, data, s] = await Promise.all([
+          getCategorySealStatus(refDate),
+          loadReflections(),
+          getCurrentStreak(),
+        ]);
 
-        setSealed(alreadySealed);
-        // Derive from actual data — not the stored counter (avoids stale values)
+        setCategorySealed(sealStatus);
         setTotalDays(new Set(data.answers.map(a => a.date)).size);
 
-        if (alreadySealed) {
-          // Pre-fill with existing answers
+        // Pre-fill with existing answers
+        const todayAnswers = data.answers.filter(a => a.date === today);
+        if (todayAnswers.length > 0) {
           const filled: Record<string, number> = {};
           for (const a of todayAnswers) {
             filled[`${a.category}-${a.questionId}`] = a.scaleValue ?? 0;
@@ -116,7 +306,6 @@ export default function DailyReflectionScreen() {
           setAnswers({});
         }
 
-        const s = await getCurrentStreak();
         setStreak(s);
       };
 
@@ -128,50 +317,54 @@ export default function DailyReflectionScreen() {
     `${category}-${questionId}`;
 
   const setAnswer = (category: ReflectionCategory, questionId: number, scaleValue: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setAnswers(prev => ({ ...prev, [answerKey(category, questionId)]: scaleValue }));
   };
 
   const totalQuestions = dayQuestions.reduce((sum, dq) => sum + dq.questions.length, 0);
   const answeredCount = Object.keys(answers).length;
-  const allAnswered = answeredCount === totalQuestions && totalQuestions > 0;
+  const allCategoriesSealed = categorySealed.values && categorySealed.archetypes && categorySealed.cognitive;
 
-  const handleSeal = async () => {
-    if (!allAnswered) {
-      Alert.alert('Incomplete', 'Answer all questions before sealing your reflections.');
+  const isCategoryAllAnswered = (category: ReflectionCategory): boolean => {
+    const dq = dayQuestions.find(d => d.category === category);
+    if (!dq || dq.questions.length === 0) return false;
+    return dq.questions.every(q => answers[answerKey(category, q.id)] !== undefined);
+  };
+
+  const handleUnsealCategory = (category: ReflectionCategory) => {
+    Haptics.selectionAsync().catch(() => {});
+    setCategorySealed(prev => ({ ...prev, [category]: false }));
+  };
+
+  const handleSealCategory = async (category: ReflectionCategory) => {
+    if (!isCategoryAllAnswered(category)) {
+      Alert.alert('Incomplete', `Answer all ${CATEGORY_LABELS[category]} statements before sealing.`);
       return;
     }
 
-    // Use the date captured when questions were loaded — not the current time.
-    // This prevents a midnight edge case where sealing after midnight would
-    // save old questions under the new date, blocking the new day's questions.
     const sealDate = loadedDateRef.current;
-    const batch: Omit<ReflectionAnswer, 'sealedAt'>[] = [];
+    const dq = dayQuestions.find(d => d.category === category);
+    if (!dq) return;
 
-    for (const dq of dayQuestions) {
-      const scale = ANSWER_SCALES[CATEGORY_SCALE[dq.category]];
-      for (const q of dq.questions) {
-        const key = answerKey(dq.category, q.id);
-        const sv = answers[key] ?? 0;
-        batch.push({
-          questionId: q.id,
-          category: dq.category,
-          questionText: q.text,
-          answer: scale[sv].label,
-          scaleValue: sv,
-          date: sealDate,
-        });
-      }
-    }
+    const scale = ANSWER_SCALES[CATEGORY_SCALE[category]];
+    const batch: Omit<ReflectionAnswer, 'sealedAt'>[] = dq.questions.map(q => {
+      const sv = answers[answerKey(category, q.id)] ?? 0;
+      return {
+        questionId: q.id,
+        category,
+        questionText: q.text,
+        answer: scale[sv].label,
+        scaleValue: sv,
+        date: sealDate,
+      };
+    });
 
     try {
-      const result = await sealTodayAnswers(batch);
-      setSealed(true);
+      const result = await sealCategoryAnswers(category, batch);
+      setCategorySealed(prev => ({ ...prev, [category]: true }));
       setTotalDays(result.totalDaysCompleted);
       const s = await getCurrentStreak();
       setStreak(s);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
     } catch {
       Alert.alert('Error', 'Failed to save reflections. Please try again.');
     }
@@ -204,7 +397,7 @@ export default function DailyReflectionScreen() {
             <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
               <Text style={styles.headerTitle}>Daily Reflection</Text>
               <GoldSubtitle style={styles.headerSubtitle}>
-                New questions each day — building who you are
+                New statements each day — building who you are
               </GoldSubtitle>
             </Animated.View>
 
@@ -233,11 +426,11 @@ export default function DailyReflectionScreen() {
             </Animated.View>
 
             {/* Sealed Banner */}
-            {sealed && (
+            {allCategoriesSealed && (
               <Animated.View entering={FadeIn.duration(500)} style={styles.sealedBanner}>
                 <MetallicIcon name="shield-checkmark" size={16} color={PALETTE.emerald} />
                 <MetallicText style={styles.sealedText} color={PALETTE.emerald}>
-                  TODAY'S REFLECTIONS SEALED
+                  ALL CATEGORIES SEALED FOR TODAY
                 </MetallicText>
               </Animated.View>
             )}
@@ -246,6 +439,8 @@ export default function DailyReflectionScreen() {
             {dayQuestions.map((dq, catIdx) => {
               const color = CATEGORY_COLORS[dq.category];
               const rgb = CATEGORY_RGB[dq.category];
+              const isSealed = categorySealed[dq.category];
+              const allAnsweredForCat = isCategoryAllAnswered(dq.category);
 
               return (
                 <Animated.View
@@ -262,6 +457,9 @@ export default function DailyReflectionScreen() {
                     <MetallicText style={styles.categoryTitle} color={color}>
                       {CATEGORY_LABELS[dq.category]}
                     </MetallicText>
+                    {isSealed && (
+                      <MetallicIcon name="shield-checkmark" size={14} color={PALETTE.emerald} />
+                    )}
                   </View>
 
                   {/* Questions */}
@@ -286,36 +484,15 @@ export default function DailyReflectionScreen() {
                         <View style={styles.questionContent}>
                           <Text style={styles.questionText}>{q.text}</Text>
 
-                          <View style={styles.scaleRow}>
-                            {scale.map(opt => {
-                              const isSelected = selectedValue === opt.value;
-                              return (
-                                <Pressable
-                                  key={opt.value}
-                                  style={[
-                                    styles.scalePill,
-                                    isSelected && {
-                                      backgroundColor: `rgba(${rgb}, 0.25)`,
-                                      borderColor: color,
-                                    },
-                                    sealed && styles.scalePillSealed,
-                                  ]}
-                                  onPress={() => setAnswer(dq.category, q.id, opt.value)}
-                                  disabled={sealed}
-                                >
-                                  <Text style={[
-                                    styles.scalePillText,
-                                    isSelected && { color },
-                                    sealed && isSelected && { color: PALETTE.emerald },
-                                  ]}>
-                                    {opt.label}
-                                  </Text>
-                                </Pressable>
-                              );
-                            })}
-                          </View>
+                          <ReflectionSlider
+                            value={selectedValue}
+                            onChange={v => setAnswer(dq.category, q.id, v)}
+                            scale={scale}
+                            color={isSealed ? PALETTE.emerald : color}
+                            disabled={isSealed}
+                          />
 
-                          {hasAnswer && sealed && (
+                          {hasAnswer && isSealed && (
                             <View style={styles.answerMeta}>
                               <MetallicIcon name="lock-closed" size={11} color={PALETTE.emerald} />
                               <Text style={[styles.answerMetaText, { color: PALETTE.emerald }]}>
@@ -327,36 +504,55 @@ export default function DailyReflectionScreen() {
                       </Animated.View>
                     );
                   })}
+
+                  {/* Per-Category Seal / Edit row */}
+                  {isSealed ? (
+                    <View style={styles.sealedRow}>
+                      <View style={styles.sealedRowLeft}>
+                        <MetallicIcon name="shield-checkmark" size={14} color={PALETTE.emerald} />
+                        <Text style={[styles.categorySealText, { color: PALETTE.emerald }]}>
+                          Sealed
+                        </Text>
+                      </View>
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.editBtn,
+                          { borderColor: `rgba(${rgb}, 0.5)` },
+                          pressed && { opacity: 0.7 },
+                        ]}
+                        onPress={() => handleUnsealCategory(dq.category)}
+                      >
+                        <MetallicIcon name="pencil-outline" size={13} color={color} />
+                        <Text style={[styles.editBtnText, { color }]}>Edit</Text>
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.categorySealBtn,
+                        { borderColor: `rgba(${rgb}, 0.3)` },
+                        allAnsweredForCat && { backgroundColor: `rgba(${rgb}, 0.15)`, borderColor: color },
+                        pressed && allAnsweredForCat && { opacity: 0.85 },
+                      ]}
+                      onPress={() => handleSealCategory(dq.category)}
+                      disabled={!allAnsweredForCat}
+                    >
+                      <MetallicIcon
+                        name="shield-checkmark"
+                        size={14}
+                        color={allAnsweredForCat ? color : PALETTE.textMuted}
+                      />
+                      <Text style={[
+                        styles.categorySealText,
+                        allAnsweredForCat ? { color } : { color: PALETTE.textMuted },
+                      ]}>
+                        Seal {CATEGORY_LABELS[dq.category]}
+                      </Text>
+                    </Pressable>
+                  )}
                 </Animated.View>
               );
             })}
-
-            {/* Seal Button */}
-            {!sealed && dayQuestions.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.sealButton,
-                    !allAnswered && styles.sealButtonDisabled,
-                    pressed && allAnswered && styles.sealButtonPressed,
-                  ]}
-                  onPress={handleSeal}
-                  disabled={!allAnswered}
-                >
-                  <MetallicIcon
-                    name="shield-checkmark"
-                    size={18}
-                    color={allAnswered ? '#0A0A0C' : PALETTE.textMuted}
-                  />
-                  <Text style={[
-                    styles.sealButtonText,
-                    !allAnswered && styles.sealButtonTextDisabled,
-                  ]}>
-                    Seal Today's Reflections
-                  </Text>
-                </Pressable>
-              </Animated.View>
-            )}
 
             {/* Journey Progress */}
             {totalDays > 0 && (
@@ -478,30 +674,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Scale pills
-  scaleRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  scalePill: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  scalePillSealed: {
-    opacity: 0.7,
-  },
-  scalePillText: {
-    fontSize: 13,
-    color: PALETTE.textMuted,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-
   // Answer meta
   answerMeta: {
     flexDirection: 'row',
@@ -518,35 +690,59 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
-  // Seal button
-  sealButton: {
+  // Sealed row (shown after sealing, with Edit button)
+  sealedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(110, 191, 139, 0.2)',
+    backgroundColor: 'rgba(110, 191, 139, 0.06)',
+    marginTop: 4,
+  },
+  sealedRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  editBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+
+  // Per-category seal button
+  categorySealBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    backgroundColor: PALETTE.gold,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  sealButtonDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    marginTop: 4,
   },
-  sealButtonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  sealButtonText: {
-    fontSize: 15,
+  categorySealText: {
+    fontSize: 13,
     fontWeight: '700',
-    color: '#0A0A0C',
-    letterSpacing: 0.5,
-  },
-  sealButtonTextDisabled: {
-    color: PALETTE.textMuted,
+    letterSpacing: 0.3,
   },
 
   // Progress

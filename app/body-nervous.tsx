@@ -38,6 +38,8 @@ interface ToolCard {
   iconColor: string;
   accentRgb: string;
   route: Href;
+  iconOffset?: number;
+  iconLeft?: number;
 }
 
 const TOOLS: ToolCard[] = [
@@ -56,6 +58,8 @@ const TOOLS: ToolCard[] = [
     iconColor: PALETTE.emerald,
     accentRgb: '110, 191, 139',
     route: '/trigger-log' as Href,
+    iconOffset: -10,
+    iconLeft: -4,
   },
 ];
 
@@ -103,9 +107,10 @@ export default function BodyNervousScreen() {
               <Animated.View
                 key={tool.route as string}
                 entering={FadeInDown.delay(220 + i * 80).duration(600)}
+                style={styles.card}
               >
                 <Pressable
-                  style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                  style={({ pressed }) => [StyleSheet.absoluteFill, pressed && styles.cardPressed]}
                   onPress={() => nav(tool.route)}
                 >
                   <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
@@ -114,7 +119,7 @@ export default function BodyNervousScreen() {
                     style={StyleSheet.absoluteFill}
                   />
                   <View style={styles.cardContent}>
-                    <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
+                    <MetallicText style={[styles.cardIcon, { marginBottom: tool.iconOffset ?? 0, marginLeft: tool.iconLeft ?? 0 }]} color={tool.iconColor}>{tool.icon}</MetallicText>
                     <View>
                       <Text style={styles.cardTitle}>{tool.title}</Text>
                       <Text style={styles.cardSubtitle}>{tool.description}</Text>
@@ -167,14 +172,14 @@ const styles = StyleSheet.create({
 
   grid: { gap: 20 },
   card: {
-    height: 160,
+    height: 190,
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
-  cardContent: { flex: 1, padding: 24, justifyContent: 'space-between' },
+  cardContent: { flex: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 32, justifyContent: 'center', gap: 4 },
   cardIcon: { fontSize: 32 },
   cardTitle: {
     fontSize: 20,

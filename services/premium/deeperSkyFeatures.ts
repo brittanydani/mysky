@@ -155,7 +155,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
     id: 'pdf-export',
     name: 'PDF Chart Export',
     icon: 'document-text',
-    description: 'Export your natal chart and personal story as a shareable PDF keepsake',
+    description: 'Export your personal birth chart and personal story as a shareable PDF keepsake',
     freeVersion: 'Not available',
     premiumVersion: 'Full PDF — cover page, Big Three, all planet placements, house cusps, aspects, and all 10 Personal Story chapters',
     isPremium: true,
@@ -331,7 +331,7 @@ export const DEEPER_SKY_MARKETING = {
     {
       emoji: '📄',
       title: 'PDF Chart Export',
-      brief: 'Export your natal chart and personal story as a shareable PDF',
+      brief: 'Export your personal birth chart and personal story as a shareable PDF',
     },
   ],
   

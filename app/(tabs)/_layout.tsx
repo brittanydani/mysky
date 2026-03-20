@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { Home, Activity, BookText, Fingerprint, Settings } from 'lucide-react-native';
+import { Home, TrendingUp, BookOpen, User, LayoutGrid } from 'lucide-react-native';
 import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { SkiaGradient } from '../../components/ui/SkiaGradient';
@@ -49,8 +49,8 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           const sw = 1.5;
 
           const LUCIDE_MAP: Record<string, React.ComponentType<any>> = {
-            home: Home, growth: Activity, journal: BookText,
-            blueprint: Fingerprint, settings: Settings,
+            home: Home, growth: TrendingUp, journal: BookOpen,
+            blueprint: User, settings: LayoutGrid,
           };
           const IconComponent = LUCIDE_MAP[route.name];
 
@@ -61,7 +61,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
             : null;
 
           return (
-            <Pressable key={route.key} onPress={onPress} style={styles.tabItem}>
+            <Pressable key={route.key} onPress={onPress} style={[styles.tabItem, route.name === 'blueprint' ? { paddingTop: 17 } : route.name === 'settings' ? { paddingTop: 16 } : undefined]}>
               <View style={styles.iconWrapper}>
                 {icon}
                 {isFocused && (
@@ -128,9 +128,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)',
   },
   glassHighlight: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.02)' },
-  tabItemsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', flex: 1, paddingHorizontal: 10 },
-  tabItem: { alignItems: 'center', justifyContent: 'center', flex: 1, paddingTop: 12 },
-  iconWrapper: { height: 30, justifyContent: 'center', alignItems: 'center' },
+  tabItemsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'stretch', flex: 1, paddingHorizontal: 10 },
+  tabItem: { alignItems: 'center', justifyContent: 'flex-start', flex: 1, paddingTop: 18 },
+  iconWrapper: { width: 22, height: 22, justifyContent: 'center', alignItems: 'center' },
   activeIndicator: {
     position: 'absolute', bottom: -8,
     width: 4, height: 4, borderRadius: 2,

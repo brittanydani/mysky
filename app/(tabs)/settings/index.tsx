@@ -37,7 +37,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How accurate is my chart?',
     answer:
-      'MySky uses the Swiss Ephemeris (via circular-natal-horoscope-js) for planetary calculations. Your chart is astronomically accurate to within fractions of a degree. For the most precise house cusps and rising sign, enter your exact birth time.',
+      'MySky uses the Swiss Ephemeris for planetary calculations. Your chart is astronomically accurate to within fractions of a degree. For the most precise house cusps and rising sign, enter your exact birth time.',
   },
   {
     question: "What if I don't know my birth time?",

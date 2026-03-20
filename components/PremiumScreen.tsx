@@ -239,7 +239,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             {[
               { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#C9AE78' },
               { icon: 'analytics-outline', title: 'Decode your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#C9AE78' },
-              { icon: 'sparkles-outline', title: 'Daily cosmic guidance', desc: 'Personalized action steps aligned to your natal chart', color: '#C9AE78' },
+              { icon: 'sparkles-outline', title: 'Daily personalized guidance', desc: 'Personalized action steps aligned to your personal chart', color: '#C9AE78' },
               { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup & restore with end-to-end encryption', color: '#C9AE78' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>

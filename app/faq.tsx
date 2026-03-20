@@ -61,13 +61,13 @@ export default function FAQScreen() {
             <View style={styles.faqCard}>
             <Text style={styles.question}>Do I need an account to use MySky?</Text>
             <Text style={styles.answer}>
-              No. All core features work fully offline and do not require an account. You can track your mood, energy, stress, sleep, journal, view your natal chart, explore relationships, and use all privacy features without ever creating an account or providing an email address. An account is only needed for the optional AI Reflection Insights feature.
+              No. All core features work fully offline and do not require an account. You can track your mood, energy, stress, sleep, journal, view your personal birth chart, explore relationships, and use all privacy features without ever creating an account or providing an email address. An account is only needed for the optional AI Reflection Insights feature.
             </Text>
 
             <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
             <Text style={styles.answer}>
-              <Text style={styles.highlight}>Free:</Text> Natal chart, Big Three, daily mood/energy/stress check-ins, basic journaling, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily astrological context with moon phase and transit awareness.{"\n\n"}
-              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship synastry, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, Chiron and Node depth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
+              <Text style={styles.highlight}>Free:</Text> Personal birth chart, Big Three, daily mood/energy/stress check-ins, basic journaling, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context with moon phase and transit awareness.{"\n\n"}
+              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
             </Text>
 
             <Text style={styles.question}>What data does MySky store and where?</Text>
