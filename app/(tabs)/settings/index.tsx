@@ -28,6 +28,7 @@ import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../../services/storage/fieldEncryption';
 import { logger } from '../../../utils/logger';
+import { NotificationEngine } from '../../../utils/NotificationEngine';
 import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
@@ -229,6 +230,32 @@ export default function SettingsScreen() {
   const togglePref = useCallback(async (key: string, value: boolean, setter: (v: boolean) => void) => {
     setter(value);
     try { await AsyncStorage.setItem(key, value ? '1' : '0'); } catch {}
+  }, []);
+
+  const toggleDailyReminder = useCallback(async (value: boolean) => {
+    setDailyReminderEnabled(value);
+    try {
+      await AsyncStorage.setItem('pref_daily_reminder', value ? '1' : '0');
+      if (value) {
+        const hasPermission = await NotificationEngine.requestPermissions();
+        if (!hasPermission) {
+          setDailyReminderEnabled(false);
+          await AsyncStorage.setItem('pref_daily_reminder', '0');
+          return;
+        }
+        // Read saved evening time from SecureStore or use default 20:00
+        const SecureStore = await import('expo-secure-store');
+        const [eh, em] = await Promise.all([
+          SecureStore.getItemAsync('notif_evening_hour'),
+          SecureStore.getItemAsync('notif_evening_minute'),
+        ]);
+        const hour = eh !== null ? Number(eh) : 20;
+        const minute = em !== null ? Number(em) : 0;
+        await NotificationEngine.scheduleCheckInReminder(hour, minute);
+      } else {
+        await NotificationEngine.cancelCheckInReminder();
+      }
+    } catch {}
   }, []);
 
   const gatePremium = async (): Promise<boolean> => {
@@ -667,29 +694,6 @@ export default function SettingsScreen() {
                 </View>
               </Pressable>
               <ObsidianDivider />
-              <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
-                onPress={async () => {
-                  try { await Haptics.selectionAsync(); } catch {}
-                  router.push('/(tabs)/settings/calibration' as Href);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Visual atmosphere customization"
-              >
-                <View style={styles.settingRow}>
-                  <View style={styles.settingInfo}>
-                    <View style={styles.settingHeader}>
-                      <MetallicIcon name="color-filter" size={20} color={accentAmethyst} />
-                      <Text style={styles.settingTitle}>Visual Atmosphere</Text>
-                    </View>
-                    <Text style={styles.settingDescription}>
-                      Customize your visual atmosphere using the color console
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
-                </View>
-              </Pressable>
-              <ObsidianDivider />
               <SkiaCelestialToggle
                 value={hapticEnabled}
                 onToggle={(v) => togglePref('pref_haptic', v, setHapticEnabled)}
@@ -699,7 +703,7 @@ export default function SettingsScreen() {
               <ObsidianDivider />
               <SkiaCelestialToggle
                 value={dailyReminderEnabled}
-                onToggle={(v) => togglePref('pref_daily_reminder', v, setDailyReminderEnabled)}
+                onToggle={toggleDailyReminder}
                 label="Daily Check-in Reminder"
                 description="Daily nudge to log your internal weather"
               />

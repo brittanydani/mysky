@@ -257,9 +257,50 @@ export default function HomeScreen() {
   // ── Balance Score + Stability Map ──
 
   const balanceScore = useMemo(() => {
-    const sleepNorm = Math.min((latestSleep / 8) * 10, 10);
-    const raw = (mood + energy + sleepNorm) / 3;
-    return Math.round(raw * 10) / 10;
+    // Per-category point tables — each maps a raw value to 0–10 points.
+    // Low values are penalised more steeply than high values are rewarded.
+
+    // Mood: 1–10 scale
+    const MOOD_POINTS: Record<number, number> = {
+      1: 0, 2: 1, 3: 2.5, 4: 3.5, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
+    };
+
+    // Energy: only 3 discrete values (low=3, medium=5, high=8)
+    const ENERGY_POINTS: Record<number, number> = {
+      3: 1.5, 5: 5, 8: 9,
+    };
+
+    // Sleep: hours → points — harsh under 6h (real impairment territory)
+    const SLEEP_POINTS: [number, number][] = [
+      [0, 0], [4, 0], [5, 2], [6, 5], [7, 8], [8, 9], [9, 10], [10, 10],
+    ];
+
+    const moodPts = MOOD_POINTS[Math.round(mood)] ?? mood;
+    const energyPts = ENERGY_POINTS[Math.round(energy)] ?? energy;
+
+    // Linearly interpolate the sleep curve
+    const clampedSleep = Math.min(Math.max(latestSleep, 0), 10);
+    let sleepPts = 0;
+    for (let i = 1; i < SLEEP_POINTS.length; i++) {
+      const [h0, p0] = SLEEP_POINTS[i - 1];
+      const [h1, p1] = SLEEP_POINTS[i];
+      if (clampedSleep <= h1) {
+        const t = (clampedSleep - h0) / (h1 - h0);
+        sleepPts = p0 + t * (p1 - p0);
+        break;
+      }
+    }
+
+    // Weighted average: sleep 40%, mood 35%, energy 25%
+    // Sleep drives both mood and energy; energy is the coarsest signal.
+    const weighted = sleepPts * 0.40 + moodPts * 0.35 + energyPts * 0.25;
+
+    // Critical-low cap: if any single metric is ≤ 1 point, the total
+    // score can't exceed 4 — you're not "balanced" when one pillar fails.
+    const lowestPts = Math.min(moodPts, energyPts, sleepPts);
+    const capped = lowestPts <= 1 ? Math.min(weighted, 4) : weighted;
+
+    return Math.round(capped * 10) / 10;
   }, [mood, energy, latestSleep]);
 
   // Prefer daily loop insight; fall back to legacy insight engine

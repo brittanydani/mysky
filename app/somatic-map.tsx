@@ -112,47 +112,16 @@ export default function SomaticMapScreen() {
   const activeEmotionColor =
     (selectedEmotion && EMOTION_COLORS[selectedEmotion]) || PALETTE.sage;
 
-  const regionCounts = useMemo(
-    () => ZONES.reduce<Record<string, number>>((acc, z) => {
-      acc[z.id] = entries.filter((e) => e.region === z.id).length;
-      return acc;
-    }, {}),
-    [entries],
-  );
-
-  const maxCount = useMemo(
-    () => Math.max(...Object.values(regionCounts), 1),
-    [regionCounts],
-  );
-
-  // Build Body component data — heat layer first, selected zone overrides on top.
-  // Nothing is highlighted until the user taps a region (selectedRegion starts null).
+  // Build Body component data — nothing is highlighted until the user taps a region.
   const bodyData = useMemo<ExtendedBodyPart[]>(() => {
-    const map = new Map<string, ExtendedBodyPart>();
+    if (!selectedRegion) return [];
 
-    // Heat layer: only shows regions with logged entries (empty on first use)
-    ZONES.forEach((zone) => {
-      const heat = regionCounts[zone.id] / maxCount;
-      if (heat > 0) {
-        const slugs = side === 'front' ? zone.frontSlugs : zone.backSlugs;
-        const level = Math.max(1, Math.ceil(heat * 3)) as 1 | 2 | 3;
-        slugs.forEach((slug) => map.set(slug, { slug, intensity: level }));
-      }
-    });
+    const zone = ZONES.find((z) => z.id === selectedRegion);
+    if (!zone) return [];
 
-    // Selection layer: only applied after user taps a region
-    if (selectedRegion) {
-      const zone = ZONES.find((z) => z.id === selectedRegion);
-      if (zone) {
-        const slugs = side === 'front' ? zone.frontSlugs : zone.backSlugs;
-        slugs.forEach((slug) =>
-          map.set(slug, { slug, styles: { fill: activeEmotionColor } }),
-        );
-      }
-    }
-
-    return Array.from(map.values());
-  }, [regionCounts, maxCount, selectedRegion, activeEmotionColor, side]);
+    const slugs = side === 'front' ? zone.frontSlugs : zone.backSlugs;
+    return slugs.map((slug) => ({ slug, styles: { fill: activeEmotionColor } }));
+  }, [selectedRegion, activeEmotionColor, side]);
 
   const handleBodyPartPress = (bodyPart: ExtendedBodyPart) => {
     if (!bodyPart.slug) return;

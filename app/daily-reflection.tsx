@@ -10,10 +10,8 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  TextInput,
   Alert,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -40,6 +38,8 @@ import {
 import {
   CATEGORY_LABELS,
   CATEGORY_ICONS,
+  ANSWER_SCALES,
+  CATEGORY_SCALE,
   ReflectionCategory,
 } from '../constants/dailyReflectionQuestions';
 
@@ -80,7 +80,7 @@ export default function DailyReflectionScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   const [dayQuestions, setDayQuestions] = useState<DayQuestions[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [sealed, setSealed] = useState(false);
   const [streak, setStreak] = useState(0);
   const [totalDays, setTotalDays] = useState(0);
@@ -107,9 +107,9 @@ export default function DailyReflectionScreen() {
 
         if (alreadySealed) {
           // Pre-fill with existing answers
-          const filled: Record<string, string> = {};
+          const filled: Record<string, number> = {};
           for (const a of todayAnswers) {
-            filled[`${a.category}-${a.questionId}`] = a.answer;
+            filled[`${a.category}-${a.questionId}`] = a.scaleValue ?? 0;
           }
           setAnswers(filled);
         } else {
@@ -127,12 +127,13 @@ export default function DailyReflectionScreen() {
   const answerKey = (category: ReflectionCategory, questionId: number) =>
     `${category}-${questionId}`;
 
-  const setAnswer = (category: ReflectionCategory, questionId: number, text: string) => {
-    setAnswers(prev => ({ ...prev, [answerKey(category, questionId)]: text }));
+  const setAnswer = (category: ReflectionCategory, questionId: number, scaleValue: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setAnswers(prev => ({ ...prev, [answerKey(category, questionId)]: scaleValue }));
   };
 
   const totalQuestions = dayQuestions.reduce((sum, dq) => sum + dq.questions.length, 0);
-  const answeredCount = Object.values(answers).filter(v => v.trim().length > 0).length;
+  const answeredCount = Object.keys(answers).length;
   const allAnswered = answeredCount === totalQuestions && totalQuestions > 0;
 
   const handleSeal = async () => {
@@ -148,13 +149,16 @@ export default function DailyReflectionScreen() {
     const batch: Omit<ReflectionAnswer, 'sealedAt'>[] = [];
 
     for (const dq of dayQuestions) {
+      const scale = ANSWER_SCALES[CATEGORY_SCALE[dq.category]];
       for (const q of dq.questions) {
         const key = answerKey(dq.category, q.id);
+        const sv = answers[key] ?? 0;
         batch.push({
           questionId: q.id,
           category: dq.category,
           questionText: q.text,
-          answer: answers[key] || '',
+          answer: scale[sv].label,
+          scaleValue: sv,
           date: sealDate,
         });
       }
@@ -191,16 +195,10 @@ export default function DailyReflectionScreen() {
           <MetallicText style={styles.backText} color={PALETTE.lavender}>Inner World</MetallicText>
         </Pressable>
 
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={100}
-        >
           <ScrollView
             ref={scrollRef}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
           >
             {/* Header */}
             <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
@@ -269,8 +267,9 @@ export default function DailyReflectionScreen() {
                   {/* Questions */}
                   {dq.questions.map((q, qIdx) => {
                     const key = answerKey(dq.category, q.id);
-                    const value = answers[key] || '';
-                    const hasAnswer = value.trim().length > 0;
+                    const selectedValue = answers[key];
+                    const hasAnswer = selectedValue !== undefined;
+                    const scale = ANSWER_SCALES[CATEGORY_SCALE[dq.category]];
 
                     return (
                       <Animated.View
@@ -287,33 +286,40 @@ export default function DailyReflectionScreen() {
                         <View style={styles.questionContent}>
                           <Text style={styles.questionText}>{q.text}</Text>
 
-                          <TextInput
-                            style={[
-                              styles.answerInput,
-                              hasAnswer && styles.answerInputFilled,
-                              sealed && styles.answerInputSealed,
-                            ]}
-                            value={value}
-                            onChangeText={t => setAnswer(dq.category, q.id, t)}
-                            placeholder="Reflect honestly…"
-                            placeholderTextColor="rgba(255,255,255,0.25)"
-                            multiline
-                            textAlignVertical="top"
-                            editable={!sealed}
-                          />
+                          <View style={styles.scaleRow}>
+                            {scale.map(opt => {
+                              const isSelected = selectedValue === opt.value;
+                              return (
+                                <Pressable
+                                  key={opt.value}
+                                  style={[
+                                    styles.scalePill,
+                                    isSelected && {
+                                      backgroundColor: `rgba(${rgb}, 0.25)`,
+                                      borderColor: color,
+                                    },
+                                    sealed && styles.scalePillSealed,
+                                  ]}
+                                  onPress={() => setAnswer(dq.category, q.id, opt.value)}
+                                  disabled={sealed}
+                                >
+                                  <Text style={[
+                                    styles.scalePillText,
+                                    isSelected && { color },
+                                    sealed && isSelected && { color: PALETTE.emerald },
+                                  ]}>
+                                    {opt.label}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
 
-                          {hasAnswer && (
+                          {hasAnswer && sealed && (
                             <View style={styles.answerMeta}>
-                              <MetallicIcon
-                                name={sealed ? 'lock-closed' : 'create-outline'}
-                                size={11}
-                                color={sealed ? PALETTE.emerald : PALETTE.textMuted}
-                              />
-                              <Text style={[
-                                styles.answerMetaText,
-                                sealed && { color: PALETTE.emerald },
-                              ]}>
-                                {sealed ? 'Sealed' : 'Draft'}
+                              <MetallicIcon name="lock-closed" size={11} color={PALETTE.emerald} />
+                              <Text style={[styles.answerMetaText, { color: PALETTE.emerald }]}>
+                                Sealed
                               </Text>
                             </View>
                           )}
@@ -387,7 +393,6 @@ export default function DailyReflectionScreen() {
 
             <View style={{ height: 120 }} />
           </ScrollView>
-        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
@@ -473,25 +478,28 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Answer input
-  answerInput: {
-    minHeight: 80,
-    maxHeight: 200,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+  // Scale pills
+  scaleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  scalePill: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: 14,
-    padding: 14,
-    color: PALETTE.textMain,
-    fontSize: 14,
-    lineHeight: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  answerInputFilled: {
-    borderColor: 'rgba(217, 191, 140, 0.2)',
+  scalePillSealed: {
+    opacity: 0.7,
   },
-  answerInputSealed: {
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    borderColor: 'rgba(110, 191, 139, 0.15)',
+  scalePillText: {
+    fontSize: 13,
+    color: PALETTE.textMuted,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 
   // Answer meta
@@ -499,7 +507,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 8,
+    marginTop: 10,
     alignSelf: 'flex-end',
   },
   answerMetaText: {

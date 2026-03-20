@@ -25,9 +25,10 @@ export interface ReflectionAnswer {
   questionId: number;
   category: ReflectionCategory;
   questionText: string;
-  answer: string;
-  date: string;          // YYYY-MM-DD
-  sealedAt: string;      // ISO timestamp
+  answer: string;          // Scale label (e.g. "Very True", "Almost Always")
+  scaleValue?: number;     // 0–3 numeric scale value
+  date: string;            // YYYY-MM-DD
+  sealedAt: string;        // ISO timestamp
 }
 
 export interface DailyReflectionData {
@@ -50,9 +51,30 @@ export interface DayQuestions {
 const STORAGE_KEY = '@mysky:daily_reflections';
 const QUESTIONS_PER_CATEGORY = 365;
 
+/**
+ * Seconds after midnight to wait before switching to the new day's questions.
+ * This prevents questions changing at exactly midnight — they change at 00:00:05.
+ */
+const MIDNIGHT_OFFSET_SECONDS = 5;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Question selection — deterministic by day
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Get the effective date for question selection.
+ * During the first MIDNIGHT_OFFSET_SECONDS after midnight, the previous day
+ * is still active so that questions don't change at exactly 00:00:00.
+ */
+export function getReflectionDate(now: Date = new Date()): Date {
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  if (h === 0 && m === 0 && s < MIDNIGHT_OFFSET_SECONDS) {
+    return new Date(now.getTime() - MIDNIGHT_OFFSET_SECONDS * 1000);
+  }
+  return now;
+}
 
 /** Get 0-indexed day of year (0–365). */
 function getDayOfYear(date: Date = new Date()): number {
@@ -149,6 +171,7 @@ export async function sealTodayAnswers(
 
   // Add answers, deduplicating by (date + questionId + category)
   for (const ans of newAnswers) {
+    // Accept either scale-based (answer label set) or legacy free-text
     if (!ans.answer.trim()) continue;
 
     const existing = data.answers.findIndex(
@@ -180,6 +203,71 @@ export async function isTodaySealed(date: Date = new Date()): Promise<boolean> {
   const data = await loadReflections();
   const today = getTodayKey(date);
   return data.answers.some(a => a.date === today);
+}
+
+/** Check whether a specific category has been sealed for a given date. */
+export async function isCategorySealedToday(
+  category: ReflectionCategory,
+  date: Date = getReflectionDate(),
+): Promise<boolean> {
+  const data = await loadReflections();
+  const today = getTodayKey(date);
+  return data.answers.some(a => a.date === today && a.category === category);
+}
+
+/**
+ * Get the sealed status for each category for a given date.
+ * Returns a record of category → boolean.
+ */
+export async function getCategorySealStatus(
+  date: Date = getReflectionDate(),
+): Promise<Record<ReflectionCategory, boolean>> {
+  const data = await loadReflections();
+  const today = getTodayKey(date);
+  const todayAnswers = data.answers.filter(a => a.date === today);
+  return {
+    values: todayAnswers.some(a => a.category === 'values'),
+    archetypes: todayAnswers.some(a => a.category === 'archetypes'),
+    cognitive: todayAnswers.some(a => a.category === 'cognitive'),
+  };
+}
+
+/**
+ * Seal answers for a single category. Independent of other categories
+ * so users can seal each category at their own pace throughout the day.
+ */
+export async function sealCategoryAnswers(
+  category: ReflectionCategory,
+  newAnswers: Omit<ReflectionAnswer, 'sealedAt'>[],
+): Promise<DailyReflectionData> {
+  const data = await loadReflections();
+  const now = new Date().toISOString();
+
+  if (!data.startedAt) {
+    data.startedAt = now;
+  }
+
+  for (const ans of newAnswers) {
+    if (!ans.answer.trim()) continue;
+    if (ans.category !== category) continue;
+
+    const existing = data.answers.findIndex(
+      a => a.date === ans.date && a.questionId === ans.questionId && a.category === ans.category,
+    );
+
+    const sealed: ReflectionAnswer = { ...ans, sealedAt: now };
+
+    if (existing >= 0) {
+      data.answers[existing] = sealed;
+    } else {
+      data.answers.push(sealed);
+    }
+  }
+
+  data.totalDaysCompleted = new Set(data.answers.map(a => a.date)).size;
+
+  await saveReflections(data);
+  return data;
 }
 
 /** Get total unique days completed (derived from actual data). */

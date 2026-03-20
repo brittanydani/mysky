@@ -76,7 +76,7 @@ export const useDreamMapStore = create<DreamMapStore>((set, get) => ({
 
   syncData: async () => {
     if (get().isFetching) return;
-    set({ isFetching: true, error: null });
+    set({ data: null, isFetching: true, error: null });
 
     const { data, error } = await supabase.rpc('get_dream_cluster_data', {
       days_back: 30,

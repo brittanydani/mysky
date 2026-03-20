@@ -1229,3 +1229,35 @@ export const CATEGORY_ICONS: Record<ReflectionCategory, string> = {
   archetypes: '⬡',
   cognitive: '◉',
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Answer scales — predefined options for each question
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AnswerScaleType = 'agreement' | 'frequency';
+
+export interface ScaleOption {
+  value: number;   // 0–3
+  label: string;
+}
+
+export const ANSWER_SCALES: Record<AnswerScaleType, ScaleOption[]> = {
+  agreement: [
+    { value: 0, label: 'Not True' },
+    { value: 1, label: 'Somewhat' },
+    { value: 2, label: 'True' },
+    { value: 3, label: 'Very True' },
+  ],
+  frequency: [
+    { value: 0, label: 'Not at All' },
+    { value: 1, label: 'Some of the Time' },
+    { value: 2, label: 'Almost Always' },
+    { value: 3, label: 'Always' },
+  ],
+};
+
+export const CATEGORY_SCALE: Record<ReflectionCategory, AnswerScaleType> = {
+  values: 'agreement',
+  archetypes: 'agreement',
+  cognitive: 'frequency',
+};

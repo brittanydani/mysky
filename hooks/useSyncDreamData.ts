@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { useDreamMapStore } from '../store/dreamMapStore';
 
 /**
@@ -9,7 +10,9 @@ import { useDreamMapStore } from '../store/dreamMapStore';
 export function useSyncDreamData(_daysBack = 60) {
   const syncData = useDreamMapStore((s) => s.syncData);
 
-  useEffect(() => {
-    syncData();
-  }, [syncData]);
+  useFocusEffect(
+    useCallback(() => {
+      syncData();
+    }, [syncData])
+  );
 }

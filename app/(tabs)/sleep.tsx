@@ -1122,16 +1122,55 @@ export default function SleepScreen() {
                     {isExpanded && interp && (
                       <Animated.View entering={FadeInDown.duration(300)}>
                         <LinearGradient colors={['rgba(157, 118, 193, 0.1)', 'rgba(2,8,23,0.50)']} style={styles.interpretCard}>
-                          <Text style={styles.interpretBody}>{interp.paragraph}</Text>
-                          {interp.patternAnalysis?.undercurrentLabel ? (
-                            <View style={styles.undercurrentBox}>
-                              <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</MetallicText>
-                            </View>
-                          ) : null}
-                          <View style={styles.sitWithBox}>
-                            <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                            <Text style={styles.sitWithText}>"{interp.question}"</Text>
-                          </View>
+                          {(() => {
+                            const aiResult = aiInterpretations[entry.id];
+                            const isLoadingAi = aiLoading === entry.id;
+                            if (aiResult) {
+                              return (
+                                <>
+                                  <Text style={styles.interpretBody}>{aiResult.paragraph}</Text>
+                                  <View style={styles.sitWithBox}>
+                                    <Text style={styles.sitWithLabel}>A question to sit with</Text>
+                                    <Text style={styles.sitWithText}>"{aiResult.question}"</Text>
+                                  </View>
+                                </>
+                              );
+                            }
+                            if (isLoadingAi) {
+                              return (
+                                <>
+                                  <Text style={styles.interpretBody}>{interp.paragraph}</Text>
+                                  {interp.patternAnalysis?.undercurrentLabel ? (
+                                    <View style={styles.undercurrentBox}>
+                                      <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</MetallicText>
+                                    </View>
+                                  ) : null}
+                                  <View style={styles.sitWithBox}>
+                                    <Text style={styles.sitWithLabel}>A question to sit with</Text>
+                                    <Text style={styles.sitWithText}>"{interp.question}"</Text>
+                                  </View>
+                                  <View style={styles.aiLoadingRow}>
+                                    <MetallicIcon name="hourglass-outline" size={14} variant="gold" />
+                                    <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
+                                  </View>
+                                </>
+                              );
+                            }
+                            return (
+                              <>
+                                <Text style={styles.interpretBody}>{interp.paragraph}</Text>
+                                {interp.patternAnalysis?.undercurrentLabel ? (
+                                  <View style={styles.undercurrentBox}>
+                                    <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</MetallicText>
+                                  </View>
+                                ) : null}
+                                <View style={styles.sitWithBox}>
+                                  <Text style={styles.sitWithLabel}>A question to sit with</Text>
+                                  <Text style={styles.sitWithText}>"{interp.question}"</Text>
+                                </View>
+                              </>
+                            );
+                          })()}
                         </LinearGradient>
                       </Animated.View>
                     )}
