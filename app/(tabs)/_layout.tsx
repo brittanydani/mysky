@@ -12,21 +12,33 @@ import { metallicFillColors, metallicFillPositions } from '../../constants/mySky
 
 const VISIBLE_TABS = new Set(['home', 'growth', 'journal', 'blueprint', 'settings']);
 
+// ── OPTICAL NUDGES ──
+// translateY / scale: Adjusts JUST the icon inside its bounding box
+// tabTranslateY: Nudges the ENTIRE tab (Icon + Text + Dot) up or down
+const OPTICAL_ADJUSTMENTS: Record<string, { translateY?: number; translateX?: number; scale?: number; tabTranslateY?: number }> = {
+  home:      { translateY: 0,  scale: 1,    tabTranslateY: 0 },
+  growth:    { translateY: 1,  scale: 1.05, tabTranslateY: 0 }, 
+  journal:   { translateY: 0,  scale: 1,    tabTranslateY: 0 },
+  blueprint: { translateY: -1, scale: 1.1,  tabTranslateY: 0 },  
+  settings:  { translateY: 0,  scale: 0.95, tabTranslateY: -1 }, // <-- Sub-pixel nudge for perfect optical alignment
+};
+
 /**
  * CUSTOM TAB BAR COMPONENT
- * Floating glassmorphic container with gold active indicators.
+ * Floating glassmorphic container with gold active indicators and strict mathematical alignment.
  */
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const insets = useSafeAreaInsets();
   const visibleRoutes = state.routes.filter((r: any) => VISIBLE_TABS.has(r.name));
 
-  // Hide the tab bar entirely on non-navigational routes (e.g. premium paywall,
-  // modals pushed into the tab stack) so the floating bar doesn't overlay content.
   const currentRouteName = state.routes[state.index]?.name;
   if (!VISIBLE_TABS.has(currentRouteName)) return null;
 
+  const safeBottom = insets.bottom > 0 ? insets.bottom : 20;
+  const BAR_HEIGHT = 65 + safeBottom; 
+
   return (
-    <View style={[styles.tabBarContainer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
+    <View style={[styles.tabBarContainer, { height: BAR_HEIGHT, paddingBottom: safeBottom }]}>
       <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
         <View style={styles.glassHighlight} />
       </BlurView>
@@ -60,10 +72,30 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
               : <IconComponent color={inactiveColor} size={size} strokeWidth={sw} />
             : null;
 
+          const nudge = OPTICAL_ADJUSTMENTS[route.name] || {};
+
           return (
-            <Pressable key={route.key} onPress={onPress} style={[styles.tabItem, route.name === 'blueprint' ? { paddingTop: 17 } : route.name === 'settings' ? { paddingTop: 16 } : undefined]}>
+            <Pressable 
+              key={route.key} 
+              onPress={onPress} 
+              style={[
+                styles.tabItem, 
+                { transform: [{ translateY: nudge.tabTranslateY || 0 }] }
+              ]}
+            >
               <View style={styles.iconWrapper}>
-                {icon}
+                
+                {/* ── INTERNAL ICON NUDGES ── */}
+                <View style={{ 
+                  transform: [
+                    { translateY: nudge.translateY || 0 }, 
+                    { translateX: nudge.translateX || 0 }, 
+                    { scale: nudge.scale || 1 }
+                  ] 
+                }}>
+                  {icon}
+                </View>
+
                 {isFocused && (
                   <View style={styles.activeIndicator}>
                     <SkiaGradient
@@ -76,6 +108,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                   </View>
                 )}
               </View>
+              
               {isFocused ? (
                 <MetallicText style={styles.tabLabel}>{options.title}</MetallicText>
               ) : (
@@ -95,14 +128,12 @@ export default function TabLayout() {
   const renderTabBar = useCallback((props: any) => <CustomTabBar {...props} />, []);
   return (
     <Tabs tabBar={renderTabBar} screenOptions={{ headerShown: false }}>
-      {/* ── 5 visible navigation hubs ── */}
       <Tabs.Screen name="home"      options={{ title: 'Today' }} />
       <Tabs.Screen name="growth"    options={{ title: 'Patterns' }} />
       <Tabs.Screen name="journal"   options={{ title: 'Archive' }} />
       <Tabs.Screen name="blueprint" options={{ title: 'Identity' }} />
       <Tabs.Screen name="settings"  options={{ title: 'Settings' }} />
 
-      {/* ── Hidden routes — accessible via router.push from within hubs ── */}
       <Tabs.Screen name="chart"         options={{ href: null }} />
       <Tabs.Screen name="checkin"       options={{ href: null }} />
       <Tabs.Screen name="index"         options={{ href: null }} />
@@ -115,7 +146,7 @@ export default function TabLayout() {
       <Tabs.Screen name="healing"       options={{ href: null }} />
       <Tabs.Screen name="insights"      options={{ href: null }} />
       <Tabs.Screen name="premium"       options={{ href: null }} />
-      <Tabs.Screen name="sanctuary"       options={{ href: null }} />
+      <Tabs.Screen name="sanctuary"     options={{ href: null }} />
       <Tabs.Screen name="inner-tensions" options={{ href: null }} />
     </Tabs>
   );
@@ -123,19 +154,56 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    height: 90, overflow: 'hidden',
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)',
-  },
-  glassHighlight: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.02)' },
-  tabItemsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'stretch', flex: 1, paddingHorizontal: 10 },
-  tabItem: { alignItems: 'center', justifyContent: 'flex-start', flex: 1, paddingTop: 18 },
-  iconWrapper: { width: 22, height: 22, justifyContent: 'center', alignItems: 'center' },
-  activeIndicator: {
-    position: 'absolute', bottom: -8,
-    width: 4, height: 4, borderRadius: 2,
+    position: 'absolute', 
+    bottom: 0, 
+    left: 0, 
+    right: 0,
     overflow: 'hidden',
-    shadowColor: '#D9BF8C', shadowRadius: 4, shadowOpacity: 0.8,
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
-  tabLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginTop: 8 },
+  glassHighlight: { 
+    ...StyleSheet.absoluteFillObject, 
+    backgroundColor: 'rgba(255,255,255,0.02)' 
+  },
+  tabItemsRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-around', 
+    alignItems: 'center', 
+    flex: 1, 
+    paddingHorizontal: 10,
+    paddingTop: 12, 
+  },
+  tabItem: { 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    flex: 1,
+    height: '100%', 
+  },
+  iconWrapper: { 
+    width: 28, 
+    height: 28, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    marginBottom: 10, 
+  },
+  activeIndicator: {
+    position: 'absolute', 
+    bottom: -7, 
+    width: 4, 
+    height: 4, 
+    borderRadius: 2,
+    overflow: 'hidden',
+    shadowColor: '#D9BF8C', 
+    shadowRadius: 4, 
+    shadowOpacity: 0.8,
+  },
+  tabLabel: { 
+    fontSize: 9, 
+    fontWeight: '700', 
+    letterSpacing: 1, 
+    textTransform: 'uppercase', 
+    lineHeight: 10, 
+    textAlign: 'center',
+  },
 });
