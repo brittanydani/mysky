@@ -30,6 +30,7 @@ import {
   computeSelfKnowledgeCrossRef,
   CrossRefInsight,
 } from '../../utils/selfKnowledgeCrossRef';
+import { enhancePatternInsights } from '../../services/insights/geminiInsightsService';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -139,6 +140,20 @@ export default function InsightsScreen() {
             const skContext = await loadSelfKnowledgeContext();
             const refs = computeSelfKnowledgeCrossRef(skContext, checkIns);
             setCrossRefs(refs);
+
+            // Enhance with Gemini in the background (non-blocking)
+            if (refs.length > 0) {
+              enhancePatternInsights(refs, skContext, checkIns)
+                .then(result => {
+                  if (!result?.insights.length) return;
+                  const enhanced = refs.map(ref => {
+                    const match = result.insights.find(r => r.id === ref.id);
+                    return match ? { ...ref, body: match.body } : ref;
+                  });
+                  setCrossRefs(enhanced);
+                })
+                .catch(e => logger.error('Gemini pattern enhancement failed:', e));
+            }
           } catch (e) {
             logger.error('Self-knowledge cross-ref failed:', e);
           }

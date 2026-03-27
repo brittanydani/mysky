@@ -1,0 +1,365 @@
+/**
+ * Gemini Pattern Insights — AI-Enhanced Personal Patterns
+ *
+ * Takes the deterministic CrossRefInsight[] (data-backed pattern cards) and
+ * the full SelfKnowledgeContext, then asks Gemini to rewrite each insight body
+ * so it feels deeply personal, specific, and human — while preserving every
+ * data point from the original.
+ *
+ * Design:
+ *   - Supplements, never replaces: original insights are the fallback.
+ *   - Caches results per calendar day + data hash so repeated screen focuses
+ *     don't hit the API.
+ *   - Follows the same HTTP / retry / rate-limit pattern as
+ *     geminiDreamInterpretation.ts.
+ *
+ * Privacy:
+ *   - Sends aggregated pattern data only — no raw journal text, no PII,
+ *     no natal chart coordinates, no user identifiers.
+ */
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../../utils/logger';
+import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
+import type { SelfKnowledgeContext } from './selfKnowledgeContext';
+import type { DailyCheckIn } from '../patterns/types';
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const REQUEST_TIMEOUT_MS = 20_000;
+const MAX_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 800;
+const RETRY_MAX_DELAY_MS = 6_000;
+const CACHE_KEY = '@mysky:gemini_pattern_insights';
+
+// ─── System Prompt ────────────────────────────────────────────────────────────
+
+const SYSTEM_PROMPT = `You are the inner voice of a personal growth app that knows this person deeply — their patterns, their data, their inner world. You are rewriting pattern insight cards to feel specific, warm, and unmistakably personal.
+
+═══ YOUR ROLE ═══
+
+You receive a set of pattern insights (each with an ID, title, and current body text) along with the user's full self-knowledge profile and behavioral data. Your job: rewrite each insight's body text so the user thinks "wow, this app really knows me."
+
+═══ VOICE ═══
+
+Write like a close friend who also happens to be perceptive and psychologically literate. Not a therapist. Not a coach. Not a wellness influencer. A person who sees you clearly and says what they see — with care.
+
+Second person ("you"). Warm. Direct. Human.
+
+Mix short and long sentences. Let the writing breathe:
+  ✓ "You've been carrying more than usual. The data shows it, but you probably already knew."
+  ✓ "Conflict doesn't just bother you — it lingers. Your mood drops and stays down for the whole day."
+  ✗ "Based on the data analysis, it appears that interpersonal conflict events correlate with a statistically significant decrease in your reported mood scores."
+
+Vary sentence openings. Never start two consecutive sentences the same way.
+
+═══ CRITICAL RULES ═══
+
+1. PRESERVE EVERY DATA POINT from the original insight. If the original says "mood averaged 4.2" or "5 check-in days" or "1.3 points lower" — those exact numbers MUST appear in your rewrite. You are enhancing the language, not replacing the data.
+
+2. MAKE CONNECTIONS across insights. You see the full picture — the archetype, the triggers, the values, the somatic map, the relationship patterns. When one insight explains or deepens another, weave that in. Example: if someone is a Caregiver archetype AND conflict is their top drain, connect those dots: "As someone who moves through the world by caring for others, conflict doesn't just stress you — it threatens the harmony you've built your identity around."
+
+3. BE SPECIFIC TO THIS PERSON. Reference their actual values, their actual archetype, their actual patterns by name. Never be generic.
+
+4. ADD ONE PERSONAL OBSERVATION per insight that the template couldn't generate — something that connects the dots in a way only a holistic view allows.
+
+5. Each rewritten body should be 2–4 sentences. Concise but rich.
+
+═══ BANNED PATTERNS ═══
+
+Never use: journey, powerful, tapestry, delve, resonate, embrace, navigate, unpack, realm, beacon, pivotal, landscape (metaphorical), profound, intricate, embark, unveil, unlock, harness, "it's important to remember", "this suggests that", "in summary", "overall", "let's explore", "let's unpack".
+
+Never stack hedges: use ONE hedge per clause maximum.
+Never write a sentence longer than 30 words.
+No bullet points. No numbered lists. Flowing prose only.
+
+═══ RESPONSE FORMAT ═══
+
+Return strict JSON. No markdown. No code fences. No extra text.
+{
+  "insights": [
+    { "id": "insight-id-here", "body": "Your rewritten body text here." },
+    ...
+  ]
+}
+
+Return one entry per insight ID provided in the input. Preserve the exact IDs.`;
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface GeminiPatternResult {
+  insights: Array<{ id: string; body: string }>;
+  generatedAt: string;
+}
+
+interface CachedResult {
+  cacheKey: string;
+  result: GeminiPatternResult;
+}
+
+// ─── API Key ──────────────────────────────────────────────────────────────────
+
+function getApiKey(): string | null {
+  const key = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+  if (!key || key.trim().length === 0) return null;
+  return key.trim();
+}
+
+// ─── Cache ────────────────────────────────────────────────────────────────────
+
+function buildCacheKey(insights: CrossRefInsight[]): string {
+  const today = new Date().toISOString().slice(0, 10);
+  const ids = insights.map(i => i.id).sort().join(',');
+  return `${today}:${ids}`;
+}
+
+async function getCachedResult(cacheKey: string): Promise<GeminiPatternResult | null> {
+  try {
+    const raw = await AsyncStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const cached: CachedResult = JSON.parse(raw);
+    if (cached.cacheKey === cacheKey) return cached.result;
+  } catch { /* ignore */ }
+  return null;
+}
+
+async function setCachedResult(cacheKey: string, result: GeminiPatternResult): Promise<void> {
+  try {
+    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify({ cacheKey, result }));
+  } catch { /* ignore */ }
+}
+
+// ─── Build User Prompt ────────────────────────────────────────────────────────
+
+function buildUserPrompt(
+  insights: CrossRefInsight[],
+  context: SelfKnowledgeContext,
+  checkIns: DailyCheckIn[],
+): string {
+  const parts: string[] = [];
+
+  // ── User profile summary ──
+  const profile: string[] = [];
+
+  if (context.archetypeProfile) {
+    profile.push(`Dominant archetype: ${context.archetypeProfile.dominant}`);
+  }
+  if (context.coreValues?.topFive.length) {
+    profile.push(`Core values (top 5): ${context.coreValues.topFive.join(', ')}`);
+  }
+  if (context.cognitiveStyle) {
+    const s = context.cognitiveStyle;
+    const scope = s.scope <= 2 ? 'big-picture' : s.scope >= 4 ? 'detail-oriented' : 'balanced';
+    const proc = s.processing <= 2 ? 'visual/spatial' : s.processing >= 4 ? 'verbal/analytical' : 'balanced';
+    const dec = s.decisions <= 2 ? 'quick/intuitive' : s.decisions >= 4 ? 'careful/deliberate' : 'adaptive';
+    profile.push(`Cognitive style: ${scope} thinker, ${proc} processor, ${dec} decider`);
+  }
+  if (context.triggers) {
+    if (context.triggers.drains.length) {
+      profile.push(`Self-reported drains: ${context.triggers.drains.join(', ')}`);
+    }
+    if (context.triggers.restores.length) {
+      profile.push(`Self-reported restores: ${context.triggers.restores.join(', ')}`);
+    }
+  }
+  if (context.somaticEntries.length > 0) {
+    const regionCounts: Record<string, number> = {};
+    const emotionCounts: Record<string, number> = {};
+    for (const e of context.somaticEntries) {
+      regionCounts[e.region] = (regionCounts[e.region] ?? 0) + 1;
+      emotionCounts[e.emotion] = (emotionCounts[e.emotion] ?? 0) + 1;
+    }
+    const topRegion = Object.entries(regionCounts).sort((a, b) => b[1] - a[1])[0];
+    const topEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0];
+    if (topRegion && topEmotion) {
+      profile.push(`Somatic pattern: ${topEmotion[0]} most often held in ${topRegion[0]} (${context.somaticEntries.length} entries)`);
+    }
+  }
+  if (context.relationshipPatterns.length > 0) {
+    const tagCounts: Record<string, number> = {};
+    for (const e of context.relationshipPatterns) {
+      for (const t of e.tags) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
+    }
+    const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    if (topTags.length) {
+      profile.push(`Top relationship patterns: ${topTags.map(([t, c]) => `${t} (${c}×)`).join(', ')}`);
+    }
+  }
+  if (context.dailyReflections) {
+    const r = context.dailyReflections;
+    profile.push(`Reflection practice: ${r.totalDays} days, ${r.totalAnswers} answers, ${r.streak}-day streak`);
+  }
+
+  if (profile.length) {
+    parts.push(`USER PROFILE:\n${profile.join('\n')}`);
+  }
+
+  // ── Behavioral snapshot ──
+  if (checkIns.length > 0) {
+    const moods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
+    const avgMood = moods.length ? (moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1) : 'N/A';
+
+    const stressScores = checkIns.map(c => {
+      if (c.stressLevel === 'low') return 2 as number;
+      if (c.stressLevel === 'medium') return 5 as number;
+      if (c.stressLevel === 'high') return 9 as number;
+      return null;
+    }).filter((v): v is number => v != null);
+    const avgStress = stressScores.length ? (stressScores.reduce((a, b) => a + b, 0) / stressScores.length).toFixed(1) : 'N/A';
+
+    // Tag frequency
+    const tagCounts: Record<string, number> = {};
+    for (const c of checkIns) {
+      for (const t of c.tags) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
+    }
+    const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+    const behavioral = [
+      `Check-ins: ${checkIns.length} over the recent period`,
+      `Average mood: ${avgMood}/10`,
+      `Average stress: ${avgStress}/9`,
+      topTags.length ? `Most frequent tags: ${topTags.map(([t, c]) => `${t} (${c}×)`).join(', ')}` : null,
+    ].filter(Boolean);
+
+    parts.push(`BEHAVIORAL DATA:\n${behavioral.join('\n')}`);
+  }
+
+  // ── Insights to rewrite ──
+  const insightBlock = insights.map(i => {
+    const confirmed = i.isConfirmed ? ' [DATA-CONFIRMED]' : ' [PROFILE-BASED]';
+    return `ID: ${i.id}\nSource: ${i.source}\nTitle: ${i.title}${confirmed}\nCurrent body: ${i.body}`;
+  }).join('\n\n');
+
+  parts.push(`INSIGHTS TO REWRITE:\n\n${insightBlock}`);
+
+  return parts.join('\n\n---\n\n');
+}
+
+// ─── Retry Helpers ────────────────────────────────────────────────────────────
+
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function computeRetryDelayMs(attempt: number, retryAfterMs?: number): number {
+  if (typeof retryAfterMs === 'number') return retryAfterMs;
+  const expDelay = Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS);
+  const jitter = Math.floor(Math.random() * 250);
+  return expDelay + jitter;
+}
+
+function isRetriableStatus(status: number): boolean {
+  return status === 408 || status === 425 || status === 429 || status === 503 || status >= 500;
+}
+
+// ─── Client-side Rate Limiter ────────────────────────────────────────────────
+
+const MIN_CALL_INTERVAL_MS = 10_000;
+let lastCallTimestamp = 0;
+
+// ─── Main API Call ────────────────────────────────────────────────────────────
+
+/**
+ * Enhance pattern insights with Gemini.
+ *
+ * Returns enhanced insights keyed by ID, or null if the API is unavailable,
+ * rate-limited, or fails. Callers should always fall back to original insights.
+ */
+export async function enhancePatternInsights(
+  insights: CrossRefInsight[],
+  context: SelfKnowledgeContext,
+  checkIns: DailyCheckIn[],
+): Promise<GeminiPatternResult | null> {
+  if (!insights.length) return null;
+
+  const apiKey = getApiKey();
+  if (!apiKey) return null;
+
+  // ── Check cache ──
+  const cacheKey = buildCacheKey(insights);
+  const cached = await getCachedResult(cacheKey);
+  if (cached) return cached;
+
+  // ── Rate limit ──
+  const now = Date.now();
+  if (now - lastCallTimestamp < MIN_CALL_INTERVAL_MS) return null;
+  lastCallTimestamp = now;
+
+  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent`;
+  const body = {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [{ parts: [{ text: buildUserPrompt(insights, context, checkIns) }] }],
+    generationConfig: {
+      temperature: 0.75,
+      maxOutputTokens: 2048,
+      responseMimeType: 'application/json',
+    },
+  };
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        logger.error('[GeminiPatterns] API error:', response.status, errorText);
+
+        if (isRetriableStatus(response.status) && attempt < MAX_RETRIES) {
+          await wait(computeRetryDelayMs(attempt));
+          continue;
+        }
+        return null;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        logger.error('[GeminiPatterns] No text in response');
+        return null;
+      }
+
+      const parsed = JSON.parse(text);
+      if (!parsed.insights || !Array.isArray(parsed.insights)) {
+        logger.error('[GeminiPatterns] Invalid response structure');
+        return null;
+      }
+
+      const result: GeminiPatternResult = {
+        insights: parsed.insights,
+        generatedAt: new Date().toISOString(),
+      };
+
+      await setCachedResult(cacheKey, result);
+      return result;
+    } catch (error: any) {
+      const isAbort = error?.name === 'AbortError';
+      const isNetwork = error instanceof TypeError;
+      const retriable = isAbort || isNetwork;
+
+      if (retriable && attempt < MAX_RETRIES) {
+        await wait(computeRetryDelayMs(attempt));
+        continue;
+      }
+
+      logger.error('[GeminiPatterns] Request failed:', error?.message);
+      return null;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  return null;
+}
