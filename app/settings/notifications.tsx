@@ -9,7 +9,6 @@ import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';
-import { GoldSubtitle as _GoldSubtitle } from '../../components/ui/GoldSubtitle'; // reserved
 import { MetallicText } from '../../components/ui/MetallicText';
 
 // ── Persistence keys ──────────────────────────────────────────────────────────

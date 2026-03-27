@@ -92,14 +92,14 @@ export const useDreamMapStore = create<DreamMapStore>((set, get) => ({
 
     const raw = data as Record<string, unknown> | null;
     const payload: DreamClusterPayload = {
-      nodes: Array.isArray(raw?.nodes)
-        ? (raw!.nodes as unknown[]).filter(isDreamNode)
+      nodes: raw && Array.isArray(raw.nodes)
+        ? (raw.nodes as unknown[]).filter(isDreamNode)
         : [],
-      links: Array.isArray(raw?.links)
-        ? (raw!.links as unknown[]).filter(isDreamLink)
+      links: raw && Array.isArray(raw.links)
+        ? (raw.links as unknown[]).filter(isDreamLink)
         : [],
       lastSynced:
-        typeof raw?.lastSynced === 'string'
+        raw && typeof raw.lastSynced === 'string'
           ? raw.lastSynced
           : new Date().toISOString(),
     };

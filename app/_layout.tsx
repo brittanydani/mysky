@@ -9,7 +9,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { Ionicons } from '@expo/vector-icons';
 
 import OnboardingModal from '../components/OnboardingModal';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
@@ -26,6 +25,36 @@ import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
+
+// Allowlist of routes that notification deep links can navigate to.
+// Prevents injection of arbitrary or external URLs via push notifications.
+const ALLOWED_NOTIFICATION_ROUTES = new Set([
+  '/(tabs)/home',
+  '/(tabs)/journal',
+  '/(tabs)/insights',
+  '/(tabs)/chart',
+  '/(tabs)/sleep',
+  '/(tabs)/energy',
+  '/(tabs)/mood',
+  '/(tabs)/growth',
+  '/(tabs)/today',
+  '/(tabs)/story',
+  '/(tabs)/blueprint',
+  '/(tabs)/healing',
+  '/(tabs)/sanctuary',
+  '/(tabs)/premium',
+  '/(tabs)/relationships',
+  '/(tabs)/inner-tensions',
+  '/(tabs)/checkin',
+  '/(tabs)/settings',
+  '/checkin',
+  '/daily-reflection',
+  '/sleep',
+  '/insights',
+  '/journal-new',
+  '/sanctuary',
+  '/premium',
+]);
 
 // ── Cinematic Error Boundary ──
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -242,8 +271,8 @@ export default function RootLayout() {
     import('expo-notifications').then((Notifications) => {
       sub = Notifications.addNotificationResponseReceivedListener(response => {
         const route = response.notification.request.content.data?.route as string | undefined;
-        if (route) {
-          router.push(route as any);
+        if (route && ALLOWED_NOTIFICATION_ROUTES.has(route)) {
+          router.push(route as import('expo-router').Href);
         }
       });
     }).catch(() => {});

@@ -17,14 +17,6 @@ import { logger } from '../../utils/logger';
 const TERMS_KEY = 'msky_termsAccepted_v1';
 const TERMS_VERSION = '2026-03-03';
 
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: theme.textGold,
-  textMain: theme.textPrimary,
-  glassBorder: theme.cardBorder,
-  glassHighlight: theme.glass.highlight,
-};
-
 export default function OnboardingConsentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

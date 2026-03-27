@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -11,6 +12,11 @@ import { SkiaGradient } from '../../components/ui/SkiaGradient';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 
 const VISIBLE_TABS = new Set(['home', 'growth', 'journal', 'blueprint', 'settings']);
+
+const LUCIDE_MAP: Record<string, React.ComponentType<any>> = {
+  home: Home, growth: TrendingUp, journal: BookOpen,
+  blueprint: User, settings: LayoutGrid,
+};
 
 // ── OPTICAL NUDGES ──
 // translateY / scale: Adjusts JUST the icon inside its bounding box
@@ -27,9 +33,9 @@ const OPTICAL_ADJUSTMENTS: Record<string, { translateY?: number; translateX?: nu
  * CUSTOM TAB BAR COMPONENT
  * Floating glassmorphic container with gold active indicators and strict mathematical alignment.
  */
-function CustomTabBar({ state, descriptors, navigation }: any) {
+function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const visibleRoutes = state.routes.filter((r: any) => VISIBLE_TABS.has(r.name));
+  const visibleRoutes = state.routes.filter((r) => VISIBLE_TABS.has(r.name));
 
   const currentRouteName = state.routes[state.index]?.name;
   if (!VISIBLE_TABS.has(currentRouteName)) return null;
@@ -44,7 +50,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
       </BlurView>
 
       <View style={styles.tabItemsRow}>
-        {visibleRoutes.map((route: any) => {
+        {visibleRoutes.map((route) => {
           const { options } = descriptors[route.key];
           const isFocused = state.routes[state.index]?.name === route.name;
 
@@ -60,10 +66,6 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           const size = 22;
           const sw = 1.5;
 
-          const LUCIDE_MAP: Record<string, React.ComponentType<any>> = {
-            home: Home, growth: TrendingUp, journal: BookOpen,
-            blueprint: User, settings: LayoutGrid,
-          };
           const IconComponent = LUCIDE_MAP[route.name];
 
           const icon = IconComponent

@@ -29,6 +29,8 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { PremiumSegmentedControl } from '../../components/ui/PremiumSegmentedControl';
+import { EnergyScrollContent } from '../../components/screens/EnergyScrollContent';
 
 const PALETTE = {
   gold: '#C9AE78',
@@ -104,10 +106,16 @@ const CARDS: BlueprintCard[] = [
   },
 ];
 
+const IDENTITY_TABS = [
+  { id: 'blueprint', label: 'Blueprint' },
+  { id: 'energy',    label: 'Energy'    },
+];
+
 export default function BlueprintScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
   const [chartName, setChartName] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'blueprint' | 'energy'>('blueprint');
 
   useFocusEffect(
     useCallback(() => {
@@ -148,7 +156,7 @@ export default function BlueprintScreen() {
         >
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.headerTitle}>Blueprint</Text>
+            <Text style={styles.headerTitle}>Identity</Text>
             <GoldSubtitle style={styles.headerSubtitle}>
               {chartName
                 ? `${chartName} · Know yourself deeply`
@@ -156,9 +164,19 @@ export default function BlueprintScreen() {
             </GoldSubtitle>
           </Animated.View>
 
-          {/* Cards */}
-          <View style={styles.grid}>
-            {CARDS.map((card, i) => (
+          {/* Tab Pill */}
+          <Animated.View entering={FadeInDown.delay(120).duration(600)}>
+            <PremiumSegmentedControl
+              options={IDENTITY_TABS}
+              selectedIndex={activeTab === 'blueprint' ? 0 : 1}
+              onChange={(idx) => setActiveTab(idx === 0 ? 'blueprint' : 'energy')}
+            />
+          </Animated.View>
+
+          {activeTab === 'blueprint' ? (
+            /* Cards */
+            <View style={styles.grid}>
+              {CARDS.map((card, i) => (
               <Animated.View
                 key={card.route as string}
                 entering={FadeInDown.delay(160 + i * 80).duration(600)}
@@ -183,7 +201,11 @@ export default function BlueprintScreen() {
                 </Pressable>
               </Animated.View>
             ))}
-          </View>
+            </View>
+          ) : (
+            /* Energy Content */
+            <EnergyScrollContent embedded />
+          )}
 
           <View style={{ height: 120 }} />
         </ScrollView>

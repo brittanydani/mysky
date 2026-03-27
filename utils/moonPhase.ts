@@ -119,5 +119,5 @@ const ZODIAC_SIGNS = [
 export function getMoonSignForDate(date: Date = new Date()): string {
   const lon = EclipticGeoMoon(date).lon;
   const normalized = ((lon % 360) + 360) % 360;
-  return ZODIAC_SIGNS[Math.floor(normalized / 30)] ?? 'Aries';
+  return ZODIAC_SIGNS[Math.floor(normalized / 30) % 12] ?? 'Aries';
 }

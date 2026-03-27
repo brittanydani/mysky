@@ -199,10 +199,10 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   const breath = useSharedValue(0);
 
   // ── Skia fonts for in-canvas text ──────────────────────────────────────
-  const serifTheme = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 10, fontWeight: '600' }), []);
-  const sansMonth = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '500' }), []);
-  const sansSummary = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 8, fontWeight: '400' }), []);
-  const sansDimLabel = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 7, fontWeight: '700' }), []);
+  const serifTheme = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 13, fontWeight: '600' }), []);
+  const sansMonth = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 11, fontWeight: '500' }), []);
+  const sansSummary = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 10, fontWeight: '400' }), []);
+  const sansDimLabel = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '700' }), []);
   useEffect(() => {
     breath.value = withRepeat(
       withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
@@ -440,8 +440,8 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
           const themeW = serifTheme ? serifTheme.getTextWidth(themeStr) : themeStr.length * 6;
           const summaryW = sansSummary ? sansSummary.getTextWidth(summary) : summary.length * 4.5;
 
-          // Total block height: month(9) + gap(6) + theme(10) + gap(5) + summary(8) = 38
-          const blockH = 38;
+          // Total block height: month(11) + gap(6) + theme(13) + gap(5) + summary(10) = 45
+          const blockH = 45;
           const topY = cy - blockH / 2;
 
           return (
@@ -449,7 +449,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
               {sansMonth && (
                 <SkiaText
                   x={cx - monthW / 2}
-                  y={topY + 9}
+                  y={topY + 11}
                   text={monthLabel}
                   font={sansMonth}
                   color="rgba(255,255,255,0.45)"
@@ -458,7 +458,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
               {serifTheme && (
                 <SkiaText
                   x={cx - themeW / 2}
-                  y={topY + 9 + 6 + 10}
+                  y={topY + 11 + 6 + 13}
                   text={themeStr}
                   font={serifTheme}
                   color="#FFFFFF"
@@ -467,7 +467,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
               {sansSummary && (
                 <SkiaText
                   x={cx - summaryW / 2}
-                  y={topY + 9 + 6 + 10 + 5 + 8}
+                  y={topY + 11 + 6 + 13 + 5 + 10}
                   text={summary}
                   font={sansSummary}
                   color="rgba(255,255,255,0.5)"
@@ -480,12 +480,12 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
 
       {/* ── Dimension labels ── */}
       {nodes.map((node, i) => {
-        const labelR = orbitR + 38;
+        const labelR = orbitR + 44;
         const lx = cx + labelR * Math.cos(node.angle);
         const ly = cy + labelR * Math.sin(node.angle);
         const lines = node.label.split('\n');
-        const canvasW = 72;
-        const lineH = 9;
+        const canvasW = 80;
+        const lineH = 11;
         const canvasH = lines.length * lineH;
 
         return (
@@ -494,9 +494,9 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
             style={[
               styles.dimLabel,
               {
-                left: lx - 36,
+                left: lx - 40,
                 top: ly - 12,
-                width: 72,
+                width: 80,
               },
             ]}
           >
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   dimIcon: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },

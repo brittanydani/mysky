@@ -3,8 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-n
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { SkiaGradient } from '../components/ui/SkiaGradient';
+import { SkiaGradient as LinearGradient, SkiaGradient } from '../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { BlurView } from 'expo-blur';
 import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';

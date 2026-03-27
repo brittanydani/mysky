@@ -49,7 +49,9 @@ import { logger } from '../utils/logger';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { MetallicText } from './ui/MetallicText';
 
-const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
+const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
+const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif', default: 'System' });
+const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
 
 // ── Ethereal Palette ──
 const ETHEREAL = {
@@ -397,7 +399,7 @@ export default function OnboardingModal({
       }, 4000);
     } catch (error) {
       logger.error('Failed to generate chart:', error);
-      Alert.alert('Something went wrong', 'We could not create your chart. Please try again.', [
+      Alert.alert('Something went wrong', 'We could not create your profile. Please try again.', [
         { text: 'OK', onPress: () => goToStep('location') },
       ]);
     }
@@ -492,7 +494,7 @@ export default function OnboardingModal({
           onComplete(chart);
         }, 900);
       } else {
-        Alert.alert('No Charts Found', 'The backup did not contain any chart data.', [
+        Alert.alert('No Data Found', 'The backup did not contain any profile data.', [
           { text: 'OK', onPress: () => setStep('welcome') },
         ]);
       }
@@ -633,7 +635,7 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                   <Text style={st.etherealQuestion}>When did your journey begin?</Text>
                   <Text style={st.etherealSubtext}>
-                    Used to calculate your core architectural blueprint.
+                    Used to build your personalized profile.
                   </Text>
 
                   <View style={st.datePickerCard}>
@@ -664,7 +666,7 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                   <Text style={st.etherealQuestion}>What time did you arrive?</Text>
                   <Text style={st.etherealSubtext}>
-                    Exact time reveals your rising sign and house placements.
+                    Exact time helps us personalize your experience more precisely.
                   </Text>
 
                   <View style={st.datePickerCard}>
@@ -710,9 +712,9 @@ export default function OnboardingModal({
                 showsVerticalScrollIndicator={false}
               >
                 <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                  <Text style={st.etherealQuestion}>Where did the stars align?</Text>
+                  <Text style={st.etherealQuestion}>Where did your journey begin?</Text>
                   <Text style={st.etherealSubtext}>
-                    City of birth sets the geographical coordinates for your chart.
+                    City of birth helps us personalize your profile.
                   </Text>
 
                   {/* Search input */}
@@ -776,7 +778,7 @@ export default function OnboardingModal({
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(400).duration(600)}>
-                  <BottomNav canGoBack={true} isNextDisabled={!locationSelected} nextLabel="Calculate Chart" nextIcon="sparkles" onBack={goBack} onNext={handleCalculateChart} />
+                  <BottomNav canGoBack={true} isNextDisabled={!locationSelected} nextLabel="Create Profile" nextIcon="sparkles" onBack={goBack} onNext={handleCalculateChart} />
                 </Animated.View>
               </ScrollView>
             )}
@@ -787,11 +789,11 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(1000)} style={st.processingContainer}>
                   <ProcessingOrb />
                   <View style={st.processingTextGroup}>
-                    <MetallicText style={st.processingLabel} color={ETHEREAL.accentGold}>CALCULATING COSMIC BLUEPRINT</MetallicText>
+                    <MetallicText style={st.processingLabel} color={ETHEREAL.accentGold}>BUILDING YOUR PROFILE</MetallicText>
                     <Text style={st.processingMessage}>
                       {userName.trim()
                         ? `Mapping your subconscious, ${userName.trim()}`
-                        : 'Aligning planetary transits'}
+                        : 'Analyzing your patterns'}
                     </Text>
                   </View>
                 </Animated.View>
@@ -908,9 +910,9 @@ const st = StyleSheet.create({
   logo: { width: 220, height: 220, resizeMode: 'contain' },
   welcomeTitle: {
     fontSize: 32,
-    fontWeight: '300',
+    fontWeight: '400',
     color: '#FFFFFF',
-    fontFamily: SERIF,
+    fontFamily: DISPLAY,
     marginBottom: 8,
     textAlign: 'center',
     marginTop: -64,
@@ -921,7 +923,7 @@ const st = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: 16,
     textAlign: 'center',
-    fontFamily: SERIF,
+    fontFamily: DISPLAY,
   },
   welcomeDescription: {
     fontSize: 16,
@@ -969,9 +971,9 @@ const st = StyleSheet.create({
   },
   etherealQuestion: {
     fontSize: 34,
-    fontWeight: '300',
+    fontWeight: '400',
     color: '#FFFFFF',
-    fontFamily: SERIF,
+    fontFamily: DISPLAY_SEMIBOLD,
     marginBottom: 24,
     lineHeight: 44,
   },
@@ -995,7 +997,7 @@ const st = StyleSheet.create({
     fontSize: 30,
     fontWeight: '400',
     color: ETHEREAL.accentGold,
-    fontFamily: SERIF,
+    fontFamily: DISPLAY_SEMIBOLD,
   },
   inputUnderline: {
     height: 1,
@@ -1194,9 +1196,9 @@ const st = StyleSheet.create({
     fontWeight: '400',
     fontStyle: 'italic',
     color: 'rgba(255,255,255,0.75)',
-    fontFamily: SERIF,
+    fontFamily: DISPLAY,
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: 30,
   },
 
   // ── Passphrase ──

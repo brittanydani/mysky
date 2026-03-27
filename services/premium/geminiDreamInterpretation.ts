@@ -22,6 +22,10 @@ import { FEELING_MAP } from './dreamTypes';
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const REQUEST_TIMEOUT_MS = 15_000;
+const MAX_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 800;
+const RETRY_MAX_DELAY_MS = 6_000;
+const RATE_LIMIT_TEXT_PATTERN = /rate\s*limit|quota|too\s*many\s*requests|resource\s*exhausted|exceeded/i;
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
 
@@ -141,6 +145,12 @@ export interface GeminiDreamInput {
   };
 }
 
+interface GeminiHttpError extends Error {
+  status: number;
+  errorText?: string;
+  retryAfterMs?: number;
+}
+
 // ─── API Key ──────────────────────────────────────────────────────────────────
 
 function getApiKey(): string | null {
@@ -195,11 +205,68 @@ function buildUserPrompt(input: GeminiDreamInput): string {
   return parts.join('\n\n');
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function parseRetryAfterMs(retryAfterHeader: string | null): number | undefined {
+  if (!retryAfterHeader) return undefined;
+
+  const asNumber = Number(retryAfterHeader);
+  if (!Number.isNaN(asNumber) && asNumber >= 0) {
+    return Math.min(Math.round(asNumber * 1000), RETRY_MAX_DELAY_MS);
+  }
+
+  const asDate = Date.parse(retryAfterHeader);
+  if (Number.isNaN(asDate)) return undefined;
+  const deltaMs = asDate - Date.now();
+  if (deltaMs <= 0) return 0;
+  return Math.min(deltaMs, RETRY_MAX_DELAY_MS);
+}
+
+function computeRetryDelayMs(attempt: number, retryAfterMs?: number): number {
+  if (typeof retryAfterMs === 'number') return retryAfterMs;
+  const expDelay = Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS);
+  const jitter = Math.floor(Math.random() * 250);
+  return expDelay + jitter;
+}
+
+function isRetriableStatus(status: number): boolean {
+  return status === 408 || status === 425 || status === 429 || status === 503 || status >= 500;
+}
+
+function isRateLimited(status: number, errorText?: string): boolean {
+  return status === 429 || Boolean(errorText && RATE_LIMIT_TEXT_PATTERN.test(errorText));
+}
+
+function toHttpError(status: number, errorText?: string, retryAfterMs?: number): GeminiHttpError {
+  const err = new Error(`Gemini API returned ${status}`) as GeminiHttpError;
+  err.status = status;
+  err.errorText = errorText;
+  err.retryAfterMs = retryAfterMs;
+  return err;
+}
+
+function getFriendlyRateLimitMessage(): string {
+  return 'AI insights are at capacity right now. Please wait a minute and try again.';
+}
+
+// ─── Client-side Rate Limiter ────────────────────────────────────────────────
+
+const MIN_CALL_INTERVAL_MS = 10_000; // 10 seconds between calls
+let lastCallTimestamp = 0;
+
 // ─── Gemini API Call ──────────────────────────────────────────────────────────
 
 export async function generateGeminiDreamInterpretation(
   input: GeminiDreamInput,
 ): Promise<GeminiDreamResult> {
+  const now = Date.now();
+  if (now - lastCallTimestamp < MIN_CALL_INTERVAL_MS) {
+    throw new Error(getFriendlyRateLimitMessage());
+  }
+  lastCallTimestamp = now;
+
   const apiKey = getApiKey();
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Set EXPO_PUBLIC_GEMINI_API_KEY in your environment.');
@@ -209,7 +276,7 @@ export async function generateGeminiDreamInterpretation(
     throw new Error('Dream text is required for interpretation.');
   }
 
-  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent`;
 
   const body = {
     systemInstruction: {
@@ -227,54 +294,91 @@ export async function generateGeminiDreamInterpretation(
     },
   };
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
-      logger.error('[GeminiDream] API error:', response.status, errorText);
-      if (response.status === 429) {
-        throw new Error('AI insights are resting — try again in a few minutes.');
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'));
+        logger.error('[GeminiDream] API error:', response.status, errorText);
+
+        const statusRetriable = isRetriableStatus(response.status);
+        if (statusRetriable && attempt < MAX_RETRIES) {
+          await wait(computeRetryDelayMs(attempt, retryAfterMs));
+          continue;
+        }
+
+        if (isRateLimited(response.status, errorText)) {
+          throw new Error(getFriendlyRateLimitMessage());
+        }
+
+        throw toHttpError(response.status, errorText, retryAfterMs);
       }
-      throw new Error(`Gemini API returned ${response.status}`);
+
+      const data = await response.json();
+
+      // Extract the text content from Gemini's response structure
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        logger.error('[GeminiDream] No text in response:', JSON.stringify(data));
+        throw new Error('No content returned from Gemini');
+      }
+
+      // Parse the JSON response
+      const parsed = JSON.parse(text);
+
+      if (!parsed.paragraph || !parsed.question) {
+        throw new Error('Invalid response structure from Gemini');
+      }
+
+      return {
+        paragraph: String(parsed.paragraph),
+        question: String(parsed.question),
+        generatedAt: new Date().toISOString(),
+      };
+    } catch (error: any) {
+      const isAbort = error?.name === 'AbortError';
+      const isNetwork = error instanceof TypeError;
+      const isHttp = typeof error?.status === 'number';
+      const rateLimited = isHttp && isRateLimited(error.status, error.errorText);
+      const retriable = isAbort || isNetwork || (isHttp && isRetriableStatus(error.status));
+
+      if (retriable && attempt < MAX_RETRIES) {
+        const retryAfterMs = isHttp ? error.retryAfterMs : undefined;
+        await wait(computeRetryDelayMs(attempt, retryAfterMs));
+        continue;
+      }
+
+      if (rateLimited) {
+        throw new Error(getFriendlyRateLimitMessage());
+      }
+
+      if (isAbort) {
+        logger.error('[GeminiDream] Request timed out');
+        throw new Error('Dream interpretation request timed out. Please try again.');
+      }
+
+      if (isNetwork) {
+        throw new Error('Could not reach AI insights. Please check your connection and try again.');
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const data = await response.json();
-
-    // Extract the text content from Gemini's response structure
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      logger.error('[GeminiDream] No text in response:', JSON.stringify(data));
-      throw new Error('No content returned from Gemini');
-    }
-
-    // Parse the JSON response
-    const parsed = JSON.parse(text);
-
-    if (!parsed.paragraph || !parsed.question) {
-      throw new Error('Invalid response structure from Gemini');
-    }
-
-    return {
-      paragraph: String(parsed.paragraph),
-      question: String(parsed.question),
-      generatedAt: new Date().toISOString(),
-    };
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      logger.error('[GeminiDream] Request timed out');
-      throw new Error('Dream interpretation request timed out. Please try again.');
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeout);
   }
+
+  throw new Error('AI insights are temporarily unavailable. Please try again soon.');
 }

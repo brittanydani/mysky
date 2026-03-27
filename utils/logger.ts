@@ -31,6 +31,11 @@ function redact(value: unknown): unknown {
         'tags','wins','challenges','evidence','snippet','evidence_snippets',
         'api_key','apikey','supabase_key','anon_key',
         'stack','componentstack','message',
+        'access_token','accesstoken','refresh_token','refreshtoken',
+        'session_token','sessiontoken','bearer',
+        'email','phone','address',
+        'birthchart','natalchart','birth_chart','natal_chart',
+        'gemini_key','revenuecat_key',
       ];
 
       if (!Array.isArray(obj)) {

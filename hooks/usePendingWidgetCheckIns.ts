@@ -39,27 +39,30 @@ export function usePendingWidgetCheckIns(): void {
 }
 
 async function flushPendingCheckIns(): Promise<void> {
-  consumePendingCheckIns(async (records) => {
-    if (!records.length) return;
+  // Pre-check: ensure we have chart data before consuming records from the
+  // native bridge. consumePendingCheckIns atomically removes records, so
+  // consuming them without a chart would silently drop the data.
+  try {
+    const charts = await localDb.getCharts();
+    if (!charts.length) {
+      logger.warn('[Widget] Skipping widget flush — no chart found yet.');
+      return;
+    }
 
-    try {
-      const charts = await localDb.getCharts();
-      if (!charts.length) {
-        logger.warn('[Widget] Cannot flush pending check-ins — no chart found.');
-        return;
-      }
+    const saved = charts[0];
+    const natal = AstrologyCalculator.generateNatalChart({
+      date:           saved.birthDate,
+      time:           saved.birthTime,
+      hasUnknownTime: saved.hasUnknownTime,
+      place:          saved.birthPlace,
+      latitude:       saved.latitude,
+      longitude:      saved.longitude,
+      timezone:       saved.timezone,
+      houseSystem:    saved.houseSystem,
+    });
 
-      const saved = charts[0];
-      const natal = AstrologyCalculator.generateNatalChart({
-        date:           saved.birthDate,
-        time:           saved.birthTime,
-        hasUnknownTime: saved.hasUnknownTime,
-        place:          saved.birthPlace,
-        latitude:       saved.latitude,
-        longitude:      saved.longitude,
-        timezone:       saved.timezone,
-        houseSystem:    saved.houseSystem,
-      });
+    consumePendingCheckIns(async (records) => {
+      if (!records.length) return;
 
       for (const record of records) {
         try {
@@ -80,8 +83,8 @@ async function flushPendingCheckIns(): Promise<void> {
       }
 
       logger.info(`[Widget] Flushed ${records.length} pending widget check-in(s).`);
-    } catch (e) {
-      logger.error('[Widget] Failed to flush pending check-ins:', e);
-    }
-  });
+    });
+  } catch (e) {
+    logger.error('[Widget] Failed to prepare widget flush:', e);
+  }
 }

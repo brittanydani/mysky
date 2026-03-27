@@ -83,7 +83,7 @@ const PALETTE = {
 };
 
 // ── Volumetric 3D Moon Rating Component ──
-const VolumetricMoon = memo(({ active, size = 38 }: { active: boolean; size?: number }) => {
+const VolumetricMoon = memo(function VolumetricMoon({ active, size = 38 }: { active: boolean; size?: number }) {
   return (
     <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
       {active && (
@@ -269,7 +269,6 @@ export default function SleepScreen() {
   const [entries, setEntries] = useState<SleepEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);

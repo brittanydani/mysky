@@ -30,13 +30,11 @@ import {
   BlurMask,
   vec,
 } from '@shopify/react-native-skia';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';
-import LunarWeekDropdown from '../../components/ui/LunarWeekDropdown';
 
 
 // ── Custom Skia Suite ──
@@ -55,7 +53,6 @@ import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
-import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 
 const { width } = Dimensions.get('window');
 
@@ -71,6 +68,24 @@ const PALETTE = {
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
+
+// ── Balance Score Lookup Tables ──────────────────────────────────────────────
+// Pre-defined at module level to avoid re-creation inside useMemo.
+
+// Mood: 1–10 scale
+const MOOD_POINTS: Record<number, number> = {
+  1: 0, 2: 1, 3: 2.5, 4: 3.5, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
+};
+
+// Energy: only 3 discrete values (low=3, medium=5, high=8)
+const ENERGY_POINTS: Record<number, number> = {
+  3: 1.5, 5: 5, 8: 9,
+};
+
+// Sleep: hours → points — harsh under 6h (real impairment territory)
+const SLEEP_POINTS: [number, number][] = [
+  [0, 0], [4, 0], [5, 2], [6, 5], [7, 8], [8, 9], [9, 10], [10, 10],
+];
 
 // ── Insight Engine ─────────────────────────────────────────────────────────
 
@@ -95,6 +110,15 @@ function generateInsight(
   }
   return `Your stability is ${stabilityIndex}% today. Small adjustments to rest and movement could shift your coherence toward alignment.`;
 }
+
+// ── Insight accent color mapping ──
+const ACCENT_MAP: Record<string, string> = {
+  gold: PALETTE.gold,
+  emerald: PALETTE.emerald,
+  silverBlue: PALETTE.silverBlue,
+  copper: PALETTE.copper,
+  rose: PALETTE.rose,
+};
 
 // ── Home Screen ─────────────────────────────────────────────────────────────
 
@@ -150,9 +174,14 @@ export default function HomeScreen() {
 
           setUserChart(chart);
 
-          // Hydrate latest check-in data for the aura
+          // Hydrate data in parallel — checkins, sleep, and self-knowledge are independent
           try {
-            const checkins = await localDb.getCheckIns(chart.id, 7);
+            const [checkins, sleepEntries, selfKnowledge] = await Promise.all([
+              localDb.getCheckIns(chart.id, 7),
+              localDb.getSleepEntries(chart.id, 7),
+              loadSelfKnowledgeContext(),
+            ]);
+
             setWeeklyCheckIns(checkins);
             if (checkins.length > 0) {
               const latest = checkins[0];
@@ -161,22 +190,18 @@ export default function HomeScreen() {
               if (latest.energyLevel) setEnergy(energyMap[latest.energyLevel] ?? 5);
             }
 
-            // Build sleep data
-            const sleepEntries = await localDb.getSleepEntries(chart.id, 7);
             if (sleepEntries.length > 0 && sleepEntries[0].durationHours != null) {
               setLatestSleep(sleepEntries[0].durationHours);
             }
+
+            try {
+              const loopData = await getDailyLoopData(chart.id, selfKnowledge);
+              setDailyLoop(loopData);
+            } catch (err) {
+              logger.error('Daily loop data failed:', err);
+            }
           } catch {
             // Silently fall back to defaults
-          }
-
-          // Hydrate daily loop (streak, weekly summary, insights)
-          try {
-            const selfKnowledge = await loadSelfKnowledgeContext();
-            const loopData = await getDailyLoopData(chart.id, selfKnowledge);
-            setDailyLoop(loopData);
-          } catch (err) {
-            logger.error('Daily loop data failed:', err);
           }
         } else {
           setUserChart(null);
@@ -245,36 +270,11 @@ export default function HomeScreen() {
   };
 
   const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
-  const ACCENT_MAP: Record<string, string> = {
-    gold: PALETTE.gold,
-    emerald: PALETTE.emerald,
-    silverBlue: PALETTE.silverBlue,
-    copper: PALETTE.copper,
-    rose: PALETTE.rose,
-  };
   const insightAccent = ACCENT_MAP[dailyLoop?.todayInsight?.accentColor ?? 'emerald'] ?? PALETTE.emerald;
 
   // ── Balance Score + Stability Map ──
 
   const balanceScore = useMemo(() => {
-    // Per-category point tables — each maps a raw value to 0–10 points.
-    // Low values are penalised more steeply than high values are rewarded.
-
-    // Mood: 1–10 scale
-    const MOOD_POINTS: Record<number, number> = {
-      1: 0, 2: 1, 3: 2.5, 4: 3.5, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
-    };
-
-    // Energy: only 3 discrete values (low=3, medium=5, high=8)
-    const ENERGY_POINTS: Record<number, number> = {
-      3: 1.5, 5: 5, 8: 9,
-    };
-
-    // Sleep: hours → points — harsh under 6h (real impairment territory)
-    const SLEEP_POINTS: [number, number][] = [
-      [0, 0], [4, 0], [5, 2], [6, 5], [7, 8], [8, 9], [9, 10], [10, 10],
-    ];
-
     const moodPts = MOOD_POINTS[Math.round(mood)] ?? mood;
     const energyPts = ENERGY_POINTS[Math.round(energy)] ?? energy;
 
@@ -382,8 +382,7 @@ export default function HomeScreen() {
                 })}
               </Text>
             </View>
-            {/* Lunar Week Dropdown — tap orb → Cosmic Context · tap ▾ → 7-day forecast */}
-            <LunarWeekDropdown />
+
           </Animated.View>
 
           {/* ── Streak Row ── */}

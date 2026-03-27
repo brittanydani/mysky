@@ -352,23 +352,7 @@ export function ordinal(n: number): string {
   return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
 }
 
-const TAG_LABELS: Record<string, string> = {
-  relationships: 'Relationships', confidence: 'Confidence', money: 'Money',
-  family: 'Family', creativity: 'Creativity', health: 'Health',
-  boundaries: 'Boundaries', career: 'Career', anxiety: 'Anxiety',
-  joy: 'Joy', grief: 'Grief', clarity: 'Clarity',
-  overwhelm: 'Overwhelm', loneliness: 'Loneliness', gratitude: 'Gratitude',
-  sleep: 'Sleep', work: 'Work', social: 'Social', conflict: 'Conflict',
-  movement: 'Movement', nature: 'Nature', routine: 'Routine',
-  overstimulated: 'Overstimulated', creative: 'Creative', rest: 'Rest',
-  alone_time: 'Alone time', travel: 'Travel', finances: 'Finances',
-  weather: 'Weather', food: 'Food', hormones: 'Hormones',
-  screens: 'Screens', kids: 'Kids', productivity: 'Productivity',
-  substances: 'Substances', intimacy: 'Intimacy',
-  eq_calm: 'Calm', eq_anxious: 'Anxious', eq_focused: 'Focused',
-  eq_disconnected: 'Disconnected', eq_hopeful: 'Hopeful', eq_irritable: 'Irritable',
-  eq_grounded: 'Grounded', eq_scattered: 'Scattered', eq_heavy: 'Heavy', eq_open: 'Open',
-};
+import { TAG_LABELS } from './tagAnalytics';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 

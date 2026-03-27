@@ -37,7 +37,12 @@ interface PrivacySettingsModalProps {
 
 export default function PrivacySettingsModal({ visible, onClose }: PrivacySettingsModalProps) {
   const [hasData, setHasData] = useState(false);
-  const [consentRecord, setConsentRecord] = useState<any>(null);
+  const [consentRecord, setConsentRecord] = useState<{
+    granted: boolean;
+    required: boolean;
+    expired?: boolean;
+    policyVersion?: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const compliance = new PrivacyComplianceManager();
 

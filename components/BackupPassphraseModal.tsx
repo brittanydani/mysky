@@ -6,7 +6,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -15,7 +14,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

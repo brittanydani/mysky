@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform, TextInput } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,22 +39,6 @@ const PALETTE = {
 };
 
 // ── Mood helpers ──
-const MOOD_COLORS: Record<string, string> = {
-  calm: '#6EBF8B',
-  soft: '#8BC4E8',
-  okay: '#D4B872',
-  heavy: '#CD7F5D',
-  stormy: '#E07A7A',
-};
-
-const MOOD_EMOJIS: Record<string, string> = {
-  calm: '🌿',
-  soft: '🌸',
-  okay: '☁️',
-  heavy: '🌧️',
-  stormy: '⚡',
-};
-
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // ── Cinematic Palette ──
@@ -149,11 +133,10 @@ const EntryCard = memo(function EntryCard({
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function JournalScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
 
-  const [showPremiumRequired, setShowPremiumRequired] = useState(false);
+  const [showPremiumRequired] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -206,15 +189,6 @@ export default function JournalScreen() {
   }, [sleepEntries, filterMonth, filterYear, searchQuery]);
 
   // Available months for navigation (derived from entries)
-  const availableMonths = useMemo(() => {
-    const months = new Set<string>();
-    entries.forEach(e => {
-      const d = parseLocalDate(e.date);
-      months.add(`${d.getFullYear()}-${d.getMonth()}`);
-    });
-    return months;
-  }, [entries]);
-
   const navigateMonth = useCallback((direction: -1 | 1) => {
     Haptics.selectionAsync().catch(() => {});
     setFilterMonth(prev => {

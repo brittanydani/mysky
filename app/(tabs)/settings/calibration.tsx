@@ -21,7 +21,7 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import Animated, { FadeIn, FadeOut, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, useSharedValue, useDerivedValue, runOnJS } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Canvas,
@@ -31,11 +31,6 @@ import {
   vec,
   SweepGradient,
 } from '@shopify/react-native-skia';
-import {
-  useSharedValue,
-  useDerivedValue,
-  runOnJS,
-} from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -288,10 +283,6 @@ export default function VisualCalibration() {
     },
     [activeCatIdx],
   );
-
-  const triggerHaptic = useCallback(() => {
-    Haptics.selectionAsync().catch(() => {});
-  }, []);
 
   const triggerThresholdHaptic = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});

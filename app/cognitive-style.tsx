@@ -21,7 +21,6 @@ import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
 import Svg, { Polygon, Line, Circle } from 'react-native-svg';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';

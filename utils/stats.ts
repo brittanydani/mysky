@@ -58,7 +58,7 @@ export function linearRegression(ys: number[]): { slope: number } {
   const sumY = ys.reduce((s, v) => s + v, 0);
   const sumXY = ys.reduce((s, v, i) => s + i * v, 0);
   const denom = n * sumX2 - sumX * sumX;
-  if (denom === 0) return { slope: 0 };
+  if (Math.abs(denom) < 1e-10) return { slope: 0 };
   return { slope: (n * sumXY - sumX * sumY) / denom };
 }
 

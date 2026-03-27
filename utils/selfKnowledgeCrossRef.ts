@@ -121,7 +121,7 @@ function buildTriggerInsights(
       if (!tag) continue;
 
       const tagged = checkIns.filter(
-        c => c.tags.includes(tag as any) && c.moodScore != null,
+        c => c.tags.includes(tag as string & {}) && c.moodScore != null,
       );
       if (tagged.length < 3) continue;
 
@@ -179,8 +179,11 @@ function buildSomaticInsight(
     emotionCounts[e.emotion] = (emotionCounts[e.emotion] ?? 0) + 1;
   }
 
-  const [topRegionId, topRegionCount] = Object.entries(regionCounts).sort((a, b) => b[1] - a[1])[0];
-  const [topEmotion, topEmotionCount] = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0];
+  const sortedRegions = Object.entries(regionCounts).sort((a, b) => b[1] - a[1]);
+  const sortedEmotions = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1]);
+  if (!sortedRegions.length || !sortedEmotions.length) return null;
+  const [topRegionId, topRegionCount] = sortedRegions[0];
+  const [topEmotion, topEmotionCount] = sortedEmotions[0];
   const regionLabel = REGION_LABELS[topRegionId] ?? topRegionId;
 
   // Cross-ref: how many somatic entry days overlap with high-stress check-in days?

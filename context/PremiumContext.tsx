@@ -9,6 +9,7 @@ import Purchases from 'react-native-purchases';
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 import * as Haptics from 'expo-haptics';
 
+import Constants from 'expo-constants';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { logger } from '../utils/logger';
 
@@ -30,8 +31,9 @@ const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-// Dev-only: force premium ON for local testing. Production builds always use RevenueCat.
-const DEBUG_FORCE_PREMIUM = __DEV__ && true;
+// Force premium ON in dev or when betaPremium is set in app.json extra.
+// To disable for production: remove "betaPremium" from app.json extra.
+const DEBUG_FORCE_PREMIUM = __DEV__ || Constants.expoConfig?.extra?.betaPremium === true;
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState<boolean>(DEBUG_FORCE_PREMIUM);
@@ -137,13 +139,17 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     init();
 
     // Entitlement Listener
-    const removeListener = Purchases.addCustomerInfoUpdateListener((info) => {
+    const listenerResult = Purchases.addCustomerInfoUpdateListener((info) => {
       updatePremiumState(info);
-    }) as unknown as (() => void);
+    });
 
     return () => {
       isMounted.current = false;
-      if (typeof removeListener === 'function') removeListener();
+      if (typeof listenerResult === 'function') {
+        listenerResult();
+      } else if (listenerResult && typeof (listenerResult as { remove?: () => void }).remove === 'function') {
+        (listenerResult as { remove: () => void }).remove();
+      }
     };
   }, []);
 

@@ -19,7 +19,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { logger } from '../utils/logger';
 import { toLocalDateString } from '../utils/dateUtils';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
@@ -220,7 +219,7 @@ export default function BirthDataModal({
   const [place, setPlace] = useState<string>(initialData?.place || '');
   const [latitude, setLatitude] = useState<number>(initialData?.latitude ?? 0);
   const [longitude, setLongitude] = useState<number>(initialData?.longitude ?? 0);
-  const [houseSystem, setHouseSystem] = useState<HouseSystem>(initialData?.houseSystem || 'whole-sign');
+  const [houseSystem] = useState<HouseSystem>(initialData?.houseSystem || 'whole-sign');
   const [showConfirm, setShowConfirm] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -272,6 +271,10 @@ export default function BirthDataModal({
             headers: NOMINATIM_HEADERS,
           }
         );
+        if (!response.ok) {
+          setShowSuggestions(false);
+          return;
+        }
         const data = await response.json();
 
         if (!controller.signal.aborted) {

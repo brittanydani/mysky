@@ -228,6 +228,33 @@ const FORCE_ALT =
   'Cognitive influence|Transformational force|Diffuse influence|Disruptive force|Healing archetype|' +
   'Core vitality|Emotional body|Outward expression|Growth direction';
 
+// ── Pre-compiled regex caches (avoid re-creating RegExp on every call) ───────
+
+const HOUSE_REGEXES: [RegExp, string][] = HOUSE_ORDINALS.map(([ord, num]) => [
+  new RegExp(`\\b${ord}\\s+[Hh]ouse\\b`, 'g'),
+  HOUSE_THEMES[num],
+]);
+
+const PLANET_REGEXES: [RegExp, string][] = Object.entries(PLANET_LABELS).map(
+  ([planet, label]) => [new RegExp(`\\b${planet}\\b`, 'gi'), label],
+);
+
+// Energy-specific pre-compiled patterns
+const ZODIAC_MOON_POSSESSIVE_RE = new RegExp(`\\b(${ZODIAC_SIGN_PATTERN})\\s+Moon's\\b`, 'gi');
+const ZODIAC_MOON_RE = new RegExp(`\\b(${ZODIAC_SIGN_PATTERN})\\s+Moon\\b`, 'gi');
+const FORCE_RULED_MOON_RE = new RegExp(
+  `\\b(${FORCE_ALT})[ -]ruled(?:\\s+(?:fire|earth|air|water))?\\s+(?:Moon|Emotional body)\\b`, 'gi',
+);
+const FORCE_ELEMENT_MOON_RE = new RegExp(
+  `\\b(${FORCE_ALT})-(fire|earth|air|water)\\s+(?:Moon|Emotional body)\\b`, 'gi',
+);
+const FORCE_MOON_RE = new RegExp(`\\b(${FORCE_ALT})\\s+(?:Moon|Emotional body)\\b`, 'gi');
+const FORCE_RULED_RE = new RegExp(`\\b(${FORCE_ALT})[ -]ruled\\b`, 'gi');
+
+const SIGN_REGEXES: [RegExp, string][] = Object.entries(SIGN_LABELS).map(
+  ([sign, label]) => [new RegExp(`\\b${sign}\\b`, 'gi'), label],
+);
+
 // ── Main transform ────────────────────────────────────────────────────────────
 
 /**
@@ -243,9 +270,8 @@ export function applyStoryLabels(text: string): string {
   let result = text;
 
   // 1. Replace "Nth House" / "Nth house" with life domain labels
-  for (const [ord, num] of HOUSE_ORDINALS) {
-    const label = HOUSE_THEMES[num];
-    result = result.replace(new RegExp(`\\b${ord}\\s+[Hh]ouse\\b`, 'g'), label);
+  for (const [regex, label] of HOUSE_REGEXES) {
+    result = result.replace(regex, label);
   }
 
   // 2. Replace compound phrases and banned terms BEFORE single-word planet/sign replacement
@@ -255,13 +281,13 @@ export function applyStoryLabels(text: string): string {
   }
 
   // 3. Replace planet and luminary names with archetypal force labels (case-insensitive)
-  for (const [planet, label] of Object.entries(PLANET_LABELS)) {
-    result = result.replace(new RegExp(`\\b${planet}\\b`, 'gi'), label);
+  for (const [regex, label] of PLANET_REGEXES) {
+    result = result.replace(regex, label);
   }
 
   // 4. Replace zodiac sign names with quality archetypes (case-insensitive)
-  for (const [sign, label] of Object.entries(SIGN_LABELS)) {
-    result = result.replace(new RegExp(`\\b${sign}\\b`, 'gi'), label);
+  for (const [regex, label] of SIGN_REGEXES) {
+    result = result.replace(regex, label);
   }
 
   // 5. Rename section sub-headers embedded in chapter content (case-insensitive)
@@ -282,9 +308,8 @@ export function applyGuidanceLabels(text: string): string {
   let result = text;
 
   // 1. House ordinals → life domain labels
-  for (const [ord, num] of HOUSE_ORDINALS) {
-    const label = HOUSE_THEMES[num];
-    result = result.replace(new RegExp(`\\b${ord}\\s+[Hh]ouse\\b`, 'g'), label);
+  for (const [regex, label] of HOUSE_REGEXES) {
+    result = result.replace(regex, label);
   }
 
   // 2. Safe compound phrases (Moon phases, nodes, chart terms — no aspect verbs)
@@ -306,13 +331,13 @@ export function applyGuidanceLabels(text: string): string {
   result = result.replace(/\bsquare\b/gi, 'in tension with');
 
   // 4. Planet / luminary names
-  for (const [planet, label] of Object.entries(PLANET_LABELS)) {
-    result = result.replace(new RegExp(`\\b${planet}\\b`, 'gi'), label);
+  for (const [regex, label] of PLANET_REGEXES) {
+    result = result.replace(regex, label);
   }
 
   // 5. Zodiac sign names
-  for (const [sign, label] of Object.entries(SIGN_LABELS)) {
-    result = result.replace(new RegExp(`\\b${sign}\\b`, 'gi'), label);
+  for (const [regex, label] of SIGN_REGEXES) {
+    result = result.replace(regex, label);
   }
 
   return result;
@@ -331,15 +356,9 @@ export function applyEnergyLabels(text: string): string {
   // MUST run before applyStoryLabels replaces those terms.
 
   // [Sign] Moon's possessive  →  "Today's active quality"
-  result = result.replace(
-    new RegExp(`\\b(${ZODIAC_SIGN_PATTERN})\\s+Moon's\\b`, 'gi'),
-    "Today's active quality",
-  );
+  result = result.replace(ZODIAC_MOON_POSSESSIVE_RE, "Today's active quality");
   // [Sign] Moon  →  "the active quality"
-  result = result.replace(
-    new RegExp(`\\b(${ZODIAC_SIGN_PATTERN})\\s+Moon\\b`, 'gi'),
-    'the active quality',
-  );
+  result = result.replace(ZODIAC_MOON_RE, 'the active quality');
   // Sun-ruled Moon  →  "the active quality"
   result = result.replace(/\bSun[- ]ruled\s+Moon\b/gi, 'the active quality');
   // Sun-ruled (without Moon)  →  "Vital"
@@ -374,26 +393,14 @@ export function applyEnergyLabels(text: string): string {
   // ── Post-pass: handle force-based Moon constructs (planet labels applied) ─
 
   // "[Force]-ruled [element?] Moon|Emotional body"
-  result = result.replace(
-    new RegExp(
-      `\\b(${FORCE_ALT})[ -]ruled(?:\\s+(?:fire|earth|air|water))?\\s+(?:Moon|Emotional body)\\b`,
-      'gi',
-    ),
-    'the active quality',
-  );
+  result = result.replace(FORCE_RULED_MOON_RE, 'the active quality');
   // "[Force]-[element] Moon|Emotional body"
-  result = result.replace(
-    new RegExp(`\\b(${FORCE_ALT})-(fire|earth|air|water)\\s+(?:Moon|Emotional body)\\b`, 'gi'),
-    'the active quality',
-  );
+  result = result.replace(FORCE_ELEMENT_MOON_RE, 'the active quality');
   // "[Force] Moon|Emotional body" standalone
-  result = result.replace(
-    new RegExp(`\\b(${FORCE_ALT})\\s+(?:Moon|Emotional body)\\b`, 'gi'),
-    'the active quality',
-  );
+  result = result.replace(FORCE_MOON_RE, 'the active quality');
   // "[Force]-ruled" (remaining, not followed by Moon/Emotional body)
   result = result.replace(
-    new RegExp(`\\b(${FORCE_ALT})[ -]ruled\\b`, 'gi'),
+    FORCE_RULED_RE,
     (_match, label: string) => label,
   );
 

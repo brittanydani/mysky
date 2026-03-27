@@ -102,9 +102,10 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
       set({ isPurchasing: false });
       return false;
-    } catch (e: any) {
+    } catch (e: unknown) {
       set({ isPurchasing: false });
-      if (!e.userCancelled) {
+      const err = e as Record<string, unknown> | undefined;
+      if (!err?.userCancelled) {
         logger.error('[useSubscriptionStore] purchasePackage failed:', e);
       }
       return false;

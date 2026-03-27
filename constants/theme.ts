@@ -167,19 +167,19 @@ export const theme = {
     headerLarge: {
       fontSize: 28,
       fontWeight: '700' as const,
-      fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif', default: 'System' }),
       letterSpacing: 0.5,
     },
     headerMedium: {
       fontSize: 22,
       fontWeight: '600' as const,
-      fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' }),
       letterSpacing: 0.3,
     },
     headerSmall: {
       fontSize: 18,
       fontWeight: '600' as const,
-      fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' }),
     },
 
     bodyLarge: {

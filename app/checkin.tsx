@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Pressable,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -19,12 +18,9 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import { LiquidCheckInHub } from '../components/ui/LiquidCheckInHub';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
-
-const { width } = Dimensions.get('window');
 
 const PALETTE = {
   gold: '#D4B872',
@@ -58,11 +54,6 @@ export default function CheckInHub() {
             <Text style={styles.title}>Log Entry</Text>
             <GoldSubtitle style={styles.subtitle}>Select your reflection pathway</GoldSubtitle>
           </View>
-        </Animated.View>
-
-        {/* ── Somatic Entry Point ── */}
-        <Animated.View entering={FadeIn.duration(1000)} style={styles.orbWrapper}>
-          <LiquidCheckInHub />
         </Animated.View>
 
         {/* ── Mood & Energy (Primary Action) ── */}
@@ -164,12 +155,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     marginBottom: 32,
-  },
-  orbWrapper: {
-    height: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 8,
   },
   cardWrapper: {
     borderRadius: 24,

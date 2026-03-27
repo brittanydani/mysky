@@ -1,6 +1,6 @@
 // File: components/TermsConsentModal.tsx
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
@@ -58,7 +58,7 @@ const CONSENT_LINKS: ConsentLink[] = [
 
 export default function TermsConsentModal({ visible, onConsent }: TermsConsentModalProps) {
   const router = useRouter();
-  const links = useMemo(() => CONSENT_LINKS, []);
+  const links = CONSENT_LINKS;
 
   const handleAccept = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});

@@ -122,6 +122,7 @@
     },
     "extra": {
       "privacyMode": true,
+      "betaPremium": false,
       "router": {},
       "eas": {
         "projectId": "c76e6f9f-d7eb-494b-90f5-e1b35d86152a"

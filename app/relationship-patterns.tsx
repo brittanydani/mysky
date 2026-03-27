@@ -15,7 +15,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -33,7 +32,6 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const PALETTE = {
   anxious: '#D4A3B3',   // Rose — Moving Toward

@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 
-import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
 import { BirthData } from '../../services/astrology/types';

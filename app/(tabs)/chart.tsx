@@ -4,7 +4,6 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
-import { SkiaGradient } from '../../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { Ionicons, FontAwesome6 } from '@expo/vector-icons';
@@ -143,7 +142,7 @@ function GradientSymbol({
         </Text>
       }
     >
-      <SkiaGradient {...(gradient ?? GRAD_PROPS)} style={{ width: w, height: h }} />
+      <LinearGradient {...(gradient ?? GRAD_PROPS)} style={{ width: w, height: h }} />
     </MaskedView>
   );
 }
@@ -152,7 +151,7 @@ function GradientSymbol({
 function GradientIcon({ size, children }: { size: number; children: React.ReactElement }) {
   return (
     <MaskedView style={{ width: size, height: size }} maskElement={children}>
-      <SkiaGradient {...GRAD_PROPS} style={{ width: size, height: size }} />
+      <LinearGradient {...GRAD_PROPS} style={{ width: size, height: size }} />
     </MaskedView>
   );
 }
@@ -197,17 +196,6 @@ function SectionAccordion({
 }
 
 type TabKey = 'planets' | 'houses' | 'aspects' | 'patterns';
-
-type SensitivePointRow = {
-  label: 'Chiron' | 'North Node' | 'South Node';
-  sign: string;
-  signSymbol: string;
-  element: string;
-  degree: number;
-  minute: number;
-  house?: number;
-  retrograde: boolean;
-};
 
 function normalizeDegMin(rawDeg: number) {
   let deg = Math.floor(rawDeg);
