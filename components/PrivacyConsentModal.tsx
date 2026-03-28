@@ -9,6 +9,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
+import { LEGAL_URL } from '../constants/config';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { logger } from '../utils/logger';
 import { MetallicIcon } from './ui/MetallicIcon';
@@ -37,7 +38,12 @@ export default function PrivacyConsentModal({
   contactEmail,
 }: PrivacyConsentModalProps) {
   const email = contactEmail ?? 'brittanyapps@outlook.com';
+  const policyUrl = privacyPolicyUrl ?? LEGAL_URL;
   const [showFullPolicy, setShowFullPolicy] = useState(false);
+
+  const handleOpenHostedPolicy = useCallback(() => {
+    Linking.openURL(policyUrl).catch(() => {});
+  }, [policyUrl]);
 
   useEffect(() => {
     if (!visible) setShowFullPolicy(false);
@@ -170,6 +176,15 @@ export default function PrivacyConsentModal({
                         You can export or delete your data at any time via Privacy Settings. Uninstalling the app erases all locally stored data.
                     </Text>
                 </View>
+
+                {!!policyUrl && (
+                  <Pressable
+                    style={[styles.policyCloseBtn, { marginBottom: 12 }]}
+                    onPress={handleOpenHostedPolicy}
+                  >
+                    <Text style={[styles.policyCloseText, { color: PALETTE.gold }]}>Open full policy in browser ↗</Text>
+                  </Pressable>
+                )}
 
                 <Pressable
                   style={styles.policyCloseBtn}

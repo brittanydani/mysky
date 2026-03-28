@@ -60,7 +60,7 @@ export default function FAQScreen() {
             <View style={styles.faqCard}>
             <Text style={styles.question}>Do I need an account to use MySky?</Text>
             <Text style={styles.answer}>
-              No. All core features work fully offline and do not require an account. You can track your mood, energy, stress, sleep, journal, view your personal birth chart, explore relationships, and use all privacy features without ever creating an account or providing an email address. An account is only needed for the optional AI Reflection Insights feature.
+              Yes. A free account is required to use MySky. Sign-up takes only an email address and is used to sync and protect your data. All core features — mood tracking, journaling, sleep logging, birth chart, and relationships — are available on the free plan. A Deeper Sky subscription is required for premium features such as dream analysis, AI Reflection Insights, and encrypted backup.
             </Text>
 
             <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>

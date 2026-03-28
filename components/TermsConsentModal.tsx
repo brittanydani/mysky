@@ -1,7 +1,7 @@
 // File: components/TermsConsentModal.tsx
 
 import React, { useCallback } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
+import { LEGAL_URL } from '../constants/config';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
 
@@ -73,10 +74,17 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
   const openRoute = useCallback(
     (route: Href) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-      try {
-        router.navigate(route);
-      } catch {
-        Alert.alert('Unable to open', 'Please try again.');
+      // Terms and Privacy open the hosted page; FAQ navigates in-app
+      if (route === '/terms' || route === '/privacy') {
+        Linking.openURL(LEGAL_URL).catch(() => {
+          try { router.navigate(route); } catch {}
+        });
+      } else {
+        try {
+          router.navigate(route);
+        } catch {
+          Alert.alert('Unable to open', 'Please try again.');
+        }
       }
     },
     [router]

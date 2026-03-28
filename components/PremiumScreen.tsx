@@ -13,7 +13,7 @@ import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import MySkyDiamondSkia from './skia/MySkyDiamondSkia';
 import { usePremium } from '../context/PremiumContext';
-import { config } from '../constants/config';
+import { config, LEGAL_URL } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
 import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
 
@@ -133,9 +133,11 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     }
   }, []);
 
-  const navigateToLegal = useCallback((path: '/terms' | '/privacy') => {
-    if (onClose) onClose();
-    setTimeout(() => router.push(path as Href), 350);
+  const navigateToLegal = useCallback((_path: '/terms' | '/privacy') => {
+    Linking.openURL(LEGAL_URL).catch(() => {
+      if (onClose) onClose();
+      setTimeout(() => router.push(_path as Href), 350);
+    });
   }, [onClose, router]);
 
   // ── Active Premium State ──
@@ -238,9 +240,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
               { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#C9AE78' },
-              { icon: 'analytics-outline', title: 'Decode your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#C9AE78' },
-              { icon: 'sparkles-outline', title: 'Daily personalized guidance', desc: 'Personalized action steps aligned to your personal chart', color: '#C9AE78' },
-              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup & restore with end-to-end encryption', color: '#C9AE78' },
+              { icon: 'analytics-outline', title: 'Understand your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#C9AE78' },
+              { icon: 'sparkles-outline', title: 'Personalized daily guidance', desc: 'Guidance shaped by your reflections and long-term patterns', color: '#C9AE78' },
+              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup and restore with end-to-end encryption', color: '#C9AE78' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>

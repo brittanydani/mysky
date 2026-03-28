@@ -1,5 +1,8 @@
 // MySky App Configuration
 
+// Single hosted page covering both Privacy Policy and Terms of Use (EULA)
+export const LEGAL_URL = 'https://amber-divan-e75.notion.site/Privacy-Policy-for-MySky-30d62720fdb580e2aa3adb38632be487';
+
 export const config = {
   appName: 'MySky',
   tagline: 'Personal Growth, Mapped to You',
