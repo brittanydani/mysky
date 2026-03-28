@@ -89,7 +89,7 @@ export default function PremiumRequiredScreen({
           icon={<Ionicons name="arrow-forward" size={18} color="#020817" />}
         />
 
-        <Text style={styles.priceHint}>Subscription plans available • Private & Secure</Text>
+        <Text style={styles.priceHint}>Deeper Sky subscription required • Private & Secure</Text>
 
         <View style={styles.legalLinks}>
           <Pressable onPress={() => router.push('/terms' as Href)} hitSlop={12}>

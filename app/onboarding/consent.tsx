@@ -95,7 +95,7 @@ export default function OnboardingConsentScreen() {
           >
             <Text style={styles.title}>Accept Terms & Privacy</Text>
             <Text style={styles.body}>
-              To use MySky, please review and accept the Terms of Service and Privacy Policy.
+              To use MySky, please review and accept the Terms of Use and Privacy Policy.
               Your data stays on your device by default, with encryption at rest.
             </Text>
 
@@ -120,14 +120,14 @@ export default function OnboardingConsentScreen() {
               style={styles.checkRow}
               onPress={() => { Haptics.selectionAsync().catch(() => {}); setChecked(v => !v); }}
               accessibilityRole="checkbox"
-              accessibilityLabel="I agree to the Terms of Service and Privacy Policy"
+              accessibilityLabel="I agree to the Terms of Use and Privacy Policy"
               accessibilityState={{ checked }}
             >
               <View style={[styles.checkbox, checked && styles.checkboxOn]}>
                 {checked && <Ionicons name="checkmark" size={16} color="#0B1220" />}
               </View>
               <Text style={styles.checkText}>
-                I agree to the Terms of Service and Privacy Policy.
+                I agree to the Terms of Use and Privacy Policy.
               </Text>
             </Pressable>
 

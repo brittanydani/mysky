@@ -837,13 +837,13 @@ export default function SettingsScreen() {
                 style={{ paddingHorizontal: 16, paddingVertical: 12 }}
                 onPress={openTerms}
                 accessibilityRole="button"
-                accessibilityLabel="Terms of Service"
+                accessibilityLabel="Terms of Use (EULA)"
               >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
                       <MetallicIcon name="ribbon-outline" size={20} color={accentCopper} />
-                      <Text style={styles.settingTitle}>Terms of Service</Text>
+                      <Text style={styles.settingTitle}>Terms of Use (EULA)</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       App terms, subscription details, and disclaimers

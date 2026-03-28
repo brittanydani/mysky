@@ -160,7 +160,7 @@ export default function FAQScreen() {
 
             <Text style={styles.question}>Will MySky's terms or privacy policy change?</Text>
             <Text style={styles.answer}>
-              We may update our Terms of Service or Privacy Policy from time to time. When material changes are made, the "Last updated" date will be revised and — if the change affects how your data is processed — we will re-request your consent within the app. We encourage you to review these documents periodically.
+              We may update our Terms of Use or Privacy Policy from time to time. When material changes are made, the "Last updated" date will be revised and — if the change affects how your data is processed — we will re-request your consent within the app. We encourage you to review these documents periodically.
             </Text>
               </View>
           </View>

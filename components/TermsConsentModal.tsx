@@ -37,7 +37,7 @@ type ConsentLink = {
 
 const CONSENT_LINKS: ConsentLink[] = [
   {
-    title: 'Terms of Service',
+    title: 'Terms of Use (EULA)',
     subtitle: 'Review our service agreement',
     icon: 'document-text-outline',
     route: '/terms' as Href,

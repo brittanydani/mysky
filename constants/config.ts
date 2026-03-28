@@ -63,7 +63,7 @@ export const config = {
       'Personalized daily action steps',
       'Chiron & Lunar Node depth mapping',
       'High-resolution PDF chart exports',
-      'Encrypted cloud-agnostic backup & restore',
+      'Encrypted backup & restore',
     ],
   },
 };

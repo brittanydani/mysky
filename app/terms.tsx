@@ -42,7 +42,7 @@ export default function TermsOfServiceScreen() {
           >
             <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>Terms of Service</Text>
+          <Text style={styles.headerTitle}>Terms of Use (EULA)</Text>
           <View style={styles.backButton} />
         </View>
 
@@ -59,11 +59,11 @@ export default function TermsOfServiceScreen() {
               <MySkyScrollSkia size={140} />
             </View>
 
-            <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: March 28, 2026</Text>
 
-            <Text style={styles.sectionTitle}>Acceptance of Terms</Text>
+            <Text style={styles.sectionTitle}>Acceptance of Terms of Use</Text>
             <Text style={styles.paragraph}>
-              By downloading or using MySky, you agree to these Terms and our Privacy Policy. All personal data is stored locally on your device with <Text style={styles.highlight}>AES-256-GCM field-level encryption</Text> and hardware-backed key storage.
+              By downloading or using MySky, you agree to these Terms of Use (EULA) and our Privacy Policy. All personal data is stored locally on your device with <Text style={styles.highlight}>AES-256-GCM field-level encryption</Text> and hardware-backed key storage.
             </Text>
 
             <Text style={styles.sectionTitle}>Service Description</Text>

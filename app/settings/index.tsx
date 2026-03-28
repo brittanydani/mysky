@@ -303,7 +303,7 @@ export default function SettingsHub() {
           <View style={styles.divider} />
           <SettingsRow
             icon="§"
-            title="Terms of Service"
+            title="Terms of Use (EULA)"
             onPress={() => handleRoute('/terms')}
           />
         </SettingsGroup>
