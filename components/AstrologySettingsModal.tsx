@@ -149,7 +149,7 @@ export default function AstrologySettingsModal({
           <View style={styles.headerRow}>
             <Text style={styles.title}>Calculation Settings</Text>
             <Pressable onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color={theme.textMuted} />
+              <Ionicons name="close-outline" size={22} color={theme.textMuted} />
             </Pressable>
           </View>
         </View>

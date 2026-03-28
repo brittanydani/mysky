@@ -526,7 +526,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'core-self',
     title: 'Your Core Self',
     subtitle: 'The light you were born to shine',
-    icon: 'sunny',
+    icon: 'sunny-outline',
     isPremium: false,
     freeContent: {
       brief: 'Your Sun sign reveals your essential self.',
@@ -537,7 +537,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'emotional-world',
     title: 'Your Emotional World',
     subtitle: 'How your heart learned to feel',
-    icon: 'moon',
+    icon: 'moon-outline',
     isPremium: false,
     freeContent: {
       brief: 'Your Moon sign shapes your emotional needs.',
@@ -548,7 +548,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'first-impression',
     title: 'Your First Impression',
     subtitle: 'The mask you wear and why',
-    icon: 'eye',
+    icon: 'eye-outline',
     isPremium: false,
     freeContent: {
       brief: 'Your Rising sign is how the world first sees you.',
@@ -559,7 +559,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'how-you-love',
     title: 'How You Love',
     subtitle: 'Your heart\'s language',
-    icon: 'heart',
+    icon: 'heart-outline',
     isPremium: true,
     freeContent: {
       brief: 'Venus reveals your love style.',
@@ -570,7 +570,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'how-you-fight',
     title: 'How You Fight',
     subtitle: 'Your fire and your edge',
-    icon: 'flame',
+    icon: 'flame-outline',
     isPremium: true,
     freeContent: {
       brief: 'Mars shows how you assert yourself.',
@@ -581,7 +581,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'protection-style',
     title: 'How You Protect Yourself',
     subtitle: 'The walls you built and why',
-    icon: 'shield',
+    icon: 'shield-outline',
     isPremium: true,
     freeContent: {
       brief: 'Your chart reveals your defense mechanisms.',
@@ -592,7 +592,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'inner-child',
     title: 'Your Inner Child',
     subtitle: 'What your younger self still needs',
-    icon: 'happy',
+    icon: 'happy-outline',
     isPremium: true,
     freeContent: {
       brief: 'Your chart holds clues to childhood wounds.',
@@ -603,7 +603,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'growth-arc',
     title: 'Your Growth Arc',
     subtitle: 'The lessons you\'re here to learn',
-    icon: 'trending-up',
+    icon: 'trending-up-outline',
     isPremium: true,
     // placementKey: 'Jupiter', // (add if such a field is used elsewhere)
     freeContent: {
@@ -615,7 +615,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'souls-purpose',
     title: 'Your Soul\'s Purpose',
     subtitle: 'Where you\'re headed',
-    icon: 'compass',
+    icon: 'compass-outline',
     isPremium: true,
     freeContent: {
       brief: 'Your North Node points toward growth.',
@@ -626,7 +626,7 @@ const CHAPTER_DEFINITIONS: NatalChapter[] = [
     id: 'shadow-work',
     title: 'Your Shadow Work',
     subtitle: 'What you\'re learning to integrate',
-    icon: 'contrast',
+    icon: 'contrast-outline',
     isPremium: true,
     freeContent: {
       brief: 'Pluto reveals transformation points.',

@@ -154,7 +154,7 @@ const FeelingItem = memo(function FeelingItem({
             {feel.label}
           </Text>
         )}
-        {isSelected && <MetallicIcon name="checkmark" size={18} variant="gold" />}
+        {isSelected && <MetallicIcon name="checkmark-outline" size={18} variant="gold" />}
       </Pressable>
       {isSelected && (
         <View style={styles.intensityRow}>
@@ -269,6 +269,7 @@ export default function SleepScreen() {
   const [entries, setEntries] = useState<SleepEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -570,7 +571,7 @@ export default function SleepScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color={PALETTE.textMain} />
+          <Ionicons name="chevron-back-outline" size={24} color={PALETTE.textMain} />
         </Pressable>
         <ScrollView
           ref={scrollRef}
@@ -610,7 +611,7 @@ export default function SleepScreen() {
                       }}
                       style={styles.cancelEditBtn}
                     >
-                      <Ionicons name="close-circle" size={16} color={PALETTE.textMuted} />
+                      <Ionicons name="close-circle-outline" size={16} color={PALETTE.textMuted} />
                     </Pressable>
                   )}
                 </View>
@@ -644,7 +645,7 @@ export default function SleepScreen() {
                       style={styles.hoursStepBtn}
                       onPress={() => { Haptics.selectionAsync(); setHasDuration(true); setDurationHours(h => Math.max(0.5, parseFloat((h - 0.5).toFixed(1)))); }}
                     >
-                      <Ionicons name="remove" size={22} color={PALETTE.textMain} />
+                      <Ionicons name="remove-outline" size={22} color={PALETTE.textMain} />
                     </Pressable>
                     <Pressable
                       style={styles.hoursCircleDisplay}
@@ -668,7 +669,7 @@ export default function SleepScreen() {
                       style={styles.hoursStepBtn}
                       onPress={() => { Haptics.selectionAsync(); setHasDuration(true); setDurationHours(h => Math.min(12, parseFloat((h + 0.5).toFixed(1)))); }}
                     >
-                      <Ionicons name="add" size={22} color={PALETTE.textMain} />
+                      <Ionicons name="add-outline" size={22} color={PALETTE.textMain} />
                     </Pressable>
                   </View>
 
@@ -695,7 +696,7 @@ export default function SleepScreen() {
                           <Text style={styles.premiumLockSub}>Deep analysis of archetypes and emotional patterns in your dreams.</Text>
                         </View>
                         <View style={styles.deeperSkyBadge}>
-                          <MetallicIcon name="sparkles" size={10} variant="gold" />
+                          <MetallicIcon name="sparkles-outline" size={10} variant="gold" />
                           <MetallicText style={styles.deeperSkyBadgeText} variant="gold">DEEPER SKY</MetallicText>
                         </View>
                       </LinearGradient>
@@ -763,7 +764,7 @@ export default function SleepScreen() {
                               />
                               {feelingSearch.length > 0 && (
                                 <Pressable onPress={() => { setFeelingSearch(''); setDebouncedSearch(''); }}>
-                                  <Ionicons name="close-circle" size={18} color={theme.textMuted} />
+                                  <Ionicons name="close-circle-outline" size={18} color={theme.textMuted} />
                                 </Pressable>
                               )}
                             </View>
@@ -847,7 +848,7 @@ export default function SleepScreen() {
                               <Text style={styles.awakenDropdownText}>
                                 {AWAKEN_STATES.find(s => s.id === dreamMetadata.awakenState)?.label ?? 'Calm'}
                               </Text>
-                              <MetallicIcon name="chevron-up" size={16} color={PALETTE.amethyst} />
+                              <MetallicIcon name="chevron-up-outline" size={16} color={PALETTE.amethyst} />
                             </Pressable>
                           </View>
 
@@ -897,7 +898,7 @@ export default function SleepScreen() {
                     <MetallicIcon name="warning-outline" size={18} variant="copper" />
                     <MetallicText color={PALETTE.copper} style={styles.errorBannerText}>{saveError}</MetallicText>
                     <Pressable onPress={() => setSaveError(null)}>
-                      <Ionicons name="close" size={18} color={theme.textMuted} />
+                      <Ionicons name="close-outline" size={18} color={theme.textMuted} />
                     </Pressable>
                   </View>
                 )}
@@ -915,7 +916,7 @@ export default function SleepScreen() {
               <Animated.View entering={FadeInDown.delay(180).duration(600)} style={styles.section}>
                 <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.todayInterpretCard}>
                   <View style={styles.todayInterpretHeader}>
-                    <MetallicIcon name="sparkles" size={18} variant="gold" />
+                    <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
                     <Text style={styles.todayInterpretTitle}>Your Dream Reflection</Text>
                   </View>
                   {/* Show AI result as primary when available, on-device as fallback */}
@@ -1080,7 +1081,7 @@ export default function SleepScreen() {
                               <View style={styles.entryMoons}>
                                 {[1, 2, 3, 4, 5].map(n =>
                                   n <= entry.quality! ? (
-                                    <MetallicIcon key={n} name="moon" size={12} color={PALETTE.silverBlue} />
+                                    <MetallicIcon key={n} name="moon-outline" size={12} color={PALETTE.silverBlue} />
                                   ) : (
                                     <Ionicons key={n} name="moon-outline" size={12} color="rgba(255,255,255,0.15)" />
                                   )

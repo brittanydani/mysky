@@ -45,7 +45,7 @@ export default function NeedsComparison({
           </View>
           <View style={styles.nameRow}>
             <View style={[styles.avatar, { backgroundColor: 'transparent' }]}>
-              <MetallicIcon name="person" size={12} color={PALETTE.gold} />
+              <MetallicIcon name="person-outline" size={12} color={PALETTE.gold} />
             </View>
             <MetallicText style={styles.name} numberOfLines={1} color={PALETTE.gold}>{person1Name}</MetallicText>
           </View>
@@ -67,7 +67,7 @@ export default function NeedsComparison({
         <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
           <View style={styles.dividerIcon}>
-            <MetallicIcon name="heart" size={10} color={PALETTE.gold} />
+            <MetallicIcon name="heart-outline" size={10} color={PALETTE.gold} />
           </View>
           <View style={styles.dividerLine} />
         </View>
@@ -83,7 +83,7 @@ export default function NeedsComparison({
           </View>
           <View style={styles.nameRow}>
             <View style={[styles.avatar, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
-              <MetallicIcon name="person" size={12} color={PALETTE.silverBlue} />
+              <MetallicIcon name="person-outline" size={12} color={PALETTE.silverBlue} />
             </View>
             <MetallicText style={styles.name} numberOfLines={1} color={PALETTE.silverBlue}>
               {person2Name}

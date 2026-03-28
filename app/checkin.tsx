@@ -74,7 +74,7 @@ export default function CheckInHub() {
                 <Text style={styles.cardTitle}>Mood & Energy</Text>
                 <Text style={styles.cardDescription}>Sync your current emotional and physical state.</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={PALETTE.textMuted} />
+              <Ionicons name="chevron-forward-outline" size={18} color={PALETTE.textMuted} />
             </LinearGradient>
           </Pressable>
         </Animated.View>
@@ -97,7 +97,7 @@ export default function CheckInHub() {
                 <Text style={styles.cardTitle}>Sleep & Dreams</Text>
                 <Text style={styles.cardDescription}>Log rest quality and capture subconscious imagery.</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={PALETTE.textMuted} />
+              <Ionicons name="chevron-forward-outline" size={18} color={PALETTE.textMuted} />
             </LinearGradient>
           </Pressable>
         </Animated.View>

@@ -20,8 +20,8 @@ import { mean } from '../../utils/stats';
 // Normalization helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ENERGY_MAP: Record<EnergyLevel, number> = { low: 2, medium: 5, high: 9 };
-const STRESS_MAP: Record<StressLevel, number> = { low: 2, medium: 5, high: 9 };
+const ENERGY_MAP: Record<EnergyLevel, number> = { low: 2, medium: 5, high: 8 };
+const STRESS_MAP: Record<StressLevel, number> = { low: 2, medium: 5, high: 8 };
 
 /** Convert energy level enum to 1–10 numeric */
 function energyToNum(e: EnergyLevel): number { return ENERGY_MAP[e] ?? 5; }

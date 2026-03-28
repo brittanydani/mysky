@@ -524,7 +524,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             {writingMode ? (
               <View style={styles.writingHeader}>
                 <Pressable style={styles.iconBtn} onPress={exitWritingMode} hitSlop={15}>
-                  <Ionicons name="chevron-down" size={22} color={PALETTE.textMain} />
+                  <Ionicons name="chevron-down-outline" size={22} color={PALETTE.textMain} />
                 </Pressable>
                 <Text style={styles.writingDateLabel} numberOfLines={1}>
                   {formatDate(date)}
@@ -541,7 +541,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             ) : (
               <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
                 <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
-                  <Ionicons name="close" size={24} color={PALETTE.textMain} />
+                  <Ionicons name="close-outline" size={24} color={PALETTE.textMain} />
                 </Pressable>
                 <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
                 <View style={{ width: 44 }} />
@@ -689,7 +689,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   {/* Prompt Engine UI */}
                   {showPrompts && (isPremium && enginePromptSet ? (
                     <Animated.View entering={FadeInDown.duration(400)} style={styles.promptZone}>
-                      <MetallicText style={styles.transitContext} color={PALETTE.silverBlue}>✨ {enginePromptSet.dailySummary}</MetallicText>
+                      <MetallicText style={styles.transitContext} color={PALETTE.silverBlue}>✦ {enginePromptSet.dailySummary}</MetallicText>
                       <Pressable style={styles.primaryPromptCard} onPress={() => { setContent(prev => prev.trim() ? `${prev}\n\n${enginePromptSet.primary.question}` : enginePromptSet.primary.question); setShowPrompts(false); }}>
                         <Text style={styles.promptContextLabel}>{enginePromptSet.primary.context}</Text>
                         <Text style={styles.primaryPromptText}>{enginePromptSet.primary.question}</Text>
@@ -728,7 +728,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       style={styles.addTagsBtn}
                       onPress={() => { Haptics.selectionAsync().catch(() => {}); setTagSearch(''); setShowTagPicker(true); }}
                     >
-                      <Ionicons name="add" size={14} color={PALETTE.jade} />
+                      <Ionicons name="add-outline" size={14} color={PALETTE.jade} />
                       <Text style={styles.addTagsBtnText}>Add Tags</Text>
                     </Pressable>
                   </View>
@@ -747,7 +747,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                             style={[styles.tagChip, custom ? styles.tagChipSelectedCustom : styles.tagChipSelected]}
                           >
                             <MetallicText style={styles.tagChipText} color={accent}>{tag.label}</MetallicText>
-                            <Ionicons name="close" size={11} color={accent} style={{ marginLeft: 4, opacity: 0.7 }} />
+                            <Ionicons name="close-outline" size={11} color={accent} style={{ marginLeft: 4, opacity: 0.7 }} />
                           </Pressable>
                         );
                       })}
@@ -822,7 +822,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 />
                 {tagSearch.length > 0 && (
                   <Pressable hitSlop={10} onPress={() => setTagSearch('')}>
-                    <Ionicons name="close-circle" size={15} color="rgba(255,255,255,0.30)" />
+                    <Ionicons name="close-circle-outline" size={15} color="rgba(255,255,255,0.30)" />
                   </Pressable>
                 )}
               </View>
@@ -862,7 +862,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                           selected && (isCustom ? styles.tagPickerChipSelectedCustom : styles.tagPickerChipSelected),
                         ]}
                       >
-                        {selected && <Ionicons name="checkmark" size={12} color={PALETTE.jade} style={{ marginRight: 4 }} />}
+                        {selected && <Ionicons name="checkmark-outline" size={12} color={PALETTE.jade} style={{ marginRight: 4 }} />}
                         <Text style={[
                           styles.tagPickerChipText,
                           selected && (isCustom ? styles.tagPickerChipTextSelectedCustom : styles.tagPickerChipTextSelected),
@@ -890,7 +890,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                           style={styles.createTagBtn}
                           onPress={() => { saveCustomTag(tagSearch); setTagSearch(''); }}
                         >
-                          <Ionicons name="add" size={14} color={PALETTE.jade} />
+                          <Ionicons name="add-outline" size={14} color={PALETTE.jade} />
                           <Text style={styles.createTagBtnText}>Create "{tagSearch}"</Text>
                         </Pressable>
                       </View>
@@ -937,7 +937,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                           />
                           {newTagInput.trim().length > 0 && (
                             <Pressable hitSlop={10} onPress={() => saveCustomTag(newTagInput)}>
-                              <Ionicons name="checkmark-circle" size={18} color={PALETTE.jade} />
+                              <Ionicons name="checkmark-circle-outline" size={18} color={PALETTE.jade} />
                             </Pressable>
                           )}
                         </View>
@@ -971,7 +971,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                 />
                                 {(categoryNewTagInputs[cat.id] || '').trim().length > 0 && (
                                   <Pressable hitSlop={10} onPress={() => saveCustomTag((categoryNewTagInputs[cat.id] || '').trim(), cat.id)}>
-                                    <Ionicons name="checkmark-circle" size={18} color={PALETTE.jade} />
+                                    <Ionicons name="checkmark-circle-outline" size={18} color={PALETTE.jade} />
                                   </Pressable>
                                 )}
                               </View>

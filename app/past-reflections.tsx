@@ -174,7 +174,7 @@ export default function PastReflectionsScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <MetallicIcon name="arrow-back" size={20} color={PALETTE.gold} />
+          <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.gold} />
           <MetallicText style={styles.backText} color={PALETTE.gold}>Daily Reflection</MetallicText>
         </Pressable>
 

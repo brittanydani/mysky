@@ -101,7 +101,7 @@ const PATTERN_LABELS: Record<DreamPattern, string> = {
 };
 
 const NS_BRANCH_KEYS: NervousSystemBranch[] = [
-  'ventral_safety', 'fight', 'flight', 'freeze', 'collapse', 'mixed',
+  'collapse', 'fight', 'flight', 'freeze', 'ventral_safety', 'mixed',
 ];
 
 const FALLBACK_METADATA: DreamMetadata = {

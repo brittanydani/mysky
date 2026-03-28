@@ -41,7 +41,7 @@ export default function EnergyScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+          <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
         </Pressable>
         <ScrollView
           style={styles.scroll}

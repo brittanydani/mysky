@@ -93,7 +93,7 @@ export default function BackupPassphraseModal({
             {/* Header */}
             <Animated.View entering={FadeInDown.delay(100).duration(400)} style={styles.header}>
               <Pressable style={styles.iconButton} onPress={onCancel}>
-                <Ionicons name="close" size={24} color={PALETTE.textMain} />
+                <Ionicons name="close-outline" size={24} color={PALETTE.textMain} />
               </Pressable>
               <Text style={styles.title}>
                 {mode === 'backup' ? 'Create Passphrase' : 'Unlock Backup'}

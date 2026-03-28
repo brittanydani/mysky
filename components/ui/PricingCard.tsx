@@ -76,7 +76,7 @@ function PricingCard({
                 </RoundedRect>
               </Canvas>
             </View>
-            <Ionicons name="sparkles" size={10} color={luxuryTheme.text.onGold} />
+            <Ionicons name="sparkles-outline" size={10} color={luxuryTheme.text.onGold} />
             <Text style={styles.popularText}>Most Popular</Text>
           </View>
         </View>
@@ -87,7 +87,7 @@ function PricingCard({
           <Text style={[styles.name, selected && styles.selectedName]}>{name}</Text>
           {selected && (
             <View style={styles.checkmark}>
-              <Ionicons name="checkmark" size={14} color={luxuryTheme.text.onGold} />
+              <Ionicons name="checkmark-outline" size={14} color={luxuryTheme.text.onGold} />
             </View>
           )}
         </View>

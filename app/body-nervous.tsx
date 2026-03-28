@@ -83,7 +83,7 @@ export default function BodyNervousScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
           style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
         >
           <MetallicText style={styles.backText} variant="green">← Identity</MetallicText>
         </Pressable>

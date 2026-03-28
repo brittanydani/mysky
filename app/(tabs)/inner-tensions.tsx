@@ -23,7 +23,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { ChevronLeft, Lock } from 'lucide-react-native';
@@ -33,6 +33,7 @@ import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { localDb } from '../../services/storage/localDb';
 import { usePremium } from '../../context/PremiumContext';
@@ -430,7 +431,7 @@ export default function InnerTensionsScreen() {
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    router.back();
+    router.replace('/(tabs)/blueprint' as Href);
   };
 
   const goPremium = () => {
@@ -455,8 +456,8 @@ export default function InnerTensionsScreen() {
         >
           {/* Header */}
           <Pressable style={styles.backButton} onPress={goBack}>
-            <ChevronLeft size={20} color={PALETTE.textMuted} strokeWidth={1.5} />
-            <Text style={styles.backLabel}>Identity</Text>
+            <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.lavender} />
+            <MetallicText style={styles.backLabel} color={PALETTE.lavender}>Identity</MetallicText>
           </Pressable>
 
           <Animated.View entering={FadeInDown.duration(400)}>

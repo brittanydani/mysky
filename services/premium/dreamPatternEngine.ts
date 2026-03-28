@@ -935,7 +935,7 @@ export function detectEmotionalContradictions(
         .filter(f => poleBLabels.includes((FEELING_MAP[f.id]?.label ?? '').toLowerCase()))
         .reduce((max, f) => Math.max(max, f.intensity), 0);
 
-      const intensity = Math.min(1, ((aIntensity || 3) + (bIntensity || 3)) / 10);
+      const intensity = Math.min(1, ((aIntensity || 1) + (bIntensity || 1)) / 10);
 
       contradictions.push({
         poleA: description.split(' and ')[0],

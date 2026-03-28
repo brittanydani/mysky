@@ -162,10 +162,10 @@ export default function RelationshipPatternsScreen() {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <Pressable
             style={styles.backBtn}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
           >
-            <MetallicIcon name="arrow-back" size={20} color={PALETTE.anxious} />
-            <MetallicText style={styles.backText} color={PALETTE.anxious}>Identity Hub</MetallicText>
+            <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.anxious} />
+            <MetallicText style={styles.backText} color={PALETTE.anxious}>Identity</MetallicText>
           </Pressable>
 
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">

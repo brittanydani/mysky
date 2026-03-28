@@ -282,14 +282,17 @@ export default function DailyReflectionScreen() {
         const refDate = getReflectionDate();
         const today = getTodayKey(refDate);
         loadedDateRef.current = today;
-        const questions = getAllTodayQuestions();
-        setDayQuestions(questions);
 
         const [sealStatus, data, s] = await Promise.all([
           getCategorySealStatus(refDate),
           loadReflections(),
           getCurrentStreak(),
         ]);
+
+        // Use startedAt as a per-user seed so different users see different questions
+        const userSeed = data.startedAt ?? undefined;
+        const questions = getAllTodayQuestions(refDate, userSeed);
+        setDayQuestions(questions);
 
         setCategorySealed(sealStatus);
         setTotalDays(new Set(data.answers.map(a => a.date)).size);
@@ -384,7 +387,7 @@ export default function DailyReflectionScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <MetallicIcon name="arrow-back" size={20} color={PALETTE.lavender} />
+          <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.lavender} />
           <MetallicText style={styles.backText} color={PALETTE.lavender}>Inner World</MetallicText>
         </Pressable>
 
@@ -428,7 +431,7 @@ export default function DailyReflectionScreen() {
             {/* Sealed Banner */}
             {allCategoriesSealed && (
               <Animated.View entering={FadeIn.duration(500)} style={styles.sealedBanner}>
-                <MetallicIcon name="shield-checkmark" size={16} color={PALETTE.emerald} />
+                <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.emerald} />
                 <MetallicText style={styles.sealedText} color={PALETTE.emerald}>
                   ALL CATEGORIES SEALED FOR TODAY
                 </MetallicText>
@@ -458,7 +461,7 @@ export default function DailyReflectionScreen() {
                       {CATEGORY_LABELS[dq.category]}
                     </MetallicText>
                     {isSealed && (
-                      <MetallicIcon name="shield-checkmark" size={14} color={PALETTE.emerald} />
+                      <MetallicIcon name="shield-checkmark-outline" size={14} color={PALETTE.emerald} />
                     )}
                   </View>
 
@@ -494,7 +497,7 @@ export default function DailyReflectionScreen() {
 
                           {hasAnswer && isSealed && (
                             <View style={styles.answerMeta}>
-                              <MetallicIcon name="lock-closed" size={11} color={PALETTE.emerald} />
+                              <MetallicIcon name="lock-closed-outline" size={11} color={PALETTE.emerald} />
                               <Text style={[styles.answerMetaText, { color: PALETTE.emerald }]}>
                                 Sealed
                               </Text>
@@ -509,7 +512,7 @@ export default function DailyReflectionScreen() {
                   {isSealed ? (
                     <View style={styles.sealedRow}>
                       <View style={styles.sealedRowLeft}>
-                        <MetallicIcon name="shield-checkmark" size={14} color={PALETTE.emerald} />
+                        <MetallicIcon name="shield-checkmark-outline" size={14} color={PALETTE.emerald} />
                         <Text style={[styles.categorySealText, { color: PALETTE.emerald }]}>
                           Sealed
                         </Text>
@@ -538,7 +541,7 @@ export default function DailyReflectionScreen() {
                       disabled={!allAnsweredForCat}
                     >
                       <MetallicIcon
-                        name="shield-checkmark"
+                        name="shield-checkmark-outline"
                         size={14}
                         color={allAnsweredForCat ? color : PALETTE.textMuted}
                       />
@@ -582,7 +585,7 @@ export default function DailyReflectionScreen() {
                   <MetallicText style={styles.pastLinkText} color={PALETTE.gold}>
                     View Past Reflections
                   </MetallicText>
-                  <MetallicIcon name="chevron-forward" size={14} color={PALETTE.gold} />
+                  <MetallicIcon name="chevron-forward-outline" size={14} color={PALETTE.gold} />
                 </Pressable>
               </Animated.View>
             )}

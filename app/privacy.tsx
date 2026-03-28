@@ -8,7 +8,6 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import MySkyShieldSkia from '../components/skia/MySkyShieldSkia';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 // ── Cinematic Palette ──
@@ -39,7 +38,7 @@ export default function PrivacyPolicyScreen() {
             accessibilityRole="button"
             accessibilityLabel="Back"
           >
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>Privacy Policy</Text>
           <View style={styles.backButton} />
@@ -50,8 +49,8 @@ export default function PrivacyPolicyScreen() {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <MySkyShieldSkia size={140} />
+          <View style={styles.heroIconWrap}>
+            <Ionicons name="shield-checkmark-outline" size={132} color={theme.textGold} />
           </View>
 
           <Text style={styles.lastUpdated}>Last updated: March 28, 2026</Text>
@@ -122,7 +121,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.sectionTitle}>Data Security</Text>
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={styles.securityCard}>
               <View style={styles.securityHeader}>
-                <MetallicIcon name="lock-closed" size={18} color={PALETTE.emerald} />
+                <MetallicIcon name="lock-closed-outline" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Encryption at Rest</Text>
               </View>
               <Text style={styles.paragraph}>
@@ -132,7 +131,7 @@ export default function PrivacyPolicyScreen() {
 
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
-                <MetallicIcon name="shield-checkmark" size={18} color={PALETTE.emerald} />
+                <MetallicIcon name="shield-checkmark-outline" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Tamper Detection</Text>
               </View>
               <Text style={styles.paragraph}>
@@ -142,7 +141,7 @@ export default function PrivacyPolicyScreen() {
 
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
-                <MetallicIcon name="cloud-offline" size={18} color={PALETTE.emerald} />
+                <MetallicIcon name="cloud-offline-outline" size={18} color={PALETTE.emerald} />
                 <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Backup Encryption</Text>
               </View>
               <Text style={styles.paragraph}>
@@ -278,6 +277,11 @@ const styles = StyleSheet.create({
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  heroIconWrap: {
+    alignItems: 'center',
+    marginBottom: 16,
+    opacity: 0.95,
+  },
   lastUpdated: { fontSize: 13, color: "#FFFFFF", marginBottom: 24, fontStyle: 'italic', textAlign: 'center' },
   
   section: { marginBottom: 32 },

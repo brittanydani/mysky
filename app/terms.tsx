@@ -9,7 +9,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-import MySkyScrollSkia from '../components/skia/MySkyScrollSkia';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
@@ -40,7 +39,7 @@ export default function TermsOfServiceScreen() {
             accessibilityRole="button"
             accessibilityLabel="Back"
           >
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>Terms of Use (EULA)</Text>
           <View style={styles.backButton} />
@@ -55,8 +54,8 @@ export default function TermsOfServiceScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-            <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <MySkyScrollSkia size={140} />
+            <View style={styles.heroIconWrap}>
+              <Ionicons name="document-text-outline" size={132} color={theme.textGold} />
             </View>
 
             <Text style={styles.lastUpdated}>Last updated: March 28, 2026</Text>
@@ -201,6 +200,11 @@ const styles = StyleSheet.create({
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  heroIconWrap: {
+    alignItems: 'center',
+    marginBottom: 16,
+    opacity: 0.95,
+  },
   lastUpdated: { fontSize: 13, color: theme.textMuted, marginBottom: 24, fontStyle: 'italic', textAlign: 'center' },
   
   sectionTitle: {

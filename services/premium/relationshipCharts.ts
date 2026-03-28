@@ -72,44 +72,44 @@ export interface EmotionalDynamicInsight {
 // Connection strength templates
 const CONNECTION_STRENGTHS: Record<string, ConnectionStrength[]> = {
   'fire-fire': [
-    { title: 'Shared Passion', description: 'You both approach life with enthusiasm and drive. Together, you can accomplish anything you set your minds to.', icon: 'flame' },
-    { title: 'Mutual Inspiration', description: 'You ignite each other\'s creativity and ambition. Neither of you lets the other play small.', icon: 'sparkles' },
+    { title: 'Shared Passion', description: 'You both approach life with enthusiasm and drive. Together, you can accomplish anything you set your minds to.', icon: 'flame-outline' },
+    { title: 'Mutual Inspiration', description: 'You ignite each other\'s creativity and ambition. Neither of you lets the other play small.', icon: 'sparkles-outline' },
   ],
   'fire-earth': [
-    { title: 'Vision Meets Action', description: 'Fire dreams it; Earth builds it. Together you turn inspiration into reality.', icon: 'construct' },
-    { title: 'Grounding Energy', description: 'Earth helps Fire sustain their flame. Fire helps Earth take risks.', icon: 'leaf' },
+    { title: 'Vision Meets Action', description: 'Fire dreams it; Earth builds it. Together you turn inspiration into reality.', icon: 'construct-outline' },
+    { title: 'Grounding Energy', description: 'Earth helps Fire sustain their flame. Fire helps Earth take risks.', icon: 'leaf-outline' },
   ],
   'fire-air': [
-    { title: 'Ideas in Motion', description: 'Air fuels Fire\'s passion with ideas and perspective. Fire gives Air\'s thoughts direction.', icon: 'bulb' },
-    { title: 'Dynamic Energy', description: 'You keep each other mentally and emotionally stimulated. Boredom isn\'t in your vocabulary.', icon: 'flash' },
+    { title: 'Ideas in Motion', description: 'Air fuels Fire\'s passion with ideas and perspective. Fire gives Air\'s thoughts direction.', icon: 'bulb-outline' },
+    { title: 'Dynamic Energy', description: 'You keep each other mentally and emotionally stimulated. Boredom isn\'t in your vocabulary.', icon: 'flash-outline' },
   ],
   'fire-water': [
-    { title: 'Passion Meets Depth', description: 'Fire brings warmth; Water brings depth. Together you have intensity AND meaning.', icon: 'heart' },
-    { title: 'Emotional Alchemy', description: 'Water teaches Fire to feel; Fire teaches Water to act. Powerful transformation potential.', icon: 'water' },
+    { title: 'Passion Meets Depth', description: 'Fire brings warmth; Water brings depth. Together you have intensity AND meaning.', icon: 'heart-outline' },
+    { title: 'Emotional Alchemy', description: 'Water teaches Fire to feel; Fire teaches Water to act. Powerful transformation potential.', icon: 'water-outline' },
   ],
   'earth-earth': [
-    { title: 'Solid Foundation', description: 'You both value stability and follow-through. When you commit, it\'s for real.', icon: 'home' },
-    { title: 'Shared Values', description: 'You understand each other\'s need for security, routine, and tangible progress.', icon: 'checkmark-circle' },
+    { title: 'Solid Foundation', description: 'You both value stability and follow-through. When you commit, it\'s for real.', icon: 'home-outline' },
+    { title: 'Shared Values', description: 'You understand each other\'s need for security, routine, and tangible progress.', icon: 'checkmark-circle-outline' },
   ],
   'earth-air': [
-    { title: 'Practical Wisdom', description: 'Air brings new perspectives; Earth grounds them in reality. A thinking-doing balance.', icon: 'analytics' },
-    { title: 'Complementary Gifts', description: 'What one lacks, the other provides. Together you\'re more complete.', icon: 'git-merge' },
+    { title: 'Practical Wisdom', description: 'Air brings new perspectives; Earth grounds them in reality. A thinking-doing balance.', icon: 'analytics-outline' },
+    { title: 'Complementary Gifts', description: 'What one lacks, the other provides. Together you\'re more complete.', icon: 'git-merge-outline' },
   ],
   'earth-water': [
-    { title: 'Nurturing Security', description: 'Earth provides the stability Water craves. Water brings emotional richness Earth needs.', icon: 'shield-checkmark' },
-    { title: 'Deep Commitment', description: 'Both of you value loyalty and depth. This connection can last.', icon: 'infinite' },
+    { title: 'Nurturing Security', description: 'Earth provides the stability Water craves. Water brings emotional richness Earth needs.', icon: 'shield-checkmark-outline' },
+    { title: 'Deep Commitment', description: 'Both of you value loyalty and depth. This connection can last.', icon: 'infinite-outline' },
   ],
   'air-air': [
-    { title: 'Mental Symphony', description: 'Your conversations could go on forever. You truly GET each other\'s minds.', icon: 'chatbubbles' },
-    { title: 'Shared Curiosity', description: 'You explore ideas together, never running out of things to discuss.', icon: 'telescope' },
+    { title: 'Mental Symphony', description: 'Your conversations could go on forever. You truly GET each other\'s minds.', icon: 'chatbubbles-outline' },
+    { title: 'Shared Curiosity', description: 'You explore ideas together, never running out of things to discuss.', icon: 'telescope-outline' },
   ],
   'air-water': [
-    { title: 'Heart-Mind Bridge', description: 'Air helps Water articulate feelings. Water helps Air access emotion.', icon: 'git-branch' },
-    { title: 'Different Languages', description: 'Learning to translate between logic and intuition makes you both more whole.', icon: 'language' },
+    { title: 'Heart-Mind Bridge', description: 'Air helps Water articulate feelings. Water helps Air access emotion.', icon: 'git-branch-outline' },
+    { title: 'Different Languages', description: 'Learning to translate between logic and intuition makes you both more whole.', icon: 'language-outline' },
   ],
   'water-water': [
-    { title: 'Emotional Telepathy', description: 'You understand each other without words. The unspoken is spoken here.', icon: 'eye' },
-    { title: 'Deep Intimacy', description: 'You can go to emotional depths together that others might find overwhelming.', icon: 'heart-circle' },
+    { title: 'Emotional Telepathy', description: 'You understand each other without words. The unspoken is spoken here.', icon: 'eye-outline' },
+    { title: 'Deep Intimacy', description: 'You can go to emotional depths together that others might find overwhelming.', icon: 'heart-circle-outline' },
   ],
 };
 
@@ -254,12 +254,12 @@ export class PremiumRelationshipService {
       ...report.connectionAspects.slice(0, 2).map((a) => ({
         title: a.title,
         description: a.description,
-        icon: 'heart',
+        icon: 'heart-outline',
       })),
       ...report.chemistryAspects.slice(0, 1).map((a) => ({
         title: a.title,
         description: a.description,
-        icon: 'flash',
+        icon: 'flash-outline',
       })),
     ];
 

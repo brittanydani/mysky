@@ -27,6 +27,7 @@ import {
   Text as SkiaText,
   matchFont,
   LinearGradient,
+  RadialGradient,
   vec,
 } from '@shopify/react-native-skia';
 import {
@@ -389,13 +390,20 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
             >
               <BlurMask blur={12} style="normal" />
             </Circle>
-            {/* Core dot */}
+            {/* Core dot — metallic radial gradient */}
             <Circle
               cx={node.x}
               cy={node.y}
               r={3 + node.score * 3}
-              color={withAlpha(node.color, 0.7 + node.score * 0.3)}
-            />
+              opacity={0.85 + node.score * 0.15}
+            >
+              <RadialGradient
+                c={vec(node.x - (3 + node.score * 3) * 0.3, node.y - (3 + node.score * 3) * 0.3)}
+                r={(3 + node.score * 3) * 1.8}
+                colors={[node.glow, node.color, withAlpha(node.color, 0.15)]}
+                positions={[0, 0.45, 1]}
+              />
+            </Circle>
             {/* Bright center pip */}
             <Circle
               cx={node.x}

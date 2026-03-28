@@ -81,7 +81,7 @@ const SOMATIC_RITUALS: Record<string, string> = {
 
 export default function HealingSpaceScreen() {
   const router = useRouter();
-  const { isPremium } = usePremium();
+  const { isPremium, isReady, refreshCustomerInfo } = usePremium();
   const [context, setContext] = useState<SelfKnowledgeContext | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -89,6 +89,7 @@ export default function HealingSpaceScreen() {
     useCallback(() => {
       let isActive = true;
       const fetchContext = async () => {
+        await refreshCustomerInfo().catch(() => {});
         const data = await loadSelfKnowledgeContext();
         if (isActive) {
           setContext(data);
@@ -97,10 +98,10 @@ export default function HealingSpaceScreen() {
       };
       fetchContext();
       return () => { isActive = false; };
-    }, [])
+    }, [refreshCustomerInfo])
   );
 
-  if (loading) {
+  if (loading || !isReady) {
     return (
       <View style={[styles.container, styles.centered]}>
         <SkiaDynamicCosmos />
@@ -113,7 +114,7 @@ export default function HealingSpaceScreen() {
   const hasArchetype = !!context?.archetypeProfile;
   const hasSomatic = (context?.somaticEntries?.length ?? 0) > 0;
   const hasRelational = (context?.relationshipPatterns?.length ?? 0) > 0;
-  const hasAnyData = hasArchetype || hasSomatic || hasRelational;
+  const hasHealingInputs = hasArchetype || hasSomatic || hasRelational;
 
   if (!isPremium) {
     return (
@@ -125,29 +126,8 @@ export default function HealingSpaceScreen() {
             <Text style={styles.lockTitle}>The Healing Space</Text>
             <Text style={styles.lockSub}>Deep shadow work and somatic release rituals synthesized from your Blueprint.</Text>
             <Pressable style={styles.premiumBtn} onPress={() => router.push('/(tabs)/premium' as Href)}>
-              <Ionicons name="sparkles" size={16} color="#0A0A0C" />
+              <Ionicons name="sparkles-outline" size={16} color="#0A0A0C" />
               <Text style={styles.premiumBtnText}>Unlock Deeper Sky</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (!hasAnyData) {
-    return (
-      <View style={styles.container}>
-        <SkiaDynamicCosmos />
-        <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <View style={styles.centered}>
-            <Ionicons name="git-network-outline" size={48} color={PALETTE.textMuted} style={{ marginBottom: 16 }} />
-            <Text style={styles.emptyTitle}>Your Sanctuary Awaits</Text>
-            <Text style={styles.emptySub}>
-              The Healing Space generates specific rituals based on your identity profile.
-              Complete your Blueprint to unlock these insights.
-            </Text>
-            <Pressable style={styles.actionBtn} onPress={() => router.push('/(tabs)/blueprint' as Href)}>
-              <Text style={styles.actionBtnText}>Go to Blueprint</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -174,12 +154,12 @@ export default function HealingSpaceScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
           style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync(); router.back(); }}
+          onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/blueprint' as Href); }}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <MetallicIcon name="arrow-back" size={20} color={PALETTE.emerald} />
-          <MetallicText style={styles.backText} variant="green">Blueprint</MetallicText>
+          <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.emerald} />
+          <MetallicText style={styles.backText} variant="green">Identity</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -253,6 +233,28 @@ export default function HealingSpaceScreen() {
               <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} variant="rose">
                 Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
               </MetallicText>
+            </Animated.View>
+          )}
+
+          {!hasHealingInputs && (
+            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.card}>
+              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={['rgba(255,255,255,0.06)', 'transparent']} style={StyleSheet.absoluteFill} />
+
+              <View style={styles.cardHeader}>
+                <MetallicIcon name="sparkles-outline" size={16} color={PALETTE.gold} />
+                <MetallicText style={styles.cardEyebrow} variant="gold">NEXT STEP</MetallicText>
+              </View>
+
+              <Text style={styles.cardTitle}>Add Healing Inputs</Text>
+              <Text style={styles.bodyText}>
+                You're in. To generate Shadow Work, Somatic Release, and Relational Reset cards,
+                add at least one of these: Archetypes, Somatic Map entries, or Relationship Patterns.
+              </Text>
+
+              <Pressable style={[styles.actionBtn, { marginTop: 16 }]} onPress={() => router.push('/(tabs)/blueprint' as Href)}>
+                <Text style={styles.actionBtnText}>Open Blueprint</Text>
+              </Pressable>
             </Animated.View>
           )}
 

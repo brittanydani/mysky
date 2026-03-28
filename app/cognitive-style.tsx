@@ -192,7 +192,7 @@ export default function CognitiveStyleScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <MetallicIcon name="arrow-back" size={20} color={PALETTE.silverBlue} />
+          <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.silverBlue} />
           <MetallicText style={styles.backText} color={PALETTE.silverBlue}>Inner World</MetallicText>
         </Pressable>
 

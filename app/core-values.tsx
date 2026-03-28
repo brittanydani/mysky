@@ -139,7 +139,7 @@ export default function CoreValuesScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable style={styles.backBtn} onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}>
-          <MetallicIcon name="arrow-back" size={20} color={PALETTE.gold} />
+          <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.gold} />
           <MetallicText style={styles.backText} color={PALETTE.gold}>Inner World</MetallicText>
         </Pressable>
 
@@ -169,7 +169,7 @@ export default function CoreValuesScreen() {
                   onPress={() => toggleSelected(value)}
                   onLongPress={() => toggleTop(value)}
                 >
-                  {isTop && <Ionicons name="star" size={10} color={PALETTE.bg} style={{ marginRight: 6 }} />}
+                  {isTop && <Ionicons name="star-outline" size={10} color={PALETTE.bg} style={{ marginRight: 6 }} />}
                   {isTop ? (
                     <Text style={[styles.chipText, styles.chipTextTop]}>{value}</Text>
                   ) : isSelected ? (

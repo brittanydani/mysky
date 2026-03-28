@@ -12,10 +12,11 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 
 import OnboardingModal from '../components/OnboardingModal';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
+import AuthRequiredModal from '../components/AuthRequiredModal';
 import CosmicBackground from '../components/ui/CosmicBackground';
 
 import { PremiumProvider } from '../context/PremiumContext';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
 
 import { MigrationService } from '../services/storage/migrationService';
@@ -83,7 +84,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
               colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']} 
               style={styles.errorButtonGradient}
             >
-              <GoldIcon name="refresh" size={16}  style={{ marginRight: 8 }}  />
+              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
               <Text style={styles.errorButtonText}>Reload Experience</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -110,8 +111,23 @@ async function setTermsConsent(granted: boolean) {
 }
 
 export default function RootLayout() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <PremiumProvider>
+          <StarNotificationProvider>
+            <AppShell />
+          </StarNotificationProvider>
+        </PremiumProvider>
+      </AuthProvider>
+    </ErrorBoundary>
+  );
+}
+
+function AppShell() {
   const pathname = usePathname();
   const router = useRouter();
+  const { session, loading: authLoading } = useAuth();
 
   // Flush any check-ins queued by the Home Screen widget's "Log Energy" button
   usePendingWidgetCheckIns();
@@ -133,6 +149,20 @@ export default function RootLayout() {
     return pathname === '/terms' || pathname === '/privacy' || pathname === '/faq';
   }, [pathname]);
 
+  const checkIfOnboardingCanBeSkipped = async () => {
+    try {
+      await localDb.initialize();
+      const charts = await localDb.getCharts();
+      const hasExistingChart = charts.length > 0;
+      setOnboardingComplete(hasExistingChart);
+      return hasExistingChart;
+    } catch (e) {
+      logger.error('Failed to check existing charts:', e);
+      setOnboardingComplete(false);
+      return false;
+    }
+  };
+
   const runPostPrivacyConsentInit = async (termsAccepted: boolean) => {
     if (didRunPostConsentInitRef.current) return;
     didRunPostConsentInitRef.current = true;
@@ -149,15 +179,7 @@ export default function RootLayout() {
 
       // If they already accepted terms previously, see if onboarding can be skipped
       if (termsAccepted) {
-        try {
-          await localDb.initialize();
-          const charts = await localDb.getCharts();
-          if (charts.length > 0) {
-            setOnboardingComplete(true);
-          }
-        } catch (e) {
-          logger.error('Failed to check existing charts:', e);
-        }
+        await checkIfOnboardingCanBeSkipped();
       }
     } catch (error) {
       logger.error('Post-consent initialization failed:', error);
@@ -257,12 +279,22 @@ export default function RootLayout() {
 
   // Listen for consent withdrawal from settings — immediately re-gate the session
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('CONSENT_WITHDRAWN', () => {
+    const consentSub = DeviceEventEmitter.addListener('CONSENT_WITHDRAWN', () => {
       setNeedsPrivacyConsent(true);
       setOnboardingComplete(false);
       logger.info('Consent withdrawn — session re-gated');
     });
-    return () => sub.remove();
+
+    // Legacy onboarding screens can complete outside the root modal. Keep root
+    // gate state in sync so tabs can mount immediately after profile creation.
+    const onboardingSub = DeviceEventEmitter.addListener('ONBOARDING_COMPLETE', () => {
+      setOnboardingComplete(true);
+    });
+
+    return () => {
+      consentSub.remove();
+      onboardingSub.remove();
+    };
   }, []);
 
   // Deep-link routing from local notification taps
@@ -303,6 +335,12 @@ export default function RootLayout() {
     try {
       await setTermsConsent(granted);
       setNeedsTermsConsent(!granted);
+
+      // Existing users who only needed updated terms should not be forced through
+      // profile creation again. Re-check chart state as soon as terms are accepted.
+      if (granted) {
+        await checkIfOnboardingCanBeSkipped();
+      }
     } catch (error) {
       logger.error('Terms consent handling failed:', error);
       setNeedsTermsConsent(!granted);
@@ -311,7 +349,9 @@ export default function RootLayout() {
 
   const handleOnboardingComplete = () => {
     setOnboardingComplete(true);
-    router.replace('/(tabs)/home');
+    if (!needsPrivacyConsent && !needsTermsConsent) {
+      router.replace('/(tabs)/home');
+    }
   };
 
   if (checkingConsent || !dbReady) {
@@ -326,7 +366,7 @@ export default function RootLayout() {
               colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']}
               style={styles.errorButtonGradient}
             >
-              <GoldIcon name="refresh" size={16}  style={{ marginRight: 8 }}  />
+              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
               <Text style={styles.errorButtonText}>Retry</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -337,75 +377,78 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <PremiumProvider>
-          <StarNotificationProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <View style={{ flex: 1, position: 'relative' }}>
-              <CosmicBackground />
-              <SafeAreaProvider>
-                <StatusBar style="light" />
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: 'transparent' },
-                    animation: 'fade',
-                  }}
-                >
-                  {/* Only mount tabs after privacy consent is confirmed */}
-                  {!needsPrivacyConsent && <Stack.Screen name="(tabs)" />}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1, position: 'relative' }}>
+        <CosmicBackground />
+        <SafeAreaProvider>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: 'transparent' },
+              animation: 'fade',
+            }}
+          >
+            {/* Mount tabs only when all gates are satisfied — including a valid session. */}
+            {!needsPrivacyConsent && !needsTermsConsent && onboardingComplete && !!session && <Stack.Screen name="(tabs)" />}
 
-                  {/* Onboarding & Auth */}
-                  <Stack.Screen name="onboarding" />
-                  <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
+            {/* Onboarding & Auth */}
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
 
-                  {/* --- HIDDEN SCREENS (MODALS) --- */}
-                  {/* Slide up over the tab bar — dedicated workspaces */}
-                  <Stack.Screen
-                    name="checkin"
-                    options={{
-                      presentation: 'modal',
-                      contentStyle: { backgroundColor: '#0A0A0C' },
-                    }}
-                  />
-                  <Stack.Screen
-                    name="sanctuary"
-                    options={{
-                      presentation: 'fullScreenModal',
-                      animation: 'fade_from_bottom',
-                    }}
-                  />
-                  {/* Slide-up from within the tab context (e.g. natal chart detail) */}
-                  <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
+            {/* --- HIDDEN SCREENS (MODALS) --- */}
+            {/* Slide up over the tab bar — dedicated workspaces */}
+            <Stack.Screen
+              name="checkin"
+              options={{
+                presentation: 'modal',
+                contentStyle: { backgroundColor: '#0A0A0C' },
+              }}
+            />
+            <Stack.Screen
+              name="sanctuary"
+              options={{
+                presentation: 'fullScreenModal',
+                animation: 'fade_from_bottom',
+              }}
+            />
+            {/* Slide-up from within the tab context (e.g. natal chart detail) */}
+            <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
 
-                  {/* Legal */}
-                  <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
-                  <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
-                  <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
-                </Stack>
+            {/* Legal */}
+            <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
+          </Stack>
 
-                {/* Overlay gates (do NOT unmount navigation) */}
-                {needsPrivacyConsent && (
-                  <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail="brittanyapps@outlook.com" />
-                )}
+          {/* Overlay gates (do NOT unmount navigation) */}
+          {needsPrivacyConsent && (
+            <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail="brittanyapps@outlook.com" />
+          )}
 
-                {/* IMPORTANT: Terms now happens INSIDE onboarding (after Welcome). */}
-                {!needsPrivacyConsent && !onboardingComplete && !isOnLegalScreen && (
-                  <OnboardingModal
-                    visible
-                    needsTermsConsent={needsTermsConsent}
-                    onTermsConsent={handleTermsConsent}
-                    onComplete={handleOnboardingComplete}
-                  />
-                )}
-              </SafeAreaProvider>
-            </View>
-          </GestureHandlerRootView>
-          </StarNotificationProvider>
-        </PremiumProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+          {/* IMPORTANT: Terms now happens INSIDE onboarding (after Welcome). */}
+          {!needsPrivacyConsent && !onboardingComplete && !isOnLegalScreen && (
+            <OnboardingModal
+              visible
+              needsTermsConsent={needsTermsConsent}
+              onTermsConsent={handleTermsConsent}
+              onComplete={handleOnboardingComplete}
+            />
+          )}
+
+          {/* Auth gate — shown after onboarding when no session exists */}
+          <AuthRequiredModal
+            visible={
+              !needsPrivacyConsent &&
+              !needsTermsConsent &&
+              onboardingComplete &&
+              !authLoading &&
+              !session
+            }
+          />
+        </SafeAreaProvider>
+      </View>
+    </GestureHandlerRootView>
   );
 }
 

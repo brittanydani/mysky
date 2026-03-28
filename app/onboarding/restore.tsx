@@ -1,6 +1,6 @@
 // File: app/onboarding/restore.tsx
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Alert, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Alert, Platform, Keyboard, TouchableWithoutFeedback, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,6 +75,7 @@ export default function OnboardingRestoreScreen() {
       };
 
       AstrologyCalculator.generateNatalChart(birthData); // sanity compute
+      DeviceEventEmitter.emit('ONBOARDING_COMPLETE');
       router.replace('/(tabs)/home' as Href);
     } catch (e) {
       logger.error('[Restore] restore failed:', e);
@@ -98,7 +99,7 @@ export default function OnboardingRestoreScreen() {
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <Ionicons name="chevron-back" size={24} color={PALETTE.textMain} />
+              <Ionicons name="chevron-back-outline" size={24} color={PALETTE.textMain} />
             </Pressable>
             <Text style={styles.headerTitle}>Restore Backup</Text>
             <View style={styles.backButton} />
@@ -110,7 +111,7 @@ export default function OnboardingRestoreScreen() {
               style={styles.glassCard}
             >
               <View style={styles.cardHeader}>
-                <MetallicIcon name="cloud-download" size={32} color={PALETTE.gold} style={{ marginBottom: 12 }} />
+                <MetallicIcon name="cloud-download-outline" size={32} color={PALETTE.gold} style={{ marginBottom: 12 }} />
                 <Text style={styles.cardTitle}>Recover Your Data</Text>
                 <Text style={styles.cardSubtitle}>
                   Select your encrypted .msky backup file and enter the passphrase used to secure it.
@@ -148,7 +149,7 @@ export default function OnboardingRestoreScreen() {
                 label={busy ? 'Restoring...' : 'Restore Data'}
                 onPress={restore}
                 disabled={!backupUri || busy}
-                icon={!busy ? <Ionicons name="arrow-forward" size={18} color="#020817" /> : undefined}
+                icon={!busy ? <Ionicons name="arrow-forward-outline" size={18} color="#020817" /> : undefined}
               />
 
               <Text style={styles.note}>

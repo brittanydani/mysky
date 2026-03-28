@@ -62,19 +62,20 @@ const HEAT_COLORS: ReadonlyArray<string> = [
 
 interface Zone {
   id: string;
-  label: string;
+  frontLabel: string;
+  backLabel:  string;
   frontSlugs: Slug[];
   backSlugs:  Slug[];
 }
 
 const ZONES: Zone[] = [
-  { id: 'head',   label: 'Head & Mind',    frontSlugs: ['head', 'hair'],                               backSlugs: ['head', 'hair'] },
-  { id: 'throat', label: 'Throat & Jaw',   frontSlugs: ['neck'],                                       backSlugs: ['trapezius'] },
-  { id: 'chest',  label: 'Chest & Heart',  frontSlugs: ['chest', 'deltoids'],                          backSlugs: ['upper-back'] },
-  { id: 'arms',   label: 'Arms & Hands',   frontSlugs: ['biceps', 'forearm', 'hands'],                 backSlugs: ['triceps'] },
-  { id: 'gut',    label: 'Gut & Belly',    frontSlugs: ['abs', 'obliques'],                            backSlugs: [] },
-  { id: 'back',   label: 'Hips & Pelvis',  frontSlugs: ['adductors'],                                  backSlugs: ['lower-back', 'gluteal'] },
-  { id: 'limbs',  label: 'Legs & Feet',    frontSlugs: ['quadriceps', 'tibialis', 'knees', 'ankles', 'feet'], backSlugs: ['hamstring', 'calves'] },
+  { id: 'head',   frontLabel: 'Head & Mind',    backLabel: 'Back of Head',       frontSlugs: ['head', 'hair'],                                            backSlugs: ['hair'] },
+  { id: 'throat', frontLabel: 'Throat & Jaw',   backLabel: 'Neck & Trapezius',   frontSlugs: ['neck', 'trapezius'],                                       backSlugs: ['neck', 'trapezius'] },
+  { id: 'chest',  frontLabel: 'Chest & Heart',  backLabel: 'Upper Back',         frontSlugs: ['chest', 'deltoids'],                                       backSlugs: ['upper-back', 'deltoids'] },
+  { id: 'arms',   frontLabel: 'Arms & Hands',   backLabel: 'Arms & Hands',       frontSlugs: ['biceps', 'triceps', 'forearm', 'hands'],                   backSlugs: ['triceps', 'forearm', 'hands'] },
+  { id: 'gut',    frontLabel: 'Gut & Belly',    backLabel: '',                   frontSlugs: ['abs', 'obliques'],                                         backSlugs: [] },
+  { id: 'back',   frontLabel: 'Hips & Pelvis',  backLabel: 'Lower Back & Glutes', frontSlugs: ['adductors'],                                              backSlugs: ['lower-back', 'gluteal', 'adductors'] },
+  { id: 'limbs',  frontLabel: 'Legs & Feet',    backLabel: 'Hamstrings & Calves', frontSlugs: ['quadriceps', 'tibialis', 'knees', 'ankles', 'feet', 'calves'], backSlugs: ['hamstring', 'calves', 'feet'] },
 ];
 
 // Flat slug → zone ID lookup (built once at module level)
@@ -87,6 +88,7 @@ interface SomaticEntry {
   id: string;
   date: string;
   region: string;
+  side?: 'front' | 'back';
   emotion: string;
   intensity: number;
 }
@@ -132,7 +134,11 @@ export default function SomaticMapScreen() {
   };
 
   const selectedZoneLabel = selectedRegion
-    ? ZONES.find((z) => z.id === selectedRegion)?.label
+    ? (() => {
+        const zone = ZONES.find((z) => z.id === selectedRegion);
+        if (!zone) return null;
+        return side === 'front' ? zone.frontLabel : zone.backLabel;
+      })()
     : null;
 
   const logEntry = async () => {
@@ -141,6 +147,7 @@ export default function SomaticMapScreen() {
       id:        Date.now().toString(),
       date:      new Date().toISOString(),
       region:    selectedRegion,
+      side,
       emotion:   selectedEmotion,
       intensity,
     };
@@ -159,12 +166,38 @@ export default function SomaticMapScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
+  const deleteEntry = (id: string) => {
+    Alert.alert('Delete Entry', 'Remove this somatic entry?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const updated = entries.filter((e) => e.id !== id);
+          setEntries(updated);
+          try {
+            await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          } catch {
+            setEntries(entries);
+          }
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        },
+      },
+    ]);
+  };
+
   const formatDate = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   };
 
-  const zoneLabel = (zoneId: string) => ZONES.find((z) => z.id === zoneId)?.label ?? zoneId;
+  const zoneLabel = (zoneId: string, entrySide?: 'front' | 'back') => {
+    const zone = ZONES.find((z) => z.id === zoneId);
+    if (!zone) return zoneId;
+    const s = entrySide ?? 'front';
+    const label = s === 'back' ? zone.backLabel : zone.frontLabel;
+    return label || zone.frontLabel || zone.backLabel || zoneId;
+  };
 
   return (
     <View style={styles.container}>
@@ -197,6 +230,7 @@ export default function SomaticMapScreen() {
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
                     setSide(s);
+                    setSelectedRegion(null);
                   }}
                 >
                   <Text style={[styles.sideBtnText, side === s && styles.sideBtnTextActive]}>
@@ -227,6 +261,7 @@ export default function SomaticMapScreen() {
           {/* Body map */}
           <Animated.View entering={FadeInDown.delay(160).duration(500)} style={styles.bodyWrap}>
             <Body
+              key={`${side}-${gender}`}
               data={bodyData}
               scale={BODY_SCALE}
               side={side}
@@ -333,13 +368,20 @@ export default function SomaticMapScreen() {
                 {entries.slice(0, 20).map((entry) => {
                   const color = EMOTION_COLORS[entry.emotion] ?? PALETTE.sage;
                   return (
-                    <View key={entry.id} style={styles.entryRow}>
+                    <Pressable
+                      key={entry.id}
+                      style={styles.entryRow}
+                      onLongPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                        deleteEntry(entry.id);
+                      }}
+                    >
                       <BlurView intensity={10} tint="dark" style={StyleSheet.absoluteFill} />
                       <View style={[styles.entryDot, { backgroundColor: color }]} />
                       <View style={styles.entryMeta}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <MetallicText style={styles.entryMain} color={color}>{entry.emotion}</MetallicText>
-                          <Text style={styles.entryMain}> · {zoneLabel(entry.region)}</Text>
+                          <Text style={styles.entryMain}> · {zoneLabel(entry.region, entry.side)}</Text>
                         </View>
                         <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
                       </View>
@@ -351,7 +393,7 @@ export default function SomaticMapScreen() {
                           />
                         ))}
                       </View>
-                    </View>
+                    </Pressable>
                   );
                 })}
               </View>

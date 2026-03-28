@@ -133,7 +133,7 @@ export default function NewJournalEntryScreen() {
               router.back();
             }}
           >
-            <Ionicons name="close" size={24} color={PALETTE.textMuted} />
+            <Ionicons name="close-outline" size={24} color={PALETTE.textMuted} />
           </Pressable>
         </View>
 
@@ -211,7 +211,7 @@ export default function NewJournalEntryScreen() {
                   style={[styles.promptCard, { borderColor: `${prompt.archetypeColor}40` }]}
                 >
                   <View style={styles.promptHeader}>
-                    <MetallicIcon name="sparkles" size={14} color={prompt.archetypeColor} />
+                    <MetallicIcon name="sparkles-outline" size={14} color={prompt.archetypeColor} />
                     <MetallicText style={styles.promptContext} color={prompt.archetypeColor}>
                       {prompt.context}
                     </MetallicText>
@@ -219,7 +219,7 @@ export default function NewJournalEntryScreen() {
                   <Text style={styles.promptQuestion}>"{prompt.question}"</Text>
                   <View style={styles.promptFooter}>
                     <Text style={styles.promptFooterText}>Tap to insert into entry</Text>
-                    <Ionicons name="arrow-down" size={12} color={PALETTE.textMuted} />
+                    <Ionicons name="arrow-down-outline" size={12} color={PALETTE.textMuted} />
                   </View>
                 </LinearGradient>
               </Pressable>

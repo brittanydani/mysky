@@ -57,6 +57,15 @@ interface SnapshotData {
   stressTrend: 'improving' | 'worsening' | 'stable' | null;
 }
 
+/** Map 1–10 average mood to a human-readable label. */
+function moodSubLabel(avg: number): string {
+  if (avg <= 3) return 'Low';
+  if (avg <= 5) return 'Subdued';
+  if (avg <= 6.5) return 'Steady';
+  if (avg <= 8) return 'Good';
+  return 'Elevated';
+}
+
 export default function PatternsScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
@@ -164,7 +173,7 @@ export default function PatternsScreen() {
 
           {/* ── Hub 1: Quantitative Snapshot ── */}
           <View style={styles.snapshotRow}>
-            <MetricCard label="AVG MOOD" value={snapshot.avgMood?.toFixed(1) ?? '—'} color={PALETTE.silverBlue} sub={snapshot.avgMood ? 'Steady' : 'No data'} />
+            <MetricCard label="AVG MOOD" value={snapshot.avgMood?.toFixed(1) ?? '—'} color={PALETTE.silverBlue} sub={snapshot.avgMood ? moodSubLabel(snapshot.avgMood) : 'No data'} />
             <MetricCard label="STRESS" value={stressLabel(snapshot.stressTrend)} color={PALETTE.copper} isText />
             <MetricCard label="LOGGED" value={snapshot.checkInCount.toString()} color={PALETTE.gold} sub="last 30 days" />
           </View>
@@ -198,7 +207,7 @@ export default function PatternsScreen() {
           ) : (
             <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
               <LinearGradient colors={['rgba(212, 184, 114, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.premiumLock}>
-                <MetallicIcon name="lock-closed" size={20} color={PALETTE.gold} />
+                <MetallicIcon name="lock-closed-outline" size={20} color={PALETTE.gold} />
                 <MetallicText style={styles.premiumText} color={PALETTE.gold}>Unlock Deep Pattern Insights</MetallicText>
               </LinearGradient>
             </Pressable>
@@ -229,7 +238,7 @@ const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
 
 const LensHeader = ({ icon, title, color }: { icon: string; title: string; color: string }) => (
   <View style={lensStyles.lensHeader}>
-    <Text style={[lensStyles.lensIcon, { color }]}>{icon}</Text>
+    <MetallicIcon name={icon as any} size={18} color={color} />
     <Text style={[lensStyles.lensTitle, { color }]}>{title}</Text>
   </View>
 );
@@ -273,7 +282,7 @@ function DeepInsightLenses({
       {/* ── 1. Mood & Energy Patterns ── */}
       {b.hasEnoughData && (b.stability || b.timeOfDay || b.weekSummary) && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="📊" title="Mood & Energy" color={PALETTE.silverBlue} />
+          <LensHeader icon="bar-chart-outline" title="Mood & Energy" color={PALETTE.silverBlue} />
 
           {b.stability && (
             <LinearGradient colors={['rgba(139,196,232,0.08)', 'rgba(10,10,12,0.85)']} style={styles.insightCard}>
@@ -324,7 +333,7 @@ function DeepInsightLenses({
       {/* ── 2. What Restores & Drains You ── */}
       {(b.tagInsights?.hasTagData || (b.noteThemes && b.noteThemes.totalNotedDays > 2)) && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="⚡" title="What Restores & Drains You" color={PALETTE.emerald} />
+          <LensHeader icon="flash-outline" title="What Restores & Drains You" color={PALETTE.emerald} />
 
           {b.tagInsights?.hasTagData && (
             <LinearGradient colors={['rgba(110,191,139,0.08)', 'rgba(10,10,12,0.85)']} style={styles.insightCard}>
@@ -378,7 +387,7 @@ function DeepInsightLenses({
       {/* ── 3. Journal & Reflection ── */}
       {(b.journalLinkage || b.journalThemes || enhanced) && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="📖" title="Journal & Reflection" color={PALETTE.gold} />
+          <LensHeader icon="book-outline" title="Journal & Reflection" color={PALETTE.gold} />
 
           {b.journalLinkage && (
             <LinearGradient colors={['rgba(212,184,114,0.08)', 'rgba(10,10,12,0.85)']} style={styles.insightCard}>
@@ -445,7 +454,7 @@ function DeepInsightLenses({
       {/* ── 4. Dream Life ── */}
       {innerTensions.dataQuality.totalEntries > 0 && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="🌙" title="Dream Life" color={PALETTE.connection} />
+          <LensHeader icon="moon-outline" title="Dream Life" color={PALETTE.connection} />
 
           <LinearGradient colors={['rgba(157,118,193,0.08)', 'rgba(10,10,12,0.85)']} style={styles.insightCard}>
             <Text style={styles.insightLabel}>DREAM RECORD</Text>
@@ -475,7 +484,7 @@ function DeepInsightLenses({
       {/* ── 5. Inner Blueprint ── */}
       {blueprint.length > 0 && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="✦" title="Inner Blueprint" color={PALETTE.gold} />
+          <LensHeader icon="diamond-outline" title="Inner Blueprint" color={PALETTE.gold} />
           {blueprint.map((theme, i) => (
             <LinearGradient
               key={i}
@@ -495,7 +504,7 @@ function DeepInsightLenses({
       {/* ── 6. Body & Nervous System ── */}
       {(innerTensions.dataQuality.entriesWithFeelings > 0 || bodyTagStats.entries.length > 0) && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="🫀" title="Body & Nervous System" color={PALETTE.copper} />
+          <LensHeader icon="body-outline" title="Body & Nervous System" color={PALETTE.copper} />
 
           {innerTensions.dataQuality.entriesWithFeelings > 0 && innerTensions.nsBranchForces.some(f => f.value > 0) && (
             <LinearGradient colors={['rgba(205,127,93,0.08)', 'rgba(10,10,12,0.85)']} style={styles.insightCard}>
@@ -536,7 +545,7 @@ function DeepInsightLenses({
       {/* ── 7. Relationship Mirror ── */}
       {relational && relational.relationalDays >= 3 && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="🪞" title="Relationship Mirror" color={PALETTE.silverBlue} />
+          <LensHeader icon="people-outline" title="Relationship Mirror" color={PALETTE.silverBlue} />
 
           <LinearGradient colors={['rgba(139,196,232,0.08)', 'rgba(10,10,12,0.85)']} style={styles.insightCard}>
             <Text style={styles.insightLabel}>RELATIONAL MOOD</Text>
@@ -567,7 +576,7 @@ function DeepInsightLenses({
       {/* ── 8. Inner Tensions ── */}
       {(innerTensions.topTriggers.length > 0 || innerTensions.ambivalence.detected || innerTensions.nsConflict.conflictScore > 0.3) && (
         <View style={{ gap: 10 }}>
-          <LensHeader icon="⚖️" title="Inner Tensions" color={PALETTE.lavender} />
+          <LensHeader icon="swap-horizontal-outline" title="Inner Tensions" color={PALETTE.lavender} />
 
           {innerTensions.nsConflict.conflictScore > 0.3 && (
             <LinearGradient colors={['rgba(168,155,200,0.08)', 'rgba(10,10,12,0.85)']} style={styles.insightCard}>
@@ -639,7 +648,7 @@ const lensStyles = StyleSheet.create({
   nsBarPct: { fontSize: 12, fontWeight: '600', width: 34, textAlign: 'right' },
   nsDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   blueprintHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  blueprintIcon: { fontSize: 18 },
+  blueprintIcon: { fontSize: 18, color: '#FFFFFF' },
   dreamPatternRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dreamPatternLabel: { fontSize: 14, fontWeight: '600', flex: 1 },
   dreamPatternCount: { color: 'rgba(255,255,255,0.4)', fontSize: 13 },

@@ -27,7 +27,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'sleep-dream',
     name: 'Dream Interpretation',
-    icon: 'moon',
+    icon: 'moon-outline',
     description: 'Symbolic dream interpretation, dream symbol cluster map, and sleep trend analysis',
     freeVersion: 'Sleep logging — quality, duration, and dream narrative',
     premiumVersion: 'Symbolic dream interpretation drawing from your dream text, feelings, and check-in data, plus a recurring symbol cluster map and sleep quality trend analysis',
@@ -42,7 +42,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'deep-insights',
     name: 'Behavioral Patterns',
-    icon: 'sparkles',
+    icon: 'sparkles-outline',
     description: 'Sleep & mood trends, what restores vs drains you, and emotion shifts',
     freeVersion: 'Basic weekly averages: avg mood, avg sleep quality, and check-in count',
     premiumVersion: 'Full trend charts: sleep & mood patterns over time, what restores vs drains you from your journal, and emotion tone shifts',
@@ -56,7 +56,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'journal',
     name: 'Journal Patterns',
-    icon: 'journal',
+    icon: 'journal-outline',
     description: 'Behavioral trends, keyword lift, and writing insights from your entries',
     freeVersion: 'One daily prompt and a shadow quote at the top of each entry',
     premiumVersion: 'Behavioral trend analysis: keyword lift, emotion tone shifts, writing pattern insights, and transit-mood correlations',
@@ -70,7 +70,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'healing',
     name: 'Healing & Inner Work',
-    icon: 'heart-half',
+    icon: 'heart-half-outline',
     description: 'Attachment styles, fear patterns, and shadow work',
     freeVersion: 'One inner child insight and a daily shadow quote',
     premiumVersion: 'Attachment style themes, fear patterns, safety patterns, shadow work, and journaling prompts tied to your chart',
@@ -84,7 +84,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'relationships',
     name: 'Unlimited Relationships',
-    icon: 'people',
+    icon: 'people-outline',
     description: 'Partner, ex, child, friend — full emotional breakdowns',
     freeVersion: '1 relationship with limited insight',
     premiumVersion: 'Unlimited charts: partner, ex, child, friend — each with full emotional breakdown of how you connect',
@@ -98,7 +98,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'natal-story',
     name: 'Full Personal Story',
-    icon: 'book',
+    icon: 'book-outline',
     description: '10 emotional chapters — how you love, protect, and grow',
     freeVersion: '3 chapters: Core Self, Emotional World, First Impression',
     premiumVersion: '10 deep chapters including How You Love, How You Fight, Your Inner Child, Shadow Work, and more',
@@ -112,7 +112,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'daily-guidance',
     name: 'Personalized Guidance',
-    icon: 'sunny',
+    icon: 'sunny-outline',
     description: 'Key insights, action steps, and evening reflections',
     freeVersion: 'Daily guidance with love, energy, and growth themes',
     premiumVersion: 'Enhanced guidance with key insights, action suggestions, emotional weather, and personalized affirmations',
@@ -126,7 +126,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'chiron-nodes',
     name: 'Chiron & Node Depth',
-    icon: 'compass',
+    icon: 'compass-outline',
     description: 'Sensitivity mapping with body awareness cues',
     freeVersion: 'Awareness cards showing your Node axis and Chiron sensitivity theme',
     premiumVersion: 'Chiron sensitivity mapping with body awareness, integration themes, and Node axis depth',
@@ -140,7 +140,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'pattern-depth',
     name: 'Pattern Depth',
-    icon: 'analytics',
+    icon: 'analytics-outline',
     description: 'Extended stellium narratives and chart pattern details',
     freeVersion: 'Stellium detection and basic pattern overview in your chart',
     premiumVersion: 'Extended narratives with element analysis, retrograde annotations, and conjunction cluster breakdowns',
@@ -154,7 +154,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'pdf-export',
     name: 'PDF Chart Export',
-    icon: 'document-text',
+    icon: 'document-text-outline',
     description: 'Export your personal birth chart and personal story as a shareable PDF keepsake',
     freeVersion: 'Not available',
     premiumVersion: 'Full PDF — cover page, Big Three, all planet placements, house cusps, aspects, and all 10 Personal Story chapters',
@@ -168,7 +168,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
   {
     id: 'encrypted-backup',
     name: 'Encrypted Backup & Restore',
-    icon: 'shield-checkmark',
+    icon: 'shield-checkmark-outline',
     description: 'Full backup & restore with end-to-end encryption',
     freeVersion: 'Not available',
     premiumVersion: 'Encrypted backup & restore — protect and transfer your data with a personal passphrase',

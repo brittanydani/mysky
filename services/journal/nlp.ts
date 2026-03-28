@@ -213,7 +213,7 @@ export function simpleStem(word: string): string {
   if (word.length <= 4) return word;
 
   // Order matters: check longer suffixes first
-  const suffixes = ['ness', 'ment', 'tion', 'sion', 'ing', 'ful', 'ous', 'ive', 'able', 'ible', 'ally', 'ily', 'ely', 'edly', 'led', 'ied', 'ies', 'ing', 'ed', 'ly', 'er', 'es', 's'];
+  const suffixes = ['ness', 'ment', 'tion', 'sion', 'ing', 'ful', 'ous', 'ive', 'able', 'ible', 'ally', 'ily', 'ely', 'edly', 'led', 'ied', 'ies', 'ed', 'ly', 'er', 'es', 's'];
 
   for (const suffix of suffixes) {
     if (word.endsWith(suffix) && word.length - suffix.length >= 3) {

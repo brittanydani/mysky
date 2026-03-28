@@ -167,11 +167,12 @@ export default function InnerWorldScreen() {
             cognitive: !!cognitiveRaw && Object.keys(JSON.parse(cognitiveRaw)).length === 3,
           });
 
-          // Load today's questions per category
+          // Load today's questions per category — use startedAt as per-user seed
+          const userSeed = reflData.startedAt ?? undefined;
           const qs: Record<ReflectionCategory, DayQuestions> = {
-            values: { category: 'values', questions: getTodayQuestions('values', refDate) },
-            archetypes: { category: 'archetypes', questions: getTodayQuestions('archetypes', refDate) },
-            cognitive: { category: 'cognitive', questions: getTodayQuestions('cognitive', refDate) },
+            values: { category: 'values', questions: getTodayQuestions('values', refDate, userSeed) },
+            archetypes: { category: 'archetypes', questions: getTodayQuestions('archetypes', refDate, userSeed) },
+            cognitive: { category: 'cognitive', questions: getTodayQuestions('cognitive', refDate, userSeed) },
           };
           setCategoryQuestions(qs);
           setCategorySealed(sealStatus);
@@ -266,9 +267,9 @@ export default function InnerWorldScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
           style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
         >
-          <MetallicIcon name="arrow-back" size={20} color={PALETTE.lavender} />
+          <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.lavender} />
           <MetallicText style={styles.backText} color={PALETTE.lavender}>Identity</MetallicText>
         </Pressable>
 
@@ -319,7 +320,7 @@ export default function InnerWorldScreen() {
             {/* All Sealed Banner */}
             {allCategoriesSealed && (
               <Animated.View entering={FadeIn.duration(500)} style={styles.sealedBanner}>
-                <MetallicIcon name="shield-checkmark" size={16} color={PALETTE.emerald} />
+                <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.emerald} />
                 <MetallicText style={styles.sealedBannerText} color={PALETTE.emerald}>
                   ALL CATEGORIES SEALED TODAY
                 </MetallicText>
@@ -357,7 +358,7 @@ export default function InnerWorldScreen() {
                             ) : (
                               <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>EXPLORE</Text>
                             )}
-                            {isDone && <MetallicIcon name="checkmark" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
+                            {isDone && <MetallicIcon name="checkmark-outline" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
                           </View>
                         </View>
 
@@ -404,7 +405,7 @@ export default function InnerWorldScreen() {
                     </View>
                     {isSealed && (
                       <View style={styles.categorySealedBadge}>
-                        <MetallicIcon name="lock-closed" size={10} color={PALETTE.emerald} />
+                        <MetallicIcon name="lock-closed-outline" size={10} color={PALETTE.emerald} />
                         <MetallicText style={styles.categorySealedText} color={PALETTE.emerald}>SEALED</MetallicText>
                       </View>
                     )}
@@ -463,7 +464,7 @@ export default function InnerWorldScreen() {
 
                           {hasAnswer && isSealed && (
                             <View style={styles.answerMeta}>
-                              <MetallicIcon name="lock-closed" size={11} color={PALETTE.emerald} />
+                              <MetallicIcon name="lock-closed-outline" size={11} color={PALETTE.emerald} />
                               <Text style={[styles.answerMetaText, { color: PALETTE.emerald }]}>
                                 Sealed
                               </Text>
@@ -487,7 +488,7 @@ export default function InnerWorldScreen() {
                       disabled={!allAnswered}
                     >
                       <MetallicIcon
-                        name="shield-checkmark"
+                        name="shield-checkmark-outline"
                         size={16}
                         color={allAnswered ? color : PALETTE.textMuted}
                       />
@@ -530,7 +531,7 @@ export default function InnerWorldScreen() {
                   <MetallicText style={styles.pastLinkText} color={PALETTE.gold}>
                     View Past Reflections
                   </MetallicText>
-                  <MetallicIcon name="chevron-forward" size={14} color={PALETTE.gold} />
+                  <MetallicIcon name="chevron-forward-outline" size={14} color={PALETTE.gold} />
                 </Pressable>
               </Animated.View>
             )}

@@ -118,21 +118,21 @@ function translateChartThemes(themes: ChartThemeCard[]): BlueprintTheme[] {
   return themes.map(theme => {
     switch (theme.source) {
       case 'moon':
-        return { title: 'Emotional Core', body: theme.body, icon: '🌙' };
+        return { title: 'Emotional Core', body: theme.body, icon: '☽' };
       case 'saturn':
-        return { title: 'Growth Edge', body: theme.body, icon: '🌿' };
+        return { title: 'Growth Edge', body: theme.body, icon: '⌘' };
       case 'chiron':
-        return { title: 'Sensitivity Zone', body: theme.body, icon: '🔑' };
+        return { title: 'Sensitivity Zone', body: theme.body, icon: '⚷' };
       case 'element':
         if (theme.label.startsWith('Dominant Modality')) {
-          return { title: 'How You Move Through Change', body: theme.body, icon: '🌀' };
+          return { title: 'How You Move Through Change', body: theme.body, icon: '◌' };
         }
         return { title: 'Your Inner Nature', body: theme.body, icon: '✦' };
       case 'house':
         if (theme.label.includes('6th')) {
-          return { title: 'Daily Rhythm & Wellbeing', body: theme.body, icon: '⚙️' };
+          return { title: 'Daily Rhythm & Wellbeing', body: theme.body, icon: '⚙' };
         }
-        return { title: 'Rest & Inner Life', body: theme.body, icon: '🌌' };
+        return { title: 'Rest & Inner Life', body: theme.body, icon: '✧' };
       default:
         return { title: theme.label, body: theme.body, icon: '◎' };
     }

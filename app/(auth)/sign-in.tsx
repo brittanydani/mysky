@@ -85,12 +85,12 @@ export default function SignInScreen() {
       >
         {/* Close button */}
         <Pressable style={styles.closeBtn} onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/growth')}>
-          <Ionicons name="close" size={24} color={theme.textSecondary} />
+          <Ionicons name="close-outline" size={24} color={theme.textSecondary} />
         </Pressable>
 
         {/* Header */}
         <View style={styles.header}>
-          <Ionicons name="sparkles" size={32} color={theme.primary} />
+          <Ionicons name="sparkles-outline" size={32} color={theme.primary} />
           <Text style={styles.title}>
             {mode === 'sign-in' ? 'Welcome back' : 'Create your account'}
           </Text>

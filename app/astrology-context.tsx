@@ -244,7 +244,7 @@ export default function CosmicContext() {
 
   const handleBack = () => {
     Haptics.selectionAsync();
-    router.back();
+    router.replace('/(tabs)/blueprint');
   };
 
   return (
@@ -253,8 +253,8 @@ export default function CosmicContext() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable onPress={handleBack} style={styles.backBtn}>
-          <MetallicIcon name="arrow-back" size={20} color="#D4B872" />
-          <MetallicText style={styles.backText} color="#D4B872">Home</MetallicText>
+          <MetallicIcon name="arrow-back-outline" size={20} color="#D4B872" />
+          <MetallicText style={styles.backText} color="#D4B872">Identity</MetallicText>
         </Pressable>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

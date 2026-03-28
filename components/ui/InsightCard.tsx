@@ -96,7 +96,7 @@ function InsightCard({
 
             {locked && (
               <View style={styles.lockedBadge}>
-                <MetallicIcon name="sparkles" size={10} color={PALETTE.amethyst} />
+                <MetallicIcon name="sparkles-outline" size={10} color={PALETTE.amethyst} />
                 <Text style={styles.lockedText}>{lockedText}</Text>
               </View>
             )}
@@ -105,7 +105,7 @@ function InsightCard({
           {locked ? (
             <MetallicIcon name="lock-closed-outline" size={16} color={PALETTE.amethyst} style={styles.lockIcon} />
           ) : (
-            <Ionicons name="chevron-forward" size={16} color={luxuryTheme.text.muted} />
+            <Ionicons name="chevron-forward-outline" size={16} color={luxuryTheme.text.muted} />
           )}
         </View>
 
@@ -121,7 +121,7 @@ function InsightCard({
             <Text style={styles.lockedHintText}>
               {lockedHint || 'Tap to unlock this insight'}
             </Text>
-            <MetallicIcon name="arrow-forward" size={12} color={PALETTE.amethyst} />
+            <MetallicIcon name="arrow-forward-outline" size={12} color={PALETTE.amethyst} />
           </View>
         )}
       </View>

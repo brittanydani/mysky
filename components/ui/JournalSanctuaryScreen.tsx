@@ -165,7 +165,7 @@ export const JournalSanctuaryScreen = () => {
           accessibilityRole="button"
           accessibilityLabel="Back to journal"
         >
-          <Ionicons name="chevron-back" color="#FFFFFF" size={28} />
+          <Ionicons name="chevron-back-outline" color="#FFFFFF" size={28} />
         </Pressable>
 
         <View style={styles.saveContainer}>

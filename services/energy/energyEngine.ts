@@ -618,20 +618,26 @@ const GUIDANCE: Record<string, EnergyGuidance> = {
   },
 };
 
-const FREE_GUIDANCE_LINES: Record<string, string> = {
-  Aries:       'Move your body before you make a decision.',
-  Taurus:      'Slow down — your best choices arrive with patience.',
-  Gemini:      'Name it out loud; clarity lives in conversation.',
-  Cancer:      'Protect your softness; choose who gets access.',
-  Leo:         'Let yourself be seen — dimming does not serve anyone.',
-  Virgo:       'Fix the one small thing; let the rest wait.',
-  Libra:       'Choose the honest thing over the comfortable thing.',
-  Scorpio:     'Tell yourself the truth first.',
-  Sagittarius: 'Expand your perspective before you react.',
-  Capricorn:   'Do the next right thing — then let it be enough.',
-  Aquarius:    'Step back to see clearly; then reconnect.',
-  Pisces:      'Less input, more inner listening.',
+const FREE_GUIDANCE_POOL: Record<string, string[]> = {
+  Aries:       ['Move your body before you make a decision.', 'Channel the impulse — act on one clear thing.', 'Pause for three breaths before reacting.'],
+  Taurus:      ['Slow down — your best choices arrive with patience.', 'Trust what your body is telling you right now.', 'Comfort is not laziness. Let yourself settle.'],
+  Gemini:      ['Name it out loud; clarity lives in conversation.', 'Pick one thread and follow it all the way.', 'Write three sentences about what is on your mind.'],
+  Cancer:      ['Protect your softness; choose who gets access.', 'Your feelings are data — listen before you dismiss them.', 'Create one small pocket of safety for yourself today.'],
+  Leo:         ['Let yourself be seen — dimming does not serve anyone.', 'Create something, even something small, just for you.', 'Tell someone what they mean to you.'],
+  Virgo:       ['Fix the one small thing; let the rest wait.', 'Good enough is still good. Release the rest.', 'Your attention to detail is a superpower — point it at one thing.'],
+  Libra:       ['Choose the honest thing over the comfortable thing.', 'Balance is not stillness — it is constant micro-adjustment.', 'Your own opinion counts. State it.'],
+  Scorpio:     ['Tell yourself the truth first.', 'Go deeper on one thought instead of wider on many.', 'Honesty with yourself is the first act of power.'],
+  Sagittarius: ['Expand your perspective before you react.', 'Step outside — even five minutes of sky resets your frame.', 'Ask: what is the larger pattern here?'],
+  Capricorn:   ['Do the next right thing — then let it be enough.', 'Rest is not wasted time. Schedule it.', 'One meaningful step beats ten urgent ones.'],
+  Aquarius:    ['Step back to see clearly; then reconnect.', 'Try the unconventional approach first.', 'Your difference is not a bug — it is the feature.'],
+  Pisces:      ['Less input, more inner listening.', 'Ground before you absorb. Your boundaries matter.', 'Trust what arrives without effort today.'],
 };
+
+function getFreeGuidanceLine(moonSign: string, date: Date): string {
+  const pool = FREE_GUIDANCE_POOL[moonSign] ?? ['Listen to your body today.'];
+  const doy = dayOfYear(date);
+  return pool[doy % pool.length];
+}
 
 // ── Behavior Context (mood, journal, patterns) ──────────────
 
@@ -675,7 +681,11 @@ export class EnergyEngine {
       driver += moodHint;
     }
 
-    const quickMeaning = QUICK_MEANINGS[moonSign] ?? 'Your energy is in flux — tune inward for clarity.';
+    const baseQuickMeaning = QUICK_MEANINGS[moonSign] ?? 'Your energy is in flux — tune inward for clarity.';
+    // Add house context when the transit Moon's natal house is known
+    const quickMeaning = moonHouse
+      ? `${baseQuickMeaning} This is activating your ${moonHouse}${this.ordinalSuffix(moonHouse)} house — ${this.houseThemeHint(moonHouse)}.`
+      : baseQuickMeaning;
 
     // 2. Chakras
     const chakras = this.buildChakras(chart, moonSign, moonElement);
@@ -688,7 +698,7 @@ export class EnergyEngine {
 
     // 4. Guidance
     const guidance = GUIDANCE[moonSign] ?? GUIDANCE.Cancer;
-    const freeGuidanceLine = FREE_GUIDANCE_LINES[moonSign] ?? 'Listen to your body today.';
+    const freeGuidanceLine = getFreeGuidanceLine(moonSign, date);
 
     // 5. Moon phase
     const { phase, emoji } = getMoonPhase(date);
@@ -783,6 +793,24 @@ export class EnergyEngine {
     const s = ['th', 'st', 'nd', 'rd'];
     const v = n % 100;
     return (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
+  private static houseThemeHint(house: number): string {
+    const hints: Record<number, string> = {
+      1: 'identity and how you present yourself',
+      2: 'security, comfort, and self-worth',
+      3: 'communication, learning, and daily exchanges',
+      4: 'home, emotional roots, and inner safety',
+      5: 'creativity, joy, and self-expression',
+      6: 'health, routines, and daily service',
+      7: 'relationships, partnership, and mirroring',
+      8: 'depth, trust, and emotional transformation',
+      9: 'meaning, growth, and broadening perspective',
+      10: 'career, public role, and long-term purpose',
+      11: 'community, friendship, and shared vision',
+      12: 'rest, solitude, and the inner world',
+    };
+    return hints[house] ?? 'a personal area of your chart';
   }
 
   private static buildChakras(
@@ -895,7 +923,7 @@ export class EnergyEngine {
       const moodSignal = behavior.recentMoodScore <= 3 ? 1
                        : behavior.recentMoodScore <= 7 ? 2
                        : 3;
-      score = Math.round(score * 0.6 + moodSignal * 0.4);
+      score = score * 0.6 + moodSignal * 0.4;
     }
 
     // Factor in self-reported energy level
@@ -903,7 +931,7 @@ export class EnergyEngine {
       const energySignal = behavior.recentEnergyLevel === 'low' ? 1
                          : behavior.recentEnergyLevel === 'medium' ? 2
                          : 3;
-      score = Math.round(score * 0.7 + energySignal * 0.3);
+      score = score * 0.7 + energySignal * 0.3;
     }
 
     // Factor in stress level (high stress → higher intensity)
@@ -915,6 +943,7 @@ export class EnergyEngine {
       if (stressSignal === 3 && score < 3) score = Math.min(3, score + 1);
     }
 
-    return reverseMap[Math.max(1, Math.min(3, score))] ?? 'Moderate';
+    // Round once at the end to avoid compounding rounding errors
+    return reverseMap[Math.max(1, Math.min(3, Math.round(score)))] ?? 'Moderate';
   }
 }

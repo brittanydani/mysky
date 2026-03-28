@@ -39,9 +39,9 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   const [hasData, setHasData] = useState(false);
   const [consentRecord, setConsentRecord] = useState<{
     granted: boolean;
-    required: boolean;
     expired?: boolean;
     policyVersion?: string;
+    timestamp?: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const compliance = new PrivacyComplianceManager();
@@ -145,7 +145,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Privacy & Data</Text>
             <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={15}>
-              <Ionicons name="close" size={24} color={PALETTE.textMain} />
+              <Ionicons name="close-outline" size={24} color={PALETTE.textMain} />
             </Pressable>
           </View>
 

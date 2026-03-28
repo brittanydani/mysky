@@ -82,7 +82,7 @@ const CATEGORIES: CalibrationCategory[] = [
   {
     id: 'steady_flow',
     label: 'Flow',
-    icon: 'water',
+    icon: 'water-outline',
     prompt: 'Choose the color that feels most like your calm, balanced state.',
     defaultHue: 0.25,
     defaultSensitivity: 0.6,
@@ -90,7 +90,7 @@ const CATEGORIES: CalibrationCategory[] = [
   {
     id: 'high_energy',
     label: 'Energy',
-    icon: 'flash',
+    icon: 'flash-outline',
     prompt: 'Pick the color that matches your most energized, excited feeling.',
     defaultHue: 0.85,
     defaultSensitivity: 0.8,
@@ -98,7 +98,7 @@ const CATEGORIES: CalibrationCategory[] = [
   {
     id: 'deep_focus',
     label: 'Focus',
-    icon: 'eye',
+    icon: 'eye-outline',
     prompt: 'Select the color that represents deep concentration and clarity.',
     defaultHue: 0.42,
     defaultSensitivity: 0.7,
@@ -106,7 +106,7 @@ const CATEGORIES: CalibrationCategory[] = [
   {
     id: 'rest_recovery',
     label: 'Rest',
-    icon: 'moon',
+    icon: 'moon-outline',
     prompt: 'Choose the color that feels like winding down and restoring.',
     defaultHue: 0.58,
     defaultSensitivity: 0.5,
@@ -114,7 +114,7 @@ const CATEGORIES: CalibrationCategory[] = [
   {
     id: 'creative_spark',
     label: 'Creative',
-    icon: 'sparkles',
+    icon: 'sparkles-outline',
     prompt: 'Pick the color that captures your inspired, playful energy.',
     defaultHue: 0.08,
     defaultSensitivity: 0.75,
@@ -401,7 +401,7 @@ export default function VisualCalibration() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color="#F8FAFC" />
+          <Ionicons name="chevron-back-outline" size={24} color="#F8FAFC" />
         </Pressable>
 
         <ScrollView
@@ -446,7 +446,7 @@ export default function VisualCalibration() {
                   <View style={[styles.summaryChip, { backgroundColor: prof.color }]} />
                   <Text style={[styles.summaryValue, isCurrent && styles.summaryValueActive]}>{prof.label}</Text>
                   {isCurrent && (
-                    <GoldIcon name="pencil" size={12}  style={{ marginLeft: 4 }}  />
+                    <GoldIcon name="pencil-outline" size={12}  style={{ marginLeft: 4 }}  />
                   )}
                 </Pressable>
               );
@@ -535,7 +535,7 @@ export default function VisualCalibration() {
             accessibilityLabel="Save color preferences"
           >
             <Ionicons
-              name="checkmark-circle"
+              name="checkmark-circle-outline"
               size={20}
               color={hasUnsavedChanges ? '#0A0A0C' : 'rgba(10,10,12,0.4)'}
             />
@@ -556,7 +556,7 @@ export default function VisualCalibration() {
               exiting={FadeOut.duration(300)}
               style={styles.savedBanner}
             >
-              <MetallicIcon name="checkmark-circle" size={18} color="#6EBF8B" />
+              <MetallicIcon name="checkmark-circle-outline" size={18} color="#6EBF8B" />
               <MetallicText style={styles.savedBannerText} color="#6EBF8B">
                 All color atmospheres saved
               </MetallicText>

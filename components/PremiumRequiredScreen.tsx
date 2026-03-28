@@ -86,7 +86,7 @@ export default function PremiumRequiredScreen({
         <SkiaMetallicPill
           label="View Subscription Plans"
           onPress={() => router.push('/(tabs)/premium' as Href)}
-          icon={<Ionicons name="arrow-forward" size={18} color="#020817" />}
+          icon={<Ionicons name="arrow-forward-outline" size={18} color="#020817" />}
         />
 
         <Text style={styles.priceHint}>Deeper Sky subscription required • Private & Secure</Text>

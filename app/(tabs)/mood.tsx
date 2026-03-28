@@ -520,7 +520,7 @@ export default function MoodCheckIn() {
           hitSlop={12}
           style={styles.dateArrow}
         >
-          <Ionicons name="chevron-back" size={18} color={canGoBack() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
+          <Ionicons name="chevron-back-outline" size={18} color={canGoBack() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
         </Pressable>
         <Text style={styles.dateNavLabel}>{formatDisplayDate(selectedDate)}</Text>
         <Pressable
@@ -529,7 +529,7 @@ export default function MoodCheckIn() {
           hitSlop={12}
           style={styles.dateArrow}
         >
-          <Ionicons name="chevron-forward" size={18} color={canGoForward() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
+          <Ionicons name="chevron-forward-outline" size={18} color={canGoForward() ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.15)'} />
         </Pressable>
       </View>
 
@@ -589,9 +589,9 @@ export default function MoodCheckIn() {
                 style={[styles.tagButton, styles.tagButtonSelected]}
                 onPress={() => { Haptics.selectionAsync(); setCustomInfluence(''); }}
               >
-                <Ionicons name="add-circle" size={13} color="#050507" style={styles.tagIcon} />
+                <Ionicons name="add-circle-outline" size={13} color="#050507" style={styles.tagIcon} />
                 <Text style={[styles.tagText, styles.tagTextSelected]}>{customInfluence.trim()}</Text>
-                <Ionicons name="close" size={12} color="#050507" style={{ marginLeft: 3 }} />
+                <Ionicons name="close-outline" size={12} color="#050507" style={{ marginLeft: 3 }} />
               </Pressable>
             )}
           </View>
@@ -656,9 +656,9 @@ export default function MoodCheckIn() {
                     style={[styles.tagButton, styles.tagButtonSelectedPremium]}
                     onPress={() => { Haptics.selectionAsync(); setCustomEmotion(''); }}
                   >
-                    <Ionicons name="add-circle" size={13} color="#FFF" style={styles.tagIcon} />
+                    <Ionicons name="add-circle-outline" size={13} color="#FFF" style={styles.tagIcon} />
                     <Text style={[styles.tagText, { color: '#FFF', fontWeight: 'bold' }]}>{customEmotion.trim()}</Text>
-                    <Ionicons name="close" size={12} color="#FFF" style={{ marginLeft: 3 }} />
+                    <Ionicons name="close-outline" size={12} color="#FFF" style={{ marginLeft: 3 }} />
                   </Pressable>
                 )}
               </View>

@@ -66,7 +66,7 @@ export default function SanctuaryWorkspace() {
 
       {/* Header controls fade out when typing for focus */}
       <View style={styles.header}>
-        <Pressable onPress={() => { Haptics.selectionAsync(); router.back(); }} style={styles.iconButton}>
+        <Pressable onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/blueprint'); }} style={styles.iconButton}>
           <Text style={styles.iconText}>×</Text>
         </Pressable>
         <Pressable onPress={handleSeal} style={[styles.iconButton, { marginRight: 8 }]}>

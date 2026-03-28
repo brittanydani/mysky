@@ -5,8 +5,8 @@
  * tabular metric precision, and refined glassmorphism.
  */
 
-import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,6 +34,10 @@ import { enhancePatternInsights } from '../../services/insights/geminiInsightsSe
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { useCorrelationStore } from '../../store/correlationStore';
+import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/insightsPdfExport';
+import { DailyAggregate, ChartProfile } from '../../services/insights/types';
+import { PipelineResult } from '../../services/insights/types';
 
 // ── Unified 5-Hub Palette ──
 const PALETTE = {
@@ -94,17 +98,25 @@ export default function InsightsScreen() {
   const [enhanced, setEnhanced] = useState<EnhancedInsightBundle | null>(null);
   const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
   const syncRhythm = useCircadianStore((s) => s.syncRhythm);
+  const circadianGrid = useCircadianStore((s) => s.grid);
+  const correlations = useCorrelationStore((s) => s.correlations);
+  const syncCorrelations = useCorrelationStore((s) => s.syncCorrelations);
+  const [isExporting, setIsExporting] = useState(false);
+  const pipelineRef = useRef<{ aggregates: DailyAggregate[]; profile: ChartProfile | null; windowDays: number; totalCheckIns: number; totalJournalEntries: number } | null>(null);
+  const chartNameRef = useRef<string | undefined>(undefined);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       syncRhythm().catch(() => {});
+      syncCorrelations().catch(() => {});
       (async () => {
         try {
           const charts = await localDb.getCharts();
           if (!charts?.length) return;
 
           const chartId = charts[0].id;
+          chartNameRef.current = charts[0].name ?? undefined;
           const checkIns = await localDb.getCheckIns(chartId, 30);
           if (!checkIns.length) return;
 
@@ -177,6 +189,13 @@ export default function InsightsScreen() {
               const extCheckIns = await localDb.getCheckIns(chartId, 90);
               const journalEntries = await localDb.getJournalEntriesPaginated(90);
               const pipelineResult = runPipeline({ checkIns: extCheckIns, journalEntries, chart: natalChart, todayContext: null });
+              pipelineRef.current = {
+                aggregates: pipelineResult.dailyAggregates,
+                profile: pipelineResult.chartProfile,
+                windowDays: pipelineResult.windowDays,
+                totalCheckIns: pipelineResult.totalCheckIns,
+                totalJournalEntries: pipelineResult.totalJournalEntries,
+              };
               setEnhanced(computeEnhancedInsights(pipelineResult.dailyAggregates, pipelineResult.chartProfile));
             } catch (e) {
               logger.error('Enhanced insights pipeline failed:', e);
@@ -187,7 +206,7 @@ export default function InsightsScreen() {
         }
       })();
       return () => { active = false; };
-    }, [isPremium, syncRhythm])
+    }, [isPremium, syncRhythm, syncCorrelations])
   );
 
   const nav = (route: string) => {
@@ -233,6 +252,33 @@ export default function InsightsScreen() {
 
   const prompt = getDailyPrompt();
 
+  const handleExportPdf = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const pipe = pipelineRef.current;
+      const input: InsightsPdfInput = {
+        userName: chartNameRef.current,
+        snapshot,
+        dailyAggregates: pipe?.aggregates ?? [],
+        chartProfile: pipe?.profile ?? null,
+        enhanced,
+        circadianGrid,
+        correlations,
+        crossRefs,
+        windowDays: pipe?.windowDays ?? 30,
+        totalCheckIns: pipe?.totalCheckIns ?? snapshot.checkInCount,
+        totalJournalEntries: pipe?.totalJournalEntries ?? 0,
+      };
+      await exportInsightsToPdf(input);
+    } catch (e) {
+      logger.error('PDF export failed:', e);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -243,14 +289,33 @@ export default function InsightsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+          <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
         </Pressable>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
-            <Text style={styles.title}>Insights</Text>
-            <GoldSubtitle style={styles.subtitle}>Personalized patterns & rhythmic guidance</GoldSubtitle>
+            <View style={styles.headerRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.title}>Insights</Text>
+                <GoldSubtitle style={styles.subtitle}>Personalized patterns & rhythmic guidance</GoldSubtitle>
+              </View>
+              {isPremium && (
+                <Pressable
+                  onPress={handleExportPdf}
+                  disabled={isExporting}
+                  style={styles.exportButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Download insights report"
+                >
+                  {isExporting ? (
+                    <ActivityIndicator size="small" color={PALETTE.gold} />
+                  ) : (
+                    <MetallicIcon name="download-outline" size={20} variant="gold" />
+                  )}
+                </Pressable>
+              )}
+            </View>
           </Animated.View>
 
           {/* ── Hub 1: Daily Reflection Prompt ── */}
@@ -372,7 +437,7 @@ export default function InsightsScreen() {
                     <MetallicText style={styles.cosmicTitle} variant="gold">Cosmic Context</MetallicText>
                     <Text style={styles.cosmicSubtitle}>View today's transits and influences</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+                  <Ionicons name="chevron-forward-outline" size={18} color="rgba(255,255,255,0.3)" />
                 </View>
               </LinearGradient>
             </Pressable>
@@ -409,6 +474,18 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingBottom: 120 },
 
   header: { marginTop: 20, marginBottom: 28 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  exportButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(212,175,55,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
   title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
   subtitle: { fontSize: 14 },
 

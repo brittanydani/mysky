@@ -336,6 +336,36 @@ export class TodayContentEngine {
     const cHash = chartHash(chart);
     const timeOfDay = getTimeOfDay(date);
 
+    // ─── Derive dominant element for fallback personalization ───
+    const elementWeights: Record<string, number> = {};
+    for (const [tag, w] of profile.tags) {
+      if (['fire', 'earth', 'air', 'water'].includes(tag)) {
+        elementWeights[tag] = (elementWeights[tag] || 0) + w;
+      }
+    }
+    const dominantEl = Object.entries(elementWeights).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+
+    const fallbackAffirmations: Record<string, string> = {
+      fire: 'I trust my instinct to act — it has carried me this far.',
+      earth: 'I am building something real, one patient step at a time.',
+      air: 'My mind is a gift. I choose where to direct it today.',
+      water: 'I honour what I feel. My depth is my compass.',
+    };
+
+    const fallbackReflections: Record<string, string> = {
+      fire: 'Where is my energy wanting to go today — and am I letting it?',
+      earth: 'What one practical thing would make today feel more grounded?',
+      air: 'What idea has been circling that deserves my full attention?',
+      water: 'What am I feeling right now that I haven\'t named yet?',
+    };
+
+    const fallbackWeather: Record<string, string> = {
+      fire: 'Your fire wants expression today. Let it move through you.',
+      earth: 'Steady rhythms serve you best today. Trust your body\'s pace.',
+      air: 'Your mind is active — channel the clarity into one meaningful direction.',
+      water: 'Sensitivity is heightened. Move gently and honour what surfaces.',
+    };
+
     // ─── Select Affirmation ───
     const affirmationRecentIds = await getRecentlyShownIds('affirmation');
     const affirmationScored: ContentSelection[] = AFFIRMATION_LIBRARY.map(item => ({
@@ -347,7 +377,7 @@ export class TodayContentEngine {
       affirmationScored, affirmationRecentIds, dHash, cHash,
     );
 
-    let affirmation = 'I trust my own timing.';
+    let affirmation = fallbackAffirmations[dominantEl] || 'I trust my own timing.';
     let affirmationSource = 'universal';
     if (selectedAffirmation) {
       const item = AFFIRMATION_LIBRARY.find(a => a.id === selectedAffirmation.id);
@@ -369,7 +399,7 @@ export class TodayContentEngine {
       reflectionScored, reflectionRecentIds, dateHash(date, 1), cHash,
     );
 
-    let reflection = 'What is one thing I can do today that my future self will be grateful for?';
+    let reflection = fallbackReflections[dominantEl] || 'What is one thing I can do today that my future self will be grateful for?';
     let reflectionSource = 'universal';
     if (selectedReflection) {
       const item = REFLECTION_LIBRARY.find(r => r.id === selectedReflection.id);
@@ -391,7 +421,7 @@ export class TodayContentEngine {
       weatherScored, weatherRecentIds, dateHash(date, 2), cHash,
     );
 
-    let cosmicWeather = 'Follow your own rhythm today. Trust what feels right.';
+    let cosmicWeather = fallbackWeather[dominantEl] || 'Follow your own rhythm today. Trust what feels right.';
     if (selectedWeather) {
       const item = COSMIC_WEATHER_LIBRARY.find(w => w.id === selectedWeather.id);
       if (item) {
@@ -451,7 +481,14 @@ function buildSourceDescription(contentTags: ContentTag[], profile: TagProfile):
     }
   }
 
-  if (parts.length === 0) return 'Your personal blueprint';
+  if (parts.length === 0) {
+    // Derive a meaningful fallback from the profile's strongest tag
+    const strongest = [...profile.tags.entries()]
+      .filter(([t]) => t !== 'universal')
+      .sort((a, b) => b[1] - a[1])[0];
+    if (strongest) return formatTagForDisplay(strongest[0]);
+    return 'Your personal blueprint';
+  }
   if (parts.length === 1) return parts[0];
   if (parts.length === 2) return `${parts[0]} × ${parts[1]}`;
   return `${parts[0]} × ${parts[1]} + more`;

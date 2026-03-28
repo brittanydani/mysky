@@ -289,6 +289,7 @@ function normalize<K extends string>(weights: Record<K, number>): Record<K, numb
   if (total === 0) {
     // Equal distribution
     const keys = Object.keys(weights) as K[];
+    if (keys.length === 0) return {} as Record<K, number>;
     const equal = 1 / keys.length;
     const result = {} as Record<K, number>;
     for (const k of keys) result[k] = equal;
@@ -302,7 +303,9 @@ function normalize<K extends string>(weights: Record<K, number>): Record<K, numb
 }
 
 function maxKey<K extends string>(obj: Record<K, number>): K {
-  let best: K = Object.keys(obj)[0] as K;
+  const keys = Object.keys(obj) as K[];
+  if (keys.length === 0) return '' as K;
+  let best: K = keys[0];
   let bestVal = -Infinity;
   for (const [k, v] of Object.entries(obj) as [K, number][]) {
     if (v > bestVal) {

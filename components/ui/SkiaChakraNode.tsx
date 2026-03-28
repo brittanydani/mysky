@@ -336,10 +336,7 @@ export function SkiaChakraGlyph({ name, size = 44, variant = 'sphere' }: SkiaCha
   const specStart = vec(size * 0.28, size * 0.28);
   const specEnd   = vec(size * 0.95, size * 0.95);
 
-  const { paths: symbolPaths, circles: symbolCircles } = useMemo(
-    () => getSkiaPathsForChakra(name, center, center, yantraR),
-    [name, center, yantraR],
-  );
+  const { paths: symbolPaths, circles: symbolCircles } = getSkiaPathsForChakra(name, center, center, yantraR);
 
   return (
     <Canvas style={{ width: size, height: size }}>

@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter, Href } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
@@ -41,6 +42,7 @@ export default function OnboardingConsentScreen() {
     Haptics.selectionAsync().catch(() => {});
     try {
       await AsyncStorage.setItem(TERMS_KEY, JSON.stringify({ accepted: true, version: TERMS_VERSION, at: new Date().toISOString() }));
+      await SecureStore.setItemAsync('terms_consent', 'true');
 
       // Record consent through the privacy compliance system so SecureStore,
       // the lawful-basis audit trail, and consent history all stay in sync.
@@ -77,7 +79,7 @@ export default function OnboardingConsentScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
           <Text style={styles.headerTitle}>Before you continue</Text>
           <View style={styles.backButton} />
@@ -124,7 +126,7 @@ export default function OnboardingConsentScreen() {
               accessibilityState={{ checked }}
             >
               <View style={[styles.checkbox, checked && styles.checkboxOn]}>
-                {checked && <Ionicons name="checkmark" size={16} color="#0B1220" />}
+                {checked && <Ionicons name="checkmark-outline" size={16} color="#0B1220" />}
               </View>
               <Text style={styles.checkText}>
                 I agree to the Terms of Use and Privacy Policy.
@@ -135,7 +137,7 @@ export default function OnboardingConsentScreen() {
               label={saving ? 'Saving...' : 'Accept & Continue'}
               onPress={accept}
               disabled={!checked || saving}
-              icon={!saving ? <Ionicons name="arrow-forward" size={18} color="#020817" /> : undefined}
+              icon={!saving ? <Ionicons name="arrow-forward-outline" size={18} color="#020817" /> : undefined}
             />
 
             <Text style={styles.note}>

@@ -132,7 +132,7 @@ export default function TermsConsentModal({ visible, onConsent }: TermsConsentMo
                       </View>
                     </View>
 
-                    <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+                    <Ionicons name="chevron-forward-outline" size={18} color={theme.textMuted} />
                   </Pressable>
                 ))}
               </View>

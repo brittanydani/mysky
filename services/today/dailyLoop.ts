@@ -106,7 +106,7 @@ function getMilestone(streak: number): number | null {
 // Energy / Stress numeric mapping (matches home.tsx and insightsEngine.ts)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ENERGY_MAP: Record<string, number> = { low: 3, medium: 5, high: 8 };
+const ENERGY_MAP: Record<string, number> = { low: 2, medium: 5, high: 8 };
 const STRESS_MAP: Record<string, number> = { low: 2, medium: 5, high: 8 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@ export async function getStreakStatus(chartId: string): Promise<StreakStatus> {
       checkedInToday,
       atRisk,
       totalCheckIns,
-      milestone: getMilestone(streak),
+      milestone: getMilestone(displayStreak),
       daysSinceLastCheckIn,
     };
   } catch (e) {
@@ -295,7 +295,16 @@ function buildWeeklySummary(data: {
     if (data.checkInCount === 0) {
       return 'Start tracking this week to see your first weekly reflection.';
     }
-    return `You've checked in ${data.checkInCount} time${data.checkInCount === 1 ? '' : 's'} this week. A few more entries will unlock your weekly summary.`;
+    if (data.checkInCount === 1) {
+      const moodHint = data.avgMood >= 7 ? 'Your first entry shows a positive start.'
+        : data.avgMood >= 5 ? 'Your first entry logged a steady baseline.'
+        : 'Your first entry captured a heavier moment — that honesty is valuable.';
+      return `You've checked in once this week. ${moodHint} A few more entries will unlock your full weekly summary.`;
+    }
+    const moodHint = data.avgMood >= 7 ? 'So far your mood is trending positive.'
+      : data.avgMood >= 5 ? 'Your mood has been steady so far.'
+      : 'Your entries suggest a harder stretch — tracking through it builds real insight.';
+    return `You've checked in ${data.checkInCount} times this week. ${moodHint} A couple more entries will unlock your weekly summary.`;
   }
 
   const moodLabel =
@@ -566,6 +575,48 @@ const ENCOURAGEMENTS: DailyInsight[] = [
     type: 'encouragement',
     accentColor: 'silverBlue',
     icon: 'moon-outline',
+  },
+  {
+    text: 'Small moments of honesty with yourself accumulate into real self-knowledge. Keep going.',
+    type: 'encouragement',
+    accentColor: 'gold',
+    icon: 'sparkles-outline',
+  },
+  {
+    text: 'Your body keeps score even when your mind moves on. Checking in bridges that gap.',
+    type: 'encouragement',
+    accentColor: 'rose',
+    icon: 'body-outline',
+  },
+  {
+    text: 'There is no wrong way to feel. What matters is that you noticed.',
+    type: 'encouragement',
+    accentColor: 'emerald',
+    icon: 'eye-outline',
+  },
+  {
+    text: 'Even one data point is the beginning of a pattern. You are already building your own map.',
+    type: 'encouragement',
+    accentColor: 'gold',
+    icon: 'map-outline',
+  },
+  {
+    text: 'Self-awareness is not about fixing — it is about seeing clearly. You are doing that now.',
+    type: 'encouragement',
+    accentColor: 'silverBlue',
+    icon: 'compass-outline',
+  },
+  {
+    text: 'Difficult feelings are not failures. They are information. Let them teach you something.',
+    type: 'encouragement',
+    accentColor: 'rose',
+    icon: 'cloudy-outline',
+  },
+  {
+    text: 'What you track consistently becomes something you can actually understand and change.',
+    type: 'encouragement',
+    accentColor: 'emerald',
+    icon: 'analytics-outline',
   },
 ];
 

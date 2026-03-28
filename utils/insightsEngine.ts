@@ -319,8 +319,8 @@ export interface InsightBundle {
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ENERGY_MAP: Record<EnergyLevel, number> = { low: 2, medium: 5, high: 9 };
-const STRESS_MAP: Record<StressLevel, number> = { low: 2, medium: 5, high: 9 };
+const ENERGY_MAP: Record<EnergyLevel, number> = { low: 2, medium: 5, high: 8 };
+const STRESS_MAP: Record<StressLevel, number> = { low: 2, medium: 5, high: 8 };
 
 function energyToNum(e: EnergyLevel): number { return ENERGY_MAP[e] ?? 5; }
 function stressToNum(s: StressLevel): number { return STRESS_MAP[s] ?? 5; }
@@ -436,11 +436,12 @@ const TOD_FIELD_TO_LABEL: Record<string, TODBucketLabel> = {
   night: 'Night',
 };
 
-/** Fallback: infer time-of-day from createdAt hour (for legacy data) */
+/** Fallback: infer time-of-day from createdAt hour (for legacy data).
+ *  Boundaries match detectTimeOfDay() in checkInService.ts. */
 function bucketHour(h: number): TODBucketLabel {
-  if (h >= 5 && h < 12) return 'Morning';
-  if (h >= 12 && h < 17) return 'Afternoon';
-  if (h >= 17 && h < 21) return 'Evening';
+  if (h >= 6  && h < 12) return 'Morning';
+  if (h >= 12 && h < 18) return 'Afternoon';
+  if (h >= 18 && h < 22) return 'Evening';
   return 'Night';
 }
 
@@ -522,9 +523,9 @@ function buildMetricInsights(buckets: TimeOfDayBucket[]): TimeOfDayMetricInsight
     extract: (b: TimeOfDayBucket) => number;
     higherIsBetter: boolean;
   }> = [
-    { key: 'mood', emoji: '💛', label: 'Mood', extract: b => b.avgMood, higherIsBetter: true },
-    { key: 'energy', emoji: '⚡', label: 'Energy', extract: b => b.avgEnergy, higherIsBetter: true },
-    { key: 'stress', emoji: '🔥', label: 'Stress', extract: b => b.avgStress, higherIsBetter: false },
+    { key: 'mood', emoji: '♡', label: 'Mood', extract: b => b.avgMood, higherIsBetter: true },
+    { key: 'energy', emoji: '✦', label: 'Energy', extract: b => b.avgEnergy, higherIsBetter: true },
+    { key: 'stress', emoji: '∿', label: 'Stress', extract: b => b.avgStress, higherIsBetter: false },
   ];
 
   const insights: TimeOfDayMetricInsight[] = [];
@@ -1021,14 +1022,38 @@ function buildBlendedCards(
     });
   }
 
-  // Default card if no rules triggered
+  // Default card if no rules triggered — vary by dominant element + modality
   if (cards.length === 0) {
+    const elementFallbacks: Record<string, { body: string; journalPrompt: string }> = {
+      Fire: {
+        body: `Your Fire-dominant chart suggests you recharge through action, passion, and creative expression. In this relatively steady period, notice what still excites you — that's where your next momentum lives.`,
+        journalPrompt: 'What is quietly calling for my attention or energy right now?',
+      },
+      Earth: {
+        body: `Your Earth-dominant chart finds stability through routine, tangibility, and physical grounding. This steady period is your natural terrain — use it to build something that lasts.`,
+        journalPrompt: 'What small, practical action would make my daily life feel more intentional?',
+      },
+      Air: {
+        body: `Your Air-dominant chart processes through ideas, conversation, and fresh perspective. In this steady stretch, the risk is mental restlessness without a clear outlet. Feed your mind deliberately.`,
+        journalPrompt: 'What idea or conversation has been circling in my mind — and what does it need from me?',
+      },
+      Water: {
+        body: `Your Water-dominant chart navigates through feeling, intuition, and emotional depth. This steadier period is an invitation to notice what your inner world is doing when it's not in crisis.`,
+        journalPrompt: `What am I feeling beneath the surface that I haven't given words to yet?`,
+      },
+    };
+
+    const fb = elementFallbacks[dominantEl] ?? {
+      body: `Your current patterns suggest a relatively steady period. This is a good moment to notice what sustains you — so you remember it when things get heavier.`,
+      journalPrompt: 'What does "feeling like myself" actually look like right now?',
+    };
+
     cards.push({
       title: 'Baseline Reflection',
-      body: `Your ${dominantEl} chart and current patterns suggest a relatively steady period. This is a good moment to notice what sustains you — so you remember it when things get heavier.`,
+      body: fb.body,
       stat: `${dominantEl} dominant · ${baseStat}`,
       confidence: conf,
-      journalPrompt: 'What does "feeling like myself" actually look like right now?',
+      journalPrompt: fb.journalPrompt,
     });
   }
 
@@ -1296,20 +1321,26 @@ function buildJournalFrequency(
 // ─────────────────────────────────────────────────────────────────────────────
 
 function buildModalityCard(chart: NatalChart): ModalityCard | null {
+  const planetNames = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'];
   const personal = [chart.sun, chart.moon, chart.mercury, chart.venus, chart.mars];
   const counts: Record<string, number> = { Cardinal: 0, Fixed: 0, Mutable: 0 };
-  for (const p of personal) {
-    const mod = p.sign.modality;
-    if (mod in counts) counts[mod]++;
+  const contributors: Record<string, string[]> = { Cardinal: [], Fixed: [], Mutable: [] };
+  for (let i = 0; i < personal.length; i++) {
+    const mod = personal[i].sign.modality;
+    if (mod in counts) {
+      counts[mod]++;
+      contributors[mod].push(planetNames[i]);
+    }
   }
 
   const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
   if (!dominant || dominant[1] < 2) return null;
 
+  const planetList = contributors[dominant[0]].join(', ');
   const bodies: Record<string, string> = {
-    Cardinal: 'You initiate. Your natural impulse is to start, lead, and create momentum. Stagnation is your biggest drain — even small beginnings restore your sense of agency.',
-    Fixed: 'You sustain. Consistency, depth, and loyalty are your strengths. Disruption to established patterns hits harder than most expect — give yourself permission to adjust slowly.',
-    Mutable: 'You adapt. Flexibility and responsiveness are your native mode. You can read the room and shift — the cost is sometimes losing track of what you actually want underneath the adjustments.',
+    Cardinal: `You initiate — ${planetList} all carry Cardinal energy. Your natural impulse is to start, lead, and create momentum. Stagnation is your biggest drain — even small beginnings restore your sense of agency.`,
+    Fixed: `You sustain — ${planetList} all carry Fixed energy. Consistency, depth, and loyalty are your strengths. Disruption to established patterns hits harder than most expect — give yourself permission to adjust slowly.`,
+    Mutable: `You adapt — ${planetList} all carry Mutable energy. Flexibility and responsiveness are your native mode. You can read the room and shift — the cost is sometimes losing track of what you actually want underneath the adjustments.`,
   };
 
   return {
@@ -1685,10 +1716,19 @@ function buildNoteThemesCard(checkIns: DailyCheckIn[]): NoteThemesCard | null {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function moonThemeBody(sign: string, element: string, house: number): string {
-  const houseNote = house === 4 ? ' Your 4th house Moon makes home and emotional safety especially foundational.' :
-    house === 12 ? ' Your 12th house Moon needs solitude to fully recharge.' :
+  const houseNote =
+    house === 1 ? ' Your 1st house Moon wears emotions close to the surface — what you feel shows quickly.' :
+    house === 2 ? ' Your 2nd house Moon ties emotional security to stability and tangible comfort.' :
+    house === 3 ? ' Your 3rd house Moon processes feelings through words — writing or talking helps you regulate.' :
+    house === 4 ? ' Your 4th house Moon makes home and emotional safety especially foundational.' :
+    house === 5 ? ' Your 5th house Moon lights up through creative expression and play.' :
+    house === 6 ? ' Your 6th house Moon finds emotional balance through routines, health, and service.' :
     house === 7 ? ' Your 7th house Moon finds regulation through connection and partnership.' :
-    house === 1 ? ' Your 1st house Moon wears emotions close to the surface — what you feel shows quickly.' : '';
+    house === 8 ? ' Your 8th house Moon runs deep — transformation and emotional intensity are familiar terrain.' :
+    house === 9 ? ' Your 9th house Moon expands through learning, travel, and philosophical exploration.' :
+    house === 10 ? ' Your 10th house Moon links emotional wellbeing to purpose and public contribution.' :
+    house === 11 ? ' Your 11th house Moon recharges through community, friendship, and shared vision.' :
+    house === 12 ? ' Your 12th house Moon needs solitude to fully recharge.' : '';
 
   const bodies: Record<string, string> = {
     Aries: `You process emotions quickly and need freedom to move through feelings without over-analyzing. Suppressing them creates pressure.${houseNote}`,
@@ -1708,9 +1748,19 @@ function moonThemeBody(sign: string, element: string, house: number): string {
 }
 
 function saturnThemeBody(sign: string, house: number): string {
-  const houseNote = house === 10 ? ' In the 10th, this plays out through career and public role.' :
+  const houseNote =
+    house === 1 ? ' In the 1st, self-definition and personal authority are your ongoing lessons.' :
     house === 2 ? ' In the 2nd, this shapes how you build and relate to security.' :
-    house === 7 ? ' In the 7th, commitment and relationship terms are your growth area.' : '';
+    house === 3 ? ' In the 3rd, communication and learning require patience and deliberate practice.' :
+    house === 4 ? ' In the 4th, emotional foundations and family patterns are where you do your deepest work.' :
+    house === 5 ? ' In the 5th, creative expression and spontaneity are things you learn over time.' :
+    house === 6 ? ' In the 6th, discipline around health, routine, and service shapes your growth.' :
+    house === 7 ? ' In the 7th, commitment and relationship terms are your growth area.' :
+    house === 8 ? ' In the 8th, trust, vulnerability, and shared resources are your long lessons.' :
+    house === 9 ? ' In the 9th, belief systems and long-range vision develop with maturity.' :
+    house === 10 ? ' In the 10th, this plays out through career and public role.' :
+    house === 11 ? ' In the 11th, finding your community and defining your contribution is the work.' :
+    house === 12 ? ' In the 12th, solitude, surrender, and inner life require conscious structure.' : '';
 
   const bodies: Record<string, string> = {
     Aries: `You build confidence through independent action, not permission. Waiting for approval delays you. Patience with yourself is the growth edge.${houseNote}`,

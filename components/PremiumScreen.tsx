@@ -99,7 +99,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
 
     if (result.success) {
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-      Alert.alert('Welcome to Deeper Sky ✨', 'Your premium features are now unlocked.');
+      Alert.alert('Welcome to Deeper Sky', 'Your premium features are now unlocked.');
     } else if (result.error) {
       Alert.alert('Purchase Failed', result.error);
     }
@@ -146,13 +146,13 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}>
             <Pressable onPress={safeGoBack} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+              <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
             </Pressable>
             <View style={styles.diamondContainer}>
               <MySkyDiamondSkia size={140} />
             </View>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-              <Text style={styles.premiumBadge}>✨ Deeper Sky Active</Text>
+              <Text style={styles.premiumBadge}>✦ Deeper Sky Active</Text>
               <Text style={styles.title}>You're a Deeper Sky member</Text>
               <Text style={styles.subtitle}>
                 All premium features are unlocked. Thank you for supporting MySky.
@@ -167,7 +167,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                     <Text style={styles.featureName}>{feature.name}</Text>
                     <Text style={styles.featureDesc}>{feature.premiumVersion}</Text>
                   </View>
-                  <Ionicons name="checkmark-circle" size={18} color={theme.primary} />
+                  <Ionicons name="checkmark-circle-outline" size={18} color={theme.primary} />
                 </View>
               ))}
             </Animated.View>
@@ -210,7 +210,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
         >
           {/* Back button */}
           <Pressable onPress={safeGoBack} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
 
           {/* ── Hero: Ethereal Eclipse ── */}

@@ -86,7 +86,7 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamC
                 </View>
               )}
             </View>
-            <MetallicIcon name="moon" size={16} color="#9D76C1" />
+            <MetallicIcon name="moon-outline" size={16} color="#9D76C1" />
           </View>
           {hasDream ? (
             <Text style={styles.dreamExcerpt} numberOfLines={3}>{entry.dreamText}</Text>
@@ -479,7 +479,7 @@ export default function JournalScreen() {
               accessibilityRole="button"
               accessibilityLabel="Previous month"
             >
-              <Ionicons name="chevron-back" size={20} color="rgba(255,255,255,0.5)" />
+              <Ionicons name="chevron-back-outline" size={20} color="rgba(255,255,255,0.5)" />
             </Pressable>
             <Text style={styles.monthLabel}>
               {MONTH_NAMES[filterMonth]} {filterYear}
@@ -491,11 +491,11 @@ export default function JournalScreen() {
               accessibilityRole="button"
               accessibilityLabel="Next month"
             >
-              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.5)" />
+              <Ionicons name="chevron-forward-outline" size={20} color="rgba(255,255,255,0.5)" />
             </Pressable>
           </View>
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
+            <Ionicons name="search-outline" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               value={searchQuery}
@@ -507,7 +507,7 @@ export default function JournalScreen() {
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color={theme.textMuted} />
+                <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
               </Pressable>
             )}
           </View>
@@ -555,10 +555,10 @@ export default function JournalScreen() {
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
             <LinearGradient colors={['rgba(232, 214, 174, 0.10)', theme.cardGradientEnd]} style={[styles.insightCard, { borderColor: 'rgba(232, 214, 174, 0.18)', borderTopColor: theme.glass.highlight }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Ionicons name="analytics" size={18} color={theme.textGold} />
+                <Ionicons name="analytics-outline" size={18} color={theme.textGold} />
                 <Text style={styles.insightTitle}>Pattern Insights</Text>
                 <View style={[styles.premiumBadge, { marginLeft: 'auto' }]}>
-                  <Ionicons name="sparkles" size={10} color={theme.textGold} />
+                  <Ionicons name="sparkles-outline" size={10} color={theme.textGold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
                 </View>
               </View>
@@ -567,7 +567,7 @@ export default function JournalScreen() {
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                 <Text style={[styles.insightActionable, { marginTop: 0, color: theme.textGold }]}>Reveal your patterns</Text>
-                <Ionicons name="arrow-forward" size={14} color={theme.textGold} />
+                <Ionicons name="arrow-forward-outline" size={14} color={theme.textGold} />
               </View>
             </LinearGradient>
           </Pressable>
@@ -684,7 +684,7 @@ export default function JournalScreen() {
                 colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']} 
                 style={StyleSheet.absoluteFillObject}
               />
-              <GoldIcon name="add" size={28}  style={{ fontWeight: '900' }}  />
+              <GoldIcon name="add-outline" size={28}  style={{ fontWeight: '900' }}  />
             </Pressable>
           </View>
           <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
@@ -843,7 +843,7 @@ function JournalFAB({ onPress }: { onPress: () => void }) {
     >
       <Animated.View style={[journalFabStyles.glowWrapper, animatedStyle]}>
         <BlurView intensity={60} tint="dark" style={journalFabStyles.glassCircle}>
-          <MetallicIcon name="add" size={28} variant="gold" />
+          <MetallicIcon name="add-outline" size={28} variant="gold" />
         </BlurView>
       </Animated.View>
     </Pressable>

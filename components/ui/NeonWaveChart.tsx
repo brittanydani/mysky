@@ -159,50 +159,68 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
                 <BlurMask blur={18} style="normal" />
               </Rect>
 
-              {/* Main pillar body — gradient fill */}
+              {/* Main pillar body — horizontal metallic sweep */}
               <Rect x={day.px} y={day.topY} width={PILLAR_W} height={day.moodH}>
                 <LinearGradient
-                  start={vec(cx, day.topY)}
-                  end={vec(cx, bottom)}
-                  colors={[
-                    hexAlpha(MOOD_COLOR, day.isToday ? 0.80 : 0.42),
-                    hexAlpha(MOOD_COLOR, day.isToday ? 0.20 : 0.06),
-                  ]}
+                  start={vec(day.px, 0)}
+                  end={vec(day.px + PILLAR_W, 0)}
+                  positions={[0, 0.22, 0.5, 0.78, 1]}
+                  colors={day.isToday
+                    ? ['rgba(74,47,16,0.72)', 'rgba(168,116,46,0.82)', 'rgba(239,213,150,0.90)', 'rgba(168,116,46,0.82)', 'rgba(74,47,16,0.72)']
+                    : ['rgba(74,47,16,0.28)', 'rgba(168,116,46,0.38)', 'rgba(221,186,106,0.44)', 'rgba(168,116,46,0.38)', 'rgba(74,47,16,0.28)']
+                  }
                 />
               </Rect>
 
-              {/* Rounded top cap — circle at top edge */}
+              {/* Rounded top cap — horizontal metallic sweep */}
               <Circle cx={cx} cy={day.topY} r={PILLAR_W / 2}>
                 <LinearGradient
-                  start={vec(cx, day.topY - PILLAR_W / 2)}
-                  end={vec(cx, day.topY + PILLAR_W / 2)}
-                  colors={[
-                    hexAlpha(MOOD_COLOR, day.isToday ? 0.90 : 0.50),
-                    hexAlpha(MOOD_COLOR, day.isToday ? 0.60 : 0.30),
-                  ]}
+                  start={vec(cx - PILLAR_W / 2, 0)}
+                  end={vec(cx + PILLAR_W / 2, 0)}
+                  positions={[0, 0.22, 0.5, 0.78, 1]}
+                  colors={day.isToday
+                    ? ['rgba(74,47,16,0.80)', 'rgba(168,116,46,0.88)', '#EFD596', 'rgba(168,116,46,0.88)', 'rgba(74,47,16,0.80)']
+                    : ['rgba(74,47,16,0.38)', 'rgba(168,116,46,0.50)', 'rgba(201,153,73,0.60)', 'rgba(168,116,46,0.50)', 'rgba(74,47,16,0.38)']
+                  }
                 />
               </Circle>
 
-              {/* Energy accent — teal left strip */}
+              {/* Energy accent — metallic blue left strip */}
               {day.energyH > 0 && (
                 <Rect
                   x={day.px}
                   y={bottom - day.energyH}
                   width={ACCENT_W}
                   height={day.energyH}
-                  color={hexAlpha(ENERGY_COLOR, day.isToday ? 0.88 : 0.58)}
-                />
+                >
+                  <LinearGradient
+                    start={vec(day.px, bottom)}
+                    end={vec(day.px, bottom - day.energyH)}
+                    colors={day.isToday
+                      ? ['rgba(139,196,232,0.30)', 'rgba(176,216,240,0.88)', 'rgba(214,238,255,0.96)']
+                      : ['rgba(139,196,232,0.12)', 'rgba(139,196,232,0.56)', 'rgba(214,238,255,0.72)']
+                    }
+                  />
+                </Rect>
               )}
 
-              {/* Stress accent — rose right strip */}
+              {/* Stress accent — metallic rose right strip */}
               {day.stressH > 0 && (
                 <Rect
                   x={day.px + PILLAR_W - ACCENT_W}
                   y={bottom - day.stressH}
                   width={ACCENT_W}
                   height={day.stressH}
-                  color={hexAlpha(STRESS_COLOR, day.isToday ? 0.88 : 0.58)}
-                />
+                >
+                  <LinearGradient
+                    start={vec(day.px + PILLAR_W, bottom)}
+                    end={vec(day.px + PILLAR_W, bottom - day.stressH)}
+                    colors={day.isToday
+                      ? ['rgba(212,163,179,0.30)', 'rgba(224,176,196,0.88)', 'rgba(245,214,224,0.96)']
+                      : ['rgba(212,163,179,0.12)', 'rgba(212,163,179,0.56)', 'rgba(245,214,224,0.72)']
+                    }
+                  />
+                </Rect>
               )}
 
               {/* Bright crown dot on top */}

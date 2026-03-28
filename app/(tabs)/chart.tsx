@@ -828,8 +828,9 @@ export default function ChartScreen() {
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 4 }}>
-              <Pressable onPress={() => router.back()} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.5)" />
+              <Pressable onPress={() => router.replace('/(tabs)/blueprint' as Href)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <MetallicIcon name="arrow-back-outline" size={18} color="rgba(255,255,255,0.5)" />
+                <MetallicText style={{ fontSize: 14, letterSpacing: 0.3 }} color="rgba(255,255,255,0.5)">Identity</MetallicText>
               </Pressable>
               <MoonPhaseView size={34} />
             </View>
@@ -866,12 +867,12 @@ export default function ChartScreen() {
                 >
                   {!overlayPerson ? (
                     <View style={[styles.personChip, styles.personChipActive]}>
-                      <Ionicons name="person" size={14} color="#FFFFFF" />
+                      <Ionicons name="person-outline" size={14} color="#FFFFFF" />
                       <Text style={[styles.personChipText, { color: '#FFFFFF', fontWeight: '700' }]}>You</Text>
                     </View>
                   ) : (
                     <View style={styles.personChip}>
-                      <Ionicons name="person" size={14} color={theme.textMuted} />
+                      <Ionicons name="person-outline" size={14} color={theme.textMuted} />
                       <Text style={styles.personChipText}>You</Text>
                     </View>
                   )}
@@ -1661,11 +1662,11 @@ export default function ChartScreen() {
                       accessibilityLabel="Unlock more aspects"
                     >
                       <LinearGradient colors={['rgba(232, 214, 174,0.1)', 'rgba(232, 214, 174,0.05)']} style={styles.aspectUpsell}>
-                        <Ionicons name="sparkles" size={16} color={theme.textPrimary} />
+                        <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
                         <MetallicText style={styles.aspectUpsellText} color="#CFAE73">
                           {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
                         </MetallicText>
-                        <Ionicons name="chevron-forward" size={16} color={theme.textPrimary} />
+                        <Ionicons name="chevron-forward-outline" size={16} color={theme.textPrimary} />
                       </LinearGradient>
                     </Pressable>
                   )}
@@ -1681,7 +1682,7 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.chartRuler && (
                 <LinearGradient colors={['rgba(232, 214, 174,0.15)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={[styles.patternIcon, { marginTop: -7 }]}>👑</Text>
+                    <Ionicons name="ribbon-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Chart Ruler</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1731,7 +1732,7 @@ export default function ChartScreen() {
               {isPremium && dominantPlacement && chartPatterns && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>🌟</Text>
+                    <Ionicons name="star-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Dominant Planet</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1759,14 +1760,14 @@ export default function ChartScreen() {
                     style={[styles.patternCard, { borderWidth: 1, borderColor: 'rgba(232, 214, 174,0.18)' }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="lock-closed" size={16} color={theme.textPrimary} />
+                      <Ionicons name="lock-closed-outline" size={16} color={theme.textPrimary} />
                       <View style={{ flex: 1 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#CFAE73">More patterns in your chart</MetallicText>
                         <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
                           Chart ruler, dominant planet, sensitive points, stelliums, retrogrades, and Point of Flow
                         </Text>
                       </View>
-                      <Ionicons name="arrow-forward" size={16} color={theme.textPrimary} />
+                      <Ionicons name="arrow-forward-outline" size={16} color={theme.textPrimary} />
                     </View>
                   </LinearGradient>
                 </Pressable>
@@ -1781,7 +1782,7 @@ export default function ChartScreen() {
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
-                      <Text style={[styles.patternIcon, { marginRight: -8, marginTop: -20, fontSize: 11 }]}>⚡</Text>
+                      <Ionicons name="flash-outline" size={16} color="#E8D6AE" style={styles.patternIcon} />
                       <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
                     </View>
                     <View style={styles.patternHighlight}>
@@ -1823,7 +1824,7 @@ export default function ChartScreen() {
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
-                      <Text style={styles.patternIcon}>🔗</Text>
+                      <Ionicons name="link-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                       <Text style={styles.patternTitle}>Conjunction Cluster</Text>
                     </View>
                     <View style={styles.patternHighlight}>
@@ -1857,7 +1858,7 @@ export default function ChartScreen() {
               {chartPatterns.elementBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>🜂</Text>
+                    <Ionicons name="flame-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Element Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }]}>
@@ -1896,7 +1897,7 @@ export default function ChartScreen() {
               {chartPatterns.modalityBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>⚖</Text>
+                    <Ionicons name="options-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Modality Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 16, justifyContent: 'center' }]}>
@@ -1928,7 +1929,7 @@ export default function ChartScreen() {
               {chartPatterns.polarityBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>{'⚊'}</Text>
+                    <Ionicons name="git-compare-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Polarity Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 24, justifyContent: 'center' }]}>
@@ -1987,7 +1988,7 @@ export default function ChartScreen() {
               {isPremium && extendedPatterns?.hemisphereEmphasis && extendedPatterns.hemisphereEmphasis.dominant !== 'Balanced' && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>◐</Text>
+                    <Ionicons name="contrast-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Hemisphere Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -2008,7 +2009,7 @@ export default function ChartScreen() {
               {isPremium && extendedPatterns?.houseEmphasis && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>⌂</Text>
+                    <Ionicons name="home-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>House Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -2199,7 +2200,7 @@ export default function ChartScreen() {
               >
                 <LinearGradient colors={['rgba(232, 214, 174,0.12)', 'rgba(14, 24, 48,0.7)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>◎</Text>
+                    <Ionicons name="ellipse-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Chart Shape: {chartShape.shape}</Text>
                   </View>
                   {chartShape.handlePlanet && (
@@ -2342,7 +2343,7 @@ export default function ChartScreen() {
               >
                 <LinearGradient colors={['rgba(232, 214, 174,0.10)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Text style={styles.patternIcon}>⛓</Text>
+                    <Ionicons name="git-network-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Rulership & Dispositors</Text>
                   </View>
                   {dispositorChain.finalDispositor && (
@@ -2505,7 +2506,7 @@ export default function ChartScreen() {
                   >
                     <LinearGradient colors={['rgba(232, 214, 174,0.08)', 'rgba(14, 24, 48,0.6)']} style={styles.themedCard}>
                       <View style={styles.themedCardHeaderRow}>
-                        <Text style={styles.themedCardIcon}>💞</Text>
+                        <GradientIcon size={20}><Ionicons name="heart-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Relationship Profile</Text>
                         <Ionicons name={expandedLifeTheme === 'relationship' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                       </View>
@@ -2539,7 +2540,7 @@ export default function ChartScreen() {
                   >
                     <LinearGradient colors={['rgba(232, 214, 174,0.08)', 'rgba(14, 24, 48,0.6)']} style={styles.themedCard}>
                       <View style={styles.themedCardHeaderRow}>
-                        <Text style={styles.themedCardIcon}>🏛</Text>
+                        <GradientIcon size={20}><Ionicons name="briefcase-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Career & Life Direction</Text>
                         <Ionicons name={expandedLifeTheme === 'career' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                       </View>
@@ -2573,7 +2574,7 @@ export default function ChartScreen() {
                   >
                     <LinearGradient colors={['rgba(232, 214, 174,0.08)', 'rgba(14, 24, 48,0.6)']} style={styles.themedCard}>
                       <View style={styles.themedCardHeaderRow}>
-                        <Text style={styles.themedCardIcon}>🌊</Text>
+                        <GradientIcon size={20}><Ionicons name="water-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Emotional & Inner World</Text>
                         <Ionicons name={expandedLifeTheme === 'emotional' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                       </View>
@@ -2601,7 +2602,7 @@ export default function ChartScreen() {
                   >
                     <LinearGradient colors={['rgba(232, 214, 174,0.08)', 'rgba(14, 24, 48,0.6)']} style={styles.themedCard}>
                       <View style={styles.themedCardHeaderRow}>
-                        <Text style={styles.themedCardIcon}>🌑</Text>
+                        <GradientIcon size={20}><Ionicons name="moon-outline" size={20} color="#000" /></GradientIcon>
                         <Text style={styles.themedCardTitle}>Shadow & Growth Path</Text>
                         <Ionicons name={expandedLifeTheme === 'shadow' ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textMuted} />
                       </View>
@@ -2639,14 +2640,14 @@ export default function ChartScreen() {
                   style={[styles.overlayUpsell, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="sparkles" size={16} color={theme.textPrimary} />
+                    <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
                     <View style={{ flex: 1 }}>
                       <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#CFAE73">Your chart has more to say</MetallicText>
                       <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
                         Nodes, Chiron, Lilith, Vertex, chart ruler, stelliums, retrogrades, and minor aspects
                       </Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={16} color={theme.textPrimary} />
+                    <Ionicons name="arrow-forward-outline" size={16} color={theme.textPrimary} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -2665,7 +2666,7 @@ export default function ChartScreen() {
                 <View style={styles.chartSettingsRow}>
                   <View style={{ flex: 1, marginRight: theme.spacing.md }}>
                     <View style={styles.chartSettingsHeader}>
-                      <MetallicIcon name="planet" size={20} color="#E8D6AE" />
+                      <MetallicIcon name="planet-outline" size={20} color="#E8D6AE" />
                       <Text style={styles.chartSettingsTitle}>Chart Settings</Text>
                     </View>
                     <Text style={styles.chartSettingsDescription}>House system, aspect orbs, and calculation preferences</Text>

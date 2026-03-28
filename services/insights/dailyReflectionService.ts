@@ -92,13 +92,30 @@ export function getTodayKey(date: Date = new Date()): string {
 }
 
 /**
+ * Simple deterministic hash of a string to a positive integer.
+ * Used to create per-user offsets so different users see different questions.
+ */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+/**
  * Select today's questions for a given category.
  * Returns 3 questions on every 3rd day, 2 otherwise.
  * Uses a staggered offset per category so questions don't repeat across categories.
+ *
+ * Pass `userSeed` (e.g. chartId or profile hash) to personalise which
+ * questions each user receives on a given day. Without it the rotation is
+ * the same for all users (deterministic by date only).
  */
 export function getTodayQuestions(
   category: ReflectionCategory,
   date: Date = new Date(),
+  userSeed?: string,
 ): ReflectionQuestion[] {
   const dayOfYear = getDayOfYear(date);
   const bank = QUESTION_BANKS[category];
@@ -112,10 +129,13 @@ export function getTodayQuestions(
   };
   const offset = categoryOffset[category];
 
+  // Per-user offset so different users see different questions on the same day
+  const userOffset = userSeed ? hashString(userSeed) : 0;
+
   const questions: ReflectionQuestion[] = [];
   for (let i = 0; i < count; i++) {
-    // Spread picks across the bank using golden-ratio-like spacing
-    const idx = (dayOfYear * 3 + i * 127 + offset) % QUESTIONS_PER_CATEGORY;
+    // Spread picks across the bank using golden-ratio-like spacing + user offset
+    const idx = (dayOfYear * 3 + i * 127 + offset + userOffset) % QUESTIONS_PER_CATEGORY;
     questions.push(bank[idx]);
   }
 
@@ -124,12 +144,13 @@ export function getTodayQuestions(
 
 /**
  * Get today's questions for all three categories.
+ * Pass `userSeed` to personalise the rotation per user.
  */
-export function getAllTodayQuestions(date: Date = new Date()): DayQuestions[] {
+export function getAllTodayQuestions(date: Date = new Date(), userSeed?: string): DayQuestions[] {
   const categories: ReflectionCategory[] = ['values', 'archetypes', 'cognitive'];
   return categories.map(category => ({
     category,
-    questions: getTodayQuestions(category, date),
+    questions: getTodayQuestions(category, date, userSeed),
   }));
 }
 

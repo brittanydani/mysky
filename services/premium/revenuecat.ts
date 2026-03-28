@@ -11,6 +11,7 @@ import { Platform } from 'react-native';
 class RevenueCatService {
   private initPromise: Promise<void> | null = null;
   private initialized = false;
+  private readonly premiumEntitlementAliases = ['premium', 'pro', 'plus', 'deeper_sky'];
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -143,6 +144,28 @@ class RevenueCatService {
     }
   }
 
+  async logIn(userId: string): Promise<void> {
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    try {
+      await Purchases.logIn(userId);
+      logger.info('[RevenueCat] Logged in with user ID:', userId);
+    } catch (error) {
+      logger.error('[RevenueCat] logIn failed:', error);
+    }
+  }
+
+  async logOut(): Promise<void> {
+    if (!this.initialized) return;
+    try {
+      await Purchases.logOut();
+      logger.info('[RevenueCat] Logged out');
+    } catch (error) {
+      logger.error('[RevenueCat] logOut failed:', error);
+    }
+  }
+
   async getCustomerInfo(): Promise<CustomerInfo | null> {
     if (!this.initialized) {
       await this.initialize();
@@ -157,12 +180,30 @@ class RevenueCatService {
   }
 
   isPremium(customerInfo: CustomerInfo): boolean {
-    // Check for the 'premium' entitlement - this should match your RevenueCat dashboard
-    return customerInfo.entitlements.active['premium'] !== undefined;
+    const activeEntitlements = customerInfo.entitlements.active;
+    const activeKeys = Object.keys(activeEntitlements);
+
+    if (activeKeys.length === 0) return false;
+
+    // Prefer explicit known aliases first.
+    const hasKnownPremiumEntitlement = this.premiumEntitlementAliases.some(
+      key => activeEntitlements[key] !== undefined,
+    );
+    if (hasKnownPremiumEntitlement) return true;
+
+    // Fallback: any active entitlement indicates an active paid access state.
+    return true;
   }
 
   getActiveEntitlement(customerInfo: CustomerInfo): PurchasesEntitlementInfo | null {
-    return customerInfo.entitlements.active['premium'] || null;
+    const activeEntitlements = customerInfo.entitlements.active;
+
+    for (const key of this.premiumEntitlementAliases) {
+      if (activeEntitlements[key]) return activeEntitlements[key];
+    }
+
+    const firstActiveEntitlement = Object.values(activeEntitlements)[0];
+    return firstActiveEntitlement ?? null;
   }
 
   // Helper method to get package by type for easier selection

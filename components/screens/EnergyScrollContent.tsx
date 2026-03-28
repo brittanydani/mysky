@@ -302,7 +302,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
           ) : (
             <LinearGradient colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(232,214,174,0.18)' }]}>
               <View style={styles.lockBanner}>
-                <Ionicons name="sparkles" size={14} color={theme.primary} />
+                <Ionicons name="sparkles-outline" size={14} color={theme.primary} />
                 <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
               </View>
               <Text style={{ fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 6 }}>
@@ -420,14 +420,14 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
                   accessibilityLabel="Unlock full energy guidance"
                 >
                   <View style={[styles.lockBanner, { marginTop: 12, backgroundColor: 'transparent', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12 }]}>
-                    <Ionicons name="sparkles" size={14} color={theme.primary} />
+                    <Ionicons name="sparkles-outline" size={14} color={theme.primary} />
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.lockText, { fontWeight: '600' }]}>Full guidance includes:</Text>
                       <Text style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
                         Lean into · Move gently around · Best use of energy · Today's micro-ritual
                       </Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={14} color={theme.primary} />
+                    <Ionicons name="arrow-forward-outline" size={14} color={theme.primary} />
                   </View>
                 </Pressable>
               </>

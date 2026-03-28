@@ -181,7 +181,7 @@ export default function AwakenStateSheet({
                       {opt.label}
                     </Text>
                     {isSelected && (
-                      <MetallicIcon name="checkmark" size={16} color={AMETHYST} />
+                      <MetallicIcon name="checkmark-outline" size={16} color={AMETHYST} />
                     )}
                   </Pressable>
                 );

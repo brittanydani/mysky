@@ -41,14 +41,14 @@ export interface DreamNode {
 // ─── Tone → color ─────────────────────────────────────────────────────────────
 
 const TONE_COLOR: Record<DreamTone, string> = {
-  joy:        '#FFDA03',
-  fear:       '#FF4455',
-  longing:    '#C86CFF',
-  adventure:  '#5CADFF',
-  loss:       '#3A8EBF',
-  connection: '#9ACD32',
-  mystery:    '#E070FF',
-  neutral:    '#88AACC',
+  joy:        '#E8C97A',  // METALLIC_HERO_GOLD core
+  fear:       '#E07A7A',  // METALLIC_RED core
+  longing:    '#9D76C1',  // METALLIC_PURPLE core
+  adventure:  '#7AA8E0',  // METALLIC_DEEP_BLUE core
+  loss:       '#8BC4E8',  // METALLIC_BLUE core
+  connection: '#6EBF8B',  // METALLIC_GREEN core
+  mystery:    '#9B7AE0',  // METALLIC_DEEP_PURPLE core
+  neutral:    '#A89BC8',  // METALLIC_LAVENDER core
 };
 
 // ─── Internal render model ────────────────────────────────────────────────────

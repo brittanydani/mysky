@@ -8,7 +8,6 @@ import { useRouter, Href } from 'expo-router';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { theme } from '../constants/theme';
-import MySkyLanternSkia from '../components/skia/MySkyLanternSkia';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -35,7 +34,7 @@ export default function FAQScreen() {
             accessibilityRole="button"
             accessibilityLabel="Back"
           >
-            <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+            <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
 
           <Text style={styles.headerTitle}>FAQ</Text>
@@ -51,8 +50,8 @@ export default function FAQScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <MySkyLanternSkia size={140} />
+          <View style={styles.heroIconWrap}>
+            <Ionicons name="help-circle-outline" size={132} color={theme.textGold} />
           </View>
 
           <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
@@ -199,6 +198,11 @@ const styles = StyleSheet.create({
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  heroIconWrap: {
+    alignItems: 'center',
+    marginBottom: 16,
+    opacity: 0.95,
+  },
 
   lastUpdated: { 
     fontSize: 12, 

@@ -468,7 +468,11 @@ export class DailyAffirmationEngine {
    * Human-readable description of why this affirmation was chosen.
    */
   private static describeSource(tag: string, chart: NatalChart, date: Date): string {
-    if (!tag) return 'Your chart today';
+    if (!tag) {
+      // Derive a meaningful fallback from the chart's sun sign
+      const sunSign = signName(chart.sunSign) || signName(chart.sun?.sign) || '';
+      return sunSign ? `${sunSign} Sun` : 'Your chart today';
+    }
 
     if (tag.startsWith('transit-')) {
       const sign = tag.replace('transit-', '');

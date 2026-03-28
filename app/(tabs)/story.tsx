@@ -38,7 +38,7 @@ const ARCHETYPES: Record<ArchetypeKey, { name: string; icon: string; color: stri
   caregiver: { name: 'The Caregiver', icon: '❧',  color: '#D4A3B3', tagline: 'Moves through the world by nurturing',            light: 'Empathy, generosity, emotional attunement',            shadow: 'Self-neglect, over-giving, resentment when unseen' },
   seeker:    { name: 'The Seeker',    icon: '◎',  color: '#C9AE78', tagline: 'Craves discovery, freedom, and new horizons',     light: 'Curiosity, adaptability, authentic living',            shadow: 'Restlessness, avoidance of commitment, feeling never satisfied' },
   sage:      { name: 'The Sage',      icon: '◬',  color: '#A8C4D4', tagline: 'Seeks truth and understanding above all',         light: 'Wisdom, clarity, thoughtful perspective',              shadow: 'Over-analysis, emotional distance, perfectionism' },
-  rebel:     { name: 'The Rebel',     icon: '⚡', color: '#C49FD4', tagline: 'Questions structures and catalyzes change',       light: 'Authenticity, vision, disrupting what no longer serves', shadow: 'Contrarianism for its own sake, difficulty with authority' },
+  rebel:     { name: 'The Rebel',     icon: 'ϟ', color: '#C49FD4', tagline: 'Questions structures and catalyzes change',       light: 'Authenticity, vision, disrupting what no longer serves', shadow: 'Contrarianism for its own sake, difficulty with authority' },
 };
 
 // ── Cognitive dimension labels ──
@@ -186,7 +186,7 @@ export default function PsychologicalProfileScreen() {
           onPress={() => { Haptics.selectionAsync(); router.back(); }}
           style={styles.backButton}
         >
-          <MetallicIcon name="arrow-back" size={20} variant="gold" />
+          <MetallicIcon name="arrow-back-outline" size={20} variant="gold" />
           <MetallicText style={styles.backText} variant="gold">Blueprint</MetallicText>
         </Pressable>
 

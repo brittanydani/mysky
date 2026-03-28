@@ -377,7 +377,7 @@ export default function RelationshipsScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <View style={StyleSheet.absoluteFill} pointerEvents="none"><SkiaDynamicCosmos /></View>
-        <Ionicons name="people" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
+        <Ionicons name="people-outline" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
         <Text style={styles.emptyTitle}>Create Your Profile First</Text>
         <Text style={styles.emptySubtitle}>Set up your birth data on the Home screen to explore relationship dynamics</Text>
       </View>
@@ -396,7 +396,7 @@ export default function RelationshipsScreen() {
           
           <View style={styles.detailHeader}>
             <Pressable onPress={handleBack} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color={theme.textPrimary} />
+              <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
             </Pressable>
             <View style={styles.detailHeaderCenter}>
               <Text style={styles.detailTitle}>Relationship Chart</Text>
@@ -420,7 +420,7 @@ export default function RelationshipsScreen() {
                 style={[styles.personPill, summaryPerson === 'you' && { borderColor: `${theme.textGold}60`, backgroundColor: `${theme.textGold}15` }]}
                 onPress={() => { setSummaryPerson('you'); Haptics.selectionAsync().catch(() => {}); }}
               >
-                <Ionicons name="person" size={13} color={summaryPerson === 'you' ? theme.textGold : theme.textMuted} />
+                <Ionicons name="person-outline" size={13} color={summaryPerson === 'you' ? theme.textGold : theme.textMuted} />
                 <Text style={[styles.personPillText, summaryPerson === 'you' && { color: theme.textGold }]}>{userName}</Text>
               </Pressable>
 
@@ -521,7 +521,7 @@ export default function RelationshipsScreen() {
               <Animated.View entering={FadeInDown.duration(400)}>
                 <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <MetallicIcon name="heart" size={20} color="#6EBF8B" />
+                    <MetallicIcon name="heart-outline" size={20} color="#6EBF8B" />
                     <Text style={styles.insightCardTitle}>Your Connection</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryConnection}</Text>
@@ -529,7 +529,7 @@ export default function RelationshipsScreen() {
 
                 <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <MetallicIcon name="trending-up" size={20} color="#8BC4E8" />
+                    <MetallicIcon name="trending-up-outline" size={20} color="#8BC4E8" />
                     <Text style={styles.insightCardTitle}>Your Growth Edge</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryChallenge}</Text>
@@ -537,7 +537,7 @@ export default function RelationshipsScreen() {
 
                 <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <Ionicons name="pulse" size={20} color={theme.textGold} />
+                    <Ionicons name="pulse-outline" size={20} color={theme.textGold} />
                     <Text style={styles.insightCardTitle}>Overall Dynamic</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.overallDynamic}</Text>
@@ -557,13 +557,13 @@ export default function RelationshipsScreen() {
                   <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                     <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <Ionicons name="sparkles" size={18} color={theme.textGold} />
+                        <Ionicons name="sparkles-outline" size={18} color={theme.textGold} />
                         <Text style={styles.upsellTitle}>There's more between you</Text>
                       </View>
                       <Text style={styles.upsellText}>Communication styles, emotional needs comparison, and healing paths for this relationship — with Deeper Sky.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} variant="gold">See the full picture</MetallicText>
-                        <MetallicIcon name="arrow-forward" size={16} variant="gold" />
+                        <MetallicIcon name="arrow-forward-outline" size={16} variant="gold" />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -585,7 +585,7 @@ export default function RelationshipsScreen() {
                       <Text style={styles.upsellText}>Deeper aspects reveal hidden dynamics — the subtle threads that make this relationship unique.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} variant="gold">Unlock all aspects</MetallicText>
-                        <MetallicIcon name="arrow-forward" size={16} variant="gold" />
+                        <MetallicIcon name="arrow-forward-outline" size={16} variant="gold" />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -641,7 +641,7 @@ export default function RelationshipsScreen() {
 
                     <Text style={styles.sectionHeader}>Tips for Connection</Text>
                     <View style={styles.tipCard}>
-                      <Ionicons name="bulb" size={20} color={theme.textGold} />
+                      <Ionicons name="bulb-outline" size={20} color={theme.textGold} />
                       <Text style={styles.tipText}>{comparison.communicationDynamics.tipForPerson1}</Text>
                     </View>
                   </>
@@ -684,7 +684,7 @@ export default function RelationshipsScreen() {
                           <Text style={styles.relationshipName}>{rel.name}</Text>
                           <Text style={styles.relationshipType}>{RELATIONSHIP_LABELS[rel.relationship]}</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                        <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                       </View>
 
                       {preview && preview.aspects.length > 0 && (
@@ -730,7 +730,7 @@ export default function RelationshipsScreen() {
             {!isPremium && (
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                 <View style={styles.limitIndicator}>
-                  <Ionicons name="sparkles" size={14} color={theme.textGold} />
+                  <Ionicons name="sparkles-outline" size={14} color={theme.textGold} />
                   <Text style={styles.limitText}>
                     {relationships.length === 0 ? 'Free includes 1 relationship chart · Deeper Sky unlocks unlimited' : 'Deeper Sky unlocks unlimited charts'}
                   </Text>
@@ -744,7 +744,7 @@ export default function RelationshipsScreen() {
               <Text style={styles.discoverTitle}>What You'll Discover</Text>
               
               <View style={styles.discoverItem}>
-                <MetallicIcon name="chatbubbles" size={20} color="#8BC4E8" />
+                <MetallicIcon name="chatbubbles-outline" size={20} color="#8BC4E8" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Communication Styles</Text>
                   <Text style={styles.discoverItemText}>How you each process and express</Text>
@@ -752,7 +752,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <MetallicIcon name="heart" size={20} color="#D4A3B3" />
+                <MetallicIcon name="heart-outline" size={20} color="#D4A3B3" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Emotional Needs</Text>
                   <Text style={styles.discoverItemText}>What makes each person feel safe</Text>
@@ -760,7 +760,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <MetallicIcon name="git-merge" size={20} color="#CD7F5D" />
+                <MetallicIcon name="git-merge-outline" size={20} color="#CD7F5D" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Sources of Ease & Tension</Text>
                   <Text style={styles.discoverItemText}>Where you flow and where you grow</Text>
@@ -768,7 +768,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <MetallicIcon name="refresh" size={20} color="#6EBF8B" />
+                <MetallicIcon name="refresh-outline" size={20} color="#6EBF8B" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Repair Strategies</Text>
                   <Text style={styles.discoverItemText}>How to reconnect after conflict</Text>

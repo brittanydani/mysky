@@ -423,9 +423,22 @@ export function generateJournalPrompt(
 /**
  * Get a simple free-tier prompt (no chart data needed).
  * Uses moon phase + day rotation only.
+ *
+ * Pass `userSeed` (e.g. a profile hash or startedAt timestamp) to
+ * differentiate prompt selection across users on the same day.
  */
-export function getFreePrompt(date: Date = new Date()): GeneratedPrompt {
+export function getFreePrompt(date: Date = new Date(), userSeed?: string): GeneratedPrompt {
   const dayOfYear = getDayOfYear(date);
+
+  // Per-user offset so different free-tier users don't all see the same prompt
+  let userOffset = 0;
+  if (userSeed) {
+    for (let i = 0; i < userSeed.length; i++) {
+      userOffset = ((userOffset << 5) - userOffset + userSeed.charCodeAt(i)) | 0;
+    }
+    userOffset = Math.abs(userOffset);
+  }
+
   const moonPhase = getMoonPhaseTag(date);
 
   // Find moon-phase-matching prompts or use fallbacks
@@ -434,12 +447,12 @@ export function getFreePrompt(date: Date = new Date()): GeneratedPrompt {
   );
   const fallbacks = PROMPT_LIBRARY.filter(p => p.id.startsWith('fb-'));
   const pool = moonPrompts.length > 0 ? moonPrompts : fallbacks;
-  const entry = pool[dayOfYear % pool.length];
+  const entry = pool[(dayOfYear + userOffset) % pool.length];
 
   return {
     context: entry.context,
     question: entry.question,
-    close: entry.close ?? GENTLE_CLOSES[dayOfYear % GENTLE_CLOSES.length],
+    close: entry.close ?? GENTLE_CLOSES[(dayOfYear + userOffset) % GENTLE_CLOSES.length],
     activation: entry.tags.activation,
     tags: [entry.tags.activation, entry.tags.theme, entry.tags.intensity],
     source: moonPrompts.length > 0 ? 'moon_phase' : 'fallback',

@@ -73,6 +73,7 @@ const TwinklingStarComp = memo(({ star, time }: { star: TwinkleStar; time: any }
     <Circle cx={star.x} cy={star.y} r={star.r} color={MYSTIC.star} opacity={opacity} />
   );
 });
+TwinklingStarComp.displayName = 'TwinklingStarComp';
 
 function CosmicBackground() {
   const staticStars = useMemo(() => makeStaticStars(), []);

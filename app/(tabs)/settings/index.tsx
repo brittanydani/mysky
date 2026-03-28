@@ -1,7 +1,7 @@
 // app/(tabs)/settings/index.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,8 @@ import { EncryptedAsyncStorage } from '../../../services/storage/encryptedAsyncS
 
 import { theme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
+import { useAuth } from '../../../context/AuthContext';
+import { supabase } from '../../../lib/supabase';
 import BackupPassphraseModal from '../../../components/BackupPassphraseModal';
 import PrivacySettingsModal from '../../../components/PrivacySettingsModal';
 import BirthDataModal from '../../../components/BirthDataModal';
@@ -23,6 +25,8 @@ import { usePremium } from '../../../context/PremiumContext';
 import PremiumModal from '../../../components/PremiumModal';
 import { localDb } from '../../../services/storage/localDb';
 import { BackupService } from '../../../services/storage/backupService';
+import { exportChartToPdf } from '../../../services/premium/pdfExport';
+import { FullNatalStoryGenerator } from '../../../services/premium/fullNatalStory';
 import { BirthData } from '../../../services/astrology/types';
 import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
@@ -57,7 +61,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'What does the PDF export include?',
     answer:
-      'PDF export is a Deeper Sky (premium) feature. Tap "Export PDF" on the Your Themes screen to generate and share a PDF that includes a cover page with your birth data, your Big Three (Sun, Moon, Rising), a full planet placements table, house cusps (if birth time is known), all aspects grouped by type, and all 10 Personal Story chapters.',
+      'PDF export is a Deeper Sky (premium) feature. Tap "Export PDF" in Settings to generate and share a PDF that includes a cover page with your birth data, your Big Three (Sun, Moon, Rising), a full planet placements table, house cusps (if birth time is known), all aspects grouped by type, and all 10 Personal Story chapters.',
   },
   {
     question: 'What does Deeper Sky include?',
@@ -115,6 +119,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
+  const { user, signOut } = useAuth();
 
   const successColor = theme.success;
   const errorColor = theme.error;
@@ -130,6 +135,7 @@ export default function SettingsScreen() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [backupInProgress, setBackupInProgress] = useState(false);
   const [restoreInProgress, setRestoreInProgress] = useState(false);
+  const [pdfExporting, setPdfExporting] = useState(false);
   const [backupModalVisible, setBackupModalVisible] = useState(false);
   const [restoreModalVisible, setRestoreModalVisible] = useState(false);
   const [restoreUri, setRestoreUri] = useState<string | null>(null);
@@ -473,6 +479,29 @@ export default function SettingsScreen() {
     router.navigate('/faq' as Href);
   };
 
+  const handleExportChartPdf = async () => {
+    if (!(await gatePremium())) return;
+    if (pdfExporting) return;
+    if (!birthInitial) {
+      Alert.alert('No Chart', 'Set up your birth data first.');
+      return;
+    }
+    try {
+      setPdfExporting(true);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const chart = AstrologyCalculator.generateNatalChart(birthInitial as any);
+      const { chapters } = FullNatalStoryGenerator.generateFullStory(chart, true);
+      await exportChartToPdf(chart, chapters);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error: any) {
+      logger.error('Chart PDF export failed:', error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Export Failed', error?.message || 'Unable to generate PDF.');
+    } finally {
+      setPdfExporting(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -501,7 +530,7 @@ export default function SettingsScreen() {
                 style={styles.keyLossBannerGradient}
               >
                 <View style={styles.keyLossBannerHeader}>
-                  <MetallicIcon name="warning" size={22} color={errorColor} />
+                  <MetallicIcon name="warning-outline" size={22} color={errorColor} />
                   <MetallicText color={errorColor} style={[styles.keyLossBannerTitle, { color: errorColor }]}>Encryption Key Unavailable</MetallicText>
                 </View>
                 <Text style={styles.keyLossBannerText}>
@@ -514,7 +543,7 @@ export default function SettingsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Restore backup"
                   >
-                    <Ionicons name="cloud-download" size={16} color={theme.primary} />
+                    <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
                     <Text style={styles.keyLossBannerButtonText}>Restore Backup</Text>
                   </Pressable>
                   <Pressable
@@ -523,7 +552,7 @@ export default function SettingsScreen() {
                     accessibilityRole="button"
                     accessibilityLabel="Delete all data"
                   >
-                    <MetallicIcon name="trash" size={16} color={errorColor} />
+                    <MetallicIcon name="trash-outline" size={16} color={errorColor} />
                     <MetallicText color={errorColor} style={[styles.keyLossBannerButtonText, { color: errorColor }]}>Delete All Data</MetallicText>
                   </Pressable>
                 </View>
@@ -542,7 +571,7 @@ export default function SettingsScreen() {
                         colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']}
                         style={styles.identityAvatar}
                       >
-                        <MetallicIcon name="person" size={24} color={accentGold} />
+                        <MetallicIcon name="person-outline" size={24} color={accentGold} />
                       </LinearGradient>
                     </View>
                     <View style={styles.identityInfo}>
@@ -576,7 +605,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <MetallicIcon name="cloud-upload" size={20} color={accentGold} />
+                        <MetallicIcon name="cloud-upload-outline" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Backup & Restore</Text>
                         {!isPremium && (
                           <View style={styles.premiumBadge}>
@@ -603,7 +632,7 @@ export default function SettingsScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Backup now"
                     >
-                      <MetallicIcon name="cloud-upload" size={16} color={accentGold} />
+                      <MetallicIcon name="cloud-upload-outline" size={16} color={accentGold} />
                       <MetallicText color={accentGold} style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</MetallicText>
                     </Pressable>
 
@@ -614,11 +643,50 @@ export default function SettingsScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Restore backup"
                     >
-                      <MetallicIcon name="cloud-download" size={16} color={accentGold} />
+                      <MetallicIcon name="cloud-download-outline" size={16} color={accentGold} />
                       <MetallicText color={accentGold} style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</MetallicText>
                     </Pressable>
                   </View>
                 </View>
+            </ObsidianSettingsGroup>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
+            <ObsidianSettingsGroup title="Export" subtitle="Download your data as a PDF">
+              <View style={{ paddingHorizontal: 16 }}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <MetallicIcon name="document-outline" size={20} color={accentGold} />
+                      <Text style={styles.settingTitle}>Export Chart PDF</Text>
+                      {!isPremium && (
+                        <View style={styles.premiumBadge}>
+                          <Text style={styles.premiumText}>Premium</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.settingDescription}>
+                      Export your natal chart, planet placements, aspects, and full personal story as a shareable PDF.
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  style={[styles.syncButton, pdfExporting && styles.syncButtonDisabled]}
+                  onPress={handleExportChartPdf}
+                  disabled={pdfExporting}
+                  accessibilityRole="button"
+                  accessibilityLabel="Export chart as PDF"
+                >
+                  {pdfExporting ? (
+                    <ActivityIndicator size="small" color={accentGold} />
+                  ) : (
+                    <MetallicIcon name="download-outline" size={16} color={accentGold} />
+                  )}
+                  <MetallicText color={accentGold} style={styles.syncButtonText}>
+                    {pdfExporting ? 'Generating...' : 'Export PDF'}
+                  </MetallicText>
+                </Pressable>
+              </View>
             </ObsidianSettingsGroup>
           </Animated.View>
 
@@ -627,7 +695,7 @@ export default function SettingsScreen() {
                 <View style={styles.securityGrid}>
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="lock-closed" size={16} color={successColor} />
+                      <MetallicIcon name="lock-closed-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Local Encryption</Text>
@@ -637,7 +705,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="airplane" size={16} color={successColor} />
+                      <MetallicIcon name="airplane-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>No Content Transmitted</Text>
@@ -647,7 +715,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="analytics" size={16} color={successColor} />
+                      <MetallicIcon name="analytics-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Zero Third-Party Analytics</Text>
@@ -657,7 +725,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="document-text" size={16} color={successColor} />
+                      <MetallicIcon name="document-text-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Minimal Event Logging</Text>
@@ -690,7 +758,7 @@ export default function SettingsScreen() {
                       Set morning and evening reminder times
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -730,28 +798,28 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <MetallicIcon name="shield-checkmark" size={20} color={accentBlue} />
+                      <MetallicIcon name="shield-checkmark-outline" size={20} color={accentBlue} />
                       <Text style={styles.settingTitle}>Privacy Settings</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       Export, delete, or manage your data on this device
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
               <View style={[styles.privacyInfo, { marginHorizontal: 16, marginBottom: 8 }]}>
                 <View style={styles.privacyItem}>
-                  <MetallicIcon name="phone-portrait" size={16} color={accentBlue} />
+                  <MetallicIcon name="phone-portrait-outline" size={16} color={accentBlue} />
                   <Text style={styles.privacyText}>Data stored locally on your device</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <MetallicIcon name="shield" size={16} color={accentEmerald} />
+                  <MetallicIcon name="shield-outline" size={16} color={accentEmerald} />
                   <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <MetallicIcon name="ban" size={16} color={accentAmethyst} />
+                  <MetallicIcon name="ban-outline" size={16} color={accentAmethyst} />
                   <Text style={styles.privacyText}>Never sold or shared</Text>
                 </View>
               </View>
@@ -829,7 +897,7 @@ export default function SettingsScreen() {
                       How MySky handles your data and protects your privacy
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -849,7 +917,7 @@ export default function SettingsScreen() {
                       App terms, subscription details, and disclaimers
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -869,7 +937,7 @@ export default function SettingsScreen() {
                       Answers to common questions about privacy, backups, and premium
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
             </ObsidianSettingsGroup>
@@ -912,14 +980,14 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <MetallicIcon name="sparkles" size={20} color={accentGold} />
+                        <MetallicIcon name="sparkles-outline" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
                         Full personal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — $4.99/mo • $29.99/yr • $49.99 lifetime.
                       </Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={20} color={theme.primary} />
+                    <Ionicons name="arrow-forward-outline" size={20} color={theme.primary} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -959,7 +1027,7 @@ export default function SettingsScreen() {
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <MetallicIcon name="sparkles" size={20} color={accentGold} />
+                        <MetallicIcon name="sparkles-outline" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky Active</Text>
                       </View>
                       <Text style={styles.settingDescription}>
@@ -970,6 +1038,85 @@ export default function SettingsScreen() {
                   </View>
                 </LinearGradient>
               </Pressable>
+            </Animated.View>
+          )}
+
+          {/* Account */}
+          {user && (
+            <Animated.View entering={FadeInDown.delay(750).duration(600)} style={styles.section}>
+              <ObsidianSettingsGroup title="Account" subtitle={user.email ?? ''}>
+                <Pressable
+                  style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                  onPress={() => {
+                    Alert.alert(
+                      'Sign Out',
+                      'Are you sure you want to sign out?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Sign Out',
+                          style: 'destructive',
+                          onPress: signOut,
+                        },
+                      ],
+                    );
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Sign out"
+                >
+                  <View style={styles.settingRow}>
+                    <View style={styles.settingInfo}>
+                      <View style={styles.settingHeader}>
+                        <MetallicIcon name="log-out-outline" size={20} color={accentCopper} />
+                        <Text style={styles.settingTitle}>Sign Out</Text>
+                      </View>
+                    </View>
+                    <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                  </View>
+                </Pressable>
+                <ObsidianDivider />
+                <Pressable
+                  style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                  onPress={() => {
+                    Alert.alert(
+                      'Delete Account',
+                      'This will permanently delete your account and all associated data. Your local app data (charts, journals, check-ins) will remain on this device. This cannot be undone.',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Delete Account',
+                          style: 'destructive',
+                          onPress: async () => {
+                            try {
+                              const { error } = await supabase.rpc('delete_user_account');
+                              if (error) throw error;
+                              await signOut();
+                            } catch (err: unknown) {
+                              const msg = err instanceof Error ? err.message : 'Something went wrong';
+                              Alert.alert('Error', `Could not delete account: ${msg}\n\nPlease contact brittanyapps@outlook.com to request deletion.`);
+                            }
+                          },
+                        },
+                      ],
+                    );
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete account"
+                >
+                  <View style={styles.settingRow}>
+                    <View style={styles.settingInfo}>
+                      <View style={styles.settingHeader}>
+                        <MetallicIcon name="trash-outline" size={20} color={errorColor} />
+                        <Text style={[styles.settingTitle, { color: errorColor }]}>Delete Account</Text>
+                      </View>
+                      <Text style={styles.settingDescription}>
+                        Permanently removes your account and synced data
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                  </View>
+                </Pressable>
+              </ObsidianSettingsGroup>
             </Animated.View>
           )}
 

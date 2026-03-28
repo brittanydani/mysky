@@ -31,9 +31,9 @@ const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-// Force premium ON in dev or when betaPremium is set in app.json extra.
+// Force premium ON when betaPremium is set in app.json extra.
 // To disable for production: remove "betaPremium" from app.json extra.
-const DEBUG_FORCE_PREMIUM = __DEV__ || Constants.expoConfig?.extra?.betaPremium === true;
+const DEBUG_FORCE_PREMIUM = Constants.expoConfig?.extra?.betaPremium === true;
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState<boolean>(DEBUG_FORCE_PREMIUM);
@@ -139,17 +139,14 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     init();
 
     // Entitlement Listener
-    const listenerResult = Purchases.addCustomerInfoUpdateListener((info) => {
+    const customerInfoListener = (info: CustomerInfo) => {
       updatePremiumState(info);
-    });
+    };
+    Purchases.addCustomerInfoUpdateListener(customerInfoListener);
 
     return () => {
       isMounted.current = false;
-      if (typeof listenerResult === 'function') {
-        listenerResult();
-      } else if (listenerResult && typeof (listenerResult as { remove?: () => void }).remove === 'function') {
-        (listenerResult as { remove: () => void }).remove();
-      }
+      Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
     };
   }, []);
 

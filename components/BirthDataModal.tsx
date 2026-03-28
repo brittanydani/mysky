@@ -364,7 +364,7 @@ export default function BirthDataModal({
               {!hideClose && (
                 <View style={styles.header}>
                   <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
-                    <Ionicons name="close" size={24} color={theme.textPrimary} />
+                    <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
                   </Pressable>
                 </View>
               )}
@@ -405,7 +405,7 @@ export default function BirthDataModal({
                 <Text style={styles.sectionLabel}>Birth Time</Text>
                 <Pressable style={styles.toggle} onPress={() => setHasUnknownTime(!hasUnknownTime)}>
                   {hasUnknownTime ? (
-                    <MetallicIcon name="checkbox" size={18} color={PALETTE.gold} />
+                    <MetallicIcon name="checkbox-outline" size={18} color={PALETTE.gold} />
                   ) : (
                     <Ionicons name="square-outline" size={18} color={theme.textMuted} />
                   )}

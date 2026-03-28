@@ -46,14 +46,14 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   size = 300 
 }) => {
   const center = size / 2;
-  const radius = (size / 2) * 0.5; // Slightly smaller to ensure full visibility
+  const radius = (size / 2) * 0.65;
   const steps = 5;
 
   // Calculate coordinates for a given value and index
   const getCoordinates = (value: number, index: number, isLabel: boolean = false) => {
     // Offset by -90 degrees (Math.PI / 2) to start at the top
     const angle = (Math.PI * 2 * index) / forces.length - Math.PI / 2;
-    const r = isLabel ? radius * 1.5 : (radius * value) / 100;
+    const r = isLabel ? radius * 1.08 : (radius * value) / 100;
     return {
       x: center + r * Math.cos(angle),
       y: center + r * Math.sin(angle),

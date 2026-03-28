@@ -142,7 +142,7 @@ function ProcessingOrb() {
       <Animated.View style={[st.processingGlow, glowStyle]} />
       <Animated.View style={[st.processingInnerRing, innerRingStyle]} />
       <Animated.View style={[st.processingOuterRing, outerRingStyle]} />
-      <MetallicIcon name="sparkles" size={28} color={ETHEREAL.accentGold} style={st.processingSparkle} />
+      <MetallicIcon name="sparkles-outline" size={28} color={ETHEREAL.accentGold} style={st.processingSparkle} />
     </View>
   );
 }
@@ -189,7 +189,7 @@ function BottomNav({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back" size={20} color="rgba(255,255,255,0.45)" />
+          <Ionicons name="arrow-back-outline" size={20} color="rgba(255,255,255,0.45)" />
         </Pressable>
       ) : <View style={{ width: 56 }} />}
 
@@ -572,10 +572,10 @@ export default function OnboardingModal({
 
                 <Animated.View entering={FadeInUp.delay(400).duration(700)} style={st.featuresContainer}>
                   {[
-                    { icon: 'pencil' as const, text: 'Daily journaling & guided reflection' },
-                    { icon: 'pulse' as const, text: 'Mood, sleep & energy tracking' },
-                    { icon: 'analytics' as const, text: 'Pattern insights drawn from your own data' },
-                    { icon: 'lock-closed' as const, text: 'Private & encrypted — only on your device' },
+                    { icon: 'pencil-outline' as const, text: 'Daily journaling & guided reflection' },
+                    { icon: 'pulse-outline' as const, text: 'Mood, sleep & energy tracking' },
+                    { icon: 'analytics-outline' as const, text: 'Pattern insights drawn from your own data' },
+                    { icon: 'lock-closed-outline' as const, text: 'Private & encrypted — only on your device' },
                   ].map((item, i) => (
                     <View key={i} style={st.feature}>
                       <View style={st.featureIcon}>
@@ -719,7 +719,7 @@ export default function OnboardingModal({
 
                   {/* Search input */}
                   <View style={st.locationSearchRow}>
-                    <MetallicIcon name="search" size={18} color={ETHEREAL.accentGold} />
+                    <MetallicIcon name="search-outline" size={18} color={ETHEREAL.accentGold} />
                     <TextInput
                       style={st.locationInput}
                       value={locationQuery}
@@ -769,7 +769,7 @@ export default function OnboardingModal({
                   {/* Selected location confirmation */}
                   {locationSelected && (
                     <Animated.View entering={FadeIn.duration(400)} style={st.locationConfirmed}>
-                      <MetallicIcon name="checkmark-circle" size={18} color={ETHEREAL.accentGold} />
+                      <MetallicIcon name="checkmark-circle-outline" size={18} color={ETHEREAL.accentGold} />
                       <Text style={st.locationConfirmedText} numberOfLines={2}>
                         {locationPlace}
                       </Text>
@@ -805,7 +805,7 @@ export default function OnboardingModal({
               <View style={st.centeredFlex}>
                 <Animated.View entering={FadeIn.delay(100).duration(800)} style={st.singleQuestionContainer}>
                   <View style={st.passphraseIconWrap}>
-                    <MetallicIcon name="lock-closed" size={40} color={ETHEREAL.accentGold} />
+                    <MetallicIcon name="lock-closed-outline" size={40} color={ETHEREAL.accentGold} />
                   </View>
                   <Text style={st.etherealQuestion}>Enter Backup Passphrase</Text>
                   <Text style={st.etherealSubtext}>
@@ -826,7 +826,7 @@ export default function OnboardingModal({
                   <SkiaMetallicPill
                     label="Restore"
                     onPress={handlePassphraseSubmit}
-                    icon={<Ionicons name="cloud-download" size={20} color="#0A0A0F" />}
+                    icon={<Ionicons name="cloud-download-outline" size={20} color="#0A0A0F" />}
                     style={{ marginBottom: theme.spacing.md }}
                   />
                   <Pressable style={st.restoreButton} onPress={() => setStep('welcome')} accessibilityRole="button" accessibilityLabel="Cancel restore">

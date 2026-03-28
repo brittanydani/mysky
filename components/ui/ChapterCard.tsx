@@ -133,7 +133,7 @@ function ChapterCard({
           )}
           {isLocked && (
             <View style={styles.lockBadge}>
-              <MetallicIcon name="sparkles" size={10} color={PALETTE.gold} />
+              <MetallicIcon name="sparkles-outline" size={10} color={PALETTE.gold} />
               <MetallicText style={styles.lockBadgeText} color={PALETTE.gold}>Deeper Sky</MetallicText>
             </View>
           )}
@@ -154,7 +154,7 @@ function ChapterCard({
         {isLocked && (
           <View style={styles.lockedCta}>
             <MetallicText style={styles.lockedCtaText} color={PALETTE.gold}>Unlock the full narrative</MetallicText>
-            <MetallicIcon name="arrow-forward" size={14} color={PALETTE.gold} />
+            <MetallicIcon name="arrow-forward-outline" size={14} color={PALETTE.gold} />
           </View>
         )}
 

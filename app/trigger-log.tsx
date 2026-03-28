@@ -121,9 +121,9 @@ export default function TriggerLogScreen() {
         <View style={styles.headerRow}>
           <Pressable
             style={styles.backBtn}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
           >
-            <Ionicons name="close" size={24} color={PALETTE.textMuted} />
+            <Ionicons name="close-outline" size={24} color={PALETTE.textMuted} />
           </Pressable>
         </View>
 

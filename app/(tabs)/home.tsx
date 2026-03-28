@@ -389,19 +389,19 @@ export default function HomeScreen() {
           {dailyLoop && dailyLoop.streak.current > 0 && (
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.streakRow}>
               <View style={styles.streakPill}>
-                <MetallicIcon name="flame" size={16} variant="gold" />
+                <MetallicIcon name="flame-outline" size={16} variant="gold" />
                 <MetallicText style={styles.streakCount} variant="gold">{dailyLoop.streak.current}</MetallicText>
                 <Text style={styles.streakLabel}>day streak</Text>
               </View>
               {dailyLoop.streak.milestone && (
                 <View style={[styles.streakPill, { backgroundColor: `${PALETTE.gold}18` }]}>
-                  <MetallicIcon name="trophy" size={14} variant="gold" />
+                  <MetallicIcon name="trophy-outline" size={14} variant="gold" />
                   <MetallicText style={styles.streakLabel} variant="gold">Milestone!</MetallicText>
                 </View>
               )}
               {dailyLoop.streak.checkedInToday && (
                 <View style={[styles.streakPill, { backgroundColor: `${PALETTE.emerald}15` }]}>
-                  <MetallicIcon name="checkmark-circle" size={14} variant="green" />
+                  <MetallicIcon name="checkmark-circle-outline" size={14} variant="green" />
                   <MetallicText style={styles.streakLabel} variant="green">Today</MetallicText>
                 </View>
               )}
@@ -414,7 +414,7 @@ export default function HomeScreen() {
             <View style={styles.scoreHeader}>
               <Text style={styles.cardLabel}>DAILY BALANCE</Text>
               <View style={styles.trendBadgeScore}>
-                <MetallicIcon name="trending-up" size={12} color="#8CBEAA" />
+                <MetallicIcon name="trending-up-outline" size={12} color="#8CBEAA" />
                 <MetallicText style={styles.trendTextScore} color="#8CBEAA">Score</MetallicText>
               </View>
             </View>
@@ -474,12 +474,12 @@ export default function HomeScreen() {
                   <MetallicText style={styles.insightEyebrow} variant="gold">THIS WEEK</MetallicText>
                   {dailyLoop.weeklyReflection.moodDirection === 'up' && (
                     <View style={styles.trendBadge}>
-                      <MetallicIcon name="trending-up" size={12} variant="green" />
+                      <MetallicIcon name="trending-up-outline" size={12} variant="green" />
                     </View>
                   )}
                   {dailyLoop.weeklyReflection.moodDirection === 'down' && (
                     <View style={styles.trendBadge}>
-                      <MetallicIcon name="trending-down" size={12} variant="copper" />
+                      <MetallicIcon name="trending-down-outline" size={12} variant="copper" />
                     </View>
                   )}
                 </View>
@@ -536,7 +536,7 @@ export default function HomeScreen() {
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                 <View style={styles.premiumPreviewCard}>
                   <View style={styles.premiumPreviewHeader}>
-                    <MetallicIcon name="sparkles" size={18} variant="gold" />
+                    <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
                     <MetallicText style={styles.premiumPreviewLabel} variant="gold">Deeper Insight</MetallicText>
                   </View>
                   <Text style={styles.premiumPreviewTitle}>
@@ -549,7 +549,7 @@ export default function HomeScreen() {
                     <MetallicText style={styles.premiumPreviewCtaText} variant="gold">
                       Explore Deeper Insight
                     </MetallicText>
-                    <MetallicIcon name="arrow-forward" size={14} variant="gold" />
+                    <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                   </View>
                 </View>
               </Pressable>
@@ -723,7 +723,7 @@ function CheckInFAB() {
     >
       <Animated.View style={[fabStyles.glowWrapper, animatedStyle]}>
         <BlurView intensity={60} tint="dark" style={fabStyles.glassCircle}>
-          <MetallicIcon name="add" size={28} variant="gold" />
+          <MetallicIcon name="add-outline" size={28} variant="gold" />
         </BlurView>
       </Animated.View>
     </Pressable>

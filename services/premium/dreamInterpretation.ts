@@ -89,8 +89,11 @@ function blendTriggerScores(
     const feelingScore = heatNorm[trigger] ?? 0;
     const textScore = (textSignals.triggers[trigger] ?? 0) * textReliability;
 
-    // Weighted blend — text leads, feelings supplement
-    const blended = (W.text * textScore) + (W.feelings * feelingScore);
+    // Weighted blend — text leads, feelings supplement.
+    // Renormalize to the two active weights (text + feelings = 0.80)
+    // so that a perfect score on both inputs produces 1.0, not 0.80.
+    const activeW = W.text + W.feelings; // 0.80
+    const blended = ((W.text * textScore) + (W.feelings * feelingScore)) / activeW;
 
     if (blended > 0.01) {
       scores.push({ trigger, score: Math.min(blended, 1) });
@@ -839,6 +842,14 @@ export function generateDreamInterpretation(
       numericSeed,
     );
     question = pickReflectionQuestion(rawThemeCards, triggerScores, numericSeed);
+  }
+
+  // ── Grounding close (high-distress gate) — applies to ALL paragraph sources
+  if (aggregates.activationScore === 'high' && aggregates.valenceScore <= -0.3) {
+    const groundingLine = pickVariant(GROUNDING_LINES, numericSeed, 22);
+    if (!paragraph.includes(groundingLine)) {
+      paragraph = paragraph + '\n\n' + groundingLine;
+    }
   }
 
   // ── Phase A: Explicit imagery (literal keyword matches only) ──────────────

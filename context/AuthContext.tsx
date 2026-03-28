@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/logger';
+import { revenueCatService } from '../services/premium/revenuecat';
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -55,6 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (isMounted.current) {
           setSession(restored);
+          if (restored?.user) {
+            revenueCatService.logIn(restored.user.id);
+          }
         }
       } catch (err) {
         logger.error('[AuthContext] Session restoration failed:', err);
@@ -72,6 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.info(`[AuthContext] State change: ${event}`);
       if (isMounted.current) {
         setSession(newSession);
+      }
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        revenueCatService.logIn(newSession.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        revenueCatService.logOut();
       }
     });
 

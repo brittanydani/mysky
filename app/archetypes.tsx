@@ -90,7 +90,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
   rebel: {
     key: 'rebel',
     name: 'The Rebel',
-    icon: '⚡',
+    icon: 'ϟ',
     color: '#C9AE78',
     tagline: 'Questions structures and catalyzes change',
     light: 'Authenticity, vision, disrupting what no longer serves',

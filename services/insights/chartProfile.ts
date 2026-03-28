@@ -62,9 +62,10 @@ export function deriveChartProfile(chart: NatalChart): ChartProfile {
   const has6thHouseEmphasis = timeKnown && personal.filter(p => p.house === 6).length >= 2;
   const has12thHouseEmphasis = timeKnown && personal.filter(p => p.house === 12).length >= 2;
 
-  // ── Stelliums (3+ planets in same sign, across all placements) ────────
+  // ── Stelliums (3+ planets in same sign, excluding angular points) ─────
   const signCounts: Record<string, number> = {};
   for (const p of chart.placements) {
+    if (p.planet.type === 'Point') continue; // Ascendant, Midheaven, etc. are not planets
     const sign = p.sign.name;
     signCounts[sign] = (signCounts[sign] ?? 0) + 1;
   }

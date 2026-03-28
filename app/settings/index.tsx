@@ -13,7 +13,10 @@ import { localDb } from '../../services/storage/localDb';
 import { FieldEncryptionService } from '../../services/storage/fieldEncryption';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { BackupService } from '../../services/storage/backupService';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { usePremium } from '../../context/PremiumContext';
 import BackupPassphraseModal from '../../components/BackupPassphraseModal';
@@ -174,6 +177,73 @@ export default function SettingsHub() {
     router.push(route as any);
   };
 
+  // ── Account ──────────────────────────────────────────────────────────────────
+  const handleSignOut = useCallback(async () => {
+    await Haptics.selectionAsync();
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/onboarding' as any);
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  }, [signOut, router]);
+
+  const executeDeleteAccount = useCallback(async () => {
+    setIsResetting(true);
+    try {
+      // 1. Delete server-side account via RPC
+      const { error: rpcError } = await supabase.rpc('delete_user_account');
+      if (rpcError) throw rpcError;
+      // 2. Wipe local data (same flow as hard reset)
+      await IdentityVault.destroyIdentity();
+      await FieldEncryptionService.destroyDek();
+      await localDb.hardDeleteAllData();
+      await Promise.all([
+        EncryptedAsyncStorage.removeItem('msky_user_name'),
+        EncryptedAsyncStorage.removeItem('@mysky:archetype_profile'),
+        EncryptedAsyncStorage.removeItem('@mysky:cognitive_style'),
+        EncryptedAsyncStorage.removeItem('@mysky:somatic_entries'),
+        EncryptedAsyncStorage.removeItem('@mysky:trigger_events'),
+        EncryptedAsyncStorage.removeItem('@mysky:relationship_patterns'),
+        EncryptedAsyncStorage.removeItem('@mysky:daily_reflections'),
+        AsyncStorage.removeItem('@mysky:core_values'),
+      ]);
+      // 3. Sign out (session is already invalid after deletion)
+      await signOut();
+      logger.info('[Settings] Account deleted and all data destroyed');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace('/onboarding' as any);
+    } catch (err) {
+      logger.error('[Settings] Account deletion failed:', err);
+      setIsResetting(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Deletion Failed', 'Something went wrong. Please try again or contact support.');
+    }
+  }, [signOut, router]);
+
+  const handleDeleteAccount = useCallback(async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert(
+      'Delete Account?',
+      'This will permanently delete your account and all data from our servers. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete Account', style: 'destructive', onPress: executeDeleteAccount },
+      ],
+      { cancelable: true }
+    );
+  }, [executeDeleteAccount]);
+
   const executeHardReset = useCallback(async () => {
     setIsResetting(true);
     try {
@@ -247,14 +317,14 @@ export default function SettingsHub() {
         {/* Group 1: Preferences */}
         <SettingsGroup title="PREFERENCES">
           <SettingsRow
-            icon="⚝"
+            icon="star-outline"
             title="Edit Birth Data"
             subtitle="Update time and location"
             onPress={() => handleRoute('/onboarding/birth')}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="✺"
+            icon="color-palette-outline"
             title="Color Calibration"
             subtitle="Map colors to your mood states"
             onPress={() => handleRoute('/settings/calibration')}
@@ -264,21 +334,21 @@ export default function SettingsHub() {
         {/* Group 2: Data & Privacy */}
         <SettingsGroup title="DATA & SECURITY">
           <SettingsRow
-            icon="🔒"
+            icon="lock-closed-outline"
             title="Privacy & Security"
             subtitle="AES-256-GCM encryption details"
             onPress={() => handleRoute('/privacy')}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="⎘"
+            icon="download-outline"
             title="Export Data"
             subtitle="Download a CSV of your journal & check-ins"
             onPress={handleExportCsv}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="☁"
+            icon="cloud-outline"
             title="Backup & Sync"
             subtitle={backupInProgress ? 'Creating backup…' : 'Encrypted .msky vault backup'}
             onPress={handleBackup}
@@ -288,27 +358,44 @@ export default function SettingsHub() {
         {/* Group 3: Support */}
         <SettingsGroup title="SUPPORT">
           <SettingsRow
-            icon="?"
+            icon="help-circle-outline"
             title="FAQ & Guides"
             subtitle="How to read your chart and patterns"
             onPress={() => handleRoute('/faq')}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="✉"
+            icon="mail-outline"
             title="Contact Us"
             subtitle="Reach the development team"
             onPress={handleContact}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="§"
+            icon="document-text-outline"
             title="Terms of Use (EULA)"
             onPress={() => handleRoute('/terms')}
           />
         </SettingsGroup>
 
-        {/* Group 4: Danger Zone */}
+        {/* Group 4: Account */}
+        <SettingsGroup title="ACCOUNT">
+          <SettingsRow
+            icon="log-out-outline"
+            title="Sign Out"
+            onPress={handleSignOut}
+          />
+          <View style={styles.divider} />
+          <SettingsRow
+            icon="trash-outline"
+            title="Delete Account"
+            subtitle="Permanently remove your account and data"
+            onPress={handleDeleteAccount}
+            danger
+          />
+        </SettingsGroup>
+
+        {/* Group 5: Danger Zone */}
         <View style={styles.dangerZone}>
           <Pressable
             style={({ pressed }) => [styles.dangerButton, pressed && { opacity: 0.7 }, isResetting && { opacity: 0.5 }]}
@@ -323,7 +410,8 @@ export default function SettingsHub() {
           </Pressable>
         </View>
 
-        <View style={{ height: 100 }} />
+        <Text style={styles.versionText}>Version {Constants.expoConfig?.version ?? '1.0.0'}</Text>
+        <View style={{ height: 60 }} />
       </ScrollView>
 
       <BackupPassphraseModal
@@ -359,21 +447,27 @@ const SettingsRow = ({
   title,
   subtitle,
   onPress,
+  danger,
 }: {
   icon: string;
   title: string;
   subtitle?: string;
   onPress: () => void;
+  danger?: boolean;
 }) => (
   <Pressable
     style={({ pressed }) => [styles.row, pressed && { backgroundColor: 'rgba(255,255,255,0.02)' }]}
     onPress={onPress}
   >
     <View style={styles.rowIconContainer}>
-      <Text style={styles.rowIcon}>{icon}</Text>
+      {icon.includes('-') ? (
+        <Ionicons name={icon as any} size={16} color="#D9BF8C" />
+      ) : (
+        <Text style={styles.rowIcon}>{icon}</Text>
+      )}
     </View>
     <View style={styles.rowTextContainer}>
-      <Text style={styles.rowTitle}>{title}</Text>
+      <Text style={[styles.rowTitle, danger && { color: '#FF453A' }]}>{title}</Text>
       {subtitle && <Text style={styles.rowSubtitle}>{subtitle}</Text>}
     </View>
     <Text style={styles.chevron}>›</Text>
@@ -447,4 +541,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(217, 140, 140, 0.3)',
   },
   dangerButtonText: { color: '#D98C8C', fontSize: 14, fontWeight: '600' },
+  versionText: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.2)',
+    marginTop: 8,
+    marginBottom: 16,
+  },
 });

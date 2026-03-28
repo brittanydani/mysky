@@ -69,7 +69,7 @@ export default function PrivacyConsentModal({
                 {/* ── Summary View ── */}
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.headerContainer}>
                   <View style={styles.iconGlow}>
-                    <MetallicIcon name="shield-checkmark" size={40} color={PALETTE.gold} />
+                    <MetallicIcon name="shield-checkmark-outline" size={40} color={PALETTE.gold} />
                   </View>
                   <Text style={styles.title}>Your Privacy Matters</Text>
                   <Text style={styles.subtitle}>We’re committed to protecting your personal information.</Text>
@@ -107,7 +107,7 @@ export default function PrivacyConsentModal({
                     onPress={() => setShowFullPolicy(true)}
                   >
                     <Text style={styles.policyLinkText}>Read Full Privacy Policy</Text>
-                    <MetallicIcon name="chevron-forward" size={14} color={PALETTE.gold} />
+                    <MetallicIcon name="chevron-forward-outline" size={14} color={PALETTE.gold} />
                   </Pressable>
 
                   <View style={styles.footerActions}>
@@ -143,7 +143,7 @@ export default function PrivacyConsentModal({
                     onPress={() => setShowFullPolicy(false)}
                     hitSlop={15}
                   >
-                    <Ionicons name="chevron-back" size={24} color={PALETTE.textMain} />
+                    <Ionicons name="chevron-back-outline" size={24} color={PALETTE.textMain} />
                   </Pressable>
                   <Text style={styles.policyTitle}>Privacy Policy</Text>
                 </Animated.View>
