@@ -9,7 +9,7 @@
     "backgroundColor": "#020817",
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
-      "buildNumber": "9",
+      "buildNumber": "11",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
