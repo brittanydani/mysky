@@ -49,16 +49,20 @@ export default function AuthRequiredModal({ visible }: Props) {
     setLoading(true);
     try {
       if (mode === 'sign-up') {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
         });
         if (error) throw error;
-        Alert.alert(
-          'Check your email',
-          'We sent you a confirmation link. Tap it, then come back and sign in.',
-        );
-        setMode('sign-in');
+        if (!data.session) {
+          // Email confirmation required — prompt user to check inbox
+          Alert.alert(
+            'Check your email',
+            'We sent you a confirmation link. Tap it, then come back and sign in.',
+          );
+          setMode('sign-in');
+        }
+        // If data.session exists, AuthContext SIGNED_IN fires and modal closes automatically
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),

@@ -44,15 +44,24 @@ export default function SignInScreen() {
     setLoading(true);
     try {
       if (mode === 'sign-up') {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
         });
         if (error) throw error;
-        Alert.alert(
-          'Check your email',
-          'We sent you a confirmation link. Tap it, then come back and sign in.',
-        );
+        if (data.session) {
+          // Email confirmation disabled — user is already signed in
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/(tabs)/growth');
+          }
+        } else {
+          Alert.alert(
+            'Check your email',
+            'We sent you a confirmation link. Tap it, then come back and sign in.',
+          );
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
