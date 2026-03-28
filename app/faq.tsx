@@ -97,7 +97,7 @@ export default function FAQScreen() {
 
             <Text style={styles.question}>Can I export or delete my data?</Text>
             <Text style={styles.answer}>
-              Yes. All users can export a complete structured JSON archive of all personal data via Privacy Settings, and permanently delete all data using the "Hard Reset" option. Premium users can also export a PDF of their natal chart and full personal story, and create encrypted .msky backup files protected with a passphrase of your choice (AES-256-GCM with PBKDF2-SHA256, 600,000 iterations).
+              Yes. All users can export a complete structured JSON archive of all personal data via Privacy Settings, and permanently delete all data using the "Hard Reset" option. Premium users can also export a PDF of their natal chart and full personal story, and create encrypted .msky backup files protected with a passphrase of your choice (AES-256-GCM with PBKDF2-SHA256, 100,000 iterations).
             </Text>
 
             <Text style={styles.question}>How does backup and restore work?</Text>
