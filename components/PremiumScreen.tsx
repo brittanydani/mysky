@@ -316,6 +316,19 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
 
         {/* ── Sticky Bottom CTA ── */}
         <View style={[styles.stickyBottom, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          {/* Legal agreement line above CTA */}
+          <Text style={styles.legalAgreement}>
+            {'By continuing, you agree to our '}
+            <Text style={styles.legalAgreementLink} onPress={() => navigateToLegal('/terms')}>
+              Terms of Use (EULA)
+            </Text>
+            {' and '}
+            <Text style={styles.legalAgreementLink} onPress={() => navigateToLegal('/privacy')}>
+              Privacy Policy
+            </Text>
+            .
+          </Text>
+
           <Animated.View entering={FadeInUp.delay(600).duration(600)}>
             <Pressable
               onPress={handlePurchase}
@@ -355,11 +368,11 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             </Pressable>
             <Text style={styles.legalBarDot}>·</Text>
             <Pressable onPress={() => navigateToLegal('/terms')} disabled={loading} hitSlop={12}>
-              <Text style={styles.legalBarLink}>Terms</Text>
+              <Text style={styles.legalBarLink}>Terms of Use</Text>
             </Pressable>
             <Text style={styles.legalBarDot}>·</Text>
             <Pressable onPress={() => navigateToLegal('/privacy')} disabled={loading} hitSlop={12}>
-              <Text style={styles.legalBarLink}>Privacy</Text>
+              <Text style={styles.legalBarLink}>Privacy Policy</Text>
             </Pressable>
           </View>
 
@@ -658,6 +671,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
   },
+  legalAgreement: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center',
+    marginBottom: 14,
+    lineHeight: 18,
+    paddingHorizontal: 8,
+  },
+  legalAgreementLink: {
+    color: 'rgba(212, 184, 114, 0.85)',
+    textDecorationLine: 'underline',
+  },
   ctaButton: {
     width: '100%',
     borderRadius: 16,
@@ -689,9 +714,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   legalBarLink: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.55)',
+    textDecorationLine: 'underline',
   },
   legalBarDot: {
     fontSize: 10,

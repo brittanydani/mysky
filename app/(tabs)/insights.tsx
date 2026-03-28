@@ -97,6 +97,7 @@ export default function InsightsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      let active = true;
       syncRhythm().catch(() => {});
       (async () => {
         try {
@@ -145,7 +146,7 @@ export default function InsightsScreen() {
             if (refs.length > 0) {
               enhancePatternInsights(refs, skContext, checkIns)
                 .then(result => {
-                  if (!result?.insights.length) return;
+                  if (!active || !result?.insights.length) return;
                   const enhanced = refs.map(ref => {
                     const match = result.insights.find(r => r.id === ref.id);
                     return match ? { ...ref, body: match.body } : ref;
@@ -185,6 +186,7 @@ export default function InsightsScreen() {
           logger.error('Insights load failed:', e);
         }
       })();
+      return () => { active = false; };
     }, [isPremium, syncRhythm])
   );
 

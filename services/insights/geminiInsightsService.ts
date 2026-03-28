@@ -111,8 +111,12 @@ function getApiKey(): string | null {
 
 function buildCacheKey(insights: CrossRefInsight[]): string {
   const today = new Date().toISOString().slice(0, 10);
-  const ids = insights.map(i => i.id).sort().join(',');
-  return `${today}:${ids}`;
+  // Include body content in hash so cache invalidates when data changes mid-day
+  const contentHash = insights
+    .map(i => `${i.id}:${i.body.length}:${i.isConfirmed}`)
+    .sort()
+    .join('|');
+  return `${today}:${contentHash}`;
 }
 
 async function getCachedResult(cacheKey: string): Promise<GeminiPatternResult | null> {
@@ -132,6 +136,18 @@ async function setCachedResult(cacheKey: string, result: GeminiPatternResult): P
 }
 
 // ─── Build User Prompt ────────────────────────────────────────────────────────
+
+// Resolve relationship pattern tag IDs (t1–t14) to human-readable labels
+const PATTERN_TAG_LABELS: Record<string, string> = {
+  t1: 'People-pleasing', t2: 'Fear of abandonment', t3: 'Rushing intimacy',
+  t4: 'Caretaking others', t5: 'Over-explaining', t6: 'Avoidant when close',
+  t7: 'Emotional withdrawal', t8: 'Hyper-independence', t9: 'Shutting down',
+  t10: 'Fear of enmeshment', t11: 'Need for control', t12: 'Difficulty with boundaries',
+  t13: 'Testing the relationship', t14: 'Perfectionism in love',
+};
+function resolvePatternTag(tag: string): string {
+  return PATTERN_TAG_LABELS[tag] ?? tag;
+}
 
 function buildUserPrompt(
   insights: CrossRefInsight[],
@@ -184,7 +200,7 @@ function buildUserPrompt(
     }
     const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
     if (topTags.length) {
-      profile.push(`Top relationship patterns: ${topTags.map(([t, c]) => `${t} (${c}×)`).join(', ')}`);
+      profile.push(`Top relationship patterns: ${topTags.map(([t, c]) => `${resolvePatternTag(t)} (${c}×)`).join(', ')}`);
     }
   }
   if (context.dailyReflections) {
