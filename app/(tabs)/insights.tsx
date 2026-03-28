@@ -147,11 +147,11 @@ export default function InsightsScreen() {
               enhancePatternInsights(refs, skContext, checkIns)
                 .then(result => {
                   if (!active || !result?.insights.length) return;
-                  const enhanced = refs.map(ref => {
+                  const aiEnhanced = refs.map(ref => {
                     const match = result.insights.find(r => r.id === ref.id);
                     return match ? { ...ref, body: match.body } : ref;
                   });
-                  setCrossRefs(enhanced);
+                  setCrossRefs(aiEnhanced);
                 })
                 .catch(e => logger.error('Gemini pattern enhancement failed:', e));
             }

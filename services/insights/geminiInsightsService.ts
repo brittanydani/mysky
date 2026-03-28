@@ -111,12 +111,22 @@ function getApiKey(): string | null {
 
 function buildCacheKey(insights: CrossRefInsight[]): string {
   const today = new Date().toISOString().slice(0, 10);
-  // Include body content in hash so cache invalidates when data changes mid-day
+  // Use a simple hash of each body so cache invalidates when numbers change
   const contentHash = insights
-    .map(i => `${i.id}:${i.body.length}:${i.isConfirmed}`)
+    .map(i => `${i.id}:${simpleHash(i.body)}:${i.isConfirmed}`)
     .sort()
     .join('|');
   return `${today}:${contentHash}`;
+}
+
+/** djb2 string hash — fast, low-collision fingerprint for cache keys */
+function simpleHash(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash |= 0; // Convert to 32-bit integer
+  }
+  return hash;
 }
 
 async function getCachedResult(cacheKey: string): Promise<GeminiPatternResult | null> {
@@ -343,18 +353,34 @@ export async function enhancePatternInsights(
       const data = await response.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) {
-        logger.error('[GeminiPatterns] No text in response');
+        logger.error('[GeminiPatterns] No text in response — possible safety filter block');
         return null;
       }
 
-      const parsed = JSON.parse(text);
+      let parsed: any;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        logger.error('[GeminiPatterns] Malformed JSON from Gemini:', text.slice(0, 200));
+        return null;
+      }
+
       if (!parsed.insights || !Array.isArray(parsed.insights)) {
         logger.error('[GeminiPatterns] Invalid response structure');
         return null;
       }
 
+      // Filter out any entries with missing/empty body or id
+      const validInsights = parsed.insights.filter(
+        (i: any) => typeof i?.id === 'string' && typeof i?.body === 'string' && i.body.trim().length > 0,
+      );
+      if (!validInsights.length) {
+        logger.error('[GeminiPatterns] No valid insights in response');
+        return null;
+      }
+
       const result: GeminiPatternResult = {
-        insights: parsed.insights,
+        insights: validInsights,
         generatedAt: new Date().toISOString(),
       };
 
