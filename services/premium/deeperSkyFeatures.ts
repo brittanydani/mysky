@@ -165,70 +165,19 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
       'Share or save to Files',
     ],
   },
-];
-
-// Premium theme options
-export interface PremiumTheme {
-  id: string;
-  name: string;
-  description: string;
-  colors: {
-    background: string;
-    backgroundSecondary: string;
-    primary: string;
-    accent: string;
-  };
-  isPremium: boolean;
-}
-
-export const PREMIUM_THEMES: PremiumTheme[] = [
   {
-    id: 'midnight',
-    name: 'Midnight Sky',
-    description: 'The classic MySky experience',
-    colors: {
-      background: '#020817',
-      backgroundSecondary: '#0A1224',
-      primary: '#D8C39A',
-      accent: '#0E1830',
-    },
-    isPremium: false,
-  },
-  {
-    id: 'dark-plum',
-    name: 'Dark Plum',
-    description: 'Deep, velvety purple tones',
-    colors: {
-      background: '#1A0F1E',
-      backgroundSecondary: '#2A1A30',
-      primary: '#D4A5D9',
-      accent: '#3D2952',
-    },
+    id: 'encrypted-backup',
+    name: 'Encrypted Backup & Restore',
+    icon: 'shield-checkmark',
+    description: 'Full backup & restore with end-to-end encryption',
+    freeVersion: 'Not available',
+    premiumVersion: 'Encrypted backup & restore — protect and transfer your data with a personal passphrase',
     isPremium: true,
-  },
-  {
-    id: 'starlight',
-    name: 'Starlight',
-    description: 'Soft silver and deep navy',
-    colors: {
-      background: '#0A0E14',
-      backgroundSecondary: '#121820',
-      primary: '#E8E8F0',
-      accent: '#2D3A5C',
-    },
-    isPremium: true,
-  },
-  {
-    id: 'rose-gold',
-    name: 'Rose Gold',
-    description: 'Warm, romantic elegance',
-    colors: {
-      background: '#1A1215',
-      backgroundSecondary: '#251A1D',
-      primary: '#E8B4B8',
-      accent: '#3D2940',
-    },
-    isPremium: true,
+    bullets: [
+      'End-to-end encrypted with your passphrase',
+      'Backup & restore across devices',
+      'Your data stays yours',
+    ],
   },
 ];
 

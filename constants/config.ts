@@ -37,33 +37,4 @@ export const config = {
       },
     ],
   },
-  
-  // Premium features list — Evocative language for Deeper Sky
-  premiumFeatures: {
-    free: [
-      'Daily mood, energy & stress check-ins',
-      'Sleep logging — quality & duration',
-      'Journaling with basic guided prompts',
-      'Basic weekly averages & summaries',
-      'Natal chart & Big Three framework',
-      'Essential daily guidance',
-      'One personal relationship profile',
-      'Private & encrypted — on-device only',
-    ],
-    premium: [
-      'Dream journal with encrypted sleep entries',
-      'Symbolic & archetypal dream reflections',
-      'Deep mood & personal reflection trends',
-      'Extended pattern reflections',
-      'Growth framework (Attachment & Shadow)',
-      'Unlimited relationship depth mapping',
-      'Connection mapping (Mood & Journaling)',
-      'Insight tagging & personal awareness',
-      'Full Natal Story (All 10 Chapters)',
-      'Personalized daily action steps',
-      'Chiron & Lunar Node depth mapping',
-      'High-resolution PDF chart exports',
-      'Encrypted backup & restore',
-    ],
-  },
 };

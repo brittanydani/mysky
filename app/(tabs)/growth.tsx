@@ -6,7 +6,7 @@
  */
 
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +22,6 @@ import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
-import { BreathingMandala } from '../../components/ui/BreathingMandala';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -175,7 +174,9 @@ export default function PatternsScreen() {
             {!loading && trendCheckIns.length >= 2 ? (
               <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />
             ) : (
-              <BreathingMandala size={240} />
+              <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center' }}>
+                <ActivityIndicator size="large" color={PALETTE.gold} />
+              </View>
             )}
           </View>
 
