@@ -30,7 +30,7 @@ function redact(value: unknown): unknown {
         'dreammood','dream_mood','dreamfeelings','dream_feelings','dreammetadata','dream_metadata',
         'tags','wins','challenges','evidence','snippet','evidence_snippets',
         'api_key','apikey','supabase_key','anon_key',
-        'stack','componentstack','message',
+        'componentstack',
         'access_token','accesstoken','refresh_token','refreshtoken',
         'session_token','sessiontoken','bearer',
         'email','phone','address',

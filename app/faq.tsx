@@ -8,6 +8,7 @@ import { useRouter, Href } from 'expo-router';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { theme } from '../constants/theme';
+import { SUPPORT_EMAIL } from '../constants/config';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -134,7 +135,7 @@ export default function FAQScreen() {
 
             <Text style={styles.question}>How do I contact support or ask privacy questions?</Text>
             <Text style={styles.answer}>
-              Email <Text style={styles.highlight}>brittanyapps@outlook.com</Text>. We respond to privacy-related inquiries within 30 days.
+              Email <Text style={styles.highlight}>{SUPPORT_EMAIL}</Text>. We respond to privacy-related inquiries within 30 days.
             </Text>
 
             <Text style={styles.question}>How old do I need to be to use MySky?</Text>

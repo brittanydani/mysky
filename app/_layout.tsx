@@ -26,6 +26,7 @@ import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
+import { SUPPORT_EMAIL } from '../constants/config';
 
 // Allowlist of routes that notification deep links can navigate to.
 // Prevents injection of arbitrary or external URLs via push notifications.
@@ -106,8 +107,12 @@ async function getTermsConsent(): Promise<boolean> {
 }
 
 async function setTermsConsent(granted: boolean) {
-  const SecureStore = await import('expo-secure-store');
-  await SecureStore.setItemAsync('terms_consent', granted ? 'true' : 'false');
+  try {
+    const SecureStore = await import('expo-secure-store');
+    await SecureStore.setItemAsync('terms_consent', granted ? 'true' : 'false');
+  } catch (e) {
+    logger.error('[setTermsConsent] Failed to persist terms consent:', e);
+  }
 }
 
 export default function RootLayout() {
@@ -423,7 +428,7 @@ function AppShell() {
 
           {/* Overlay gates (do NOT unmount navigation) */}
           {needsPrivacyConsent && (
-            <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail="brittanyapps@outlook.com" />
+            <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail={SUPPORT_EMAIL} />
           )}
 
           {/* IMPORTANT: Terms now happens INSIDE onboarding (after Welcome). */}

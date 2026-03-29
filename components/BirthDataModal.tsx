@@ -28,6 +28,7 @@ import { MetallicIcon } from './ui/MetallicIcon';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import Constants from 'expo-constants';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
@@ -86,9 +87,10 @@ function parseHHMMToDate(hhmm?: string): Date {
 }
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const _bundleId = Constants.expoConfig?.ios?.bundleIdentifier ?? 'com.mysky.app';
 const NOMINATIM_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
-  'User-Agent': 'MySkyApp/1.0 (brittanyapps@outlook.com)',
+  'User-Agent': `MySkyApp/1.0 (${_bundleId})`,
 };
 
 // ─── Custom Time Picker ──────────────────────────────────────────────────────

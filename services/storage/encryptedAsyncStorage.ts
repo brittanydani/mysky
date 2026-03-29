@@ -47,14 +47,24 @@ export const EncryptedAsyncStorage = {
    * Encrypt and store a value. The plaintext is never written to AsyncStorage.
    */
   async setItem(key: string, value: string): Promise<void> {
-    const encrypted = await FieldEncryptionService.encryptField(value);
-    await AsyncStorage.setItem(key, encrypted);
+    try {
+      const encrypted = await FieldEncryptionService.encryptField(value);
+      await AsyncStorage.setItem(key, encrypted);
+    } catch (e) {
+      logger.error(`[EncryptedAsyncStorage] Write failed for key "${key}"`, e);
+      throw e;
+    }
   },
 
   /**
    * Remove a key (unchanged — deletion doesn't need encryption).
    */
   async removeItem(key: string): Promise<void> {
-    await AsyncStorage.removeItem(key);
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (e) {
+      logger.error(`[EncryptedAsyncStorage] Delete failed for key "${key}"`, e);
+      throw e;
+    }
   },
 };

@@ -48,9 +48,9 @@ import { toLocalDateString } from '../utils/dateUtils';
 import { logger } from '../utils/logger';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { MetallicText } from './ui/MetallicText';
+import Constants from 'expo-constants';
 
 const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
-const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif', default: 'System' });
 const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
 
 // ── Ethereal Palette ──
@@ -63,9 +63,10 @@ const ETHEREAL = {
 
 // ── Nominatim location search ──
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const _bundleId = Constants.expoConfig?.ios?.bundleIdentifier ?? 'com.mysky.app';
 const NOMINATIM_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
-  'User-Agent': 'MySkyApp/1.0 (brittanyapps@outlook.com)',
+  'User-Agent': `MySkyApp/1.0 (${_bundleId})`,
 };
 
 interface LocationSuggestion {
@@ -431,6 +432,9 @@ export default function OnboardingModal({
             headers: NOMINATIM_HEADERS,
           }
         );
+        if (!response.ok) {
+          throw new Error(`Nominatim error ${response.status}`);
+        }
         const data = await response.json();
 
         if (!controller.signal.aborted) {

@@ -28,7 +28,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
 import { MetallicIcon } from './MetallicIcon';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -59,7 +58,6 @@ const SPRING = {
   overshootClamping: false,
 } as const;
 
-const GOLD    = '#C9AE78';
 const AMETHYST = '#9D76C1';
 
 // ── Component ─────────────────────────────────────────────────────────────────

@@ -10,7 +10,6 @@ import {
   vec,
   Circle,
   BlurMask,
-  Oval,
 } from '@shopify/react-native-skia';
 import { mySkyGold } from '@/constants/mySkyMetallic';
 

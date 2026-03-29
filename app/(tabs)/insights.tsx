@@ -37,7 +37,6 @@ import { MetallicText } from '../../components/ui/MetallicText';
 import { useCorrelationStore } from '../../store/correlationStore';
 import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/insightsPdfExport';
 import { DailyAggregate, ChartProfile } from '../../services/insights/types';
-import { PipelineResult } from '../../services/insights/types';
 
 // ── Unified 5-Hub Palette ──
 const PALETTE = {

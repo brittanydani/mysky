@@ -51,7 +51,8 @@ type BackupEnvelope = {
  * ============================================================================
  */
 
-const KDF_ITERATIONS = 100_000;
+// OWASP PBKDF2-SHA256 minimum (2023): 310,000 iterations
+const KDF_ITERATIONS = 310_000;
 const KEY_LEN = 32; // bytes (AES-256)
 const SALT_LEN = 16;
 const IV_LEN = 12;
@@ -225,8 +226,8 @@ export class BackupService {
       .toISOString()
       .replace(/[:.]/g, '-')}.msky`;
 
-    const baseDir =
-      FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
+    // Use documentDirectory so iOS does not purge the file before sharing completes.
+    const baseDir = FileSystem.documentDirectory;
 
     if (!baseDir) {
       throw new Error('No writable directory available for backup');
@@ -255,7 +256,7 @@ export class BackupService {
       throw new Error('Backup file does not exist');
     }
     const MAX_BACKUP_SIZE = 50 * 1024 * 1024; // 50 MB
-    if (fileInfo.exists && (fileInfo as any).size > MAX_BACKUP_SIZE) {
+    if (fileInfo.exists && 'size' in fileInfo && (fileInfo.size as number) > MAX_BACKUP_SIZE) {
       throw new Error('Backup file is too large (max 50 MB)');
     }
 

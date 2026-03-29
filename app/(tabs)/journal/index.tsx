@@ -223,24 +223,6 @@ export default function JournalScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries.length, isPremium]);
 
-  const formatDate = (dateString: string) => {
-    const date = parseLocalDate(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
-
   const moodToLevel = (mood: string): MoodLevel => {
     const map: Record<string, MoodLevel> = {
       calm: 5,
@@ -376,8 +358,23 @@ export default function JournalScreen() {
     ]);
   }, []);
 
-  const stableFormatDate = useCallback(formatDate, []);
-  const stableFormatTime = useCallback(formatTime, []);
+  const stableFormatDate = useCallback((dateString: string) => {
+    const date = parseLocalDate(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
+
+  const stableFormatTime = useCallback((dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }, []);
 
   const keyExtractor = useCallback((item: JournalEntry | SleepEntry) => item.id, []);
 

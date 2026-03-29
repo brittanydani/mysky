@@ -26,7 +26,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { ChevronLeft, Lock } from 'lucide-react-native';
+import { Lock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';

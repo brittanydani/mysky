@@ -86,7 +86,7 @@ export default function AuthRequiredModal({ visible }: Props) {
           <SkiaDynamicCosmos />
 
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.inner}
           >
             <View style={styles.header}>
@@ -109,6 +109,7 @@ export default function AuthRequiredModal({ visible }: Props) {
                 autoCorrect={false}
                 value={email}
                 onChangeText={setEmail}
+                accessibilityLabel="Email address"
               />
               <TextInput
                 style={styles.input}
@@ -117,9 +118,13 @@ export default function AuthRequiredModal({ visible }: Props) {
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
+                accessibilityLabel="Password"
               />
 
-              <Pressable onPress={handleAuth} disabled={loading} style={styles.btnWrap}>
+              <Pressable onPress={handleAuth} disabled={loading} style={styles.btnWrap}
+                accessibilityRole="button"
+                accessibilityLabel={mode === 'sign-in' ? 'Sign In' : 'Create Account'}
+              >
                 <LinearGradient
                   colors={[theme.primary, theme.primaryDark]}
                   start={{ x: 0, y: 0 }}
@@ -140,6 +145,8 @@ export default function AuthRequiredModal({ visible }: Props) {
             <Pressable
               style={styles.toggleRow}
               onPress={() => setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in')}
+              accessibilityRole="button"
+              accessibilityLabel={mode === 'sign-in' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
             >
               <Text style={styles.toggleText}>
                 {mode === 'sign-in' ? "Don't have an account? " : 'Already have an account? '}

@@ -269,8 +269,6 @@ export default function SleepScreen() {
   const [entries, setEntries] = useState<SleepEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editingDate, setEditingDate] = useState<string | null>(null);
@@ -315,7 +313,6 @@ export default function SleepScreen() {
 
   useEffect(() => {
     return () => {
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
   }, []);
@@ -470,9 +467,7 @@ export default function SleepScreen() {
         if (expandedEntryId === savedId) setExpandedEntryId(null);
       }
       applyEntryToForm(savedEntry);
-      setSaving(false); setSaved(true);
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-      savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
+      setSaving(false);
     } catch (e) {
       logger.error('Sleep save failed:', e);
       const msg = 'Could not save entry. Please try again.';

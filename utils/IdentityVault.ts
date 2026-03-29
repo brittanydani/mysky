@@ -60,6 +60,10 @@ export class IdentityVault {
    * Called during a Hard Reset — irreversible.
    */
   static async destroyIdentity(): Promise<void> {
-    await SecureStore.deleteItemAsync(IDENTITY_KEY, STORE_OPTIONS);
+    try {
+      await SecureStore.deleteItemAsync(IDENTITY_KEY, STORE_OPTIONS);
+    } catch (error) {
+      logger.error('[IdentityVault] Failed to destroy identity:', error);
+    }
   }
 }

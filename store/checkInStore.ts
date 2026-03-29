@@ -37,9 +37,10 @@ export const useCheckInStore = create<CheckInStore>((set) => ({
     set({ isSaving: true, saveStatus: 'idle', error: null });
 
     const {
-      data: { user },
+      data: { session },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getSession();
+    const user = session?.user;
 
     if (authError || !user) {
       set({
@@ -78,20 +79,26 @@ export const useCheckInStore = create<CheckInStore>((set) => ({
   loadTodayCheckIn: async () => {
     set({ isLoadingToday: true, error: null });
 
-    const { data, error } = await supabase.rpc('get_today_check_in');
+    try {
+      const { data, error } = await supabase.rpc('get_today_check_in');
 
-    if (error) {
-      set({ isLoadingToday: false, error: error.message ?? "Failed to load today's check-in." });
+      if (error) {
+        set({ isLoadingToday: false, error: error.message ?? "Failed to load today's check-in." });
+        return null;
+      }
+
+      const exists     = Boolean(data?.exists);
+      const moodValue  = exists && typeof data?.moodValue === 'number'
+        ? clampMood(data.moodValue)
+        : null;
+
+      set({ isLoadingToday: false, todayMood: moodValue, error: null });
+      return moodValue;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to load today's check-in.";
+      set({ isLoadingToday: false, error: msg });
       return null;
     }
-
-    const exists     = Boolean(data?.exists);
-    const moodValue  = exists && typeof data?.moodValue === 'number'
-      ? clampMood(data.moodValue)
-      : null;
-
-    set({ isLoadingToday: false, todayMood: moodValue, error: null });
-    return moodValue;
   },
 
   resetStatus: () =>

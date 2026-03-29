@@ -32,6 +32,7 @@ import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../../services/storage/fieldEncryption';
 import { logger } from '../../../utils/logger';
+import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';
 import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
@@ -126,10 +127,10 @@ export default function SettingsScreen() {
 
   // ── Accent colors for settings sections ──
   const accentGold = '#C9AE78';
-  const accentAmethyst = '#C9AE78';
-  const accentBlue = '#C9AE78';
+  const accentAmethyst = '#9B72CF';
+  const accentBlue = '#8BC4E8';
   const accentCopper = '#CD7F5D';
-  const accentEmerald = '#C9AE78';
+  const accentEmerald = '#6EBF8B';
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -217,12 +218,14 @@ export default function SettingsScreen() {
             latitude: chart.latitude,
             longitude: chart.longitude,
             timezone: chart.timezone,
-            houseSystem: chart.houseSystem as any,
+            houseSystem: chart.houseSystem as import('../../../services/astrology/types').HouseSystem,
           });
         }
         const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
         if (storedName) setIdentityName(prev => prev || storedName);
-      } catch {}
+      } catch (innerErr) {
+        logger.warn('Failed to load identity chart data:', innerErr);
+      }
     } catch (error) {
       logger.error('Failed to load settings:', error);
     }
@@ -372,16 +375,16 @@ export default function SettingsScreen() {
   const disableActions = backupInProgress || restoreInProgress || backupModalVisible || restoreModalVisible;
 
   const openSupportEmail = async () => {
-    const url = 'mailto:brittanyapps@outlook.com?subject=MySky%20Support';
+    const url = `mailto:${SUPPORT_EMAIL}?subject=MySky%20Support`;
     try {
       const can = await Linking.canOpenURL(url);
       if (!can) {
-        Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com.');
+        Alert.alert('Unable to Open Mail', `Please email ${SUPPORT_EMAIL}.`);
         return;
       }
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com.');
+      Alert.alert('Unable to Open Mail', `Please email ${SUPPORT_EMAIL}.`);
     }
   };
 
@@ -414,7 +417,7 @@ export default function SettingsScreen() {
             latitude: chart.latitude,
             longitude: chart.longitude,
             timezone: chart.timezone,
-            houseSystem: chart.houseSystem as any,
+            houseSystem: chart.houseSystem as import('../../../services/astrology/types').HouseSystem,
           });
           setShowBirthModal(true);
         } else {
@@ -1093,7 +1096,7 @@ export default function SettingsScreen() {
                               await signOut();
                             } catch (err: unknown) {
                               const msg = err instanceof Error ? err.message : 'Something went wrong';
-                              Alert.alert('Error', `Could not delete account: ${msg}\n\nPlease contact brittanyapps@outlook.com to request deletion.`);
+                              Alert.alert('Error', `Could not delete account: ${msg}\n\nPlease contact ${SUPPORT_EMAIL} to request deletion.`);
                             }
                           },
                         },

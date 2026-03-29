@@ -1,12 +1,18 @@
 // MySky App Configuration
 
+import Constants from 'expo-constants';
+
 // Single hosted page covering both Privacy Policy and Terms of Use (EULA)
 export const LEGAL_URL = 'https://amber-divan-e75.notion.site/Privacy-Policy-for-MySky-30d62720fdb580e2aa3adb38632be487';
+
+// Support contact — single source of truth for all in-app references
+export const SUPPORT_EMAIL = 'brittanyapps@outlook.com';
 
 export const config = {
   appName: 'MySky',
   tagline: 'Personal Growth, Mapped to You',
-  version: '1.0.0',
+  // Reads the live version from app.json via expo-constants so this never drifts.
+  version: Constants.expoConfig?.version ?? '1.0.0',
   
   // Premium pricing tiers (for display only - live prices from RevenueCat override these)
   premium: {

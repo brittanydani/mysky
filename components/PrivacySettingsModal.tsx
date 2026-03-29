@@ -14,11 +14,10 @@ import * as Haptics from 'expo-haptics';
 import { MetallicIcon } from './ui/MetallicIcon';
 
 import { theme } from '../constants/theme';
-import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import { secureStorage } from '../services/storage/secureStorage';
-import { localDb } from '../services/storage/localDb';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { logger } from '../utils/logger';
+import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
+import { localDb } from '../services/storage/localDb';
 
 // ── Cinematic Palette ──
 const PALETTE = {

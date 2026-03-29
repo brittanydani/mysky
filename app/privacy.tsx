@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
+import { SUPPORT_EMAIL } from '../constants/config';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
@@ -237,10 +238,10 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.sectionTitle}>Contact Us</Text>
             <Pressable
               style={styles.contactCard}
-              onPress={() => Linking.openURL('mailto:brittanyapps@outlook.com?subject=MySky%20Privacy%20Inquiry')}
+              onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=MySky%20Privacy%20Inquiry`)}
             >
               <Ionicons name="mail-outline" size={20} color={theme.textGold} />
-              <Text style={styles.contactInfo}>brittanyapps@outlook.com</Text>
+              <Text style={styles.contactInfo}>{SUPPORT_EMAIL}</Text>
             </Pressable>
             <Text style={[styles.paragraph, { marginTop: 12 }]}>We respond to privacy-related inquiries within 30 days.</Text>
           </View>

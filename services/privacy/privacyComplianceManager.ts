@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '../storage/secureStorage';
 import { localDb } from '../storage/localDb';
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
@@ -254,8 +253,8 @@ export class PrivacyComplianceManager {
       EncryptedAsyncStorage.removeItem('@mysky:trigger_events'),
       EncryptedAsyncStorage.removeItem('@mysky:relationship_patterns'),
       EncryptedAsyncStorage.removeItem('@mysky:daily_reflections'),
-      // Core values uses plain AsyncStorage (not encrypted)
-      AsyncStorage.removeItem('@mysky:core_values'),
+      // Core values contains psychological profiling data — delete via EncryptedAsyncStorage.
+      EncryptedAsyncStorage.removeItem('@mysky:core_values'),
     ]);
 
     return {
@@ -293,7 +292,10 @@ export class PrivacyComplianceManager {
   }
 
   private isConsentExpired(timestamp?: string): boolean {
-    if (!timestamp) return false;
+    // A missing timestamp means the consent record is malformed or legacy.
+    // Treat it as expired so the user is prompted to re-consent, rather than
+    // granting perpetual consent from a record with no provenance.
+    if (!timestamp) return true;
     const maxAgeMs = PrivacyComplianceManager.CONSENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
     const expiryTime = new Date(timestamp).getTime() + maxAgeMs;
     return Date.now() > expiryTime;

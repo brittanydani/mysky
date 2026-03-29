@@ -7,7 +7,6 @@ import {
   Skia,
   LinearGradient,
   SweepGradient,
-  Group,
   vec,
 } from '@shopify/react-native-skia';
 import {
@@ -18,11 +17,6 @@ import {
 } from '@/constants/mySkyMetallic';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = (angleDeg - 90) * Math.PI / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-}
 
 /**
  * Diamond-shaped compass blade:

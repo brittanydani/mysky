@@ -150,7 +150,7 @@ class RevenueCatService {
     }
     try {
       await Purchases.logIn(userId);
-      logger.info('[RevenueCat] Logged in with user ID:', userId);
+      logger.info('[RevenueCat] User logged in successfully');
     } catch (error) {
       logger.error('[RevenueCat] logIn failed:', error);
     }
@@ -191,8 +191,10 @@ class RevenueCatService {
     );
     if (hasKnownPremiumEntitlement) return true;
 
-    // Fallback: any active entitlement indicates an active paid access state.
-    return true;
+    // Only known premium entitlement aliases grant access.
+    // Do NOT fall through to `return true` — an unknown entitlement (trial, partner, etc.)
+    // must not silently grant premium access.
+    return false;
   }
 
   getActiveEntitlement(customerInfo: CustomerInfo): PurchasesEntitlementInfo | null {

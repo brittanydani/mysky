@@ -507,7 +507,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         closeQuoteTimeoutRef.current = setTimeout(() => setShowCloseQuote(false), 4000);
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    } catch (e) {
+    } catch {
       Alert.alert('Save Error', 'Could not secure your entry. Please try again.');
     }
   };

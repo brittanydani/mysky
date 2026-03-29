@@ -8,6 +8,7 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
+import { SUPPORT_EMAIL } from '../constants/config';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
@@ -167,7 +168,7 @@ export default function TermsOfServiceScreen() {
             <View style={styles.contactCard}>
               <Text style={styles.sectionTitle}>Contact</Text>
               <Text style={styles.paragraph}>Questions regarding these terms? Reach us at:</Text>
-              <Text style={styles.email}>brittanyapps@outlook.com</Text>
+              <Text style={styles.email}>{SUPPORT_EMAIL}</Text>
             </View>
 
           </Animated.View>

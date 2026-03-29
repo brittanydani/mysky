@@ -1,9 +1,7 @@
 import React, { memo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle, Platform, LayoutChangeEvent } from 'react-native';
 import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
-import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
-import { luxuryTheme } from '../../constants/luxuryTheme';
 import { MetallicText } from './MetallicText';
 import { MetallicIcon } from './MetallicIcon';
 

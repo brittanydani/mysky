@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePremium } from '../../context/PremiumContext';
 import BackupPassphraseModal from '../../components/BackupPassphraseModal';
 import { logger } from '../../utils/logger';
+import { SUPPORT_EMAIL } from '../../constants/config';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 
 /** Wraps a field value safely for CSV output. */
@@ -159,16 +160,16 @@ export default function SettingsHub() {
 
   // ── Contact Us ───────────────────────────────────────────────────────────────
   const handleContact = async () => {
-    const url = 'mailto:brittanyapps@outlook.com?subject=MySky%20Support';
+    const url = `mailto:${SUPPORT_EMAIL}?subject=MySky%20Support`;
     try {
       const can = await Linking.canOpenURL(url);
       if (!can) {
-        Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com directly.');
+        Alert.alert('Unable to Open Mail', `Please email ${SUPPORT_EMAIL} directly.`);
         return;
       }
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Unable to Open Mail', 'Please email brittanyapps@outlook.com directly.');
+      Alert.alert('Unable to Open Mail', `Please email ${SUPPORT_EMAIL} directly.`);
     }
   };
 
