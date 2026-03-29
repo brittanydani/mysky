@@ -17,7 +17,6 @@ import { InputValidator } from './inputValidator';
 import {
   isSwissEphemerisAvailable,
   calculateChart as sweCalculateChart,
-  SwissEphChartData,
   calcMoonUncertainty,
   setSiderealMode,
   setTropicalMode,
@@ -229,9 +228,6 @@ export class EnhancedAstrologyCalculator {
     const cachedSettings = AstrologySettingsService.getCachedSettings();
     const includeAsteroids = cachedSettings?.showAsteroid ?? true;
     const lilitMethod = cachedSettings?.lilitMethod ?? 'mean';
-
-    // Swiss Ephemeris expects 1-based month; parseBirthDateTime returns 0-based
-    const sweMonth = month + 1;
 
     // Convert local time to UTC for Swiss Ephemeris
     const utc = timezoneInfo.utcDateTime;

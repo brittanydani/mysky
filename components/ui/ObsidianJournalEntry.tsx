@@ -33,13 +33,11 @@ import {
   BlurMask,
   Rect,
   vec,
-  Paint,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
   useDerivedValue,
   withTiming,
-  withSequence,
   Easing,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -219,10 +217,6 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   });
 
   // Ripple radius expands
-  const rippleRadius = useDerivedValue(() => {
-    'worklet';
-    return rippleProgress.value * CARD_W * 0.6;
-  });
 
   return (
     <Pressable
@@ -301,7 +295,6 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
           <Canvas style={styles.sigilCanvas}>
             <Group opacity={0.6}>
               {sigil.map((pt, i) => {
-                const next = sigil[(i + 1) % sigil.length];
                 return (
                   <Rect
                     key={i}

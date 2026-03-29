@@ -8,7 +8,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
-import { theme } from '../../constants/theme';
 import { MetallicText } from './MetallicText';
 
 export type AspectCategory = 'connection' | 'chemistry' | 'growth' | 'challenge';

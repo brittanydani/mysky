@@ -80,7 +80,7 @@ export default function MoonPhaseView({ size = 40, date, interactive = true, gra
       const a = -Math.PI / 2 + (i / N) * Math.PI;
       const x = cx + sign * r * Math.cos(a);
       const y = cy + r * Math.sin(a);
-      i === 0 ? p.moveTo(x, y) : p.lineTo(x, y);
+      if (i === 0) p.moveTo(x, y); else p.lineTo(x, y);
     }
 
     // 2) Terminator ellipse: bottom → top

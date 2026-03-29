@@ -8,7 +8,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { Canvas, Path, Skia, BlurMask, Group, Circle } from '@shopify/react-native-skia';
+import { Canvas, Path, Skia, BlurMask, Group } from '@shopify/react-native-skia';
 import { StyleSheet } from 'react-native';
 
 interface Props {

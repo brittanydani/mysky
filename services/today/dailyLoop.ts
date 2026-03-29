@@ -16,7 +16,6 @@
  */
 
 import { localDb } from '../storage/localDb';
-import { DailyCheckIn } from '../patterns/types';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { mean } from '../../utils/stats';
 import { logger } from '../../utils/logger';
@@ -103,13 +102,7 @@ function getMilestone(streak: number): number | null {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Energy / Stress numeric mapping (matches home.tsx and insightsEngine.ts)
-// ─────────────────────────────────────────────────────────────────────────────
 
-const ENERGY_MAP: Record<string, number> = { low: 2, medium: 5, high: 8 };
-const STRESS_MAP: Record<string, number> = { low: 2, medium: 5, high: 8 };
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Streak Status
 // ─────────────────────────────────────────────────────────────────────────────
 

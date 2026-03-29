@@ -5,7 +5,7 @@
  * Every check-in becomes: User signals + Astrology context.
  */
 
-import { DailyCheckIn, TransitEvent, ThemeTag, EnergyLevel, StressLevel, TimeOfDay, CheckInInput, SkySnapshot } from './types';
+import { DailyCheckIn, TransitEvent, TimeOfDay, CheckInInput, SkySnapshot } from './types';
 import { localDb } from '../storage/localDb';
 import { NatalChart } from '../astrology/types';
 import { getTransitInfo, getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';

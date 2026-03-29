@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient, BlurMask } from '@shopify/react-native-skia';
 import { theme } from '../../constants/theme';
 import { MetallicText } from './MetallicText';
@@ -59,15 +59,6 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
       y: center + r * Math.sin(angle),
     };
   };
-
-  const polygonPoints = useMemo(() => {
-    return forces
-      .map((f, i) => {
-        const { x, y } = getCoordinates(f.value, i);
-        return `${x},${y}`;
-      })
-      .join(' ');
-  }, [forces, center, radius]);
 
   // Determine the dominant force color for the fill gradient
   const dominantForce = useMemo(() => {

@@ -7,7 +7,6 @@
 //   Excludes Angles (ASC/MC) and Nodes.
 
 import { NatalChart, PlanetPlacement } from './types';
-import { ZODIAC_SIGNS } from './constants';
 
 // ══════════════════════════════════════════════════
 // TYPES

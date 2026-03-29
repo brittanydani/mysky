@@ -64,7 +64,7 @@ async function flushPendingCheckIns(): Promise<void> {
     consumePendingCheckIns(async (records) => {
       if (!records.length) return;
 
-      for (const record of records) {
+      for (let i = 0; i < records.length; i++) {
         try {
           await CheckInService.saveCheckIn(
             {

@@ -2,8 +2,8 @@
 // Not charts first — people first.
 // Now powered by accurate natal-transit calculations
 
-import { NatalChart, AstrologySign, ZodiacSign } from './types';
-import { DailyInsightEngine, DailyInsight, LifeDomain } from './dailyInsightEngine';
+import { NatalChart } from './types';
+import { DailyInsightEngine, LifeDomain } from './dailyInsightEngine';
 import { toLocalDateString, dayOfYear } from '../../utils/dateUtils';
 
 export interface HumanDailyGuidance {

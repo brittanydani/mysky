@@ -748,7 +748,7 @@ class LocalDatabase {
 
     try {
       await db.execAsync(`ALTER TABLE daily_check_ins ADD COLUMN time_of_day TEXT NOT NULL DEFAULT 'morning'`);
-    } catch (_) {
+    } catch {
       /* already exists */
     }
 

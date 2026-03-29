@@ -157,7 +157,6 @@ export class RelationshipInsightGenerator {
    */
   private static analyzeHowTheyFeelSafe(chart: NatalChart): string {
     const moon = chart.moon;
-    const saturn = chart.saturn;
     
     let safetyNeeds = '';
     

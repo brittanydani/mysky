@@ -29,7 +29,7 @@ import {
   MockPersonalizeScreen,
 } from './mocks';
 
-const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = Dimensions.get('window');
+const { width: DEVICE_WIDTH } = Dimensions.get('window');
 
 // Map screenshot configs to their mock content components
 function getMockContent(slug: string, width: number, height: number) {

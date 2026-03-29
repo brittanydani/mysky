@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { LEGAL_URL, SUPPORT_EMAIL } from '../constants/config';
+import { LEGAL_URL } from '../constants/config';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { MetallicIcon } from './ui/MetallicIcon';
 
@@ -35,7 +35,6 @@ export default function PrivacyConsentModal({
   privacyPolicyUrl,
   contactEmail,
 }: PrivacyConsentModalProps) {
-  const email = contactEmail ?? SUPPORT_EMAIL;
   const policyUrl = privacyPolicyUrl ?? LEGAL_URL;
   const [showFullPolicy, setShowFullPolicy] = useState(false);
 

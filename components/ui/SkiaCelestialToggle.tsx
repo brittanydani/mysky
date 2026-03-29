@@ -21,7 +21,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Platform,
 } from 'react-native';
 import {
   Canvas,
@@ -29,9 +28,7 @@ import {
   Circle,
   Group,
   RadialGradient,
-  LinearGradient,
   BlurMask,
-  Rect,
   vec,
 } from '@shopify/react-native-skia';
 import {

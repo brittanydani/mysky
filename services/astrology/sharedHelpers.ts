@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { ZODIAC_SIGNS } from './constants';
-import { AstrologySign, ZodiacSign } from './types';
+import { AstrologySign } from './types';
 
 // ── Zodiac sign name list (derived from constants) ──────────
 

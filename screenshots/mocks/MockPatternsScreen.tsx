@@ -11,11 +11,6 @@ import {
   Canvas,
   Circle,
   BlurMask,
-  Path,
-  Skia,
-  RoundedRect,
-  LinearGradient,
-  vec,
 } from '@shopify/react-native-skia';
 
 const PALETTE = {

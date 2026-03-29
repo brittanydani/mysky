@@ -20,20 +20,16 @@ import React, { memo, useMemo } from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
 import {
   Canvas,
-  Circle,
   Group,
   RadialGradient,
   Rect,
   vec,
   Blur,
-  BlurMask,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
   useDerivedValue,
   useFrameCallback,
-  withTiming,
-  Easing,
 } from 'react-native-reanimated';
 
 const { width: W, height: H } = Dimensions.get('window');

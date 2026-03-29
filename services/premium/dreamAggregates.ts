@@ -12,8 +12,7 @@
  */
 
 import { NatalChart } from '../astrology/types';
-import { DailyCheckIn } from '../patterns/types';
-import { JournalEntry, SleepEntry } from '../storage/models';
+import { SleepEntry } from '../storage/models';
 import {
   AttachmentStyle,
   DreamAggregates,

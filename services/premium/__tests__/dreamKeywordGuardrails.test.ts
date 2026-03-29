@@ -15,11 +15,6 @@ import { matchDreamKeywords, type KeywordMatch } from '../dreamKeywords';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Extract just the canonical labels (first keyword) from matches */
-function extractLabels(matches: KeywordMatch[]): string[] {
-  return matches.map(m => m.entry.keywords[0]);
-}
-
 /** Extract just the entry IDs from matches */
 function extractIds(matches: KeywordMatch[]): string[] {
   return matches.map(m => m.entry.id);
@@ -116,7 +111,6 @@ describe('ambiguous keyword disqualification', () => {
   it('should disqualify "late" when used as time-related (e.g., "I was late")', () => {
     const dreamText = 'I was late for the exam and everyone was staring at me.';
     const matches = matchDreamKeywords(dreamText);
-    const ids = extractIds(matches);
 
     // "late" should not match the deceased-person entry via disqualifier
     const lateMatch = matches.find(m => m.matchedKeyword === 'late');

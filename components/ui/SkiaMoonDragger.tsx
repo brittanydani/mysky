@@ -15,7 +15,7 @@
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
  */
 
-import React, { memo, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { memo, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,6 @@ import {
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
-  useDerivedValue,
   withRepeat,
   withTiming,
   Easing,
@@ -93,8 +92,6 @@ const SkiaMoonDragger = memo(function SkiaMoonDragger({ value, onChange }: Props
       true,
     );
   }, [moonPulse]);
-
-  const moonGlowRadius = useDerivedValue(() => HANDLE_RADIUS + 4 + moonPulse.value * 4);
 
   // ── Angle computation ──
   const angleFraction = value / MAX_HOURS; // 0–1

@@ -417,7 +417,6 @@ function computePatternFlags(
   nervousConflict: NervousConflict,
 ): PatternFlags {
   const recurring = history?.recurring ?? false;
-  const recurrenceStrength = history?.recurrenceStrength ?? 0;
 
   // Escalating: recurring + current top themes are stronger than history average
   const topScore = topThemes[0]?.score ?? 0;

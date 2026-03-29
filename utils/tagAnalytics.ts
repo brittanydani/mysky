@@ -15,8 +15,7 @@
  *  - Tag + chart baseline agreement (personalized blended insight)
  */
 
-import { DailyAggregate, ChartProfile, Element } from '../services/insights/types';
-import { regulationStyle } from '../services/insights/chartProfile';
+import { DailyAggregate, ChartProfile } from '../services/insights/types';
 import type { ConfidenceLevel } from './insightsEngine';
 import { ordinal } from './insightsEngine';
 import { mean, confidence } from './stats';
@@ -192,11 +191,6 @@ export function computeTagImpact(aggregates: DailyAggregate[]): TagImpactCard {
     for (const tag of d.tagsUnion) allTags.add(tag);
   }
 
-  // Baseline averages (all days)
-  const baseMood = mean(aggregates.map(d => d.moodAvg));
-  const baseEnergy = mean(aggregates.map(d => d.energyAvg));
-  const baseStress = mean(aggregates.map(d => d.stressAvg));
-
   const items: TagImpactItem[] = [];
 
   for (const tag of allTags) {
@@ -312,7 +306,6 @@ export function computeTagPairs(aggregates: DailyAggregate[]): TagPairCard {
 
   const baseMood = mean(aggregates.map(d => d.moodAvg));
   const baseStress = mean(aggregates.map(d => d.stressAvg));
-  const baseEnergy = mean(aggregates.map(d => d.energyAvg));
 
   // Collect all unique tags
   const allTags: string[] = [];

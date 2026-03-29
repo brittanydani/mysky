@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from '
 import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { Ionicons } from '@expo/vector-icons';
 import { luxuryTheme } from '../../constants/luxuryTheme';
-import { theme } from '../../constants/theme';
 import { MetallicIcon } from './MetallicIcon';
 
 interface InsightCardProps {

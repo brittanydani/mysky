@@ -2,7 +2,7 @@
 // Generates themed interpretation sections and aspect-level interpretations
 // for the natal chart detail page.
 
-import { NatalChart, PlanetPlacement, Aspect, AnglePosition } from './types';
+import { NatalChart, PlanetPlacement, Aspect } from './types';
 
 // ── Themed Section Types ──
 
@@ -213,11 +213,6 @@ function placementLine(p: PlanetPlacement): string {
   return `${p.planet.name} in ${p.sign.name}, House ${p.house || '—'}, ${p.degree}°${String(p.minute).padStart(2, '0')}'${retro}`;
 }
 
-function angleLine(a: AnglePosition): string {
-  const signName = typeof a.sign === 'string' ? a.sign : a.sign.name;
-  return `${a.name} in ${signName}, ${a.degree}°`;
-}
-
 // ── Individual Section Generators ──
 
 function generateCoreSelf(chart: NatalChart): ThemedSection {
@@ -342,8 +337,6 @@ function generateCareerSection(chart: NatalChart): ThemedSection {
   if (chart.midheaven) placements.push(placementLine(chart.midheaven));
 
   const mc = chart.angles?.find(a => a.name === 'Midheaven');
-  const h10 = chart.houseCusps?.find(h => h.house === 10);
-
   const details: string[] = [];
 
   if (mc) {

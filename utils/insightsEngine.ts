@@ -21,17 +21,13 @@
  *  - Chiron is in chart.planets (PlanetPosition[], planet === 'Chiron')
  */
 
-import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel, TimeOfDay } from '../services/patterns/types';
+import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel } from '../services/patterns/types';
 import { JournalEntry } from '../services/storage/models';
 import { NatalChart } from '../services/astrology/types';
 import {
-  DailyAggregate,
-  ChartProfile,
   PipelineResult,
-  TodayContext,
 } from '../services/insights/types';
 import { weekKey } from '../services/insights/dayKey';
-import { deriveChartProfile, regulationStyle } from '../services/insights/chartProfile';
 import {
   computeEnhancedInsights,
   EnhancedInsightBundle,
@@ -39,11 +35,11 @@ import {
 import {
   computeTagAnalytics,
   TagAnalyticsBundle,
+  TAG_LABELS,
 } from './tagAnalytics';
 import {
   mean as _mean,
   stdDev as _stdDev,
-  linearRegression as _linearRegression,
   computeTrend as _computeTrend,
   confidence as _confidence,
 } from './stats';
@@ -328,7 +324,6 @@ function stressToNum(s: StressLevel): number { return STRESS_MAP[s] ?? 5; }
 // ── Use shared implementations from utils/stats ──
 const mean = _mean;
 const stdDev = _stdDev;
-const linearRegression = _linearRegression;
 const computeTrend = _computeTrend;
 const confidence = _confidence;
 
@@ -351,8 +346,6 @@ export function ordinal(n: number): string {
   const v = n % 100;
   return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
 }
-
-import { TAG_LABELS } from './tagAnalytics';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 

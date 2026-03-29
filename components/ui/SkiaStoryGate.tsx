@@ -12,7 +12,7 @@
  */
 
 import React, { memo, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import {
   Canvas,
   Circle,
@@ -20,7 +20,6 @@ import {
   Path,
   Skia,
   BlurMask,
-  SweepGradient,
   vec,
 } from '@shopify/react-native-skia';
 import {
@@ -32,7 +31,6 @@ import {
 } from 'react-native-reanimated';
 import { MetallicText } from './MetallicText';
 
-const { width } = Dimensions.get('window');
 const GATE_SIZE = 120;
 const RADIUS = GATE_SIZE * 0.4;
 

@@ -28,7 +28,6 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../ui/MetallicIcon';
 import { MetallicText } from '../ui/MetallicText';
-import { GoldSubtitle } from '../ui/GoldSubtitle';
 import {
   EnergyEngine,
   EnergySnapshot,

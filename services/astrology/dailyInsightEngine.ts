@@ -9,7 +9,6 @@ import {
   normalize360,
   signNameFromLongitude as getSignFromDegree,
   extractAbsDegree,
-  ZODIAC_SIGN_NAMES as SIGNS,
 } from './sharedHelpers';
 
 const { Origin, Horoscope } = require('circular-natal-horoscope-js');

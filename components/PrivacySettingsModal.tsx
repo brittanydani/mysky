@@ -76,7 +76,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
       }
       const exportData = JSON.stringify(result.package, null, 2);
       await Share.share({ message: exportData, title: 'MySky Data Export' });
-    } catch (error) {
+    } catch {
       Alert.alert('Export Failed', 'Unable to secure your data for export.');
     } finally {
       setIsLoading(false);
@@ -99,7 +99,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
               // Close modal and force the root layout to re-gate the session
               onClose();
               DeviceEventEmitter.emit('CONSENT_WITHDRAWN');
-            } catch (error) {
+            } catch {
               Alert.alert('Error', 'Could not withdraw consent. Please try again.');
             }
           },
@@ -127,7 +127,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
       Alert.alert('Reset Complete', 'Your personal data has been erased from this device.', [
         { text: 'OK', onPress: onClose },
       ]);
-    } catch (error) {
+    } catch {
       Alert.alert('Reset Failed', 'Process interrupted. Please try again.');
     } finally {
       setIsLoading(false);

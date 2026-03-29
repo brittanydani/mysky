@@ -10,13 +10,10 @@
  *   <SkiaBreathingRing size={120} color="amethyst" rings={2} />
  */
 import React, { useEffect, memo } from 'react';
-import { StyleSheet } from 'react-native';
 import {
   Canvas,
   Circle,
   BlurMask,
-  vec,
-  LinearGradient,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,
@@ -26,7 +23,6 @@ import {
   useDerivedValue,
   SharedValue,
 } from 'react-native-reanimated';
-import { mySkyGold } from '../../constants/mySkyMetallic';
 
 type ColorPreset = 'gold' | 'amethyst' | 'emerald' | 'silverBlue';
 

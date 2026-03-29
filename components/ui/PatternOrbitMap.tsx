@@ -113,7 +113,6 @@ function computeDimensionScores(checkIns: DailyCheckIn[]): number[] {
     return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
   };
 
-  const avgMood = avg(moods);
   const avgEnergy = avg(energies);
   const avgStress = avg(stresses);
   const moodStd = stdDev(moods);
@@ -229,9 +228,6 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   // Second particle (opposite phase, inner orbit)
   const particle2X = useDerivedValue(() => cx + innerR * 1.1 * Math.cos(orbitAngle.value + Math.PI));
   const particle2Y = useDerivedValue(() => cy + innerR * 1.1 * Math.sin(orbitAngle.value + Math.PI));
-
-  // Breathing glow radius
-  const glowPulse = useDerivedValue(() => 1 + breath.value * 0.08);
 
   const { nodes, flowArcs, outerRingPath, innerRingPath } = useMemo(() => {
     const startAngle = -Math.PI / 2; // top

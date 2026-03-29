@@ -2,9 +2,8 @@
 // Enhanced personalized daily guidance for Deeper Sky premium users
 // Premium gets 3-6 lines per category instead of 1-2, plus transit explanations
 
-import { NatalChart, SimpleAspect, AstrologySign } from '../astrology/types';
+import { NatalChart, SimpleAspect } from '../astrology/types';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
-import { DailyGuidanceGenerator } from '../astrology/dailyGuidance';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { getMoonPhaseName } from '../../utils/moonPhase';
 

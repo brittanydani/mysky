@@ -12,7 +12,7 @@
  *  - Blended insight rule matching
  */
 
-import { NatalChart, PlanetPlacement } from '../astrology/types';
+import { NatalChart } from '../astrology/types';
 import { ChartProfile, Element, Modality } from './types';
 
 /**

@@ -15,23 +15,21 @@
  *   Direction (Nodes) + Activation (Transit/Moon) + Location (House/Chakra)
  */
 
-import { NatalChart, SimpleAspect, AspectTypeName } from '../astrology/types';
+import { NatalChart } from '../astrology/types';
 import { DailyInsightEngine } from '../astrology/dailyInsightEngine';
-import { detectChartPatterns, Stellium } from '../astrology/chartPatterns';
+import { detectChartPatterns } from '../astrology/chartPatterns';
 import {
   PROMPT_LIBRARY,
   GENTLE_CLOSES,
-  CONTEXT_LINES,
   JournalPromptEntry,
   Activation,
   TransitTrigger,
   MoonPhaseTag,
-  ChakraTag,
 } from './promptLibrary';
 import { getChironPlacement } from './chiron';
 import { getNodeAxis } from './nodes';
 import { getMoonPhaseKey } from '../../utils/moonPhase';
-import { getChakraForHouse, getChakraForPlanet, generateChakraInsightCard, ChakraInsightCard } from './chakraSystem';
+import { generateChakraInsightCard, ChakraInsightCard } from './chakraSystem';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES

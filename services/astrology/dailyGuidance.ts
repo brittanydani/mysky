@@ -14,7 +14,6 @@ import {
 } from './types';
 
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transits';
-import { ZODIAC_SIGNS } from './constants';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { signFromLongitude } from './sharedHelpers';
 

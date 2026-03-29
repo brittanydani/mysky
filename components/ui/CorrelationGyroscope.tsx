@@ -58,7 +58,7 @@ function buildRingConfig(pair: CorrelationPair, idx: number): RingConfig {
 
 // ─── Orbital Ring with spinning indicator node ────────────────────────────────
 
-interface OrbitalRingProps extends RingConfig {}
+type OrbitalRingProps = RingConfig;
 
 function OrbitalRing({ radius, tiltX, tiltZ, speed, colorHex, opacity, isPulse }: OrbitalRingProps) {
   const nodeRef  = useRef<THREE.Group>(null);

@@ -2,7 +2,7 @@
 // Detects notable aspect patterns: Grand Trine, T-Square, Grand Cross,
 // Kite, Yod, Mystic Rectangle, and hemisphere emphasis.
 
-import { NatalChart, PlanetPlacement, Aspect } from './types';
+import { NatalChart, PlanetPlacement } from './types';
 
 // ── Types ──
 

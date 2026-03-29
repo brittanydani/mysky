@@ -9,26 +9,22 @@ import {
   runDreamSynthesisEngine,
   __test,
   type EngineInput,
-  type EngineOutput,
   type TextSignalsInput,
   type CheckInSignalsInput,
   type HistorySignalsInput,
 } from '../dreamSynthesisEngine';
 import type {
-  DreamFeelingDef,
   SelectedFeeling,
   ShadowTrigger,
 } from '../dreamTypes';
-import { FEELING_MAP, DREAM_FEELINGS } from '../dreamTypes';
+import { DREAM_FEELINGS } from '../dreamTypes';
 import { detectNervousSystemConflict } from '../nervousSystemConflict';
-import { detectAmbivalence } from '../ambivalenceEngine';
 
 const {
   clamp,
   normalize,
   scoreFeelings,
   blendTriggerScores,
-  buildDominantProfiles,
   computeConfidence,
   DEFAULT_WEIGHTS,
   ALL_TRIGGERS,

@@ -9,9 +9,7 @@
  */
 
 import { NatalChart } from '../astrology/types';
-import { RelationshipChart } from '../storage/models';
-import { RelationshipGuidanceGenerator, HumanRelationshipGuidance } from '../astrology/relationshipGuidance';
-import { SynastryEngine, SynastryReport, SynastryAspect } from '../astrology/synastryEngine';
+import { SynastryReport } from '../astrology/synastryEngine';
 
 export interface RelationshipComparison {
   person1Name: string;

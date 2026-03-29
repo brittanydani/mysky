@@ -4,7 +4,7 @@
 // No horoscopes. Personal energy weather, grounded in placements.
 // ─────────────────────────────────────────────────────────────
 
-import { NatalChart, PlanetPlacement, ZodiacSign } from '../astrology/types';
+import { NatalChart } from '../astrology/types';
 import { getTransitingLongitudes } from '../astrology/transits';
 import { getMoonPhaseInfo } from '../../utils/moonPhase';
 import {
@@ -12,8 +12,6 @@ import {
   extractSignElement as signElement,
   signNameFromLongitude as signFromLongitude,
   computeHouseForLongitude as houseForLongitude,
-  SIGN_TO_ELEMENT as SIGN_ELEMENTS,
-  ZODIAC_SIGN_NAMES,
 } from '../astrology/sharedHelpers';
 import { dayOfYear } from '../../utils/dateUtils';
 
@@ -739,7 +737,7 @@ export class EnergyEngine {
       if (typeof moonLongitude === 'number' && Number.isFinite(moonLongitude)) {
         return signFromLongitude(moonLongitude);
       }
-    } catch (_e) {
+    } catch {
       // Transit calculation failed — fall back to natal Moon
     }
     return signName(chart.moonSign) || signName(chart.moon?.sign) || 'Cancer';
@@ -757,7 +755,7 @@ export class EnergyEngine {
       if (typeof moonLongitude === 'number' && Number.isFinite(moonLongitude)) {
         return moonLongitude;
       }
-    } catch (_e) {
+    } catch {
       // fall through
     }
     return null;

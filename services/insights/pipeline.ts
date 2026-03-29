@@ -9,9 +9,8 @@
 
 import { DailyCheckIn, EnergyLevel, StressLevel } from '../patterns/types';
 import { JournalEntry } from '../storage/models';
-import { NatalChart } from '../astrology/types';
-import { DailyAggregate, PipelineInput, PipelineResult, TodayContext } from './types';
-import { toDayKey, todayDayKey, daysBetweenKeys } from './dayKey';
+import { DailyAggregate, PipelineInput, PipelineResult } from './types';
+import { todayDayKey, daysBetweenKeys } from './dayKey';
 import { deriveChartProfile } from './chartProfile';
 import type { KeywordResult, EmotionResult, SentimentResult } from '../journal/nlp';
 import { mean } from '../../utils/stats';

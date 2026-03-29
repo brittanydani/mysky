@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Canvas, RoundedRect, Rect, Circle, vec, BlurMask, Group } from '@shopify/react-native-skia';
+import { Canvas, RoundedRect, BlurMask } from '@shopify/react-native-skia';
 import { SCREENSHOT } from './config';
 
 interface Props {

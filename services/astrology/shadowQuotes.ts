@@ -19,7 +19,7 @@
  *   But it reads like a simple sentence.
  */
 
-import { NatalChart, SimpleAspect, AspectTypeName } from './types';
+import { NatalChart, SimpleAspect } from './types';
 import { TransitSignal } from './dailyInsightEngine';
 import { detectChartPatterns } from './chartPatterns';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transits';
@@ -415,7 +415,6 @@ const SHADOW_JOURNAL_PROMPTS: Record<ShadowTone, string[]> = {
 /**
  * 14-day anti-repetition key for AsyncStorage / SQLite
  */
-const SHOWN_QUOTES_KEY = 'shadow_quotes_shown';
 const ANTI_REPEAT_DAYS = 14;
 
 /**
@@ -581,11 +580,6 @@ function scoreQuote(quote: ShadowQuote, ctx: DayActivationContext): number {
 // ════════════════════════════════════════════════════════════════════════════
 // ANTI-REPETITION (SQLite-backed)
 // ════════════════════════════════════════════════════════════════════════════
-
-interface ShownQuoteRecord {
-  quoteId: string;
-  shownAt: string; // ISO date
-}
 
 async function getRecentlyShownIds(): Promise<Set<string>> {
   try {

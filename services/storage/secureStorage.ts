@@ -422,7 +422,7 @@ class SecureStorageService {
         await SecureStore.setItemAsync(key, JSON.stringify({ junk: Array.from(junk), t: Date.now() }));
       }
       await SecureStore.deleteItemAsync(key);
-    } catch (e) {
+    } catch {
       // still attempt delete
       try { await SecureStore.deleteItemAsync(key); } catch {}
     }

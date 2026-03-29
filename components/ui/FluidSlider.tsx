@@ -22,7 +22,6 @@ import {
   LinearGradient,
   vec,
   Shadow,
-  BlurMask,
 } from '@shopify/react-native-skia';
 import * as Haptics from 'expo-haptics';
 

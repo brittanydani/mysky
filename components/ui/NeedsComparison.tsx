@@ -4,7 +4,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
-import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from './MetallicText';
 import { MetallicIcon } from './MetallicIcon';
 

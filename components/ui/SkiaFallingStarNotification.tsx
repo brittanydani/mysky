@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { forwardRef, useImperativeHandle, useState, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, useWindowDimensions } from 'react-native';
 import {
   Canvas,

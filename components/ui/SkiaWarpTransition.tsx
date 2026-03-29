@@ -32,8 +32,6 @@ import {
   Path,
   Skia,
   BlurMask,
-  RadialGradient,
-  vec,
 } from '@shopify/react-native-skia';
 import {
   useSharedValue,

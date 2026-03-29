@@ -24,7 +24,6 @@ import {
   BlurMask,
   Group,
   Circle,
-  RoundedRect,
 } from '@shopify/react-native-skia';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────

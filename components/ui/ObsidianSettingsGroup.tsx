@@ -19,19 +19,15 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  Platform,
 } from 'react-native';
 import {
   Canvas,
   RoundedRect,
-  Group,
   LinearGradient,
   Rect,
   BlurMask,
   vec,
 } from '@shopify/react-native-skia';
-import { theme } from '../../constants/theme';
-
 const { width: SCREEN_W } = Dimensions.get('window');
 const GROUP_W = SCREEN_W - 32;
 
@@ -165,8 +161,6 @@ export const ObsidianDivider = memo(function ObsidianDivider() {
 });
 
 // ── Styles ──────────────────────────────────────────────────────────────────
-
-const SERIF = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' });
 
 const styles = StyleSheet.create({
   wrapper: {

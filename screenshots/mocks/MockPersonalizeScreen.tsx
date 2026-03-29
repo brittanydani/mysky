@@ -13,8 +13,6 @@ import {
   BlurMask,
   SweepGradient,
   vec,
-  RoundedRect,
-  LinearGradient,
 } from '@shopify/react-native-skia';
 
 const PALETTE = {

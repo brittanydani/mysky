@@ -225,7 +225,7 @@ class FieldEncryptionServiceClass {
     let existingDek: string | null = null;
     try {
       existingDek = await SecureStore.getItemAsync(DEK_KEY);
-    } catch (error) {
+    } catch {
       // SecureStore is unavailable (keychain locked, device migration, etc.)
       // Do NOT generate a new key — that would silently orphan all encrypted data.
       logger.error('[FieldEncryption] SecureStore unavailable — cannot load or create DEK');
@@ -260,7 +260,7 @@ class FieldEncryptionServiceClass {
     let stored: string | null = null;
     try {
       stored = await SecureStore.getItemAsync(DEK_KEY);
-    } catch (error) {
+    } catch {
       logger.error('[FieldEncryption] SecureStore unavailable during getDek()');
       throw new Error('Secure storage unavailable — cannot access encryption key');
     }
@@ -330,7 +330,7 @@ class FieldEncryptionServiceClass {
         const ciphertextWithTag = base64ToUint8Array(parts[1]);
 
         return aesGcmDecrypt(ciphertextWithTag, dek, iv);
-      } catch (error) {
+      } catch {
         // Never return the raw encrypted blob — it would show gibberish in the UI.
         // Return a controlled, user-safe placeholder so the app remains usable.
         logger.error('[FieldEncryption] AES-GCM decryption failed (encryption key may be unavailable)');
@@ -360,7 +360,7 @@ class FieldEncryptionServiceClass {
         const tag = base64ToUint8Array(legacyData.tag);
         
         return await legacyXorDecrypt(ciphertext, dek, iv, tag);
-      } catch (error) {
+      } catch {
         // Never return the raw encrypted blob — it would show gibberish in the UI.
         logger.error('[FieldEncryption] Legacy decryption failed (encryption key may be unavailable)');
         return DECRYPTION_FAILED_PLACEHOLDER;

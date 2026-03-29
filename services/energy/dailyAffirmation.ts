@@ -6,13 +6,12 @@
 
 import { NatalChart } from '../astrology/types';
 import { getTransitingLongitudes } from '../astrology/transits';
-import { getMoonPhaseTag as getPreciseMoonPhaseTag, getMoonPhaseName as getPreciseMoonPhaseName } from '../../utils/moonPhase';
+import { getMoonPhaseTag as getPreciseMoonPhaseTag } from '../../utils/moonPhase';
 import {
   extractSignName as signName,
   signNameFromLongitude as signFromLongitude,
   SIGN_TO_ELEMENT as SIGN_ELEMENTS,
   SIGN_TO_MODALITY as SIGN_MODALITIES,
-  ZODIAC_SIGN_NAMES as ZODIAC_SIGNS,
 } from '../astrology/sharedHelpers';
 import { dayOfYear } from '../../utils/dateUtils';
 
@@ -443,7 +442,7 @@ export class DailyAffirmationEngine {
       if (typeof moonLon === 'number' && Number.isFinite(moonLon)) {
         return signFromLongitude(moonLon);
       }
-    } catch (_e) {
+    } catch {
       // fallback
     }
     return '';

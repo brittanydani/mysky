@@ -11,14 +11,10 @@ import { getMoonPhaseTag as getPreciseMoonPhaseTag } from '../../utils/moonPhase
 import {
   signNameFromLongitude as signFromLongitude,
   extractSignName as getSignName,
-  SIGN_TO_ELEMENT,
-  SIGN_TO_MODALITY,
-  ZODIAC_SIGN_NAMES as ZODIAC_SIGNS,
 } from '../astrology/sharedHelpers';
 import { dayOfYear, toLocalDateString } from '../../utils/dateUtils';
 import {
   TaggedContent,
-  TaggedGreeting,
   ContentTag,
   TimeOfDay,
   AFFIRMATION_LIBRARY,
@@ -26,7 +22,6 @@ import {
   COSMIC_WEATHER_LIBRARY,
   GREETING_LIBRARY,
 } from './todayContentLibrary';
-import { logger } from '../../utils/logger';
 import { localDb } from '../storage/localDb';
 
 // ═══════════════════════════════════════════════════════════════

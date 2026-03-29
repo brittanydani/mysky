@@ -15,8 +15,6 @@ import {
   vec,
   Path,
   Skia,
-  RoundedRect,
-  LinearGradient,
 } from '@shopify/react-native-skia';
 
 const PALETTE = {

@@ -21,7 +21,6 @@ import {
   RadialGradient,
   SweepGradient,
   Text as SkiaText,
-  useFont,
   vec,
   BlurMask,
   Path,
@@ -132,12 +131,7 @@ const R_INNER = 42;                     // inner circle — slightly larger for 
 const R_DOT_RING_1 = R_PLANET_RING - 18;
 const R_DOT_RING_2 = R_ASPECT_RING + 10;
 
-// Polish constants
-const RIM_W = 3.5;
-const RIM_INSET = 2;
-
 const PLANET_R = 13.5;
-const HILITE_R = 1.8;
 
 // Glass reflection helpers
 function makeArcPath(
@@ -206,14 +200,6 @@ const PLANET_SYMBOLS: Record<string, string> = {
   Midheaven: 'MC',
 };
 
-// ── User Color Palette ──
-const USER_COLORS = [
-  '#C9AE78', // User0 (Owner) - Champagne Gold
-  '#C8CCD4', // User1 - Silver / Platinum
-  '#D4B26A', // User2 - Warm Gold
-  '#D2B6A4', // User3 - Rose Gold
-];
-
 const PLANET_COLORS: Record<string, string> = {
   Sun: '#C9AE78',
   Moon: '#B8C2D0',
@@ -262,28 +248,6 @@ function getUserSpherePalette(userIndex: number): string[] {
   ];
   return palettes[userIndex % 4] ?? palettes[0];
 }
-
-// Muted, jewel-tone aspect colors matching reference palette
-const ASPECT_COLOR: Record<string, string> = {
-  conjunction: '#C89030',  // warm amber gold
-  sextile:     '#4E90C0',  // steel blue
-  trine:       '#4EAA84',  // muted emerald
-  square:      '#B85C58',  // dusty rose
-  opposition:  '#B87840',  // burnt amber
-};
-
-// Pale silk-thread aspect colors (fallback for minor/other aspects)
-const ASPECT_LINE_COLORS: Record<string, string> = {
-  Harmonious: 'rgba(170,210,185,0.20)',
-  Challenging: 'rgba(210,170,160,0.20)',
-  Neutral: 'rgba(203,184,146,0.22)',
-};
-
-const ASPECT_STRONG_COLORS: Record<string, string> = {
-  Harmonious: 'rgba(170,210,185,0.38)',
-  Challenging: 'rgba(210,170,160,0.38)',
-  Neutral: 'rgba(203,184,146,0.40)',
-};
 
 // Warm platinum cross-aspect threads
 const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
@@ -529,14 +493,10 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
   const serif16 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 16, fontWeight: '600' }), []);
   const serif14 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 14, fontWeight: '600' }), []);
   const serif12 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 12, fontWeight: '600' }), []);
-  const serif10 = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 10, fontWeight: '600' }), []);
   const sans10 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 10, fontWeight: '600' }), []);
   const sans9 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '600' }), []);
   const sans8 = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 8, fontWeight: '600' }), []);
-  const zodiac16 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 16, fontWeight: '400' }), []);
   const zodiac24 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 24, fontWeight: '400' }), []);
-  const zodiac12 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 12, fontWeight: '400' }), []);
-  const zodiac10 = useMemo(() => matchFont({ fontFamily: ZODIAC_FAMILY, fontSize: 10, fontWeight: '400' }), []);
 
   const sans11Heavy = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 11, fontWeight: '900' }), []);
   const sans9Heavy = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '900' }), []);
@@ -1237,10 +1197,6 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           const glyphPos = polarToXY(planet.originalAngle, actualRadius);
           const tickOuter = polarToXY(planet.originalAngle, R_OUTER - 1);
           const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : actualRadius + (PLANET_R * 0.75) + 2);
-          const textColor = isPoint ? "#FFFFFF" : "#000000";
-          const textOpacity = 1.0;
-          const textStyle = isPoint ? "fill" : "stroke";
-          const strokeWidthVal = isPoint ? 0 : 1.5;
 
           const baseColor = planet.color;
 

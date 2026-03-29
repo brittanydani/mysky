@@ -87,7 +87,6 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
 
     // ── 8 Bezel (kite) facets — second half (mirror from bezel mid back) ──
     const bezelFacets2 = dirs.map((_, i) => {
-      const gi = i * 2; // girdle index for this primary direction
       const giNext = ((i + 1) % 8) * 2;
       const p = make();
       p.moveTo(bPts[i].x, bPts[i].y);
@@ -210,7 +209,6 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
       <Group>
         {girdleFacets.map((p, i) => {
           const gi = i * 2;
-          const giMid = gi + 1;
           const s = sectorStyle(i);
           return (
             <Path key={`gf1-${i}`} path={p}>

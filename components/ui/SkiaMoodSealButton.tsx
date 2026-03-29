@@ -30,7 +30,6 @@ import {
   withSequence,
   Easing,
   runOnJS,
-  withSpring,
 } from 'react-native-reanimated';
 import {
   Gesture,
@@ -50,7 +49,6 @@ const HOLD_MS = 1800;    // milliseconds required to hold
 // ── Palette ───────────────────────────────────────────────────────────────────
 
 const GOLD    = '#D9BF8C';
-const GOLD2   = '#C9AE78';
 const EMERALD = '#6EBF8B';
 const BG      = '#020817';
 
@@ -259,11 +257,6 @@ export default function SkiaMoodSealButton({
 
   // Core border alpha
   const coreOp = useDerivedValue(() => 0.50 + progress.value * 0.45);
-
-  // Tick brightness brightens proportionally to progress
-  const tickBrightness = useDerivedValue(() =>
-    Math.min(0.30, 0.08 + progress.value * 0.22),
-  );
 
   // Post-seal success pulse
   const sGlowR  = useDerivedValue(() => CORE_R + 8 + breathe.value * 14);

@@ -3,10 +3,7 @@
 
 import { 
   NatalChart, 
-  PlanetPlacement, 
-  Aspect
 } from './types';
-import { PLANETS, ZODIAC_SIGNS } from './constants';
 import { UnknownTimeHandler } from './unknownTimeHandler';
 
 export interface EmotionalOperatingSystem {
@@ -77,7 +74,6 @@ export class EmotionalOperatingSystemGenerator {
   private static analyzeEmotionalLanguage(chart: NatalChart): EmotionalLanguage {
     const moon = chart.moon;
     const moonSign = moon.sign;
-    const moonHouse = moon.house;
     
     // Find Moon aspects for additional context
     const moonAspects = chart.aspects.filter(a => 
@@ -207,8 +203,6 @@ export class EmotionalOperatingSystemGenerator {
    */
   private static analyzeProtectionStyle(chart: NatalChart): ProtectionStyle {
     const mars = chart.mars;
-    const saturn = chart.saturn;
-    const ascendant = chart.ascendant;
     
     let primaryDefense = '';
     let triggers: string[] = [];
@@ -444,7 +438,6 @@ export class EmotionalOperatingSystemGenerator {
    */
   private static analyzeLoveWound(chart: NatalChart): LoveWound {
     const venus = chart.venus;
-    const moon = chart.moon;
     
     // Find challenging Venus aspects
     const venusAspects = chart.aspects.filter(a => 
@@ -574,8 +567,6 @@ export class EmotionalOperatingSystemGenerator {
    */
   private static analyzeRepairStyle(chart: NatalChart): RepairStyle {
     const mars = chart.mars;
-    const venus = chart.venus;
-    const moon = chart.moon;
     
     let conflictResponse = '';
     let repairNeeds: string[] = [];
@@ -682,8 +673,6 @@ export class EmotionalOperatingSystemGenerator {
    */
   private static analyzeInnerChildTheme(chart: NatalChart): InnerChildTheme {
     const sun = chart.sun;
-    const moon = chart.moon;
-    const venus = chart.venus;
     
     let coreNeed = '';
     let playStyle = '';
