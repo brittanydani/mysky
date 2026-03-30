@@ -77,6 +77,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
     }
     path += ' Z';
     return path;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forces, center, radius]);
 
   return (

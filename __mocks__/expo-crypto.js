@@ -7,7 +7,7 @@ module.exports = {
   digestStringAsync: async (_algorithm, data) => {
     const encoder = new TextEncoder();
     const buf = await webcrypto.subtle.digest('SHA-256', encoder.encode(data));
-    return Buffer.from(buf).toString('hex');
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   },
   CryptoDigestAlgorithm: { SHA256: 'SHA-256', SHA1: 'SHA-1', MD5: 'MD5' },
   CryptoEncoding: { HEX: 'hex', BASE64: 'base64' },

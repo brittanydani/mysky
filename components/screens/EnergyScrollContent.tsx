@@ -171,7 +171,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
         }
       };
       load();
-    }, [])
+    }, [syncCorrelations])
   );
 
   /* ── No-chart inline state ── */

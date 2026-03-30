@@ -256,6 +256,7 @@ export default function VisualCalibration() {
         /* first launch — defaults are fine */
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // When the user switches categories, update the animated values to match
@@ -371,6 +372,7 @@ export default function VisualCalibration() {
           'worklet';
           runOnJS(finalizeGesture)(moodHue.value, sensitivity.value);
         }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [updateProfile, triggerThresholdHaptic, finalizeGesture],
   );
 

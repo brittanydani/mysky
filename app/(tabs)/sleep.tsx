@@ -515,7 +515,7 @@ export default function SleepScreen() {
       logger.error('Dream interpretation failed:', e);
       setExpandedEntryId(null);
     }
-  }, [expandedEntryId, natalChart, entries]);
+  }, [expandedEntryId, natalChart, entries, isPremium]);
 
   const handleDelete = (id: string) => {
     Alert.alert('Delete Entry', 'Remove this sleep entry?', [

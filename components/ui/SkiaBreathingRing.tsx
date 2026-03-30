@@ -74,6 +74,7 @@ const SkiaBreathingRing = memo(function SkiaBreathingRing({
       -1,
       true,
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 
   // Generate ring radii (outermost → innermost)

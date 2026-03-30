@@ -32,6 +32,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 
 import { theme } from '../constants/theme';
@@ -52,13 +53,19 @@ import Constants from 'expo-constants';
 
 const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
 const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
+const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' });
 
-// ── Ethereal Palette ──
-const ETHEREAL = {
-  bgDark: '#0A0A0F',
-  accentGold: 'rgba(217, 191, 140, 1)',
-  etherealBlue: 'rgba(115, 166, 217, 0.15)',
-  dreamViolet: 'rgba(140, 115, 191, 0.10)',
+// ── Velvet Tech Palette ──
+const VELVET = {
+  bgOled: '#000000',
+  accentPrimary: '#FFFFFF', // Clean, high-contrast white
+  accentCyan: '#00E5FF', // High-tech data glow
+  etherealBlue: 'rgba(0, 150, 255, 0.4)', // Deep aurora blue
+  dreamViolet: 'rgba(138, 43, 226, 0.3)', // Deep aurora purple
+  glassBorder: 'rgba(255, 255, 255, 0.12)',
+  glassFill: 'rgba(255, 255, 255, 0.04)',
+  textMain: '#FFFFFF',
+  textMuted: 'rgba(255, 255, 255, 0.5)',
 };
 
 // ── Nominatim location search ──
@@ -89,13 +96,13 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   passphrase: -1,
 };
 
-// ── Living Background ──
+// ── Living Background (Aurora Velvet Glass) ──
 function LivingBackground() {
   const rotation = useSharedValue(0);
 
   useEffect(() => {
     rotation.value = withRepeat(
-      withTiming(360, { duration: 40_000, easing: Easing.linear }),
+      withTiming(360, { duration: 60_000, easing: Easing.linear }),
       -1,
       false,
     );
@@ -106,14 +113,18 @@ function LivingBackground() {
   }));
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]} pointerEvents="none">
-      <View style={st.orbBlue} />
-      <View style={st.orbViolet} />
-    </Animated.View>
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
+        <View style={st.orbBlue} />
+        <View style={st.orbViolet} />
+      </Animated.View>
+      {/* Massive blur to create the velvet glass nebula effect */}
+      <BlurView intensity={120} tint="dark" style={StyleSheet.absoluteFill} />
+    </View>
   );
 }
 
-// ── Pulsing Processing Orb ──
+// ── Pulsing Processing Orb (High-Tech Scanner) ──
 function ProcessingOrb() {
   const pulse = useSharedValue(0);
 
@@ -126,12 +137,12 @@ function ProcessingOrb() {
   }, [pulse]);
 
   const glowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 0.8 + pulse.value * 0.4 }],
-    opacity: 0.15 + pulse.value * 0.15,
+    transform: [{ scale: 0.8 + pulse.value * 0.5 }],
+    opacity: 0.1 + pulse.value * 0.2,
   }));
 
   const innerRingStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${pulse.value * 180}deg` }],
+    transform: [{ rotate: `${pulse.value * 360}deg` }],
   }));
 
   const outerRingStyle = useAnimatedStyle(() => ({
@@ -143,12 +154,12 @@ function ProcessingOrb() {
       <Animated.View style={[st.processingGlow, glowStyle]} />
       <Animated.View style={[st.processingInnerRing, innerRingStyle]} />
       <Animated.View style={[st.processingOuterRing, outerRingStyle]} />
-      <MetallicIcon name="sparkles-outline" size={28} color={ETHEREAL.accentGold} style={st.processingSparkle} />
+      <Ionicons name="scan-outline" size={32} color={VELVET.accentCyan} style={st.processingSparkle} />
     </View>
   );
 }
 
-// ── Progress Capsules ──
+// ── Progress Capsules (Editorial Lines) ──
 function ProgressIndicator({ currentIndex }: { currentIndex: number }) {
   return (
     <View style={st.progressRow}>
@@ -190,7 +201,7 @@ function BottomNav({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back-outline" size={20} color="rgba(255,255,255,0.45)" />
+          <Ionicons name="chevron-back-outline" size={24} color={VELVET.textMain} />
         </Pressable>
       ) : <View style={{ width: 56 }} />}
 
@@ -208,7 +219,7 @@ function BottomNav({
         accessibilityLabel={nextLabel}
       >
         <Text style={st.nextButtonText}>{nextLabel}</Text>
-        <Ionicons name={nextIcon} size={16} color={ETHEREAL.bgDark} style={{ marginLeft: 6 }} />
+        <Ionicons name={nextIcon} size={18} color={VELVET.bgOled} style={{ marginLeft: 8 }} />
       </Pressable>
     </View>
   );
@@ -223,8 +234,6 @@ interface OnboardingModalProps {
   onComplete: (chart: NatalChart) => void;
   needsTermsConsent?: boolean;
   onTermsConsent?: (granted: boolean) => void;
-  /** Called when the welcome screen's "Get Started" is tapped and terms consent is required.
-   * The parent should show TermsConsentModal at the top level to avoid nested-Modal issues on iOS. */
   onRequestTermsConsent?: () => void;
 }
 
@@ -239,7 +248,7 @@ export default function OnboardingModal({
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [showTermsModal, setShowTermsModal] = useState(false);
 
-  // ── User data (inline — no external BirthDataModal) ──
+  // ── User data ──
   const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date());
   const [birthTime, setBirthTime] = useState<Date>(new Date());
@@ -262,7 +271,6 @@ export default function OnboardingModal({
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Reset everything when modal hides; refresh date/time defaults when it opens ──
   useEffect(() => {
     if (!visible) {
       setStep('welcome');
@@ -284,8 +292,6 @@ export default function OnboardingModal({
       if (abortControllerRef.current) abortControllerRef.current.abort();
       timeoutRef.current = null;
     } else {
-      // Refresh the time default so the picker reflects "now" rather than the
-      // stale time captured when the component first mounted.
       setBirthDate(new Date());
       setBirthTime(new Date());
     }
@@ -299,7 +305,6 @@ export default function OnboardingModal({
     };
   }, []);
 
-  // ── Navigation helpers ──
   const STEP_ORDER: OnboardingStep[] = ['name', 'birthDate', 'birthTime', 'location', 'processing'];
 
   const goToStep = (next: OnboardingStep) => {
@@ -312,7 +317,6 @@ export default function OnboardingModal({
     if (idx > 0) goToStep(STEP_ORDER[idx - 1]);
   };
 
-  // ── Advance to 'name' when parent accepts terms (needsTermsConsent flips false) ──
   const prevNeedsTermsRef = useRef(needsTermsConsent);
   useEffect(() => {
     const wasNeeded = prevNeedsTermsRef.current;
@@ -322,11 +326,9 @@ export default function OnboardingModal({
     }
   }, [needsTermsConsent, step]);
 
-  // ── Welcome → Name ──
   const handleGetStarted = () => {
     Haptics.selectionAsync().catch(() => {});
     if (needsTermsConsent) {
-      // Prefer the parent-level handler to avoid nested-Modal issues on iOS.
       if (onRequestTermsConsent) {
         onRequestTermsConsent();
       } else {
@@ -337,37 +339,32 @@ export default function OnboardingModal({
     goToStep('name');
   };
 
-  // ── Name → Birth Date ──
   const handleNameContinue = () => {
     if (!userName.trim()) return;
     Haptics.selectionAsync().catch(() => {});
     goToStep('birthDate');
   };
 
-  // ── Birth Date → Birth Time ──
   const handleDateContinue = () => {
     Haptics.selectionAsync().catch(() => {});
     goToStep('birthTime');
   };
 
-  // ── Birth Time → Location ──
   const handleTimeContinue = () => {
     Haptics.selectionAsync().catch(() => {});
     goToStep('location');
   };
 
-  // ── "I don't know my birth time" ──
   const handleUnknownTime = () => {
     Haptics.selectionAsync().catch(() => {});
     setHasUnknownTime(true);
     goToStep('location');
   };
 
-  // ── Location → Processing (Calculate Chart) ──
   const handleCalculateChart = async () => {
     if (!locationSelected || !locationPlace.trim()) return;
     Keyboard.dismiss();
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
     goToStep('processing');
 
     try {
@@ -413,7 +410,6 @@ export default function OnboardingModal({
 
       await localDb.saveChart(savedChart);
 
-      // Processing climax — 4 second delay for the cinematic effect
       timeoutRef.current = setTimeout(() => {
         onComplete(chart);
       }, 4000);
@@ -425,7 +421,6 @@ export default function OnboardingModal({
     }
   };
 
-  // ── Location search (Nominatim) ──
   const searchLocation = useCallback((query: string) => {
     if (abortControllerRef.current) abortControllerRef.current.abort();
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -478,7 +473,6 @@ export default function OnboardingModal({
     Keyboard.dismiss();
   };
 
-  // ── Backup restore ──
   const handleRestoreBackup = async () => {
     Haptics.selectionAsync().catch(() => {});
     try {
@@ -529,7 +523,6 @@ export default function OnboardingModal({
     }
   };
 
-  // ── Terms consent ──
   const handleTermsDecision = async (granted: boolean) => {
     try {
       if (!granted) {
@@ -551,43 +544,29 @@ export default function OnboardingModal({
     }
   };
 
-  // ── Derived state ──
   const showProgress = STEP_PROGRESS_INDEX[step] >= 0;
-
-  // ════════════════════════════════════════════════════════════════════════
-  // ── Render ──
-  // ════════════════════════════════════════════════════════════════════════
 
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
       <View style={st.container}>
-        <SkiaDynamicCosmos fill="#0A0A0F" />
+        <SkiaDynamicCosmos fill={VELVET.bgOled} />
         <LivingBackground />
 
         <SafeAreaView edges={['top', 'bottom']} style={st.safeArea}>
-          {/* ── Progress Indicator (hidden on welcome/processing/passphrase) ── */}
           {showProgress && (
             <Animated.View entering={FadeIn.duration(600)} exiting={FadeOut.duration(300)}>
               <ProgressIndicator currentIndex={STEP_PROGRESS_INDEX[step]} />
             </Animated.View>
           )}
 
-          {/* ── Step Content ── */}
           <View style={st.contentArea}>
 
             {/* ══════ WELCOME ══════ */}
             {step === 'welcome' && (
               <View style={st.centeredFlex}>
                 <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.welcomeContainer}>
-                  <View style={st.logoContainer}>
-                    <Image
-                      source={require('../assets/images/mysky_logo.png')}
-                      style={st.logo}
-                      accessibilityLabel="MySky logo"
-                    />
-                  </View>
                   <Text style={st.welcomeTitle}>Welcome to MySky</Text>
-                  <MetallicText style={st.welcomeSubtitle} color={ETHEREAL.accentGold}>Personal Growth, Mapped to You</MetallicText>
+                  <Text style={st.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
                   <Text style={st.welcomeDescription}>
                     Track your mood, sleep, and energy, journal your thoughts, and uncover personal patterns over time.
                   </Text>
@@ -595,29 +574,31 @@ export default function OnboardingModal({
 
                 <Animated.View entering={FadeInUp.delay(400).duration(700)} style={st.featuresContainer}>
                   {[
-                    { icon: 'pencil-outline' as const, text: 'Daily journaling & guided reflection' },
+                    { icon: 'pencil-outline' as const, text: 'Daily journaling & reflection' },
                     { icon: 'pulse-outline' as const, text: 'Mood, sleep & energy tracking' },
-                    { icon: 'analytics-outline' as const, text: 'Pattern insights drawn from your own data' },
-                    { icon: 'lock-closed-outline' as const, text: 'Private & encrypted — only on your device' },
+                    { icon: 'analytics-outline' as const, text: 'Pattern insights drawn from data' },
+                    { icon: 'lock-closed-outline' as const, text: 'Private & encrypted on-device' },
                   ].map((item, i) => (
-                    <View key={i} style={st.feature}>
+                    <BlurView intensity={20} tint="dark" key={i} style={st.featureCard}>
                       <View style={st.featureIcon}>
-                        <MetallicIcon name={item.icon} size={18} color={ETHEREAL.accentGold} />
+                        <Ionicons name={item.icon} size={20} color={VELVET.accentPrimary} />
                       </View>
                       <Text style={st.featureText}>{item.text}</Text>
-                    </View>
+                    </BlurView>
                   ))}
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(700).duration(600)} style={st.ctaContainer}>
-                  <SkiaMetallicPill
-                    label="Get Started"
+                  <Pressable
+                    style={({ pressed }) => [st.primaryActionBtn, pressed && st.primaryActionBtnPressed]}
                     onPress={handleGetStarted}
-                    style={{ marginBottom: theme.spacing.md }}
-                  />
-                  <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button" accessibilityLabel="Restore from backup">
-                    <MetallicIcon name="cloud-download-outline" size={16} color={ETHEREAL.accentGold} />
-                    <MetallicText style={st.restoreText} color={ETHEREAL.accentGold}>Restore from Backup</MetallicText>
+                  >
+                    <Text style={st.primaryActionBtnText}>Get Started</Text>
+                    <Ionicons name="arrow-forward" size={18} color={VELVET.bgOled} style={{ marginLeft: 8 }} />
+                  </Pressable>
+                  <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
+                    <Ionicons name="cloud-download-outline" size={16} color={VELVET.textMuted} />
+                    <Text style={st.restoreText}>Restore from Backup</Text>
                   </Pressable>
                 </Animated.View>
               </View>
@@ -634,14 +615,14 @@ export default function OnboardingModal({
                       value={userName}
                       onChangeText={setUserName}
                       placeholder="Your name"
-                      placeholderTextColor="rgba(255,255,255,0.18)"
+                      placeholderTextColor={VELVET.textMuted}
                       autoFocus
                       returnKeyType="next"
                       maxLength={30}
                       onSubmitEditing={handleNameContinue}
                       autoCapitalize="words"
                       autoCorrect={false}
-                      selectionColor={ETHEREAL.accentGold}
+                      selectionColor={VELVET.accentCyan}
                     />
                     <View style={[st.inputUnderline, userName.trim() ? st.inputUnderlineActive : st.inputUnderlineInactive]} />
                   </View>
@@ -658,10 +639,10 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                   <Text style={st.etherealQuestion}>When did your journey begin?</Text>
                   <Text style={st.etherealSubtext}>
-                    Used to build your personalized profile.
+                    Used to accurately map your internal weather and profile.
                   </Text>
 
-                  <View style={st.datePickerCard}>
+                  <BlurView intensity={25} tint="dark" style={st.glassCard}>
                     <DateTimePicker
                       value={birthDate}
                       mode="date"
@@ -675,7 +656,7 @@ export default function OnboardingModal({
                       textColor="#FFFFFF"
                       style={{ width: '100%' }}
                     />
-                  </View>
+                  </BlurView>
                 </Animated.View>
                 <Animated.View entering={FadeInUp.delay(400).duration(600)}>
                   <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleDateContinue} />
@@ -689,10 +670,10 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                   <Text style={st.etherealQuestion}>What time did you arrive?</Text>
                   <Text style={st.etherealSubtext}>
-                    Exact time helps us personalize your experience more precisely.
+                    Precision helps us personalize your data patterns.
                   </Text>
 
-                  <View style={st.datePickerCard}>
+                  <BlurView intensity={25} tint="dark" style={st.glassCard}>
                     <DateTimePicker
                       value={birthTime}
                       mode="time"
@@ -707,16 +688,13 @@ export default function OnboardingModal({
                       textColor="#FFFFFF"
                       style={{ width: '100%' }}
                     />
-                  </View>
+                  </BlurView>
 
-                  {/* Premium "I don't know" button */}
                   <Pressable
                     style={({ pressed }) => [st.unknownTimeButton, pressed && { opacity: 0.7 }]}
                     onPress={handleUnknownTime}
-                    accessibilityRole="button"
-                    accessibilityLabel="I don't know my exact birth time"
                   >
-                    <MetallicText style={st.unknownTimeText} color={ETHEREAL.accentGold}>I don't know my exact birth time</MetallicText>
+                    <Text style={st.unknownTimeText}>I don't know my exact birth time</Text>
                   </Pressable>
                 </Animated.View>
                 <Animated.View entering={FadeInUp.delay(400).duration(600)}>
@@ -737,12 +715,11 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                   <Text style={st.etherealQuestion}>Where did your journey begin?</Text>
                   <Text style={st.etherealSubtext}>
-                    City of birth helps us personalize your profile.
+                    City of birth roots your profile baseline.
                   </Text>
 
-                  {/* Search input */}
-                  <View style={st.locationSearchRow}>
-                    <MetallicIcon name="search-outline" size={18} color={ETHEREAL.accentGold} />
+                  <BlurView intensity={20} tint="dark" style={st.locationSearchRow}>
+                    <Ionicons name="search-outline" size={20} color={VELVET.accentPrimary} />
                     <TextInput
                       style={st.locationInput}
                       value={locationQuery}
@@ -751,21 +728,20 @@ export default function OnboardingModal({
                         searchLocation(t);
                       }}
                       placeholder="Search city..."
-                      placeholderTextColor="rgba(255,255,255,0.25)"
+                      placeholderTextColor={VELVET.textMuted}
                       autoFocus
                       returnKeyType="search"
                       autoCapitalize="words"
                       autoCorrect={false}
-                      selectionColor={ETHEREAL.accentGold}
+                      selectionColor={VELVET.accentCyan}
                     />
                     {searchingLocation && (
-                      <ActivityIndicator size="small" color={ETHEREAL.accentGold} />
+                      <ActivityIndicator size="small" color={VELVET.accentPrimary} />
                     )}
-                  </View>
+                  </BlurView>
 
-                  {/* Location suggestions */}
                   {locationSuggestions.length > 0 && !locationSelected && (
-                    <View style={st.suggestionsContainer}>
+                    <BlurView intensity={30} tint="dark" style={st.suggestionsContainer}>
                       {locationSuggestions.map((suggestion, idx) => {
                         const parts = suggestion.display_name.split(', ');
                         const city = parts.slice(0, 2).join(', ');
@@ -774,9 +750,8 @@ export default function OnboardingModal({
                           <React.Fragment key={suggestion.place_id ?? idx}>
                             {idx > 0 && <View style={st.suggestionDivider} />}
                             <Pressable
-                              style={({ pressed }) => [st.suggestionRow, pressed && { backgroundColor: 'rgba(255,255,255,0.04)' }]}
+                              style={({ pressed }) => [st.suggestionRow, pressed && { backgroundColor: VELVET.glassFill }]}
                               onPress={() => handleSelectLocation(suggestion)}
-                              accessibilityRole="button"
                             >
                               <View>
                                 <Text style={st.suggestionCity}>{city}</Text>
@@ -786,13 +761,12 @@ export default function OnboardingModal({
                           </React.Fragment>
                         );
                       })}
-                    </View>
+                    </BlurView>
                   )}
 
-                  {/* Selected location confirmation */}
                   {locationSelected && (
                     <Animated.View entering={FadeIn.duration(400)} style={st.locationConfirmed}>
-                      <MetallicIcon name="checkmark-circle-outline" size={18} color={ETHEREAL.accentGold} />
+                      <Ionicons name="checkmark-circle-outline" size={20} color={VELVET.accentCyan} />
                       <Text style={st.locationConfirmedText} numberOfLines={2}>
                         {locationPlace}
                       </Text>
@@ -812,11 +786,11 @@ export default function OnboardingModal({
                 <Animated.View entering={FadeIn.delay(100).duration(1000)} style={st.processingContainer}>
                   <ProcessingOrb />
                   <View style={st.processingTextGroup}>
-                    <MetallicText style={st.processingLabel} color={ETHEREAL.accentGold}>BUILDING YOUR PROFILE</MetallicText>
+                    <Text style={st.processingLabel}>COMPILING DATA</Text>
                     <Text style={st.processingMessage}>
                       {userName.trim()
-                        ? `Mapping your subconscious, ${userName.trim()}`
-                        : 'Analyzing your patterns'}
+                        ? `Mapping telemetry for ${userName.trim()}`
+                        : 'Analyzing core patterns'}
                     </Text>
                   </View>
                 </Animated.View>
@@ -828,31 +802,36 @@ export default function OnboardingModal({
               <View style={st.centeredFlex}>
                 <Animated.View entering={FadeIn.delay(100).duration(800)} style={st.singleQuestionContainer}>
                   <View style={st.passphraseIconWrap}>
-                    <MetallicIcon name="lock-closed-outline" size={40} color={ETHEREAL.accentGold} />
+                    <Ionicons name="lock-closed-outline" size={32} color={VELVET.accentPrimary} />
                   </View>
-                  <Text style={st.etherealQuestion}>Enter Backup Passphrase</Text>
+                  <Text style={st.etherealQuestion}>Enter Encryption Key</Text>
                   <Text style={st.etherealSubtext}>
-                    This is the passphrase you set when you created the backup.
+                    Provide the passphrase used to secure your backup.
                   </Text>
-                  <TextInput
-                    style={st.passphraseInput}
-                    value={passphrase}
-                    onChangeText={setPassphrase}
-                    placeholder="Enter passphrase"
-                    placeholderTextColor={theme.textMuted}
-                    secureTextEntry
-                    autoFocus
-                    returnKeyType="done"
-                    onSubmitEditing={handlePassphraseSubmit}
-                    selectionColor={ETHEREAL.accentGold}
-                  />
-                  <SkiaMetallicPill
-                    label="Restore"
+                  
+                  <BlurView intensity={20} tint="dark" style={st.passphraseInputWrapper}>
+                    <TextInput
+                      style={st.passphraseInput}
+                      value={passphrase}
+                      onChangeText={setPassphrase}
+                      placeholder="Enter passphrase"
+                      placeholderTextColor={VELVET.textMuted}
+                      secureTextEntry
+                      autoFocus
+                      returnKeyType="done"
+                      onSubmitEditing={handlePassphraseSubmit}
+                      selectionColor={VELVET.accentCyan}
+                    />
+                  </BlurView>
+
+                  <Pressable
+                    style={({ pressed }) => [st.primaryActionBtn, { width: '100%', marginBottom: 16 }, pressed && st.primaryActionBtnPressed]}
                     onPress={handlePassphraseSubmit}
-                    icon={<Ionicons name="cloud-download-outline" size={20} color="#0A0A0F" />}
-                    style={{ marginBottom: theme.spacing.md }}
-                  />
-                  <Pressable style={st.restoreButton} onPress={() => setStep('welcome')} accessibilityRole="button" accessibilityLabel="Cancel restore">
+                  >
+                    <Text style={st.primaryActionBtnText}>Decrypt & Restore</Text>
+                  </Pressable>
+
+                  <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('welcome')}>
                     <Text style={st.restoreText}>Cancel</Text>
                   </Pressable>
                 </Animated.View>
@@ -861,7 +840,6 @@ export default function OnboardingModal({
           </View>
         </SafeAreaView>
 
-        {/* Terms inside onboarding — fallback for when no onRequestTermsConsent parent handler is available */}
         {showTermsModal && !onRequestTermsConsent && (
           <TermsConsentModal visible onConsent={handleTermsDecision} />
         )}
@@ -875,35 +853,35 @@ export default function OnboardingModal({
 // ════════════════════════════════════════════════════════════════════════════
 
 const st = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: VELVET.bgOled },
   safeArea: { flex: 1 },
 
   // ── Living Background Orbs ──
   orbBlue: {
     position: 'absolute',
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    backgroundColor: ETHEREAL.etherealBlue,
+    width: 500,
+    height: 500,
+    borderRadius: 250,
+    backgroundColor: VELVET.etherealBlue,
     top: -200,
-    right: -100,
+    right: -150,
   },
   orbViolet: {
     position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: ETHEREAL.dreamViolet,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: VELVET.dreamViolet,
     bottom: -100,
-    left: -150,
+    left: -200,
   },
 
-  // ── Progress Capsules ──
+  // ── Progress Capsules (Editorial) ──
   progressRow: {
     flexDirection: 'row',
     paddingHorizontal: 32,
     paddingTop: 20,
-    gap: 8,
+    gap: 6,
   },
   progressCapsule: {
     flex: 1,
@@ -911,10 +889,10 @@ const st = StyleSheet.create({
     borderRadius: 2,
   },
   progressCapsuleActive: {
-    backgroundColor: ETHEREAL.accentGold,
+    backgroundColor: VELVET.accentPrimary,
   },
   progressCapsuleInactive: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
 
   // ── Content Layout ──
@@ -927,87 +905,116 @@ const st = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // ── Welcome ──
-  welcomeContainer: { alignItems: 'center', marginBottom: 24 },
-  logoContainer: { marginBottom: 8, alignItems: 'center' },
-  logo: { width: 220, height: 220, resizeMode: 'contain' },
+  // ── Welcome (Left-aligned, strong hierarchy) ──
+  welcomeContainer: { alignItems: 'flex-start', marginBottom: 32, width: '100%' },
   welcomeTitle: {
-    fontSize: 32,
-    fontWeight: '400',
-    color: '#FFFFFF',
-    fontFamily: DISPLAY,
+    fontSize: 40,
+    fontWeight: '800',
+    color: VELVET.textMain,
+    fontFamily: DISPLAY_BOLD,
     marginBottom: 8,
-    textAlign: 'center',
-    marginTop: -64,
+    textAlign: 'left',
+    letterSpacing: -0.5,
   },
   welcomeSubtitle: {
     fontSize: 18,
-    color: ETHEREAL.accentGold,
-    fontStyle: 'italic',
+    fontWeight: '600',
+    color: VELVET.accentCyan,
     marginBottom: 16,
-    textAlign: 'center',
-    fontFamily: DISPLAY,
+    textAlign: 'left',
+    fontFamily: DISPLAY_SEMIBOLD,
+    letterSpacing: 0.5,
   },
   welcomeDescription: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.55)',
-    textAlign: 'center',
+    color: VELVET.textMuted,
+    textAlign: 'left',
     lineHeight: 24,
-    paddingHorizontal: 12,
+    fontWeight: '400',
+    fontFamily: DISPLAY,
   },
-  featuresContainer: { marginBottom: 24 },
-  feature: {
+  
+  featuresContainer: { marginBottom: 32, gap: 12 },
+  featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 12,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: VELVET.glassBorder,
+    backgroundColor: VELVET.glassFill,
+    overflow: 'hidden',
   },
   featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(217,191,140,0.18)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
-  featureText: { fontSize: 16, color: 'rgba(255,255,255,0.6)', flex: 1 },
-  ctaContainer: { alignItems: 'center' },
+  featureText: { 
+    fontSize: 15, 
+    fontWeight: '500',
+    color: VELVET.textMain, 
+    flex: 1,
+    fontFamily: DISPLAY_SEMIBOLD,
+  },
+  
+  ctaContainer: { alignItems: 'center', width: '100%' },
+  primaryActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: VELVET.accentPrimary,
+    width: '100%',
+    height: 56,
+    borderRadius: 28,
+    marginBottom: 16,
+  },
+  primaryActionBtnPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  primaryActionBtnText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: VELVET.bgOled,
+    fontFamily: DISPLAY_BOLD,
+  },
+  
   restoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    marginBottom: 12,
   },
   restoreText: {
     fontSize: 14,
-    color: ETHEREAL.accentGold,
+    fontWeight: '600',
+    color: VELVET.textMuted,
     marginLeft: 8,
+    fontFamily: DISPLAY_SEMIBOLD,
   },
 
-  // ── Single Question Layout (shared across steps) ──
+  // ── Single Question Layout ──
   singleQuestionContainer: {
     alignItems: 'flex-start',
     width: '100%',
   },
   etherealQuestion: {
     fontSize: 34,
-    fontWeight: '400',
-    color: '#FFFFFF',
-    fontFamily: DISPLAY_SEMIBOLD,
-    marginBottom: 24,
-    lineHeight: 44,
+    fontWeight: '800',
+    color: VELVET.textMain,
+    fontFamily: DISPLAY_BOLD,
+    marginBottom: 12,
+    lineHeight: 42,
+    letterSpacing: -0.5,
   },
   etherealSubtext: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.45)',
-    marginBottom: 24,
-    lineHeight: 22,
+    fontSize: 16,
+    color: VELVET.textMuted,
+    marginBottom: 32,
+    lineHeight: 24,
+    fontFamily: DISPLAY,
   },
 
-  // ── Name Input — Underline ──
+  // ── Name Input ──
   nameInputWrapper: {
     width: '100%',
     marginBottom: 24,
@@ -1016,50 +1023,50 @@ const st = StyleSheet.create({
     width: '100%',
     backgroundColor: 'transparent',
     borderWidth: 0,
-    paddingVertical: 12,
-    fontSize: 30,
-    fontWeight: '400',
-    color: ETHEREAL.accentGold,
-    fontFamily: DISPLAY_SEMIBOLD,
+    paddingVertical: 8,
+    fontSize: 32,
+    fontWeight: '700',
+    color: VELVET.textMain,
+    fontFamily: DISPLAY_BOLD,
   },
   inputUnderline: {
-    height: 1,
+    height: 2,
     width: '100%',
-    marginTop: 4,
+    marginTop: 8,
   },
   inputUnderlineActive: {
-    backgroundColor: ETHEREAL.accentGold,
+    backgroundColor: VELVET.accentCyan,
+    shadowColor: VELVET.accentCyan,
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
   },
   inputUnderlineInactive: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: VELVET.glassBorder,
   },
 
-  // ── Date / Time Picker Card ──
-  datePickerCard: {
+  // ── Glass Card (Pickers) ──
+  glassCard: {
     width: '100%',
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: VELVET.glassBorder,
+    backgroundColor: VELVET.glassFill,
     padding: 12,
     overflow: 'hidden',
     alignItems: 'center',
   },
 
-  // ── Unknown Time Button ──
   unknownTimeButton: {
-    marginTop: 16,
-    alignSelf: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    marginTop: 20,
+    alignSelf: 'flex-start',
+    paddingVertical: 12,
   },
   unknownTimeText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: ETHEREAL.accentGold,
-    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '600',
+    color: VELVET.textMuted,
+    fontFamily: DISPLAY_SEMIBOLD,
   },
 
   // ── Location Search ──
@@ -1068,58 +1075,65 @@ const st = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    borderColor: VELVET.glassBorder,
+    backgroundColor: VELVET.glassFill,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     gap: 12,
+    overflow: 'hidden',
   },
   locationInput: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '400',
-    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '500',
+    color: VELVET.textMain,
+    fontFamily: DISPLAY_SEMIBOLD,
   },
   suggestionsContainer: {
     marginTop: 12,
     width: '100%',
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: VELVET.glassBorder,
+    backgroundColor: VELVET.glassFill,
     overflow: 'hidden',
   },
   suggestionDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    marginLeft: 20,
+    backgroundColor: VELVET.glassBorder,
+    marginLeft: 16,
   },
   suggestionRow: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   suggestionCity: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    marginBottom: 2,
+    fontWeight: '600',
+    color: VELVET.textMain,
+    marginBottom: 4,
+    fontFamily: DISPLAY_SEMIBOLD,
   },
   suggestionCountry: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '400',
-    color: 'rgba(255,255,255,0.45)',
+    color: VELVET.textMuted,
+    fontFamily: DISPLAY,
   },
   locationConfirmed: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 20,
     gap: 8,
+    paddingHorizontal: 4,
   },
   locationConfirmedText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
+    fontSize: 15,
+    fontWeight: '500',
+    color: VELVET.textMain,
     flex: 1,
+    fontFamily: DISPLAY_SEMIBOLD,
   },
 
   // ── Bottom Navigation ──
@@ -1130,10 +1144,12 @@ const st = StyleSheet.create({
     paddingTop: 24,
   },
   backButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: VELVET.glassFill,
+    borderWidth: 1,
+    borderColor: VELVET.glassBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1141,15 +1157,10 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: ETHEREAL.accentGold,
-    paddingHorizontal: 32,
-    height: 56,
-    borderRadius: 28,
-    shadowColor: ETHEREAL.accentGold,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
+    backgroundColor: VELVET.accentPrimary,
+    paddingHorizontal: 28,
+    height: 50,
+    borderRadius: 25,
   },
   nextButtonDisabled: {
     opacity: 0.3,
@@ -1161,7 +1172,8 @@ const st = StyleSheet.create({
   nextButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: ETHEREAL.bgDark,
+    color: VELVET.bgOled,
+    fontFamily: DISPLAY_BOLD,
   },
 
   // ── Processing Climax ──
@@ -1174,71 +1186,78 @@ const st = StyleSheet.create({
     height: 160,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
+    marginBottom: 48,
   },
   processingGlow: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: ETHEREAL.accentGold,
-  },
-  processingInnerRing: {
     position: 'absolute',
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(217,191,140,0.5)',
+    backgroundColor: VELVET.accentCyan,
+    shadowColor: VELVET.accentCyan,
+    shadowOpacity: 1,
+    shadowRadius: 30,
+  },
+  processingInnerRing: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: VELVET.accentCyan,
+    borderStyle: 'dashed',
   },
   processingOuterRing: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: VELVET.glassBorder,
   },
   processingSparkle: {
     zIndex: 1,
   },
   processingTextGroup: {
     alignItems: 'center',
-    paddingHorizontal: 8,
   },
   processingLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: ETHEREAL.accentGold,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 3,
+    color: VELVET.textMuted,
     marginBottom: 12,
-    textAlign: 'center',
+    fontFamily: DISPLAY_BOLD,
   },
   processingMessage: {
-    fontSize: 20,
-    fontWeight: '400',
-    fontStyle: 'italic',
-    color: 'rgba(255,255,255,0.75)',
-    fontFamily: DISPLAY,
+    fontSize: 22,
+    fontWeight: '600',
+    color: VELVET.textMain,
+    fontFamily: DISPLAY_SEMIBOLD,
     textAlign: 'center',
-    lineHeight: 30,
   },
 
   // ── Passphrase ──
   passphraseIconWrap: {
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  passphraseInputWrapper: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: VELVET.glassBorder,
+    backgroundColor: VELVET.glassFill,
+    overflow: 'hidden',
+    marginBottom: 32,
   },
   passphraseInput: {
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 20,
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 24,
+    fontSize: 17,
+    fontWeight: '500',
+    color: VELVET.textMain,
     textAlign: 'center',
+    fontFamily: DISPLAY_SEMIBOLD,
   },
 });

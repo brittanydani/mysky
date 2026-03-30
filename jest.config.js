@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/services', '<rootDir>/utils'],
+  roots: ['<rootDir>/services', '<rootDir>/utils', '<rootDir>/store'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   // Force-exit after all tests complete. astronomy-engine and native module
@@ -14,5 +14,7 @@ module.exports = {
     '^expo-crypto$': '<rootDir>/__mocks__/expo-crypto.js',
     '^expo-sqlite$': '<rootDir>/__mocks__/expo-sqlite.js',
     '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.js',
+    // @noble/ciphers uses ESM — redirect to the CJS-compatible build
+    '^@noble/ciphers/aes\\.js$': '<rootDir>/__mocks__/noble-ciphers-aes.js',
   },
 };

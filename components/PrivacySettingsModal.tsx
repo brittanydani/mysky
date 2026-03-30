@@ -47,6 +47,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 
   useEffect(() => {
     if (visible) loadPrivacyInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const loadPrivacyInfo = async () => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, Dimensions, ListRenderItemInfo, Platform, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
@@ -22,13 +22,10 @@ import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, T
 import { usePremium } from '../../../context/PremiumContext';
 import { logger } from '../../../utils/logger';
 import { parseLocalDate } from '../../../utils/dateUtils';
-import { CheckInService } from '../../../services/patterns/checkInService';
-import { DailyCheckIn } from '../../../services/patterns/types';
 import ObsidianJournalEntry from '../../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../../services/journal/nlp';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 
-const { width } = Dimensions.get('window');
 const PAGE_SIZE = 30;
 
 const PALETTE = {
@@ -147,7 +144,6 @@ export default function JournalScreen() {
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
-  const [checkIns, setCheckIns] = useState<DailyCheckIn[]>([]);
   const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
@@ -213,8 +209,8 @@ export default function JournalScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadEntries(true);
-      void loadCheckIns();
       void loadSleepEntries();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 
@@ -296,21 +292,6 @@ export default function JournalScreen() {
     }
   };
 
-  const loadCheckIns = async () => {
-    try {
-      const charts = await localDb.getCharts();
-      const primaryChart = charts[0];
-      if (!primaryChart) {
-        setCheckIns([]);
-        return;
-      }
-      const result = await CheckInService.getAllCheckIns(primaryChart.id, 7);
-      setCheckIns(Array.isArray(result) ? result : []);
-    } catch (error) {
-      logger.error('Failed to load check-ins:', error);
-      setCheckIns([]);
-    }
-  };
 
   const loadSleepEntries = async () => {
     try {
@@ -356,6 +337,7 @@ export default function JournalScreen() {
         },
       },
     ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stableFormatDate = useCallback((dateString: string) => {
@@ -404,6 +386,7 @@ export default function JournalScreen() {
     if (activeTab === 'reflections' && !loadingMore && hasMore) {
       void loadEntries(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, loadingMore, hasMore]);
 
   // ── List header ────────────────────────────────────────────────────────────
@@ -588,7 +571,7 @@ export default function JournalScreen() {
         </View>
       </View>
     </>
-  ), [checkIns, isPremium, patternInsights, totalCount, sleepEntries.length, router, width, filterMonth, filterYear, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, navigateMonth, setActiveTab]);
+  ), [isPremium, patternInsights, totalCount, sleepEntries.length, router, filterMonth, filterYear, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, navigateMonth, setActiveTab]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 

@@ -148,7 +148,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       isMounted.current = false;
       Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
     };
-  }, []);
+  }, [updatePremiumState]);
 
   // ─── Value ──────────────────────────────────────────────────────────────────
 

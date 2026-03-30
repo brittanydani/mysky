@@ -107,7 +107,7 @@ export default function RelationshipsScreen() {
       setActiveScene('RESONANCE_HELIX');
       syncData();
       return () => clearScene();
-    }, [])
+    }, [setActiveScene, syncData, clearScene])
   );
 
   const loadData = async () => {

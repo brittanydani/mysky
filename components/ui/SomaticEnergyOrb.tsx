@@ -76,6 +76,7 @@ function SomaticEnergyOrbComponent({ intensity, size = 200 }: SomaticEnergyOrbPr
       -1,
       true,
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intensity, config.duration]);
 
   const r0 = useDerivedValue(() => baseRadius * breath.value);

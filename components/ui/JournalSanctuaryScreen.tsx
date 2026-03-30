@@ -63,12 +63,14 @@ export const JournalSanctuaryScreen = () => {
     } else {
       savePulse.value = withTiming(0.3, { duration: 400 });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasText]);
 
   // Fade non-essential chrome when deeply focused
   const inFocusMode = isFocused && text.length > 50;
   useEffect(() => {
     uiOpacity.value = withTiming(inFocusMode ? 0.3 : 1, { duration: 500 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inFocusMode]);
 
   // Persist entry to encrypted local storage

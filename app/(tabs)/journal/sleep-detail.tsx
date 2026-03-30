@@ -90,6 +90,7 @@ export default function SleepDetailScreen() {
       if (id) {
         void loadEntry(id);
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id])
   );
 

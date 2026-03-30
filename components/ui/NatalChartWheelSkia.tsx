@@ -554,7 +554,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
       ...p,
       color: OVERLAY_PLANET_COLORS[p.label] || '#9C8FD2',
     }));
-  }, [overlayChart, ascLongitude]);
+  }, [overlayChart, ascLongitude, R_OVERLAY_RING]);
 
   // ── Cross-chart (synastry) aspect lines ──
   const crossAspects = useMemo(() => {

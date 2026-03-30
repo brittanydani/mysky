@@ -150,7 +150,7 @@ export default function PatternsScreen() {
           setLoading(false);
         }
       })();
-    }, [isPremium])
+    }, [])
   );
 
   const stressLabel = (trend: SnapshotData['stressTrend']): string => {

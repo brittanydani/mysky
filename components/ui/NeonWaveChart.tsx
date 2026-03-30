@@ -101,7 +101,7 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
 
       return { ...day, px, moodH, topY, energyH, stressH };
     }),
-  [days, plotH, bottom, PILLAR_W, STRIDE]);
+  [days, plotH, bottom, STRIDE]);
 
   // Ground line dimensions
   const groundY = bottom;

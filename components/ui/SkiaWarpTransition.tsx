@@ -111,6 +111,7 @@ const SkiaWarpTransition = forwardRef<WarpRef>(function SkiaWarpTransition(
       // Fire completion after full duration
       setTimeout(() => done(), 620);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 

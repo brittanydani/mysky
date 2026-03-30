@@ -184,7 +184,7 @@ function NebulaBackground({ mood = 5, energy = 5 }: NebulaBackgroundProps) {
       palette.primary.replace('ALPHA', String(palette.primaryAlpha * 0.3)),
       'transparent',
     ],
-    [tier],
+    [palette],
   );
 
   const secondaryColors = useMemo(
@@ -193,12 +193,12 @@ function NebulaBackground({ mood = 5, energy = 5 }: NebulaBackgroundProps) {
       palette.secondary.replace('ALPHA', String(palette.secondaryAlpha * 0.25)),
       'transparent',
     ],
-    [tier],
+    [palette],
   );
 
   const tertiaryColors = useMemo(
     () => [palette.tertiary, 'transparent'],
-    [tier],
+    [palette],
   );
 
   // Frame-driven animation clock — energy scales the perceived time

@@ -340,6 +340,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       cancelAnimation(pulseOpacity);
       pulseOpacity.value = withTiming(1, { duration: 200 });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingSave]);
 
   // Exit writing mode when the modal closes
@@ -354,6 +355,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       loadUserChart();
       loadCustomTags();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   useEffect(() => {
@@ -363,6 +365,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         if (profile) setArchetypePrompt(getArchetypePrompt(profile, mood));
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // Re-derive prompt whenever the user changes their mood

@@ -32,6 +32,10 @@ const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
  * luminous octagonal table. Champagne-gold metallic palette with specular
  * highlights, glow halo, and sparkle stars.
  */
+// 8 primary directions (N, NE, E, SE, S, SW, W, NW) and intermediates
+const DIRS = [0, 45, 90, 135, 180, 225, 270, 315];
+const MIDS = [22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5];
+
 const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: Props) {
   const cx = size / 2;
   const cy = size / 2;
@@ -41,22 +45,17 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
   const rBezel  = size * 0.30;  // where bezel kites meet star facets
   const rTable  = size * 0.17;  // octagonal table edge
 
-  // 8 primary directions (N, NE, E, SE, S, SW, W, NW)
-  const dirs = [0, 45, 90, 135, 180, 225, 270, 315];
-  // 8 intermediate directions (between primaries)
-  const mids = [22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5];
-
   const paths = useMemo(() => {
     const make = () => Skia.Path.Make();
 
     // Girdle points (16 — at every 22.5°)
     const gPts = Array.from({ length: 16 }, (_, i) => polar(cx, cy, rGirdle, i * 22.5));
     // Bezel points (8 — at every 45° offset by 22.5°, i.e. between primary dirs)
-    const bPts = mids.map(a => polar(cx, cy, rBezel, a));
+    const bPts = MIDS.map(a => polar(cx, cy, rBezel, a));
     // Star points (8 — at primary directions, at bezel radius inset)
-    const sPts = dirs.map(a => polar(cx, cy, rBezel * 0.72, a));
+    const sPts = DIRS.map(a => polar(cx, cy, rBezel * 0.72, a));
     // Table points (8 — octagonal)
-    const tPts = dirs.map(a => polar(cx, cy, rTable, a));
+    const tPts = DIRS.map(a => polar(cx, cy, rTable, a));
 
     // ── Table (center octagon) ──
     const table = make();
@@ -65,7 +64,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
     table.close();
 
     // ── 8 Star facets (kite from table edge → star point → table edge) ──
-    const starFacets = dirs.map((_, i) => {
+    const starFacets = DIRS.map((_, i) => {
       const p = make();
       p.moveTo(tPts[i].x, tPts[i].y);
       p.lineTo(sPts[i].x, sPts[i].y);
@@ -75,7 +74,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
     });
 
     // ── 8 Bezel (kite) facets — from star point → girdle primary → bezel mid → girdle primary ──
-    const bezelFacets = dirs.map((_, i) => {
+    const bezelFacets = DIRS.map((_, i) => {
       const gi = i * 2; // girdle index for this primary direction
       const p = make();
       p.moveTo(sPts[i].x, sPts[i].y);
@@ -86,7 +85,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
     });
 
     // ── 8 Bezel (kite) facets — second half (mirror from bezel mid back) ──
-    const bezelFacets2 = dirs.map((_, i) => {
+    const bezelFacets2 = DIRS.map((_, i) => {
       const giNext = ((i + 1) % 8) * 2;
       const p = make();
       p.moveTo(bPts[i].x, bPts[i].y);
@@ -97,7 +96,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
     });
 
     // ── 16 Upper girdle facets (small triangles filling between star/bezel → girdle) ──
-    const girdleFacets = dirs.map((_, i) => {
+    const girdleFacets = DIRS.map((_, i) => {
       const gi = i * 2;
       const giMid = gi + 1; // the mid-girdle point between two primaries
       const p = make();
@@ -108,7 +107,7 @@ const MySkyDiamondSkia = memo(function MySkyDiamondSkia({ size = 512, style }: P
       return p;
     });
 
-    const girdleFacets2 = dirs.map((_, i) => {
+    const girdleFacets2 = DIRS.map((_, i) => {
       const giMid = i * 2 + 1;
       const giNext = ((i + 1) % 8) * 2;
       const p = make();

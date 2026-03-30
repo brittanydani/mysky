@@ -64,6 +64,11 @@ type Props = {
  * 4 smaller ordinal blades (NE/NW/SE/SW), concentric rings, and a centre hub.
  * All rendered with the shared champagne-gold metallic system.
  */
+// Cardinal blades (0° = N, 90° = E, 180° = S, 270° = W)
+const CARD_ANGLES = [0, 90, 180, 270];
+// Ordinal blades (NE / NW / SE / SW)
+const ORD_ANGLES  = [45, 135, 225, 315];
+
 const MySkyCompassSkia = memo(function MySkyCompassSkia({ size = 512, style }: Props) {
   const cx = size / 2;
   const cy = size / 2;
@@ -87,15 +92,12 @@ const MySkyCompassSkia = memo(function MySkyCompassSkia({ size = 512, style }: P
   const hubInner   = size * 0.026;
 
   // Cardinal blades (0° = N, 90° = E, 180° = S, 270° = W)
-  const cardAngles  = [0, 90, 180, 270];
-  const ordAngles   = [45, 135, 225, 315];
-
   const cardPaths = useMemo(
-    () => cardAngles.map(a => makeBlade(cx, cy, cardInner, cardOuter, cardHalfW, a)),
+    () => CARD_ANGLES.map(a => makeBlade(cx, cy, cardInner, cardOuter, cardHalfW, a)),
     [cx, cy, cardInner, cardOuter, cardHalfW],
   );
   const ordPaths = useMemo(
-    () => ordAngles.map(a => makeBlade(cx, cy, ordInner, ordOuter, ordHalfW, a)),
+    () => ORD_ANGLES.map(a => makeBlade(cx, cy, ordInner, ordOuter, ordHalfW, a)),
     [cx, cy, ordInner, ordOuter, ordHalfW],
   );
 

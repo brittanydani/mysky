@@ -70,14 +70,17 @@ const TabButton = memo(function TabButton({ isFocused, cfg, onPress, onLayout }:
 
   useEffect(() => {
     scale.value = withSpring(isFocused ? 1.1 : 1.0, { mass: 0.6, damping: 14, stiffness: 160 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
 
   const handlePressIn = useCallback(() => {
     scale.value = withSpring(0.85, { mass: 0.5, damping: 12 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePressOut = useCallback(() => {
     scale.value = withSpring(isFocused ? 1.1 : 1.0, { mass: 0.5, damping: 12 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
 
   const animatedIconStyle = useAnimatedStyle(() => ({
@@ -158,6 +161,7 @@ export default function GlassDock({ state, navigation }: BottomTabBarProps) {
       indicatorWidth.value = layout.width;
       indicatorDotX.value = withSpring(centerX, { mass: 0.8, damping: 15, stiffness: 150 });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRouteName, tabLayouts]);
 
   const animatedIndicatorStyle = useAnimatedStyle(() => ({

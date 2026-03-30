@@ -27,8 +27,7 @@ jest.mock('../../storage/localDb', () => ({
 
 import { localDb } from '../../storage/localDb';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockDb = localDb as jest.Mocked<any>;
+const mockDb = localDb as jest.Mocked<typeof localDb>;
 
 // ─── Minimal fixture ──────────────────────────────────────────────────────────
 

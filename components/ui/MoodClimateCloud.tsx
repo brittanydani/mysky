@@ -87,10 +87,12 @@ export function MoodClimateCloud({ turbulence = 3, height = 280 }: MoodClimateCl
       false,
     );
     return () => { clock.value = 0; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Turbulence level accessible on the UI thread
   const turbulenceShared = useSharedValue(t01);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { turbulenceShared.value = t01; }, [t01]);
 
   const cx = SCREEN_W / 2;
