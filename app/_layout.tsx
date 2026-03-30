@@ -12,7 +12,6 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 
 import OnboardingModal from '../components/OnboardingModal';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
-import TermsConsentModal from '../components/TermsConsentModal';
 import AuthRequiredModal from '../components/AuthRequiredModal';
 import CosmicBackground from '../components/ui/CosmicBackground';
 
@@ -144,7 +143,6 @@ function AppShell() {
 
   const [needsPrivacyConsent, setNeedsPrivacyConsent] = useState(false);
   const [needsTermsConsent, setNeedsTermsConsent] = useState(false);
-  const [showTermsGate, setShowTermsGate] = useState(false);
 
   const [onboardingComplete, setOnboardingComplete] = useState(false);
 
@@ -299,7 +297,6 @@ function AppShell() {
       setNeedsPrivacyConsent(true);
       setNeedsTermsConsent(true);
       setOnboardingComplete(false);
-      setShowTermsGate(false);
       // Allow post-consent init to run again after re-consent
       didRunPostConsentInitRef.current = false;
       logger.info('Consent withdrawn — session re-gated');
@@ -373,7 +370,10 @@ function AppShell() {
 
       // Existing users who only needed updated terms should not be forced through
       // profile creation again. Re-check chart state as soon as terms are accepted.
-      if (granted) {
+      // Guard: do NOT re-evaluate onboarding while user is viewing a legal page
+      // (Terms/Privacy/FAQ opened from the onboarding consent step). This prevents
+      // async state churn from remounting the onboarding modal in the wrong step.
+      if (granted && !isOnLegalScreen) {
         await checkIfOnboardingCanBeSkipped();
       }
     } catch (error) {
@@ -382,8 +382,16 @@ function AppShell() {
     }
   };
 
-  const handleOnboardingComplete = () => {
+  const handleOnboardingComplete = async () => {
     setOnboardingComplete(true);
+
+    try {
+      const { trackGrowthEvent } = await import('../services/growth/localAnalytics');
+      await trackGrowthEvent('onboarding_completed');
+    } catch (e) {
+      logger.error('[RootLayout] Failed to track onboarding_completed:', e);
+    }
+
     if (!needsPrivacyConsent && !needsTermsConsent) {
       router.replace('/(tabs)/home');
     }
@@ -461,25 +469,15 @@ function AppShell() {
             <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail={SUPPORT_EMAIL} />
           )}
 
-          {/* IMPORTANT: Terms happens at the root level to avoid nested-Modal issues on iOS. */}
-          {!needsPrivacyConsent && !onboardingComplete && !isOnLegalScreen && (
+          {/* IMPORTANT: Terms consent is now an inline step inside OnboardingModal.
+              Keep the modal mounted while the user is viewing a legal screen so that
+              onboarding step state is preserved (no remount → no step reset). */}
+          {!needsPrivacyConsent && !onboardingComplete && (
             <OnboardingModal
-              visible
+              visible={!isOnLegalScreen}
               needsTermsConsent={needsTermsConsent}
               onTermsConsent={handleTermsConsent}
-              onRequestTermsConsent={() => setShowTermsGate(true)}
               onComplete={handleOnboardingComplete}
-            />
-          )}
-
-          {showTermsGate && (
-            <TermsConsentModal
-              visible
-              onConsent={async (granted) => {
-                if (!granted) return; // keep gate up until accepted
-                setShowTermsGate(false);
-                await handleTermsConsent(granted);
-              }}
             />
           )}
 

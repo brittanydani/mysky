@@ -1,6 +1,6 @@
 // File: app/onboarding/birth.tsx
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
+import { Alert, View, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
@@ -70,10 +70,15 @@ export default function OnboardingBirthScreen() {
         logger.error('[OnboardingBirth] IdentityVault seal failed:', err)
       );
 
+      import('../../services/growth/localAnalytics')
+        .then(({ trackGrowthEvent }) => trackGrowthEvent('onboarding_completed'))
+        .catch((err) => logger.error('[OnboardingBirth] analytics failed:', err));
+
       DeviceEventEmitter.emit('ONBOARDING_COMPLETE');
       router.replace('/(tabs)/home' as Href);
     } catch (e) {
       logger.error('[OnboardingBirth] failed:', e);
+      Alert.alert('Something went wrong', 'We could not save your birth details. Please try again.');
     }
   }, [router]);
 

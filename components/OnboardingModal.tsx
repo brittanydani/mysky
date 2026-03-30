@@ -8,7 +8,6 @@ import {
   Alert,
   Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -38,7 +37,10 @@ import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import TermsConsentModal from './TermsConsentModal';
+import { MetallicIcon } from './ui/MetallicIcon';
+import SkiaMetallicPill from './ui/SkiaMetallicPill';
+import { useRouter, Href } from 'expo-router';
+import { theme } from '../constants/theme';
 
 import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
 import { AstrologyCalculator } from '../services/astrology/calculator';
@@ -48,6 +50,8 @@ import { BackupService } from '../services/storage/backupService';
 import { toLocalDateString } from '../utils/dateUtils';
 import { logger } from '../utils/logger';
 import Constants from 'expo-constants';
+
+const ONBOARDING_RETURN_STEP_KEY = 'msky_onboarding_return_step';
 
 const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
 const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
@@ -91,10 +95,11 @@ interface LocationSuggestion {
   lon: string;
 }
 
-type OnboardingStep = 'welcome' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
+type OnboardingStep = 'welcome' | 'terms' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
 
 const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   welcome: -1,
+  terms: -1,
   name: 0,
   birthDate: 1,
   birthTime: 2,
@@ -102,6 +107,12 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   processing: -1,
   passphrase: -1,
 };
+
+const CONSENT_LINKS: { title: string; subtitle: string; icon: keyof typeof Ionicons.glyphMap; route: Href }[] = [
+  { title: 'Terms of Use (EULA)', subtitle: 'Review our service agreement', icon: 'document-text-outline', route: '/terms' as Href },
+  { title: 'Privacy Policy', subtitle: 'How we secure your chart data', icon: 'shield-checkmark-outline', route: '/privacy' as Href },
+  { title: 'FAQ', subtitle: 'Common technical questions', icon: 'help-circle-outline', route: '/faq' as Href },
+];
 
 // ── Living Volumetric Nebula ──
 function LivingBackground() {
@@ -250,7 +261,6 @@ interface OnboardingModalProps {
   onComplete: (chart: NatalChart) => void;
   needsTermsConsent?: boolean;
   onTermsConsent?: (granted: boolean) => void;
-  onRequestTermsConsent?: () => void;
 }
 
 export default function OnboardingModal({
@@ -258,10 +268,9 @@ export default function OnboardingModal({
   onComplete,
   needsTermsConsent = false,
   onTermsConsent,
-  onRequestTermsConsent,
 }: OnboardingModalProps) {
+  const router = useRouter();
   const [step, setStep] = useState<OnboardingStep>('welcome');
-  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date());
@@ -282,38 +291,14 @@ export default function OnboardingModal({
   const [passphrase, setPassphrase] = useState('');
   const [isNameFocused, setIsNameFocused] = useState(false);
 
+  // Guard: prevents blur/pressOut from firing "I Agree" while navigating to a legal screen
+  const navigatingLegalRef = useRef(false);
+
   // ── Hardware Tactility: Scale animations ──
   const ctaScale = useSharedValue(1);
   const ctaAnimStyle = useAnimatedStyle(() => ({ transform: [{ scale: ctaScale.value }] }));
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!visible) {
-      setStep('welcome');
-      setShowTermsModal(false);
-      setUserName('');
-      setBirthDate(new Date());
-      setBirthTime(new Date());
-      setHasUnknownTime(false);
-      setLocationQuery('');
-      setLocationPlace('');
-      setLocationLat(0);
-      setLocationLon(0);
-      setLocationSelected(false);
-      setLocationSuggestions([]);
-      setBackupUri(null);
-      setPassphrase('');
-      setIsNameFocused(false);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-      if (abortControllerRef.current) abortControllerRef.current.abort();
-      timeoutRef.current = null;
-    } else {
-      setBirthDate(new Date());
-      setBirthTime(new Date());
-    }
-  }, [visible]);
 
   useEffect(() => {
     return () => {
@@ -323,7 +308,30 @@ export default function OnboardingModal({
     };
   }, []);
 
-  const STEP_ORDER: OnboardingStep[] = ['name', 'birthDate', 'birthTime', 'location', 'processing'];
+  // Restore persisted step when modal becomes visible (survives unmount during legal screen nav)
+  useEffect(() => {
+    const restoreStep = async () => {
+      if (!visible) return;
+      try {
+        const savedStep = await EncryptedAsyncStorage.getItem(ONBOARDING_RETURN_STEP_KEY);
+        if (
+          savedStep === 'welcome' ||
+          savedStep === 'terms' ||
+          savedStep === 'name' ||
+          savedStep === 'birthDate' ||
+          savedStep === 'birthTime' ||
+          savedStep === 'location' ||
+          savedStep === 'passphrase'
+        ) {
+          setStep(savedStep as OnboardingStep);
+          await EncryptedAsyncStorage.removeItem(ONBOARDING_RETURN_STEP_KEY);
+        }
+      } catch {}
+    };
+    restoreStep();
+  }, [visible]);
+
+  const STEP_ORDER: OnboardingStep[] = ['terms', 'name', 'birthDate', 'birthTime', 'location', 'processing'];
 
   const goToStep = (next: OnboardingStep) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -335,27 +343,30 @@ export default function OnboardingModal({
     if (idx > 0) goToStep(STEP_ORDER[idx - 1]);
   };
 
-  const prevNeedsTermsRef = useRef(needsTermsConsent);
-  useEffect(() => {
-    const wasNeeded = prevNeedsTermsRef.current;
-    prevNeedsTermsRef.current = needsTermsConsent;
-    if (wasNeeded && !needsTermsConsent && step === 'welcome') {
-      goToStep('name');
-    }
-  }, [needsTermsConsent, step]);
-
   const handleGetStarted = () => {
     Haptics.selectionAsync().catch(() => {});
-    if (needsTermsConsent) {
-      if (onRequestTermsConsent) {
-        onRequestTermsConsent();
-      } else {
-        setShowTermsModal(true);
-      }
-      return;
-    }
+    goToStep('terms');
+  };
+
+  const handleTermsAccept = () => {
+    // Block if we're mid-navigation to a legal screen (blur can misfire as a tap)
+    if (navigatingLegalRef.current) return;
+    Haptics.selectionAsync().catch(() => {});
+    onTermsConsent?.(true);
     goToStep('name');
   };
+
+  const openConsentRoute = useCallback(async (route: Href) => {
+    // Lock the accept button BEFORE any async work so blur events are blocked
+    navigatingLegalRef.current = true;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    try {
+      await EncryptedAsyncStorage.setItem(ONBOARDING_RETURN_STEP_KEY, step);
+      router.push(route);
+    } catch { Alert.alert('Unable to open', 'Please try again.'); }
+    // Release after a generous delay so the transition animation completes
+    setTimeout(() => { navigatingLegalRef.current = false; }, 800);
+  }, [router, step]);
 
   const handleNameContinue = () => {
     if (!userName.trim()) return;
@@ -542,31 +553,14 @@ export default function OnboardingModal({
     }
   };
 
-  const handleTermsDecision = async (granted: boolean) => {
-    try {
-      if (!granted) {
-        onTermsConsent?.(false);
-        setShowTermsModal(true);
-        return;
-      }
-      onTermsConsent?.(true);
-      setShowTermsModal(false);
-      goToStep('name');
-    } catch (e) {
-      logger.error('Terms decision failed:', e);
-      if (granted) {
-        setShowTermsModal(false);
-        goToStep('name');
-      } else {
-        setShowTermsModal(true);
-      }
-    }
-  };
+
 
   const showProgress = STEP_PROGRESS_INDEX[step] >= 0;
 
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
+    <View style={st.modalOverlay}>
       <View style={st.container}>
         
         {/* Deep Stack Background */}
@@ -640,6 +634,50 @@ export default function OnboardingModal({
                       <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
                       <Text style={st.restoreText}>Restore from Backup</Text>
                     </Pressable>
+                  </Animated.View>
+                </View>
+              )}
+
+              {/* ══════ TERMS CONSENT ══════ */}
+              {step === 'terms' && (
+                <View style={st.centeredFlex}>
+                  <Animated.View entering={FadeInDown.delay(100).duration(700)} style={st.termsContainer}>
+                    <Text style={st.termsTitle}>Before you continue</Text>
+                    <Text style={st.termsBody}>
+                      To provide personalized insights, we need you to review and accept our data framework.
+                    </Text>
+
+                    <View style={st.termsLinksBlock}>
+                      {CONSENT_LINKS.map((l) => (
+                        <Pressable
+                          key={l.title}
+                          onPress={() => openConsentRoute(l.route)}
+                          accessibilityRole="link"
+                          style={({ pressed }) => [st.termsLinkRow, pressed && { opacity: 0.7 }]}
+                        >
+                          <View style={st.termsLinkLeft}>
+                            <View style={st.termsLinkIcon}>
+                              <MetallicIcon name={l.icon} size={18} color={theme.growth ?? PREMIUM.titanium} />
+                            </View>
+                            <View>
+                              <Text style={st.termsLinkTitle}>{l.title}</Text>
+                              <Text style={st.termsLinkSubtitle}>{l.subtitle}</Text>
+                            </View>
+                          </View>
+                          <Ionicons name="chevron-forward-outline" size={18} color={PREMIUM.textMuted} />
+                        </Pressable>
+                      ))}
+                    </View>
+
+                    <Text style={st.termsFootnote}>You can view these anytime in Settings.</Text>
+                  </Animated.View>
+
+                  <Animated.View entering={FadeInUp.delay(500).duration(600)} style={st.ctaContainerFixed}>
+                    <SkiaMetallicPill
+                      label="I Agree"
+                      onPress={handleTermsAccept}
+                      borderRadius={16}
+                    />
                   </Animated.View>
                 </View>
               )}
@@ -902,11 +940,9 @@ export default function OnboardingModal({
           </KeyboardAvoidingView>
         </SafeAreaView>
 
-        {showTermsModal && !onRequestTermsConsent && (
-          <TermsConsentModal visible onConsent={handleTermsDecision} />
-        )}
+
       </View>
-    </Modal>
+    </View>
   );
 }
 
@@ -915,6 +951,10 @@ export default function OnboardingModal({
 // ════════════════════════════════════════════════════════════════════════════
 
 const st = StyleSheet.create({
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 999,
+  },
   container: { flex: 1, backgroundColor: PREMIUM.bgOled },
   safeArea: { flex: 1 },
 
@@ -1021,6 +1061,50 @@ const st = StyleSheet.create({
   },
   
   ctaContainer: { alignItems: 'center', width: '100%' },
+  ctaContainerFixed: { alignItems: 'center', width: '100%', paddingTop: 24, paddingBottom: 16 },
+
+  // ── Terms Consent (inline step) ──
+  termsContainer: { alignItems: 'flex-start', width: '100%', marginBottom: 32 },
+  termsTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    color: PREMIUM.textMain,
+    fontFamily: DISPLAY_BOLD,
+    marginBottom: 12,
+    letterSpacing: -0.7,
+  },
+  termsBody: {
+    fontSize: 16,
+    color: PREMIUM.textMuted,
+    lineHeight: 24,
+    fontFamily: DISPLAY,
+    marginBottom: 24,
+  },
+  termsLinksBlock: { width: '100%', gap: 12, marginBottom: 24 },
+  termsLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  termsLinkLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  termsLinkIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    marginRight: 14,
+  },
+  termsLinkTitle: { fontSize: 16, fontWeight: '700', color: PREMIUM.textMain, fontFamily: DISPLAY_SEMIBOLD },
+  termsLinkSubtitle: { fontSize: 13, color: PREMIUM.textMuted, fontFamily: DISPLAY, marginTop: 2 },
+  termsFootnote: { fontSize: 12, color: PREMIUM.textMuted, fontFamily: DISPLAY, textAlign: 'center', width: '100%' },
   
   // ── Liquid Mirror Gold Primary Action Button ──
   primaryActionBtn: {

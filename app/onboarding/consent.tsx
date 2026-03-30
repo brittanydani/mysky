@@ -6,7 +6,6 @@ import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter, Href } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
 import { theme } from '../../constants/theme';
@@ -15,7 +14,6 @@ import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { PrivacyComplianceManager } from '../../services/privacy/privacyComplianceManager';
 import { logger } from '../../utils/logger';
 
-const TERMS_KEY = 'msky_termsAccepted_v1';
 const TERMS_VERSION = '2026-03-03';
 
 export default function OnboardingConsentScreen() {
@@ -41,7 +39,6 @@ export default function OnboardingConsentScreen() {
     setSaving(true);
     Haptics.selectionAsync().catch(() => {});
     try {
-      await AsyncStorage.setItem(TERMS_KEY, JSON.stringify({ accepted: true, version: TERMS_VERSION, at: new Date().toISOString() }));
       await SecureStore.setItemAsync('terms_consent', 'true');
 
       // Record consent through the privacy compliance system so SecureStore,

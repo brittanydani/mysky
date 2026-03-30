@@ -95,7 +95,7 @@ export default function OnboardingRestoreScreen() {
           <View style={styles.headerBar}>
             <Pressable 
               style={styles.backButton} 
-              onPress={() => router.replace('/onboarding/consent?mode=restore' as Href)}
+              onPress={() => router.replace('/onboarding/birth' as Href)}
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
