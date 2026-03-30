@@ -6,8 +6,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Keyboard,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -28,6 +28,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -35,9 +36,8 @@ import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 
-import { theme } from '../constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import TermsConsentModal from './TermsConsentModal';
 
 import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
@@ -47,26 +47,34 @@ import { localDb } from '../services/storage/localDb';
 import { BackupService } from '../services/storage/backupService';
 import { toLocalDateString } from '../utils/dateUtils';
 import { logger } from '../utils/logger';
-import { MetallicIcon } from './ui/MetallicIcon';
-import { MetallicText } from './ui/MetallicText';
 import Constants from 'expo-constants';
 
 const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
 const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
 const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' });
 
-// ── Velvet Tech Palette ──
-const VELVET = {
+// ── Liquid Mirror Gold Palette ──
+const PREMIUM = {
   bgOled: '#000000',
-  accentPrimary: '#FFFFFF', // Clean, high-contrast white
-  accentCyan: '#00E5FF', // High-tech data glow
-  etherealBlue: 'rgba(0, 150, 255, 0.4)', // Deep aurora blue
-  dreamViolet: 'rgba(138, 43, 226, 0.3)', // Deep aurora purple
-  glassBorder: 'rgba(255, 255, 255, 0.12)',
-  glassFill: 'rgba(255, 255, 255, 0.04)',
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(255, 255, 255, 0.5)',
+  titanium: '#C5B5A1',
+  // Nebula orb fills — Champagne Gold + Amethyst Purple for volumetric depth
+  titaniumGlow: 'rgba(197, 181, 161, 0.12)',   // Champagne — refined Titanium warmth
+  starlight:    'rgba(79,  79,  127, 0.10)',    // Amethyst Purple — deep volumetric void
+  // Laser-Etched White Gold border
+  glassBorder: 'rgba(255, 253, 235, 0.2)',
+  glassFill: 'rgba(15, 15, 15, 0.4)',
+  textMain: '#F5F5F7',
+  textMuted: '#86868B',
 };
+
+// 6-stop horizontal Liquid Mirror Gold gradient
+const LIQUID_GOLD: readonly [string, string, ...string[]] = [
+  '#FFFFFF',   // 0 — Specular white glint
+  '#F7E7C2',   // 1 — Champagne gold
+  '#EED9A7',   // 2 — Base gold
+  '#CFAE73',   // 3 — Amber mid-tone
+  '#9B7A46',   // 4 — Deep bronze shadow
+] as const;
 
 // ── Nominatim location search ──
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
@@ -83,7 +91,6 @@ interface LocationSuggestion {
   lon: string;
 }
 
-// ── Step Types ──
 type OnboardingStep = 'welcome' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
 
 const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
@@ -96,13 +103,13 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   passphrase: -1,
 };
 
-// ── Living Background (Aurora Velvet Glass) ──
+// ── Living Volumetric Nebula ──
 function LivingBackground() {
   const rotation = useSharedValue(0);
 
   useEffect(() => {
     rotation.value = withRepeat(
-      withTiming(360, { duration: 60_000, easing: Easing.linear }),
+      withTiming(360, { duration: 80_000, easing: Easing.linear }),
       -1,
       false,
     );
@@ -113,32 +120,31 @@ function LivingBackground() {
   }));
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: PREMIUM.bgOled }]} pointerEvents="none">
       <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
-        <View style={st.orbBlue} />
-        <View style={st.orbViolet} />
+        <View style={st.orbTitanium} />
+        <View style={st.orbStarlight} />
       </Animated.View>
-      {/* Massive blur to create the velvet glass nebula effect */}
-      <BlurView intensity={120} tint="dark" style={StyleSheet.absoluteFill} />
+      <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
     </View>
   );
 }
 
-// ── Pulsing Processing Orb (High-Tech Scanner) ──
+// ── Precision High-Tech Scanner ──
 function ProcessingOrb() {
   const pulse = useSharedValue(0);
 
   useEffect(() => {
     pulse.value = withRepeat(
-      withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+      withTiming(1, { duration: 2500, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     );
   }, [pulse]);
 
   const glowStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 0.8 + pulse.value * 0.5 }],
-    opacity: 0.1 + pulse.value * 0.2,
+    transform: [{ scale: 0.85 + pulse.value * 0.3 }],
+    opacity: 0.1 + pulse.value * 0.3,
   }));
 
   const innerRingStyle = useAnimatedStyle(() => ({
@@ -154,12 +160,12 @@ function ProcessingOrb() {
       <Animated.View style={[st.processingGlow, glowStyle]} />
       <Animated.View style={[st.processingInnerRing, innerRingStyle]} />
       <Animated.View style={[st.processingOuterRing, outerRingStyle]} />
-      <Ionicons name="scan-outline" size={32} color={VELVET.accentCyan} style={st.processingSparkle} />
+      <Ionicons name="scan-outline" size={36} color={PREMIUM.titanium} style={st.processingSparkle} />
     </View>
   );
 }
 
-// ── Progress Capsules (Editorial Lines) ──
+// ── Editorial Progress Indicator ──
 function ProgressIndicator({ currentIndex }: { currentIndex: number }) {
   return (
     <View style={st.progressRow}>
@@ -176,7 +182,7 @@ function ProgressIndicator({ currentIndex }: { currentIndex: number }) {
   );
 }
 
-// ── Bottom Navigation Bar ──
+// ── Solid Titanium Bottom Navigation ──
 function BottomNav({
   canGoBack,
   isNextDisabled,
@@ -192,6 +198,11 @@ function BottomNav({
   onBack: () => void;
   onNext: () => void;
 }) {
+  const nextScale = useSharedValue(1);
+  const nextAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: nextScale.value }],
+  }));
+
   return (
     <View style={st.bottomNav}>
       {canGoBack ? (
@@ -199,28 +210,33 @@ function BottomNav({
           style={({ pressed }) => [st.backButton, pressed && { opacity: 0.7 }]}
           onPress={onBack}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back-outline" size={24} color={VELVET.textMain} />
+          <Ionicons name="chevron-back-outline" size={24} color={PREMIUM.textMain} />
         </Pressable>
-      ) : <View style={{ width: 56 }} />}
+      ) : <View style={{ width: 50 }} />}
 
       <View style={{ flex: 1 }} />
 
-      <Pressable
-        style={({ pressed }) => [
-          st.nextButton,
-          isNextDisabled && st.nextButtonDisabled,
-          pressed && !isNextDisabled && st.nextButtonPressed,
-        ]}
-        onPress={onNext}
-        disabled={isNextDisabled}
-        accessibilityRole="button"
-        accessibilityLabel={nextLabel}
-      >
-        <Text style={st.nextButtonText}>{nextLabel}</Text>
-        <Ionicons name={nextIcon} size={18} color={VELVET.bgOled} style={{ marginLeft: 8 }} />
-      </Pressable>
+      <Animated.View style={[st.nextButton, isNextDisabled && st.nextButtonDisabled, nextAnimStyle]}>
+        <Pressable
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, height: '100%' }}
+          onPressIn={() => { if (!isNextDisabled) nextScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
+          onPressOut={() => { nextScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
+          onPress={onNext}
+          disabled={isNextDisabled}
+        >
+          {!isNextDisabled && (
+            <LinearGradient
+              colors={LIQUID_GOLD}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={st.nextButtonGradient}
+            />
+          )}
+          <Text style={[st.nextButtonText, isNextDisabled && { color: PREMIUM.textMuted }]}>{nextLabel}</Text>
+          <Ionicons name={nextIcon} size={18} color={isNextDisabled ? PREMIUM.textMuted : '#000000'} style={{ marginLeft: 8 }} />
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }
@@ -244,11 +260,9 @@ export default function OnboardingModal({
   onTermsConsent,
   onRequestTermsConsent,
 }: OnboardingModalProps) {
-  // ── Step state ──
   const [step, setStep] = useState<OnboardingStep>('welcome');
   const [showTermsModal, setShowTermsModal] = useState(false);
 
-  // ── User data ──
   const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date());
   const [birthTime, setBirthTime] = useState<Date>(new Date());
@@ -259,15 +273,18 @@ export default function OnboardingModal({
   const [locationLon, setLocationLon] = useState(0);
   const [locationSelected, setLocationSelected] = useState(false);
 
-  // ── Location search state ──
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [searchingLocation, setSearchingLocation] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // ── Backup restore state ──
   const [backupUri, setBackupUri] = useState<string | null>(null);
   const [passphrase, setPassphrase] = useState('');
+  const [isNameFocused, setIsNameFocused] = useState(false);
+
+  // ── Hardware Tactility: Scale animations ──
+  const ctaScale = useSharedValue(1);
+  const ctaAnimStyle = useAnimatedStyle(() => ({ transform: [{ scale: ctaScale.value }] }));
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -287,6 +304,7 @@ export default function OnboardingModal({
       setLocationSuggestions([]);
       setBackupUri(null);
       setPassphrase('');
+      setIsNameFocused(false);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
       if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -491,6 +509,7 @@ export default function OnboardingModal({
       Alert.alert('Invalid Passphrase', 'Passphrase must be at least 8 characters.');
       return;
     }
+    Keyboard.dismiss();
     setStep('processing');
     try {
       await BackupService.restoreFromBackupFile(backupUri, passphrase);
@@ -549,295 +568,339 @@ export default function OnboardingModal({
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
       <View style={st.container}>
-        <SkiaDynamicCosmos fill={VELVET.bgOled} />
+        
+        {/* Deep Stack Background */}
         <LivingBackground />
+        
+        {/* Stars sit ON TOP of the nebula blur, but UNDER the UI */}
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <SkiaDynamicCosmos fill="transparent" />
+        </View>
 
         <SafeAreaView edges={['top', 'bottom']} style={st.safeArea}>
-          {showProgress && (
-            <Animated.View entering={FadeIn.duration(600)} exiting={FadeOut.duration(300)}>
-              <ProgressIndicator currentIndex={STEP_PROGRESS_INDEX[step]} />
-            </Animated.View>
-          )}
-
-          <View style={st.contentArea}>
-
-            {/* ══════ WELCOME ══════ */}
-            {step === 'welcome' && (
-              <View style={st.centeredFlex}>
-                <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.welcomeContainer}>
-                  <Text style={st.welcomeTitle}>Welcome to MySky</Text>
-                  <Text style={st.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
-                  <Text style={st.welcomeDescription}>
-                    Track your mood, sleep, and energy, journal your thoughts, and uncover personal patterns over time.
-                  </Text>
-                </Animated.View>
-
-                <Animated.View entering={FadeInUp.delay(400).duration(700)} style={st.featuresContainer}>
-                  {[
-                    { icon: 'pencil-outline' as const, text: 'Daily journaling & reflection' },
-                    { icon: 'pulse-outline' as const, text: 'Mood, sleep & energy tracking' },
-                    { icon: 'analytics-outline' as const, text: 'Pattern insights drawn from data' },
-                    { icon: 'lock-closed-outline' as const, text: 'Private & encrypted on-device' },
-                  ].map((item, i) => (
-                    <BlurView intensity={20} tint="dark" key={i} style={st.featureCard}>
-                      <View style={st.featureIcon}>
-                        <Ionicons name={item.icon} size={20} color={VELVET.accentPrimary} />
-                      </View>
-                      <Text style={st.featureText}>{item.text}</Text>
-                    </BlurView>
-                  ))}
-                </Animated.View>
-
-                <Animated.View entering={FadeInUp.delay(700).duration(600)} style={st.ctaContainer}>
-                  <Pressable
-                    style={({ pressed }) => [st.primaryActionBtn, pressed && st.primaryActionBtnPressed]}
-                    onPress={handleGetStarted}
-                  >
-                    <Text style={st.primaryActionBtnText}>Get Started</Text>
-                    <Ionicons name="arrow-forward" size={18} color={VELVET.bgOled} style={{ marginLeft: 8 }} />
-                  </Pressable>
-                  <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
-                    <Ionicons name="cloud-download-outline" size={16} color={VELVET.textMuted} />
-                    <Text style={st.restoreText}>Restore from Backup</Text>
-                  </Pressable>
-                </Animated.View>
-              </View>
+          <KeyboardAvoidingView 
+            style={{ flex: 1 }} 
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
+            {showProgress && (
+              <Animated.View entering={FadeIn.duration(600)} exiting={FadeOut.duration(300)}>
+                <ProgressIndicator currentIndex={STEP_PROGRESS_INDEX[step]} />
+              </Animated.View>
             )}
 
-            {/* ══════ NAME ══════ */}
-            {step === 'name' && (
-              <View style={st.centeredFlex}>
-                <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                  <Text style={st.etherealQuestion}>What should we call you?</Text>
-                  <View style={st.nameInputWrapper}>
-                    <TextInput
-                      style={st.nameInput}
-                      value={userName}
-                      onChangeText={setUserName}
-                      placeholder="Your name"
-                      placeholderTextColor={VELVET.textMuted}
-                      autoFocus
-                      returnKeyType="next"
-                      maxLength={30}
-                      onSubmitEditing={handleNameContinue}
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                      selectionColor={VELVET.accentCyan}
-                    />
-                    <View style={[st.inputUnderline, userName.trim() ? st.inputUnderlineActive : st.inputUnderlineInactive]} />
-                  </View>
-                </Animated.View>
-                <Animated.View entering={FadeInUp.delay(400).duration(600)}>
-                  <BottomNav canGoBack={false} isNextDisabled={!userName.trim()} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleNameContinue} />
-                </Animated.View>
-              </View>
-            )}
+            <View style={st.contentArea}>
 
-            {/* ══════ BIRTH DATE ══════ */}
-            {step === 'birthDate' && (
-              <View style={st.centeredFlex}>
-                <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                  <Text style={st.etherealQuestion}>When did your journey begin?</Text>
-                  <Text style={st.etherealSubtext}>
-                    Used to accurately map your internal weather and profile.
-                  </Text>
-
-                  <BlurView intensity={25} tint="dark" style={st.glassCard}>
-                    <DateTimePicker
-                      value={birthDate}
-                      mode="date"
-                      display="spinner"
-                      onChange={(_e: DateTimePickerEvent, selected?: Date) => {
-                        if (selected) setBirthDate(selected);
-                      }}
-                      maximumDate={new Date()}
-                      minimumDate={new Date(1900, 0, 1)}
-                      themeVariant="dark"
-                      textColor="#FFFFFF"
-                      style={{ width: '100%' }}
-                    />
-                  </BlurView>
-                </Animated.View>
-                <Animated.View entering={FadeInUp.delay(400).duration(600)}>
-                  <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleDateContinue} />
-                </Animated.View>
-              </View>
-            )}
-
-            {/* ══════ BIRTH TIME ══════ */}
-            {step === 'birthTime' && (
-              <View style={st.centeredFlex}>
-                <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                  <Text style={st.etherealQuestion}>What time did you arrive?</Text>
-                  <Text style={st.etherealSubtext}>
-                    Precision helps us personalize your data patterns.
-                  </Text>
-
-                  <BlurView intensity={25} tint="dark" style={st.glassCard}>
-                    <DateTimePicker
-                      value={birthTime}
-                      mode="time"
-                      display="spinner"
-                      onChange={(_e: DateTimePickerEvent, selected?: Date) => {
-                        if (selected) {
-                          setBirthTime(selected);
-                          setHasUnknownTime(false);
-                        }
-                      }}
-                      themeVariant="dark"
-                      textColor="#FFFFFF"
-                      style={{ width: '100%' }}
-                    />
-                  </BlurView>
-
-                  <Pressable
-                    style={({ pressed }) => [st.unknownTimeButton, pressed && { opacity: 0.7 }]}
-                    onPress={handleUnknownTime}
-                  >
-                    <Text style={st.unknownTimeText}>I don't know my exact birth time</Text>
-                  </Pressable>
-                </Animated.View>
-                <Animated.View entering={FadeInUp.delay(400).duration(600)}>
-                  <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleTimeContinue} />
-                </Animated.View>
-              </View>
-            )}
-
-            {/* ══════ LOCATION ══════ */}
-            {step === 'location' && (
-              <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-                keyboardShouldPersistTaps="handled"
-                keyboardDismissMode="on-drag"
-                showsVerticalScrollIndicator={false}
-              >
-                <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
-                  <Text style={st.etherealQuestion}>Where did your journey begin?</Text>
-                  <Text style={st.etherealSubtext}>
-                    City of birth roots your profile baseline.
-                  </Text>
-
-                  <BlurView intensity={20} tint="dark" style={st.locationSearchRow}>
-                    <Ionicons name="search-outline" size={20} color={VELVET.accentPrimary} />
-                    <TextInput
-                      style={st.locationInput}
-                      value={locationQuery}
-                      onChangeText={(t) => {
-                        setLocationQuery(t);
-                        searchLocation(t);
-                      }}
-                      placeholder="Search city..."
-                      placeholderTextColor={VELVET.textMuted}
-                      autoFocus
-                      returnKeyType="search"
-                      autoCapitalize="words"
-                      autoCorrect={false}
-                      selectionColor={VELVET.accentCyan}
-                    />
-                    {searchingLocation && (
-                      <ActivityIndicator size="small" color={VELVET.accentPrimary} />
-                    )}
-                  </BlurView>
-
-                  {locationSuggestions.length > 0 && !locationSelected && (
-                    <BlurView intensity={30} tint="dark" style={st.suggestionsContainer}>
-                      {locationSuggestions.map((suggestion, idx) => {
-                        const parts = suggestion.display_name.split(', ');
-                        const city = parts.slice(0, 2).join(', ');
-                        const country = parts[parts.length - 1] || '';
-                        return (
-                          <React.Fragment key={suggestion.place_id ?? idx}>
-                            {idx > 0 && <View style={st.suggestionDivider} />}
-                            <Pressable
-                              style={({ pressed }) => [st.suggestionRow, pressed && { backgroundColor: VELVET.glassFill }]}
-                              onPress={() => handleSelectLocation(suggestion)}
-                            >
-                              <View>
-                                <Text style={st.suggestionCity}>{city}</Text>
-                                <Text style={st.suggestionCountry}>{country}</Text>
-                              </View>
-                            </Pressable>
-                          </React.Fragment>
-                        );
-                      })}
-                    </BlurView>
-                  )}
-
-                  {locationSelected && (
-                    <Animated.View entering={FadeIn.duration(400)} style={st.locationConfirmed}>
-                      <Ionicons name="checkmark-circle-outline" size={20} color={VELVET.accentCyan} />
-                      <Text style={st.locationConfirmedText} numberOfLines={2}>
-                        {locationPlace}
-                      </Text>
-                    </Animated.View>
-                  )}
-                </Animated.View>
-
-                <Animated.View entering={FadeInUp.delay(400).duration(600)}>
-                  <BottomNav canGoBack={true} isNextDisabled={!locationSelected} nextLabel="Create Profile" nextIcon="sparkles" onBack={goBack} onNext={handleCalculateChart} />
-                </Animated.View>
-              </ScrollView>
-            )}
-
-            {/* ══════ PROCESSING CLIMAX ══════ */}
-            {step === 'processing' && (
-              <View style={st.centeredFlex}>
-                <Animated.View entering={FadeIn.delay(100).duration(1000)} style={st.processingContainer}>
-                  <ProcessingOrb />
-                  <View style={st.processingTextGroup}>
-                    <Text style={st.processingLabel}>COMPILING DATA</Text>
-                    <Text style={st.processingMessage}>
-                      {userName.trim()
-                        ? `Mapping telemetry for ${userName.trim()}`
-                        : 'Analyzing core patterns'}
+              {/* ══════ WELCOME ══════ */}
+              {step === 'welcome' && (
+                <View style={st.centeredFlex}>
+                  <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.welcomeContainer}>
+                    <Text style={st.welcomeTitle}>Welcome to MySky</Text>
+                    <Text style={st.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
+                    <Text style={st.welcomeDescription}>
+                      Track your mood, sleep, and energy, journal your thoughts, and uncover personal patterns over time.
                     </Text>
-                  </View>
-                </Animated.View>
-              </View>
-            )}
+                  </Animated.View>
 
-            {/* ══════ PASSPHRASE (Restore) ══════ */}
-            {step === 'passphrase' && (
-              <View style={st.centeredFlex}>
-                <Animated.View entering={FadeIn.delay(100).duration(800)} style={st.singleQuestionContainer}>
-                  <View style={st.passphraseIconWrap}>
-                    <Ionicons name="lock-closed-outline" size={32} color={VELVET.accentPrimary} />
-                  </View>
-                  <Text style={st.etherealQuestion}>Enter Encryption Key</Text>
-                  <Text style={st.etherealSubtext}>
-                    Provide the passphrase used to secure your backup.
-                  </Text>
-                  
-                  <BlurView intensity={20} tint="dark" style={st.passphraseInputWrapper}>
-                    <TextInput
-                      style={st.passphraseInput}
-                      value={passphrase}
-                      onChangeText={setPassphrase}
-                      placeholder="Enter passphrase"
-                      placeholderTextColor={VELVET.textMuted}
-                      secureTextEntry
-                      autoFocus
-                      returnKeyType="done"
-                      onSubmitEditing={handlePassphraseSubmit}
-                      selectionColor={VELVET.accentCyan}
-                    />
-                  </BlurView>
+                  {/* Clean, flush feature list. Removed the distracting individual glass cards. */}
+                  <Animated.View entering={FadeInUp.delay(400).duration(700)} style={st.featuresContainer}>
+                    {[
+                      { icon: 'pencil-outline' as const, text: 'Daily journaling & reflection' },
+                      { icon: 'pulse-outline' as const, text: 'Mood, sleep & energy tracking' },
+                      { icon: 'analytics-outline' as const, text: 'Pattern insights drawn from data' },
+                      { icon: 'lock-closed-outline' as const, text: 'Private & encrypted on-device' },
+                    ].map((item, i) => (
+                      <View key={i} style={st.featureRow}>
+                        <View style={st.featureIcon}>
+                          <Ionicons name={item.icon} size={22} color={PREMIUM.titanium} />
+                        </View>
+                        <Text style={st.featureText}>{item.text}</Text>
+                      </View>
+                    ))}
+                  </Animated.View>
 
-                  <Pressable
-                    style={({ pressed }) => [st.primaryActionBtn, { width: '100%', marginBottom: 16 }, pressed && st.primaryActionBtnPressed]}
-                    onPress={handlePassphraseSubmit}
-                  >
-                    <Text style={st.primaryActionBtnText}>Decrypt & Restore</Text>
-                  </Pressable>
+                  <Animated.View entering={FadeInUp.delay(700).duration(600)} style={st.ctaContainer}>
+                    <Animated.View style={[st.primaryActionBtn, ctaAnimStyle]}>
+                      <Pressable
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                        onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); Haptics.selectionAsync().catch(() => {}); }}
+                        onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
+                        onPress={handleGetStarted}
+                      >
+                        <LinearGradient
+                          colors={LIQUID_GOLD}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={st.liquidGoldFill}
+                        />
+                        <Text style={st.primaryActionBtnText}>Get Started</Text>
+                        <Ionicons name="arrow-forward-outline" size={18} color="#000000" style={{ marginLeft: 10 }} />
+                      </Pressable>
+                    </Animated.View>
+                    <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
+                      <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
+                      <Text style={st.restoreText}>Restore from Backup</Text>
+                    </Pressable>
+                  </Animated.View>
+                </View>
+              )}
 
-                  <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('welcome')}>
-                    <Text style={st.restoreText}>Cancel</Text>
-                  </Pressable>
-                </Animated.View>
-              </View>
-            )}
-          </View>
+              {/* ══════ NAME ══════ */}
+              {step === 'name' && (
+                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
+                  <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
+                    <Text style={st.etherealQuestion}>What should we call you?</Text>
+                    <View style={st.nameInputWrapper}>
+                      <TextInput
+                        style={st.nameInput}
+                        value={userName}
+                        onChangeText={setUserName}
+                        placeholder="Your name"
+                        placeholderTextColor={PREMIUM.textMuted}
+                        autoFocus
+                        returnKeyType="next"
+                        maxLength={30}
+                        onSubmitEditing={handleNameContinue}
+                        autoCapitalize="words"
+                        autoCorrect={false}
+                        selectionColor={PREMIUM.titanium}
+                        textAlign="center"
+                        onFocus={() => setIsNameFocused(true)}
+                        onBlur={() => setIsNameFocused(false)}
+                      />
+                      {isNameFocused ? (
+                        <LinearGradient
+                          colors={LIQUID_GOLD}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={st.inputUnderline}
+                        />
+                      ) : (
+                        <View style={[st.inputUnderline, userName.trim() ? st.inputUnderlineActive : st.inputUnderlineInactive]} />
+                      )}
+                    </View>
+                  </Animated.View>
+                  <Animated.View entering={FadeInUp.delay(400).duration(600)}>
+                    <BottomNav canGoBack={false} isNextDisabled={!userName.trim()} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleNameContinue} />
+                  </Animated.View>
+                </Pressable>
+              )}
+
+              {/* ══════ BIRTH DATE ══════ */}
+              {step === 'birthDate' && (
+                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
+                  <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
+                    <Text style={st.etherealQuestion}>When did your journey begin?</Text>
+                    <Text style={st.etherealSubtext}>
+                      Used to accurately map your internal weather and profile.
+                    </Text>
+
+                    <BlurView intensity={30} tint="dark" style={st.glassCard}>
+                      <DateTimePicker
+                        value={birthDate}
+                        mode="date"
+                        display="spinner"
+                        onChange={(_e: DateTimePickerEvent, selected?: Date) => {
+                          if (selected) setBirthDate(selected);
+                        }}
+                        maximumDate={new Date()}
+                        minimumDate={new Date(1900, 0, 1)}
+                        themeVariant="dark"
+                        textColor="#FFFFFF"
+                        style={{ width: '100%' }}
+                      />
+                    </BlurView>
+                  </Animated.View>
+                  <Animated.View entering={FadeInUp.delay(400).duration(600)}>
+                    <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleDateContinue} />
+                  </Animated.View>
+                </Pressable>
+              )}
+
+              {/* ══════ BIRTH TIME ══════ */}
+              {step === 'birthTime' && (
+                <View style={st.centeredFlex}>
+                  <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
+                    <Text style={st.etherealQuestion}>What time did you arrive?</Text>
+                    <Text style={st.etherealSubtext}>
+                      Precision helps us personalize your data patterns.
+                    </Text>
+
+                    <View style={st.timePickerCard}>
+                      <DateTimePicker
+                        value={birthTime}
+                        mode="time"
+                        display="spinner"
+                        onChange={(_e: DateTimePickerEvent, selected?: Date) => {
+                          if (selected) {
+                            setBirthTime(selected);
+                            setHasUnknownTime(false);
+                          }
+                        }}
+                        themeVariant="dark"
+                        textColor="#FFFFFF"
+                        style={{ width: '100%' }}
+                      />
+                    </View>
+
+                    <Pressable
+                      style={({ pressed }) => [st.unknownTimeButton, pressed && { opacity: 0.7 }]}
+                      onPress={handleUnknownTime}
+                    >
+                      <Text style={st.unknownTimeText}>I don't know my exact birth time</Text>
+                    </Pressable>
+                  </Animated.View>
+                  <Animated.View entering={FadeInUp.delay(400).duration(600)}>
+                    <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleTimeContinue} />
+                  </Animated.View>
+                </View>
+              )}
+
+              {/* ══════ LOCATION ══════ */}
+              {step === 'location' && (
+                <ScrollView
+                  style={{ flex: 1 }}
+                  contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+                  keyboardShouldPersistTaps="handled"
+                  keyboardDismissMode="on-drag"
+                  showsVerticalScrollIndicator={false}
+                >
+                  <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
+                    <Text style={st.etherealQuestion}>Where did your journey begin?</Text>
+                    <Text style={st.etherealSubtext}>
+                      City of birth roots your profile baseline.
+                    </Text>
+
+                    <BlurView intensity={30} tint="dark" style={st.locationSearchRow}>
+                      <Ionicons name="search-outline" size={20} color={PREMIUM.titanium} />
+                      <TextInput
+                        style={st.locationInput}
+                        value={locationQuery}
+                        onChangeText={(t) => {
+                          setLocationQuery(t);
+                          searchLocation(t);
+                        }}
+                        placeholder="Search city..."
+                        placeholderTextColor={PREMIUM.textMuted}
+                        autoFocus
+                        returnKeyType="search"
+                        autoCapitalize="words"
+                        autoCorrect={false}
+                        selectionColor={PREMIUM.titanium}
+                      />
+                      {searchingLocation && (
+                        <ActivityIndicator size="small" color={PREMIUM.titanium} />
+                      )}
+                    </BlurView>
+
+                    {locationSuggestions.length > 0 && !locationSelected && (
+                      <BlurView intensity={40} tint="dark" style={st.suggestionsContainer}>
+                        {locationSuggestions.map((suggestion, idx) => {
+                          const parts = suggestion.display_name.split(', ');
+                          const city = parts.slice(0, 2).join(', ');
+                          const country = parts[parts.length - 1] || '';
+                          return (
+                            <React.Fragment key={suggestion.place_id ?? idx}>
+                              {idx > 0 && <View style={st.suggestionDivider} />}
+                              <Pressable
+                                style={({ pressed }) => [st.suggestionRow, pressed && { backgroundColor: PREMIUM.glassFill }]}
+                                onPress={() => handleSelectLocation(suggestion)}
+                              >
+                                <View>
+                                  <Text style={st.suggestionCity}>{city}</Text>
+                                  <Text style={st.suggestionCountry}>{country}</Text>
+                                </View>
+                              </Pressable>
+                            </React.Fragment>
+                          );
+                        })}
+                      </BlurView>
+                    )}
+
+                    {locationSelected && (
+                      <Animated.View entering={FadeIn.duration(400)} style={st.locationConfirmed}>
+                        <Ionicons name="checkmark-circle-outline" size={20} color={PREMIUM.titanium} />
+                        <Text style={st.locationConfirmedText} numberOfLines={2}>
+                          {locationPlace}
+                        </Text>
+                      </Animated.View>
+                    )}
+                  </Animated.View>
+
+                  <Animated.View entering={FadeInUp.delay(400).duration(600)}>
+                    <BottomNav canGoBack={true} isNextDisabled={!locationSelected} nextLabel="Create Profile" nextIcon="sparkles" onBack={goBack} onNext={handleCalculateChart} />
+                  </Animated.View>
+                </ScrollView>
+              )}
+
+              {/* ══════ PROCESSING CLIMAX ══════ */}
+              {step === 'processing' && (
+                <View style={st.centeredFlex}>
+                  <Animated.View entering={FadeIn.delay(100).duration(1000)} style={st.processingContainer}>
+                    <ProcessingOrb />
+                    <View style={st.processingTextGroup}>
+                      <Text style={st.processingLabel}>COMPILING DATA</Text>
+                      <Text style={st.processingMessage}>
+                        {userName.trim()
+                          ? `Mapping telemetry for ${userName.trim()}`
+                          : 'Analyzing core patterns'}
+                      </Text>
+                    </View>
+                  </Animated.View>
+                </View>
+              )}
+
+              {/* ══════ PASSPHRASE (Restore) ══════ */}
+              {step === 'passphrase' && (
+                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
+                  <Animated.View entering={FadeIn.delay(100).duration(800)} style={st.singleQuestionContainer}>
+                    <View style={st.passphraseIconWrap}>
+                      <Ionicons name="lock-closed-outline" size={32} color={PREMIUM.titanium} />
+                    </View>
+                    <Text style={st.etherealQuestion}>Enter Encryption Key</Text>
+                    <Text style={st.etherealSubtext}>
+                      Provide the passphrase used to secure your backup.
+                    </Text>
+                    
+                    <BlurView intensity={30} tint="dark" style={st.passphraseInputWrapper}>
+                      <TextInput
+                        style={st.passphraseInput}
+                        value={passphrase}
+                        onChangeText={setPassphrase}
+                        placeholder="Enter passphrase"
+                        placeholderTextColor={PREMIUM.textMuted}
+                        secureTextEntry
+                        autoFocus
+                        returnKeyType="done"
+                        onSubmitEditing={handlePassphraseSubmit}
+                        selectionColor={PREMIUM.titanium}
+                      />
+                    </BlurView>
+
+                    <Animated.View style={[st.primaryActionBtn, { width: '100%', marginBottom: 16 }, ctaAnimStyle]}>
+                      <Pressable
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                        onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
+                        onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
+                        onPress={handlePassphraseSubmit}
+                      >
+                        <LinearGradient
+                          colors={LIQUID_GOLD}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={st.liquidGoldFill}
+                        />
+                        <Text style={st.primaryActionBtnText}>Decrypt & Restore</Text>
+                      </Pressable>
+                    </Animated.View>
+
+                    <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('welcome')}>
+                      <Text style={st.restoreText}>Cancel</Text>
+                    </Pressable>
+                  </Animated.View>
+                </Pressable>
+              )}
+            </View>
+          </KeyboardAvoidingView>
         </SafeAreaView>
 
         {showTermsModal && !onRequestTermsConsent && (
@@ -853,26 +916,26 @@ export default function OnboardingModal({
 // ════════════════════════════════════════════════════════════════════════════
 
 const st = StyleSheet.create({
-  container: { flex: 1, backgroundColor: VELVET.bgOled },
+  container: { flex: 1, backgroundColor: PREMIUM.bgOled },
   safeArea: { flex: 1 },
 
-  // ── Living Background Orbs ──
-  orbBlue: {
+  // ── Living Nebula Orbs ──
+  orbTitanium: {
     position: 'absolute',
-    width: 500,
-    height: 500,
-    borderRadius: 250,
-    backgroundColor: VELVET.etherealBlue,
-    top: -200,
-    right: -150,
+    width: 600,
+    height: 600,
+    borderRadius: 300,
+    backgroundColor: PREMIUM.titaniumGlow,
+    top: -250,
+    right: -200,
   },
-  orbViolet: {
+  orbStarlight: {
     position: 'absolute',
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    backgroundColor: VELVET.dreamViolet,
-    bottom: -100,
+    width: 450,
+    height: 450,
+    borderRadius: 225,
+    backgroundColor: PREMIUM.starlight,
+    bottom: -150,
     left: -200,
   },
 
@@ -889,10 +952,14 @@ const st = StyleSheet.create({
     borderRadius: 2,
   },
   progressCapsuleActive: {
-    backgroundColor: VELVET.accentPrimary,
+    backgroundColor: PREMIUM.titanium,
+    shadowColor: PREMIUM.titanium,
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
   },
   progressCapsuleInactive: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: PREMIUM.glassBorder,
   },
 
   // ── Content Layout ──
@@ -903,23 +970,24 @@ const st = StyleSheet.create({
   centeredFlex: {
     flex: 1,
     justifyContent: 'center',
+    width: '100%',
   },
 
-  // ── Welcome (Left-aligned, strong hierarchy) ──
-  welcomeContainer: { alignItems: 'flex-start', marginBottom: 32, width: '100%' },
+  // ── Welcome (Left-aligned, refined hierarchy) ──
+  welcomeContainer: { alignItems: 'flex-start', marginBottom: 40, width: '100%' },
   welcomeTitle: {
-    fontSize: 40,
+    fontSize: 34,
     fontWeight: '800',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     fontFamily: DISPLAY_BOLD,
     marginBottom: 8,
     textAlign: 'left',
-    letterSpacing: -0.5,
+    letterSpacing: -0.7,
   },
   welcomeSubtitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
-    color: VELVET.accentCyan,
+    color: PREMIUM.titanium,
     marginBottom: 16,
     textAlign: 'left',
     fontFamily: DISPLAY_SEMIBOLD,
@@ -927,57 +995,67 @@ const st = StyleSheet.create({
   },
   welcomeDescription: {
     fontSize: 16,
-    color: VELVET.textMuted,
+    color: PREMIUM.textMuted,
     textAlign: 'left',
     lineHeight: 24,
     fontWeight: '400',
     fontFamily: DISPLAY,
   },
   
-  featuresContainer: { marginBottom: 32, gap: 12 },
-  featureCard: {
+  // ── Feature List (Clean flush text, no cluttered boxes) ──
+  featuresContainer: { marginBottom: 48, gap: 16 },
+  featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: VELVET.glassBorder,
-    backgroundColor: VELVET.glassFill,
-    overflow: 'hidden',
   },
   featureIcon: {
     marginRight: 16,
+    width: 32,
+    alignItems: 'center',
   },
   featureText: { 
-    fontSize: 15, 
+    fontSize: 16, 
     fontWeight: '500',
-    color: VELVET.textMain, 
+    color: PREMIUM.textMain, 
     flex: 1,
     fontFamily: DISPLAY_SEMIBOLD,
   },
   
   ctaContainer: { alignItems: 'center', width: '100%' },
+  
+  // ── Liquid Mirror Gold Primary Action Button ──
   primaryActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: VELVET.accentPrimary,
+    overflow: 'hidden',
     width: '100%',
     height: 56,
     borderRadius: 28,
-    marginBottom: 16,
+    marginBottom: 20,
+    // Deep shadow anchored to the bronze end of the gradient
+    shadowColor: '#9B7A46',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  liquidGoldFill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 28,
   },
   primaryActionBtnPressed: {
-    opacity: 0.8,
+    opacity: 0.85,
     transform: [{ scale: 0.98 }],
   },
   primaryActionBtnText: {
     fontSize: 17,
-    fontWeight: '700',
-    color: VELVET.bgOled,
+    fontWeight: '800',
+    color: '#000000', // OLED black for maximum hardware tactility
     fontFamily: DISPLAY_BOLD,
+    letterSpacing: 0.3,
   },
-  
+
   restoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -987,37 +1065,40 @@ const st = StyleSheet.create({
   restoreText: {
     fontSize: 14,
     fontWeight: '600',
-    color: VELVET.textMuted,
+    color: PREMIUM.textMuted,
     marginLeft: 8,
     fontFamily: DISPLAY_SEMIBOLD,
   },
 
   // ── Single Question Layout ──
   singleQuestionContainer: {
-    alignItems: 'flex-start',
+    alignItems: 'center', // Centered for the input flow
     width: '100%',
   },
   etherealQuestion: {
     fontSize: 34,
     fontWeight: '800',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     fontFamily: DISPLAY_BOLD,
     marginBottom: 12,
-    lineHeight: 42,
-    letterSpacing: -0.5,
+    textAlign: 'center',
+    lineHeight: 40,
+    letterSpacing: -0.7,
   },
   etherealSubtext: {
-    fontSize: 16,
-    color: VELVET.textMuted,
-    marginBottom: 32,
-    lineHeight: 24,
+    fontSize: 15,
+    color: PREMIUM.textMuted,
+    marginBottom: 40,
+    lineHeight: 22,
+    textAlign: 'center',
     fontFamily: DISPLAY,
   },
 
-  // ── Name Input ──
+  // ── Centered Name Input ──
   nameInputWrapper: {
-    width: '100%',
+    width: '80%', // Constrained width so the line isn't massive
     marginBottom: 24,
+    alignItems: 'center',
   },
   nameInput: {
     width: '100%',
@@ -1026,8 +1107,9 @@ const st = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 32,
     fontWeight: '700',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     fontFamily: DISPLAY_BOLD,
+    textAlign: 'center',
   },
   inputUnderline: {
     height: 2,
@@ -1035,37 +1117,47 @@ const st = StyleSheet.create({
     marginTop: 8,
   },
   inputUnderlineActive: {
-    backgroundColor: VELVET.accentCyan,
-    shadowColor: VELVET.accentCyan,
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
+    backgroundColor: '#F5F5F7', // High-contrast Off-White — crisp anchor line
+    shadowColor: '#F5F5F7',
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
   },
   inputUnderlineInactive: {
-    backgroundColor: VELVET.glassBorder,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
 
   // ── Glass Card (Pickers) ──
   glassCard: {
     width: '100%',
     borderRadius: 24,
-    borderWidth: 1,
-    borderColor: VELVET.glassBorder,
-    backgroundColor: VELVET.glassFill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
     padding: 12,
-    overflow: 'hidden',
+    alignItems: 'center',
+  },
+  // ── Time Picker Card — no BlurView, no overflow, nothing that can block native gestures ──
+  timePickerCard: {
+    width: '100%',
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: 'rgba(20, 20, 20, 0.85)',
+    padding: 12,
     alignItems: 'center',
   },
 
   unknownTimeButton: {
-    marginTop: 20,
-    alignSelf: 'flex-start',
+    marginTop: 24,
+    alignItems: 'center',
     paddingVertical: 12,
+    width: '100%',
   },
   unknownTimeText: {
     fontSize: 15,
     fontWeight: '600',
-    color: VELVET.textMuted,
+    color: PREMIUM.titanium,
     fontFamily: DISPLAY_SEMIBOLD,
   },
 
@@ -1074,12 +1166,12 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: VELVET.glassBorder,
-    backgroundColor: VELVET.glassFill,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     gap: 12,
     overflow: 'hidden',
   },
@@ -1087,38 +1179,38 @@ const st = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontWeight: '500',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     fontFamily: DISPLAY_SEMIBOLD,
   },
   suggestionsContainer: {
     marginTop: 12,
     width: '100%',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: VELVET.glassBorder,
-    backgroundColor: VELVET.glassFill,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
     overflow: 'hidden',
   },
   suggestionDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: VELVET.glassBorder,
+    backgroundColor: PREMIUM.glassBorder,
     marginLeft: 16,
   },
   suggestionRow: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
   },
   suggestionCity: {
     fontSize: 16,
     fontWeight: '600',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     marginBottom: 4,
     fontFamily: DISPLAY_SEMIBOLD,
   },
   suggestionCountry: {
     fontSize: 14,
     fontWeight: '400',
-    color: VELVET.textMuted,
+    color: PREMIUM.textMuted,
     fontFamily: DISPLAY,
   },
   locationConfirmed: {
@@ -1131,12 +1223,12 @@ const st = StyleSheet.create({
   locationConfirmedText: {
     fontSize: 15,
     fontWeight: '500',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     flex: 1,
     fontFamily: DISPLAY_SEMIBOLD,
   },
 
-  // ── Bottom Navigation ──
+  // ── Bottom Navigation (Solid Titanium Action) ──
   bottomNav: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1147,23 +1239,32 @@ const st = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: VELVET.glassFill,
-    borderWidth: 1,
-    borderColor: VELVET.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
   nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: VELVET.accentPrimary,
-    paddingHorizontal: 28,
+    overflow: 'hidden',
     height: 50,
+    borderRadius: 25,
+    shadowColor: '#9B7A46',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  nextButtonGradient: {
+    ...StyleSheet.absoluteFillObject,
     borderRadius: 25,
   },
   nextButtonDisabled: {
-    opacity: 0.3,
+    opacity: 0.35,
+    backgroundColor: PREMIUM.glassFill,
+    borderColor: PREMIUM.glassBorder,
+    borderWidth: 1,
+    shadowOpacity: 0,
   },
   nextButtonPressed: {
     opacity: 0.85,
@@ -1171,9 +1272,10 @@ const st = StyleSheet.create({
   },
   nextButtonText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: VELVET.bgOled,
+    fontWeight: '800',
+    color: '#000000',
     fontFamily: DISPLAY_BOLD,
+    letterSpacing: 0.2,
   },
 
   // ── Processing Climax ──
@@ -1193,10 +1295,10 @@ const st = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: VELVET.accentCyan,
-    shadowColor: VELVET.accentCyan,
+    backgroundColor: PREMIUM.titanium,
+    shadowColor: PREMIUM.titanium,
     shadowOpacity: 1,
-    shadowRadius: 30,
+    shadowRadius: 40,
   },
   processingInnerRing: {
     position: 'absolute',
@@ -1204,7 +1306,7 @@ const st = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 2,
-    borderColor: VELVET.accentCyan,
+    borderColor: PREMIUM.titanium,
     borderStyle: 'dashed',
   },
   processingOuterRing: {
@@ -1213,7 +1315,7 @@ const st = StyleSheet.create({
     height: 160,
     borderRadius: 80,
     borderWidth: 1,
-    borderColor: VELVET.glassBorder,
+    borderColor: PREMIUM.glassBorder,
   },
   processingSparkle: {
     zIndex: 1,
@@ -1222,17 +1324,17 @@ const st = StyleSheet.create({
     alignItems: 'center',
   },
   processingLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 3,
-    color: VELVET.textMuted,
+    letterSpacing: 2.5,
+    color: PREMIUM.titanium,
     marginBottom: 12,
     fontFamily: DISPLAY_BOLD,
   },
   processingMessage: {
     fontSize: 22,
     fontWeight: '600',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     fontFamily: DISPLAY_SEMIBOLD,
     textAlign: 'center',
   },
@@ -1243,10 +1345,10 @@ const st = StyleSheet.create({
   },
   passphraseInputWrapper: {
     width: '100%',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: VELVET.glassBorder,
-    backgroundColor: VELVET.glassFill,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
     overflow: 'hidden',
     marginBottom: 32,
   },
@@ -1256,7 +1358,7 @@ const st = StyleSheet.create({
     paddingHorizontal: 20,
     fontSize: 17,
     fontWeight: '500',
-    color: VELVET.textMain,
+    color: PREMIUM.textMain,
     textAlign: 'center',
     fontFamily: DISPLAY_SEMIBOLD,
   },

@@ -52,15 +52,15 @@ import type { NervousSystemBranch, ShadowTrigger } from '../../services/premium/
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
 const PALETTE = {
-  gold:        '#C9AE78',
+  gold:        '#C5B5A1',
   rose:        '#D4A3B3',
   sage:        '#8CBEAA',
   lavender:    '#A89BC8',
   coral:       '#D4826A',
-  textMain:    '#FFFFFF',
+  textMain:    '#F5F5F7',
   textMuted:   'rgba(255,255,255,0.55)',
   textDim:     'rgba(255,255,255,0.35)',
-  glassBorder: 'rgba(255,255,255,0.08)',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
   glassBg:     'rgba(255,255,255,0.04)',
   lockBg:      'rgba(20,15,30,0.85)',
 };
@@ -530,8 +530,8 @@ const styles = StyleSheet.create({
   // Header
   backButton:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, gap: 4 },
   backLabel:   { fontSize: 14, color: PALETTE.textMuted, letterSpacing: 0.3 },
-  screenTitle: { fontSize: 34, fontWeight: '300', color: '#FFFFFF', marginBottom: 8,
-                 fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  screenTitle: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: '#F5F5F7', marginBottom: 8,
+                  },
   screenSubtitle: { fontSize: 14, marginBottom: 32 },
 
   // Section label

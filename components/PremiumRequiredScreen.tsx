@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { theme } from '../constants/theme';
@@ -16,7 +15,7 @@ interface PremiumRequiredScreenProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
   textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -62,10 +61,7 @@ export default function PremiumRequiredScreen({
 
       {/* Glassmorphic Perks Card */}
       <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.perksCard}>
-        <LinearGradient 
-          colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} 
-          style={styles.perksGradient}
-        >
+        <View style={[styles.perksGradient, { backgroundColor: 'rgba(15,15,15,0.40)' }]}>
           {PREVIEW_PERKS.map((perk, i) => (
             <Animated.View
               key={perk.text}
@@ -78,7 +74,7 @@ export default function PremiumRequiredScreen({
               <Text style={styles.perkText}>{perk.text}</Text>
             </Animated.View>
           ))}
-        </LinearGradient>
+        </View>
       </Animated.View>
 
       {/* CTA Section */}
@@ -139,11 +135,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontWeight: '800',
     color: PALETTE.textMain,
     marginBottom: 12,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    letterSpacing: -0.5,
     textAlign: 'center',
-    letterSpacing: 0.5,
   },
   description: {
     fontSize: 15,
@@ -207,7 +203,6 @@ const styles = StyleSheet.create({
     color: '#020817',
     fontWeight: '700',
     fontSize: 16,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   priceHint: {
     color: theme.textMuted,

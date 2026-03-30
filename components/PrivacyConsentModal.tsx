@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -14,7 +13,7 @@ import { MetallicIcon } from './ui/MetallicIcon';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
   textMain: '#F0EAD6',
@@ -118,14 +117,9 @@ export default function PrivacyConsentModal({
                       style={({ pressed }) => [styles.acceptBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                       onPress={handleAccept}
                     >
-                      <LinearGradient
-                        colors={['#FFF4D6', '#C9AE78', '#6B532E']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.btnGradient}
-                      >
+                      <View style={[styles.btnGradient, { backgroundColor: '#C5B5A1' }]}>
                         <Text style={styles.acceptBtnText}>I Accept & Continue</Text>
-                      </LinearGradient>
+                      </View>
                     </Pressable>
 
                     <Pressable
@@ -219,8 +213,9 @@ const styles = StyleSheet.create({
   },
   title: { 
     fontSize: 30, 
-    color: "#FFFFFF", 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), 
+    color: "#F5F5F7", 
+    fontWeight: '700',
+    letterSpacing: -0.3,
     marginBottom: 12, 
     textAlign: 'center' 
   },
@@ -235,7 +230,7 @@ const styles = StyleSheet.create({
     borderColor: PALETTE.glassBorder,
     marginBottom: 16,
   },
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: "#FFFFFF", letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#86868B', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 },
   dataRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 12 },
   dataText: { fontSize: 14, color: "#FFFFFF", flex: 1 },
   
@@ -245,14 +240,14 @@ const styles = StyleSheet.create({
   footerActions: { marginTop: 24, gap: 16 },
   acceptBtn: { borderRadius: 16, overflow: 'hidden', },
   btnGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
-  acceptBtnText: { fontSize: 17, fontWeight: '700', color: '#020817', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  acceptBtnText: { fontSize: 17, fontWeight: '700', color: '#020817' },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },
   declineBtnText: { fontSize: 14, color: "#FFFFFF", fontWeight: '600', textDecorationLine: 'underline' },
 
   // Full Policy View
   policyHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 32, gap: 16 },
   backBtn: { width: 44, height: 44, justifyContent: 'center' },
-  policyTitle: { fontSize: 24, color: "#FFFFFF", fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  policyTitle: { fontSize: 24, color: "#F5F5F7", fontWeight: '700' },
   lastUpdated: { fontSize: 12, color: "#FFFFFF", marginBottom: 24, fontStyle: 'italic' },
   legalContent: { gap: 20 },
   legalSub: { fontSize: 18, fontWeight: '700', color: "#FFFFFF", marginTop: 10 },

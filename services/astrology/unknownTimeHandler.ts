@@ -17,7 +17,7 @@ interface UnknownTimeResult {
   approximateTimePeriod?: ApproximateTimePeriod;
 }
 
-const UNKNOWN_TIME_WARNINGS = [
+export const UNKNOWN_TIME_WARNINGS = [
   'Birth time is required for Rising sign and houses',
   'Planetary positions shown are calculated for 12:00 noon local time',
   'House-based interpretations are not available without exact birth time',
@@ -25,7 +25,7 @@ const UNKNOWN_TIME_WARNINGS = [
   'For complete accuracy, please provide exact birth time if available',
 ];
 
-const UNKNOWN_TIME_FEATURES = [
+export const UNKNOWN_TIME_FEATURES = [
   'sun-sign',
   'moon-sign',
   'planetary-positions',

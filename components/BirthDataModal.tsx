@@ -5,11 +5,10 @@
  * Features custom obsidian scroll wheels and glassmorphic confirmation seal.
  */
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Modal,
   Platform,
   ScrollView,
@@ -21,7 +20,6 @@ import {
 } from 'react-native';
 import { toLocalDateString } from '../utils/dateUtils';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
@@ -40,7 +38,7 @@ import { InputValidator } from '../services/astrology/inputValidator';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -92,117 +90,6 @@ const NOMINATIM_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
   'User-Agent': `MySkyApp/1.0 (${_bundleId})`,
 };
-
-// ─── Custom Time Picker ──────────────────────────────────────────────────────
-const ITEM_HEIGHT = 48;
-const VISIBLE_ITEMS = 5;
-const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
-
-const HOURS_12 = Array.from({ length: 12 }, (_, i) => i + 1);
-const MINUTES = Array.from({ length: 60 }, (_, i) => i);
-const PERIODS = ['AM', 'PM'] as const;
-
-function pad2(n: number) {
-  return n < 10 ? `0${n}` : `${n}`;
-}
-
-function TimeWheelColumn({
-  data,
-  selected,
-  onSelect,
-  formatItem,
-}: {
-  data: readonly number[] | readonly string[];
-  selected: number | string;
-  onSelect: (val: any) => void;
-  formatItem?: (val: any) => string;
-}) {
-  const flatListRef = useRef<FlatList>(null);
-  const initialScrollDone = useRef(false);
-  const selectedIndex = data.indexOf(selected as never);
-
-  useEffect(() => {
-    if (flatListRef.current && selectedIndex >= 0 && !initialScrollDone.current) {
-      initialScrollDone.current = true;
-      setTimeout(() => {
-        flatListRef.current?.scrollToOffset({
-          offset: selectedIndex * ITEM_HEIGHT,
-          animated: false,
-        });
-      }, 60);
-    }
-  }, [selectedIndex]);
-
-  const commitFromOffset = useCallback(
-    (offsetY: number) => {
-      const index = Math.round(offsetY / ITEM_HEIGHT);
-      const clampedIndex = Math.max(0, Math.min(index, data.length - 1));
-      const next = data[clampedIndex];
-      if (next !== selected) {
-        Haptics.selectionAsync().catch(() => {});
-        onSelect(next);
-      }
-    },
-    [data, selected, onSelect]
-  );
-
-  const renderItem = useCallback(
-    ({ item }: { item: any }) => {
-      const isSelected = item === selected;
-      return (
-        <View style={{ height: ITEM_HEIGHT, justifyContent: 'center', alignItems: 'center' }}>
-          {isSelected ? (
-            <MetallicText
-              color={PALETTE.gold}
-              style={{
-                fontSize: 24,
-                fontWeight: '700',
-                fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-              }}
-            >
-              {formatItem ? formatItem(item) : String(item)}
-            </MetallicText>
-          ) : (
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '400',
-                color: 'rgba(255,255,255,0.2)',
-                fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-              }}
-            >
-              {formatItem ? formatItem(item) : String(item)}
-            </Text>
-          )}
-        </View>
-      );
-    },
-    [selected, formatItem]
-  );
-
-  return (
-    <View style={{ height: PICKER_HEIGHT, overflow: 'hidden', flex: 1 }}>
-      <View pointerEvents="none" style={styles.pickerSelectorOverlay} />
-      <FlatList
-        ref={flatListRef}
-        data={data as any[]}
-        keyExtractor={(item) => String(item)}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={ITEM_HEIGHT}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        onMomentumScrollEnd={(e) => commitFromOffset(e.nativeEvent.contentOffset.y)}
-        contentContainerStyle={{ paddingVertical: (PICKER_HEIGHT - ITEM_HEIGHT) / 2 }}
-        getItemLayout={(_, index) => ({
-          length: ITEM_HEIGHT,
-          offset: ITEM_HEIGHT * index,
-          index,
-        })}
-      />
-    </View>
-  );
-}
 
 export default function BirthDataModal({
   visible,
@@ -322,32 +209,12 @@ export default function BirthDataModal({
     if (selected) setDate(selected);
   };
 
-  const t12 = useMemo(() => {
-    let h = pickerTime.getHours();
-    const p = (h >= 12 ? 'PM' : 'AM') as typeof PERIODS[number];
-    h = h % 12 || 12;
-    return { h, m: pickerTime.getMinutes(), p };
-  }, [pickerTime]);
-
-  const [pHour, setPHour] = useState(t12.h);
-  const [pMin, setPMin] = useState(t12.m);
-  const [pPer, setPPer] = useState<typeof PERIODS[number]>(t12.p);
-
-  const confirmTime = () => {
-    const h24 =
-      pPer === 'PM'
-        ? pHour === 12
-          ? 12
-          : pHour + 12
-        : pHour === 12
-          ? 0
-          : pHour;
-
-    const newTime = new Date();
-    newTime.setHours(h24, pMin, 0, 0);
-    setTime(newTime);
-    setPickerTime(newTime);
-    setShowTimePicker(false);
+  const onTimeChange = (_event: any, selected?: Date) => {
+    if (Platform.OS !== 'ios') setShowTimePicker(false);
+    if (selected) {
+      setTime(selected);
+      setPickerTime(selected);
+    }
   };
 
   return (
@@ -388,10 +255,7 @@ export default function BirthDataModal({
 
               <Text style={styles.sectionLabel}>Birth Date</Text>
               <Pressable style={styles.pickButton} onPress={() => setShowDatePicker(true)}>
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.01)']}
-                  style={styles.pickGradient}
-                >
+                <View style={styles.pickGradient}>
                   <MetallicIcon name="calendar-outline" size={18} color={PALETTE.silverBlue} />
                   <Text style={styles.pickText}>
                     {date.toLocaleDateString('en-US', {
@@ -400,7 +264,7 @@ export default function BirthDataModal({
                       year: 'numeric',
                     })}
                   </Text>
-                </LinearGradient>
+                </View>
               </Pressable>
 
               <View style={styles.rowBetween}>
@@ -418,22 +282,14 @@ export default function BirthDataModal({
               {!hasUnknownTime && (
                 <Pressable
                   style={styles.pickButton}
-                  onPress={() => {
-                    setPHour(t12.h);
-                    setPMin(t12.m);
-                    setPPer(t12.p);
-                    setShowTimePicker(true);
-                  }}
+                  onPress={() => setShowTimePicker(true)}
                 >
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.04)', 'rgba(255,255,255,0.01)']}
-                    style={styles.pickGradient}
-                  >
+                    <View style={styles.pickGradient}>
                     <MetallicIcon name="time-outline" size={18} color={PALETTE.gold} />
                     <Text style={styles.pickText}>
                       {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                     </Text>
-                  </LinearGradient>
+                  </View>
                 </Pressable>
               )}
 
@@ -495,7 +351,7 @@ export default function BirthDataModal({
 
         {showConfirm && (
           <View style={StyleSheet.absoluteFill}>
-            <LinearGradient colors={['rgba(7, 9, 15, 0.95)', '#020817']} style={styles.confirmOverlay}>
+            <View style={[styles.confirmOverlay, { backgroundColor: 'rgba(0,0,0,0.96)' }]}>
               <Animated.View entering={FadeInUp} style={styles.confirmCard}>
                 <MySkyVerifySealSkia 
                   size={96} 
@@ -554,7 +410,7 @@ export default function BirthDataModal({
                   <Text style={styles.backBtnText}>Edit Details</Text>
                 </Pressable>
               </Animated.View>
-            </LinearGradient>
+            </View>
           </View>
         )}
 
@@ -562,27 +418,30 @@ export default function BirthDataModal({
           <View style={styles.pickerOverlay}>
             <View style={styles.pickerContent}>
               <View style={styles.pickerHeader}>
-                <Pressable onPress={() => setShowTimePicker(false)}>
-                  <Text style={styles.pickerCancel}>Cancel</Text>
-                </Pressable>
-
+                <View style={{ width: 60 }} />
                 <Text style={styles.pickerTitle}>Set Birth Time</Text>
-
-                <Pressable onPress={confirmTime}>
+                <Pressable onPress={() => setShowTimePicker(false)}>
                   <MetallicText color={PALETTE.gold} style={styles.pickerDone}>Done</MetallicText>
                 </Pressable>
               </View>
 
-              <View style={styles.wheelsRow}>
-                <TimeWheelColumn data={HOURS_12} selected={pHour} onSelect={setPHour} />
-                <View style={styles.wheelSeparator}>
-                  <Text style={styles.sepText}>:</Text>
-                </View>
-                <TimeWheelColumn data={MINUTES} selected={pMin} onSelect={setPMin} formatItem={pad2} />
-                <TimeWheelColumn data={PERIODS} selected={pPer} onSelect={setPPer} />
-              </View>
+              <DateTimePicker
+                value={pickerTime}
+                mode="time"
+                display="spinner"
+                themeVariant="dark"
+                onChange={onTimeChange}
+              />
             </View>
           </View>
+        )}
+
+        {showTimePicker && Platform.OS === 'android' && (
+          <DateTimePicker
+            value={pickerTime}
+            mode="time"
+            onChange={onTimeChange}
+          />
         )}
 
         {showDatePicker && Platform.OS === 'ios' && (
@@ -606,6 +465,15 @@ export default function BirthDataModal({
               />
             </View>
           </View>
+        )}
+
+        {showDatePicker && Platform.OS === 'android' && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            onChange={onDateChange}
+            maximumDate={new Date()}
+          />
         )}
       </View>
     </Modal>
@@ -653,9 +521,9 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: 32,
-    fontWeight: '700',
+    fontWeight: '800',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    letterSpacing: -0.5,
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
     marginTop: -48,
@@ -773,8 +641,8 @@ const styles = StyleSheet.create({
   },
   confirmTitle: {
     fontSize: 28,
-    color: '#FFFFFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    fontWeight: '700',
+    color: '#F5F5F7',
     marginBottom: 8,
   },
   confirmSub: {
@@ -850,32 +718,5 @@ const styles = StyleSheet.create({
   pickerCancel: {
     color: theme.textMuted,
     fontSize: 16,
-  },
-  wheelsRow: {
-    flexDirection: 'row',
-    height: PICKER_HEIGHT,
-    paddingHorizontal: 20,
-  },
-  wheelSeparator: {
-    justifyContent: 'center',
-    width: 12,
-  },
-  sepText: {
-    color: PALETTE.textMain,
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  pickerSelectorOverlay: {
-    position: 'absolute',
-    top: (PICKER_HEIGHT - ITEM_HEIGHT) / 2,
-    left: 0,
-    right: 0,
-    height: ITEM_HEIGHT,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: 'rgba(232,214,174,0.25)',
-    backgroundColor: 'transparent',
-    zIndex: 1,
   },
 });

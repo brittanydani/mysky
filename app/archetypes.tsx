@@ -30,11 +30,11 @@ const STORAGE_KEY = '@mysky:archetype_profile';
 
 const PALETTE = {
   lavender: '#A89BC8',
-  gold: '#D9BF8C',
+  gold: '#C5B5A1',
   rose: '#D4A3B3',
-  textMain: '#FFFFFF',
+  textMain: '#F5F5F7',
   textMuted: 'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(255,255,255,0.08)',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
   bg: '#0A0A0C',
 };
 
@@ -73,7 +73,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'seeker',
     name: 'The Seeker',
     icon: '◎',
-    color: '#C9AE78',
+    color: '#C5B5A1',
     tagline: 'Craves discovery, freedom, and new horizons',
     light: 'Curiosity, adaptability, authentic living',
     shadow: 'Restlessness, avoidance of commitment, feeling never satisfied',
@@ -82,7 +82,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'sage',
     name: 'The Sage',
     icon: '◬',
-    color: '#C9AE78',
+    color: '#C5B5A1',
     tagline: 'Seeks truth and understanding above all',
     light: 'Wisdom, clarity, thoughtful perspective',
     shadow: 'Over-analysis, emotional distance, perfectionism',
@@ -91,7 +91,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'rebel',
     name: 'The Rebel',
     icon: 'ϟ',
-    color: '#C9AE78',
+    color: '#C5B5A1',
     tagline: 'Questions structures and catalyzes change',
     light: 'Authenticity, vision, disrupting what no longer serves',
     shadow: 'Contrarianism for its own sake, difficulty with authority',
@@ -376,10 +376,10 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 34, letterSpacing: -0.5,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '300',
+    
+    fontWeight: '800',
     marginBottom: 8,
   },
   headerSubtitle: { fontSize: 14 },
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   promptQuestion: {
     fontSize: 16,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    
     marginBottom: 14,
     lineHeight: 22,
   },
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resultIcon: { fontSize: 48, marginBottom: 12 },
-  resultName: { fontSize: 26, fontFamily: 'Georgia', fontWeight: '400', marginBottom: 6 },
+  resultName: { fontSize: 26,  fontWeight: '400', marginBottom: 6 },
   resultTagline: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',

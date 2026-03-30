@@ -16,5 +16,9 @@ module.exports = {
     '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.js',
     // @noble/ciphers uses ESM — redirect to the CJS-compatible build
     '^@noble/ciphers/aes\\.js$': '<rootDir>/__mocks__/noble-ciphers-aes.js',
+    // @noble/hashes uses ESM — redirect to CJS-compatible mocks
+    '^@noble/hashes/hmac$': '<rootDir>/__mocks__/noble-hashes-hmac.js',
+    '^@noble/hashes/sha2$': '<rootDir>/__mocks__/noble-hashes-sha2.js',
+    '^@noble/hashes/utils$': '<rootDir>/__mocks__/noble-hashes-utils.js',
   },
 };

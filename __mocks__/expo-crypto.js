@@ -4,6 +4,7 @@ const { webcrypto } = require('crypto');
 module.exports = {
   randomUUID: () => webcrypto.randomUUID(),
   getRandomBytes: (byteCount) => webcrypto.getRandomValues(new Uint8Array(byteCount)),
+  getRandomBytesAsync: async (byteCount) => webcrypto.getRandomValues(new Uint8Array(byteCount)),
   digestStringAsync: async (_algorithm, data) => {
     const encoder = new TextEncoder();
     const buf = await webcrypto.subtle.digest('SHA-256', encoder.encode(data));

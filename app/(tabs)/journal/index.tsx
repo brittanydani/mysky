@@ -29,10 +29,10 @@ import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 const PAGE_SIZE = 30;
 
 const PALETTE = {
-  gold: '#D4B872',
+  gold: '#C5B5A1',
   amethyst: '#9D76C1',
   bg: '#0A0A0C',
-  glassBorder: 'rgba(255,255,255,0.08)',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
 };
 
 // ── Mood helpers ──
@@ -430,7 +430,7 @@ export default function JournalScreen() {
                   <MetallicIcon
                     name={tab === 'reflections' ? 'book-outline' : 'moon-outline'}
                     size={14}
-                    color="#D4B872"
+                    color="#C5B5A1"
                   />
                 ) : (
                   <Ionicons
@@ -440,7 +440,7 @@ export default function JournalScreen() {
                   />
                 )}
                 {activeTab === tab ? (
-                  <MetallicText color="#D4B872" style={[styles.segmentText, styles.segmentTextActive]}>
+                  <MetallicText color="#C5B5A1" style={[styles.segmentText, styles.segmentTextActive]}>
                     {tab === 'reflections' ? 'Reflections' : 'Dreams'}
                   </MetallicText>
                 ) : (
@@ -838,7 +838,7 @@ const journalFabStyles = StyleSheet.create({
     zIndex: 100,
   },
   glowWrapper: {
-    shadowColor: '#D4B872',
+    shadowColor: '#C5B5A1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,
@@ -862,13 +862,13 @@ const styles = StyleSheet.create({
 
   header: { marginTop: 20, marginBottom: 28 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 34, fontWeight: '300', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  title: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: theme.textPrimary,  marginBottom: 8 },
   subtitle: { fontSize: 14 },
 
   chartTitle: {
     fontSize: 20,
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     marginBottom: 4,
   },
   checkInTrendSection: { marginBottom: 32 },
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
   lockSubtitle: { color: theme.textSecondary, fontSize: 14, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
 
   insightsSection: { marginBottom: 32 },
-  insightsTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 4 },
+  insightsTitle: { fontSize: 20, color: theme.textPrimary,  marginBottom: 4 },
   insightsSubtitle: { fontSize: 13, color: theme.textSecondary, fontStyle: 'italic', marginBottom: 20 },
 
   insightCard: {
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     minWidth: 140,
     textAlign: 'center',
   },
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
 
   entriesSection: { marginBottom: 16 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) },
+  sectionTitle: { fontSize: 20, color: theme.textPrimary,  },
   entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic', fontVariant: ['tabular-nums'] },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
 
   emptyContainer: { paddingVertical: 32 },
   emptyCard: { borderRadius: 20, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight },
-  emptyTitle: { fontSize: 22, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 8 },
+  emptyTitle: { fontSize: 22, color: theme.textPrimary,  marginBottom: 8 },
   emptyDescription: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22 },
 
   entryCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
@@ -981,7 +981,7 @@ const styles = StyleSheet.create({
   entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
   entryTime: { fontSize: 12, color: theme.textMuted },
 
-  entryTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 8 },
+  entryTitle: { fontSize: 18, color: theme.textPrimary,  marginBottom: 8 },
   entryContent: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
 
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   segmentTextActive: {
-    color: '#D4B872',
+    color: '#C5B5A1',
   },
 
   // ── Dream card ──

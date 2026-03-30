@@ -47,7 +47,7 @@ export interface NodeInsight {
 // SOUTH NODE BY HOUSE — "Where you default"
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SOUTH_NODE_BY_HOUSE: Record<number, NodeHouseContent> = {
+export const SOUTH_NODE_BY_HOUSE: Record<number, NodeHouseContent> = {
   1: {
     house: 1,
     title: 'Self-Reliance',
@@ -174,7 +174,7 @@ const SOUTH_NODE_BY_HOUSE: Record<number, NodeHouseContent> = {
 // NORTH NODE BY HOUSE — "Where life expands"
 // ═══════════════════════════════════════════════════════════════════════════
 
-const NORTH_NODE_BY_HOUSE: Record<number, NodeHouseContent> = {
+export const NORTH_NODE_BY_HOUSE: Record<number, NodeHouseContent> = {
   1: {
     house: 1,
     title: 'Self-Definition',

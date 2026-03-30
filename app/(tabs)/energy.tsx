@@ -84,10 +84,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
   },
   title: {
-    fontSize: 34,
-    fontWeight: '300',
+    fontSize: 34, letterSpacing: -0.5,
+    fontWeight: '800',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     marginBottom: 8,
   },
   subtitle: {

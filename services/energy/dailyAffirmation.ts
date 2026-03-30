@@ -69,7 +69,7 @@ interface TaggedAffirmation {
   tags: AffirmationTag[];
 }
 
-const AFFIRMATION_POOL: TaggedAffirmation[] = [
+export const AFFIRMATION_POOL: TaggedAffirmation[] = [
   // ═══════════════════════════════════════════════════════════
   // SUN ELEMENT — Identity & Core Self (20)
   // ═══════════════════════════════════════════════════════════

@@ -69,16 +69,16 @@ const SCREEN_W = Dimensions.get('window').width;
 // ── Cinematic Palette (Obsidian & Gold) ──
 const PALETTE = {
   bg: '#050507',
-  cardBg: 'rgba(15, 18, 25, 0.65)',
-  gold: '#C9AE78',
+  cardBg: 'rgba(15, 15, 15, 0.45)',
+  gold: '#C5B5A1',
   goldGlow: 'rgba(201, 174, 120, 0.15)',
-  silverBlue: '#C9AE78',
+  silverBlue: '#C5B5A1',
   copper: '#CD7F5D',
-  emerald: '#C9AE78',
-  amethyst: '#C9AE78',
+  emerald: '#C5B5A1',
+  amethyst: '#C5B5A1',
   textMain: '#F0EAD6',
   textMuted: 'rgba(240, 234, 214, 0.4)',
-  glassBorder: 'rgba(255,255,255,0.08)',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
   glassHighlight: 'rgba(255,255,255,0.15)',
 };
 
@@ -1206,17 +1206,17 @@ const styles = StyleSheet.create({
 
   header: { marginTop: 10, marginBottom: 24, paddingHorizontal: 4 },
   backButton: { padding: 8, paddingHorizontal: 16, alignSelf: 'flex-start' },
-  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  title: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: PALETTE.textMain,  marginBottom: 8 },
   subtitle: { fontSize: 14 },
 
   section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16, paddingLeft: 4 },
+  sectionTitle: { fontSize: 18, color: PALETTE.textMain,  marginBottom: 16, paddingLeft: 4 },
 
   // ── Form Card (deep glassmorphic volume) ──
   formCard: { borderRadius: 32, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
   formInner: { padding: 28 },
   formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
-  formTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  formTitle: { fontSize: 22, color: PALETTE.textMain,  },
   cancelEditBtn: { padding: 8 },
 
   fieldLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.textMain, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16 },
@@ -1229,13 +1229,13 @@ const styles = StyleSheet.create({
   hoursPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   hoursStepBtn: { width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   hoursCircleDisplay: { width: 140, height: 140, borderRadius: 70, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', marginHorizontal: 16, backgroundColor: 'rgba(0,0,0,0.35)' },
-  hoursCircleValue: { fontSize: 28, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  hoursCircleValue: { fontSize: 28, fontWeight: '700', color: PALETTE.textMain,  },
   hoursCircleQuality: { fontSize: 9, fontWeight: '800', color: PALETTE.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 5 },
 
   // Dream journal glass card
   dreamGlassCard: { borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 16, backgroundColor: 'rgba(0,0,0,0.3)', minHeight: 120 },
   dreamGlassCardActive: { borderColor: 'rgba(217, 191, 140, 0.4)', backgroundColor: 'rgba(217, 191, 140, 0.05)' },
-  dreamInputInner: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), lineHeight: 24 },
+  dreamInputInner: { fontSize: 16, color: PALETTE.textMain,  lineHeight: 24 },
 
   // Premium lock cards
   premiumLockCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.2)', padding: 20 },
@@ -1299,13 +1299,13 @@ const styles = StyleSheet.create({
   // Today's dream reflection
   todayInterpretCard: { borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.25)', borderTopColor: 'rgba(157, 118, 193, 0.4)' },
   todayInterpretHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  todayInterpretTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  todayInterpretTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain,  },
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 12 },
   statCard: { flex: 1, borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, overflow: 'hidden' },
   statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
-  statValue: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  statValue: { fontSize: 24, color: PALETTE.textMain,  },
   statSub: { fontSize: 11, color: PALETTE.textMuted, marginTop: 4, textAlign: 'center', fontStyle: 'italic' },
 
   // Obsidian graph / cluster cards
@@ -1337,11 +1337,11 @@ const styles = StyleSheet.create({
   interpretBody: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 24 },
 
   undercurrentBox: { marginTop: 16, paddingVertical: 8, paddingHorizontal: 14, alignSelf: 'flex-start', borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.10)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.18)' },
-  undercurrentLabel: { fontSize: 12, fontWeight: '600', color: PALETTE.amethyst, letterSpacing: 0.8, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  undercurrentLabel: { fontSize: 12, fontWeight: '600', color: PALETTE.amethyst, letterSpacing: 0.8,  },
 
   sitWithBox: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(157, 118, 193, 0.15)' },
   sitWithLabel: { fontSize: 11, fontWeight: '700', color: PALETTE.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24, fontStyle: 'italic', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24, fontStyle: 'italic',  },
 
   // AI Gemini interpretation
   aiSection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(201, 174, 120, 0.15)' },
@@ -1356,6 +1356,6 @@ const styles = StyleSheet.create({
   aiResultLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase' },
 
   emptyState: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
-  emptyTitle: { fontSize: 22, fontWeight: '600', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlign: 'center', marginBottom: 12 },
+  emptyTitle: { fontSize: 22, fontWeight: '600', color: PALETTE.textMain,  textAlign: 'center', marginBottom: 12 },
   emptySubtitle: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22 },
 });

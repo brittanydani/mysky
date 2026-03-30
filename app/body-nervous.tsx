@@ -24,11 +24,11 @@ import { MetallicText } from '../components/ui/MetallicText';
 
 const PALETTE = {
   sage: '#8CBEAA',
-  emerald: '#C9AE78',
+  emerald: '#C5B5A1',
   rose: '#D4A3B3',
-  textMain: '#FFFFFF',
+  textMain: '#F5F5F7',
   textMuted: 'rgba(255,255,255,0.6)',
-  glassBorder: 'rgba(255,255,255,0.08)',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
 };
 
 interface ToolCard {
@@ -148,10 +148,10 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 34, letterSpacing: -0.5,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '300',
+    
+    fontWeight: '800',
     marginBottom: 8,
   },
   headerSubtitle: { fontSize: 14 },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    
     fontWeight: '400',
     marginBottom: 6,
   },

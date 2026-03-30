@@ -187,12 +187,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)',
   },
   headerTitle: { 
     fontSize: 16,
     color: '#FFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     letterSpacing: 2,
     textTransform: 'uppercase',
     opacity: 0.6,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     fontSize: 19,
     fontWeight: '700',
     color: theme.textGold,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     marginTop: 24,
     marginBottom: 8,
     lineHeight: 26,

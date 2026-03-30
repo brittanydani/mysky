@@ -163,12 +163,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)' },
   headerTitle: { 
     fontSize: 18, 
     fontWeight: '600', 
     color: theme.textPrimary, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
+     
   },
   
   scrollView: { flex: 1 },
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 24, 
     color: theme.textPrimary, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), 
+     
     marginBottom: 12,
     letterSpacing: 0.5,
   },

@@ -462,7 +462,7 @@ const SettingsRow = ({
   >
     <View style={styles.rowIconContainer}>
       {icon.includes('-') ? (
-        <Ionicons name={icon as any} size={16} color="#D9BF8C" />
+        <Ionicons name={icon as any} size={16} color="#C5B5A1" />
       ) : (
         <Text style={styles.rowIcon}>{icon}</Text>
       )}
@@ -483,10 +483,10 @@ const styles = StyleSheet.create({
 
   header: { paddingTop: 80, paddingHorizontal: 24, paddingBottom: 20 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 34, letterSpacing: -0.5,
     color: '#FFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '300',
+    
+    fontWeight: '800',
     marginBottom: 8,
   },
   headerSubtitle: { fontSize: 14 },
@@ -520,14 +520,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  rowIcon: { color: '#D9BF8C', fontSize: 16 },
+  rowIcon: { color: '#C5B5A1', fontSize: 16 },
   rowTextContainer: { flex: 1, justifyContent: 'center' },
   rowTitle: { fontSize: 16, color: '#FFF', fontWeight: '500', marginBottom: 2 },
   rowSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
   chevron: {
     fontSize: 24,
     color: 'rgba(255,255,255,0.2)',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     marginLeft: 16,
   },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginLeft: 72 },

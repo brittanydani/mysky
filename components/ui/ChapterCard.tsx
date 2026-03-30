@@ -7,7 +7,7 @@ import { MetallicIcon } from './MetallicIcon';
 
 // Mappings for Archetypal Forces to their corresponding aura colors
 const FORCE_COLORS: Record<string, string> = {
-  'Core vitality': '#C9AE78',       // Champagne Gold (Sun)
+  'Core vitality': '#C5B5A1',       // Champagne Gold (Sun)
   'Emotional body': '#8BC4E8',      // Silver-Blue (Moon)
   'Activating force': '#CD7F5D',    // Copper (Mars)
   'Relational force': '#F4C2C2',    // Soft Pink (Venus)
@@ -35,7 +35,7 @@ interface ChapterCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   textMain: '#F0EAD6',
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 21,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     marginBottom: 16,
     lineHeight: 27,
   },
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 22,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
   },
   readMoreRow: {
     flexDirection: 'row',

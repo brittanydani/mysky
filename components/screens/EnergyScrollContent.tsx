@@ -13,7 +13,6 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import { SkiaGradient as LinearGradient } from '../ui/SkiaGradient';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -182,7 +181,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
           <Text style={styles.somaticPrompt}>Your energy mirror awaits</Text>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
+          <View style={[styles.card, styles.cardPad]}>
             <Text style={styles.heroToneText}>Energy needs your birth info</Text>
             <Text style={[styles.body, { marginTop: 8 }]}>
               Add your birth info to unlock your personal energy weather {'—'} chakra awareness, domain tracking, and daily guidance.
@@ -194,7 +193,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
               style={{ marginTop: 16 }}
               labelStyle={{ fontSize: 15 }}
             />
-          </LinearGradient>
+          </View>
         </Animated.View>
       </>
     );
@@ -224,10 +223,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
 
       {/* ═══ HUB 2 — ENERGY WEATHER ═══ */}
       <Animated.View entering={FadeInDown.delay(200).duration(600)} style={contentStyle}>
-        <LinearGradient
-          colors={['rgba(212,184,114,0.10)', 'rgba(10,10,12,0.80)']}
-          style={styles.snapshotCard}
-        >
+        <View style={styles.snapshotCard}>
           <Text style={styles.toneLabel}>{snapshot.tone}</Text>
           {intensityMeta.color === '#FFFFFF' ? (
             <Text style={[styles.intensityBadge, { color: intensityMeta.color }]}>
@@ -239,8 +235,8 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
             </MetallicText>
           )}
           <Text style={styles.meaningText}>{snapshot.quickMeaning}</Text>
-        </LinearGradient>
-      </Animated.View>
+          </View>
+        </Animated.View>
 
       {/* ═══ HUB 3 — CHAKRA WHEEL ═══ */}
       <Animated.View entering={FadeInDown.delay(300).duration(600)}>
@@ -299,7 +295,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
               )}
             </>
           ) : (
-            <LinearGradient colors={['rgba(232,214,174,0.08)', 'rgba(232,214,174,0.03)']} style={[styles.card, styles.cardPad, { borderColor: 'rgba(232,214,174,0.18)' }]}>
+            <View style={[styles.card, styles.cardPad, { backgroundColor: 'rgba(197,181,161,0.06)', borderColor: 'rgba(197,181,161,0.18)' }]}>
               <View style={styles.lockBanner}>
                 <Ionicons name="sparkles-outline" size={14} color={theme.primary} />
                 <Text style={styles.lockText}>All 7 chakras with body cues and triggers</Text>
@@ -307,7 +303,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
               <Text style={{ fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 6 }}>
                 Your birth data activates specific energy centers {'—'} see which ones need attention today
               </Text>
-            </LinearGradient>
+            </View>
           )}
         </Animated.View>
 
@@ -344,13 +340,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
                 accessibilityLabel={`${d.name} energy domain${isLocked ? ', locked' : ''}`}
                 accessibilityState={{ expanded: isExpanded }}
               >
-                <LinearGradient
-                  colors={isLocked
-                    ? ['rgba(10,18,36,0.5)', 'rgba(13,20,33,0.5)']
-                    : ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']
-                  }
-                  style={[styles.card, { padding: 16, marginBottom: 8 }]}
-                >
+                <View style={[styles.card, { padding: 16, marginBottom: 8 }]}>
                   <View style={styles.domainRow}>
                     <View style={styles.domainIconWrap}>
                       <Ionicons
@@ -384,7 +374,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
                       </View>
                     </Animated.View>
                   )}
-                </LinearGradient>
+                </View>
               </Pressable>
             );
           })}
@@ -393,7 +383,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
         {/* ═══ HUB 8 — ENERGY GUIDANCE ═══ */}
         <SectionHeader icon="compass-outline" title="Energy Guidance" delay={560} />
         <Animated.View entering={FadeInDown.delay(580).duration(600)}>
-          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']} style={[styles.card, styles.cardPad]}>
+          <View style={[styles.card, styles.cardPad]}>
             {isPremium ? (
               <>
                 <GuidanceBlock icon="arrow-up-outline" label="Lean into" text={snapshot.guidance.leanInto} context={snapshot.guidance.leanIntoContext} color={theme.energy} />
@@ -431,7 +421,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
                 </Pressable>
               </>
             )}
-          </LinearGradient>
+          </View>
         </Animated.View>
 
         {/* ── Footer ── */}
@@ -469,10 +459,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 
   if (resolvedRole === 'background') {
     return (
-      <LinearGradient
-        colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
-        style={[styles.card, { padding: 14, marginBottom: 6 }]}
-      >
+      <View style={[styles.card, { padding: 14, marginBottom: 6 }]}>
         <View style={styles.chakraHeader}>
           <SkiaChakraGlyph name={chakra.name} size={34} variant="vivid" />
           <View style={{ flex: 1 }}>
@@ -483,16 +470,13 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
           </View>
           <View style={[styles.chakraStateDot, { backgroundColor: 'rgba(255,255,255,0.60)' }]} />
         </View>
-      </LinearGradient>
+        </View>
     );
   }
 
   if (resolvedRole === 'secondary') {
     return (
-      <LinearGradient
-        colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
-        style={[styles.card, styles.cardPad, { marginBottom: 8 }]}
-      >
+      <View style={[styles.card, styles.cardPad, { marginBottom: 8 }]}>
         <View style={styles.chakraHeader}>
           <SkiaChakraGlyph name={chakra.name} size={42} variant="vivid" />
           <View style={{ flex: 1 }}>
@@ -510,7 +494,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
           <Ionicons name="heart-outline" size={13} color="rgba(255,255,255,0.70)" />
           <Text style={[styles.chakraDetailText, { color: 'rgba(255,255,255,0.85)' }]}>{chakra.healingSuggestion}</Text>
         </View>
-      </LinearGradient>
+        </View>
     );
   }
 
@@ -520,10 +504,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
     .filter(s => s.length > 3);
 
   return (
-    <LinearGradient
-      colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.50)']}
-      style={[styles.card, styles.cardPad, { marginBottom: 10 }]}
-    >
+    <View style={[styles.card, styles.cardPad, { marginBottom: 10 }]}>
       <Text style={[styles.focusRoleLabel, { color: 'rgba(255,255,255,0.75)' }]}>Primary Focus Today</Text>
       <View style={styles.focusHeaderBlock}>
         <SkiaChakraGlyph name={chakra.name} size={64} variant="vivid" />
@@ -571,7 +552,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
           <Text style={styles.affirmationText}>{'"'}{chakra.affirmation}{'"'}</Text>
         </View>
       ) : null}
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -650,7 +631,7 @@ const styles = StyleSheet.create({
     color: theme.textPrimary,
     fontSize: 24,
     fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    
   },
   intensityBadge: {
     fontSize: 12,
@@ -669,7 +650,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: 'serif',
+    
   },
 
   body: {
@@ -696,7 +677,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: theme.textPrimary,
-    fontFamily: 'serif',
+    
   },
   lockBanner: {
     flexDirection: 'row',
@@ -848,7 +829,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: 'serif',
+    
   },
   focusStateBadge: {
     flexDirection: 'row',
@@ -983,7 +964,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '600',
-    fontFamily: 'serif',
+    
   },
   footer: {
     paddingVertical: theme.spacing.xl,

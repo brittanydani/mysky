@@ -40,15 +40,15 @@ const SCREEN_W = Dimensions.get('window').width;
 const ORBIT_SIZE = Math.min(SCREEN_W - 24, 380);
 
 const PALETTE = {
-  gold: '#D4B872',
+  gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   connection: '#9D76C1',
   lavender: '#A89BC8',
   bg: '#0A0A0C',
-  textMain: '#FFFFFF',
-  glassBorder: 'rgba(255,255,255,0.06)',
+  textMain: '#F5F5F7',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
 };
 
 interface SnapshotData {
@@ -633,7 +633,7 @@ function DeepInsightLenses({
 const lensStyles = StyleSheet.create({
   lensHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
   lensIcon: { fontSize: 18 },
-  lensTitle: { fontSize: 17, fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  lensTitle: { fontSize: 17, fontWeight: '700',  },
   lensSubtitle: { fontSize: 15, fontWeight: '600', marginBottom: 6 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1 },
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   header: { marginTop: 20, marginBottom: 32 },
-  title: { fontSize: 34, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  title: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: PALETTE.textMain,  marginBottom: 8 },
   subtitle: { fontSize: 14 },
   snapshotRow: { flexDirection: 'row', gap: 10, marginBottom: 32 },
   metricCard: { flex: 1, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', minHeight: 100 },
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
   chartWrapper: { width: '100%', marginTop: 24, padding: 20, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   chartLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.8, marginBottom: 20, textAlign: 'center' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  sectionTitle: { color: PALETTE.textMain, fontSize: 18, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  sectionTitle: { color: PALETTE.textMain, fontSize: 18, fontWeight: '600',  },
   insightColumn: { gap: 12 },
   insightCard: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder },
   insightLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1, marginBottom: 8 },

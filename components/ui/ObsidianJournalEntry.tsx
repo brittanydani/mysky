@@ -58,7 +58,7 @@ const GLASS = {
   specularTop: 'rgba(255, 255, 255, 0.08)',
   specularBot: 'rgba(255, 255, 255, 0.0)',
   inkRipple: 'rgba(232, 214, 174, 0.15)',
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
   },
   timeText: {
     color: theme.textMuted,
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     marginBottom: 4,
   },
   body: {

@@ -97,7 +97,7 @@ export default function SleepQuickLog() {
         </Pressable>
 
         <View style={styles.hoursDisplay}>
-          <MetallicText style={styles.hoursValue} numberOfLines={1} color="#D9BF8C">{formatHours(hours)}</MetallicText>
+          <MetallicText style={styles.hoursValue} numberOfLines={1} color="#C5B5A1">{formatHours(hours)}</MetallicText>
         </View>
 
         <Pressable
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 16,
   },
   modalTitle: {
-    color: '#FFF', fontSize: 24, fontFamily: 'Georgia',
+    color: '#FFF', fontSize: 24, 
     marginBottom: 36, letterSpacing: 0.5,
   },
   sectionLabel: {
@@ -184,12 +184,12 @@ const styles = StyleSheet.create({
     minWidth: 160, alignItems: 'center',
   },
   hoursValue: {
-    color: '#D9BF8C', fontSize: 36, fontFamily: 'Georgia', letterSpacing: 0.5,
+    color: '#C5B5A1', fontSize: 36,  letterSpacing: 0.5,
   },
   moonRow: { flexDirection: 'row', gap: 20, marginBottom: 12 },
   moon: { fontSize: 38, color: '#6E8CB4' },
   qualityLabel: {
-    color: '#6E8CB4', fontFamily: 'Georgia', fontStyle: 'italic',
+    color: '#6E8CB4',  fontStyle: 'italic',
     fontSize: 14, marginBottom: 48,
   },
 

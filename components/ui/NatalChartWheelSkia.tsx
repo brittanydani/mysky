@@ -31,7 +31,7 @@ import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
 import { theme } from '../../constants/theme';
 // Remove SVG icon imports; will use Skia-native drawing below
 // Skia-native Pholus icon
-function SkiaPholusIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+function SkiaPholusIcon({ x, y, size = 24, color = '#C5B5A1' }: { x: number, y: number, size?: number, color?: string }) {
   const s = size / 24;
   // Main diagonal slash
   const path = Skia.Path.Make();
@@ -48,7 +48,7 @@ function SkiaPholusIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: 
 }
 
 // Skia-native Lilith (Black Moon Lilith) icon — crescent on stem with crossbar
-function SkiaLilithIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+function SkiaLilithIcon({ x, y, size = 24, color = '#C5B5A1' }: { x: number, y: number, size?: number, color?: string }) {
   const s = size / 24;
   const cx = x + 12 * s;
   const cresR = 4 * s;
@@ -73,7 +73,7 @@ function SkiaLilithIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: 
 }
 
 // Skia-native Part of Fortune icon — circle with X inside
-function SkiaPartOfFortuneIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+function SkiaPartOfFortuneIcon({ x, y, size = 24, color = '#C5B5A1' }: { x: number, y: number, size?: number, color?: string }) {
   const s = size / 24;
   const cx = x + 12 * s, cy = y + 12 * s;
   const r = 5 * s;
@@ -88,7 +88,7 @@ function SkiaPartOfFortuneIcon({ x, y, size = 24, color = '#C9AE78' }: { x: numb
 }
 
 // Skia-native Vertex icon
-function SkiaVertexIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
+function SkiaVertexIcon({ x, y, size = 24, color = '#C5B5A1' }: { x: number, y: number, size?: number, color?: string }) {
   const s = size / 24;
   // 'V' path
   const vPath = Skia.Path.Make();
@@ -201,12 +201,12 @@ const PLANET_SYMBOLS: Record<string, string> = {
 };
 
 const PLANET_COLORS: Record<string, string> = {
-  Sun: '#C9AE78',
+  Sun: '#C5B5A1',
   Moon: '#B8C2D0',
   Mercury: '#86BCEC',
   Venus: '#D07E9E',
   Mars: '#D07E7E',
-  Jupiter: '#C9AE78',
+  Jupiter: '#C5B5A1',
   Saturn: '#8484A0',
   Uranus: '#6CBEC4',
   Neptune: '#7C8CD0',
@@ -214,8 +214,8 @@ const PLANET_COLORS: Record<string, string> = {
   'North Node': '#A0A0B0',
   'South Node': '#A0A0B0',
   Chiron: '#98FB98',
-  Ascendant: '#C9AE78',
-  Midheaven: '#C9AE78',
+  Ascendant: '#C5B5A1',
+  Midheaven: '#C5B5A1',
 };
 
 const OVERLAY_PLANET_COLORS: Record<string, string> = {
@@ -241,7 +241,7 @@ const OVERLAY_PLANET_COLORS: Record<string, string> = {
 // 0: Champagne Gold, 1: Silver, 2: Rose Gold, 3: Purple Metallic
 function getUserSpherePalette(userIndex: number): string[] {
   const palettes = [
-    ['#FFFBF0', '#F0E0B0', '#C9AE78', '#8A6A30', '#3A2810'], // Champagne Gold
+    ['#FFFBF0', '#F0E0B0', '#C5B5A1', '#8A6A30', '#3A2810'], // Champagne Gold
     ['#FFFFFF', '#E8EAED', '#C0C4CC', '#707880', '#282C34'], // Silver / Platinum
     ['#FFF0EC', '#EDDAC8', '#D4A898', '#9A6858', '#3A1C10'], // Rose Gold
     ['#F4EEFF', '#DACAF0', '#A880D4', '#6040A0', '#201030'], // Purple Metallic
@@ -720,7 +720,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               c={vec(CX, CY)}
               colors={[
                 '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
-                '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#C5B5A1', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
               positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]}
@@ -757,7 +757,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               c={vec(CX, CY)}
               colors={[
                 '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
-                '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#C5B5A1', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
               positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]}
@@ -769,7 +769,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
           <Circle cx={CX} cy={CY} r={R_OUTER - 2} style="stroke" strokeWidth={0.8} opacity={0.95}>
              <SweepGradient
               c={vec(CX, CY)}
-              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C9AE78', '#FFFFFF', '#3A2E1C', '#8A734D']}
+              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C5B5A1', '#FFFFFF', '#3A2E1C', '#8A734D']}
               positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]}
               transform={[{ rotate: -0.3 }]}
             />
@@ -1442,7 +1442,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
               c={vec(CX, CY)}
               colors={[
                 '#4A3728', '#FDF5E6', '#A8926F', '#3A2E1C', 
-                '#C9AE78', '#FFFFFF', '#8A734D', '#2A1F14', 
+                '#C5B5A1', '#FFFFFF', '#8A734D', '#2A1F14', 
                 '#FFF4D6', '#4A3728'
               ]}
               positions={[0.0, 0.1, 0.28, 0.42, 0.55, 0.65, 0.82, 0.9, 0.96, 1.0]}
@@ -1454,7 +1454,7 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
         <Circle cx={CX} cy={CY} r={R_INNER - 3} style="stroke" strokeWidth={0.8} opacity={0.95}>
            <SweepGradient
               c={vec(CX, CY)}
-              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C9AE78', '#FFFFFF', '#3A2E1C', '#8A734D']}
+              colors={['#8A734D', '#FDF5E6', '#4A3728', '#C5B5A1', '#FFFFFF', '#3A2E1C', '#8A734D']}
               positions={[0.0, 0.15, 0.35, 0.5, 0.68, 0.85, 1.0]}
               transform={[{ rotate: -0.2 }]}
             />

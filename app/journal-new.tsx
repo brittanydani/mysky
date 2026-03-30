@@ -38,16 +38,16 @@ type MoodKey = 'calm' | 'soft' | 'okay' | 'heavy' | 'stormy';
 const MOODS: { id: MoodKey; label: string; icon: string; color: string }[] = [
   { id: 'calm',   label: 'Calm',   icon: 'water-outline',       color: '#6EBF8B' },
   { id: 'soft',   label: 'Soft',   icon: 'leaf-outline',        color: '#8BC4E8' },
-  { id: 'okay',   label: 'Okay',   icon: 'remove-outline',      color: '#D9BF8C' },
+  { id: 'okay',   label: 'Okay',   icon: 'remove-outline',      color: '#C5B5A1' },
   { id: 'heavy',  label: 'Heavy',  icon: 'cloud-outline',       color: '#A89BC8' },
   { id: 'stormy', label: 'Stormy', icon: 'thunderstorm-outline', color: '#D4A3B3' },
 ];
 
 const PALETTE = {
   bg: '#0A0A0C',
-  textMain: '#FFFFFF',
+  textMain: '#F5F5F7',
   textMuted: 'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(255,255,255,0.08)',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
 };
 
 export default function NewJournalEntryScreen() {
@@ -243,7 +243,7 @@ export default function NewJournalEntryScreen() {
                 multiline
                 textAlignVertical="top"
                 autoFocus={false}
-                selectionColor={prompt?.archetypeColor ?? '#D9BF8C'}
+                selectionColor={prompt?.archetypeColor ?? '#C5B5A1'}
               />
             </View>
           </Animated.View>
@@ -263,7 +263,7 @@ export default function NewJournalEntryScreen() {
                 colors={['rgba(217, 191, 140, 0.25)', 'rgba(217, 191, 140, 0.05)']}
                 style={StyleSheet.absoluteFill}
               />
-              <MetallicText style={styles.sealBtnText} color="#D9BF8C">{isSaving ? 'SEALING...' : 'SEAL RECORD'}</MetallicText>
+              <MetallicText style={styles.sealBtnText} color="#C5B5A1">{isSaving ? 'SEALING...' : 'SEAL RECORD'}</MetallicText>
             </Pressable>
           </Animated.View>
         )}
@@ -287,10 +287,10 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
 
   headerTitle: {
-    fontSize: 34,
+    fontSize: 34, letterSpacing: -0.5,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '300',
+    
+    fontWeight: '800',
     marginBottom: 8,
   },
   headerSubtitle: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   promptQuestion: {
     fontSize: 18,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     lineHeight: 26,
     marginBottom: 16,
   },
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     padding: 20,
     color: PALETTE.textMain,
     fontSize: 16,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     lineHeight: 26,
   },
 
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   sealBtnDisabled: { opacity: 0.5 },
   sealBtnText: {
-    color: '#D9BF8C',
+    color: '#C5B5A1',
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 1.5,

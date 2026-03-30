@@ -1,5 +1,4 @@
 import 'expo-standard-web-crypto';
-import { GoldIcon } from '../components/ui/GoldIcon';
 // File: app/_layout.tsx
 
 import React, { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
@@ -8,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
-import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
+import { Ionicons } from '@expo/vector-icons';
 
 import OnboardingModal from '../components/OnboardingModal';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
@@ -28,6 +27,20 @@ import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { SUPPORT_EMAIL } from '../constants/config';
+
+// ── Desert Titanium & Velvet Tech Palette ──
+const PREMIUM = {
+  bgOled: '#000000',
+  titanium: '#C5B5A1', // Sophisticated, high-tech desaturated gold
+  glassBorder: 'rgba(197, 181, 161, 0.3)', // Crisp inner glass edge
+  glassFill: 'rgba(15, 15, 15, 0.4)', // Deep frosted glass
+  textMain: '#F5F5F7',
+  textMuted: '#86868B',
+};
+
+const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
+const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
+const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' });
 
 // Allowlist of routes that notification deep links can navigate to.
 // Prevents injection of arbitrary or external URLs via push notifications.
@@ -78,17 +91,14 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <View style={styles.errorContainer}>
-          <GoldIcon name="warning-outline" size={56}  style={{ marginBottom: 20 }}  />
-          <Text style={styles.errorTitle}>Something went wrong</Text>
-          <Text style={styles.errorBody}>An unexpected error occurred. Please close the app and reopen it, or try reloading below.</Text>
+          <Ionicons name="warning-outline" size={56} color={PREMIUM.titanium} style={{ marginBottom: 24 }} />
+          <Text style={styles.errorTitle}>System Error</Text>
+          <Text style={styles.errorBody}>An unexpected anomaly occurred. Please close the app and reopen it, or attempt to reload the environment below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
-            <LinearGradient 
-              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']} 
-              style={styles.errorButtonGradient}
-            >
-              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
+            <View style={styles.errorButton}>
+              <Ionicons name="refresh-outline" size={18} color={PREMIUM.titanium} style={{ marginRight: 8 }} />
               <Text style={styles.errorButtonText}>Reload Experience</Text>
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
         </View>
       );
@@ -365,17 +375,14 @@ function AppShell() {
     if (initTimedOut) {
       return (
         <View style={styles.errorContainer}>
-          <GoldIcon name="hourglass-outline" size={56}  style={{ marginBottom: 20 }}  />
-          <Text style={styles.errorTitle}>Taking longer than expected</Text>
-          <Text style={styles.errorBody}>Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.</Text>
+          <Ionicons name="hourglass-outline" size={56} color={PREMIUM.titanium} style={{ marginBottom: 24 }} />
+          <Text style={styles.errorTitle}>Connection Timeout</Text>
+          <Text style={styles.errorBody}>Initialization is taking longer than expected. Secure storage may be temporarily locked by the system.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={retryInit}>
-            <LinearGradient
-              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']}
-              style={styles.errorButtonGradient}
-            >
-              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
-              <Text style={styles.errorButtonText}>Retry</Text>
-            </LinearGradient>
+            <View style={styles.errorButton}>
+              <Ionicons name="refresh-outline" size={18} color={PREMIUM.titanium} style={{ marginRight: 8 }} />
+              <Text style={styles.errorButtonText}>Retry Connection</Text>
+            </View>
           </TouchableOpacity>
         </View>
       );
@@ -385,7 +392,7 @@ function AppShell() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, position: 'relative' }}>
+      <View style={{ flex: 1, position: 'relative', backgroundColor: PREMIUM.bgOled }}>
         <CosmicBackground />
         <SafeAreaProvider>
           <StatusBar style="light" />
@@ -409,7 +416,7 @@ function AppShell() {
               name="checkin"
               options={{
                 presentation: 'modal',
-                contentStyle: { backgroundColor: '#0A0A0C' },
+                contentStyle: { backgroundColor: PREMIUM.bgOled },
               }}
             />
             <Stack.Screen
@@ -474,38 +481,48 @@ function AppShell() {
 const styles = StyleSheet.create({
   errorContainer: { 
     flex: 1, 
-    backgroundColor: '#020817', 
+    backgroundColor: PREMIUM.bgOled, 
     alignItems: 'center', 
     justifyContent: 'center', 
     padding: 32 
   },
   errorTitle: { 
-    color: '#FFFFFF', 
-    fontSize: 26, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), 
+    color: PREMIUM.textMain, 
+    fontSize: 28, 
+    fontFamily: DISPLAY_BOLD,
+    fontWeight: '800',
     marginBottom: 12,
-    textAlign: 'center'
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
   errorBody: { 
-    color: '#8A8D98', 
-    fontSize: 15, 
+    color: PREMIUM.textMuted, 
+    fontSize: 16, 
     textAlign: 'center', 
     marginBottom: 40, 
-    lineHeight: 22,
-    paddingHorizontal: 20
+    lineHeight: 24,
+    paddingHorizontal: 20,
+    fontFamily: DISPLAY,
   },
-  errorButtonGradient: { 
+  errorButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 28, 
-    paddingVertical: 14, 
-    borderRadius: 20, 
-    borderWidth: 1, 
-    borderColor: 'rgba(232,214,174,0.25)' 
+    justifyContent: 'center',
+    backgroundColor: PREMIUM.glassFill,
+    borderWidth: 1,
+    borderColor: PREMIUM.titanium,
+    paddingHorizontal: 28,
+    height: 56,
+    borderRadius: 28,
+    shadowColor: PREMIUM.titanium,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
   errorButtonText: { 
-    color: '#FFFFFF', 
-    fontSize: 15, 
-    fontWeight: '600' 
+    color: PREMIUM.titanium, 
+    fontSize: 17, 
+    fontWeight: '700',
+    fontFamily: DISPLAY_BOLD,
   },
 });

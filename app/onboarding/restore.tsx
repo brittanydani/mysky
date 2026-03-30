@@ -19,9 +19,9 @@ import { MetallicText } from '../../components/ui/MetallicText';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
+  glassBorder: 'rgba(197, 181, 161, 0.25)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
@@ -176,12 +176,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)' },
   headerTitle: { 
     fontSize: 18, 
     fontWeight: '600', 
     color: PALETTE.textMain, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) 
+     
   },
   
   content: { paddingHorizontal: 20, paddingTop: 32 },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 22,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     marginBottom: 8,
     textAlign: 'center',
   },

@@ -28,7 +28,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 
 interface Props {
   visible: boolean;
@@ -125,12 +124,7 @@ export default function AuthRequiredModal({ visible }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={mode === 'sign-in' ? 'Sign In' : 'Create Account'}
               >
-                <LinearGradient
-                  colors={[theme.primary, theme.primaryDark]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.btn}
-                >
+                <View style={[styles.btn, { backgroundColor: '#C5B5A1' }]}>
                   {loading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
@@ -138,7 +132,7 @@ export default function AuthRequiredModal({ visible }: Props) {
                       {mode === 'sign-in' ? 'Sign In' : 'Create Account'}
                     </Text>
                   )}
-                </LinearGradient>
+                </View>
               </Pressable>
             </View>
 

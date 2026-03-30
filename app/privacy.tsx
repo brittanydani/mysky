@@ -267,11 +267,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)' },
   headerTitle: { 
     fontSize: 16,
     color: '#FFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     letterSpacing: 2,
     textTransform: 'uppercase',
     opacity: 0.6,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     color: "#FFFFFF",
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     marginBottom: 16,
     paddingLeft: 4,
   },

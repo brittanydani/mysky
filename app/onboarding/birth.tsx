@@ -15,7 +15,7 @@ import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   textMain: '#F0EAD6',
 };
 
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain, 
     fontSize: 22, 
     fontWeight: '700', 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     letterSpacing: 0.5,
   },
 });

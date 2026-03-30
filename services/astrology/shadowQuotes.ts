@@ -112,7 +112,7 @@ export interface DayActivationContext {
 //    overloaded, Saturn aspects
 // ────────────────────────────────────────────────────
 
-const AWARENESS_QUOTES: ShadowQuote[] = [
+export const AWARENESS_QUOTES: ShadowQuote[] = [
   { id: 'aw-01', text: "You're holding yourself to a standard you don't apply to others.", tone: 'awareness', triggers: ['saturn-aspect', 'general'], intensity: 'medium' },
   { id: 'aw-02', text: "You notice everyone else's needs faster than your own.", tone: 'awareness', triggers: ['south-node', 'relationship-transit'], intensity: 'medium' },
   { id: 'aw-03', text: "You keep waiting for permission you don't actually need.", tone: 'awareness', triggers: ['saturn-aspect', 'south-node'], intensity: 'deep' },
@@ -140,7 +140,7 @@ const AWARENESS_QUOTES: ShadowQuote[] = [
 //    inner planets retrograde
 // ────────────────────────────────────────────────────
 
-const PROTECTIVE_QUOTES: ShadowQuote[] = [
+export const PROTECTIVE_QUOTES: ShadowQuote[] = [
   { id: 'pr-01', text: "This pattern once kept you safe.", tone: 'protective', triggers: ['chiron', 'inner-planet-retrograde'], intensity: 'soft' },
   { id: 'pr-02', text: "There's a reason you learned to be this way.", tone: 'protective', triggers: ['chiron', 'moon-waning'], intensity: 'soft' },
   { id: 'pr-03', text: "You didn't imagine this need — you adapted to it.", tone: 'protective', triggers: ['chiron', 'heavy-day'], intensity: 'medium' },
@@ -165,7 +165,7 @@ const PROTECTIVE_QUOTES: ShadowQuote[] = [
 //    activation, relationship transits
 // ────────────────────────────────────────────────────
 
-const TENSION_QUOTES: ShadowQuote[] = [
+export const TENSION_QUOTES: ShadowQuote[] = [
   { id: 'te-01', text: "Part of you wants more. Another part wants certainty.", tone: 'tension', triggers: ['opposition-aspect', 'node-axis'], intensity: 'medium' },
   { id: 'te-02', text: "You're torn between staying comfortable and staying honest.", tone: 'tension', triggers: ['opposition-aspect', 'node-axis'], intensity: 'medium' },
   { id: 'te-03', text: "You want closeness, but not at the cost of yourself.", tone: 'tension', triggers: ['relationship-transit', 'opposition-aspect'], intensity: 'deep' },
@@ -190,7 +190,7 @@ const TENSION_QUOTES: ShadowQuote[] = [
 //    journal completion moments
 // ────────────────────────────────────────────────────
 
-const RELEASE_QUOTES: ShadowQuote[] = [
+export const RELEASE_QUOTES: ShadowQuote[] = [
   { id: 're-01', text: "You don't have to resolve this today.", tone: 'release', triggers: ['chiron-moon', 'heavy-day', 'journal-complete'], intensity: 'soft' },
   { id: 're-02', text: "This doesn't need a solution to be valid.", tone: 'release', triggers: ['chiron-moon', 'heavy-day', 'journal-complete'], intensity: 'soft' },
   { id: 're-03', text: "Awareness is enough for now.", tone: 'release', triggers: ['journal-complete', 'general'], intensity: 'soft' },

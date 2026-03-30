@@ -43,7 +43,7 @@ import { DailyCheckIn } from '../../services/patterns/types';
 // Each dimension uses the "core" stop of its metallic gradient.
 
 const CLR_EMOTIONAL  = '#E07A98';  // METALLIC_LOVE core
-const CLR_CREATIVITY = '#C9AE78';  // METALLIC_GOLD core
+const CLR_CREATIVITY = '#C5B5A1';  // METALLIC_GOLD core
 const CLR_CONNECTION = '#9D76C1';  // METALLIC_PURPLE core
 const CLR_STRESS     = '#CD7F5D';  // METALLIC_COPPER core
 const CLR_REST       = '#8BC4E8';  // METALLIC_BLUE core
@@ -418,7 +418,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
           <BlurMask blur={8} style="normal" />
         </Circle>
         {/* Tiny star at center */}
-        <Circle cx={cx} cy={cy} r={2} color="#C9AE78" opacity={0.6} />
+        <Circle cx={cx} cy={cy} r={2} color="#C5B5A1" opacity={0.6} />
 
         {/* ── Orbiting particle (metallic gold) ── */}
         <Circle cx={particleX} cy={particleY} r={2.5} color="rgba(201, 174, 120, 0.7)">

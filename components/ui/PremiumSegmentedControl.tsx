@@ -35,7 +35,7 @@ const INDICATOR_BG = 'rgba(255,255,255,0.10)';
 const CONTAINER_BG = 'rgba(10, 18, 36, 0.5)';
 const TEXT_ACTIVE = '#FFFFFF';
 const TEXT_INACTIVE = 'rgba(226,232,240,0.45)';
-const COUNT_ACTIVE = '#D4B872';
+const COUNT_ACTIVE = '#C5B5A1';
 const COUNT_INACTIVE = 'rgba(226,232,240,0.30)';
 
 export function PremiumSegmentedControl({

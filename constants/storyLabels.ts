@@ -45,7 +45,7 @@ const HOUSE_ORDINALS: [string, number][] = [
 
 // ── Planets / Luminaries → Archetypal Forces ─────────────────────────────────
 
-const PLANET_LABELS: Record<string, string> = {
+export const PLANET_LABELS: Record<string, string> = {
   Sun: 'Core vitality',
   Moon: 'Emotional body',
   Mars: 'Activating force',
@@ -64,7 +64,7 @@ const PLANET_LABELS: Record<string, string> = {
 
 // ── Zodiac Signs → Quality Archetypes ────────────────────────────────────────
 
-const SIGN_LABELS: Record<string, string> = {
+export const SIGN_LABELS: Record<string, string> = {
   Aries: 'Initiation',
   Taurus: 'Stability',
   Gemini: 'Curiosity',
@@ -87,7 +87,7 @@ const SIGN_LABELS: Record<string, string> = {
 // Safe phrases: work in both narrative essay text AND guidance sentences.
 // (Moon phases, nodes, chart terminology, retrograde — none appear as verbs
 //  in the way that trine/sextile/square do.)
-const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
+export const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
   // Moon phase names are KEPT as-is — they are observable astronomy, not astrology.
   // The following prevent the standalone Moon→Emotional body replacement from
   // mangling moon-phase compound phrases that should pass through untouched.
@@ -195,7 +195,7 @@ const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
 // Aspect terms: safe as nouns in essay text ("a trine between…") but break as
 // verbs in guidance sentences ("Jupiter sextile your Jupiter" → "Expansion force
 // cooperative influence your Expansion force"). Used ONLY in applyStoryLabels.
-const ASPECT_PHRASE_REPLACEMENTS: [RegExp, string][] = [
+export const ASPECT_PHRASE_REPLACEMENTS: [RegExp, string][] = [
   [/\bConjunction\b/g, 'Alignment'],
   [/\bconjunction\b/g, 'alignment'],
   [/\bOpposition\b/g, 'Tension dynamic'],

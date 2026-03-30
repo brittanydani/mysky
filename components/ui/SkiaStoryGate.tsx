@@ -36,7 +36,7 @@ const RADIUS = GATE_SIZE * 0.4;
 
 export const PALETTE = {
   amethyst: '#9D76C1',
-  gold: '#C9AE78',
+  gold: '#C5B5A1',
   emerald: '#6EBF8B',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   chapterTitle: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    
     fontWeight: '600',
   },
   lockedText: {

@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, Platform, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
@@ -239,10 +238,10 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* ── Value Propositions ── */}
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
-              { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#C9AE78' },
-              { icon: 'analytics-outline', title: 'Understand your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#C9AE78' },
-              { icon: 'sparkles-outline', title: 'Personalized daily guidance', desc: 'Guidance shaped by your reflections and long-term patterns', color: '#C9AE78' },
-              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup and restore with end-to-end encryption', color: '#C9AE78' },
+              { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#C5B5A1' },
+              { icon: 'analytics-outline', title: 'Understand your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#C5B5A1' },
+              { icon: 'sparkles-outline', title: 'Personalized daily guidance', desc: 'Guidance shaped by your reflections and long-term patterns', color: '#C5B5A1' },
+              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup and restore with end-to-end encryption', color: '#C5B5A1' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
@@ -279,15 +278,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   accessibilityState={{ selected: isSelected }}
                 >
                   {isAnnual ? (
-                    <LinearGradient
-                      colors={[...metallicFillColors]}
-                      locations={[...metallicFillPositions]}
-                      start={[0, 0]}
-                      end={[1, 0]}
-                      style={styles.bestValueBadge}
-                    >
+                    <View style={[styles.bestValueBadge, { backgroundColor: '#C5B5A1' }]}>
                       <Text style={styles.bestValueText}>BEST VALUE</Text>
-                    </LinearGradient>
+                    </View>
                   ) : (
                     <View style={styles.pricingBadgePlaceholder} />
                   )}
@@ -302,7 +295,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                     {tier.price}
                   </Text>
                   {isSelected ? (
-                    <MetallicText color="#D4B872" style={[styles.pricingMeta, styles.pricingMetaSelected]}>
+                    <MetallicText color="#C5B5A1" style={[styles.pricingMeta, styles.pricingMetaSelected]}>
                       {isAnnual ? tier.period : isLifetime ? 'One-time' : 'Billed monthly'}
                     </MetallicText>
                   ) : (
@@ -341,13 +334,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                 (loading || restoring) && { opacity: 0.7 },
               ]}
             >
-              <LinearGradient
-                colors={[...metallicFillColors]}
-                locations={[...metallicFillPositions]}
-                start={[0, 0]}
-                end={[1, 1]}
-                style={styles.ctaGradient}
-              >
+              <View style={[styles.ctaGradient, { backgroundColor: '#C5B5A1' }]}>
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
@@ -355,7 +342,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                     {`Continue with ${resolvedTiers.find(t => t.id === selectedPlan)?.name}`}
                   </Text>
                 )}
-              </LinearGradient>
+              </View>
             </Pressable>
           </Animated.View>
 
@@ -483,7 +470,7 @@ const styles = StyleSheet.create({
     borderRadius: 58,
     borderWidth: 1,
     borderColor: 'rgba(201, 174, 120, 0.18)',
-    shadowColor: '#C9AE78',
+    shadowColor: '#C5B5A1',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
     shadowRadius: 18,
@@ -510,10 +497,9 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 26,
-    fontWeight: '700',
+    fontWeight: '800',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-    letterSpacing: 0.3,
+    letterSpacing: -0.5,
     marginBottom: 8,
     textAlign: 'center',
     lineHeight: 34,
@@ -552,7 +538,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 4,
   },
   valueDesc: {
@@ -584,7 +569,7 @@ const styles = StyleSheet.create({
   pricingCardSelected: {
     borderColor: 'rgba(212, 184, 114, 0.35)',
     backgroundColor: 'rgba(212, 184, 114, 0.04)',
-    shadowColor: '#D4B872',
+    shadowColor: '#C5B5A1',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -627,7 +612,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   pricingMetaSelected: {
-    color: '#D4B872',
+    color: '#C5B5A1',
   },
 
   // ── Lifetime ──
@@ -689,7 +674,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#C9AE78',
+    shadowColor: '#C5B5A1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,
@@ -706,7 +691,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: '#3A2A10',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   legalBar: {
     flexDirection: 'row',
@@ -737,10 +721,9 @@ const styles = StyleSheet.create({
   // ── Already premium state ──
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: '800',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-    letterSpacing: 0.3,
+    letterSpacing: -0.5,
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
   },

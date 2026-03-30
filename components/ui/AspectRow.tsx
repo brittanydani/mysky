@@ -197,14 +197,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    
     fontSize: 18,
     color: '#FFFFFF',
     marginBottom: 6,
     letterSpacing: 0.2,
   },
   detail: {
-    fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif' }),
+    
     fontSize: 14,
     color: 'rgba(255,255,255,0.65)',
     lineHeight: 20,

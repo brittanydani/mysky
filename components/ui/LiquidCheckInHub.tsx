@@ -19,7 +19,7 @@ import {
 const SIZE = 160;
 const CENTER = SIZE / 2;
 
-const GOLD = '#D4B872';
+const GOLD = '#C5B5A1';
 const AMETHYST = '#9D76C1';
 
 const LiquidCheckInHub = memo(function LiquidCheckInHub() {
