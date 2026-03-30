@@ -110,7 +110,7 @@ export default function LunarWeekDropdown() {
           {weeklyData.map((item, i) => (
             <View key={i} style={styles.dayCard}>
               {i === 0 ? (
-                <MetallicText style={styles.dayLabel} color="#C5B5A1">
+                <MetallicText style={styles.dayLabel} color="#D4B872">
                   {item.dayLabel}
                 </MetallicText>
               ) : (
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   todayLabel: {
-    color: '#C5B5A1',
+    color: '#D4B872',
   },
   phaseEmoji: {
     fontSize: 13,

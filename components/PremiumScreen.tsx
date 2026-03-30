@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator, Platform, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
@@ -21,6 +22,9 @@ type IoniconName = keyof typeof Ionicons.glyphMap;
 
 interface PremiumScreenProps {
   onClose?: () => void;
+  analyticsSource?: string;
+  analyticsExperiment?: string;
+  analyticsVariant?: string;
 }
 
 export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
@@ -239,10 +243,10 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* ── Value Propositions ── */}
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
-              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: '#C5B5A1' },
-              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: '#C5B5A1' },
-              { icon: 'sparkles-outline', title: 'Get more personal guidance', desc: 'Guidance shaped by your history, not just today\'s mood', color: '#C5B5A1' },
-              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: '#C5B5A1' },
+              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: '#C9AE78' },
+              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: '#C9AE78' },
+              { icon: 'sparkles-outline', title: 'Get more personal guidance', desc: 'Guidance shaped by your history, not just today\'s mood', color: '#C9AE78' },
+              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: '#C9AE78' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
@@ -288,9 +292,15 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   accessibilityState={{ selected: isSelected }}
                 >
                   {isAnnual ? (
-                    <View style={[styles.bestValueBadge, { backgroundColor: '#C5B5A1' }]}>
+                    <LinearGradient
+                      colors={[...metallicFillColors]}
+                      locations={[...metallicFillPositions]}
+                      start={[0, 0]}
+                      end={[1, 0]}
+                      style={styles.bestValueBadge}
+                    >
                       <Text style={styles.bestValueText}>BEST FOR GROWTH</Text>
-                    </View>
+                    </LinearGradient>
                   ) : (
                     <View style={styles.pricingBadgePlaceholder} />
                   )}
@@ -305,7 +315,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                     {tier.price}
                   </Text>
                   {isSelected ? (
-                    <MetallicText color="#C5B5A1" style={[styles.pricingMeta, styles.pricingMetaSelected]}>
+                    <MetallicText color="#D4B872" style={[styles.pricingMeta, styles.pricingMetaSelected]}>
                       {isAnnual ? 'Build your pattern archive all year' : 'Flexible monthly access'}
                     </MetallicText>
                   ) : (
@@ -369,7 +379,13 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                 (loading || restoring) && { opacity: 0.7 },
               ]}
             >
-              <View style={[styles.ctaGradient, { backgroundColor: '#C5B5A1' }]}>
+              <LinearGradient
+                colors={[...metallicFillColors]}
+                locations={[...metallicFillPositions]}
+                start={[0, 0]}
+                end={[1, 1]}
+                style={styles.ctaGradient}
+              >
                 {loading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
@@ -377,7 +393,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                     {`Continue with ${selectedTier?.name ?? 'your plan'}`}
                   </Text>
                 )}
-              </View>
+              </LinearGradient>
             </Pressable>
           </Animated.View>
 
@@ -513,7 +529,7 @@ const styles = StyleSheet.create({
     borderRadius: 58,
     borderWidth: 1,
     borderColor: 'rgba(201, 174, 120, 0.18)',
-    shadowColor: '#C5B5A1',
+    shadowColor: '#C9AE78',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.35,
     shadowRadius: 18,
@@ -540,9 +556,10 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '700',
     color: theme.textPrimary,
-    letterSpacing: -0.5,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    letterSpacing: 0.3,
     marginBottom: 8,
     textAlign: 'center',
     lineHeight: 34,
@@ -581,6 +598,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 4,
   },
   valueDesc: {
@@ -638,7 +656,7 @@ const styles = StyleSheet.create({
   pricingCardSelected: {
     borderColor: 'rgba(212, 184, 114, 0.35)',
     backgroundColor: 'rgba(212, 184, 114, 0.04)',
-    shadowColor: '#C5B5A1',
+    shadowColor: '#D4B872',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -681,7 +699,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   pricingMetaSelected: {
-    color: '#C5B5A1',
+    color: '#D4B872',
   },
   lifetimeSectionLabel: {
     fontSize: 11,
@@ -797,7 +815,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#C5B5A1',
+    shadowColor: '#C9AE78',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,
@@ -814,6 +832,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: '#3A2A10',
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   ctaHint: {
     marginTop: 12,
@@ -852,9 +871,10 @@ const styles = StyleSheet.create({
   // ── Already premium state ──
   title: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '700',
     color: theme.textPrimary,
-    letterSpacing: -0.5,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    letterSpacing: 0.3,
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
   },

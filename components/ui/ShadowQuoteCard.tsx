@@ -24,7 +24,7 @@ interface ShadowQuoteCardProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 28,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     opacity: 0.95,
     letterSpacing: 0.2,
   },
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 24,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     opacity: 0.8,
   },
   footerContainer: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 22,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     opacity: 0.7,
   },
 });

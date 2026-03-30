@@ -48,7 +48,7 @@ const HOLD_MS = 1800;    // milliseconds required to hold
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
-const GOLD    = '#C5B5A1';
+const GOLD    = '#D9BF8C';
 const EMERALD = '#6EBF8B';
 const BG      = '#020817';
 

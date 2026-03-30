@@ -204,7 +204,7 @@ export default function NotificationSettings() {
                 {unknown ? '—' : formatTime(time)}
               </Text>
             ) : (
-              <MetallicText color="#C5B5A1" style={styles.timeText}>
+              <MetallicText color="#D9BF8C" style={styles.timeText}>
                 {formatTime(time)}
               </MetallicText>
             )}
@@ -225,7 +225,7 @@ export default function NotificationSettings() {
             />
             {Platform.OS === 'ios' && (
               <Pressable style={styles.doneButton} onPress={confirmIOSTime}>
-                <MetallicText color="#C5B5A1" style={styles.doneText}>Done</MetallicText>
+                <MetallicText color="#D9BF8C" style={styles.doneText}>Done</MetallicText>
               </Pressable>
             )}
           </View>
@@ -236,7 +236,7 @@ export default function NotificationSettings() {
         {/* Unknown time option */}
         <Pressable style={styles.unknownRow} onPress={() => toggleUnknown(slot)}>
           <View style={[styles.checkbox, unknown && styles.checkboxActive]}>
-            {unknown && <MetallicText color="#C5B5A1" style={styles.checkmark}>✓</MetallicText>}
+            {unknown && <MetallicText color="#D9BF8C" style={styles.checkmark}>✓</MetallicText>}
           </View>
           <Text style={styles.unknownLabel}>
             {isMorning ? "I don't know my wake time" : "I don't know my evening routine"}
@@ -280,7 +280,7 @@ export default function NotificationSettings() {
             <Switch
               value={isRhythmEnabled}
               onValueChange={toggleRhythm}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#C5B5A1' }}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#D9BF8C' }}
               thumbColor={isRhythmEnabled ? '#050507' : '#FFF'}
               ios_backgroundColor="rgba(255,255,255,0.1)"
             />
@@ -318,14 +318,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 8,
   },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)' },
+  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   backArrow: { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 40 },
   headerTitle: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     color: '#FFFFFF',
-    
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
-    marginBottom: 8,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
 
   content: { paddingHorizontal: 24, paddingTop: 20 },
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     backgroundColor: 'transparent',
   },
-  timeText: { fontSize: 15, color: '#C5B5A1', fontWeight: '500', letterSpacing: 0.5 },
+  timeText: { fontSize: 15, color: '#D9BF8C', fontWeight: '500', letterSpacing: 0.5 },
 
   picker: { marginTop: 8 },
   doneButton: {
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'rgba(217,191,140,0.12)',
   },
-  doneText: { color: '#C5B5A1', fontSize: 14, fontWeight: '600' },
+  doneText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },
 
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 16 },
 
@@ -394,17 +395,17 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   checkboxActive: {
-    borderColor: '#C5B5A1',
+    borderColor: '#D9BF8C',
     backgroundColor: 'rgba(217,191,140,0.15)',
   },
-  checkmark: { fontSize: 12, color: '#C5B5A1', lineHeight: 14 },
+  checkmark: { fontSize: 12, color: '#D9BF8C', lineHeight: 14 },
   unknownLabel: { fontSize: 13, color: 'rgba(255,255,255,0.45)', flex: 1 },
 
   privacyNote: {
     marginTop: 28,
     fontSize: 12,
     color: 'rgba(255,255,255,0.3)',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontStyle: 'italic',
     textAlign: 'center',
     paddingHorizontal: 16,

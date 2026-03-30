@@ -23,13 +23,13 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#D4B872',
   silverBlue: '#8BC4E8',
   amethyst: '#9D76C1',
   bg: '#0A0A0C',
-  textMain: '#F5F5F7',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.45)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 export default function CheckInHub() {
@@ -146,11 +146,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   title: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
-    marginBottom: 8,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,

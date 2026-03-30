@@ -8,6 +8,7 @@ import {
   Dimensions,
   PanResponder,
   ActivityIndicator,
+  Platform,
   TextInput,
 } from 'react-native';
 import SkiaMoodSealButton from '../../components/ui/SkiaMoodSealButton';
@@ -31,6 +32,7 @@ import { MetallicIcon } from '../../components/ui/MetallicIcon';
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
 const CARD_INNER_W = width - 88;
+const FONT_SERIF = Platform.select({ ios: 'Georgia', android: 'serif' });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -479,9 +481,9 @@ export default function MoodCheckIn() {
   };
   const ALL_SLOTS: { key: string; label: string; iconName: keyof typeof Ionicons.glyphMap; iconColor: string }[] = [
     { key: 'morning',   label: 'Morning',   iconName: 'sunny-outline',         iconColor: '#F0C87E' },
-    { key: 'afternoon', label: 'Afternoon', iconName: 'partly-sunny-outline',  iconColor: '#C5B5A1' },
+    { key: 'afternoon', label: 'Afternoon', iconName: 'partly-sunny-outline',  iconColor: '#D9BF8C' },
     { key: 'evening',   label: 'Evening',   iconName: 'cloudy-night-outline',  iconColor: '#A89BC8' },
-    { key: 'night',     label: 'Night',     iconName: 'moon-outline',          iconColor: '#C5B5A1' },
+    { key: 'night',     label: 'Night',     iconName: 'moon-outline',          iconColor: '#C9AE78' },
   ];
 
   return (
@@ -561,7 +563,7 @@ export default function MoodCheckIn() {
 
         {/* 1–10 Haptic Sliders */}
         <View style={styles.slidersContainer}>
-          <CustomHapticSlider title="Mood" value={mood} setValue={setMood} color="#C5B5A1" labels={['Low', 'Neutral', 'High']} />
+          <CustomHapticSlider title="Mood" value={mood} setValue={setMood} color="#D9BF8C" labels={['Low', 'Neutral', 'High']} />
           <View style={styles.divider} />
           <CustomHapticSlider title="Energy" value={energy} setValue={setEnergy} color="#6E8CB4" labels={['Exhausted', 'Steady', 'Energized']} />
           <View style={styles.divider} />
@@ -685,7 +687,7 @@ export default function MoodCheckIn() {
           {ALL_SLOTS.map(({ key, label, iconName, iconColor }) => {
             const isDone      = completedSlots.includes(key);
             const isSelected  = key === selectedSlot;
-            const activeColor = isDone ? '#C5B5A1' : isSelected ? iconColor : 'rgba(255,255,255,0.22)';
+            const activeColor = isDone ? '#C9AE78' : isSelected ? iconColor : 'rgba(255,255,255,0.22)';
             return (
               <Pressable
                 key={key}
@@ -873,10 +875,10 @@ const styles = StyleSheet.create({
 
   header: { flexDirection: 'row', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)', justifyContent: 'center', alignItems: 'center' },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  headerTitle: { fontSize: 34, letterSpacing: -0.5, color: '#F5F5F7', fontWeight: '800', marginBottom: 8 },
-  headerEditingBadge: { fontSize: 10, color: '#C5B5A1', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerEditingBadge: { fontSize: 10, color: '#D9BF8C', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },
   dateArrow: { padding: 4 },
@@ -884,7 +886,7 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
 
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#86868B', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.8, marginBottom: 16 },
 
   trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
@@ -897,7 +899,7 @@ const styles = StyleSheet.create({
 
   sliderWrapper: { width: '100%' },
   sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  sliderTitle: { fontSize: 16, color: '#FFF',  },
+  sliderTitle: { fontSize: 16, color: '#FFF', fontFamily: 'Georgia' },
   sliderValue: { fontSize: 18, fontWeight: 'bold' },
 
   trackContainer: { height: 32, justifyContent: 'center' },
@@ -927,7 +929,7 @@ const styles = StyleSheet.create({
   tagsSection: { marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201, 174, 120, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
-  premiumBadgeText: { color: '#C5B5A1', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
+  premiumBadgeText: { color: '#C9AE78', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
   lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.5)', fontStyle: 'italic', marginTop: 12 },
 
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
@@ -1015,7 +1017,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(201,174,120,0.12)',
   },
   slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: '600', letterSpacing: 0.5 },
-  slotLabelDone: { color: '#C5B5A1' },
+  slotLabelDone: { color: '#C9AE78' },
 
   emotionDropdownHeader: {
     marginBottom: 14,

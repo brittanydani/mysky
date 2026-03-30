@@ -70,7 +70,7 @@ export default function SanctuaryWorkspace() {
           <Text style={styles.iconText}>×</Text>
         </Pressable>
         <Pressable onPress={handleSeal} style={[styles.iconButton, { marginRight: 8 }]}>
-          <MetallicText style={styles.sealIconText} color="#C5B5A1">⚲</MetallicText>
+          <MetallicText style={styles.sealIconText} color="#D9BF8C">⚲</MetallicText>
         </Pressable>
       </View>
       <View style={[styles.titleArea, isKeyboardVisible && { opacity: 0.3 }]}>
@@ -86,7 +86,7 @@ export default function SanctuaryWorkspace() {
           autoFocus
           value={entryText}
           onChangeText={setEntryText}
-          selectionColor="#C5B5A1"
+          selectionColor="#D9BF8C"
           textAlignVertical="top"
         />
 
@@ -107,8 +107,8 @@ export default function SanctuaryWorkspace() {
             style={({ pressed }) => [styles.aiPromptButton, pressed && { opacity: 0.7 }]}
             onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
           >
-            <MetallicText style={styles.aiPromptIcon} color="#C5B5A1">✧</MetallicText>
-            <MetallicText style={styles.aiPromptText} color="#C5B5A1">Prompt Me</MetallicText>
+            <MetallicText style={styles.aiPromptIcon} color="#D9BF8C">✧</MetallicText>
+            <MetallicText style={styles.aiPromptText} color="#D9BF8C">Prompt Me</MetallicText>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -124,18 +124,18 @@ const styles = StyleSheet.create({
   titleArea: { paddingHorizontal: 24, paddingBottom: 16 },
   iconButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 22 },
   iconText: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  sealIconText: { color: '#C5B5A1', fontSize: 20, transform: [{ rotate: '45deg' }] },
-  headerTitle: { fontSize: 34, letterSpacing: -0.5, color: '#F5F5F7',  fontWeight: '800', marginBottom: 8 },
+  sealIconText: { color: '#D9BF8C', fontSize: 20, transform: [{ rotate: '45deg' }] },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
 
   editorContainer: { flex: 1, paddingHorizontal: 24 },
-  textInput: { flex: 1, fontSize: 18, color: '#FFF',  lineHeight: 28, paddingTop: 20 },
+  textInput: { flex: 1, fontSize: 18, color: '#FFF', fontFamily: 'Georgia', lineHeight: 28, paddingTop: 20 },
 
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
   footerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  wordCount: { color: 'rgba(255,255,255,0.3)', fontSize: 12,  fontStyle: 'italic' },
+  wordCount: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontFamily: 'Georgia', fontStyle: 'italic' },
   autoSaveText: { color: '#8CBEAA', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, textTransform: 'uppercase' },
 
   aiPromptButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(217, 191, 140, 0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
-  aiPromptIcon: { color: '#C5B5A1', fontSize: 14, marginRight: 6 },
-  aiPromptText: { color: '#C5B5A1', fontSize: 12, fontWeight: '600' }
+  aiPromptIcon: { color: '#D9BF8C', fontSize: 14, marginRight: 6 },
+  aiPromptText: { color: '#D9BF8C', fontSize: 12, fontWeight: '600' }
 });

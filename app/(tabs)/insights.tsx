@@ -40,15 +40,15 @@ import { DailyAggregate, ChartProfile } from '../../services/insights/types';
 
 // ── Unified 5-Hub Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
-  silverBlue: '#C5B5A1',
+  gold: '#C9AE78',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
-  emerald: '#C5B5A1',
+  emerald: '#C9AE78',
   rose: '#D4A3B3',
   lavender: '#A89BC8',
   bg: '#0A0A0C',
-  textMain: '#F5F5F7',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  textMain: '#FFFFFF',
+  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 const CROSS_REF_ACCENT: Record<string, string> = {
@@ -485,17 +485,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 4,
   },
-  title: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: PALETTE.textMain,  marginBottom: 8 },
+  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5, marginBottom: 4 },
   subtitle: { fontSize: 14 },
 
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 18, color: PALETTE.textMain,  marginBottom: 16 },
+  sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16 },
 
   glassCard: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 8 },
 
   promptHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   promptEyebrow: { color: PALETTE.gold, fontSize: 10, fontWeight: '800', letterSpacing: 2 },
-  promptText: { color: PALETTE.textMain, fontSize: 20, lineHeight: 30,  marginBottom: 20 },
+  promptText: { color: PALETTE.textMain, fontSize: 20, lineHeight: 30, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 20 },
 
   actionRow: { flexDirection: 'row', gap: 12 },
   actionPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 16, borderWidth: 1 },
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   terrainContainer: { borderRadius: 24, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.3)', borderWidth: 1, borderColor: PALETTE.glassBorder },
 
   patternLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-  patternTitle: { fontSize: 18, color: PALETTE.textMain,  marginBottom: 8 },
+  patternTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
   insightLabel: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, marginBottom: 12 },
   insightBody: { color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 24 },
 

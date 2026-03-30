@@ -1,9 +1,10 @@
 // File: app/settings/index.tsx
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform, Alert, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Platform, Alert, ActivityIndicator, Linking, DeviceEventEmitter } from 'react-native';
 import { useRouter, Href } from 'expo-router';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { MetallicText } from '../../components/ui/MetallicText';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -16,6 +17,7 @@ import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStor
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { BackupService } from '../../services/storage/backupService';
+import { secureStorage } from '../../services/storage/secureStorage';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { usePremium } from '../../context/PremiumContext';
@@ -209,6 +211,8 @@ export default function SettingsHub() {
       await IdentityVault.destroyIdentity();
       await FieldEncryptionService.destroyDek();
       await localDb.hardDeleteAllData();
+      // 3. Clear consent records so terms/privacy are shown during re-onboarding
+      await secureStorage.deleteAllUserData();
       await Promise.all([
         EncryptedAsyncStorage.removeItem('msky_user_name'),
         EncryptedAsyncStorage.removeItem('@mysky:archetype_profile'),
@@ -219,10 +223,12 @@ export default function SettingsHub() {
         EncryptedAsyncStorage.removeItem('@mysky:daily_reflections'),
         AsyncStorage.removeItem('@mysky:core_values'),
       ]);
-      // 3. Sign out (session is already invalid after deletion)
+      // 4. Sign out (session is already invalid after deletion)
       await signOut();
       logger.info('[Settings] Account deleted and all data destroyed');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Reset gate state so consent modals appear immediately
+      DeviceEventEmitter.emit('CONSENT_WITHDRAWN');
       router.replace('/onboarding' as any);
     } catch (err) {
       logger.error('[Settings] Account deletion failed:', err);
@@ -255,7 +261,9 @@ export default function SettingsHub() {
       await FieldEncryptionService.destroyDek();
       // 3. Delete all rows from the SQLite database
       await localDb.hardDeleteAllData();
-      // 4. Clear sensitive AsyncStorage keys (encrypted personal data)
+      // 4. Clear consent records so terms/privacy are shown during re-onboarding
+      await secureStorage.deleteAllUserData();
+      // 5. Clear sensitive AsyncStorage keys (encrypted personal data)
       await Promise.all([
         EncryptedAsyncStorage.removeItem('msky_user_name'),
         EncryptedAsyncStorage.removeItem('@mysky:archetype_profile'),
@@ -267,12 +275,14 @@ export default function SettingsHub() {
         // Core values uses plain AsyncStorage (not encrypted)
         AsyncStorage.removeItem('@mysky:core_values'),
       ]);
-      // 5. Sign out of Supabase
+      // 6. Sign out of Supabase
       await signOut();
 
       logger.info('[Settings] Hard reset complete — all data destroyed');
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Reset gate state so consent modals appear immediately
+      DeviceEventEmitter.emit('CONSENT_WITHDRAWN');
       // Replace the entire navigation stack with onboarding
       router.replace('/onboarding' as any);
     } catch (err) {
@@ -462,13 +472,17 @@ const SettingsRow = ({
   >
     <View style={styles.rowIconContainer}>
       {icon.includes('-') ? (
-        <Ionicons name={icon as any} size={16} color="#C5B5A1" />
+        <Ionicons name={icon as any} size={16} color="#D9BF8C" />
       ) : (
         <Text style={styles.rowIcon}>{icon}</Text>
       )}
     </View>
     <View style={styles.rowTextContainer}>
-      <Text style={[styles.rowTitle, danger && { color: '#FF453A' }]}>{title}</Text>
+      {danger ? (
+        <MetallicText color="#FF453A" style={styles.rowTitle}>{title}</MetallicText>
+      ) : (
+        <Text style={styles.rowTitle}>{title}</Text>
+      )}
       {subtitle && <Text style={styles.rowSubtitle}>{subtitle}</Text>}
     </View>
     <Text style={styles.chevron}>›</Text>
@@ -483,11 +497,12 @@ const styles = StyleSheet.create({
 
   header: { paddingTop: 80, paddingHorizontal: 24, paddingBottom: 20 },
   headerTitle: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     color: '#FFF',
-    
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
-    marginBottom: 8,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   headerSubtitle: { fontSize: 14 },
 
@@ -520,14 +535,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  rowIcon: { color: '#C5B5A1', fontSize: 16 },
+  rowIcon: { color: '#D9BF8C', fontSize: 16 },
   rowTextContainer: { flex: 1, justifyContent: 'center' },
   rowTitle: { fontSize: 16, color: '#FFF', fontWeight: '500', marginBottom: 2 },
   rowSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
   chevron: {
     fontSize: 24,
     color: 'rgba(255,255,255,0.2)',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginLeft: 16,
   },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginLeft: 72 },

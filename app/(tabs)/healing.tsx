@@ -31,13 +31,13 @@ import { MetallicText } from '../../components/ui/MetallicText';
 // ── Cinematic Palette ──
 const PALETTE = {
   emerald: '#6EBF8B',   // Healing / Growth
-  gold: '#C5B5A1',      // Core Values
+  gold: '#D9BF8C',      // Core Values
   lavender: '#A89BC8',  // Archetypes
   rose: '#D4A3B3',      // Relational
   silverBlue: '#8BC4E8',// Cognitive
-  textMain: '#F5F5F7',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.6)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#0A0A0C',
 };
 
@@ -277,17 +277,18 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
   headerTitle: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
-    marginBottom: 8,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   headerSubtitle: { fontSize: 14 },
 
   loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14 },
 
-  lockTitle: { fontSize: 24, color: PALETTE.textMain,  marginBottom: 12, textAlign: 'center' },
+  lockTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12, textAlign: 'center' },
   lockSub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   premiumBtn: {
     flexDirection: 'row',
@@ -300,20 +301,20 @@ const styles = StyleSheet.create({
   },
   premiumBtnText: { color: '#0A0A0C', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
 
-  emptyTitle: { fontSize: 24, color: PALETTE.textMain,  marginBottom: 12, textAlign: 'center' },
+  emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12, textAlign: 'center' },
   emptySub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   actionBtn: { borderWidth: 1, borderColor: PALETTE.glassBorder, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 28 },
   actionBtnText: { color: PALETTE.textMain, fontSize: 14, fontWeight: '600' },
 
   card: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 24, marginBottom: 24 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  cardEyebrow: { fontSize: 10, fontWeight: '700', color: '#86868B', textTransform: 'uppercase', letterSpacing: 2 },
-  cardTitle: { fontSize: 22, color: PALETTE.textMain,  marginBottom: 12 },
+  cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  cardTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12 },
   promptText: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, fontStyle: 'italic', marginBottom: 24 },
   bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 24 },
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
   affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  affirmationText: { fontSize: 15, color: '#C5B5A1', lineHeight: 22, fontStyle: 'italic',  },
+  affirmationText: { fontSize: 15, color: '#D9BF8C', lineHeight: 22, fontStyle: 'italic', fontFamily: 'Georgia' },
 });
 

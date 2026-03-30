@@ -226,7 +226,7 @@ export default function SleepDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#C5B5A1" />
+        <ActivityIndicator color="#D9BF8C" />
       </View>
     );
   }
@@ -250,9 +250,9 @@ export default function SleepDetailScreen() {
           hitSlop={8}
         >
           {saving ? (
-            <ActivityIndicator color="#C5B5A1" size="small" />
+            <ActivityIndicator color="#D9BF8C" size="small" />
           ) : (
-            <MetallicText color="#C5B5A1" style={styles.saveText}>Save</MetallicText>
+            <MetallicText color="#D9BF8C" style={styles.saveText}>Save</MetallicText>
           )}
         </Pressable>
       </View>
@@ -301,7 +301,7 @@ export default function SleepDetailScreen() {
             placeholder="Describe your journey through the subconscious..."
             placeholderTextColor="rgba(255,255,255,0.2)"
             multiline
-            selectionColor="#C5B5A1"
+            selectionColor="#D9BF8C"
             value={dreamText}
             onChangeText={setDreamText}
           />
@@ -309,32 +309,32 @@ export default function SleepDetailScreen() {
 
         {/* Premium AI section */}
         <View style={[styles.premiumSection, !isPremium && styles.lockedSection]}>
-          <MetallicLucideIcon icon={Sparkles} color="#C5B5A1" size={20} />
-          <MetallicText color="#C5B5A1" style={styles.premiumTitle}>Symbolic Interpretation</MetallicText>
+          <MetallicLucideIcon icon={Sparkles} color="#D9BF8C" size={20} />
+          <MetallicText color="#D9BF8C" style={styles.premiumTitle}>Symbolic Interpretation</MetallicText>
           {isPremium ? (
             interpreting ? (
-              <ActivityIndicator color="#C5B5A1" style={{ marginTop: 8 }} />
+              <ActivityIndicator color="#D9BF8C" style={{ marginTop: 8 }} />
             ) : interpretation ? (
               <View style={{ gap: 16, width: '100%' }}>
                 {/* Show AI result as primary when available, on-device as fallback */}
                 {aiResult ? (
                   <>
                     <Text style={styles.interpretationParagraph}>{aiResult.paragraph}</Text>
-                    <MetallicText color="#C5B5A1" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
+                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
                   </>
                 ) : aiLoading ? (
                   <>
                     <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                    <MetallicText color="#C5B5A1" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                     <View style={styles.aiLoadingRow}>
-                      <ActivityIndicator color="#C5B5A1" size="small" />
+                      <ActivityIndicator color="#D9BF8C" size="small" />
                       <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
                     </View>
                   </>
                 ) : (
                   <>
                     <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                    <MetallicText color="#C5B5A1" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                     {aiError && (
                       <Text style={styles.aiErrorText}>{aiError}</Text>
                     )}
@@ -350,7 +350,7 @@ export default function SleepDetailScreen() {
                     }
                   }}
                 >
-                  <MetallicText color="#C5B5A1" style={styles.rerunBtnText}>RE-INTERPRET</MetallicText>
+                  <MetallicText color="#D9BF8C" style={styles.rerunBtnText}>RE-INTERPRET</MetallicText>
                 </Pressable>
               </View>
             ) : (
@@ -396,21 +396,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 34, letterSpacing: -0.5, color: '#F5F5F7', 
-    fontWeight: '800', marginBottom: 8,
+    fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
+    fontWeight: '800', letterSpacing: -0.5, marginBottom: 4,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
-  saveText: { color: '#C5B5A1', fontSize: 14, fontWeight: '600' },
+  saveText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },
   scrollPadding: { padding: 24, paddingTop: 8 },
 
   metaRow: { marginBottom: 24 },
   metaDate: {
-    color: 'rgba(255,255,255,0.6)', fontSize: 13, 
+    color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: 'Georgia',
     fontStyle: 'italic', marginBottom: 8,
   },
   qualityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   qualityLabel: {
-    color: '#6E8CB4', fontSize: 12, 
+    color: '#6E8CB4', fontSize: 12, fontFamily: 'Georgia',
     fontStyle: 'italic', marginLeft: 6,
   },
 
@@ -421,18 +421,18 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   label: { fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 2 },
   fullInput: {
-    color: '#FFF', fontSize: 16, 
+    color: '#FFF', fontSize: 16, fontFamily: 'Georgia',
     lineHeight: 26, textAlignVertical: 'top', minHeight: 250,
   },
 
   premiumSection: {
     alignItems: 'center', padding: 32, borderRadius: 24,
-    borderWidth: 1, borderColor: '#C5B5A1',
+    borderWidth: 1, borderColor: '#D9BF8C',
     backgroundColor: 'rgba(217,191,140,0.04)', gap: 12,
   },
   lockedSection: { borderStyle: 'dashed' },
   premiumTitle: {
-    color: '#C5B5A1', fontSize: 16,  textAlign: 'center',
+    color: '#D9BF8C', fontSize: 16, fontFamily: 'Georgia', textAlign: 'center',
   },
   premiumBody: {
     color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center', lineHeight: 20,
@@ -441,10 +441,10 @@ const styles = StyleSheet.create({
 
   interpretationParagraph: {
     color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 24,
-     fontStyle: 'italic',
+    fontFamily: 'Georgia', fontStyle: 'italic',
   },
   reflectionQuestion: {
-    color: '#C5B5A1', fontSize: 14, 
+    color: '#D9BF8C', fontSize: 14, fontFamily: 'Georgia',
     fontStyle: 'italic', lineHeight: 22,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(217,191,140,0.2)',
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end', paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)',
   },
-  rerunBtnText: { color: '#C5B5A1', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  rerunBtnText: { color: '#D9BF8C', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
 
   // AI Gemini interpretation
   aiSection: { marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(217,191,140,0.2)', width: '100%' },

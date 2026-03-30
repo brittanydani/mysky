@@ -44,7 +44,7 @@ export default function OnboardingIndex() {
           value={name}
           onChangeText={setName}
           autoFocus
-          selectionColor="#C5B5A1"
+          selectionColor="#D9BF8C"
           returnKeyType="done"
           onSubmitEditing={handleContinue}
           maxLength={60}
@@ -70,8 +70,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
-  title: { fontSize: 34, fontWeight: '800', color: '#F5F5F7', marginBottom: 40,  letterSpacing: 1 },
-  input: { fontSize: 32, color: '#C5B5A1', borderBottomWidth: 1, borderColor: 'rgba(217,191,140,0.3)', paddingBottom: 16,  },
+  title: { fontSize: 34, fontWeight: '800', color: '#FFF', marginBottom: 40, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5 },
+  input: { fontSize: 32, color: '#D9BF8C', borderBottomWidth: 1, borderColor: 'rgba(217,191,140,0.3)', paddingBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) },
   footer: { paddingHorizontal: 32, paddingBottom: 60 },
 
 });

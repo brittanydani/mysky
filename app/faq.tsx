@@ -55,7 +55,7 @@ export default function FAQScreen() {
             <Ionicons name="help-circle-outline" size={132} color={theme.textGold} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: March 15, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 30, 2026</Text>
 
           <View style={styles.faqSection}>
             <View style={styles.faqCard}>
@@ -162,6 +162,106 @@ export default function FAQScreen() {
             <Text style={styles.answer}>
               We may update our Terms of Use or Privacy Policy from time to time. When material changes are made, the "Last updated" date will be revised and — if the change affects how your data is processed — we will re-request your consent within the app. We encourage you to review these documents periodically.
             </Text>
+
+            <Text style={styles.question}>What is the Daily Reflection feature?</Text>
+            <Text style={styles.answer}>
+              Daily Reflection provides a rotating set of guided self-inquiry prompts drawn from a curated question library. The prompts are presented alongside your current astrological context (moon phase, active transits) to help you notice patterns connected to real-time cycles. All reflection data stays on your device and is encrypted at rest.
+            </Text>
+
+            <Text style={styles.question}>How does the Energy Tracking system work?</Text>
+            <Text style={styles.answer}>
+              MySky tracks your energy across five domains — Physical, Emotional, Mental, Social, and Spiritual. Free users see 2 rotating domains at a time; Deeper Sky unlocks all 5 simultaneously. Daily energy readings are paired with affirmation content and can be correlated with your check-in data over time to reveal energy patterns.
+            </Text>
+
+            <Text style={styles.question}>What is the Balance Dashboard?</Text>
+            <Text style={styles.answer}>
+              The Balance Dashboard aggregates your mood, energy, stress, and sleep data into a unified daily snapshot. It shows trends over time, highlights correlations between different data points (e.g., sleep quality vs. mood), and surfaces patterns you might not notice on your own. All correlation calculations happen on your device.
+            </Text>
+
+            <Text style={styles.question}>What is the Personal Story feature?</Text>
+            <Text style={styles.answer}>
+              Personal Story organizes your natal chart into narrative chapters — up to 10 total — covering themes like identity, emotional landscape, communication style, relationships, and purpose. Free users access 3 chapters; Deeper Sky unlocks all 10. Story content is generated from your birth data using on-device interpretation engines, not AI.
+            </Text>
+
+            <Text style={styles.question}>How does the Somatic Body Map work?</Text>
+            <Text style={styles.answer}>
+              The Somatic Map lets you log where you feel emotions in your body — selecting body regions, tagging linked emotions, and rating intensity. Over time, it builds a visual map of your embodied emotional patterns. This is among the most sensitive data in the app and is encrypted with <Text style={styles.highlight}>AES-256-GCM</Text>. It is never transmitted to any server.
+            </Text>
+
+            <Text style={styles.question}>What is the Trigger Log / Nervous System Profile?</Text>
+            <Text style={styles.answer}>
+              The Trigger Log helps you track emotional triggers, dysregulation patterns, and restoring practices. Over time it builds a personal nervous system profile showing what activates you, what helps you return to baseline, and how your window of tolerance shifts. All entries are encrypted at rest and never leave your device.
+            </Text>
+
+            <Text style={styles.question}>What are Relationship Patterns?</Text>
+            <Text style={styles.answer}>
+              Relationship Patterns is a self-reflection tool for tracking recurring relational dynamics — communication tendencies, attachment observations, and interpersonal patterns you notice over time. This is separate from the synastry chart feature and does not use birth data. All entries are stored locally and encrypted.
+            </Text>
+
+            <Text style={styles.question}>How do Relationship / Synastry Charts work?</Text>
+            <Text style={styles.answer}>
+              You can add a partner's birth data to generate a synastry chart showing planetary aspects between your charts. Free users get 1 relationship chart; Deeper Sky unlocks unlimited. Partner birth data is stored locally and encrypted with the same <Text style={styles.highlight}>AES-256-GCM</Text> encryption as your own data. All astrological calculations happen on-device.
+            </Text>
+
+            <Text style={styles.question}>What is the Inner World / Inner Tensions feature?</Text>
+            <Text style={styles.answer}>
+              Inner World visualizes the psychological forces at play in your chart — conflicting drives, unresolved tensions, and growth edges. Inner Tensions maps specific chart aspects that create internal friction (e.g., a square between your Moon and Saturn). These features use on-device chart analysis and are available to Deeper Sky subscribers.
+            </Text>
+
+            <Text style={styles.question}>What is the Sanctuary space?</Text>
+            <Text style={styles.answer}>
+              Sanctuary is a calming, visually immersive space within the app designed for grounding and self-regulation. It includes a breathing ring for guided breathwork, pulse monitoring visualization, and ambient cosmic scenery. No data is collected or stored from the Sanctuary — it's a tool for present-moment awareness.
+            </Text>
+
+            <Text style={styles.question}>How does AI-Enhanced Dream Interpretation work?</Text>
+            <Text style={styles.answer}>
+              When available, dream text and selected dream feelings are sent to Google Gemini to generate a richer narrative interpretation that supplements the on-device symbolic engine. <Text style={styles.highlight}>No birth data, user identifiers, or other personal information is included.</Text> The on-device interpretation is always generated first, regardless of AI availability. This is a premium feature.
+            </Text>
+
+            <Text style={styles.question}>What are AI Pattern Insights?</Text>
+            <Text style={styles.answer}>
+              AI Pattern Insights use aggregated self-knowledge context — your dominant archetype, top core values, cognitive style summary, top somatic region, top relationship pattern tags, and check-in averages — to generate personalized cross-domain reflections via Google Gemini. <Text style={styles.highlight}>Raw journal text, birth data, dream content, and personal notes are never transmitted.</Text> This is a premium feature.
+            </Text>
+
+            <Text style={styles.question}>What is the Growth & Healing Journey feature?</Text>
+            <Text style={styles.answer}>
+              The Growth screen tracks your personal development journey based on patterns surfaced from your check-ins, journal entries, and self-discovery data. The Healing Journey explores sensitive growth areas connected to your chart (e.g., Chiron wound work, lunar node path). Both use on-device analysis and are part of the Deeper Sky experience.
+            </Text>
+
+            <Text style={styles.question}>How does the Daily Guidance / Today feed work?</Text>
+            <Text style={styles.answer}>
+              The Today screen delivers a personalized daily content loop including moon phase awareness, active transit context, energy readings, reflection prompts, and guidance tied to your chart. Free users get basic daily context; Deeper Sky unlocks personalized guidance with action steps. Content is generated on-device using your natal data and current planetary positions.
+            </Text>
+
+            <Text style={styles.question}>What is the Circadian Rhythm tracking?</Text>
+            <Text style={styles.answer}>
+              MySky tracks circadian patterns by analyzing the timing of your check-ins and sleep data over time. This helps surface when during the day you tend to feel most energized, most creative, or most drained. All analysis happens locally on your device.
+            </Text>
+
+            <Text style={styles.question}>Can I customize my chart settings?</Text>
+            <Text style={styles.answer}>
+              Yes. You can choose between multiple house systems (Placidus, Koch, Whole Sign, Equal House, Campanus, Regiomontanus, Topocentric) and adjust display preferences through the Astrology Settings and Calibration screens. If your birth time is unknown, MySky uses a specialized handler that adjusts interpretations accordingly.
+            </Text>
+
+            <Text style={styles.question}>How do notifications work?</Text>
+            <Text style={styles.answer}>
+              MySky can send optional local notifications for daily check-in reminders and reflection prompts. All notifications are scheduled on-device — no push notification server is used. You can configure or disable notifications in Settings.
+            </Text>
+
+            <Text style={styles.question}>What are my legal rights regarding my data?</Text>
+            <Text style={styles.answer}>
+              Under GDPR, CCPA/CPRA, and applicable privacy law you have the right to: access all data stored about you, export your data in a portable format, correct inaccurate data, delete all data permanently, withdraw processing consent, object to processing, restrict processing, and lodge a complaint with a supervisory authority. California residents have additional rights including the right to know what categories of personal information are collected, the right to opt out of sales (MySky never sells your data), and the right to limit use of sensitive personal information. See our full Privacy Policy for details.
+            </Text>
+
+            <Text style={styles.question}>Does MySky use cookies or web tracking?</Text>
+            <Text style={styles.answer}>
+              No. MySky does not use cookies, web beacons, or browser-based tracking technologies. All data is stored in a local SQLite database and the device's SecureStore. No web-based session tracking occurs.
+            </Text>
+
+            <Text style={styles.question}>What happens in a data breach?</Text>
+            <Text style={styles.answer}>
+              In the unlikely event of a data breach affecting personal information held on our servers (limited to Supabase authentication data for users who created an account), we will notify affected users within 72 hours in accordance with GDPR and applicable law. Because nearly all your data is stored exclusively on your device and never transmitted, the risk of a server-side breach affecting personal content is extremely limited.
+            </Text>
               </View>
           </View>
         </ScrollView>
@@ -187,12 +287,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     justifyContent: 'center',
-    alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)',
+    alignItems: 'center',
   },
   headerTitle: { 
     fontSize: 16,
     color: '#FFF',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 2,
     textTransform: 'uppercase',
     opacity: 0.6,
@@ -227,7 +327,7 @@ const styles = StyleSheet.create({
     fontSize: 19,
     fontWeight: '700',
     color: theme.textGold,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginTop: 24,
     marginBottom: 8,
     lineHeight: 26,

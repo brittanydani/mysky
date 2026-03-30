@@ -54,7 +54,15 @@ export default function PrivacyPolicyScreen() {
             <Ionicons name="shield-checkmark-outline" size={132} color={theme.textGold} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: March 28, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: March 30, 2026</Text>
+
+          {/* ── Data Controller ── */}
+          <LinearGradient colors={[theme.cardGradientStart, theme.cardGradientEnd]} style={styles.glassSection}>
+            <Text style={styles.sectionTitle}>Data Controller</Text>
+            <Text style={styles.paragraph}>
+              MySky is developed and operated by Brittany Apps ("we," "us," or "our"). For questions or requests regarding your personal data, contact us at {SUPPORT_EMAIL}.
+            </Text>
+          </LinearGradient>
 
           {/* ── Section Wrapper Helper ── */}
           <LinearGradient colors={[theme.cardGradientStart, theme.cardGradientEnd]} style={styles.glassSection}>
@@ -109,12 +117,28 @@ export default function PrivacyPolicyScreen() {
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Premium AI Features (Optional)</Text>
-              <Text style={styles.paragraph}>MySky includes optional AI-powered features that transmit data to external services. AI Reflection Insights requires both a Deeper Sky subscription and account creation: aggregated behavioral statistics (mood/stress/energy trends, top tags, correlation data) are sent to a Supabase Edge Function which calls Anthropic Claude. Rate limited to 5 requests per hour. AI-enhanced dream interpretations send dream text and selected dream feelings to Google Gemini. AI pattern insights send aggregated self-knowledge context (dominant archetype, top core values, cognitive style summary, top somatic pattern, top relationship pattern tags, and check-in averages) to Google Gemini. For all AI features, raw journal text, birth data, and user identifiers are never transmitted.</Text>
+              <Text style={styles.paragraph}>MySky includes two optional AI-powered features that transmit data to external services:</Text>
+              <Text style={styles.paragraph}><Text style={styles.boldText}>AI Reflection Insights</Text> — Requires both a Deeper Sky subscription and account creation. Aggregated behavioral statistics (mood/stress/energy trends, top tags, correlation data) are sent to a Supabase Edge Function which calls Anthropic Claude. Raw journal text, birth data, dream content, and personal notes are never transmitted. Rate limited to 5 requests per hour, enforced server-side.</Text>
+              <Text style={styles.paragraph}><Text style={styles.boldText}>AI-Enhanced Dream Interpretations</Text> — When available, dream text and selected dream feelings are sent to Google Gemini to generate a richer narrative interpretation. No birth data, user identifiers, or other personal information is included. This supplements the on-device dream engine; the on-device interpretation is always generated first regardless of AI availability.</Text>
+              <Text style={styles.paragraph}><Text style={styles.boldText}>AI Pattern Insights</Text> — When available, aggregated self-knowledge context (dominant archetype, top core values, cognitive style summary, top somatic pattern region, top relationship pattern tags, and behavioral check-in averages) is sent to Google Gemini to generate personalized pattern reflections. Raw journal text, birth data, dream content, and personal notes are never transmitted.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>iOS Widgets</Text>
               <Text style={styles.paragraph}>If you use MySky's iOS home screen widgets, recent check-in data (mood, energy, and sleep scores) is shared with the widget extension via a sandboxed App Group container on your device. This data never leaves your device and is not transmitted to any server.</Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Legal Basis for Processing (GDPR)</Text>
+            <Text style={styles.paragraph}>We process your personal data under the following legal bases:</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Consent (Art. 6(1)(a) GDPR):</Text> We collect and process your personal data only after you provide explicit consent via the in-app privacy consent flow. You may withdraw consent at any time via Privacy Settings.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Performance of a Contract (Art. 6(1)(b) GDPR):</Text> When you subscribe to Deeper Sky, we process subscription-related data (via Apple and RevenueCat) to fulfill our contractual obligations.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Legitimate Interest (Art. 6(1)(f) GDPR):</Text> We maintain security audit logs and tamper detection to protect the integrity of your locally stored data.</Text>
+
+            <View style={[styles.dataBlock, { marginTop: 16 }]}>
+              <Text style={styles.subSectionTitle}>Special Category Data</Text>
+              <Text style={styles.paragraph}>Certain data you may enter — such as emotional states, somatic body sensations, nervous system triggers, and psychological self-assessments — may constitute special category data under GDPR Article 9. We process this data solely on the basis of your explicit consent and store it exclusively on your device with AES-256-GCM encryption. This data is never transmitted to any server.</Text>
             </View>
           </View>
 
@@ -126,7 +150,7 @@ export default function PrivacyPolicyScreen() {
                 <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Encryption at Rest</Text>
               </View>
               <Text style={styles.paragraph}>
-                Sensitive fields — journal content, titles, birth places, dream text, mood/stress/energy scores, emotional tags, check-in notes, wins, challenges, and NLP results — use <Text style={styles.highlight}>AES-256-GCM</Text> field-level encryption. The data encryption key is stored in your device's hardware-backed SecureStore (iOS Keychain / Android Keystore).
+                Sensitive fields — journal content, titles, birth places, dream text, mood/stress/energy scores, emotional tags, check-in notes, wins, challenges, and NLP results — use <Text style={styles.highlight}>AES-256-GCM</Text> field-level encryption. The data encryption key is stored in your device's hardware-backed SecureStore (iOS Keychain).
               </Text>
             </LinearGradient>
 
@@ -155,15 +179,26 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.sectionTitle}>Third-Party Services</Text>
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>RevenueCat:</Text> Device identifier generated by the RevenueCat SDK for subscription and in-app purchase verification. No personal data is shared.</Text>
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>OpenStreetMap Nominatim:</Text> Birth city text sent for geocoding to coordinates. Only the city name string is transmitted.</Text>
-            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Supabase:</Text> Account creation (email/password) required for AI Reflection Insights. Session tokens stored in device secure storage.</Text>
-            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Anthropic Claude:</Text> AI Reflection Insights via Supabase Edge Function. Receives only aggregated behavioral stats — never raw text, birth data, or personal notes. API key lives exclusively in the Edge Function environment.</Text>
-            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Google Gemini:</Text> AI-enhanced dream interpretations (dream text and feelings) and pattern insights (aggregated self-knowledge context). No birth data, user identifiers, or raw journal text is transmitted.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Supabase:</Text> Account creation (email/password) required for AI Reflection Insights. Session tokens stored in device secure storage. Supabase servers are located in the United States.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Anthropic Claude:</Text> AI Reflection Insights via Supabase Edge Function. Receives only aggregated behavioral stats — never raw text, birth data, or personal notes. API key lives exclusively in the Edge Function environment. Anthropic servers are located in the United States.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Google Gemini:</Text> AI-enhanced dream interpretations and pattern insights. Dream text and feelings are sent for dream interpretations. Aggregated self-knowledge context (archetype, values, cognitive style, somatic patterns, relationship patterns, and check-in averages) is sent for pattern insights. No birth data, user identifiers, or raw journal text is transmitted. Google servers may be located in the United States or other countries.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Apple App Store:</Text> Processes all subscription and in-app purchase transactions. MySky does not directly collect or store any payment card or billing information.</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>International Data Transfers</Text>
+            <Text style={styles.paragraph}>
+              When you use optional AI-powered features, limited data is transmitted to servers located in the United States (Supabase, Anthropic) and potentially other countries (Google). These transfers are necessary to provide the requested service and are made on the basis of your explicit consent. All transmitted data is limited to the minimum necessary — no raw personal content, birth data, or identifying information is included.
+            </Text>
+            <Text style={styles.paragraph}>
+              For users in the European Economic Area (EEA), United Kingdom, or Switzerland: data transfers to the United States rely on your explicit consent under GDPR Article 49(1)(a) and, where available, the service providers' adherence to Standard Contractual Clauses (SCCs) or equivalent safeguards.
+            </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>No Tracking</Text>
             <Text style={styles.paragraph}>
-              MySky declares NSPrivacyTracking: false with an empty tracking domains list. No analytics SDKs (no Firebase, Amplitude, Mixpanel, Sentry, or Crashlytics) are included. No advertising identifiers are collected. Android explicitly blocks Camera, Microphone, Contacts, Calendar, SMS, Phone, and Location permissions.
+              MySky declares NSPrivacyTracking: false with an empty tracking domains list. No analytics SDKs (no Firebase, Amplitude, Mixpanel, Sentry, or Crashlytics) are included. No advertising identifiers are collected.
             </Text>
           </View>
 
@@ -177,9 +212,23 @@ export default function PrivacyPolicyScreen() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cookies and Local Storage</Text>
+            <Text style={styles.paragraph}>
+              MySky does not use cookies, web beacons, or browser-based tracking technologies. All data is stored in a local SQLite database and the device's SecureStore (iOS Keychain). No web-based session tracking occurs.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Automated Decision-Making</Text>
+            <Text style={styles.paragraph}>
+              MySky does not engage in automated decision-making or profiling that produces legal effects or similarly significant effects on users. All reflective content, pattern analysis, and interpretations are provided for self-awareness purposes only and carry no binding or consequential effect.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>Your Rights</Text>
             <Text style={styles.paragraph}>
-              Under GDPR, CCPA, and applicable privacy law, you have the following rights over your personal data:
+              Under GDPR, CCPA/CPRA, and applicable privacy law, you have the following rights over your personal data:
             </Text>
 
             <View style={styles.dataBlock}>
@@ -193,8 +242,8 @@ export default function PrivacyPolicyScreen() {
             </View>
 
             <View style={styles.dataBlock}>
-              <Text style={styles.subSectionTitle}>Right to Erasure</Text>
-              <Text style={styles.paragraph}>Delete all personal data at any time using the "Hard Reset" option in Privacy Settings. This permanently erases all data from SQLite and SecureStore with best-effort secure deletion. Uninstalling the app also erases all locally stored data.</Text>
+              <Text style={styles.subSectionTitle}>Right to Erasure ("Right to Be Forgotten")</Text>
+              <Text style={styles.paragraph}>Delete all personal data at any time using the "Hard Reset" option in Privacy Settings. This permanently erases all data from SQLite and SecureStore with best-effort secure deletion. Uninstalling the app also erases all locally stored data. If you created a Supabase account, you may request deletion of your authentication credentials by contacting us.</Text>
             </View>
 
             <View style={styles.dataBlock}>
@@ -204,33 +253,92 @@ export default function PrivacyPolicyScreen() {
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right to Withdraw Consent</Text>
-              <Text style={styles.paragraph}>Withdraw your data processing consent at any time via Privacy Settings. Existing data is preserved but no new personal data will be collected until consent is restored.</Text>
+              <Text style={styles.paragraph}>Withdraw your data processing consent at any time via Privacy Settings. Existing data is preserved but no new personal data will be collected until consent is restored. Withdrawal of consent does not affect the lawfulness of processing based on consent before its withdrawal.</Text>
             </View>
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Right to Restrict Processing</Text>
               <Text style={styles.paragraph}>Since all core processing happens on-device, you control it entirely. Withdrawing consent blocks all data writes until consent is restored.</Text>
             </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Object</Text>
+              <Text style={styles.paragraph}>You have the right to object to data processing based on legitimate interest. Since MySky processes nearly all data on-device under your explicit consent, this right is effectively exercised by withdrawing consent in Privacy Settings.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Lodge a Complaint</Text>
+              <Text style={styles.paragraph}>If you believe your data protection rights have been violated, you have the right to lodge a complaint with a supervisory authority. For users in the EEA, you may contact the data protection authority in your country of residence.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right of Non-Discrimination</Text>
+              <Text style={styles.paragraph}>We will not discriminate against you for exercising any of your privacy rights. Exercising your rights will not affect the quality or availability of the service.</Text>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>California Privacy Rights (CCPA/CPRA)</Text>
+            <Text style={styles.paragraph}>If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA) as amended by the California Privacy Rights Act (CPRA):</Text>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Categories of Personal Information</Text>
+              <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Identifiers:</Text> Email address (only if you create an optional account).</Text>
+              <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Personal records:</Text> Birth date, birth time, birth place (stored locally and encrypted).</Text>
+              <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Commercial information:</Text> Subscription status (managed by Apple and RevenueCat).</Text>
+              <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Geolocation data:</Text> Coarse location (timezone only, via on-device lookup).</Text>
+              <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Inferences:</Text> On-device pattern analysis for self-reflection; never transmitted.</Text>
+              <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Sensitive personal information:</Text> Emotional states, somatic data, psychological self-assessments (stored locally and encrypted; never transmitted except aggregated stats for opted-in AI features).</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Sale and Sharing</Text>
+              <Text style={styles.paragraph}>MySky does not sell your personal information. MySky does not share your personal information for cross-context behavioral advertising. We have not sold or shared personal information in the preceding 12 months.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Know, Delete, and Correct</Text>
+              <Text style={styles.paragraph}>Since all data is stored locally on your device, you can access, delete, and correct it directly via Privacy Settings and the app's editing features. For account data, contact us at {SUPPORT_EMAIL}.</Text>
+            </View>
+
+            <View style={styles.dataBlock}>
+              <Text style={styles.subSectionTitle}>Right to Limit Use of Sensitive Information</Text>
+              <Text style={styles.paragraph}>MySky uses sensitive personal information only for the purpose of providing the app's self-reflection features. No sensitive data is used for advertising, profiling, or any secondary purpose.</Text>
+            </View>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Retention</Text>
             <Text style={styles.paragraph}>
-              Your data is stored locally on your device for as long as you keep the app installed. Consent records expire after 365 days and will be re-requested. There is no server-side storage of personal data beyond optional Supabase authentication credentials.
+              Your data is stored locally on your device for as long as you keep the app installed. Consent records expire after 365 days and will be re-requested. There is no server-side storage of personal data beyond optional Supabase authentication credentials. If you delete your account, authentication data is removed from Supabase within 30 days.
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Children's Privacy</Text>
             <Text style={styles.paragraph}>
-              MySky is intended for users aged 17 and older. We do not knowingly collect personal information from children under 17. If we learn we have inadvertently collected data from a user under 17, we will take steps to delete that data promptly.
+              MySky is intended for users aged 17 and older. We do not knowingly collect personal information from children under 17. If we learn we have inadvertently collected data from a user under 17, we will take steps to delete that data promptly. If you are a parent or guardian and believe your child has provided personal information through the app, please contact us immediately.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Subscriptions & Payments</Text>
+            <Text style={styles.paragraph}>
+              MySky offers optional auto-renewable subscriptions and a lifetime purchase ("Deeper Sky") processed through Apple's App Store. Payment is charged to your Apple ID at confirmation of purchase. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. You can manage or cancel subscriptions in your device settings. MySky does not directly collect or store payment information — all transactions are handled by Apple.
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Data Breach Notification</Text>
+            <Text style={styles.paragraph}>
+              In the unlikely event of a data breach affecting your personal information held on our servers (Supabase authentication data), we will notify affected users within 72 hours of becoming aware of the breach, in accordance with GDPR Article 33 and applicable law. Because the vast majority of your data is stored exclusively on your device and never transmitted, the risk of a server-side breach affecting personal content is extremely limited.
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Changes to This Policy</Text>
             <Text style={styles.paragraph}>
-              We may update this Privacy Policy from time to time. When we make material changes, the "Last updated" date at the top of this page will be revised, and — if the change affects how your data is processed — we will re-request your privacy consent within the app. Continued use of MySky after a policy update constitutes acceptance of the revised terms.
+              We may update this Privacy Policy from time to time. When we make material changes, the "Last updated" date at the top of this page will be revised, and — if the change affects how your data is processed — we will re-request your privacy consent within the app. Continued use of MySky after a policy update constitutes acceptance of the revised terms. We encourage you to review this page periodically.
             </Text>
           </View>
 
@@ -267,11 +375,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', borderRadius: 22, backgroundColor: 'rgba(15, 15, 15, 0.45)', borderWidth: 1, borderColor: 'rgba(197, 181, 161, 0.25)' },
+  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { 
     fontSize: 16,
     color: '#FFF',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 2,
     textTransform: 'uppercase',
     opacity: 0.6,
@@ -298,7 +406,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     color: "#FFFFFF",
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 16,
     paddingLeft: 4,
   },

@@ -16,9 +16,8 @@
  */
 
 import { DailyAggregate, ChartProfile } from '../services/insights/types';
-import type { ConfidenceLevel } from './insightsEngine';
-import { ordinal } from './insightsEngine';
-import { mean, confidence } from './stats';
+import type { ConfidenceLevel } from './stats';
+import { mean, confidence, ordinal } from './stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared helpers

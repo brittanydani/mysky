@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   tooltipRow: {
     flexDirection: 'row',

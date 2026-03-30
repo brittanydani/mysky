@@ -47,7 +47,7 @@ const HOLD_MS  = 2500;    // milliseconds to hold before sealing
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
-const GOLD      = '#C5B5A1';
+const GOLD      = '#C9AE78';
 const EMERALD   = '#6EBF8B';
 const NAVY      = '#030C1E';
 

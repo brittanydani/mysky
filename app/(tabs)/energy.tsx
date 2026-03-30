@@ -84,11 +84,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
   },
   title: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     fontWeight: '800',
     color: theme.textPrimary,
-    
-    marginBottom: 8,
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,

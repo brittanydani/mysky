@@ -39,7 +39,7 @@ function formatHoursMinutes(hours: number): string {
 
 // ── Planet metadata ─────────────────────────────────────────────────────────
 const PLANET_META: Record<string, { symbol: string; color: string }> = {
-  Sun:     { symbol: '☉', color: '#C5B5A1' },
+  Sun:     { symbol: '☉', color: '#D4B872' },
   Moon:    { symbol: '☽', color: '#A8C0D6' },
   Mercury: { symbol: '☿', color: '#B0C4DE' },
   Venus:   { symbol: '♀', color: '#D4A0A0' },
@@ -253,8 +253,8 @@ export default function CosmicContext() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable onPress={handleBack} style={styles.backBtn}>
-          <MetallicIcon name="arrow-back-outline" size={20} color="#C5B5A1" />
-          <MetallicText style={styles.backText} color="#C5B5A1">Identity</MetallicText>
+          <MetallicIcon name="arrow-back-outline" size={20} color="#D4B872" />
+          <MetallicText style={styles.backText} color="#D4B872">Identity</MetallicText>
         </Pressable>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -270,7 +270,7 @@ export default function CosmicContext() {
             {moonInfo.name}{moonSign ? ` in ${moonSign}` : ''}
           </Text>
           {moonSign != null && moonDegree != null && (
-          <MetallicText style={styles.moonDegree} color="#C5B5A1">
+          <MetallicText style={styles.moonDegree} color="#D4B872">
               {SIGN_SYMBOL[moonSign] ?? ''} {moonDegree}° {moonSign}
             </MetallicText>
           )}
@@ -279,7 +279,7 @@ export default function CosmicContext() {
           {vocHours != null && vocHours < 24 && (
             <View style={styles.vocBadge}>
               <View style={styles.vocPulse} />
-              <MetallicText style={styles.vocText} color="#C5B5A1">
+              <MetallicText style={styles.vocText} color="#D4B872">
                 VOID-OF-COURSE IN {formatHoursMinutes(vocHours)}
               </MetallicText>
             </View>
@@ -320,12 +320,12 @@ export default function CosmicContext() {
                     hitSlop={4}
                   >
                     {isToday ? (
-                      <MetallicText style={styles.weekDayName} color="#C5B5A1">{dayName.toUpperCase()}</MetallicText>
+                      <MetallicText style={styles.weekDayName} color="#D4B872">{dayName.toUpperCase()}</MetallicText>
                     ) : (
                       <Text style={styles.weekDayName}>{dayName.toUpperCase()}</Text>
                     )}
                     {isToday ? (
-                      <MetallicText style={[styles.weekDayNum, { fontWeight: '800' }]} color="#C5B5A1">{dayNum}</MetallicText>
+                      <MetallicText style={[styles.weekDayNum, { fontWeight: '800' }]} color="#D4B872">{dayNum}</MetallicText>
                     ) : (
                       <Text style={styles.weekDayNum}>{dayNum}</Text>
                     )}
@@ -380,8 +380,8 @@ export default function CosmicContext() {
         <View style={styles.affirmationCard}>
           <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
           <View style={styles.premiumHeaderRow}>
-            <MetallicText style={styles.affirmationLabel} color="#C5B5A1">DAILY ALIGNMENT</MetallicText>
-            <MetallicText style={styles.premiumIcon} color="#C5B5A1">✦</MetallicText>
+            <MetallicText style={styles.affirmationLabel} color="#D9BF8C">DAILY ALIGNMENT</MetallicText>
+            <MetallicText style={styles.premiumIcon} color="#D9BF8C">✦</MetallicText>
           </View>
           <Text style={styles.affirmationText}>
             {moonInfo.emoji}{'  '}{moonInfo.message}
@@ -440,11 +440,11 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   backText: { fontSize: 14, fontWeight: '600' },
   titleHeader: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, letterSpacing: -0.5, color: '#F5F5F7',  fontWeight: '800', marginBottom: 8 },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#86868B', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 },
+  sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
 
   // ── Hero Moon ─────────────────────────────────────────────────────────────
   heroSection: { alignItems: 'center', marginBottom: 20 },
@@ -455,9 +455,9 @@ const styles = StyleSheet.create({
   weekRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, paddingVertical: 16, paddingHorizontal: 8, borderWidth: 1, borderColor: 'rgba(212,184,114,0.12)', marginBottom: 28 },
   weekDayCol: { flex: 1, alignItems: 'center', gap: 4 },
   weekDayName: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.35)', letterSpacing: 0.8 },
-  weekDayNameToday: { color: '#C5B5A1' },
+  weekDayNameToday: { color: '#D4B872' },
   weekDayNum: { fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: '500' },
-  weekDayNumToday: { color: '#C5B5A1', fontWeight: '800' },
+  weekDayNumToday: { color: '#D4B872', fontWeight: '800' },
   weekOrb: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
   weekOrbToday: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212,184,114,0.4)' },
   weekDayColActive: { backgroundColor: 'rgba(212,184,114,0.08)', borderRadius: 12 },
@@ -478,13 +478,13 @@ const styles = StyleSheet.create({
   weekInfoSign: { fontSize: 13, color: 'rgba(212,184,114,0.85)', fontWeight: '600' },
   weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', fontStyle: 'italic', textAlign: 'center', marginTop: 2 },
 
-  moonTitle: { fontSize: 22, color: '#FFF',  marginTop: 20, marginBottom: 4 },
-  moonDegree: { fontSize: 14, color: '#C5B5A1', letterSpacing: 1, marginBottom: 16 },
+  moonTitle: { fontSize: 22, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginTop: 20, marginBottom: 4 },
+  moonDegree: { fontSize: 14, color: '#D4B872', letterSpacing: 1, marginBottom: 16 },
 
   // VoC
   vocBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(212,184,114,0.08)', borderWidth: 1, borderColor: 'rgba(212,184,114,0.25)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  vocPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#C5B5A1', marginRight: 8 },
-  vocText: { fontSize: 10, fontWeight: '800', color: '#C5B5A1', letterSpacing: 1.2 },
+  vocPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#D4B872', marginRight: 8 },
+  vocText: { fontSize: 10, fontWeight: '800', color: '#D4B872', letterSpacing: 1.2 },
 
   // ── Retrograde Alert ──────────────────────────────────────────────────────
   rxAlertCard: { backgroundColor: 'rgba(217,140,140,0.07)', borderWidth: 1, borderColor: 'rgba(217,140,140,0.25)', borderRadius: 20, padding: 20, marginBottom: 24 },
@@ -495,9 +495,9 @@ const styles = StyleSheet.create({
   // ── Daily Alignment ───────────────────────────────────────────────────────
   affirmationCard: { padding: 24, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#C5B5A1', letterSpacing: 1.5 },
-  premiumIcon: { color: '#C5B5A1', fontSize: 14 },
-  affirmationText: { fontSize: 18, color: '#FFF',  fontStyle: 'italic', lineHeight: 28 },
+  affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#D9BF8C', letterSpacing: 1.5 },
+  premiumIcon: { color: '#D9BF8C', fontSize: 14 },
+  affirmationText: { fontSize: 18, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontStyle: 'italic', lineHeight: 28 },
 
   // ── Transits ──────────────────────────────────────────────────────────────
   transitsSection: { marginBottom: 32 },

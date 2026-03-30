@@ -31,12 +31,12 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 const STORAGE_KEY = '@mysky:cognitive_style';
 
 const PALETTE = {
-  silverBlue: '#C5B5A1',
-  gold: '#C5B5A1',
+  silverBlue: '#C9AE78',
+  gold: '#D9BF8C',
   sage: '#8CBEAA',
-  textMain: '#F5F5F7',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#0A0A0C',
 };
 
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, letterSpacing: -0.5, color: PALETTE.textMain,  fontWeight: '800', marginBottom: 8 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
   instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, fontStyle: 'italic', marginBottom: 28 },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   synthesisCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(139,196,232,0.25)', padding: 24, marginBottom: 32, alignItems: 'center' },
   synthesisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 16 },
   synthesisEyebrow: { fontSize: 11, color: PALETTE.silverBlue, fontWeight: '800', letterSpacing: 1.5 },
-  synthesisTitle: { fontSize: 26,  color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start' },
+  synthesisTitle: { fontSize: 26, fontFamily: 'Georgia', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start' },
 
   radarContainer: { position: 'relative', width: 220, height: 220, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   radarLabel: { position: 'absolute', fontSize: 9, fontWeight: '800', color: PALETTE.textMuted, letterSpacing: 1 },
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   dimensionsContainer: { gap: 16 },
   dimensionBlock: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
   dimInner: { padding: 20 },
-  dimQuestion: { fontSize: 15, color: PALETTE.textMain,  lineHeight: 22, marginBottom: 20 },
+  dimQuestion: { fontSize: 15, color: PALETTE.textMain, fontFamily: 'Georgia', lineHeight: 22, marginBottom: 20 },
 
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, gap: 8 },
   scaleBtn: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center', alignItems: 'center' },

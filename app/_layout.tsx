@@ -1,4 +1,5 @@
 import 'expo-standard-web-crypto';
+import { GoldIcon } from '../components/ui/GoldIcon';
 // File: app/_layout.tsx
 
 import React, { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
@@ -7,7 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 
 import OnboardingModal from '../components/OnboardingModal';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
@@ -27,20 +28,6 @@ import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { SUPPORT_EMAIL } from '../constants/config';
-
-// ── Desert Titanium & Velvet Tech Palette ──
-const PREMIUM = {
-  bgOled: '#000000',
-  titanium: '#C5B5A1', // Sophisticated, high-tech desaturated gold
-  glassBorder: 'rgba(197, 181, 161, 0.3)', // Crisp inner glass edge
-  glassFill: 'rgba(15, 15, 15, 0.4)', // Deep frosted glass
-  textMain: '#F5F5F7',
-  textMuted: '#86868B',
-};
-
-const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
-const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
-const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' });
 
 // Allowlist of routes that notification deep links can navigate to.
 // Prevents injection of arbitrary or external URLs via push notifications.
@@ -91,14 +78,17 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <View style={styles.errorContainer}>
-          <Ionicons name="warning-outline" size={56} color={PREMIUM.titanium} style={{ marginBottom: 24 }} />
-          <Text style={styles.errorTitle}>System Error</Text>
-          <Text style={styles.errorBody}>An unexpected anomaly occurred. Please close the app and reopen it, or attempt to reload the environment below.</Text>
+          <GoldIcon name="warning-outline" size={56}  style={{ marginBottom: 20 }}  />
+          <Text style={styles.errorTitle}>Something went wrong</Text>
+          <Text style={styles.errorBody}>An unexpected error occurred. Please close the app and reopen it, or try reloading below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
-            <View style={styles.errorButton}>
-              <Ionicons name="refresh-outline" size={18} color={PREMIUM.titanium} style={{ marginRight: 8 }} />
+            <LinearGradient 
+              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']} 
+              style={styles.errorButtonGradient}
+            >
+              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
               <Text style={styles.errorButtonText}>Reload Experience</Text>
-            </View>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       );
@@ -196,7 +186,16 @@ function AppShell() {
 
       // If they already accepted terms previously, see if onboarding can be skipped
       if (termsAccepted) {
-        await checkIfOnboardingCanBeSkipped();
+        const canSkip = await checkIfOnboardingCanBeSkipped();
+
+        // If terms were "accepted" but no chart exists, the consent data is stale
+        // (e.g. iOS Keychain surviving an app reinstall). Re-require both consent
+        // gates so users always see terms & privacy during a fresh onboarding flow.
+        if (!canSkip) {
+          await setTermsConsent(false);
+          setNeedsTermsConsent(true);
+          setNeedsPrivacyConsent(true);
+        }
       }
     } catch (error) {
       logger.error('Post-consent initialization failed:', error);
@@ -298,7 +297,11 @@ function AppShell() {
   useEffect(() => {
     const consentSub = DeviceEventEmitter.addListener('CONSENT_WITHDRAWN', () => {
       setNeedsPrivacyConsent(true);
+      setNeedsTermsConsent(true);
       setOnboardingComplete(false);
+      setShowTermsGate(false);
+      // Allow post-consent init to run again after re-consent
+      didRunPostConsentInitRef.current = false;
       logger.info('Consent withdrawn — session re-gated');
     });
 
@@ -334,6 +337,21 @@ function AppShell() {
         // Keep gate up; do not initialize anything
         setNeedsPrivacyConsent(true);
         return;
+      }
+
+      // Persist consent so it survives app restarts
+      try {
+        const compliance = new PrivacyComplianceManager();
+        await compliance.recordConsent({
+          granted: true,
+          policyVersion: PrivacyComplianceManager.DEFAULT_POLICY_VERSION,
+          timestamp: new Date().toISOString(),
+          method: 'explicit',
+          lawfulBasis: 'consent',
+          purpose: 'astrology_personalization',
+        });
+      } catch (e) {
+        logger.error('[handlePrivacyConsent] Failed to record consent:', e);
       }
 
       setNeedsPrivacyConsent(false);
@@ -375,14 +393,17 @@ function AppShell() {
     if (initTimedOut) {
       return (
         <View style={styles.errorContainer}>
-          <Ionicons name="hourglass-outline" size={56} color={PREMIUM.titanium} style={{ marginBottom: 24 }} />
-          <Text style={styles.errorTitle}>Connection Timeout</Text>
-          <Text style={styles.errorBody}>Initialization is taking longer than expected. Secure storage may be temporarily locked by the system.</Text>
+          <GoldIcon name="hourglass-outline" size={56}  style={{ marginBottom: 20 }}  />
+          <Text style={styles.errorTitle}>Taking longer than expected</Text>
+          <Text style={styles.errorBody}>Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={retryInit}>
-            <View style={styles.errorButton}>
-              <Ionicons name="refresh-outline" size={18} color={PREMIUM.titanium} style={{ marginRight: 8 }} />
-              <Text style={styles.errorButtonText}>Retry Connection</Text>
-            </View>
+            <LinearGradient
+              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']}
+              style={styles.errorButtonGradient}
+            >
+              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
+              <Text style={styles.errorButtonText}>Retry</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       );
@@ -392,7 +413,7 @@ function AppShell() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, position: 'relative', backgroundColor: PREMIUM.bgOled }}>
+      <View style={{ flex: 1, position: 'relative' }}>
         <CosmicBackground />
         <SafeAreaProvider>
           <StatusBar style="light" />
@@ -416,7 +437,7 @@ function AppShell() {
               name="checkin"
               options={{
                 presentation: 'modal',
-                contentStyle: { backgroundColor: PREMIUM.bgOled },
+                contentStyle: { backgroundColor: '#0A0A0C' },
               }}
             />
             <Stack.Screen
@@ -481,48 +502,38 @@ function AppShell() {
 const styles = StyleSheet.create({
   errorContainer: { 
     flex: 1, 
-    backgroundColor: PREMIUM.bgOled, 
+    backgroundColor: '#020817', 
     alignItems: 'center', 
     justifyContent: 'center', 
     padding: 32 
   },
   errorTitle: { 
-    color: PREMIUM.textMain, 
-    fontSize: 28, 
-    fontFamily: DISPLAY_BOLD,
-    fontWeight: '800',
+    color: '#FFFFFF', 
+    fontSize: 26, 
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), 
     marginBottom: 12,
-    textAlign: 'center',
-    letterSpacing: -0.5,
+    textAlign: 'center'
   },
   errorBody: { 
-    color: PREMIUM.textMuted, 
-    fontSize: 16, 
+    color: '#8A8D98', 
+    fontSize: 15, 
     textAlign: 'center', 
     marginBottom: 40, 
-    lineHeight: 24,
-    paddingHorizontal: 20,
-    fontFamily: DISPLAY,
+    lineHeight: 22,
+    paddingHorizontal: 20
   },
-  errorButton: {
+  errorButtonGradient: { 
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: PREMIUM.glassFill,
-    borderWidth: 1,
-    borderColor: PREMIUM.titanium,
-    paddingHorizontal: 28,
-    height: 56,
-    borderRadius: 28,
-    shadowColor: PREMIUM.titanium,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    paddingHorizontal: 28, 
+    paddingVertical: 14, 
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: 'rgba(232,214,174,0.25)' 
   },
   errorButtonText: { 
-    color: PREMIUM.titanium, 
-    fontSize: 17, 
-    fontWeight: '700',
-    fontFamily: DISPLAY_BOLD,
+    color: '#FFFFFF', 
+    fontSize: 15, 
+    fontWeight: '600' 
   },
 });

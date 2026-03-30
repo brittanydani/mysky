@@ -795,7 +795,7 @@ export default function ChartScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go to Home"
         >
-          <MetallicText style={styles.goHomeText} color="#C5B5A1">Go to Home</MetallicText>
+          <MetallicText style={styles.goHomeText} color="#CFAE73">Go to Home</MetallicText>
         </Pressable>
       </View>
     );
@@ -993,7 +993,7 @@ export default function ChartScreen() {
           {/* ── Birth time warning ── */}
           {displayChart?.warnings?.length ? (
             <View style={styles.warningBox}>
-              <Ionicons name="alert-circle-outline" size={18} color={theme.warning} />
+              <Ionicons name="alert-circle" size={18} color={theme.warning} />
               <Text style={styles.warningText}>{displayChart.warnings[0]}</Text>
             </View>
           ) : null}
@@ -1158,7 +1158,7 @@ export default function ChartScreen() {
                 accessibilityState={{ selected: viewMode === 'essentials' }}
               >
                 {viewMode === 'essentials' ? (
-                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#C5B5A1">Essentials</MetallicText>
+                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">Essentials</MetallicText>
                 ) : (
                   <Text style={styles.tabText}>Essentials</Text>
                 )}
@@ -1171,7 +1171,7 @@ export default function ChartScreen() {
                 accessibilityState={{ selected: viewMode === 'complete' }}
               >
                 {viewMode === 'complete' ? (
-                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#C5B5A1">Complete Chart</MetallicText>
+                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">Complete Chart</MetallicText>
                 ) : (
                   <Text style={styles.tabText}>Complete Chart</Text>
                 )}
@@ -1278,7 +1278,7 @@ export default function ChartScreen() {
                 accessibilityState={{ selected: activeTab === tab }}
               >
                 {activeTab === tab ? (
-                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#C5B5A1">
+                  <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">
                     {tab === 'planets'
                       ? `Planets (${planetRows.length})`
                       : tab === 'houses'
@@ -1663,7 +1663,7 @@ export default function ChartScreen() {
                     >
                       <LinearGradient colors={['rgba(232, 214, 174,0.1)', 'rgba(232, 214, 174,0.05)']} style={styles.aspectUpsell}>
                         <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
-                        <MetallicText style={styles.aspectUpsellText} color="#C5B5A1">
+                        <MetallicText style={styles.aspectUpsellText} color="#CFAE73">
                           {hiddenAspectCount} more subtle aspect{hiddenAspectCount > 1 ? 's' : ''} — sextiles, quincunxes, and more
                         </MetallicText>
                         <Ionicons name="chevron-forward-outline" size={16} color={theme.textPrimary} />
@@ -1688,9 +1688,9 @@ export default function ChartScreen() {
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={chartPatterns.chartRuler.planetSymbol} fontSize={15} w={18} h={17} />
-                      <MetallicText style={styles.patternHighlightText} color="#C5B5A1"> {chartPatterns.chartRuler.planet} in </MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.planet} in </MetallicText>
                       <GradientSymbol symbol={chartPatterns.chartRuler.rulerSignSymbol} fontSize={15} w={18} h={17} />
-                      <MetallicText style={styles.patternHighlightText} color="#C5B5A1"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
@@ -1714,7 +1714,7 @@ export default function ChartScreen() {
                   <View style={styles.patternHighlight}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <GradientSymbol symbol={partOfFortune.sign?.symbol ?? ''} fontSize={15} w={18} h={17} />
-                      <MetallicText style={styles.patternHighlightText} color="#C5B5A1"> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {partOfFortune.sign?.name} · {Math.floor(partOfFortune.degree)}°{partOfFortune.house ? ` · House ${partOfFortune.house}` : ''}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>
@@ -1736,7 +1736,7 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Dominant Planet</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#C5B5A1">
+                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                       {safeString((dominantPlacement as any).planet)} in {(dominantPlacement as any).sign?.name ?? safeString((dominantPlacement as any).sign)} ·{' '}
                       {Math.floor((dominantPlacement as any).degree ?? 0)}°
                       {(dominantPlacement as any).house ? ` · House ${(dominantPlacement as any).house}` : ''}
@@ -1762,7 +1762,7 @@ export default function ChartScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="lock-closed-outline" size={16} color={theme.textPrimary} />
                       <View style={{ flex: 1 }}>
-                        <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#C5B5A1">More patterns in your chart</MetallicText>
+                        <MetallicText style={{ fontSize: 14, fontWeight: '600' }} color="#CFAE73">More patterns in your chart</MetallicText>
                         <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 3, lineHeight: 18 }}>
                           Chart ruler, dominant planet, sensitive points, stelliums, retrogrades, and Point of Flow
                         </Text>
@@ -1786,7 +1786,7 @@ export default function ChartScreen() {
                       <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
                     </View>
                     <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#C5B5A1">{stellium.planets.join(', ')}</MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">{stellium.planets.join(', ')}</MetallicText>
                     </View>
                     <Text style={styles.patternDesc}>{stellium.subtitle}</Text>
                     <Text style={[styles.patternDesc, { marginTop: 8 }]}>{stellium.description}</Text>
@@ -1828,7 +1828,7 @@ export default function ChartScreen() {
                       <Text style={styles.patternTitle}>Conjunction Cluster</Text>
                     </View>
                     <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#C5B5A1">{cluster.planets.join(' · ')}</MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">{cluster.planets.join(' · ')}</MetallicText>
                     </View>
                     <Text style={styles.patternDesc}>{cluster.description}</Text>
                     <View style={styles.tooltipBox}>
@@ -1846,7 +1846,7 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#C5B5A1">
+                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                       {chartPatterns.retrogradeEmphasis.count} planets retrograde: {chartPatterns.retrogradeEmphasis.planets.join(', ')}
                     </MetallicText>
                   </View>
@@ -1907,7 +1907,7 @@ export default function ChartScreen() {
                         <MetallicText
                           key={mod}
                           style={[styles.patternHighlightText, { fontSize: 15 }]}
-                          color="#C5B5A1"
+                          color="#CFAE73"
                         >
                           {mod}: {count as number}
                         </MetallicText>
@@ -1939,7 +1939,7 @@ export default function ChartScreen() {
                     ].map(({ label, count }) => {
                       const isDominant = label === chartPatterns.polarityBalance.dominant;
                       return isDominant ? (
-                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color="#C5B5A1">
+                        <MetallicText key={label} style={[styles.patternHighlightText, { fontSize: 15 }]} color="#CFAE73">
                           {label}: {count}
                         </MetallicText>
                       ) : (
@@ -1976,7 +1976,7 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>{pattern.name}</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#C5B5A1">
+                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                       {pattern.planets.join(' · ')}
                     </MetallicText>
                   </View>
@@ -1992,7 +1992,7 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>Hemisphere Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#C5B5A1">
+                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                       {extendedPatterns.hemisphereEmphasis.dominant} emphasis
                     </MetallicText>
                   </View>
@@ -2013,7 +2013,7 @@ export default function ChartScreen() {
                     <Text style={styles.patternTitle}>House Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
-                    <MetallicText style={styles.patternHighlightText} color="#C5B5A1">
+                    <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                       {extendedPatterns.houseEmphasis.dominant} houses dominant
                     </MetallicText>
                   </View>
@@ -2115,7 +2115,7 @@ export default function ChartScreen() {
                     style={[styles.tableRow, { flexDirection: 'column', alignItems: 'center', gap: 6 }]}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <MetallicText style={{ fontSize: 14, fontWeight: '700' }} color="#C5B5A1">
+                      <MetallicText style={{ fontSize: 14, fontWeight: '700' }} color="#CFAE73">
                         {ka.planet1} {ka.type.toLowerCase()} {ka.planet2}
                       </MetallicText>
                       <Text style={{ fontSize: 12, color: ka.nature === 'Harmonious' ? '#9ACD32' : ka.nature === 'Challenging' ? '#991FA6' : '#FFDA03' }}>
@@ -2150,7 +2150,7 @@ export default function ChartScreen() {
                   >
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{ai.name}</Text>
-                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#C5B5A1">{ai.sign} · {ai.degree}°</MetallicText>
+                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">{ai.sign} · {ai.degree}°</MetallicText>
                     </View>
                     <Text style={styles.themedCardSummary}>{ai.interpretation}</Text>
                   </LinearGradient>
@@ -2177,7 +2177,7 @@ export default function ChartScreen() {
                   >
                     <View style={styles.themedCardHeaderRow}>
                       <Text style={styles.themedCardTitle}>{pi.name}</Text>
-                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#C5B5A1">
+                      <MetallicText style={{ fontSize: 13, fontWeight: '600' }} color="#CFAE73">
                         {pi.sign}{pi.house ? ` · House ${pi.house}` : ''}
                       </MetallicText>
                     </View>
@@ -2205,7 +2205,7 @@ export default function ChartScreen() {
                   </View>
                   {chartShape.handlePlanet && (
                     <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#C5B5A1">
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                         Handle: {chartShape.handlePlanet}
                       </MetallicText>
                     </View>
@@ -2348,7 +2348,7 @@ export default function ChartScreen() {
                   </View>
                   {dispositorChain.finalDispositor && (
                     <View style={styles.patternHighlight}>
-                      <MetallicText style={styles.patternHighlightText} color="#C5B5A1">
+                      <MetallicText style={styles.patternHighlightText} color="#CFAE73">
                         Final Dispositor: {dispositorChain.finalDispositor}
                       </MetallicText>
                     </View>
@@ -2461,7 +2461,7 @@ export default function ChartScreen() {
                     >
                       <View style={[styles.themedCardHeaderRow, { justifyContent: 'center' }]}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#C5B5A1">{hd.house}</MetallicText>
+                          <MetallicText style={{ fontSize: 16, fontWeight: '700' }} color="#CFAE73">{hd.house}</MetallicText>
                           <Text style={[styles.themedCardTitle, { flex: 0, textAlign: 'center' }]}>{hd.cuspSign}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', gap: 4 }}>
@@ -2642,7 +2642,7 @@ export default function ChartScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="sparkles-outline" size={16} color={theme.textPrimary} />
                     <View style={{ flex: 1 }}>
-                      <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#C5B5A1">Your chart has more to say</MetallicText>
+                      <MetallicText style={[styles.overlayUpsellText, { fontWeight: '600' }]} color="#CFAE73">Your chart has more to say</MetallicText>
                       <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
                         Nodes, Chiron, Lilith, Vertex, chart ruler, stelliums, retrogrades, and minor aspects
                       </Text>
@@ -2769,7 +2769,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'transparent',
   },
-  goHomeText: { color: '#C5B5A1', fontWeight: '700' },
+  goHomeText: { color: '#CFAE73', fontWeight: '700' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: theme.spacing.lg, alignItems: 'center' },
@@ -2781,11 +2781,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     fontWeight: '800',
     color: theme.textPrimary,
-    
-    marginBottom: 8,
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
@@ -2899,7 +2900,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: 'center',
   },
-  insightTitle: { color: '#E8D6AE', fontSize: 15, fontWeight: '600',  textAlign: 'center' },
+  insightTitle: { color: '#E8D6AE', fontSize: 15, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
   insightText: { color: theme.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center' },
 
   pointsDivider: {
@@ -2929,7 +2930,7 @@ const styles = StyleSheet.create({
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
   tabBtnActive: { backgroundColor: 'transparent' },
   tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  tabTextActive: { color: '#C5B5A1' },
+  tabTextActive: { color: '#CFAE73' },
 
   tableHeader: {
     flexDirection: 'row',
@@ -3046,7 +3047,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
     gap: 8,
   },
-  aspectUpsellText: { flex: 1, color: '#C5B5A1', fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },
+  aspectUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },
 
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, textAlign: 'center' },
@@ -3063,7 +3064,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     alignSelf: 'center',
   },
-  patternHighlightText: { color: '#C5B5A1', fontWeight: '700', fontSize: 15, textAlign: 'center' },
+  patternHighlightText: { color: '#CFAE73', fontWeight: '700', fontSize: 15, textAlign: 'center' },
   patternDesc: { color: theme.textSecondary, fontSize: 12, lineHeight: 19, marginTop: theme.spacing.sm, textAlign: 'center' },
   tooltipBox: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', backgroundColor: 'transparent', borderRadius: theme.borderRadius.md, padding: 10, marginTop: theme.spacing.md },
   tooltipText: { color: theme.textMuted, fontSize: 11, lineHeight: 16, marginLeft: 6, flex: 1, fontStyle: 'italic', textAlign: 'center' },
@@ -3098,7 +3099,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     maxWidth: 80,
   },
-  personChipTextActive: { color: '#C5B5A1' },
+  personChipTextActive: { color: '#CFAE73' },
   personChipRelation: { color: theme.textMuted, fontSize: 10, fontStyle: 'italic', opacity: 0.7 },
 
   addPersonChip: {
@@ -3112,7 +3113,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#FFDA03',
   },
-  addPersonText: { color: '#C5B5A1', fontSize: 13, fontWeight: '600' },
+  addPersonText: { color: '#CFAE73', fontSize: 13, fontWeight: '600' },
 
   // ── Overlay Legend (luxury pill tags) ──
   overlayLegend: {
@@ -3163,7 +3164,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: theme.spacing.xl,
   },
-  overlayUpsellText: { flex: 1, color: '#C5B5A1', fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },
+  overlayUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },
 
   // ── Chart Settings card ──
   chartSettingsCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, marginBottom: theme.spacing.md },
@@ -3185,7 +3186,7 @@ const styles = StyleSheet.create({
   glossaryRow: { paddingVertical: theme.spacing.md },
   glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary,  flex: 1 },
+  glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
   glossaryDefinition: { fontSize: 14, color: '#E8D6AE', lineHeight: 20, marginTop: theme.spacing.xs },
 
   // ── Transparency Bar ──
@@ -3206,12 +3207,12 @@ const styles = StyleSheet.create({
   transparencyText: {
     fontSize: 13,
     color: theme.textSecondary,
-    
+    fontFamily: 'serif',
   },
   transparencyTextMuted: {
     fontSize: 12,
     color: theme.textMuted,
-    
+    fontFamily: 'serif',
   },
   transparencyNote: {
     fontSize: 11,
@@ -3245,8 +3246,8 @@ const styles = StyleSheet.create({
   // ── House Planets ──
   housePlanets: {
     fontSize: 12,
-    color: '#C5B5A1',
-    
+    color: '#CFAE73',
+    fontFamily: 'serif',
     marginTop: 2,
   },
 
@@ -3271,7 +3272,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: theme.textPrimary,
-    
+    fontFamily: 'serif',
     letterSpacing: 0.5,
   },
   themedCard: {
@@ -3295,7 +3296,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: theme.textPrimary,
-    
+    fontFamily: 'serif',
     flex: 1,
   },
   themedCardPlacements: {
@@ -3314,14 +3315,14 @@ const styles = StyleSheet.create({
   },
   themedPlacementText: {
     fontSize: 10,
-    color: '#C5B5A1',
-    
+    color: '#CFAE73',
+    fontFamily: 'serif',
   },
   themedCardSummary: {
     fontSize: 13,
     color: theme.textSecondary,
     lineHeight: 19,
-    
+    fontFamily: 'serif',
   },
   themedCardDetails: {
     marginTop: theme.spacing.sm,
@@ -3334,7 +3335,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.textSecondary,
     lineHeight: 19,
-    
+    fontFamily: 'serif',
   },
 
 });

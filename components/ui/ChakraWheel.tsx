@@ -44,14 +44,14 @@ export { CHAKRA_COLORS };
 // Elegant Champagne Gold Base
 export const GOLD = {
   main: 'rgba(232, 214, 174, 0.4)',
-  highlight: '#C5B5A1',
+  highlight: '#C9AE78',
   glow: 'rgba(232, 214, 174, 0.8)',
   dark: '#6B532E',
   aura: 'rgba(240, 234, 214, 0.15)',
 };
 
 const STATE_COLORS: Record<ChakraState, string> = {
-  Flowing: '#C5B5A1',             // Gold
+  Flowing: '#C9AE78',             // Gold
   Sensitive: '#8BC4E8',           // Silver/Blue
   'Grounding Needed': '#CD7F5D',  // Copper
   Quiet: 'rgba(255,255,255,0.3)', // Frosted Glass
@@ -257,7 +257,7 @@ export default function ChakraWheel({
 export function ChakraLegend() {
   const states: ChakraState[] = ['Flowing', 'Sensitive', 'Grounding Needed', 'Quiet'];
   const dotColors: Record<ChakraState, string> = {
-    Flowing: '#C5B5A1',             // Gold
+    Flowing: '#C9AE78',             // Gold
     Sensitive: '#8BC4E8',           // Silver/Blue
     'Grounding Needed': '#CD7F5D',  // Copper
     Quiet: 'rgba(255,255,255,0.3)', // Frosted
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1.5,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   centerState: {
     marginTop: 4,

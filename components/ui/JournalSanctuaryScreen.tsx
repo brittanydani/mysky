@@ -195,7 +195,7 @@ export const JournalSanctuaryScreen = () => {
         onChangeText={setText}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        selectionColor="#C5B5A1"
+        selectionColor="#D4B872"
         keyboardAppearance="dark"
         textAlignVertical="top"
       />

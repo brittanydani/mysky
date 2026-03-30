@@ -3,15 +3,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
+import { MetallicText } from '../../../components/ui/MetallicText';
+import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { BlurView } from 'expo-blur';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../../../services/storage/encryptedAsyncStorage';
 
+import { theme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
@@ -33,23 +36,7 @@ import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';
 import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
-
-// ── Desert Titanium & Velvet Tech Palette ──
-const PREMIUM = {
-  bgOled: '#000000',
-  titanium: '#C5B5A1', // Sophisticated, high-tech desaturated gold
-  glassBorder: 'rgba(197, 181, 161, 0.25)', 
-  glassFill: 'rgba(15, 15, 15, 0.4)', 
-  textMain: '#F5F5F7',
-  textMuted: '#86868B',
-  danger: '#FF453A',
-  dangerGlow: 'rgba(255, 69, 58, 0.15)',
-  success: '#30D158',
-};
-
-const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
-const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
-const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' });
+import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -135,6 +122,16 @@ export default function SettingsScreen() {
   const { isPremium } = usePremium();
   const { user, signOut } = useAuth();
 
+  const successColor = theme.success;
+  const errorColor = theme.error;
+
+  // ── Accent colors for settings sections ──
+  const accentGold = '#C9AE78';
+  const accentAmethyst = '#9B72CF';
+  const accentBlue = '#8BC4E8';
+  const accentCopper = '#CD7F5D';
+  const accentEmerald = '#6EBF8B';
+
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [backupInProgress, setBackupInProgress] = useState(false);
@@ -148,7 +145,7 @@ export default function SettingsScreen() {
   const [showFaq, setShowFaq] = useState(false);
   const [encryptionKeyLost, setEncryptionKeyLost] = useState(false);
 
-  // ── Calibration preferences ──
+  // ── Calibration preferences (persisted via AsyncStorage) ──
   const [hapticEnabled, setHapticEnabled] = useState(true);
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
@@ -183,9 +180,11 @@ export default function SettingsScreen() {
       const settings = await ensureSettings();
       setLastBackupAt(settings.lastBackupAt || null);
 
+      // Detect encryption key loss — if the DEK is gone, warn the user
       const keyOk = await FieldEncryptionService.isKeyAvailable();
       setEncryptionKeyLost(!keyOk);
 
+      // Calibration preferences
       const [haptic, reminder, mood, dream] = await Promise.all([
         AsyncStorage.getItem('pref_haptic'),
         AsyncStorage.getItem('pref_daily_reminder'),
@@ -197,6 +196,7 @@ export default function SettingsScreen() {
       if (mood !== null) setMoodInsightsEnabled(mood === '1');
       if (dream !== null) setDreamLoggingEnabled(dream === '1');
 
+      // Load identity
       try {
         const charts = await localDb.getCharts();
         if (charts.length > 0) {
@@ -235,6 +235,7 @@ export default function SettingsScreen() {
     loadSettings();
   }, [loadSettings]);
 
+  // ── Calibration toggle helpers ──
   const togglePref = useCallback(async (key: string, value: boolean, setter: (v: boolean) => void) => {
     setter(value);
     try { await AsyncStorage.setItem(key, value ? '1' : '0'); } catch {}
@@ -251,6 +252,7 @@ export default function SettingsScreen() {
           await AsyncStorage.setItem('pref_daily_reminder', '0');
           return;
         }
+        // Read saved evening time from SecureStore or use default 20:00
         const SecureStore = await import('expo-secure-store');
         const [eh, em] = await Promise.all([
           SecureStore.getItemAsync('notif_evening_hour'),
@@ -400,6 +402,7 @@ export default function SettingsScreen() {
     if (birthInitial) {
       setShowBirthModal(true);
     } else {
+      // If no chart data, try to load it fresh
       try {
         const charts = await localDb.getCharts();
         if (charts.length > 0) {
@@ -503,20 +506,12 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* ── OLED Base & Nebula Blur ── */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: PREMIUM.bgOled }]}>
-        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
-      </View>
-      
-      {/* ── Stars On Top ── */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <SkiaDynamicCosmos fill="transparent" />
-      </View>
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
           <Text style={styles.title}>Settings</Text>
-          <Text style={styles.subtitle}>Instrument precision · Data sovereignty</Text>
+          <GoldSubtitle style={styles.subtitle}>Instrument precision · Data sovereignty</GoldSubtitle>
         </Animated.View>
 
         <ScrollView
@@ -532,31 +527,38 @@ export default function SettingsScreen() {
         >
           {encryptionKeyLost && (
             <Animated.View entering={FadeInDown.duration(500)} style={styles.keyLossBanner}>
-              <View style={styles.keyLossBannerHeader}>
-                <Ionicons name="warning-outline" size={22} color={PREMIUM.danger} />
-                <Text style={styles.keyLossBannerTitle}>Encryption Key Unavailable</Text>
-              </View>
-              <Text style={styles.keyLossBannerText}>
-                Your encrypted data cannot be read on this device. This can happen after a device migration, OS update, or app reinstall.
-              </Text>
-              <View style={styles.keyLossBannerActions}>
-                <Pressable
-                  style={styles.keyLossBannerButton}
-                  onPress={handleRestore}
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.titanium} />
-                  <Text style={styles.keyLossBannerButtonText}>Restore Backup</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.keyLossBannerButton, styles.keyLossBannerButtonDestructive]}
-                  onPress={() => setShowPrivacyModal(true)}
-                  accessibilityRole="button"
-                >
-                  <Ionicons name="trash-outline" size={16} color={PREMIUM.danger} />
-                  <Text style={[styles.keyLossBannerButtonText, { color: PREMIUM.danger }]}>Delete All Data</Text>
-                </Pressable>
-              </View>
+              <LinearGradient
+                colors={['rgba(224, 122, 122, 0.15)', 'rgba(224, 122, 122, 0.05)']}
+                style={styles.keyLossBannerGradient}
+              >
+                <View style={styles.keyLossBannerHeader}>
+                  <MetallicIcon name="warning-outline" size={22} color={errorColor} />
+                  <MetallicText color={errorColor} style={[styles.keyLossBannerTitle, { color: errorColor }]}>Encryption Key Unavailable</MetallicText>
+                </View>
+                <Text style={styles.keyLossBannerText}>
+                  Your encrypted data cannot be read on this device. This can happen after a device migration, OS update, or app reinstall.
+                </Text>
+                <View style={styles.keyLossBannerActions}>
+                  <Pressable
+                    style={styles.keyLossBannerButton}
+                    onPress={handleRestore}
+                    accessibilityRole="button"
+                    accessibilityLabel="Restore backup"
+                  >
+                    <Ionicons name="cloud-download-outline" size={16} color={theme.primary} />
+                    <Text style={styles.keyLossBannerButtonText}>Restore Backup</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.keyLossBannerButton, styles.keyLossBannerButtonDestructive]}
+                    onPress={() => setShowPrivacyModal(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Delete all data"
+                  >
+                    <MetallicIcon name="trash-outline" size={16} color={errorColor} />
+                    <MetallicText color={errorColor} style={[styles.keyLossBannerButtonText, { color: errorColor }]}>Delete All Data</MetallicText>
+                  </Pressable>
+                </View>
+              </LinearGradient>
             </Animated.View>
           )}
 
@@ -566,8 +568,13 @@ export default function SettingsScreen() {
               <View style={{ paddingHorizontal: 16 }}>
                 <View style={styles.identityCard}>
                   <View style={styles.identityRow}>
-                    <View style={styles.identityAvatar}>
-                      <Ionicons name="person-outline" size={24} color={PREMIUM.titanium} />
+                    <View style={styles.identityAvatarContainer}>
+                      <LinearGradient
+                        colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']}
+                        style={styles.identityAvatar}
+                      >
+                        <MetallicIcon name="person-outline" size={24} color={accentGold} />
+                      </LinearGradient>
                     </View>
                     <View style={styles.identityInfo}>
                       <Text style={styles.identityName}>{identityName || 'Your Chart'}</Text>
@@ -585,22 +592,22 @@ export default function SettingsScreen() {
                   style={styles.identityEditButton}
                   onPress={handleEditIdentity}
                   accessibilityRole="button"
+                  accessibilityLabel="Edit birth data"
                 >
-                  <Ionicons name="create-outline" size={16} color={PREMIUM.titanium} />
-                  <Text style={styles.identityEditText}>Edit Birth Data</Text>
+                  <MetallicIcon name="create-outline" size={16} color={accentGold} />
+                  <MetallicText color={accentGold} style={styles.identityEditText}>Edit Birth Data</MetallicText>
                 </Pressable>
               </View>
             </ObsidianSettingsGroup>
           </Animated.View>
 
-          {/* ── Encrypted Backup ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key">
                 <View style={{ paddingHorizontal: 16 }}>
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="cloud-upload-outline" size={20} color={PREMIUM.titanium} />
+                        <MetallicIcon name="cloud-upload-outline" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Backup & Restore</Text>
                         {!isPremium && (
                           <View style={styles.premiumBadge}>
@@ -625,9 +632,10 @@ export default function SettingsScreen() {
                       onPress={handleBackup}
                       disabled={disableActions}
                       accessibilityRole="button"
+                      accessibilityLabel="Backup now"
                     >
-                      <Ionicons name="cloud-upload-outline" size={16} color={PREMIUM.titanium} />
-                      <Text style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</Text>
+                      <MetallicIcon name="cloud-upload-outline" size={16} color={accentGold} />
+                      <MetallicText color={accentGold} style={styles.syncButtonText}>{backupInProgress ? 'Preparing...' : 'Backup Now'}</MetallicText>
                     </Pressable>
 
                     <Pressable
@@ -635,23 +643,23 @@ export default function SettingsScreen() {
                       onPress={handleRestore}
                       disabled={disableActions}
                       accessibilityRole="button"
+                      accessibilityLabel="Restore backup"
                     >
-                      <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.titanium} />
-                      <Text style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</Text>
+                      <MetallicIcon name="cloud-download-outline" size={16} color={accentGold} />
+                      <MetallicText color={accentGold} style={styles.syncButtonText}>{restoreInProgress ? 'Restoring...' : 'Restore Backup'}</MetallicText>
                     </Pressable>
                   </View>
                 </View>
             </ObsidianSettingsGroup>
           </Animated.View>
 
-          {/* ── Export ── */}
           <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Export" subtitle="Download your data as a PDF">
               <View style={{ paddingHorizontal: 16 }}>
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="document-outline" size={20} color={PREMIUM.titanium} />
+                      <MetallicIcon name="document-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Export Chart PDF</Text>
                       {!isPremium && (
                         <View style={styles.premiumBadge}>
@@ -669,27 +677,27 @@ export default function SettingsScreen() {
                   onPress={handleExportChartPdf}
                   disabled={pdfExporting}
                   accessibilityRole="button"
+                  accessibilityLabel="Export chart as PDF"
                 >
                   {pdfExporting ? (
-                    <ActivityIndicator size="small" color={PREMIUM.titanium} />
+                    <ActivityIndicator size="small" color={accentGold} />
                   ) : (
-                    <Ionicons name="download-outline" size={16} color={PREMIUM.titanium} />
+                    <MetallicIcon name="download-outline" size={16} color={accentGold} />
                   )}
-                  <Text style={styles.syncButtonText}>
+                  <MetallicText color={accentGold} style={styles.syncButtonText}>
                     {pdfExporting ? 'Generating...' : 'Export PDF'}
-                  </Text>
+                  </MetallicText>
                 </Pressable>
               </View>
             </ObsidianSettingsGroup>
           </Animated.View>
 
-          {/* ── Security Details ── */}
           <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Security & Data Protection" subtitle="Your data is fully encrypted">
                 <View style={styles.securityGrid}>
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="lock-closed-outline" size={16} color={PREMIUM.success} />
+                      <MetallicIcon name="lock-closed-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Local Encryption</Text>
@@ -699,7 +707,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="airplane-outline" size={16} color={PREMIUM.success} />
+                      <MetallicIcon name="airplane-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>No Content Transmitted</Text>
@@ -709,7 +717,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="analytics-outline" size={16} color={PREMIUM.success} />
+                      <MetallicIcon name="analytics-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Zero Third-Party Analytics</Text>
@@ -719,7 +727,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <Ionicons name="document-text-outline" size={16} color={PREMIUM.success} />
+                      <MetallicIcon name="document-text-outline" size={16} color={successColor} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Minimal Event Logging</Text>
@@ -740,18 +748,19 @@ export default function SettingsScreen() {
                   router.push('/settings/notifications' as Href);
                 }}
                 accessibilityRole="button"
+                accessibilityLabel="Notification schedule settings"
               >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="notifications-outline" size={20} color={PREMIUM.textMain} />
+                      <MetallicIcon name="notifications-outline" size={20} color={accentAmethyst} />
                       <Text style={styles.settingTitle}>Notification Schedule</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       Set morning and evening reminder times
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={PREMIUM.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -785,42 +794,40 @@ export default function SettingsScreen() {
             </ObsidianSettingsGroup>
           </Animated.View>
 
-          {/* ── Privacy & Data ── */}
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Privacy & Data" subtitle="Device-only, encrypted at rest">
-              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button">
+              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="shield-checkmark-outline" size={20} color={PREMIUM.textMain} />
+                      <MetallicIcon name="shield-checkmark-outline" size={20} color={accentBlue} />
                       <Text style={styles.settingTitle}>Privacy Settings</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       Export, delete, or manage your data on this device
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={PREMIUM.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
               <View style={[styles.privacyInfo, { marginHorizontal: 16, marginBottom: 8 }]}>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="phone-portrait-outline" size={16} color={PREMIUM.textMuted} />
+                  <MetallicIcon name="phone-portrait-outline" size={16} color={accentBlue} />
                   <Text style={styles.privacyText}>Data stored locally on your device</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="shield-outline" size={16} color={PREMIUM.success} />
+                  <MetallicIcon name="shield-outline" size={16} color={accentEmerald} />
                   <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <Ionicons name="ban-outline" size={16} color={PREMIUM.danger} />
+                  <MetallicIcon name="ban-outline" size={16} color={accentAmethyst} />
                   <Text style={styles.privacyText}>Never sold or shared</Text>
                 </View>
               </View>
             </ObsidianSettingsGroup>
           </Animated.View>
 
-          {/* ── FAQ Accordion ── */}
           <Animated.View entering={FadeInDown.delay(475).duration(600)} style={styles.section}>
             <Pressable
               style={styles.sectionTitleRow}
@@ -829,18 +836,22 @@ export default function SettingsScreen() {
                 setShowFaq(prev => !prev);
               }}
               accessibilityRole="button"
+              accessibilityLabel="Toggle FAQ"
             >
               <Text style={styles.sectionTitle}>FAQ</Text>
               <Ionicons
                 name={showFaq ? 'chevron-up' : 'chevron-down'}
                 size={20}
-                color={PREMIUM.textMuted}
+                color={theme.textMuted}
               />
             </Pressable>
 
             {showFaq && (
               <View style={styles.settingCard}>
-                <BlurView intensity={30} tint="dark" style={styles.glossaryContainer}>
+                <LinearGradient
+                  colors={['rgba(14, 24, 48, 0.6)', 'rgba(10, 18, 36, 0.4)']}
+                  style={styles.glossaryGradient}
+                >
                   {FAQ.map((item, index) => (
                     <Pressable
                       key={item.question}
@@ -852,86 +863,135 @@ export default function SettingsScreen() {
                       }}
                       style={[styles.glossaryRow, index < FAQ.length - 1 && styles.glossaryRowBorder]}
                       accessibilityRole="button"
+                      accessibilityLabel={item.question}
                     >
                       <View style={styles.glossaryHeader}>
                         <Text style={styles.glossaryTerm}>{item.question}</Text>
                         <Ionicons
                           name={expandedFaq === item.question ? 'chevron-up' : 'chevron-down'}
                           size={16}
-                          color={PREMIUM.textMuted}
+                          color={theme.textMuted}
                         />
                       </View>
                       {expandedFaq === item.question && <Text style={styles.glossaryDefinition}>{item.answer}</Text>}
                     </Pressable>
                   ))}
-                </BlurView>
+                </LinearGradient>
               </View>
             )}
           </Animated.View>
 
-          {/* ── Legal & Support ── */}
           <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Legal & Support" subtitle="Policies and documentation">
-              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={openPrivacyPolicy} accessibilityRole="button">
+            <ObsidianSettingsGroup title="Legal" subtitle="Policies and documentation">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openPrivacyPolicy}
+                accessibilityRole="button"
+                accessibilityLabel="Privacy Policy"
+              >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="shield-half-outline" size={20} color={PREMIUM.textMain} />
+                      <MetallicIcon name="shield-half-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>Privacy Policy</Text>
                     </View>
+                    <Text style={styles.settingDescription}>
+                      How MySky handles your data and protects your privacy
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={PREMIUM.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
-              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={openTerms} accessibilityRole="button">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openTerms}
+                accessibilityRole="button"
+                accessibilityLabel="Terms of Use (EULA)"
+              >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="ribbon-outline" size={20} color={PREMIUM.textMain} />
+                      <MetallicIcon name="ribbon-outline" size={20} color={accentCopper} />
                       <Text style={styles.settingTitle}>Terms of Use (EULA)</Text>
                     </View>
+                    <Text style={styles.settingDescription}>
+                      App terms, subscription details, and disclaimers
+                    </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={PREMIUM.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
               <ObsidianDivider />
-              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={openSupportEmail} accessibilityRole="link">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openFaq}
+                accessibilityRole="button"
+                accessibilityLabel="FAQ"
+              >
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <Ionicons name="mail-outline" size={20} color={PREMIUM.titanium} />
-                      <Text style={styles.settingTitle}>Contact Support</Text>
+                      <MetallicIcon name="diamond-outline" size={20} color={accentCopper} />
+                      <Text style={styles.settingTitle}>FAQ</Text>
                     </View>
+                    <Text style={styles.settingDescription}>
+                      Answers to common questions about privacy, backups, and premium
+                    </Text>
                   </View>
-                  <Ionicons name="open-outline" size={18} color={PREMIUM.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                 </View>
               </Pressable>
             </ObsidianSettingsGroup>
           </Animated.View>
 
-          {/* ── Premium Gateway ── */}
+          <Animated.View entering={FadeInDown.delay(625).duration(600)} style={styles.section}>
+            <ObsidianSettingsGroup title="Support" subtitle="We're here to help">
+              <Pressable
+                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                onPress={openSupportEmail}
+                accessibilityRole="link"
+                accessibilityLabel="Contact us via email"
+              >
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <MetallicIcon name="mail-outline" size={20} color={accentGold} />
+                      <Text style={styles.settingTitle}>Contact Us</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>Get help with MySky</Text>
+                  </View>
+                  <Ionicons name="open-outline" size={18} color={theme.textMuted} />
+                </View>
+              </Pressable>
+            </ObsidianSettingsGroup>
+          </Animated.View>
+
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(700).duration(600)} style={styles.section}>
               <Pressable
-                style={styles.premiumCard}
+                style={styles.settingCard}
                 onPress={() => setShowPremiumModal(true)}
                 accessibilityRole="button"
+                accessibilityLabel="Learn about premium features"
               >
-                <BlurView intensity={40} tint="dark" style={styles.cardGradient}>
+                <LinearGradient
+                  colors={['rgba(232, 214, 174, 0.12)', 'rgba(232, 214, 174, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
+                >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="sparkles-outline" size={20} color={PREMIUM.titanium} />
+                        <MetallicIcon name="sparkles-outline" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky</Text>
                       </View>
                       <Text style={styles.settingDescription}>
-                        Full personal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — $4.99/mo • $29.99/yr • $49.99 lifetime.
+                        Full personal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — $4.99/mo • $29.99/yr • $129.99 lifetime.
                       </Text>
                     </View>
-                    <Ionicons name="arrow-forward-outline" size={20} color={PREMIUM.titanium} />
+                    <Ionicons name="arrow-forward-outline" size={20} color={theme.primary} />
                   </View>
-                </BlurView>
+                </LinearGradient>
               </Pressable>
             </Animated.View>
           )}
@@ -940,7 +1000,7 @@ export default function SettingsScreen() {
             <Animated.View entering={FadeInDown.delay(700).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Subscription</Text>
               <Pressable
-                style={styles.premiumCard}
+                style={styles.settingCard}
                 onPress={async () => {
                   try { await Haptics.selectionAsync(); } catch {}
                   try {
@@ -951,25 +1011,34 @@ export default function SettingsScreen() {
                     });
                     await Linking.openURL(url);
                   } catch {
-                    Alert.alert('Unable to Open', 'Go to your device\'s app store settings to manage your subscription.');
+                    const instructions = Platform.select({
+                      ios: 'Go to Settings → Apple ID → Subscriptions to manage your plan.',
+                      android: 'Go to Google Play → Payments & subscriptions → Subscriptions to manage your plan.',
+                      default: 'Go to your device\'s app store settings to manage your subscription.',
+                    });
+                    Alert.alert('Unable to Open', instructions);
                   }
                 }}
                 accessibilityRole="button"
+                accessibilityLabel="Manage your subscription"
               >
-                <BlurView intensity={40} tint="dark" style={styles.cardGradient}>
+                <LinearGradient
+                  colors={['rgba(232, 214, 174, 0.12)', 'rgba(232, 214, 174, 0.04)']}
+                  style={[styles.cardGradient, { borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' }]}
+                >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="sparkles-outline" size={20} color={PREMIUM.titanium} />
+                        <MetallicIcon name="sparkles-outline" size={20} color={accentGold} />
                         <Text style={styles.settingTitle}>Deeper Sky Active</Text>
                       </View>
                       <Text style={styles.settingDescription}>
                         Manage, upgrade, or cancel your subscription
                       </Text>
                     </View>
-                    <Ionicons name="open-outline" size={18} color={PREMIUM.titanium} />
+                    <Ionicons name="open-outline" size={18} color={theme.primary} />
                   </View>
-                </BlurView>
+                </LinearGradient>
               </Pressable>
             </Animated.View>
           )}
@@ -986,20 +1055,25 @@ export default function SettingsScreen() {
                       'Are you sure you want to sign out?',
                       [
                         { text: 'Cancel', style: 'cancel' },
-                        { text: 'Sign Out', style: 'destructive', onPress: signOut },
+                        {
+                          text: 'Sign Out',
+                          style: 'destructive',
+                          onPress: signOut,
+                        },
                       ],
                     );
                   }}
                   accessibilityRole="button"
+                  accessibilityLabel="Sign out"
                 >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="log-out-outline" size={20} color={PREMIUM.textMain} />
+                        <MetallicIcon name="log-out-outline" size={20} color={accentCopper} />
                         <Text style={styles.settingTitle}>Sign Out</Text>
                       </View>
                     </View>
-                    <Ionicons name="chevron-forward-outline" size={20} color={PREMIUM.textMuted} />
+                    <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                   </View>
                 </Pressable>
                 <ObsidianDivider />
@@ -1029,25 +1103,26 @@ export default function SettingsScreen() {
                     );
                   }}
                   accessibilityRole="button"
+                  accessibilityLabel="Delete account"
                 >
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
-                        <Ionicons name="trash-outline" size={20} color={PREMIUM.danger} />
-                        <Text style={[styles.settingTitle, { color: PREMIUM.danger }]}>Delete Account</Text>
+                        <MetallicIcon name="trash-outline" size={20} color={errorColor} />
+                        <MetallicText color={errorColor} style={styles.settingTitle}>Delete Account</MetallicText>
                       </View>
                       <Text style={styles.settingDescription}>
                         Permanently removes your account and synced data
                       </Text>
                     </View>
-                    <Ionicons name="chevron-forward-outline" size={20} color={PREMIUM.textMuted} />
+                    <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                   </View>
                 </Pressable>
               </ObsidianSettingsGroup>
             </Animated.View>
           )}
 
-          {/* Version */}
+          {/* Version — always at the very bottom */}
           <Text style={styles.versionText}>
             MySky v{Constants.expoConfig?.version ?? '1.0.0'}
           </Text>
@@ -1091,112 +1166,76 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PREMIUM.bgOled },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
 
-  header: { paddingHorizontal: 24, paddingVertical: 16 },
+  header: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md },
   title: {
     fontSize: 34,
     fontWeight: '800',
-    color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
-    marginBottom: 4,
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     letterSpacing: -0.5,
+    marginBottom: 4,
   },
-  subtitle: { 
-    fontSize: 14, 
-    color: PREMIUM.titanium, 
-    fontFamily: DISPLAY_SEMIBOLD,
-    letterSpacing: 0.5,
-  },
+  subtitle: { fontSize: 14 },
 
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 16 },
+  scrollContent: { paddingHorizontal: theme.spacing.lg },
 
-  section: { marginBottom: 24 },
+  section: { marginBottom: theme.spacing.xl },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: PREMIUM.titanium,
-    letterSpacing: 2,
+    color: '#9A9A9F',
+    letterSpacing: 2.5,
     textTransform: 'uppercase',
-    marginBottom: 12,
-    marginLeft: 8,
-    fontFamily: DISPLAY_BOLD,
+    marginBottom: theme.spacing.md,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    paddingHorizontal: 8,
+    marginBottom: theme.spacing.md,
   },
 
   settingCard: {
-    borderRadius: 16,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PREMIUM.glassBorder,
-    backgroundColor: PREMIUM.glassFill,
-    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    marginBottom: theme.spacing.md,
   },
-  cardGradient: { padding: 16 },
+  cardGradient: { padding: theme.spacing.lg },
 
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  settingInfo: { flex: 1, flexShrink: 1, marginRight: 12 },
-  settingHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  settingTitle: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: PREMIUM.textMain, 
-    marginLeft: 8, 
-    flex: 1,
-    fontFamily: DISPLAY_SEMIBOLD,
-  },
+  settingInfo: { flex: 1, flexShrink: 1, marginRight: theme.spacing.md },
+  settingHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.xs },
+  settingTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginLeft: theme.spacing.sm, flex: 1 },
 
   premiumBadge: {
-    backgroundColor: 'rgba(197, 181, 161, 0.15)',
-    paddingHorizontal: 6,
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: theme.borderRadius.sm,
   },
-  premiumText: { fontSize: 10, color: PREMIUM.titanium, fontWeight: '700', fontFamily: DISPLAY_BOLD },
+  premiumText: { fontSize: 10, color: theme.primary, fontWeight: '600' },
 
-  settingDescription: { 
-    fontSize: 14, 
-    color: PREMIUM.textMuted, 
-    lineHeight: 20, 
-    flexShrink: 1, 
-    flexWrap: "wrap",
-    fontFamily: DISPLAY,
-  },
-  lastSyncText: { 
-    fontSize: 12, 
-    color: PREMIUM.textMuted, 
-    marginTop: 4,
-    fontFamily: DISPLAY,
-  },
+  settingDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, flexShrink: 1, flexWrap: "wrap" },
+  lastSyncText: { fontSize: 12, color: theme.textMuted, marginTop: theme.spacing.xs },
 
-  backupActions: { gap: 8 },
+  backupActions: { gap: theme.spacing.sm },
   syncButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 12,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PREMIUM.glassBorder,
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: 'transparent',
+    borderRadius: theme.borderRadius.sm,
   },
-  syncButtonDisabled: { opacity: 0.5 },
-  syncButtonText: { 
-    fontSize: 14, 
-    color: PREMIUM.titanium, 
-    fontWeight: '600', 
-    marginLeft: 6,
-    fontFamily: DISPLAY_SEMIBOLD,
-  },
+  syncButtonDisabled: { opacity: 0.6 },
+  syncButtonText: { fontSize: 14, color: '#C9AE78', fontWeight: '600', marginLeft: theme.spacing.xs },
 
   // ── Identity ──
   identityCard: {
@@ -1207,6 +1246,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
   },
+  identityAvatarContainer: {},
   identityAvatar: {
     width: 48,
     height: 48,
@@ -1214,176 +1254,143 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: PREMIUM.titanium,
-    backgroundColor: 'rgba(197, 181, 161, 0.1)',
+    borderColor: 'rgba(201, 174, 120, 0.2)',
   },
   identityInfo: {
     flex: 1,
   },
   identityName: {
     fontSize: 18,
-    fontWeight: '700',
-    color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 2,
   },
   identityDetail: {
     fontSize: 13,
-    color: PREMIUM.textMuted,
+    color: theme.textSecondary,
     lineHeight: 18,
-    fontFamily: DISPLAY,
   },
   identityEditButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PREMIUM.glassBorder,
+    backgroundColor: 'rgba(201, 174, 120, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(201, 174, 120, 0.15)',
   },
   identityEditText: {
     fontSize: 14,
     fontWeight: '600',
-    color: PREMIUM.titanium,
-    fontFamily: DISPLAY_SEMIBOLD,
+    color: '#C9AE78',
   },
 
   premiumCard: {
-    borderRadius: 18,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: PREMIUM.titanium,
-    shadowColor: PREMIUM.titanium,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    borderColor: 'rgba(232,214,174,0.25)',
   },
+  premiumContent: { flexDirection: 'row', alignItems: 'center' },
+  premiumIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  premiumInfo: { flex: 1 },
+  premiumTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: 2 },
+  premiumDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
 
   privacyInfo: {
     backgroundColor: 'transparent',
-    borderRadius: 16,
-    padding: 12,
-    gap: 8,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
-  privacyItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  privacyText: { 
-    fontSize: 13, 
-    color: PREMIUM.textMuted, 
-    flex: 1,
-    fontFamily: DISPLAY,
-  },
+  privacyItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  privacyText: { fontSize: 12, color: theme.textSecondary, flex: 1 },
 
-  securityGrid: { gap: 12, paddingHorizontal: 16 },
-  securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  securityBullet: { 
-    width: 28, 
-    height: 28, 
-    borderRadius: 14, 
-    backgroundColor: 'rgba(48, 209, 88, 0.15)', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    marginTop: 1 
-  },
+  securityGrid: { gap: theme.spacing.md, paddingHorizontal: 16 },
+  securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
+  securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(72, 187, 120, 0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   securityContent: { flex: 1 },
-  securityLabel: { 
-    fontSize: 14, 
-    fontWeight: '600', 
-    color: PREMIUM.textMain, 
-    marginBottom: 2,
-    fontFamily: DISPLAY_SEMIBOLD,
-  },
-  securityDetail: { 
-    fontSize: 13, 
-    color: PREMIUM.textMuted, 
-    lineHeight: 18,
-    fontFamily: DISPLAY,
-  },
+  securityLabel: { fontSize: 14, fontWeight: '600', color: theme.textPrimary, marginBottom: 2 },
+  securityDetail: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },
 
-  glossaryContainer: { paddingHorizontal: 16, paddingVertical: 8 },
-  glossaryRow: { paddingVertical: 16 },
-  glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: PREMIUM.glassBorder },
+  chartSettingsSummary: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
+  settingTag: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.sm,
+  },
+  settingTagText: { fontSize: 11, color: theme.primary, fontWeight: '500' },
+
+  glossaryGradient: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm },
+  glossaryRow: { paddingVertical: theme.spacing.md },
+  glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  glossaryTerm: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: PREMIUM.textMain, 
-    fontFamily: DISPLAY_SEMIBOLD, 
-    flex: 1 
-  },
-  glossaryDefinition: { 
-    fontSize: 14, 
-    color: PREMIUM.textMuted, 
-    lineHeight: 20, 
-    marginTop: 6,
-    fontFamily: DISPLAY,
-  },
+  glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
+  glossaryDefinition: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs },
 
-  versionText: { 
-    fontSize: 11, 
-    color: PREMIUM.textMuted, 
-    textAlign: 'center', 
-    marginTop: 24, 
-    marginBottom: 12, 
-    letterSpacing: 1,
-    fontFamily: DISPLAY,
-  },
+  versionText: { fontSize: 11, color: 'rgba(226,232,240,0.25)', textAlign: 'center', marginTop: theme.spacing.xl, marginBottom: theme.spacing.sm, letterSpacing: 0.5 },
 
   // Key-loss warning banner
   keyLossBanner: {
-    marginBottom: 24,
-    borderRadius: 16,
+    marginBottom: theme.spacing.xl,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 69, 58, 0.4)',
-    backgroundColor: PREMIUM.dangerGlow,
-    padding: 16,
+    borderColor: 'rgba(224, 122, 122, 0.4)',
+  },
+  keyLossBannerGradient: {
+    padding: theme.spacing.lg,
   },
   keyLossBannerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
   },
   keyLossBannerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: PREMIUM.danger,
-    fontFamily: DISPLAY_BOLD,
+    color: '#E07A7A',
+    fontFamily: 'serif',
   },
   keyLossBannerText: {
     fontSize: 14,
-    color: PREMIUM.textMain,
+    color: theme.textSecondary,
     lineHeight: 20,
-    marginBottom: 16,
-    fontFamily: DISPLAY,
+    marginBottom: theme.spacing.md,
   },
   keyLossBannerActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: theme.spacing.sm,
   },
   keyLossBannerButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PREMIUM.glassBorder,
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: 'transparent',
+    borderRadius: theme.borderRadius.sm,
   },
   keyLossBannerButtonDestructive: {
-    backgroundColor: 'rgba(255, 69, 58, 0.1)',
-    borderColor: 'rgba(255, 69, 58, 0.3)',
+    backgroundColor: 'rgba(224, 122, 122, 0.1)',
   },
   keyLossBannerButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: PREMIUM.titanium,
-    fontFamily: DISPLAY_SEMIBOLD,
+    color: theme.primary,
   },
 });

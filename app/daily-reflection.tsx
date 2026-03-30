@@ -52,14 +52,14 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#D9BF8C',
   lavender: '#A89BC8',
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
   rose: '#C88BA8',
-  textMain: '#F5F5F7',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#0A0A0C',
 };
 
@@ -612,11 +612,12 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 24 },
   headerTitle: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
-    marginBottom: 8,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   headerSubtitle: { fontSize: 14 },
 
@@ -671,7 +672,7 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 15,
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '400',
     lineHeight: 22,
     marginBottom: 14,

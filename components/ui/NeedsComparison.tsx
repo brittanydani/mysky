@@ -16,7 +16,7 @@ interface NeedsComparisonProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     fontWeight: '700',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     flex: 1,
   },
   needsList: {

@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, DeviceEventEmitter, Modal, Pressable, ScrollView, Share, StyleSheet, Text, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -20,7 +21,7 @@ import { localDb } from '../services/storage/localDb';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   textMain: '#F0EAD6',
@@ -154,7 +155,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
               {/* Privacy Status Grid */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>System Integrity</Text>
-                <View style={[styles.glassCard, { backgroundColor: 'rgba(15,15,15,0.4)' }]}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   {[
                     { label: 'Architecture', val: 'Local-First', icon: 'server-outline', color: "#FFFFFF" },
                     { label: 'Encryption', val: 'AES-256-GCM', icon: 'lock-closed-outline', color: "#FFFFFF" },
@@ -168,13 +169,13 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                       <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>{item.val}</Text>
                     </View>
                   ))}
-                </View>
+                </LinearGradient>
               </View>
 
               {/* Consent Status */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Consent Record</Text>
-                <View style={[styles.glassCard, { backgroundColor: 'rgba(15,15,15,0.4)' }]}>
+                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
                   <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
                     <View style={styles.rowLead}>
                       <MetallicIcon name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
@@ -204,14 +205,14 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                       {consentRecord?.policyVersion ?? '—'}
                     </Text>
                   </View>
-                </View>
+                </LinearGradient>
                 {consentRecord?.granted && (
                   <Pressable style={styles.actionCard} onPress={handleWithdrawConsent} disabled={isLoading}>
-                    <View style={styles.actionGradient}>
+                    <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                       <MetallicIcon name="close-circle-outline" size={22} color={PALETTE.copper} />
                       <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Withdraw Consent</Text>
                       <Text style={styles.actionSub}>Revoke data processing consent. Existing data is preserved.</Text>
-                    </View>
+                    </LinearGradient>
                   </Pressable>
                 )}
               </View>
@@ -222,19 +223,19 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 {hasData ? (
                   <View style={styles.actionGrid}>
                     <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading}>
-                      <View style={styles.actionGradient}>
+                      <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
                         <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Export Archive</Text>
                         <Text style={styles.actionSub}>Create a readable backup of all entries.</Text>
-                      </View>
+                      </LinearGradient>
                     </Pressable>
 
                     <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading}>
-                      <View style={styles.actionGradient}>
+                      <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="trash-outline" size={22} color={PALETTE.copper} />
                         <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Hard Reset</Text>
                         <Text style={styles.actionSub}>Permanently erase all data from this device.</Text>
-                      </View>
+                      </LinearGradient>
                     </Pressable>
                   </View>
                 ) : (
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 20, fontWeight: '700', letterSpacing: -0.2, color: '#F5F5F7' },
+  headerTitle: { fontSize: 20, color: "#FFFFFF", fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   closeBtn: { padding: 4 },
   
   scrollView: { flex: 1 },
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
   content: { gap: 32 },
 
   section: { gap: 12 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#86868B', textTransform: 'uppercase', letterSpacing: 2, paddingLeft: 4 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 2, paddingLeft: 4 },
   
   glassCard: { borderRadius: 20, paddingHorizontal: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },

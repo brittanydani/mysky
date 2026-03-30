@@ -54,7 +54,7 @@ const PremiumPill = memo(function PremiumPill({
   isSelected,
   onToggle,
   onLongPress,
-  accentColor = '#C5B5A1',
+  accentColor = '#C9AE78',
   disabled = false,
 }: PremiumPillProps) {
   // 0 = deselected, 1 = selected — drives color interpolation

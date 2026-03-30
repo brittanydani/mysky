@@ -23,12 +23,12 @@ import {
 
 // ── Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
-  silverBlue: '#C5B5A1',
+  gold: '#C9AE78',
+  silverBlue: '#C9AE78',
   bg: '#0A0A0C',
-  textMain: '#F5F5F7',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 
@@ -36,7 +36,7 @@ const PALETTE = {
 const ARCHETYPES: Record<ArchetypeKey, { name: string; icon: string; color: string; tagline: string; light: string; shadow: string }> = {
   hero:      { name: 'The Hero',      icon: '⚔',  color: '#E8C97A', tagline: 'Driven to prove strength and overcome',          light: 'Courage, determination, protection of others',         shadow: 'Overextension, fear of weakness, difficulty receiving help' },
   caregiver: { name: 'The Caregiver', icon: '❧',  color: '#D4A3B3', tagline: 'Moves through the world by nurturing',            light: 'Empathy, generosity, emotional attunement',            shadow: 'Self-neglect, over-giving, resentment when unseen' },
-  seeker:    { name: 'The Seeker',    icon: '◎',  color: '#C5B5A1', tagline: 'Craves discovery, freedom, and new horizons',     light: 'Curiosity, adaptability, authentic living',            shadow: 'Restlessness, avoidance of commitment, feeling never satisfied' },
+  seeker:    { name: 'The Seeker',    icon: '◎',  color: '#C9AE78', tagline: 'Craves discovery, freedom, and new horizons',     light: 'Curiosity, adaptability, authentic living',            shadow: 'Restlessness, avoidance of commitment, feeling never satisfied' },
   sage:      { name: 'The Sage',      icon: '◬',  color: '#A8C4D4', tagline: 'Seeks truth and understanding above all',         light: 'Wisdom, clarity, thoughtful perspective',              shadow: 'Over-analysis, emotional distance, perfectionism' },
   rebel:     { name: 'The Rebel',     icon: 'ϟ', color: '#C49FD4', tagline: 'Questions structures and catalyzes change',       light: 'Authenticity, vision, disrupting what no longer serves', shadow: 'Contrarianism for its own sake, difficulty with authority' },
 };
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14, marginTop: 12 },
 
   header: { alignItems: 'center', marginTop: 20, marginBottom: 28 },
-  title: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: PALETTE.textMain,  marginBottom: 8 },
+  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5, marginBottom: 4 },
   headerSub: { fontSize: 14, textAlign: 'center' },
 
   sectionCard: {
@@ -411,14 +411,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 6 },
-  sectionTitle: { fontSize: 12, fontWeight: '700', color: '#86868B', letterSpacing: 2, textTransform: 'uppercase' },
+  sectionTitle: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' },
   sectionSubtitle: { fontSize: 13, color: PALETTE.textMuted, alignSelf: 'flex-start', marginBottom: 16, lineHeight: 18 },
 
   emptyHint: { paddingVertical: 24 },
   emptyHintText: { color: PALETTE.textMuted, fontSize: 14, textAlign: 'center', lineHeight: 20 },
 
   archetypeIcon: { fontSize: 20 },
-  archetypeName: { fontSize: 22, fontWeight: '300',  alignSelf: 'flex-start', marginBottom: 4 },
+  archetypeName: { fontSize: 22, fontWeight: '300', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), alignSelf: 'flex-start', marginBottom: 4 },
   archetypeTagline: { fontSize: 13, color: PALETTE.textMuted, alignSelf: 'flex-start', fontStyle: 'italic', marginBottom: 16, lineHeight: 18 },
 
   dualRow: { flexDirection: 'row', gap: 12, alignSelf: 'stretch' },
@@ -441,12 +441,12 @@ const styles = StyleSheet.create({
 
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   statCard: { borderRadius: 20, padding: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 22, fontWeight: '300', color: PALETTE.textMain,  },
+  statValue: { fontSize: 22, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   statLabel: { fontSize: 11, color: PALETTE.textMuted, textAlign: 'center', fontWeight: '600', letterSpacing: 0.5 },
   statSub: { fontSize: 11, color: PALETTE.gold, textAlign: 'center' },
 
   emptyCard: { borderRadius: 24, padding: 32, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
-  emptyTitle: { fontSize: 22, color: PALETTE.textMain,  marginBottom: 10, textAlign: 'center' },
+  emptyTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 10, textAlign: 'center' },
   emptySubtitle: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   emptyLinks: { flexDirection: 'row', gap: 12 },
   emptyButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(201,174,120,0.4)' },

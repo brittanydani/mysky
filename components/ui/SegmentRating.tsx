@@ -26,7 +26,7 @@ import * as Haptics from 'expo-haptics';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const GOLD           = '#C5B5A1';
+const GOLD           = '#C9AE78';
 const GOLD_BG        = 'rgba(201,174,120,0.18)';
 const INACTIVE_BG    = 'rgba(255,255,255,0.05)';
 const INACTIVE_BORDER = 'rgba(255,255,255,0.10)';

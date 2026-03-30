@@ -37,10 +37,10 @@ const PALETTE = {
   anxious: '#D4A3B3',   // Rose — Moving Toward
   avoidant: '#8BC4E8',  // Silver Blue — Moving Away
   control: '#A89BC8',   // Lavender — Rigidity
-  gold: '#C5B5A1',
-  textMain: '#F5F5F7',
+  gold: '#D9BF8C',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#0A0A0C',
 };
 
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, letterSpacing: -0.5, color: PALETTE.textMain,  fontWeight: '800', marginBottom: 8 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
   summaryCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.2)', padding: 24, marginBottom: 24 },
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
 
   formCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 24, marginBottom: 32 },
   formTitle: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
-  noteInput: { minHeight: 100, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)', padding: 16, color: PALETTE.textMain, fontSize: 15,  lineHeight: 22, marginBottom: 24 },
+  noteInput: { minHeight: 100, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)', padding: 16, color: PALETTE.textMain, fontSize: 15, fontFamily: 'Georgia', lineHeight: 22, marginBottom: 24 },
   tagSectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 12 },
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
 
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   entryCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', padding: 20 },
   entryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   entryDate: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '600' },
-  entryNote: { fontSize: 15, color: 'rgba(255,255,255,0.85)',  lineHeight: 22, marginBottom: 16 },
+  entryNote: { fontSize: 15, color: 'rgba(255,255,255,0.85)', fontFamily: 'Georgia', lineHeight: 22, marginBottom: 16 },
   entryTagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   entryTag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1 },
   entryTagText: { fontSize: 11, fontWeight: '700' },

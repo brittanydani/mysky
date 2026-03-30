@@ -52,15 +52,15 @@ import type { NervousSystemBranch, ShadowTrigger } from '../../services/premium/
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
 const PALETTE = {
-  gold:        '#C5B5A1',
+  gold:        '#C9AE78',
   rose:        '#D4A3B3',
   sage:        '#8CBEAA',
   lavender:    '#A89BC8',
   coral:       '#D4826A',
-  textMain:    '#F5F5F7',
+  textMain:    '#FFFFFF',
   textMuted:   'rgba(255,255,255,0.55)',
   textDim:     'rgba(255,255,255,0.35)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   glassBg:     'rgba(255,255,255,0.04)',
   lockBg:      'rgba(20,15,30,0.85)',
 };
@@ -530,8 +530,8 @@ const styles = StyleSheet.create({
   // Header
   backButton:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, gap: 4 },
   backLabel:   { fontSize: 14, color: PALETTE.textMuted, letterSpacing: 0.3 },
-  screenTitle: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: '#F5F5F7', marginBottom: 8,
-                  },
+  screenTitle: { fontSize: 34, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, marginBottom: 4,
+                 fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }) },
   screenSubtitle: { fontSize: 14, marginBottom: 32 },
 
   // Section label

@@ -45,7 +45,7 @@ const HOUSE_ORDINALS: [string, number][] = [
 
 // ── Planets / Luminaries → Archetypal Forces ─────────────────────────────────
 
-export const PLANET_LABELS: Record<string, string> = {
+const PLANET_LABELS: Record<string, string> = {
   Sun: 'Core vitality',
   Moon: 'Emotional body',
   Mars: 'Activating force',
@@ -64,7 +64,7 @@ export const PLANET_LABELS: Record<string, string> = {
 
 // ── Zodiac Signs → Quality Archetypes ────────────────────────────────────────
 
-export const SIGN_LABELS: Record<string, string> = {
+const SIGN_LABELS: Record<string, string> = {
   Aries: 'Initiation',
   Taurus: 'Stability',
   Gemini: 'Curiosity',
@@ -87,7 +87,7 @@ export const SIGN_LABELS: Record<string, string> = {
 // Safe phrases: work in both narrative essay text AND guidance sentences.
 // (Moon phases, nodes, chart terminology, retrograde — none appear as verbs
 //  in the way that trine/sextile/square do.)
-export const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
+const SAFE_PHRASE_REPLACEMENTS: [RegExp, string][] = [
   // Moon phase names are KEPT as-is — they are observable astronomy, not astrology.
   // The following prevent the standalone Moon→Emotional body replacement from
   // mangling moon-phase compound phrases that should pass through untouched.

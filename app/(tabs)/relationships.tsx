@@ -425,11 +425,11 @@ export default function RelationshipsScreen() {
               </Pressable>
 
               <Pressable
-                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#C5B5A1'}60`, backgroundColor: `${'#C5B5A1'}15` }]}
+                style={[styles.personPill, styles.personPillPartner, summaryPerson === 'them' && { borderColor: `${'#C9AE78'}60`, backgroundColor: `${'#C9AE78'}15` }]}
                 onPress={() => { setSummaryPerson('them'); Haptics.selectionAsync().catch(() => {}); }}
               >
-                {summaryPerson === 'them' ? <MetallicIcon name="layers-outline" size={13} color="#C5B5A1" /> : <Ionicons name="layers-outline" size={13} color={theme.textMuted} />}
-                {summaryPerson === 'them' ? <MetallicText style={styles.personPillText} color="#C5B5A1">{selectedRelationship.name}</MetallicText> : <Text style={styles.personPillText}>{selectedRelationship.name}</Text>}
+                {summaryPerson === 'them' ? <MetallicIcon name="layers-outline" size={13} color="#C9AE78" /> : <Ionicons name="layers-outline" size={13} color={theme.textMuted} />}
+                {summaryPerson === 'them' ? <MetallicText style={styles.personPillText} color="#C9AE78">{selectedRelationship.name}</MetallicText> : <Text style={styles.personPillText}>{selectedRelationship.name}</Text>}
                 <Text style={styles.personPillType}>{RELATIONSHIP_LABELS[selectedRelationship.relationship]}</Text>
               </Pressable>
 
@@ -442,7 +442,7 @@ export default function RelationshipsScreen() {
             <View style={styles.filterRow}>
               {([
                 { key: 'person1' as const, label: 'Your planets', activeColor: theme.textGold },
-                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#C5B5A1' },
+                { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#C9AE78' },
                 { key: 'cross' as const, label: 'Cross-aspects', activeColor: '#E5E4E2' },
               ] as const).map(pill => {
                 const active = filterMode[pill.key];
@@ -795,22 +795,22 @@ const styles = StyleSheet.create({
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
   loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15, fontStyle: 'italic' },
-  emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '600', color: theme.textPrimary,  },
+  emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '600', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
   
   header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 34, letterSpacing: -0.5, fontWeight: '800', color: theme.textPrimary,  marginBottom: 8 },
+  title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5, marginBottom: 4 },
   subtitle: { fontSize: 14 },
   scrollView: { flex: 1, paddingHorizontal: 24 },
   
-  listSectionTitle: { fontSize: 22, color: theme.textPrimary, marginTop: 24, marginBottom: 6,  },
+  listSectionTitle: { fontSize: 22, color: theme.textPrimary, marginTop: 24, marginBottom: 6, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   listSectionSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20 },
   
   relationshipCardGradient: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center' },
   relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   relationshipInfo: { flex: 1, marginLeft: 16 },
-  relationshipName: { fontSize: 18, fontWeight: '600', color: theme.textPrimary,  marginBottom: 2 },
+  relationshipName: { fontSize: 18, fontWeight: '600', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 2 },
   relationshipType: { fontSize: 13, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
   
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
@@ -822,7 +822,7 @@ const styles = StyleSheet.create({
   limitText: { fontSize: 13, color: theme.textGold, textAlign: 'center', fontWeight: '600' },
   
   discoverSection: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder },
-  discoverTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 20,  },
+  discoverTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 20, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   discoverItem: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 20 },
   discoverContent: { flex: 1, marginLeft: 16 },
   discoverItemTitle: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, marginBottom: 4 },
@@ -832,7 +832,7 @@ const styles = StyleSheet.create({
   detailHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   backButton: { padding: 8 },
   detailHeaderCenter: { flex: 1, alignItems: 'center' },
-  detailTitle: { fontSize: 18, color: theme.textPrimary,  },
+  detailTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   detailSubtitle: { fontSize: 13, color: theme.textSecondary, marginTop: 4, fontStyle: 'italic' },
   exportButton: { padding: 8 },
   deleteButton: { padding: 8 },
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   summaryCol: { flex: 1, alignItems: 'center', gap: 4 },
   summarySep: { width: 1, height: 48, backgroundColor: 'transparent', alignSelf: 'center' },
   summaryIcon: { fontSize: 11, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
-  summarySign: { fontSize: 16, color: theme.textPrimary,  },
+  summarySign: { fontSize: 16, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   summaryDetail: { fontSize: 12, color: theme.textSecondary, fontVariant: ['tabular-nums'] },
 
   tabBar: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.cardBorder, marginBottom: 16 },
@@ -867,12 +867,12 @@ const styles = StyleSheet.create({
   tabTextActive: { color: theme.textGold },
   
   insightCardGradient: { padding: 24, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
-  insightCardTitle: { fontSize: 18, color: theme.textPrimary,  },
+  insightCardTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   insightCardText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
-  sectionHeader: { fontSize: 18, color: theme.textPrimary, marginTop: 24, marginBottom: 16,  },
+  sectionHeader: { fontSize: 18, color: theme.textPrimary, marginTop: 24, marginBottom: 16, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
   reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'transparent', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: theme.textGold },
-  reminderText: { fontSize: 16, color: theme.textPrimary, fontStyle: 'italic', lineHeight: 24,  },
+  reminderText: { fontSize: 16, color: theme.textPrimary, fontStyle: 'italic', lineHeight: 24, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   
   upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
   upsellTitle: { fontSize: 16, fontWeight: '600', color: theme.textGold },

@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 32,
     color: luxuryTheme.text.white,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     fontWeight: '700',
   },
   selectedPrice: {

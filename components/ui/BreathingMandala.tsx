@@ -48,7 +48,7 @@ import {
 // Flat base colours kept for glow tints; metallic gradients used for strokes.
 
 const RING_COLORS = [
-  '#C5B5A1', // Mood    — champagne gold
+  '#C9AE78', // Mood    — champagne gold
   '#49DFFF', // Energy  — electric cyan
   '#FF6B9D', // Stress  — rose pink
   '#9D76C1', // Focus   — violet

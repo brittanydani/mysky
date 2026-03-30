@@ -50,6 +50,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
 import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -58,14 +59,14 @@ const { width } = Dimensions.get('window');
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
-  silverBlue: '#C5B5A1',
+  gold: '#C9AE78',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
-  emerald: '#C5B5A1',
+  emerald: '#C9AE78',
   rose: '#D4A3B3',
   bg: '#0A0A0C',
-  textMain: '#F5F5F7',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  textMain: '#FFFFFF',
+  glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
@@ -170,6 +171,10 @@ export default function HomeScreen() {
           chart.id = savedChart.id;
           chart.name = savedChart.name;
           chart.createdAt = savedChart.createdAt;
+
+          // Prefer the user's actual name over the chart name (which defaults to birth place)
+          const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
+          if (storedName) chart.name = storedName;
           chart.updatedAt = savedChart.updatedAt;
 
           setUserChart(chart);
@@ -358,8 +363,8 @@ export default function HomeScreen() {
 
       {/* Nebula depth — atmospheric glow orbs */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -80, right: -100, backgroundColor: 'rgba(197, 181, 161, 0.15)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -140, backgroundColor: 'rgba(245, 245, 247, 0.10)' }]} />
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
       </View>
 
       {/* LAYER 3: Interactive UI */}
@@ -410,7 +415,7 @@ export default function HomeScreen() {
 
           {/* ── Daily Balance Score ── */}
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.scoreCard}>
-            <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={styles.scoreHeader}>
               <Text style={styles.cardLabel}>DAILY BALANCE</Text>
               <View style={styles.trendBadgeScore}>
@@ -423,8 +428,8 @@ export default function HomeScreen() {
               <Text style={styles.scoreMax}>/ 10</Text>
             </View>
             <View style={styles.pillsRow}>
-              <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C5B5A1" />
-              <ScorePill label="Mood" val={mood.toFixed(1)} color="#C5B5A1" />
+              <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
+              <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
               <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
             </View>
           </Animated.View>
@@ -653,7 +658,7 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
               cx={pt.x}
               cy={pt.y}
               r={i === 6 ? 4.5 : hasData[i] ? 2.5 : 1.5}
-              color={i === 6 ? '#C5B5A1' : hasData[i] ? 'rgba(201,174,120,0.55)' : 'rgba(255,255,255,0.1)'}
+              color={i === 6 ? '#C9AE78' : hasData[i] ? 'rgba(201,174,120,0.55)' : 'rgba(255,255,255,0.1)'}
             />
           </React.Fragment>
         ))}
@@ -738,7 +743,7 @@ const fabStyles = StyleSheet.create({
     zIndex: 100,
   },
   glowWrapper: {
-    shadowColor: '#C5B5A1',
+    shadowColor: '#D4B872',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,
@@ -788,7 +793,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 24,
     fontWeight: '300',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   dateLabel: {
     color: 'rgba(255, 255, 255, 0.45)', // further muted
@@ -824,7 +829,7 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 15,
     lineHeight: 24,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
 
   // Premium preview
@@ -853,7 +858,7 @@ const styles = StyleSheet.create({
   premiumPreviewTitle: {
     fontSize: 20,
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '400',
     lineHeight: 28,
     marginBottom: 8,
@@ -888,7 +893,7 @@ const styles = StyleSheet.create({
     color: PALETTE.gold,
     fontSize: 16,
     fontWeight: '700',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontVariant: ['tabular-nums'] as const,
   },
   streakLabel: {
@@ -912,7 +917,7 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 14,
     lineHeight: 22,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   weeklyMetrics: {
     flexDirection: 'row',
@@ -931,7 +936,7 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 18,
     fontWeight: '700',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontVariant: ['tabular-nums'] as const,
   },
   metricLabel: {
@@ -1001,7 +1006,7 @@ const styles = StyleSheet.create({
   scoreValue: {
     fontSize: 60,
     color: '#FFFFFF',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   scoreMax: {
     fontSize: 18,
@@ -1079,7 +1084,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '300',
     color: '#FFFFFF',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginBottom: 12,
   },
   quickLinksRow: {
@@ -1110,7 +1115,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '400',
     color: '#FFFFFF',
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     textAlign: 'center',
   },
   quickLinkSub: {

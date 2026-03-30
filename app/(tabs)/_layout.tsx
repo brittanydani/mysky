@@ -1,11 +1,15 @@
 import { Tabs } from 'expo-router';
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Home, TrendingUp, BookOpen, User, LayoutGrid } from 'lucide-react-native';
+import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
+import { MetallicText } from '../../components/ui/MetallicText';
+import { SkiaGradient } from '../../components/ui/SkiaGradient';
+import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 
 const VISIBLE_TABS = new Set(['home', 'growth', 'journal', 'blueprint', 'settings']);
 
@@ -13,19 +17,6 @@ const LUCIDE_MAP: Record<string, React.ComponentType<any>> = {
   home: Home, growth: TrendingUp, journal: BookOpen,
   blueprint: User, settings: LayoutGrid,
 };
-
-// ── Desert Titanium & Velvet Tech Palette ──
-const PREMIUM = {
-  bgOled: '#000000',
-  titanium: '#C5B5A1', // Sophisticated, high-tech desaturated gold
-  glassBorder: 'rgba(197, 181, 161, 0.25)', // Crisp inner glass edge
-  glassFill: 'rgba(15, 15, 15, 0.65)', // Deep frosted glass
-  textMain: '#F5F5F7',
-  textMuted: '#86868B',
-};
-
-const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
-const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' });
 
 // ── OPTICAL NUDGES ──
 // translateY / scale: Adjusts JUST the icon inside its bounding box
@@ -40,7 +31,7 @@ const OPTICAL_ADJUSTMENTS: Record<string, { translateY?: number; translateX?: nu
 
 /**
  * CUSTOM TAB BAR COMPONENT
- * Floating glassmorphic container with titanium active indicators and strict mathematical alignment.
+ * Floating glassmorphic container with gold active indicators and strict mathematical alignment.
  */
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
@@ -54,7 +45,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.tabBarContainer, { height: BAR_HEIGHT, paddingBottom: safeBottom }]}>
-      <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill}>
+      <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
         <View style={styles.glassHighlight} />
       </BlurView>
 
@@ -71,14 +62,16 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             }
           };
 
-          const inactiveColor = PREMIUM.textMuted;
+          const inactiveColor = 'rgba(255,255,255,0.3)';
           const size = 22;
-          const sw = 1.5; // Modern thin stroke weight
+          const sw = 1.5;
 
           const IconComponent = LUCIDE_MAP[route.name];
 
           const icon = IconComponent
-            ? <IconComponent color={isFocused ? PREMIUM.titanium : inactiveColor} size={size} strokeWidth={sw} />
+            ? isFocused
+              ? <MetallicLucideIcon icon={IconComponent} size={size} strokeWidth={sw} />
+              : <IconComponent color={inactiveColor} size={size} strokeWidth={sw} />
             : null;
 
           const nudge = OPTICAL_ADJUSTMENTS[route.name] || {};
@@ -106,13 +99,25 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 </View>
 
                 {isFocused && (
-                  <View style={styles.activeIndicator} />
+                  <View style={styles.activeIndicator}>
+                    <SkiaGradient
+                      colors={[...metallicFillColors]}
+                      locations={[...metallicFillPositions]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                  </View>
                 )}
               </View>
               
-              <Text style={[styles.tabLabel, { color: isFocused ? PREMIUM.titanium : PREMIUM.textMuted }]}>
-                {options.title}
-              </Text>
+              {isFocused ? (
+                <MetallicText style={styles.tabLabel}>{options.title}</MetallicText>
+              ) : (
+                <Text style={[styles.tabLabel, { color: 'rgba(255,255,255,0.4)' }]}>
+                  {options.title}
+                </Text>
+              )}
             </Pressable>
           );
         })}
@@ -124,7 +129,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 export default function TabLayout() {
   const renderTabBar = useCallback((props: any) => <CustomTabBar {...props} />, []);
   return (
-    <Tabs tabBar={renderTabBar} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: PREMIUM.bgOled } }}>
+    <Tabs tabBar={renderTabBar} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="home"      options={{ title: 'Today' }} />
       <Tabs.Screen name="growth"    options={{ title: 'Patterns' }} />
       <Tabs.Screen name="journal"   options={{ title: 'Archive' }} />
@@ -156,9 +161,8 @@ const styles = StyleSheet.create({
     left: 0, 
     right: 0,
     overflow: 'hidden',
-    borderTopWidth: StyleSheet.hairlineWidth, 
-    borderTopColor: PREMIUM.glassBorder,
-    backgroundColor: PREMIUM.glassFill,
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   glassHighlight: { 
     ...StyleSheet.absoluteFillObject, 
@@ -183,26 +187,25 @@ const styles = StyleSheet.create({
     height: 28, 
     justifyContent: 'center', 
     alignItems: 'center',
-    marginBottom: 8, 
+    marginBottom: 10, 
   },
   activeIndicator: {
     position: 'absolute', 
-    bottom: -6, 
+    bottom: -7, 
     width: 4, 
     height: 4, 
     borderRadius: 2,
-    backgroundColor: PREMIUM.titanium,
-    shadowColor: PREMIUM.titanium, 
-    shadowRadius: 6, 
-    shadowOpacity: 1,
-    shadowOffset: { width: 0, height: 0 },
+    overflow: 'hidden',
+    shadowColor: '#D9BF8C', 
+    shadowRadius: 4, 
+    shadowOpacity: 0.8,
   },
   tabLabel: { 
-    fontSize: 10, 
+    fontSize: 9, 
     fontWeight: '700', 
-    letterSpacing: 0.5, 
-    lineHeight: 12, 
+    letterSpacing: 1, 
+    textTransform: 'uppercase', 
+    lineHeight: 10, 
     textAlign: 'center',
-    fontFamily: DISPLAY_BOLD,
   },
 });

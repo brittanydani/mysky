@@ -28,13 +28,13 @@ const STORAGE_KEY = '@mysky:trigger_events';
 const PALETTE = {
   bg: '#0A0A0C',
   sage: '#8CBEAA',
-  emerald: '#C5B5A1',
+  emerald: '#C9AE78',
   rose: '#D4A3B3',
   copper: '#CD7F5D',
   lavender: '#A89BC8',
-  textMain: '#F5F5F7',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.5)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 type LogMode = 'drain' | 'nourish';
@@ -314,11 +314,12 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   headerTitle: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
-    marginBottom: 8,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
 
   toggleContainer: {
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
   textInput: {
     color: PALETTE.textMain,
     fontSize: 16,
-    
+    fontFamily: 'Georgia',
     lineHeight: 24,
   },
 

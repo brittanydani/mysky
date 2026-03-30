@@ -35,9 +35,9 @@ const BODY_SCALE = (SCREEN_W * 0.55) / 200;
 
 const PALETTE = {
   sage:        '#8CBEAA',
-  textMain:    '#F5F5F7',
+  textMain:    '#FFFFFF',
   textMuted:   'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   bg:          '#0A0A0C',
 };
 
@@ -48,7 +48,7 @@ const EMOTIONS = [
 ];
 
 const EMOTION_COLORS: Record<string, string> = {
-  Anxiety:    '#C5B5A1', Sadness: '#8BC4E8', Anger:    '#D4A3B3', Joy:       '#8CBEAA',
+  Anxiety:    '#D9BF8C', Sadness: '#8BC4E8', Anger:    '#D4A3B3', Joy:       '#8CBEAA',
   Fear:       '#A89BC8', Peace:   '#6EBF8B', Tension:  '#D98C8C', Numbness:  '#6E8CB4',
   Grief:      '#9E8FB8', Excitement: '#E8C97A', Shame: '#B87EA0', Love:      '#E8A3B3',
 };
@@ -418,11 +418,12 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header:        { marginBottom: 24 },
   headerTitle: {
-    fontSize: 34, letterSpacing: -0.5,
+    fontSize: 34,
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
-    marginBottom: 8,
+    letterSpacing: -0.5,
+    marginBottom: 4,
   },
   headerSubtitle: { fontSize: 14 },
 

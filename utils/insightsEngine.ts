@@ -42,6 +42,7 @@ import {
   stdDev as _stdDev,
   computeTrend as _computeTrend,
   confidence as _confidence,
+  ordinal,
 } from './stats';
 import type { ConfidenceLevel, TrendDirection } from './stats';
 
@@ -340,12 +341,10 @@ function daysBetween(a: string, b: string): number {
   );
 }
 
-export function ordinal(n: number): string {
-  if (n <= 0) return `${n}`;
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
-}
+/**
+ * @deprecated Import from './stats' instead. Re-exported for backward compatibility.
+ */
+export { ordinal } from './stats';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 

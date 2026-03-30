@@ -32,12 +32,12 @@ const STORAGE_KEY = '@mysky:core_values';
 const MAX_TOP = 5;
 
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#D9BF8C',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
-  textMain: '#F5F5F7',
+  textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
-  glassBorder: 'rgba(197, 181, 161, 0.25)',
+  glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#0A0A0C',
 };
 
@@ -267,10 +267,10 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, letterSpacing: -0.5, color: PALETTE.textMain,  fontWeight: '800', marginBottom: 8 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#86868B', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 },
+  sectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, fontWeight: '800', marginBottom: 16 },
 
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   topItemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   topNumberBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(217,191,140,0.2)', justifyContent: 'center', alignItems: 'center' },
   topNumberText: { color: PALETTE.gold, fontSize: 11, fontWeight: '800' },
-  topItemText: { fontSize: 16, color: PALETTE.textMain,  fontWeight: '500' },
+  topItemText: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '500' },
   
   summaryHint: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 20, fontStyle: 'italic', textAlign: 'center' },
 
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   paradoxCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 24, marginBottom: 20, backgroundColor: 'rgba(205, 127, 93, 0.05)' },
   paradoxHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   paradoxEyebrow: { fontSize: 10, color: PALETTE.copper, fontWeight: '800', letterSpacing: 1.5 },
-  paradoxTitle: { fontSize: 20, color: PALETTE.textMain,  marginBottom: 10 },
+  paradoxTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 10 },
   paradoxBody: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 22, marginBottom: 16 },
   paradoxFooter: { fontSize: 12, color: PALETTE.textMuted, fontStyle: 'italic', lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
 

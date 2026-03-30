@@ -34,7 +34,7 @@ interface BackupPassphraseModalProps {
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   textMain: '#F0EAD6',
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: PALETTE.textMain,
-    
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   scrollContent: {
     paddingHorizontal: 24,

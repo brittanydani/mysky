@@ -106,7 +106,7 @@ const TabButton = memo(function TabButton({ isFocused, cfg, onPress, onLayout }:
       {isFocused ? (
         <MetallicText
           style={styles.label}
-          color="#C5B5A1"
+          color="#D4B872"
           numberOfLines={1}
         >
           {cfg.label}
@@ -330,8 +330,8 @@ const styles = StyleSheet.create({
     width: DOT_SIZE,
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
-    backgroundColor: '#C5B5A1',
-    shadowColor: '#C5B5A1',
+    backgroundColor: '#D4B872',
+    shadowColor: '#D4B872',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9,
     shadowRadius: 6,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   labelActive: {
-    color: '#C5B5A1',
+    color: '#D4B872',
   },
   labelInactive: {
     color: 'rgba(255, 255, 255, 0.35)',

@@ -41,7 +41,7 @@ import SkiaMetallicPill from './ui/SkiaMetallicPill';
 
 // ── Cinematic Palette ──
 const PALETTE = {
-  gold: '#C5B5A1',
+  gold: '#C9AE78',
   textMain: '#F0EAD6',
   glassBorder: 'rgba(255,255,255,0.06)',
 };
@@ -141,7 +141,7 @@ export default function AstrologySettingsModal({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={styles.container}>
-        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#000000' }]} />
+        <LinearGradient colors={['rgba(30, 35, 50, 0.98)', '#020817']} style={StyleSheet.absoluteFillObject} />
 
         {/* Header */}
         <View style={styles.header}>
@@ -308,14 +308,14 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
   headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginBottom: 20 },
   headerRow: { flexDirection: 'row', width: '100%', paddingHorizontal: 24, justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: '700', letterSpacing: -0.3, color: PALETTE.textMain },
+  title: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
   closeBtn: { padding: 4 },
 
   loadingContainer: { padding: 60, alignItems: 'center' },
   scrollContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 40 },
 
   section: { marginBottom: 32 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: '#86868B', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 },
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.gold, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
   sectionSub: { fontSize: 14, color: theme.textMuted, lineHeight: 20, marginBottom: 16 },
 
   optionsList: { gap: 10 },

@@ -55,7 +55,7 @@ const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-
 
 // ── Liquid Mirror Gold Palette ──
 const PREMIUM = {
-  bgOled: '#000000',
+  bgOled: '#020817',
   titanium: '#C5B5A1',
   // Nebula orb fills — Champagne Gold + Amethyst Purple for volumetric depth
   titaniumGlow: 'rgba(197, 181, 161, 0.12)',   // Champagne — refined Titanium warmth
