@@ -103,7 +103,6 @@ export default function BirthDataModal({
   const [chartName, setChartName] = useState(initialData?.chartName || '');
   const [date, setDate] = useState<Date>(parseISODateToDate(initialData?.date));
   const [time, setTime] = useState<Date>(parseHHMMToDate(initialData?.time));
-  const [pickerTime, setPickerTime] = useState<Date>(parseHHMMToDate(initialData?.time));
   const [hasUnknownTime, setHasUnknownTime] = useState<boolean>(initialData?.hasUnknownTime ?? false);
   const [place, setPlace] = useState<string>(initialData?.place || '');
   const [latitude, setLatitude] = useState<number>(initialData?.latitude ?? 0);
@@ -124,9 +123,7 @@ export default function BirthDataModal({
     if (visible && initialData) {
       setChartName(initialData.chartName || '');
       setDate(parseISODateToDate(initialData.date));
-      const pt = parseHHMMToDate(initialData.time);
-      setTime(pt);
-      setPickerTime(pt);
+      setTime(parseHHMMToDate(initialData.time));
       setHasUnknownTime(initialData.hasUnknownTime ?? false);
       setPlace(initialData.place || '');
       setLatitude(initialData.latitude ?? 0);
@@ -211,10 +208,7 @@ export default function BirthDataModal({
 
   const onTimeChange = (_event: any, selected?: Date) => {
     if (Platform.OS !== 'ios') setShowTimePicker(false);
-    if (selected) {
-      setTime(selected);
-      setPickerTime(selected);
-    }
+    if (selected) setTime(selected);
   };
 
   return (
@@ -415,8 +409,12 @@ export default function BirthDataModal({
         )}
 
         {showTimePicker && Platform.OS === 'ios' && (
-          <View style={styles.pickerOverlay}>
-            <View style={styles.pickerContent}>
+          <View style={StyleSheet.absoluteFill}>
+            <Pressable
+              style={styles.pickerScrim}
+              onPress={() => setShowTimePicker(false)}
+            />
+            <View style={styles.pickerSheet}>
               <View style={styles.pickerHeader}>
                 <View style={{ width: 60 }} />
                 <Text style={styles.pickerTitle}>Set Birth Time</Text>
@@ -425,28 +423,36 @@ export default function BirthDataModal({
                 </Pressable>
               </View>
 
-              <DateTimePicker
-                value={pickerTime}
-                mode="time"
-                display="spinner"
-                themeVariant="dark"
-                onChange={onTimeChange}
-              />
+              <View style={styles.timePickerCard}>
+                <DateTimePicker
+                  value={time}
+                  mode="time"
+                  display="spinner"
+                  themeVariant="dark"
+                  textColor="#FFFFFF"
+                  onChange={onTimeChange}
+                  style={styles.nativePicker}
+                />
+              </View>
             </View>
           </View>
         )}
 
         {showTimePicker && Platform.OS === 'android' && (
           <DateTimePicker
-            value={pickerTime}
+            value={time}
             mode="time"
             onChange={onTimeChange}
           />
         )}
 
         {showDatePicker && Platform.OS === 'ios' && (
-          <View style={styles.pickerOverlay}>
-            <View style={styles.pickerContent}>
+          <View style={StyleSheet.absoluteFill}>
+            <Pressable
+              style={styles.pickerScrim}
+              onPress={() => setShowDatePicker(false)}
+            />
+            <View style={styles.pickerSheet}>
               <View style={styles.pickerHeader}>
                 <View style={{ width: 60 }} />
                 <Text style={styles.pickerTitle}>Set Birth Date</Text>
@@ -684,15 +690,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
-  pickerOverlay: {
+  pickerScrim: {
     flex: 1,
-    backgroundColor: 'transparent',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  pickerContent: {
+  pickerSheet: {
     backgroundColor: '#0D1117',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 40,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
@@ -718,5 +725,17 @@ const styles = StyleSheet.create({
   pickerCancel: {
     color: theme.textMuted,
     fontSize: 16,
+  },
+  timePickerCard: {
+    width: '100%',
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(20, 20, 20, 0.85)',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  nativePicker: {
+    width: '100%',
   },
 });

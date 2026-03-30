@@ -4,7 +4,7 @@
 // (Hub 1 through footer). Used by both the standalone Energy tab screen and
 // the embedded Energy pill inside the Identity (Blueprint) tab.
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Pressable,
   Dimensions,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,7 +39,10 @@ import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import ChakraWheelComponent from '../ui/ChakraWheel';
 import { SkiaChakraGlyph } from '../ui/SkiaChakraNode';
-import { CorrelationGyroscope } from '../ui/CorrelationGyroscope';
+
+const CorrelationGyroscope = React.lazy(() =>
+  import('../ui/CorrelationGyroscope').then(m => ({ default: m.CorrelationGyroscope }))
+);
 import { useCorrelationStore } from '../../store/correlationStore';
 import { updateWidgetData } from '../../services/widgets/widgetDataService';
 
@@ -312,7 +316,9 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
           <>
             <SectionHeader icon="analytics-outline" title="Neural Patterns" delay={460} />
             <Animated.View entering={FadeInDown.delay(480).duration(600)} style={{ marginBottom: 16 }}>
-              <CorrelationGyroscope height={280} />
+              <Suspense fallback={<ActivityIndicator color={theme.primary} style={{ height: 280 }} />}>
+                <CorrelationGyroscope height={280} />
+              </Suspense>
             </Animated.View>
           </>
         )}

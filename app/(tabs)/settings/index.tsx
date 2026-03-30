@@ -172,7 +172,7 @@ export default function SettingsScreen() {
       cloudSyncEnabled: false,
       createdAt: now,
       updatedAt: now,
-      lastBackupAt: null as string | null,
+      lastBackupAt: undefined,
     };
     await localDb.saveSettings(defaults);
     return defaults;
@@ -446,7 +446,7 @@ export default function SettingsScreen() {
         updatedAt: now,
         isDeleted: false,
       });
-      setIdentityName(extra?.chartName ?? chart.name);
+      setIdentityName(extra?.chartName ?? chart.name ?? '');
       setIdentityPlace(chart.birthData.place);
       const dateStr = chart.birthData.date
         ? new Date(chart.birthData.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })

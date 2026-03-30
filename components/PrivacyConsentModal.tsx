@@ -74,14 +74,14 @@ export default function PrivacyConsentModal({
                     <MetallicIcon name="shield-checkmark-outline" size={40} color={PALETTE.gold} />
                   </View>
                   <Text style={styles.title}>Your Privacy Matters</Text>
-                  <Text style={styles.subtitle}>We’re committed to protecting your personal information.</Text>
+                  <Text style={styles.subtitle}>MySky is built to help you reflect privately, not to turn your inner life into ad data.</Text>
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(300).duration(600)} style={styles.contentContainer}>
                   
                   {/* Glass Highlights Grid */}
                   <View style={styles.glassSection}>
-                    <Text style={styles.sectionLabel}>What We Collect</Text>
+                    <Text style={styles.sectionLabel}>What You Add</Text>
                     <View style={styles.dataRow}>
                         <MetallicIcon name="sparkles-outline" size={16} color={PALETTE.gold} />
                         <Text style={styles.dataText}>Birth data & personalization settings</Text>
@@ -96,7 +96,11 @@ export default function PrivacyConsentModal({
                     <Text style={[styles.sectionLabel, { color: "#FFFFFF" }]}>How We Protect It</Text>
                     <View style={styles.dataRow}>
                         <MetallicIcon name="lock-closed-outline" size={16} color={PALETTE.silverBlue} />
-                        <Text style={styles.dataText}>Core data stays encrypted on your device</Text>
+                      <Text style={styles.dataText}>Core reflections stay encrypted on your device</Text>
+                    </View>
+                    <View style={styles.dataRow}>
+                      <MetallicIcon name="hardware-chip-outline" size={16} color={PALETTE.silverBlue} />
+                      <Text style={styles.dataText}>Pattern analysis runs locally whenever possible</Text>
                     </View>
                     <View style={styles.dataRow}>
                         <MetallicIcon name="ban-outline" size={16} color={PALETTE.silverBlue} />
@@ -149,12 +153,12 @@ export default function PrivacyConsentModal({
 
                 <View style={styles.legalContent}>
                     <Text style={styles.policyText}>
-                        MySky ("we," "us," or "our") is a personal growth and wellness app. This policy explains what information we process and how it is protected. 
+                    MySky ("we," "us," or "our") is a private self-pattern tracker for sleep, mood, dreams, and reflection. This policy explains what information you add and how it is protected.
                     </Text>
                     
                     <Text style={styles.legalSub}>Local-First Architecture</Text>
                     <Text style={styles.policyText}>
-                        All core data—including your birth details, journal entries, and check-ins—is stored exclusively on your device using AES-256-GCM encryption. It is never transmitted to an external server unless you opt-in to premium AI features.
+                    Core data—including your birth details, journal entries, dreams, and check-ins—is stored on your device using AES-256-GCM encryption. Pattern analysis runs locally by default. Optional external services are only used for features you explicitly invoke, such as subscription verification, city lookup, or cloud-assisted dream interpretation.
                     </Text>
 
                     <Text style={styles.legalSub}>Third-Party Services</Text>

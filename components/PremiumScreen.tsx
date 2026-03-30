@@ -53,6 +53,9 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       period: tier.period,
     };
   });
+  const selectedTier = resolvedTiers.find((tier) => tier.id === selectedPlan);
+  const subscriptionTiers = resolvedTiers.filter((tier) => tier.id !== 'lifetime');
+  const lifetimeTier = resolvedTiers.find((tier) => tier.id === 'lifetime');
 
   const safeGoBack = useCallback(() => {
     if (onClose) {
@@ -227,21 +230,19 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* ── Value Copywriting ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.header}>
             <Text style={styles.premiumBadge}>✦ {DEEPER_SKY_MARKETING.headline}</Text>
-            <Text style={styles.heroTitle}>
-              Unlock your complete{'\n'}architectural blueprint
-            </Text>
+            <Text style={styles.heroTitle}>See what your patterns are teaching you</Text>
             <Text style={styles.heroSubtitle}>
-              Map your subconscious patterns, decode your dreams, and receive personalized daily guidance.
+              Deeper Sky turns your sleep, mood, dreams, and journal history into weekly shifts, recurring themes, and more personal guidance.
             </Text>
           </Animated.View>
 
           {/* ── Value Propositions ── */}
           <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.valueSection}>
             {[
-              { icon: 'moon-outline', title: 'Map your subconscious', desc: 'Unlimited dream journaling with symbolic reflections', color: '#C5B5A1' },
-              { icon: 'analytics-outline', title: 'Understand your patterns', desc: 'Deep trend analysis across mood, energy, and stress', color: '#C5B5A1' },
-              { icon: 'sparkles-outline', title: 'Personalized daily guidance', desc: 'Guidance shaped by your reflections and long-term patterns', color: '#C5B5A1' },
-              { icon: 'shield-checkmark-outline', title: 'Encrypted vault', desc: 'Full backup and restore with end-to-end encryption', color: '#C5B5A1' },
+              { icon: 'calendar-outline', title: 'Track change over time', desc: 'Weekly shifts, recurring themes, and longitudinal pattern insight', color: '#C5B5A1' },
+              { icon: 'analytics-outline', title: 'Understand what helps or hurts', desc: 'See what restores you, drains you, and repeats in your reflections', color: '#C5B5A1' },
+              { icon: 'sparkles-outline', title: 'Get more personal guidance', desc: 'Guidance shaped by your history, not just today\'s mood', color: '#C5B5A1' },
+              { icon: 'shield-checkmark-outline', title: 'Private by design', desc: 'Core reflections stay encrypted on-device and are not sold for ads', color: '#C5B5A1' },
             ].map((item, idx) => (
               <Animated.View key={item.title} entering={FadeInDown.delay(320 + idx * 60).duration(500)} style={styles.valueRow}>
                 <View style={[styles.valueIconContainer, { borderColor: `${item.color}30` }]}>
@@ -255,14 +256,23 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             ))}
           </Animated.View>
 
+          <Animated.View entering={FadeInDown.delay(360).duration(600)} style={styles.trustCard}>
+            <Text style={styles.trustLabel}>WHY MEMBERS STAY</Text>
+            <Text style={styles.trustBody}>
+              The value compounds as you log more. Deeper Sky highlights what changed this week, what keeps repeating, and what your private history is teaching you.
+            </Text>
+            <Text style={styles.trustFootnote}>
+              Core analysis stays local whenever possible. Subscription verification and optional external features are clearly separated.
+            </Text>
+          </Animated.View>
+
           {/* Flexible space to push pricing to the bottom on larger screens */}
           <View style={styles.spacer} />
 
           {/* ── Pricing Cards ── */}
           <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.pricingRow}>
-            {resolvedTiers.map((tier) => {
+            {subscriptionTiers.map((tier) => {
               const isAnnual = tier.id === 'yearly';
-              const isLifetime = tier.id === 'lifetime';
               const isSelected = selectedPlan === tier.id;
               return (
                 <Pressable
@@ -279,13 +289,13 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                 >
                   {isAnnual ? (
                     <View style={[styles.bestValueBadge, { backgroundColor: '#C5B5A1' }]}>
-                      <Text style={styles.bestValueText}>BEST VALUE</Text>
+                      <Text style={styles.bestValueText}>BEST FOR GROWTH</Text>
                     </View>
                   ) : (
                     <View style={styles.pricingBadgePlaceholder} />
                   )}
                   <Text style={styles.pricingPeriod}>
-                    {isAnnual ? '12 Months' : isLifetime ? 'Lifetime' : '1 Month'}
+                    {isAnnual ? '12 Months' : '1 Month'}
                   </Text>
                   <Text
                     style={[styles.pricingPrice, isSelected && styles.pricingPriceSelected]}
@@ -296,17 +306,42 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   </Text>
                   {isSelected ? (
                     <MetallicText color="#C5B5A1" style={[styles.pricingMeta, styles.pricingMetaSelected]}>
-                      {isAnnual ? tier.period : isLifetime ? 'One-time' : 'Billed monthly'}
+                      {isAnnual ? 'Build your pattern archive all year' : 'Flexible monthly access'}
                     </MetallicText>
                   ) : (
                     <Text style={styles.pricingMeta}>
-                      {isAnnual ? tier.period : isLifetime ? 'One-time' : 'Billed monthly'}
+                      {isAnnual ? 'Build your pattern archive all year' : 'Flexible monthly access'}
                     </Text>
                   )}
                 </Pressable>
               );
             })}
           </Animated.View>
+
+          {lifetimeTier ? (
+            <Animated.View entering={FadeInDown.delay(560).duration(600)}>
+              <Text style={styles.lifetimeSectionLabel}>Optional one-time unlock</Text>
+              <Pressable
+                onPress={() => handleSelectPlan('lifetime')}
+                disabled={loading || restoring}
+                style={[
+                  styles.lifetimeOfferCard,
+                  selectedPlan === 'lifetime' && styles.lifetimeOfferCardSelected,
+                ]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selectedPlan === 'lifetime' }}
+              >
+                <View style={styles.lifetimeOfferCopy}>
+                  <Text style={styles.lifetimeOfferTitle}>Lifetime</Text>
+                  <Text style={styles.lifetimeOfferDesc}>Best for people who already know they want one long-term private archive.</Text>
+                </View>
+                <View style={styles.lifetimeOfferPriceWrap}>
+                  <Text style={styles.lifetimeOfferPrice}>{lifetimeTier.price}</Text>
+                  <Text style={styles.lifetimeOfferMeta}>single purchase</Text>
+                </View>
+              </Pressable>
+            </Animated.View>
+          ) : null}
         </ScrollView>
 
         {/* ── Sticky Bottom CTA ── */}
@@ -339,12 +374,20 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
                   <ActivityIndicator color={theme.background} />
                 ) : (
                   <Text style={styles.ctaText}>
-                    {`Continue with ${resolvedTiers.find(t => t.id === selectedPlan)?.name}`}
+                    {`Continue with ${selectedTier?.name ?? 'your plan'}`}
                   </Text>
                 )}
               </View>
             </Pressable>
           </Animated.View>
+
+          <Text style={styles.ctaHint}>
+            {selectedPlan === 'yearly'
+              ? 'Yearly is the best fit if you want weekly pattern shifts, recurring themes, and a full year of progress.'
+              : selectedPlan === 'lifetime'
+                ? 'Lifetime works best if you already know you want to keep your full archive in one place long term.'
+                : 'Monthly is the lightest way to try Deeper Sky before committing to a longer pattern-building cycle.'}
+          </Text>
 
           {/* Legal bar */}
           <View style={styles.legalBar}>
@@ -545,6 +588,32 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     lineHeight: 18,
   },
+  trustCard: {
+    marginBottom: 16,
+    padding: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(197,181,161,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  trustLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 1.2,
+    marginBottom: 8,
+  },
+  trustBody: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: theme.textPrimary,
+    marginBottom: 8,
+  },
+  trustFootnote: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: theme.textSecondary,
+  },
 
   // ── Pricing Cards ──
   pricingRow: {
@@ -613,6 +682,60 @@ const styles = StyleSheet.create({
   },
   pricingMetaSelected: {
     color: '#C5B5A1',
+  },
+  lifetimeSectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.38)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  lifetimeOfferCard: {
+    marginBottom: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.015)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    opacity: 0.86,
+  },
+  lifetimeOfferCardSelected: {
+    borderColor: 'rgba(212, 184, 114, 0.24)',
+    backgroundColor: 'rgba(212, 184, 114, 0.035)',
+    opacity: 1,
+  },
+  lifetimeOfferCopy: {
+    flex: 1,
+    paddingRight: 16,
+  },
+  lifetimeOfferTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.textPrimary,
+    marginBottom: 4,
+  },
+  lifetimeOfferDesc: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: theme.textSecondary,
+  },
+  lifetimeOfferPriceWrap: {
+    alignItems: 'flex-end',
+  },
+  lifetimeOfferPrice: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: theme.textPrimary,
+  },
+  lifetimeOfferMeta: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.35)',
+    marginTop: 4,
   },
 
   // ── Lifetime ──
@@ -691,6 +814,14 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: '#3A2A10',
+  },
+  ctaHint: {
+    marginTop: 12,
+    fontSize: 12,
+    lineHeight: 18,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 6,
   },
   legalBar: {
     flexDirection: 'row',

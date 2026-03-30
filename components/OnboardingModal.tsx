@@ -595,19 +595,19 @@ export default function OnboardingModal({
                 <View style={st.centeredFlex}>
                   <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.welcomeContainer}>
                     <Text style={st.welcomeTitle}>Welcome to MySky</Text>
-                    <Text style={st.welcomeSubtitle}>Personal Growth, Mapped to You</Text>
+                    <Text style={st.welcomeSubtitle}>Your private self-pattern tracker</Text>
                     <Text style={st.welcomeDescription}>
-                      Track your mood, sleep, and energy, journal your thoughts, and uncover personal patterns over time.
+                      Track sleep, mood, dreams, and relationships so you can understand yourself over time.
                     </Text>
                   </Animated.View>
 
                   {/* Clean, flush feature list. Removed the distracting individual glass cards. */}
                   <Animated.View entering={FadeInUp.delay(400).duration(700)} style={st.featuresContainer}>
                     {[
-                      { icon: 'pencil-outline' as const, text: 'Daily journaling & reflection' },
-                      { icon: 'pulse-outline' as const, text: 'Mood, sleep & energy tracking' },
-                      { icon: 'analytics-outline' as const, text: 'Pattern insights drawn from data' },
-                      { icon: 'lock-closed-outline' as const, text: 'Private & encrypted on-device' },
+                      { icon: 'pencil-outline' as const, text: 'Daily journaling and dream reflection' },
+                      { icon: 'pulse-outline' as const, text: 'Sleep, mood, and energy tracking' },
+                      { icon: 'analytics-outline' as const, text: 'Weekly pattern shifts and recurring themes' },
+                      { icon: 'lock-closed-outline' as const, text: 'Private by design, encrypted on-device' },
                     ].map((item, i) => (
                       <View key={i} style={st.featureRow}>
                         <View style={st.featureIcon}>
@@ -718,7 +718,7 @@ export default function OnboardingModal({
 
               {/* ══════ BIRTH TIME ══════ */}
               {step === 'birthTime' && (
-                <View style={st.centeredFlex}>
+                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>What time did you arrive?</Text>
                     <Text style={st.etherealSubtext}>
@@ -729,7 +729,7 @@ export default function OnboardingModal({
                       <DateTimePicker
                         value={birthTime}
                         mode="time"
-                        display="spinner"
+                        display="default"
                         onChange={(_e: DateTimePickerEvent, selected?: Date) => {
                           if (selected) {
                             setBirthTime(selected);
@@ -737,8 +737,7 @@ export default function OnboardingModal({
                           }
                         }}
                         themeVariant="dark"
-                        textColor="#FFFFFF"
-                        style={{ width: '100%' }}
+                        style={st.nativeTimePicker}
                       />
                     </View>
 
@@ -752,7 +751,7 @@ export default function OnboardingModal({
                   <Animated.View entering={FadeInUp.delay(400).duration(600)}>
                     <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleTimeContinue} />
                   </Animated.View>
-                </View>
+                </Pressable>
               )}
 
               {/* ══════ LOCATION ══════ */}
@@ -1140,12 +1139,18 @@ const st = StyleSheet.create({
   // ── Time Picker Card — no BlurView, no overflow, nothing that can block native gestures ──
   timePickerCard: {
     width: '100%',
+    minHeight: 216,
     borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: 'rgba(20, 20, 20, 0.85)',
     padding: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nativeTimePicker: {
+    width: '100%',
+    height: 216,
   },
 
   unknownTimeButton: {

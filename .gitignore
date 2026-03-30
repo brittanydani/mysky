@@ -34,7 +34,6 @@ android/app/build/
 # Local scripts
 scripts/
 *.log
-.github/
 claude-test.js
 
 # Supabase temp

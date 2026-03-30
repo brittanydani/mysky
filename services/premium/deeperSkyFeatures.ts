@@ -227,9 +227,9 @@ export class DeeperSkyGate {
 
 // Marketing copy for Deeper Sky — soft, trust-based, never manipulative
 export const DEEPER_SKY_MARKETING = {
-  tagline: 'Go deeper with your patterns',
+  tagline: 'See what your patterns are teaching you',
   headline: 'Deeper Sky',
-  subheadline: 'From awareness to integration — your patterns, your story, fully understood',
+  subheadline: 'Turn your history into weekly shifts, recurring themes, and more personal guidance',
   
   valueProps: [
     {
@@ -284,9 +284,9 @@ export const DEEPER_SKY_MARKETING = {
     },
   ],
   
-  socialProof: '"Finally, an app that helps me understand my patterns." — User review',
+  socialProof: '"Finally, I can see what keeps changing and what keeps repeating." — User review',
   
   guarantee: 'Cancel anytime. No questions asked.',
   
-  trustLine: 'Mood tracking, sleep logging, daily journaling, and basic weekly averages are always free.',
+  trustLine: 'Mood tracking, sleep logging, daily journaling, and basic weekly averages stay free. Core reflections stay private and on-device.',
 };

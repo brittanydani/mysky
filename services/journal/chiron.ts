@@ -309,7 +309,7 @@ export function getChironPlacement(chart: NatalChart): ChironPlacement | null {
         house: chiron.house ?? 0,
         sign: chiron.sign,
         degree: chiron.degree,
-        retrograde: chiron.retrograde,
+        retrograde: chiron.retrograde ?? false,
       };
     }
   }

@@ -36,44 +36,51 @@ export const useCheckInStore = create<CheckInStore>((set) => ({
   saveDailyLog: async (moodValue: number) => {
     set({ isSaving: true, saveStatus: 'idle', error: null });
 
-    const {
-      data: { session },
-      error: authError,
-    } = await supabase.auth.getSession();
-    const user = session?.user;
+    try {
+      const {
+        data: { session },
+        error: authError,
+      } = await supabase.auth.getSession();
+      const user = session?.user;
 
-    if (authError || !user) {
-      set({
-        isSaving: false,
-        saveStatus: 'error',
-        error: authError?.message ?? 'You must be signed in to save a check-in.',
-      });
-      return;
+      if (authError || !user) {
+        set({
+          isSaving: false,
+          saveStatus: 'error',
+          error: authError?.message ?? 'You must be signed in to save a check-in.',
+        });
+        return;
+      }
+
+      const safeMood = clampMood(moodValue);
+
+      const { error } = await supabase
+        .from('daily_check_ins')
+        .upsert(
+          {
+            user_id:    user.id,
+            mood_value: safeMood,
+            log_date:   getTodayDateString(),
+          },
+          { onConflict: 'user_id,log_date' }
+        );
+
+      if (error) {
+        set({
+          isSaving: false,
+          saveStatus: 'error',
+          error: 'Failed to save check-in. Please try again.',
+        });
+        return;
+      }
+
+      set({ isSaving: false, saveStatus: 'success', error: null, todayMood: safeMood });
+    } catch (e: unknown) {
+      const msg = e instanceof Error && e.message.includes('network')
+        ? 'Network error — your check-in could not be saved. Please check your connection.'
+        : 'Something went wrong saving your check-in. Please try again.';
+      set({ isSaving: false, saveStatus: 'error', error: msg });
     }
-
-    const safeMood = clampMood(moodValue);
-
-    const { error } = await supabase
-      .from('daily_check_ins')
-      .upsert(
-        {
-          user_id:    user.id,
-          mood_value: safeMood,
-          log_date:   getTodayDateString(),
-        },
-        { onConflict: 'user_id,log_date' }
-      );
-
-    if (error) {
-      set({
-        isSaving: false,
-        saveStatus: 'error',
-        error: error.message ?? 'Failed to save check-in.',
-      });
-      return;
-    }
-
-    set({ isSaving: false, saveStatus: 'success', error: null, todayMood: safeMood });
   },
 
   loadTodayCheckIn: async () => {

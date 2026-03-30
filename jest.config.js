@@ -5,10 +5,9 @@ module.exports = {
   roots: ['<rootDir>/services', '<rootDir>/utils', '<rootDir>/store'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
-  // Force-exit after all tests complete. astronomy-engine and native module
-  // stubs keep the V8 isolate alive in jest workers, causing the
-  // "worker process failed to exit gracefully" warning without this.
-  forceExit: true,
+  // Keep force-exit available for debugging flaky environments, but do not
+  // enable it by default because it produces a misleading open-handle warning.
+  forceExit: process.env.JEST_FORCE_EXIT === '1',
   moduleNameMapper: {
     // Expo native packages that use ESM and cannot run in Node test environment
     '^expo-crypto$': '<rootDir>/__mocks__/expo-crypto.js',

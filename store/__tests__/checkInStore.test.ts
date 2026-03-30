@@ -186,7 +186,7 @@ describe('saveDailyLog — database error', () => {
     await getStore().saveDailyLog(5);
     const state = getStore();
     expect(state.saveStatus).toBe('error');
-    expect(state.error).toContain('DB write failed');
+    expect(state.error).toContain('Failed to save check-in');
     expect(state.isSaving).toBe(false);
   });
 });

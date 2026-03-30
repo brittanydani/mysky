@@ -85,8 +85,8 @@ export function captureSkySnapshot(chart: NatalChart, date: Date = new Date()): 
 
     return {
       moonSign,
-      moonHouse,
-      sunHouse,
+      moonHouse: moonHouse ?? 0,
+      sunHouse: sunHouse ?? 0,
       transitEvents,
       lunarPhase,
       retrogrades,

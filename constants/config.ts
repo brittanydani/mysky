@@ -10,7 +10,7 @@ export const SUPPORT_EMAIL = 'brittanyapps@outlook.com';
 
 export const config = {
   appName: 'MySky',
-  tagline: 'Personal Growth, Mapped to You',
+  tagline: 'Track sleep, mood, dreams, and relationships to understand yourself over time.',
   // Reads the live version from app.json via expo-constants so this never drifts.
   version: Constants.expoConfig?.version ?? '1.0.0',
   
@@ -32,16 +32,16 @@ export const config = {
         price: '$29.99',
         priceValue: 29.99,
         period: 'per year',
-        description: 'Save 50% vs monthly',
+        description: 'Best plan for building patterns over time',
         popular: true,
       },
       {
         id: 'lifetime',
         name: 'Lifetime',
-        price: '$49.99',
-        priceValue: 49.99,
+        price: '$129.99',
+        priceValue: 129.99,
         period: 'one time',
-        description: 'The complete journey',
+        description: 'One-time unlock for long-term archives',
         popular: false,
       },
     ],

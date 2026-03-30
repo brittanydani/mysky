@@ -128,7 +128,7 @@ export default function OnboardingRestoreScreen() {
                   size={20} 
                   color={backupUri ? '#6EBF8B' : PALETTE.gold} 
                 />
-                <MetallicText style={[styles.pickText, backupUri && { fontWeight: '700' }]} color={backupUri ? '#6EBF8B' : PALETTE.gold}>
+                <MetallicText style={backupUri ? [styles.pickText, { fontWeight: '700' as const }] : styles.pickText} color={backupUri ? '#6EBF8B' : PALETTE.gold}>
                   {backupUri ? 'Backup file selected' : 'Choose backup file'}
                 </MetallicText>
               </Pressable>

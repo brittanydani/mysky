@@ -78,33 +78,38 @@ export const useDreamMapStore = create<DreamMapStore>((set, get) => ({
     if (get().isFetching) return;
     set({ data: null, isFetching: true, error: null });
 
-    const { data, error } = await supabase.rpc('get_dream_cluster_data', {
-      days_back: 30,
-    });
-
-    if (error) {
-      set({
-        isFetching: false,
-        error: error.message ?? 'Failed to load dream cluster data.',
+    try {
+      const { data, error } = await supabase.rpc('get_dream_cluster_data', {
+        days_back: 30,
       });
-      return;
+
+      if (error) {
+        set({
+          isFetching: false,
+          error: error.message ?? 'Failed to load dream cluster data.',
+        });
+        return;
+      }
+
+      const raw = data as Record<string, unknown> | null;
+      const payload: DreamClusterPayload = {
+        nodes: raw && Array.isArray(raw.nodes)
+          ? (raw.nodes as unknown[]).filter(isDreamNode)
+          : [],
+        links: raw && Array.isArray(raw.links)
+          ? (raw.links as unknown[]).filter(isDreamLink)
+          : [],
+        lastSynced:
+          raw && typeof raw.lastSynced === 'string'
+            ? raw.lastSynced
+            : new Date().toISOString(),
+      };
+
+      set({ data: payload, isFetching: false, error: null });
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to load dream cluster data.';
+      set({ isFetching: false, error: msg });
     }
-
-    const raw = data as Record<string, unknown> | null;
-    const payload: DreamClusterPayload = {
-      nodes: raw && Array.isArray(raw.nodes)
-        ? (raw.nodes as unknown[]).filter(isDreamNode)
-        : [],
-      links: raw && Array.isArray(raw.links)
-        ? (raw.links as unknown[]).filter(isDreamLink)
-        : [],
-      lastSynced:
-        raw && typeof raw.lastSynced === 'string'
-          ? raw.lastSynced
-          : new Date().toISOString(),
-    };
-
-    set({ data: payload, isFetching: false, error: null });
   },
 }));
 

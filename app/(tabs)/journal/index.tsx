@@ -219,7 +219,7 @@ export default function JournalScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries.length, isPremium]);
 
-  const moodToLevel = (mood: string): MoodLevel => {
+  const moodToLevel = useCallback((mood: string): MoodLevel => {
     const map: Record<string, MoodLevel> = {
       calm: 5,
       soft: 4,
@@ -228,9 +228,9 @@ export default function JournalScreen() {
       stormy: 1,
     };
     return map[mood] ?? 3;
-  };
+  }, []);
 
-  const generatePatternInsights = () => {
+  const generatePatternInsights = useCallback(() => {
     try {
       const sample = entries.slice(0, 90);
       const entryMetas: JournalEntryMeta[] = sample.map((e) => {
@@ -253,7 +253,7 @@ export default function JournalScreen() {
     } catch (e) {
       logger.error('[Journal] Pattern analysis failed:', e);
     }
-  };
+  }, [entries, isPremium, moodToLevel]);
 
   const loadEntries = async (reset = false) => {
     try {

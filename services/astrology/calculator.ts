@@ -166,10 +166,47 @@ export class EnhancedAstrologyCalculator {
   private static transitsCache: Map<string, TransitCacheEntry> = new Map();
   private static TRANSIT_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
+  // Natal chart cache — birth data is deterministic so cache by serialized input
+  private static natalChartCache: Map<string, NatalChart> = new Map();
+  private static NATAL_CACHE_MAX_SIZE = 5;
+
+  private static buildNatalCacheKey(birthData: BirthData): string {
+    return JSON.stringify({
+      d: birthData.date,
+      t: birthData.time,
+      u: birthData.hasUnknownTime,
+      a: birthData.approximateTime,
+      la: birthData.latitude,
+      lo: birthData.longitude,
+      tz: birthData.timezone,
+      h: birthData.houseSystem,
+      z: birthData.zodiacSystem,
+      o: birthData.orbPreset,
+    });
+  }
+
+  /** Clear the natal chart cache (e.g. after editing birth data or settings). */
+  static clearNatalChartCache(): void {
+    this.natalChartCache.clear();
+  }
+
   static generateNatalChart(birthData: BirthData): NatalChart {
+    const cacheKey = this.buildNatalCacheKey(birthData);
+    const cached = this.natalChartCache.get(cacheKey);
+    if (cached) return cached;
+
     try {
       InputValidator.validateBirthData(birthData);
-      return this.generateWithTimezone(birthData);
+      const chart = this.generateWithTimezone(birthData);
+
+      // Evict oldest entries if cache is full
+      if (this.natalChartCache.size >= this.NATAL_CACHE_MAX_SIZE) {
+        const firstKey = this.natalChartCache.keys().next().value;
+        if (firstKey !== undefined) this.natalChartCache.delete(firstKey);
+      }
+      this.natalChartCache.set(cacheKey, chart);
+
+      return chart;
     } catch (err) {
       const wrapped = err instanceof Error ? err : new Error(String(err));
       logger.error('Failed to generate natal chart:', wrapped);
@@ -499,7 +536,7 @@ export class EnhancedAstrologyCalculator {
           sign,
           degree,
           minute,
-          house,
+          house: house ?? undefined,
         };
 
         aspectPointsByName.set('Part of Fortune', pofAbs);

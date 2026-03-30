@@ -57,6 +57,13 @@ interface SnapshotData {
   stressTrend: 'improving' | 'worsening' | 'stable' | null;
 }
 
+interface LoopCardContent {
+  label: string;
+  title: string;
+  body: string;
+  accent: string;
+}
+
 /** Map 1–10 average mood to a human-readable label. */
 function moodSubLabel(avg: number): string {
   if (avg <= 3) return 'Low';
@@ -64,6 +71,91 @@ function moodSubLabel(avg: number): string {
   if (avg <= 6.5) return 'Steady';
   if (avg <= 8) return 'Good';
   return 'Elevated';
+}
+
+function buildWeeklyChangeCard(deepBundle: DeepPatternBundle | null, snapshot: SnapshotData): LoopCardContent | null {
+  const weekSummary = deepBundle?.bundle.weekSummary;
+  const timeOfDay = deepBundle?.bundle.timeOfDay;
+
+  if (weekSummary) {
+    const stressLine = weekSummary.stressTrend.direction === 'up'
+      ? 'Stress has been rising.'
+      : weekSummary.stressTrend.direction === 'down'
+        ? 'Stress has been easing.'
+        : 'Stress has stayed fairly steady.';
+
+    return {
+      label: 'WHAT CHANGED THIS WEEK',
+      title: 'Your weekly signal',
+      body: `${stressLine} Mood averaged ${weekSummary.avgMood.toFixed(1)}/10 and energy averaged ${((weekSummary.avgEnergy / 9) * 10).toFixed(1)}/10.${timeOfDay ? ` ${timeOfDay.insight}` : ''}`,
+      accent: PALETTE.silverBlue,
+    };
+  }
+
+  if (snapshot.avgMood !== null) {
+    return {
+      label: 'WHAT CHANGED THIS WEEK',
+      title: 'Your pattern baseline is forming',
+      body: `You have ${snapshot.checkInCount} check-ins in the last 30 days and an average mood of ${snapshot.avgMood.toFixed(1)}/10. Keep logging for a fuller weekly change signal.`,
+      accent: PALETTE.silverBlue,
+    };
+  }
+
+  return null;
+}
+
+function buildLearningCard(deepBundle: DeepPatternBundle | null, enhanced: EnhancedInsightBundle | null): LoopCardContent | null {
+  const bundle = deepBundle?.bundle;
+  const relational = deepBundle?.relational;
+  const blueprintTheme = deepBundle?.blueprint[0];
+
+  if (bundle?.tagInsights?.hasTagData) {
+    const restore = bundle.tagInsights.restores[0]?.label;
+    const drain = bundle.tagInsights.drains[0]?.label;
+    if (restore && drain) {
+      return {
+        label: "WHAT YOU'RE LEARNING",
+        title: 'Your strongest pattern right now',
+        body: `${restore} tends to restore you, while ${drain} shows up more often on heavier days. This gets sharper as your history grows.`,
+        accent: PALETTE.emerald,
+      };
+    }
+  }
+
+  if (enhanced?.keywordLift.hasData && enhanced.keywordLift.restores.length > 0) {
+    const restoreWord = enhanced.keywordLift.restores[0]?.label;
+    const drainWord = enhanced.keywordLift.drains[0]?.label;
+    return {
+      label: "WHAT YOU'RE LEARNING",
+      title: 'Your language leaves clues',
+      body: drainWord
+        ? `Your writing shifts with your state. ${restoreWord} appears more on your better days, while ${drainWord} is more common on harder ones.`
+        : `Your writing shifts with your state. ${restoreWord} appears more often on your better days.`,
+      accent: PALETTE.gold,
+    };
+  }
+
+  if (relational && relational.moodLift !== null) {
+    return {
+      label: "WHAT YOU'RE LEARNING",
+      title: 'Connection affects your baseline',
+      body: relational.moodLift > 0
+        ? `Relational days lift your mood by about ${relational.moodLift.toFixed(1)} points. Connection looks like a real source of regulation for you.`
+        : `Relational days run about ${Math.abs(relational.moodLift).toFixed(1)} points lower. Connection may be meaningful, but it is also carrying weight.`,
+      accent: PALETTE.rose,
+    };
+  }
+
+  if (blueprintTheme) {
+    return {
+      label: "WHAT YOU'RE LEARNING",
+      title: blueprintTheme.title,
+      body: blueprintTheme.body,
+      accent: PALETTE.gold,
+    };
+  }
+
+  return null;
 }
 
 export default function PatternsScreen() {
@@ -78,6 +170,9 @@ export default function PatternsScreen() {
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [deepBundle, setDeepBundle] = useState<DeepPatternBundle | null>(null);
+  const weeklyChangeCard = buildWeeklyChangeCard(deepBundle, snapshot);
+  const learningCard = buildLearningCard(deepBundle, enhanced);
+  const premiumTeaser = weeklyChangeCard ?? learningCard;
 
   useFocusEffect(
     useCallback(() => {
@@ -189,6 +284,20 @@ export default function PatternsScreen() {
             )}
           </View>
 
+          {weeklyChangeCard && (
+            <>
+              <SectionHeader title="What Changed This Week" icon="calendar-outline" />
+              <LoopCard content={weeklyChangeCard} />
+            </>
+          )}
+
+          {learningCard && (
+            <>
+              <SectionHeader title="What You're Learning" icon="school-outline" />
+              <LoopCard content={learningCard} />
+            </>
+          )}
+
           {/* ── Hub 3: Deep Insights (Premium) ── */}
           <SectionHeader title="Deep Insights" icon="analytics-outline" />
           {isPremium ? (
@@ -207,8 +316,17 @@ export default function PatternsScreen() {
           ) : (
             <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
               <LinearGradient colors={['rgba(212, 184, 114, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.premiumLock}>
-                <MetallicIcon name="lock-closed-outline" size={20} color={PALETTE.gold} />
-                <MetallicText style={styles.premiumText} color={PALETTE.gold}>Unlock Deep Pattern Insights</MetallicText>
+                <View style={styles.premiumLockIcon}>
+                  <MetallicIcon name="lock-closed-outline" size={20} color={PALETTE.gold} />
+                </View>
+                <View style={styles.premiumLockTextWrap}>
+                  <MetallicText style={styles.premiumText} color={PALETTE.gold}>Unlock your full private pattern report</MetallicText>
+                  <Text style={styles.premiumTeaserText}>
+                    {premiumTeaser
+                      ? `${premiumTeaser.title}: ${premiumTeaser.body}`
+                      : 'See what changed this week, what keeps repeating, and what your history is teaching you.'}
+                  </Text>
+                </View>
               </LinearGradient>
             </Pressable>
           )}
@@ -232,6 +350,14 @@ const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
     <MetallicIcon name={icon as any} size={18} color={PALETTE.gold} />
     <Text style={styles.sectionTitle}>{title}</Text>
   </View>
+);
+
+const LoopCard = ({ content }: { content: LoopCardContent }) => (
+  <LinearGradient colors={[`${content.accent}18`, 'rgba(10,10,12,0.85)']} style={[styles.insightCard, styles.loopCard]}>
+    <Text style={styles.insightLabel}>{content.label}</Text>
+    <Text style={[styles.loopTitle, { color: content.accent }]}>{content.title}</Text>
+    <Text style={styles.insightBody}>{content.body}</Text>
+  </LinearGradient>
 );
 
 // ── Deep Insight Lenses ───────────────────────────────────────────────────────
@@ -675,7 +801,12 @@ const styles = StyleSheet.create({
   insightCard: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder },
   insightLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1, marginBottom: 8 },
   insightBody: { color: PALETTE.textMain, fontSize: 15, lineHeight: 24 },
-  premiumLock: { padding: 24, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  loopCard: { marginBottom: 24 },
+  loopTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  premiumLock: { padding: 24, borderRadius: 24, flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  premiumLockIcon: { paddingTop: 2 },
+  premiumLockTextWrap: { flex: 1 },
   premiumText: { color: PALETTE.gold, fontWeight: '600' },
+  premiumTeaserText: { color: 'rgba(255,255,255,0.72)', fontSize: 13, lineHeight: 20, marginTop: 8 },
 });
 
