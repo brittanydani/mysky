@@ -8,6 +8,7 @@ import {
   Alert,
   Keyboard,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -31,15 +32,15 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import * as Haptics from 'expo-haptics';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { BlurView } from 'expo-blur';
-import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
-
-import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { MetallicIcon } from './ui/MetallicIcon';
-import SkiaMetallicPill from './ui/SkiaMetallicPill';
-import { useRouter, Href } from 'expo-router';
+import { MetallicText } from './ui/MetallicText';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { LegalOverlay } from './LegalOverlay';
 import { theme } from '../constants/theme';
 
 import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
@@ -48,10 +49,8 @@ import { InputValidator } from '../services/astrology/inputValidator';
 import { localDb } from '../services/storage/localDb';
 import { BackupService } from '../services/storage/backupService';
 import { toLocalDateString } from '../utils/dateUtils';
-import { logger } from '../utils/logger';
+import { logger } from     '../utils/logger';
 import Constants from 'expo-constants';
-
-const ONBOARDING_RETURN_STEP_KEY = 'msky_onboarding_return_step';
 
 const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
 const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
@@ -72,13 +71,13 @@ const PREMIUM = {
 };
 
 // 6-stop horizontal Liquid Mirror Gold gradient
-const LIQUID_GOLD: readonly [string, string, ...string[]] = [
+const LIQUID_GOLD: string[] = [
   '#FFFFFF',   // 0 — Specular white glint
   '#F7E7C2',   // 1 — Champagne gold
   '#EED9A7',   // 2 — Base gold
   '#CFAE73',   // 3 — Amber mid-tone
   '#9B7A46',   // 4 — Deep bronze shadow
-] as const;
+];
 
 // ── Nominatim location search ──
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
@@ -95,11 +94,11 @@ interface LocationSuggestion {
   lon: string;
 }
 
-type OnboardingStep = 'welcome' | 'terms' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
+type OnboardingStep = 'welcome' | 'privacy' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
 
 const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   welcome: -1,
-  terms: -1,
+  privacy: -1,
   name: 0,
   birthDate: 1,
   birthTime: 2,
@@ -107,12 +106,6 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   processing: -1,
   passphrase: -1,
 };
-
-const CONSENT_LINKS: { title: string; subtitle: string; icon: keyof typeof Ionicons.glyphMap; route: Href }[] = [
-  { title: 'Terms of Use (EULA)', subtitle: 'Review our service agreement', icon: 'document-text-outline', route: '/terms' as Href },
-  { title: 'Privacy Policy', subtitle: 'How we secure your chart data', icon: 'shield-checkmark-outline', route: '/privacy' as Href },
-  { title: 'FAQ', subtitle: 'Common technical questions', icon: 'help-circle-outline', route: '/faq' as Href },
-];
 
 // ── Living Volumetric Nebula ──
 function LivingBackground() {
@@ -171,7 +164,7 @@ function ProcessingOrb() {
       <Animated.View style={[st.processingGlow, glowStyle]} />
       <Animated.View style={[st.processingInnerRing, innerRingStyle]} />
       <Animated.View style={[st.processingOuterRing, outerRingStyle]} />
-      <Ionicons name="scan-outline" size={36} color={PREMIUM.titanium} style={st.processingSparkle} />
+      <MetallicIcon name="scan-outline" size={36} color={PREMIUM.titanium} style={st.processingSparkle} />
     </View>
   );
 }
@@ -259,18 +252,16 @@ function BottomNav({
 interface OnboardingModalProps {
   visible: boolean;
   onComplete: (chart: NatalChart) => void;
-  needsTermsConsent?: boolean;
-  onTermsConsent?: (granted: boolean) => void;
+  onPrivacyConsent?: () => void;
 }
 
 export default function OnboardingModal({
   visible,
   onComplete,
-  needsTermsConsent = false,
-  onTermsConsent,
+  onPrivacyConsent,
 }: OnboardingModalProps) {
-  const router = useRouter();
   const [step, setStep] = useState<OnboardingStep>('welcome');
+  const [legalView, setLegalView] = useState<null | 'terms' | 'privacy' | 'faq'>(null);
 
   const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date());
@@ -290,9 +281,7 @@ export default function OnboardingModal({
   const [backupUri, setBackupUri] = useState<string | null>(null);
   const [passphrase, setPassphrase] = useState('');
   const [isNameFocused, setIsNameFocused] = useState(false);
-
-  // Guard: prevents blur/pressOut from firing "I Agree" while navigating to a legal screen
-  const navigatingLegalRef = useRef(false);
+  const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
 
   // ── Hardware Tactility: Scale animations ──
   const ctaScale = useSharedValue(1);
@@ -308,30 +297,7 @@ export default function OnboardingModal({
     };
   }, []);
 
-  // Restore persisted step when modal becomes visible (survives unmount during legal screen nav)
-  useEffect(() => {
-    const restoreStep = async () => {
-      if (!visible) return;
-      try {
-        const savedStep = await EncryptedAsyncStorage.getItem(ONBOARDING_RETURN_STEP_KEY);
-        if (
-          savedStep === 'welcome' ||
-          savedStep === 'terms' ||
-          savedStep === 'name' ||
-          savedStep === 'birthDate' ||
-          savedStep === 'birthTime' ||
-          savedStep === 'location' ||
-          savedStep === 'passphrase'
-        ) {
-          setStep(savedStep as OnboardingStep);
-          await EncryptedAsyncStorage.removeItem(ONBOARDING_RETURN_STEP_KEY);
-        }
-      } catch {}
-    };
-    restoreStep();
-  }, [visible]);
-
-  const STEP_ORDER: OnboardingStep[] = ['terms', 'name', 'birthDate', 'birthTime', 'location', 'processing'];
+  const STEP_ORDER: OnboardingStep[] = ['privacy', 'name', 'birthDate', 'birthTime', 'location', 'processing'];
 
   const goToStep = (next: OnboardingStep) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -339,34 +305,24 @@ export default function OnboardingModal({
   };
 
   const goBack = () => {
+    if (step === 'privacy') {
+      goToStep('welcome');
+      return;
+    }
     const idx = STEP_ORDER.indexOf(step);
     if (idx > 0) goToStep(STEP_ORDER[idx - 1]);
   };
 
   const handleGetStarted = () => {
     Haptics.selectionAsync().catch(() => {});
-    goToStep('terms');
+    goToStep('privacy');
   };
 
-  const handleTermsAccept = () => {
-    // Block if we're mid-navigation to a legal screen (blur can misfire as a tap)
-    if (navigatingLegalRef.current) return;
+  const handlePrivacyAccept = () => {
     Haptics.selectionAsync().catch(() => {});
-    onTermsConsent?.(true);
+    onPrivacyConsent?.();
     goToStep('name');
   };
-
-  const openConsentRoute = useCallback(async (route: Href) => {
-    // Lock the accept button BEFORE any async work so blur events are blocked
-    navigatingLegalRef.current = true;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    try {
-      await EncryptedAsyncStorage.setItem(ONBOARDING_RETURN_STEP_KEY, step);
-      router.push(route);
-    } catch { Alert.alert('Unable to open', 'Please try again.'); }
-    // Release after a generous delay so the transition animation completes
-    setTimeout(() => { navigatingLegalRef.current = false; }, 800);
-  }, [router, step]);
 
   const handleNameContinue = () => {
     if (!userName.trim()) return;
@@ -560,7 +516,7 @@ export default function OnboardingModal({
   if (!visible) return null;
 
   return (
-    <View style={st.modalOverlay}>
+    <Modal visible animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
       <View style={st.container}>
         
         {/* Deep Stack Background */}
@@ -570,6 +526,9 @@ export default function OnboardingModal({
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <SkiaDynamicCosmos fill="transparent" />
         </View>
+
+        {/* Solid OLED background across all steps */}
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020817' }]} pointerEvents="none" />
 
         <SafeAreaView edges={['top', 'bottom']} style={st.safeArea}>
           <KeyboardAvoidingView 
@@ -589,10 +548,10 @@ export default function OnboardingModal({
                 <View style={st.centeredFlex}>
                   <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.welcomeContainer}>
                     <Text style={st.welcomeTitle}>Welcome to MySky</Text>
-                    <Text style={st.welcomeSubtitle}>Your private self-pattern tracker</Text>
-                    <Text style={st.welcomeDescription}>
+                    <MetallicText style={st.welcomeSubtitle} variant="gold">Your private self-pattern tracker</MetallicText>
+                    <MetallicText style={st.welcomeDescription} color={PREMIUM.textMuted}>
                       Track sleep, mood, dreams, and relationships so you can understand yourself over time.
-                    </Text>
+                    </MetallicText>
                   </Animated.View>
 
                   {/* Clean, flush feature list. Removed the distracting individual glass cards. */}
@@ -605,7 +564,7 @@ export default function OnboardingModal({
                     ].map((item, i) => (
                       <View key={i} style={st.featureRow}>
                         <View style={st.featureIcon}>
-                          <Ionicons name={item.icon} size={22} color={PREMIUM.titanium} />
+                          <MetallicIcon name={item.icon} size={22} color={PREMIUM.titanium} />
                         </View>
                         <Text style={st.featureText}>{item.text}</Text>
                       </View>
@@ -631,55 +590,95 @@ export default function OnboardingModal({
                       </Pressable>
                     </Animated.View>
                     <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
-                      <Ionicons name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
-                      <Text style={st.restoreText}>Restore from Backup</Text>
+                      <MetallicIcon name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
+                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Restore from Backup</MetallicText>
                     </Pressable>
                   </Animated.View>
                 </View>
               )}
 
-              {/* ══════ TERMS CONSENT ══════ */}
-              {step === 'terms' && (
-                <View style={st.centeredFlex}>
-                  <Animated.View entering={FadeInDown.delay(100).duration(700)} style={st.termsContainer}>
-                    <Text style={st.termsTitle}>Before you continue</Text>
-                    <Text style={st.termsBody}>
-                      To provide personalized insights, we need you to review and accept our data framework.
-                    </Text>
+              {/* ══════ PRIVACY & TERMS CONSENT ══════ */}
+              {step === 'privacy' && (
+                <ScrollView
+                  style={{ flex: 1 }}
+                  contentContainerStyle={{ flexGrow: 1, paddingTop: 64, paddingBottom: 16 }}
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Animated.View entering={FadeInDown.delay(100).duration(800)} style={st.termsHeader}>
+                    <View style={st.termsIconGlow}>
+                      <MetallicIcon name="shield-checkmark-outline" size={44} color={PREMIUM.titanium} />
+                    </View>
+                    <Text style={st.termsTitle}>Your Privacy Matters</Text>
+                    <MetallicText style={st.termsSubtitle} variant="gold">
+                      MySky is built to help you reflect privately, not to turn your inner life into ad data.
+                    </MetallicText>
+                  </Animated.View>
 
-                    <View style={st.termsLinksBlock}>
-                      {CONSENT_LINKS.map((l) => (
+                  <Animated.View entering={FadeInUp.delay(300).duration(600)} style={st.termsContent}>
+                    <View style={st.termsGlassSection}>
+                      <MetallicText style={st.termsSectionLabel} color={PREMIUM.textMuted}>What You Add</MetallicText>
+                      <View style={st.termsDataRow}>
+                        <MetallicIcon name="sparkles-outline" size={16} color={PREMIUM.titanium} />
+                        <Text style={st.termsDataText}>Birth data & personalization settings</Text>
+                      </View>
+                      <View style={st.termsDataRow}>
+                        <MetallicIcon name="book-outline" size={16} color={PREMIUM.titanium} />
+                        <Text style={st.termsDataText}>Journal, mood, and sleep entries</Text>
+                      </View>
+                    </View>
+
+                    <View style={[st.termsGlassSection, { borderColor: 'rgba(110, 191, 139, 0.2)' }]}>
+                      <MetallicText style={st.termsSectionLabel} variant="green">Your Agreement</MetallicText>
+                      <View style={st.termsDataRow}>
+                        <MetallicIcon name="document-text-outline" size={16} color="#6EBF8B" />
+                        <Text style={st.termsDataText}>By continuing, you accept our Terms of Use and this Privacy Policy</Text>
+                      </View>
+                      <View style={st.termsDataRow}>
+                        <MetallicIcon name="settings-outline" size={16} color="#6EBF8B" />
+                        <Text style={st.termsDataText}>You can review these anytime in Settings</Text>
+                      </View>
+                    </View>
+
+                    {/* ── Legal Pill Links ── */}
+                    <View style={st.legalPillsRow}>
+                      {([
+                        { label: 'Terms', id: 'terms' as const },
+                        { label: 'Privacy', id: 'privacy' as const },
+                        { label: 'FAQ', id: 'faq' as const },
+                      ]).map((item) => (
                         <Pressable
-                          key={l.title}
-                          onPress={() => openConsentRoute(l.route)}
+                          key={item.label}
+                          style={({ pressed }) => [st.legalPill, pressed && { opacity: 0.6 }]}
+                          onPress={() => setLegalView(item.id)}
                           accessibilityRole="link"
-                          style={({ pressed }) => [st.termsLinkRow, pressed && { opacity: 0.7 }]}
                         >
-                          <View style={st.termsLinkLeft}>
-                            <View style={st.termsLinkIcon}>
-                              <MetallicIcon name={l.icon} size={18} color={theme.growth ?? PREMIUM.titanium} />
-                            </View>
-                            <View>
-                              <Text style={st.termsLinkTitle}>{l.title}</Text>
-                              <Text style={st.termsLinkSubtitle}>{l.subtitle}</Text>
-                            </View>
-                          </View>
-                          <Ionicons name="chevron-forward-outline" size={18} color={PREMIUM.textMuted} />
+                          <MetallicText style={st.legalPillText} color={PREMIUM.textMuted}>{item.label}</MetallicText>
+                          <MetallicIcon name="chevron-forward-outline" size={12} color={PREMIUM.textMuted} />
                         </Pressable>
                       ))}
                     </View>
-
-                    <Text style={st.termsFootnote}>You can view these anytime in Settings.</Text>
                   </Animated.View>
 
-                  <Animated.View entering={FadeInUp.delay(500).duration(600)} style={st.ctaContainerFixed}>
-                    <SkiaMetallicPill
-                      label="I Agree"
-                      onPress={handleTermsAccept}
-                      borderRadius={16}
-                    />
+                  <Animated.View entering={FadeInUp.delay(500).duration(600)} style={st.termsFooterActions}>
+                    <Pressable
+                      onPress={handlePrivacyAccept}
+                      style={({ pressed }) => [st.termsAcceptBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                    >
+                      <LinearGradient
+                        colors={['#FFF4D6', '#C9AE78', '#6B532E']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={st.termsBtnGradient}
+                      >
+                        <Text style={st.termsAcceptBtnText}>I Accept & Continue</Text>
+                      </LinearGradient>
+                    </Pressable>
+                    <Pressable style={st.restoreButton} onPress={() => goToStep('welcome')}>
+                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Go Back</MetallicText>
+                    </Pressable>
                   </Animated.View>
-                </View>
+                </ScrollView>
               )}
 
               {/* ══════ NAME ══════ */}
@@ -728,9 +727,9 @@ export default function OnboardingModal({
                 <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>When did your journey begin?</Text>
-                    <Text style={st.etherealSubtext}>
+                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
                       Used to accurately map your internal weather and profile.
-                    </Text>
+                    </MetallicText>
 
                     <BlurView intensity={30} tint="dark" style={st.glassCard}>
                       <DateTimePicker
@@ -756,40 +755,49 @@ export default function OnboardingModal({
 
               {/* ══════ BIRTH TIME ══════ */}
               {step === 'birthTime' && (
-                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
+                <View style={st.centeredFlex}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>What time did you arrive?</Text>
-                    <Text style={st.etherealSubtext}>
+                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
                       Precision helps us personalize your data patterns.
-                    </Text>
+                    </MetallicText>
 
-                    <View style={st.timePickerCard}>
-                      <DateTimePicker
-                        value={birthTime}
-                        mode="time"
-                        display="default"
-                        onChange={(_e: DateTimePickerEvent, selected?: Date) => {
-                          if (selected) {
-                            setBirthTime(selected);
-                            setHasUnknownTime(false);
-                          }
-                        }}
-                        themeVariant="dark"
-                        style={st.nativeTimePicker}
-                      />
-                    </View>
+                    <Pressable
+                      style={({ pressed }) => [st.timeDisplayButton, pressed && { opacity: 0.8 }]}
+                      onPress={() => setIsTimePickerVisible(true)}
+                    >
+                      <MetallicIcon name="time-outline" size={22} color={PREMIUM.titanium} />
+                      <Text style={st.timeDisplayText}>
+                        {birthTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                      <MetallicIcon name="chevron-down-outline" size={18} color={PREMIUM.textMuted} />
+                    </Pressable>
+
+                    <DateTimePickerModal
+                      isVisible={isTimePickerVisible}
+                      mode="time"
+                      date={birthTime}
+                      onConfirm={(selected) => {
+                        setBirthTime(selected);
+                        setHasUnknownTime(false);
+                        setIsTimePickerVisible(false);
+                      }}
+                      onCancel={() => setIsTimePickerVisible(false)}
+                      themeVariant="dark"
+                      isDarkModeEnabled={true}
+                    />
 
                     <Pressable
                       style={({ pressed }) => [st.unknownTimeButton, pressed && { opacity: 0.7 }]}
                       onPress={handleUnknownTime}
                     >
-                      <Text style={st.unknownTimeText}>I don't know my exact birth time</Text>
+                      <MetallicText style={st.unknownTimeText} variant="gold">I don't know my exact birth time</MetallicText>
                     </Pressable>
                   </Animated.View>
                   <Animated.View entering={FadeInUp.delay(400).duration(600)}>
                     <BottomNav canGoBack={true} isNextDisabled={false} nextLabel="Continue" nextIcon="arrow-forward" onBack={goBack} onNext={handleTimeContinue} />
                   </Animated.View>
-                </Pressable>
+                </View>
               )}
 
               {/* ══════ LOCATION ══════ */}
@@ -803,12 +811,12 @@ export default function OnboardingModal({
                 >
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>Where did your journey begin?</Text>
-                    <Text style={st.etherealSubtext}>
+                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
                       City of birth roots your profile baseline.
-                    </Text>
+                    </MetallicText>
 
                     <BlurView intensity={30} tint="dark" style={st.locationSearchRow}>
-                      <Ionicons name="search-outline" size={20} color={PREMIUM.titanium} />
+                      <MetallicIcon name="search-outline" size={20} color={PREMIUM.titanium} />
                       <TextInput
                         style={st.locationInput}
                         value={locationQuery}
@@ -844,7 +852,7 @@ export default function OnboardingModal({
                               >
                                 <View>
                                   <Text style={st.suggestionCity}>{city}</Text>
-                                  <Text style={st.suggestionCountry}>{country}</Text>
+                                  <MetallicText style={st.suggestionCountry} color={PREMIUM.textMuted}>{country}</MetallicText>
                                 </View>
                               </Pressable>
                             </React.Fragment>
@@ -855,7 +863,7 @@ export default function OnboardingModal({
 
                     {locationSelected && (
                       <Animated.View entering={FadeIn.duration(400)} style={st.locationConfirmed}>
-                        <Ionicons name="checkmark-circle-outline" size={20} color={PREMIUM.titanium} />
+                        <MetallicIcon name="checkmark-circle-outline" size={20} color={PREMIUM.titanium} />
                         <Text style={st.locationConfirmedText} numberOfLines={2}>
                           {locationPlace}
                         </Text>
@@ -875,7 +883,7 @@ export default function OnboardingModal({
                   <Animated.View entering={FadeIn.delay(100).duration(1000)} style={st.processingContainer}>
                     <ProcessingOrb />
                     <View style={st.processingTextGroup}>
-                      <Text style={st.processingLabel}>COMPILING DATA</Text>
+                      <MetallicText style={st.processingLabel} variant="gold">COMPILING DATA</MetallicText>
                       <Text style={st.processingMessage}>
                         {userName.trim()
                           ? `Mapping telemetry for ${userName.trim()}`
@@ -891,12 +899,12 @@ export default function OnboardingModal({
                 <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
                   <Animated.View entering={FadeIn.delay(100).duration(800)} style={st.singleQuestionContainer}>
                     <View style={st.passphraseIconWrap}>
-                      <Ionicons name="lock-closed-outline" size={32} color={PREMIUM.titanium} />
+                      <MetallicIcon name="lock-closed-outline" size={32} color={PREMIUM.titanium} />
                     </View>
                     <Text style={st.etherealQuestion}>Enter Encryption Key</Text>
-                    <Text style={st.etherealSubtext}>
+                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
                       Provide the passphrase used to secure your backup.
-                    </Text>
+                    </MetallicText>
                     
                     <BlurView intensity={30} tint="dark" style={st.passphraseInputWrapper}>
                       <TextInput
@@ -931,7 +939,7 @@ export default function OnboardingModal({
                     </Animated.View>
 
                     <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('welcome')}>
-                      <Text style={st.restoreText}>Cancel</Text>
+                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Cancel</MetallicText>
                     </Pressable>
                   </Animated.View>
                 </Pressable>
@@ -941,8 +949,9 @@ export default function OnboardingModal({
         </SafeAreaView>
 
 
+        {legalView && <LegalOverlay screen={legalView} onClose={() => setLegalView(null)} />}
       </View>
-    </View>
+    </Modal>
   );
 }
 
@@ -1063,24 +1072,58 @@ const st = StyleSheet.create({
   ctaContainer: { alignItems: 'center', width: '100%' },
   ctaContainerFixed: { alignItems: 'center', width: '100%', paddingTop: 24, paddingBottom: 16 },
 
-  // ── Terms Consent (inline step) ──
-  termsContainer: { alignItems: 'flex-start', width: '100%', marginBottom: 32 },
+  // ── Terms Consent (mirrors PrivacyConsentModal) ──
+  termsHeader: { alignItems: 'center', marginBottom: 20 },
+  termsIconGlow: {
+    width: 88,
+    height: 88,
+    borderRadius: 26,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(232,214,174,0.18)',
+  },
   termsTitle: {
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: '800',
+    letterSpacing: -0.7,
     color: PREMIUM.textMain,
     fontFamily: DISPLAY_BOLD,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  termsSubtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    color: PREMIUM.titanium,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  termsContent: { width: '100%', marginBottom: 28 },
+  termsGlassSection: {
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
     marginBottom: 12,
-    letterSpacing: -0.7,
   },
-  termsBody: {
-    fontSize: 16,
+  termsSectionLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 2.5,
+    textTransform: 'uppercase',
     color: PREMIUM.textMuted,
-    lineHeight: 24,
-    fontFamily: DISPLAY,
-    marginBottom: 24,
+    marginBottom: 10,
   },
-  termsLinksBlock: { width: '100%', gap: 12, marginBottom: 24 },
+  termsDataRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, gap: 10 },
+  termsDataText: { fontSize: 12, color: '#FFFFFF', flex: 1 },
+  termsLinksBlock: { width: '100%', gap: 12, marginBottom: 16 },
   termsLinkRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1105,6 +1148,10 @@ const st = StyleSheet.create({
   termsLinkTitle: { fontSize: 16, fontWeight: '700', color: PREMIUM.textMain, fontFamily: DISPLAY_SEMIBOLD },
   termsLinkSubtitle: { fontSize: 13, color: PREMIUM.textMuted, fontFamily: DISPLAY, marginTop: 2 },
   termsFootnote: { fontSize: 12, color: PREMIUM.textMuted, fontFamily: DISPLAY, textAlign: 'center', width: '100%' },
+  termsFooterActions: { width: '100%', gap: 16 },
+  termsAcceptBtn: { borderRadius: 16, overflow: 'hidden' },
+  termsBtnGradient: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
+  termsAcceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817', fontFamily: DISPLAY_BOLD },
   
   // ── Liquid Mirror Gold Primary Action Button ──
   primaryActionBtn: {
@@ -1227,7 +1274,19 @@ const st = StyleSheet.create({
     borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: PREMIUM.glassBorder,
-    backgroundColor: 'rgba(20, 20, 20, 0.85)',
+    backgroundColor: 'rgba(40, 40, 55, 0.65)',
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timePickerWrapper: {
+    width: '100%',
+    minWidth: 320,
+    height: 216,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1248,6 +1307,25 @@ const st = StyleSheet.create({
     fontWeight: '600',
     color: PREMIUM.titanium,
     fontFamily: DISPLAY_SEMIBOLD,
+  },
+  timeDisplayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+    width: '100%',
+    paddingVertical: 20,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
+  },
+  timeDisplayText: {
+    fontSize: 38,
+    fontWeight: '700',
+    color: PREMIUM.textMain,
+    fontFamily: DISPLAY_BOLD,
+    letterSpacing: 1,
   },
 
   // ── Location Search ──
@@ -1426,6 +1504,33 @@ const st = StyleSheet.create({
     color: PREMIUM.textMain,
     fontFamily: DISPLAY_SEMIBOLD,
     textAlign: 'center',
+  },
+
+  // ── Legal Pill Links ──
+  legalPillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  legalPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  legalPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: PREMIUM.textMuted,
+    fontFamily: DISPLAY_SEMIBOLD,
   },
 
   // ── Passphrase ──

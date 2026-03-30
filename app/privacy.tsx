@@ -8,7 +8,6 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
-import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 // ── Cinematic Palette ──
@@ -22,27 +21,23 @@ const PALETTE = {
   glassHighlight: theme.glass.highlight,
 };
 
-export default function PrivacyPolicyScreen() {
+export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } = {}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   return (
     <View style={styles.container}>
-      <SkiaDynamicCosmos />
-
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
         <View style={styles.headerBar}>
           <Pressable
             style={styles.backButton}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/onboarding/consent' as Href))}
+            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : router.replace('/onboarding/consent' as Href))}
             accessibilityRole="button"
             accessibilityLabel="Back"
           >
             <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>Privacy Policy</Text>
-          <View style={styles.backButton} />
         </View>
 
         <ScrollView
@@ -371,7 +366,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingTop: 40,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },

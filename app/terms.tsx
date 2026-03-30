@@ -9,7 +9,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { theme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
-import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
@@ -23,27 +22,23 @@ const PALETTE = {
   glassHighlight: theme.glass.highlight,
 };
 
-export default function TermsOfServiceScreen() {
+export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void } = {}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   return (
     <View style={styles.container}>
-      <SkiaDynamicCosmos />
-      
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
         <View style={styles.headerBar}>
           <Pressable
             style={styles.backButton}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/onboarding/consent' as Href))}
+            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : router.replace('/onboarding/consent' as Href))}
             accessibilityRole="button"
             accessibilityLabel="Back"
           >
             <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
-          <Text style={styles.headerTitle}>Terms of Use (EULA)</Text>
-          <View style={styles.backButton} />
         </View>
 
         <ScrollView
@@ -258,7 +253,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingTop: 40,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },

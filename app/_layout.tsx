@@ -2,8 +2,8 @@ import 'expo-standard-web-crypto';
 import { GoldIcon } from '../components/ui/GoldIcon';
 // File: app/_layout.tsx
 
-import React, { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { Stack, usePathname, useRouter } from 'expo-router';
+import React, { Component, type ReactNode, useEffect, useRef, useState } from 'react';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -26,7 +26,6 @@ import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
-import { SUPPORT_EMAIL } from '../constants/config';
 
 // Allowlist of routes that notification deep links can navigate to.
 // Prevents injection of arbitrary or external URLs via push notifications.
@@ -130,7 +129,6 @@ export default function RootLayout() {
 }
 
 function AppShell() {
-  const pathname = usePathname();
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
 
@@ -149,10 +147,6 @@ function AppShell() {
   // Prevent double-running the heavy init in edge cases
   const didRunPostConsentInitRef = useRef(false);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const isOnLegalScreen = useMemo(() => {
-    return pathname === '/terms' || pathname === '/privacy' || pathname === '/faq';
-  }, [pathname]);
 
   const checkIfOnboardingCanBeSkipped = async () => {
     try {
@@ -353,32 +347,16 @@ function AppShell() {
 
       setNeedsPrivacyConsent(false);
 
+      // Terms consent is covered by accepting the combined privacy/terms modal
+      await setTermsConsent(true);
+      setNeedsTermsConsent(false);
+
       // Now that consent is granted, complete the deferred initialization
-      const termsAccepted = await getTermsConsent();
-      setNeedsTermsConsent(!termsAccepted);
-      await runPostPrivacyConsentInit(termsAccepted);
+      // Pass false to skip the stale-reinstall check — user just explicitly consented.
+      await runPostPrivacyConsentInit(false);
     } catch (error) {
       logger.error('Privacy consent handling failed:', error);
       setNeedsPrivacyConsent(true);
-    }
-  };
-
-  const handleTermsConsent = async (granted: boolean) => {
-    try {
-      await setTermsConsent(granted);
-      setNeedsTermsConsent(!granted);
-
-      // Existing users who only needed updated terms should not be forced through
-      // profile creation again. Re-check chart state as soon as terms are accepted.
-      // Guard: do NOT re-evaluate onboarding while user is viewing a legal page
-      // (Terms/Privacy/FAQ opened from the onboarding consent step). This prevents
-      // async state churn from remounting the onboarding modal in the wrong step.
-      if (granted && !isOnLegalScreen) {
-        await checkIfOnboardingCanBeSkipped();
-      }
-    } catch (error) {
-      logger.error('Terms consent handling failed:', error);
-      setNeedsTermsConsent(!granted);
     }
   };
 
@@ -392,7 +370,7 @@ function AppShell() {
       logger.error('[RootLayout] Failed to track onboarding_completed:', e);
     }
 
-    if (!needsPrivacyConsent && !needsTermsConsent) {
+    if (!needsPrivacyConsent) {
       router.replace('/(tabs)/home');
     }
   };
@@ -432,8 +410,8 @@ function AppShell() {
               animation: 'fade',
             }}
           >
-            {/* Mount tabs only when all gates are satisfied — including a valid session. */}
-            {!needsPrivacyConsent && !needsTermsConsent && onboardingComplete && !!session && <Stack.Screen name="(tabs)" />}
+            {/* Mount tabs only when privacy is satisfied and onboarding is complete with a valid session. */}
+            {!needsPrivacyConsent && onboardingComplete && !!session && <Stack.Screen name="(tabs)" />}
 
             {/* Onboarding & Auth */}
             <Stack.Screen name="onboarding" />
@@ -465,18 +443,15 @@ function AppShell() {
           </Stack>
 
           {/* Overlay gates (do NOT unmount navigation) */}
-          {needsPrivacyConsent && (
-            <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail={SUPPORT_EMAIL} />
+          {/* Re-consent gate — only shown when consent is withdrawn after onboarding is complete */}
+          {needsPrivacyConsent && onboardingComplete && (
+            <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
           )}
 
-          {/* IMPORTANT: Terms consent is now an inline step inside OnboardingModal.
-              Keep the modal mounted while the user is viewing a legal screen so that
-              onboarding step state is preserved (no remount → no step reset). */}
-          {!needsPrivacyConsent && !onboardingComplete && (
+          {!onboardingComplete && (
             <OnboardingModal
-              visible={!isOnLegalScreen}
-              needsTermsConsent={needsTermsConsent}
-              onTermsConsent={handleTermsConsent}
+              visible
+              onPrivacyConsent={() => handlePrivacyConsent(true)}
               onComplete={handleOnboardingComplete}
             />
           )}
@@ -485,7 +460,6 @@ function AppShell() {
           <AuthRequiredModal
             visible={
               !needsPrivacyConsent &&
-              !needsTermsConsent &&
               onboardingComplete &&
               !authLoading &&
               !session
