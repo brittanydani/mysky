@@ -223,6 +223,9 @@ interface OnboardingModalProps {
   onComplete: (chart: NatalChart) => void;
   needsTermsConsent?: boolean;
   onTermsConsent?: (granted: boolean) => void;
+  /** Called when the welcome screen's "Get Started" is tapped and terms consent is required.
+   * The parent should show TermsConsentModal at the top level to avoid nested-Modal issues on iOS. */
+  onRequestTermsConsent?: () => void;
 }
 
 export default function OnboardingModal({
@@ -230,6 +233,7 @@ export default function OnboardingModal({
   onComplete,
   needsTermsConsent = false,
   onTermsConsent,
+  onRequestTermsConsent,
 }: OnboardingModalProps) {
   // ── Step state ──
   const [step, setStep] = useState<OnboardingStep>('welcome');
@@ -308,11 +312,26 @@ export default function OnboardingModal({
     if (idx > 0) goToStep(STEP_ORDER[idx - 1]);
   };
 
+  // ── Advance to 'name' when parent accepts terms (needsTermsConsent flips false) ──
+  const prevNeedsTermsRef = useRef(needsTermsConsent);
+  useEffect(() => {
+    const wasNeeded = prevNeedsTermsRef.current;
+    prevNeedsTermsRef.current = needsTermsConsent;
+    if (wasNeeded && !needsTermsConsent && step === 'welcome') {
+      goToStep('name');
+    }
+  }, [needsTermsConsent, step]);
+
   // ── Welcome → Name ──
   const handleGetStarted = () => {
     Haptics.selectionAsync().catch(() => {});
     if (needsTermsConsent) {
-      setShowTermsModal(true);
+      // Prefer the parent-level handler to avoid nested-Modal issues on iOS.
+      if (onRequestTermsConsent) {
+        onRequestTermsConsent();
+      } else {
+        setShowTermsModal(true);
+      }
       return;
     }
     goToStep('name');
@@ -842,8 +861,8 @@ export default function OnboardingModal({
           </View>
         </SafeAreaView>
 
-        {/* Terms inside onboarding (after Welcome) */}
-        {showTermsModal && (
+        {/* Terms inside onboarding — fallback for when no onRequestTermsConsent parent handler is available */}
+        {showTermsModal && !onRequestTermsConsent && (
           <TermsConsentModal visible onConsent={handleTermsDecision} />
         )}
       </View>

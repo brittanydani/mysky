@@ -174,7 +174,7 @@ function Stars() {
 
 interface SceneProps {
   renderNodes: RenderNode[];
-  connectorPairs: Array<{ a: number; b: number; color: string }>;
+  connectorPairs: { a: number; b: number; color: string }[];
 }
 
 function ClusterScene({ renderNodes, connectorPairs }: SceneProps) {
@@ -236,7 +236,7 @@ export function DreamClusterMap({
 
       const indexMap = new Map<string, number>(storeNodes.map((n, i) => [n.id, i]));
       const seenLinks = new Set<string>();
-      const pairs: Array<{ a: number; b: number; color: string }> = [];
+      const pairs: { a: number; b: number; color: string }[] = [];
       storeLinks.forEach(link => {
         const a = indexMap.get(link.source);
         const b = indexMap.get(link.target);
@@ -261,7 +261,7 @@ export function DreamClusterMap({
 
     const indexMap = new Map<string, number>(srcNodes.map((n, i) => [n.id, i]));
     const seen = new Set<string>();
-    const pairs: Array<{ a: number; b: number; color: string }> = [];
+    const pairs: { a: number; b: number; color: string }[] = [];
     srcNodes.forEach((n, i) => {
       (n.coOccursWith ?? []).forEach(otherId => {
         const j = indexMap.get(otherId);

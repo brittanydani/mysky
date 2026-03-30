@@ -291,7 +291,6 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
       outerRingPath: outerP,
       innerRingPath: innerP,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scores, cx, cy, orbitR, innerR, outerR, size]);
 
   if (!checkIns.length) {

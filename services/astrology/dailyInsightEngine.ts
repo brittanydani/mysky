@@ -1236,7 +1236,7 @@ export class DailyInsightEngine {
       'Midheaven',
     ];
 
-    const aspects: Array<{ type: AspectTypeName; angle: number }> = [
+    const aspects: { type: AspectTypeName; angle: number }[] = [
       { type: 'conjunction', angle: 0 },
       { type: 'sextile', angle: 60 },
       { type: 'square', angle: 90 },

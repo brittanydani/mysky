@@ -121,7 +121,7 @@ class LocalDatabase {
   private async runMigrations(fromVersion: number): Promise<void> {
     const db = await this.ensureReady();
 
-    const steps: Array<{ version: number; fn: () => Promise<void> }> = [
+    const steps: { version: number; fn: () => Promise<void> }[] = [
       { version: 1, fn: () => this.createInitialSchema() },
       { version: 2, fn: () => this.migrateToVersion2() },
       { version: 3, fn: () => this.migrateToVersion3() },

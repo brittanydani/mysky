@@ -54,7 +54,7 @@ const EMOTION_COLORS: Record<string, string> = {
 };
 
 // Sage heat steps: low → high
-const HEAT_COLORS: ReadonlyArray<string> = [
+const HEAT_COLORS: readonly string[] = [
   'rgba(140,190,170,0.30)',
   'rgba(140,190,170,0.62)',
   'rgba(140,190,170,0.92)',

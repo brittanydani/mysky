@@ -77,8 +77,8 @@ interface ReflectionPayload {
   };
   restores: {
     sampleSizeDays: number;
-    top: Array<{ tag: string; label: string; liftMood: number }>;
-    drains: Array<{ tag: string; label: string; liftMood: number }>;
+    top: { tag: string; label: string; liftMood: number }[];
+    drains: { tag: string; label: string; liftMood: number }[];
   };
 }
 
@@ -288,7 +288,7 @@ serve(async (req: Request) => {
 
     // ── Parse Anthropic response ────────────────────────────────────────────
     const anthropicData = (await anthropicRes.json()) as {
-      content?: Array<{ type: string; text?: string }>;
+      content?: { type: string; text?: string }[];
     };
 
     const textBlock = anthropicData?.content?.find(

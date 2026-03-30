@@ -66,7 +66,6 @@ function emit(level: LogLevel, ...args: unknown[]) {
   // In production, only warn/error.
   if (!isDev && (level === 'debug' || level === 'info')) return;
 
-  // eslint-disable-next-line no-console
   (console[level] ?? console.log)(...safeArgs);
 }
 

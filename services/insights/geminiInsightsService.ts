@@ -90,7 +90,7 @@ Return one entry per insight ID provided in the input. Preserve the exact IDs.`;
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface GeminiPatternResult {
-  insights: Array<{ id: string; body: string }>;
+  insights: { id: string; body: string }[];
   generatedAt: string;
 }
 

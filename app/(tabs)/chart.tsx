@@ -268,7 +268,7 @@ export default function ChartScreen() {
   // Multi-chart state
   const [savedUserChartId, setSavedUserChartId] = useState<string | null>(null);
   const [people, setPeople] = useState<RelationshipChart[]>([]);
-  const [activeOverlays, setActiveOverlays] = useState<Array<{person: RelationshipChart, chart: NatalChart, theme: 'silver'|'roseGold'|'iceBlue'}>>([]);
+  const [activeOverlays, setActiveOverlays] = useState<({person: RelationshipChart, chart: NatalChart, theme: 'silver'|'roseGold'|'iceBlue'})[]>([]);
   const overlayPerson = activeOverlays.length > 0 ? activeOverlays[0].person : null;
   const overlayChart = activeOverlays.length > 0 ? activeOverlays[0].chart : null;
   const [showAddModal, setShowAddModal] = useState(false);
@@ -484,7 +484,7 @@ export default function ChartScreen() {
   // ── Sensitive points (Chiron, Nodes, Lilith, Vertex, Part of Fortune, Pholus) ──
   const sensitivePoints = useMemo(() => {
     if (!activeChart) return [];
-    const points: Array<{
+    const points: {
       label: string;
       sign: string;
       signSymbol: string;
@@ -494,7 +494,7 @@ export default function ChartScreen() {
       house?: number;
       retrograde: boolean;
       icon?: React.ReactNode;
-    }> = [];
+    }[] = [];
 
     // Helper to add a point
     function addPoint(label: string, sign: string, degree: number, minute: number, house: number | undefined, retrograde: boolean, icon?: React.ReactNode) {

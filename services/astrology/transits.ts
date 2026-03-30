@@ -6,7 +6,7 @@ import { EclipticGeoMoon } from 'astronomy-engine';
 // circular-natal-horoscope-js
 const { Origin, Horoscope } = require('circular-natal-horoscope-js');
 
-const ASPECTS: Array<{ type: AspectTypeName; angle: number; orb: number }> = [
+const ASPECTS: { type: AspectTypeName; angle: number; orb: number }[] = [
   { type: 'conjunction', angle: 0, orb: 3 }, // tighter transit orbs
   { type: 'sextile', angle: 60, orb: 3 },
   { type: 'square', angle: 90, orb: 3 },
@@ -115,7 +115,7 @@ export function getTransitInfo(
   const bodies = (horoscope as any).CelestialBodies || {};
   const map: Record<string, number> = {};
 
-  const keys: Array<[string, string]> = [
+  const keys: [string, string][] = [
     ['Sun', 'sun'],
     ['Moon', 'moon'],
     ['Mercury', 'mercury'],
@@ -151,7 +151,7 @@ export function computeTransitAspectsToNatal(
 ): SimpleAspect[] {
   // Natal points we care about for daily weather:
   // Moon + Sun + Saturn + Venus + (ASC if known)
-  const natalPoints: Array<{ name: string; absDeg: number }> = [];
+  const natalPoints: { name: string; absDeg: number }[] = [];
 
   // Prefer enhanced planets if available (they should have absoluteDegree if you add it),
   // else fall back to legacy placements (longitude exists).

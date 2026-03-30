@@ -39,7 +39,7 @@ export type LearningDelta = {
 
 export type LearningContext = {
   themeId: string;
-  matchedTriggers: Array<{ trigger: ShadowTrigger; score: number }>;
+  matchedTriggers: { trigger: ShadowTrigger; score: number }[];
   textCoverage: number;
   feelingsStrength: number;
   checkInCompleteness: number;
@@ -242,9 +242,9 @@ export function computeLearningUpdate(args: {
  * Call this between engine output and theme selection.
  */
 export function applyModelMultipliers(
-  triggerScores: Array<{ trigger: ShadowTrigger; score: number }>,
+  triggerScores: { trigger: ShadowTrigger; score: number }[],
   model: UserDreamModel,
-): Array<{ trigger: ShadowTrigger; score: number }> {
+): { trigger: ShadowTrigger; score: number }[] {
   return triggerScores.map(t => ({
     trigger: t.trigger,
     score: clamp(t.score * (model.trigger_multipliers[t.trigger] ?? 1.0), 0, 1),

@@ -65,7 +65,7 @@ export type ThemeCard = {
   reflectionQuestion: string;
   integrationPrompt?: string;
   matched: {
-    triggers: Array<{ trigger: ShadowTrigger; score: number }>;
+    triggers: { trigger: ShadowTrigger; score: number }[];
     nervousBoost?: { branch: NervousSystemBranch; weight: number };
     attachmentBoost?: { tone: AttachmentTone; weight: number };
   };
@@ -82,7 +82,7 @@ const pickOne = (arr: string[], seed: number): string => {
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
 const topKey = <T extends string>(m: Partial<Record<T, number>>): { key: T | null; value: number } => {
-  const entries = Object.entries(m) as Array<[T, number]>;
+  const entries = Object.entries(m) as [T, number][];
   if (!entries.length) return { key: null, value: 0 };
   let best: T | null = null;
   let bestV = -Infinity;
@@ -321,7 +321,7 @@ export function selectThemesForDream(args: {
       : undefined;
 
     // Build matched.triggers: primary trigger + other high-scoring triggers for evidence breadth
-    const matchedTriggers: Array<{ trigger: ShadowTrigger; score: number }> = [
+    const matchedTriggers: { trigger: ShadowTrigger; score: number }[] = [
       { trigger: x.theme.trigger, score: x.primaryScore },
     ];
     for (const ts of topThemes) {

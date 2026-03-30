@@ -4,14 +4,14 @@ import type { ShadowTrigger } from "./dreamTypes";
 
 export type AmbivalenceResult = {
   detected: boolean;
-  pairs: Array<{
+  pairs: {
     positiveTrigger: ShadowTrigger;
     negativeTrigger: ShadowTrigger;
     intensity: number; // 0..1
-  }>;
+  }[];
 };
 
-const AMBIVALENT_PAIRS: Array<[ShadowTrigger, ShadowTrigger]> = [
+const AMBIVALENT_PAIRS: [ShadowTrigger, ShadowTrigger][] = [
   ["intimacy", "danger"],
   ["intimacy", "shame"],
   ["sexuality", "shame"],

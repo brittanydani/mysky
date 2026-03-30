@@ -12,6 +12,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 
 import OnboardingModal from '../components/OnboardingModal';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
+import TermsConsentModal from '../components/TermsConsentModal';
 import AuthRequiredModal from '../components/AuthRequiredModal';
 import CosmicBackground from '../components/ui/CosmicBackground';
 
@@ -143,6 +144,7 @@ function AppShell() {
 
   const [needsPrivacyConsent, setNeedsPrivacyConsent] = useState(false);
   const [needsTermsConsent, setNeedsTermsConsent] = useState(false);
+  const [showTermsGate, setShowTermsGate] = useState(false);
 
   const [onboardingComplete, setOnboardingComplete] = useState(false);
 
@@ -431,13 +433,25 @@ function AppShell() {
             <PrivacyConsentModal visible onConsent={handlePrivacyConsent} contactEmail={SUPPORT_EMAIL} />
           )}
 
-          {/* IMPORTANT: Terms now happens INSIDE onboarding (after Welcome). */}
+          {/* IMPORTANT: Terms happens at the root level to avoid nested-Modal issues on iOS. */}
           {!needsPrivacyConsent && !onboardingComplete && !isOnLegalScreen && (
             <OnboardingModal
               visible
               needsTermsConsent={needsTermsConsent}
               onTermsConsent={handleTermsConsent}
+              onRequestTermsConsent={() => setShowTermsGate(true)}
               onComplete={handleOnboardingComplete}
+            />
+          )}
+
+          {showTermsGate && (
+            <TermsConsentModal
+              visible
+              onConsent={async (granted) => {
+                if (!granted) return; // keep gate up until accepted
+                setShowTermsGate(false);
+                await handleTermsConsent(granted);
+              }}
             />
           )}
 

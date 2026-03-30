@@ -476,7 +476,7 @@ export function formatEvidenceForUI(
   signals: DreamTextSignals,
   topTriggers: ShadowTrigger[],
   maxPerTrigger = 2
-): Array<{ trigger: ShadowTrigger; snippets: string[] }> {
+): { trigger: ShadowTrigger; snippets: string[] }[] {
   return topTriggers.map((t) => {
     const hits = signals.evidence[t] ?? [];
     const snippets = hits.slice(0, maxPerTrigger).map((h) => h.snippet);

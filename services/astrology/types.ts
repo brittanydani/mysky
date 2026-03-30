@@ -242,12 +242,12 @@ export interface NatalChart {
       reference: 'ephemeris';
       maxDifference: number;
       isWithinStandards: boolean;
-      comparisons: Array<{
+      comparisons: {
         planet: string;
         difference: number;
         threshold: number;
         withinThreshold: boolean;
-      }>;
+      }[];
     };
   };
 

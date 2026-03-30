@@ -73,7 +73,7 @@ export interface AstrologySettings {
 
 const SETTINGS_KEY = 'astrology_settings';
 
-export const HOUSE_SYSTEM_OPTIONS: Array<{ value: HouseSystem; label: string; description: string }> = [
+export const HOUSE_SYSTEM_OPTIONS: { value: HouseSystem; label: string; description: string }[] = [
   { value: 'whole-sign', label: 'Whole Sign', description: 'Traditional/Hellenistic, rising sign = 1st house' },
   { value: 'placidus', label: 'Placidus', description: 'Most common in Western astrology' },
   { value: 'equal-house', label: 'Equal House', description: 'Each house is exactly 30°' },
@@ -83,19 +83,19 @@ export const HOUSE_SYSTEM_OPTIONS: Array<{ value: HouseSystem; label: string; de
   { value: 'topocentric', label: 'Topocentric', description: 'Modern refinement of Placidus' },
 ];
 
-export const ZODIAC_SYSTEM_OPTIONS: Array<{ value: ZodiacSystem; label: string; description: string }> = [
+export const ZODIAC_SYSTEM_OPTIONS: { value: ZodiacSystem; label: string; description: string }[] = [
   { value: 'tropical', label: 'Tropical', description: 'Western astrology standard, based on seasons' },
   { value: 'sidereal', label: 'Sidereal', description: 'Vedic/Jyotish, aligned with fixed stars' },
 ];
 
-export const AYANAMSA_OPTIONS: Array<{ value: Ayanamsa; label: string; description: string }> = [
+export const AYANAMSA_OPTIONS: { value: Ayanamsa; label: string; description: string }[] = [
   { value: 'lahiri', label: 'Lahiri (Chitrapaksha)', description: 'Most common in Indian/Vedic astrology' },
   { value: 'raman', label: 'B.V. Raman', description: 'Popular alternative in South Indian tradition' },
   { value: 'krishnamurti', label: 'Krishnamurti (KP)', description: 'Used in Krishnamurti Paddhati system' },
   { value: 'fagan-bradley', label: 'Fagan-Bradley', description: 'Common in Western sidereal astrology' },
 ];
 
-export const ORB_PRESET_OPTIONS: Array<{ value: OrbPreset; label: string; description: string }> = [
+export const ORB_PRESET_OPTIONS: { value: OrbPreset; label: string; description: string }[] = [
   { value: 'tight', label: 'Tight', description: 'Smaller orbs, only strongest aspects' },
   { value: 'normal', label: 'Normal', description: 'Standard orbs, balanced approach' },
   { value: 'wide', label: 'Wide', description: 'Larger orbs, more aspects detected' },

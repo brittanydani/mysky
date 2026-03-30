@@ -390,7 +390,7 @@ function buildPdfHtml(chart: NatalChart, chapters: GeneratedChapter[] = []): str
     </tr>`).join('');
 
   // Sensitive Points (Lilith, Vertex, Part of Fortune, Pholus, Chiron, Nodes)
-  const sensitivePoints: Array<{ label: string; sign: string; degree: number; minute: number; house?: number; retrograde: boolean }> = [];
+  const sensitivePoints: { label: string; sign: string; degree: number; minute: number; house?: number; retrograde: boolean }[] = [];
   // Helper to add a point
   function addPoint(label: string, sign: string, degree: number, minute: number, house: number | undefined, retrograde: boolean) {
     sensitivePoints.push({ label, sign, degree, minute, house, retrograde });

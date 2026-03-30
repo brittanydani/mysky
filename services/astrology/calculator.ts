@@ -106,9 +106,9 @@ function convertToLegacyPlanetPlacement(
   };
 }
 
-function buildAspectDefs(orbConfig?: OrbConfiguration, includeMinor: boolean = false): Array<{ type: AspectTypeName; angle: number; orb: number }> {
+function buildAspectDefs(orbConfig?: OrbConfiguration, includeMinor: boolean = false): { type: AspectTypeName; angle: number; orb: number }[] {
   const orbs = orbConfig ?? ORB_CONFIGURATIONS.normal;
-  const defs: Array<{ type: AspectTypeName; angle: number; orb: number }> = [
+  const defs: { type: AspectTypeName; angle: number; orb: number }[] = [
     { type: 'conjunction', angle: 0, orb: orbs.conjunction },
     { type: 'sextile', angle: 60, orb: orbs.sextile },
     { type: 'square', angle: 90, orb: orbs.square },
@@ -128,7 +128,7 @@ function buildAspectDefs(orbConfig?: OrbConfiguration, includeMinor: boolean = f
   return defs;
 }
 
-function computeAspects(points: Array<{ name: string; absDeg: number }>, orbConfig?: OrbConfiguration, includeMinor: boolean = false): SimpleAspect[] {
+function computeAspects(points: { name: string; absDeg: number }[], orbConfig?: OrbConfiguration, includeMinor: boolean = false): SimpleAspect[] {
   const aspectDefs = buildAspectDefs(orbConfig, includeMinor);
   const out: SimpleAspect[] = [];
   for (let i = 0; i < points.length; i++) {
@@ -649,7 +649,7 @@ export class EnhancedAstrologyCalculator {
   }
 
   private static calculatePlanets(horoscope: any) {
-    const bodiesOrder: Array<{ key: string; label: string }> = [
+    const bodiesOrder: { key: string; label: string }[] = [
       { key: 'sun', label: 'Sun' },
       { key: 'moon', label: 'Moon' },
       { key: 'mercury', label: 'Mercury' },

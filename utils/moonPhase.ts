@@ -34,13 +34,13 @@ export interface MoonPhaseInfo {
 // day on which the exact moment falls — ±6° window (~1 day, since Moon moves ~12.2°/day).
 // Intermediate phases (Crescents, Gibbous) fill the remaining ~78° (~6.4 days each).
 // Verified against SpaceWeatherLive & lunar-calendar.net for Feb 2026.
-const PHASE_TABLE: Array<{
+const PHASE_TABLE: {
   maxAngle: number;
   name: MoonPhaseName;
   emoji: string;
   tag: MoonPhaseTag;
   message: string;
-}> = [
+}[] = [
   { maxAngle: 6,     name: 'New Moon',         emoji: '🌑', tag: 'phase-new',              message: 'Set intentions. Plant seeds in the dark.' },
   { maxAngle: 84,    name: 'Waxing Crescent',  emoji: '🌒', tag: 'phase-waxing-crescent',  message: 'Momentum is building. Keep going.' },
   { maxAngle: 96,    name: 'First Quarter',     emoji: '🌓', tag: 'phase-first-quarter',    message: 'Push through resistance. Commit.' },

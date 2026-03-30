@@ -462,7 +462,6 @@ export default function MoodCheckIn() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setIsSaving(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const trendLabel = computeTrendLabel(recentCheckIns);
@@ -480,7 +479,7 @@ export default function MoodCheckIn() {
     d.setDate(d.getDate() + direction);
     setSelectedDate(toLocalDateString(d));
   };
-  const ALL_SLOTS: Array<{ key: string; label: string; iconName: keyof typeof Ionicons.glyphMap; iconColor: string }> = [
+  const ALL_SLOTS: { key: string; label: string; iconName: keyof typeof Ionicons.glyphMap; iconColor: string }[] = [
     { key: 'morning',   label: 'Morning',   iconName: 'sunny-outline',         iconColor: '#F0C87E' },
     { key: 'afternoon', label: 'Afternoon', iconName: 'partly-sunny-outline',  iconColor: '#D9BF8C' },
     { key: 'evening',   label: 'Evening',   iconName: 'cloudy-night-outline',  iconColor: '#A89BC8' },

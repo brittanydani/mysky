@@ -323,7 +323,7 @@ export class PremiumDailyGuidanceGenerator {
   ): CategoryGuidance[] {
     const elementGuidance = ELEMENT_GUIDANCE[primaryElement] || WATER_SIGN_GUIDANCE;
 
-    const categoryConfigs: Array<{ key: GuidanceCategory; title: string; icon: string }> = [
+    const categoryConfigs: { key: GuidanceCategory; title: string; icon: string }[] = [
       { key: 'love', title: 'Love & Connection', icon: '💞' },
       { key: 'energy', title: 'Energy & Vitality', icon: '✨' },
       { key: 'work', title: 'Work & Purpose', icon: '🎯' },

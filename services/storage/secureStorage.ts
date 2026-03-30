@@ -437,7 +437,7 @@ class SecureStorageService {
   }
 
   private async recordDeletion(key: string, id: string): Promise<void> {
-    const existing = (await this.getEncryptedItem<Array<{ id: string; deletedAt: string }>>(key)) ?? [];
+    const existing = (await this.getEncryptedItem<{ id: string; deletedAt: string }[]>(key)) ?? [];
     // Keep only 20 entries to stay under SecureStore 2KB limit
     const updated = [{ id, deletedAt: new Date().toISOString() }, ...existing].slice(0, 20);
     await this.setEncryptedItem(key, updated);

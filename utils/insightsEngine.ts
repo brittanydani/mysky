@@ -509,13 +509,13 @@ function buildTimeOfDay(checkIns: DailyCheckIn[]): TimeOfDayCard | null {
 function buildMetricInsights(buckets: TimeOfDayBucket[]): TimeOfDayMetricInsight[] {
   if (buckets.length < 2) return [];
 
-  const metrics: Array<{
+  const metrics: {
     key: 'mood' | 'energy' | 'stress';
     emoji: string;
     label: string;
     extract: (b: TimeOfDayBucket) => number;
     higherIsBetter: boolean;
-  }> = [
+  }[] = [
     { key: 'mood', emoji: '♡', label: 'Mood', extract: b => b.avgMood, higherIsBetter: true },
     { key: 'energy', emoji: '✦', label: 'Energy', extract: b => b.avgEnergy, higherIsBetter: true },
     { key: 'stress', emoji: '∿', label: 'Stress', extract: b => b.avgStress, higherIsBetter: false },

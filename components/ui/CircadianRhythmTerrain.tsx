@@ -23,7 +23,7 @@ import { useCircadianStore } from '../../store/circadianStore';
 // ─── Color gradient for terrain height ───────────────────────────────────────
 
 // value 0–10 → color interpolated across these stops
-const COLOR_STOPS: Array<[number, THREE.Color]> = [
+const COLOR_STOPS: [number, THREE.Color][] = [
   [0,    new THREE.Color('#1A1B38')],   // deep indigo — trough
   [3,    new THREE.Color('#13142A')],   // near-black violet
   [5,    new THREE.Color('#3B2F8A')],   // blue-violet
