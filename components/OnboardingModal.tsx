@@ -762,30 +762,87 @@ export default function OnboardingModal({
                       Precision helps us personalize your data patterns.
                     </MetallicText>
 
-                    <Pressable
-                      style={({ pressed }) => [st.timeDisplayButton, pressed && { opacity: 0.8 }]}
-                      onPress={() => setIsTimePickerVisible(true)}
-                    >
-                      <MetallicIcon name="time-outline" size={22} color={PREMIUM.titanium} />
-                      <Text style={st.timeDisplayText}>
-                        {birthTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </Text>
-                      <MetallicIcon name="chevron-down-outline" size={18} color={PREMIUM.textMuted} />
-                    </Pressable>
+                    <View style={st.customTimeRow}>
+                      {/* Hour */}
+                      <View style={st.customTimeColumn}>
+                        <Pressable
+                          style={({ pressed }) => [st.customTimeArrow, pressed && { opacity: 0.5 }]}
+                          onPress={() => {
+                            const d = new Date(birthTime);
+                            d.setHours((d.getHours() + 1) % 24);
+                            setBirthTime(d);
+                            setHasUnknownTime(false);
+                            Haptics.selectionAsync().catch(() => {});
+                          }}
+                        >
+                          <Ionicons name="chevron-up" size={28} color={PREMIUM.titanium} />
+                        </Pressable>
+                        <Text style={st.customTimeDigit}>
+                          {String(birthTime.getHours() % 12 || 12).padStart(2, '0')}
+                        </Text>
+                        <Pressable
+                          style={({ pressed }) => [st.customTimeArrow, pressed && { opacity: 0.5 }]}
+                          onPress={() => {
+                            const d = new Date(birthTime);
+                            d.setHours((d.getHours() - 1 + 24) % 24);
+                            setBirthTime(d);
+                            setHasUnknownTime(false);
+                            Haptics.selectionAsync().catch(() => {});
+                          }}
+                        >
+                          <Ionicons name="chevron-down" size={28} color={PREMIUM.titanium} />
+                        </Pressable>
+                      </View>
 
-                    <DateTimePickerModal
-                      isVisible={isTimePickerVisible}
-                      mode="time"
-                      date={birthTime}
-                      onConfirm={(selected) => {
-                        setBirthTime(selected);
-                        setHasUnknownTime(false);
-                        setIsTimePickerVisible(false);
-                      }}
-                      onCancel={() => setIsTimePickerVisible(false)}
-                      themeVariant="dark"
-                      isDarkModeEnabled={true}
-                    />
+                      <Text style={st.customTimeColon}>:</Text>
+
+                      {/* Minute */}
+                      <View style={st.customTimeColumn}>
+                        <Pressable
+                          style={({ pressed }) => [st.customTimeArrow, pressed && { opacity: 0.5 }]}
+                          onPress={() => {
+                            const d = new Date(birthTime);
+                            d.setMinutes((d.getMinutes() + 1) % 60);
+                            setBirthTime(d);
+                            setHasUnknownTime(false);
+                            Haptics.selectionAsync().catch(() => {});
+                          }}
+                        >
+                          <Ionicons name="chevron-up" size={28} color={PREMIUM.titanium} />
+                        </Pressable>
+                        <Text style={st.customTimeDigit}>
+                          {String(birthTime.getMinutes()).padStart(2, '0')}
+                        </Text>
+                        <Pressable
+                          style={({ pressed }) => [st.customTimeArrow, pressed && { opacity: 0.5 }]}
+                          onPress={() => {
+                            const d = new Date(birthTime);
+                            d.setMinutes((d.getMinutes() - 1 + 60) % 60);
+                            setBirthTime(d);
+                            setHasUnknownTime(false);
+                            Haptics.selectionAsync().catch(() => {});
+                          }}
+                        >
+                          <Ionicons name="chevron-down" size={28} color={PREMIUM.titanium} />
+                        </Pressable>
+                      </View>
+
+                      {/* AM/PM */}
+                      <Pressable
+                        style={({ pressed }) => [st.customTimeAmPm, pressed && { opacity: 0.7 }]}
+                        onPress={() => {
+                          const d = new Date(birthTime);
+                          d.setHours((d.getHours() + 12) % 24);
+                          setBirthTime(d);
+                          setHasUnknownTime(false);
+                          Haptics.selectionAsync().catch(() => {});
+                        }}
+                      >
+                        <Text style={st.customTimeAmPmText}>
+                          {birthTime.getHours() < 12 ? 'AM' : 'PM'}
+                        </Text>
+                      </Pressable>
+                    </View>
 
                     <Pressable
                       style={({ pressed }) => [st.unknownTimeButton, pressed && { opacity: 0.7 }]}
@@ -1324,6 +1381,57 @@ const st = StyleSheet.create({
     fontSize: 38,
     fontWeight: '700',
     color: PREMIUM.textMain,
+    fontFamily: DISPLAY_BOLD,
+    letterSpacing: 1,
+  },
+  customTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: PREMIUM.glassFill,
+  },
+  customTimeColumn: {
+    alignItems: 'center',
+    width: 72,
+  },
+  customTimeArrow: {
+    padding: 8,
+  },
+  customTimeDigit: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: PREMIUM.textMain,
+    fontFamily: DISPLAY_BOLD,
+    letterSpacing: 1,
+    minWidth: 60,
+    textAlign: 'center',
+  },
+  customTimeColon: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: PREMIUM.textMuted,
+    fontFamily: DISPLAY_BOLD,
+    marginBottom: 2,
+  },
+  customTimeAmPm: {
+    marginLeft: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: PREMIUM.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  customTimeAmPmText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: PREMIUM.titanium,
     fontFamily: DISPLAY_BOLD,
     letterSpacing: 1,
   },
