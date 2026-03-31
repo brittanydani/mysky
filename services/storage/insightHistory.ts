@@ -223,11 +223,12 @@ class InsightHistoryServiceClass {
   private inferDomain(description: string): string {
     const lower = description.toLowerCase();
     if (lower.includes('venus') || lower.includes('7th')) return 'love';
-    if (lower.includes('mars') || lower.includes('sun')) return 'energy';
+    if (lower.includes('mars')) return 'energy';
     if (lower.includes('saturn') || lower.includes('10th')) return 'direction';
-    if (lower.includes('moon') || lower.includes('4th')) return 'mood';
     if (lower.includes('mercury') || lower.includes('3rd')) return 'focus';
     if (lower.includes('jupiter') || lower.includes('9th')) return 'growth';
+    if (lower.includes('sun')) return 'energy';
+    if (lower.includes('moon') || lower.includes('4th')) return 'mood';
     return 'general';
   }
   
