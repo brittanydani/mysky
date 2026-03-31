@@ -307,6 +307,8 @@ export default function ChartScreen() {
           longitude: saved.longitude,
           timezone: saved.timezone,
           houseSystem: astroSettings.houseSystem,
+          zodiacSystem: astroSettings.zodiacSystem,
+          orbPreset: astroSettings.orbPreset,
         };
 
         const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -2740,6 +2742,9 @@ export default function ChartScreen() {
         onSettingsChanged={(updated) => {
           setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(updated.houseSystem));
           setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(updated.orbPreset));
+          setZodiacSystemLabel(updated.zodiacSystem === 'sidereal' ? 'Sidereal' : 'Tropical');
+          // Clear natal chart cache so changes take effect
+          AstrologyCalculator.clearNatalChartCache();
           // Clear overlays so they regenerate with new settings
           setActiveOverlays([]);
           // Recalculate chart with new house system / orb settings

@@ -21,6 +21,7 @@ import * as Haptics from 'expo-haptics';
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
+import { DemoSeedService } from '../services/storage/demoSeedService';
 import { useDreamMapStore } from '../store/dreamMapStore';
 import { useResonanceStore } from '../store/resonanceStore';
 import { useSceneStore } from '../store/sceneStore';
@@ -85,6 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (event === 'SIGNED_IN' && newSession?.user) {
         revenueCatService.logIn(newSession.user.id);
+        // Auto-seed demo data for the App Store reviewer account only
+        DemoSeedService.seedIfNeeded(newSession.user.email).catch(() => {});
       } else if (event === 'SIGNED_OUT') {
         revenueCatService.logOut();
       }

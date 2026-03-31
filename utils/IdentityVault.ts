@@ -18,7 +18,7 @@ export interface CosmicIdentity {
   timezone?: string;
 }
 
-const IDENTITY_KEY = '@mysky_secure_identity';
+const IDENTITY_KEY = 'mysky_secure_identity';
 
 const STORE_OPTIONS: SecureStore.SecureStoreOptions = {
   // Only accessible when the device is unlocked; never migrates to another device.

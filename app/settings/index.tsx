@@ -83,12 +83,28 @@ export default function SettingsHub() {
     try {
       setBackupInProgress(true);
       const { uri } = await BackupService.createEncryptedBackupFile(passphrase);
-      await BackupService.shareBackupFile(uri);
+
+      // Share loop — allows saving to multiple locations
+      let keepSharing = true;
+      while (keepSharing) {
+        await BackupService.shareBackupFile(uri, false);
+        keepSharing = await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Backup Saved',
+            'Would you like to save a copy to another location?',
+            [
+              { text: 'Done', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Save Again', onPress: () => resolve(true) },
+            ]
+          );
+        });
+      }
+
+      await BackupService.cleanupBackupFile(uri);
       const existing = await localDb.getSettings();
       const now = new Date().toISOString();
       if (existing) await localDb.saveSettings({ ...existing, lastBackupAt: now, updatedAt: now });
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Backup Ready', 'Your encrypted backup is ready to save or share.');
     } catch (error: any) {
       logger.error('[Settings] Backup failed:', error);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

@@ -424,21 +424,34 @@ export class BackupService {
     await localDb.setMigrationMarker('data_migration_completed');
   }
 
-  static async shareBackupFile(uri: string): Promise<void> {
+  static async shareBackupFile(uri: string, deleteAfter = true): Promise<void> {
     const canShare = await Sharing.isAvailableAsync();
     if (!canShare) {
       throw new Error('Sharing is not available on this device');
     }
     await Sharing.shareAsync(uri);
 
-    // Clean up temporary backup file after sharing dialog closes
+    if (deleteAfter) {
+      // Clean up temporary backup file after sharing dialog closes
+      try {
+        const info = await FileSystem.getInfoAsync(uri);
+        if (info.exists) {
+          await FileSystem.deleteAsync(uri, { idempotent: true });
+        }
+      } catch {
+        // Best-effort cleanup — don't fail the share operation
+      }
+    }
+  }
+
+  static async cleanupBackupFile(uri: string): Promise<void> {
     try {
       const info = await FileSystem.getInfoAsync(uri);
       if (info.exists) {
         await FileSystem.deleteAsync(uri, { idempotent: true });
       }
     } catch {
-      // Best-effort cleanup — don't fail the share operation
+      // Best-effort cleanup
     }
   }
 

@@ -1,14 +1,12 @@
 /**
  * BirthDataModal
  *
- * Cinematic entry point for personal birth data.
- * Features custom obsidian scroll wheels and glassmorphic confirmation seal.
+ * Clean birth data entry screen.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Platform,
   ScrollView,
@@ -24,27 +22,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 
+import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import SkiaMetallicPill from './ui/SkiaMetallicPill';
-import MySkyCompassSkia from './skia/MySkyCompassSkia';
-import MySkyVerifySealSkia from './skia/MySkyVerifySealSkia';
 import { BirthData, HouseSystem } from '../services/astrology/types';
 import { InputValidator } from '../services/astrology/inputValidator';
 
-// ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
   textMain: '#F0EAD6',
-  glassBorder: 'rgba(255,255,255,0.06)',
-  glassHighlight: 'rgba(255,255,255,0.12)',
+  glassBorder: 'rgba(255,255,255,0.08)',
+  surface: 'rgba(255,255,255,0.04)',
 };
 
 type BirthDataModalInitial = Partial<BirthData> & { chartName?: string };
@@ -108,13 +101,13 @@ export default function BirthDataModal({
   const [latitude, setLatitude] = useState<number>(initialData?.latitude ?? 0);
   const [longitude, setLongitude] = useState<number>(initialData?.longitude ?? 0);
   const [houseSystem] = useState<HouseSystem>(initialData?.houseSystem || 'whole-sign');
-  const [showConfirm, setShowConfirm] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [searchingLocation, setSearchingLocation] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [locationSelected, setLocationSelected] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -128,11 +121,10 @@ export default function BirthDataModal({
       setPlace(initialData.place || '');
       setLatitude(initialData.latitude ?? 0);
       setLongitude(initialData.longitude ?? 0);
-      setLocationSelected(!!(initialData.place && initialData.latitude));
+      setLocationSelected(!!(initialData.place && initialData.latitude != null));
     }
   }, [visible, initialData]);
 
-  // Cleanup pending search timeout and in-flight request on unmount or when modal closes
   useEffect(() => {
     if (!visible) {
       if (searchTimeoutRef.current) {
@@ -193,9 +185,10 @@ export default function BirthDataModal({
     }, 500);
   };
 
-  const handleSave = () => {
+  const handleGenerate = async () => {
+    setSaveError(null);
     if (!place || !locationSelected) {
-      Alert.alert('Incomplete Data', 'Please select a specific location from the suggestions.');
+      setSaveError('Please search for and select a location from the suggestions.');
       return;
     }
 
@@ -211,22 +204,24 @@ export default function BirthDataModal({
 
     const validation = InputValidator.validateBirthData(data);
     if (!validation.valid) {
-      Alert.alert('Invalid Entry', validation.errors[0]);
+      setSaveError(validation.errors[0]);
       return;
     }
 
+    setIsSaving(true);
     Haptics.selectionAsync().catch(() => {});
-    setShowConfirm(true);
+    try {
+      await Promise.resolve(onSave(data, { chartName }));
+    } catch (e) {
+      setSaveError('Something went wrong. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const onDateChange = (_event: any, selected?: Date) => {
     if (Platform.OS !== 'ios') setShowDatePicker(false);
     if (selected) setDate(selected);
-  };
-
-  const onTimeChange = (_event: any, selected?: Date) => {
-    if (Platform.OS !== 'ios') setShowTimePicker(false);
-    if (selected) setTime(selected);
   };
 
   return (
@@ -241,84 +236,156 @@ export default function BirthDataModal({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Animated.View entering={FadeInDown.delay(100)} style={styles.glassCard}>
-              {!hideClose && (
-                <View style={styles.header}>
-                  <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
-                    <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
-                  </Pressable>
-                </View>
-              )}
-
-              <View style={[styles.logoContainer, { alignItems: 'center' }]}>
-                <MySkyCompassSkia size={160} />
+            {/* Header */}
+            {!hideClose && (
+              <View style={styles.header}>
+                <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
+                  <Ionicons name="close-outline" size={26} color={theme.textPrimary} />
+                </Pressable>
               </View>
+            )}
 
+            <Animated.View entering={FadeInDown.delay(80)} style={styles.titleSection}>
               <Text style={styles.mainTitle}>{title || 'Birth Details'}</Text>
+              <Text style={styles.subtitle}>Your data stays private and encrypted on your device.</Text>
+            </Animated.View>
 
-              <Text style={styles.sectionLabel}>Name (Local Only)</Text>
+            {/* Name */}
+            <Animated.View entering={FadeInDown.delay(120)} style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Name</Text>
               <TextInput
                 style={styles.textInput}
                 value={chartName}
                 onChangeText={setChartName}
-                placeholder="Name your profile..."
-                placeholderTextColor={theme.textMuted}
+                placeholder="Your name or a nickname"
+                placeholderTextColor="rgba(255,255,255,0.25)"
               />
+            </Animated.View>
 
-              <Text style={styles.sectionLabel}>Birth Date</Text>
-              <Pressable style={styles.pickButton} onPress={() => setShowDatePicker(true)}>
-                <View style={styles.pickGradient}>
-                  <MetallicIcon name="calendar-outline" size={18} color={PALETTE.silverBlue} />
-                  <Text style={styles.pickText}>
-                    {date.toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </Text>
-                </View>
+            {/* Birth Date */}
+            <Animated.View entering={FadeInDown.delay(160)} style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Birth Date</Text>
+              <Pressable style={styles.selectButton} onPress={() => setShowDatePicker(true)}>
+                <MetallicIcon name="calendar-outline" size={18} color={PALETTE.silverBlue} />
+                <Text style={styles.selectButtonText}>
+                  {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.3)" />
               </Pressable>
+            </Animated.View>
 
-              <View style={styles.rowBetween}>
-                <Text style={styles.sectionLabel}>Birth Time</Text>
-                <Pressable style={styles.toggle} onPress={() => setHasUnknownTime(!hasUnknownTime)}>
-                  {hasUnknownTime ? (
-                    <MetallicIcon name="checkbox-outline" size={18} color={PALETTE.gold} />
-                  ) : (
-                    <Ionicons name="square-outline" size={18} color={theme.textMuted} />
-                  )}
-                  <Text style={styles.toggleText}>Unknown</Text>
+            {/* Birth Time */}
+            <Animated.View entering={FadeInDown.delay(200)} style={styles.fieldGroup}>
+              <View style={styles.fieldLabelRow}>
+                <Text style={styles.fieldLabel}>Birth Time</Text>
+                <Pressable style={styles.unknownToggle} onPress={() => setHasUnknownTime(!hasUnknownTime)}>
+                  <View style={[styles.checkbox, hasUnknownTime && styles.checkboxChecked]}>
+                    {hasUnknownTime && <Ionicons name="checkmark" size={12} color="#020817" />}
+                  </View>
+                  <Text style={styles.unknownLabel}>I don't know</Text>
                 </Pressable>
               </View>
 
               {!hasUnknownTime && (
-                <Pressable
-                  style={styles.pickButton}
-                  onPress={() => setShowTimePicker(true)}
-                >
-                    <View style={styles.pickGradient}>
-                    <MetallicIcon name="time-outline" size={18} color={PALETTE.gold} />
-                    <Text style={styles.pickText}>
-                      {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                    </Text>
+                <View style={styles.timeRow}>
+                  {/* Hour */}
+                  <View style={styles.timeColumn}>
+                    <Pressable
+                      style={styles.timeArrow}
+                      onPress={() => {
+                        const d = new Date(time);
+                        d.setHours((d.getHours() + 1) % 24);
+                        setTime(d);
+                        Haptics.selectionAsync().catch(() => {});
+                      }}
+                    >
+                      <Ionicons name="chevron-up" size={22} color={PALETTE.gold} />
+                    </Pressable>
+                    <Text style={styles.timeDigit}>{String(time.getHours() % 12 || 12).padStart(2, '0')}</Text>
+                    <Pressable
+                      style={styles.timeArrow}
+                      onPress={() => {
+                        const d = new Date(time);
+                        d.setHours((d.getHours() - 1 + 24) % 24);
+                        setTime(d);
+                        Haptics.selectionAsync().catch(() => {});
+                      }}
+                    >
+                      <Ionicons name="chevron-down" size={22} color={PALETTE.gold} />
+                    </Pressable>
                   </View>
-                </Pressable>
+
+                  <Text style={styles.timeColon}>:</Text>
+
+                  {/* Minute */}
+                  <View style={styles.timeColumn}>
+                    <Pressable
+                      style={styles.timeArrow}
+                      onPress={() => {
+                        const d = new Date(time);
+                        d.setMinutes((d.getMinutes() + 1) % 60);
+                        setTime(d);
+                        Haptics.selectionAsync().catch(() => {});
+                      }}
+                    >
+                      <Ionicons name="chevron-up" size={22} color={PALETTE.gold} />
+                    </Pressable>
+                    <Text style={styles.timeDigit}>{String(time.getMinutes()).padStart(2, '0')}</Text>
+                    <Pressable
+                      style={styles.timeArrow}
+                      onPress={() => {
+                        const d = new Date(time);
+                        d.setMinutes((d.getMinutes() - 1 + 60) % 60);
+                        setTime(d);
+                        Haptics.selectionAsync().catch(() => {});
+                      }}
+                    >
+                      <Ionicons name="chevron-down" size={22} color={PALETTE.gold} />
+                    </Pressable>
+                  </View>
+
+                  {/* AM/PM */}
+                  <Pressable
+                    style={styles.amPmButton}
+                    onPress={() => {
+                      const d = new Date(time);
+                      d.setHours((d.getHours() + 12) % 24);
+                      setTime(d);
+                      Haptics.selectionAsync().catch(() => {});
+                    }}
+                  >
+                    <Text style={styles.amPmText}>{time.getHours() < 12 ? 'AM' : 'PM'}</Text>
+                  </Pressable>
+                </View>
               )}
 
-              <Text style={styles.sectionLabel}>Birth Location</Text>
-              <View style={styles.inputContainer}>
+              {hasUnknownTime && (
+                <View style={styles.unknownTimeNote}>
+                  <Text style={styles.unknownTimeNoteText}>Chart will use solar noon. House cusps less precise.</Text>
+                </View>
+              )}
+            </Animated.View>
+
+            {/* Location */}
+            <Animated.View entering={FadeInDown.delay(240)} style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Birth Location</Text>
+              <View style={styles.inputWrap}>
+                <MetallicIcon name="location-outline" size={17} color={PALETTE.silverBlue} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.textInput}
+                  style={styles.locationInput}
                   value={place}
                   onChangeText={(t) => {
                     setPlace(t);
                     searchLocation(t);
                   }}
                   placeholder="City, State, Country"
-                  placeholderTextColor={theme.textMuted}
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                 />
                 {searchingLocation && (
                   <ActivityIndicator size="small" color={PALETTE.gold} style={styles.loader} />
+                )}
+                {locationSelected && !searchingLocation && (
+                  <Ionicons name="checkmark-circle" size={18} color="#6EBF8B" style={styles.loader} />
                 )}
               </View>
 
@@ -327,7 +394,7 @@ export default function BirthDataModal({
                   {locationSuggestions.map((s, i) => (
                     <Pressable
                       key={`${s.place_id ?? s.display_name}-${i}`}
-                      style={styles.suggestion}
+                      style={[styles.suggestion, i < locationSuggestions.length - 1 && styles.suggestionBorder]}
                       onPress={() => {
                         setPlace(s.display_name);
                         setLatitude(parseFloat(s.lat));
@@ -337,148 +404,69 @@ export default function BirthDataModal({
                         Haptics.selectionAsync().catch(() => {});
                       }}
                     >
-                      <MetallicIcon name="location-outline" size={16} color={PALETTE.silverBlue} />
-                      <Text style={styles.suggestionText} numberOfLines={1}>
-                        {s.display_name}
-                      </Text>
+                      <Text style={styles.suggestionText} numberOfLines={1}>{s.display_name}</Text>
                     </Pressable>
                   ))}
                 </View>
               )}
             </Animated.View>
 
-            <View style={{ marginTop: 32 }}>
-              <SkiaMetallicPill label="Generate My Data" onPress={handleSave} borderRadius={16} />
-            </View>
+            {/* Error */}
+            {saveError && (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle-outline" size={16} color="#FF6B6B" />
+                <Text style={styles.errorText}>{saveError}</Text>
+              </View>
+            )}
 
-            <Text style={styles.privacyNote}>Encrypted locally. Private by design.</Text>
+            {/* Generate Button */}
+            <Animated.View entering={FadeInDown.delay(280)} style={styles.generateWrap}>
+              {isSaving ? (
+                <View style={styles.savingRow}>
+                  <ActivityIndicator color={PALETTE.gold} />
+                  <Text style={styles.savingText}>Generating your chart…</Text>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={handleGenerate}
+                  accessibilityRole="button"
+                  accessibilityLabel="Generate My Data"
+                  style={({ pressed }) => [styles.generateBtn, pressed && { opacity: 0.85 }]}
+                >
+                  <LinearGradient
+                    colors={['#C9AE78', '#A07840', '#C9AE78']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.generateBtnGradient}
+                  >
+                    <Text style={styles.generateBtnText}>Generate My Data</Text>
+                  </LinearGradient>
+                </Pressable>
+              )}
+            </Animated.View>
+
+            <Text style={styles.privacyNote}>Stored locally. Never shared.</Text>
 
             {onRestore && (
               <Pressable style={styles.restoreBtn} onPress={onRestore}>
-                <MetallicText color={PALETTE.gold} style={styles.restoreText}>Restore Data</MetallicText>
+                <MetallicText color={PALETTE.gold} style={styles.restoreText}>Restore from Backup</MetallicText>
               </Pressable>
             )}
           </ScrollView>
         </SafeAreaView>
 
-        {showConfirm && (
-          <View style={StyleSheet.absoluteFill}>
-            <View style={[styles.confirmOverlay, { backgroundColor: 'rgba(0,0,0,0.96)' }]}>
-              <Animated.View entering={FadeInUp} style={styles.confirmCard}>
-                <MySkyVerifySealSkia 
-                  size={96} 
-                  style={{ marginBottom: 16 }} 
-                />
-
-                <Text style={styles.confirmTitle}>Verify Your Details</Text>
-                <Text style={styles.confirmSub}>
-                  Birth data is locked after saving to ensure cycle accuracy.
-                </Text>
-
-                <View style={styles.sealRows}>
-                  <View style={styles.sealRow}>
-                    <MetallicText color={PALETTE.gold} style={styles.sealLabel}>DATE</MetallicText>
-                    <Text style={styles.sealValue}>{date.toLocaleDateString()}</Text>
-                  </View>
-
-                  <View style={styles.sealRow}>
-                    <MetallicText color={PALETTE.gold} style={styles.sealLabel}>TIME</MetallicText>
-                    <Text style={styles.sealValue}>
-                      {hasUnknownTime
-                        ? 'Unknown'
-                        : time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                    </Text>
-                  </View>
-
-                  <View style={styles.sealRow}>
-                    <MetallicText color={PALETTE.gold} style={styles.sealLabel}>PLACE</MetallicText>
-                    <Text style={styles.sealValue} numberOfLines={1}>
-                      {place.split(',')[0]}
-                    </Text>
-                  </View>
-                </View>
-
-                <SkiaMetallicPill
-                  label="Confirm & Secure"
-                  onPress={() => {
-                    setShowConfirm(false);
-                    onSave(
-                      {
-                        date: toLocalDateString(date),
-                        time: hasUnknownTime ? undefined : time.toTimeString().slice(0, 5),
-                        hasUnknownTime,
-                        place,
-                        latitude,
-                        longitude,
-                        houseSystem,
-                      },
-                      { chartName }
-                    );
-                  }}
-                  borderRadius={16}
-                />
-
-                <Pressable onPress={() => setShowConfirm(false)} style={{ marginTop: 20 }}>
-                  <Text style={styles.backBtnText}>Edit Details</Text>
-                </Pressable>
-              </Animated.View>
-            </View>
-          </View>
-        )}
-
-        {showTimePicker && Platform.OS === 'ios' && (
-          <View style={StyleSheet.absoluteFill}>
-            <Pressable
-              style={styles.pickerScrim}
-              onPress={() => setShowTimePicker(false)}
-            />
-            <View style={styles.pickerSheet}>
-              <View style={styles.pickerHeader}>
-                <View style={{ width: 60 }} />
-                <Text style={styles.pickerTitle}>Set Birth Time</Text>
-                <Pressable onPress={() => setShowTimePicker(false)}>
-                  <MetallicText color={PALETTE.gold} style={styles.pickerDone}>Done</MetallicText>
-                </Pressable>
-              </View>
-
-              <View style={styles.timePickerCard}>
-                <DateTimePicker
-                  value={time}
-                  mode="time"
-                  display="spinner"
-                  themeVariant="dark"
-                  textColor="#FFFFFF"
-                  onChange={onTimeChange}
-                  style={styles.nativePicker}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {showTimePicker && Platform.OS === 'android' && (
-          <DateTimePicker
-            value={time}
-            mode="time"
-            onChange={onTimeChange}
-          />
-        )}
-
+        {/* Date Picker — iOS bottom sheet */}
         {showDatePicker && Platform.OS === 'ios' && (
           <View style={StyleSheet.absoluteFill}>
-            <Pressable
-              style={styles.pickerScrim}
-              onPress={() => setShowDatePicker(false)}
-            />
+            <Pressable style={styles.pickerScrim} onPress={() => setShowDatePicker(false)} />
             <View style={styles.pickerSheet}>
               <View style={styles.pickerHeader}>
                 <View style={{ width: 60 }} />
-                <Text style={styles.pickerTitle}>Set Birth Date</Text>
+                <Text style={styles.pickerTitle}>Birth Date</Text>
                 <Pressable onPress={() => setShowDatePicker(false)}>
                   <MetallicText color={PALETTE.gold} style={styles.pickerDone}>Done</MetallicText>
                 </Pressable>
               </View>
-
               <DateTimePicker
                 value={date}
                 mode="date"
@@ -515,7 +503,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingTop: 4,
+    marginBottom: 8,
   },
   closeBtn: {
     width: 44,
@@ -523,194 +513,257 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollView: {
-    flex: 1,
-  },
+  scrollView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.xl,
+    paddingHorizontal: 24,
+    paddingBottom: 48,
+    paddingTop: 8,
   },
-  glassCard: {},
-  logoContainer: {
-    marginTop: -60,
-    marginBottom: 70,
-    alignItems: 'center',
-  },
-  logo: {
-    width: 220,
-    height: 220,
-    alignSelf: 'center',
+  titleSection: {
+    marginBottom: 32,
+    marginTop: 8,
   },
   mainTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: theme.textPrimary,
+    fontSize: 30,
+    fontWeight: '700',
+    color: '#F8F6F2',
     letterSpacing: -0.5,
-    marginBottom: theme.spacing.sm,
-    textAlign: 'center',
-    marginTop: -48,
+    marginBottom: 6,
   },
-  sectionLabel: {
-    fontSize: 11,
+  subtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.4)',
+    lineHeight: 20,
+  },
+  fieldGroup: {
+    marginBottom: 24,
+  },
+  fieldLabel: {
+    fontSize: 12,
     fontWeight: '600',
-    color: 'rgba(201, 174, 120, 0.75)',
-    letterSpacing: 2.2,
+    color: 'rgba(197, 181, 161, 0.8)',
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
-    marginBottom: 12,
-    marginTop: 16,
-    opacity: 0.85,
+    marginBottom: 10,
   },
-  textInput: {
-    backgroundColor: 'transparent',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-    padding: 16,
-    color: 'rgba(226,232,240,0.9)',
-    fontSize: 16,
-  },
-  pickButton: {
-    backgroundColor: 'transparent',
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  pickGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  pickText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  rowBetween: {
+  fieldLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 10,
   },
-  toggle: {
+  textInput: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: '#F0EAD6',
+    fontSize: 16,
+  },
+  selectButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  toggleText: {
-    color: theme.textMuted,
+  selectButtonText: {
+    flex: 1,
+    color: '#F0EAD6',
+    fontSize: 16,
+  },
+  unknownToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: PALETTE.gold,
+    borderColor: PALETTE.gold,
+  },
+  unknownLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '500',
   },
-  inputContainer: {
-    position: 'relative',
-    marginTop: 4,
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 10,
+  },
+  timeColumn: {
+    alignItems: 'center',
+    width: 64,
+  },
+  timeArrow: {
+    padding: 6,
+  },
+  timeDigit: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#F0EAD6',
+    minWidth: 52,
+    textAlign: 'center',
+  },
+  timeColon: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: 'rgba(197, 181, 161, 0.5)',
+    marginBottom: 2,
+  },
+  amPmButton: {
+    marginLeft: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  amPmText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: PALETTE.gold,
+    letterSpacing: 1,
+  },
+  unknownTimeNote: {
+    marginTop: 10,
+    backgroundColor: 'rgba(197,181,161,0.06)',
+    borderRadius: 10,
+    padding: 12,
+  },
+  unknownTimeNoteText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 14,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  locationInput: {
+    flex: 1,
+    paddingVertical: 14,
+    color: '#F0EAD6',
+    fontSize: 16,
   },
   loader: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
+    marginLeft: 8,
   },
   suggestions: {
-    marginTop: 8,
-    backgroundColor: 'rgba(20, 24, 34, 0.95)',
-    borderRadius: 14,
+    marginTop: 6,
+    backgroundColor: 'rgba(12, 18, 32, 0.97)',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
   },
   suggestion: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 10,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+  },
+  suggestionBorder: {
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   suggestionText: {
-    color: '#FFFFFF',
+    color: '#E2E8F0',
     fontSize: 14,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,107,107,0.08)',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 13,
     flex: 1,
+  },
+  generateWrap: {
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  generateBtn: {
+    width: '100%',
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  generateBtnGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  generateBtnText: {
+    color: '#0D0A06',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  savingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 18,
+  },
+  savingText: {
+    color: PALETTE.gold,
+    fontSize: 15,
+    fontWeight: '500',
   },
   privacyNote: {
     textAlign: 'center',
-    color: theme.textMuted,
+    color: 'rgba(255,255,255,0.25)',
     fontSize: 12,
-    marginTop: 16,
-    fontStyle: 'italic',
+    marginTop: 14,
   },
   restoreBtn: {
     marginTop: 20,
-    marginBottom: 40,
+    marginBottom: 20,
     alignItems: 'center',
   },
   restoreText: {
-    color: PALETTE.gold,
     fontSize: 14,
-    textDecorationLine: 'underline',
-  },
-  confirmOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  confirmCard: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  confirmTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#F5F5F7',
-    marginBottom: 8,
-  },
-  confirmSub: {
-    fontSize: 14,
-    color: theme.textMuted,
-    textAlign: 'center',
-    marginBottom: 32,
-    paddingHorizontal: 20,
-  },
-  sealRows: {
-    width: '100%',
-    gap: 16,
-    marginBottom: 20,
-  },
-  sealRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-  },
-  sealLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: PALETTE.gold,
-    letterSpacing: 1.5,
-  },
-  sealValue: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'right',
-    marginLeft: 16,
-  },
-  backBtnText: {
-    color: theme.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
     textDecorationLine: 'underline',
   },
   pickerScrim: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   pickerSheet: {
     backgroundColor: '#0D1117',
@@ -719,8 +772,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 40,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   pickerHeader: {
     flexDirection: 'row',
@@ -731,7 +784,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   pickerTitle: {
-    color: PALETTE.textMain,
+    color: '#F0EAD6',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -739,21 +792,5 @@ const styles = StyleSheet.create({
     color: PALETTE.gold,
     fontSize: 16,
     fontWeight: '700',
-  },
-  pickerCancel: {
-    color: theme.textMuted,
-    fontSize: 16,
-  },
-  timePickerCard: {
-    width: '100%',
-    borderRadius: 24,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(20, 20, 20, 0.85)',
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  nativePicker: {
-    width: '100%',
   },
 });
