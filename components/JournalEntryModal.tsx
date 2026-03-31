@@ -1039,10 +1039,10 @@ const styles = StyleSheet.create({
   promptsToggleText: { fontSize: 13, color: PALETTE.gold, fontWeight: '600' },
   
   promptZone: { marginBottom: 20 },
-  transitContext: { fontSize: 13, color: PALETTE.silverBlue, fontStyle: 'italic', marginBottom: 12, textAlign: 'center' },
+  transitContext: { fontSize: 13, color: PALETTE.silverBlue, marginBottom: 12, textAlign: 'center' },
   primaryPromptCard: { backgroundColor: 'transparent', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
   promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
-  primaryPromptText: { fontSize: 16, color: PALETTE.textMain, fontStyle: 'italic', lineHeight: 24 },
+  primaryPromptText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
   
   contentBox: { minHeight: 240 },
@@ -1053,7 +1053,7 @@ const styles = StyleSheet.create({
   archetypeAccent: { width: 3 },
   archetypePromptInner: { flex: 1, padding: 14, gap: 4 },
   archetypeLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
-  archetypeContext: { fontSize: 12, color: 'rgba(255,255,255,0.40)', fontStyle: 'italic', lineHeight: 17 },
+  archetypeContext: { fontSize: 12, color: 'rgba(255,255,255,0.40)', lineHeight: 17 },
   archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 21, marginTop: 2 },
   
   // ── Mood row ──
@@ -1074,7 +1074,7 @@ const styles = StyleSheet.create({
   addTagsBtnText: { fontSize: 12, color: PALETTE.jade, fontWeight: '600' },
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagPlaceholder: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 4 },
-  tagPlaceholderText: { fontSize: 13, color: 'rgba(255,255,255,0.22)', fontStyle: 'italic' },
+  tagPlaceholderText: { fontSize: 13, color: 'rgba(255,255,255,0.22)',  },
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1117,7 +1117,7 @@ const styles = StyleSheet.create({
   createTagBtnText: { fontSize: 13, color: PALETTE.jade, fontWeight: '600' },
   newTagInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.05)', minWidth: 90 },
   newTagInput: { flex: 1, color: PALETTE.textMain, fontSize: 13, padding: 0, minWidth: 60 },
-  tagPickerHint: { fontSize: 10, color: 'rgba(255,255,255,0.20)', textAlign: 'center', marginTop: 6, marginBottom: 2, fontStyle: 'italic' },
+  tagPickerHint: { fontSize: 10, color: 'rgba(255,255,255,0.20)', textAlign: 'center', marginTop: 6, marginBottom: 2,  },
 
   footer: { marginTop: 24 },
   saveBtn: { borderRadius: 16, overflow: 'hidden', },

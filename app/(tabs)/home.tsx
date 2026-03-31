@@ -786,7 +786,6 @@ const styles = StyleSheet.create({
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: 'rgba(255, 255, 255, 0.9)',
-    fontStyle: 'italic',
     marginTop: 16,
   },
   safeArea: { flex: 1 },
@@ -1023,7 +1022,6 @@ const styles = StyleSheet.create({
   noDataText: {
     fontSize: 18,
     color: 'rgba(255,255,255,0.4)',
-    fontStyle: 'italic',
     marginBottom: 20,
   },
   scoreMax: {

@@ -1205,7 +1205,6 @@ const st = StyleSheet.create({
     fontSize: 34,
     fontWeight: '800',
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
     marginBottom: 8,
     textAlign: 'left',
     letterSpacing: -0.7,
@@ -1216,7 +1215,6 @@ const st = StyleSheet.create({
     color: PREMIUM.titanium,
     marginBottom: 16,
     textAlign: 'left',
-    fontFamily: DISPLAY_SEMIBOLD,
     letterSpacing: 0.5,
   },
   welcomeDescription: {
@@ -1225,7 +1223,6 @@ const st = StyleSheet.create({
     textAlign: 'left',
     lineHeight: 24,
     fontWeight: '400',
-    fontFamily: DISPLAY,
   },
   
   // ── Feature List (Clean flush text, no cluttered boxes) ──
@@ -1244,7 +1241,6 @@ const st = StyleSheet.create({
     fontWeight: '500',
     color: PREMIUM.textMain, 
     flex: 1,
-    fontFamily: DISPLAY_SEMIBOLD,
   },
   
   ctaContainer: { alignItems: 'center', width: '100%' },
@@ -1268,7 +1264,6 @@ const st = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.7,
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -1280,7 +1275,6 @@ const st = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 20,
     lineHeight: 20,
-    fontStyle: 'italic',
   },
   termsContent: { width: '100%', marginBottom: 28 },
   termsGlassSection: {
@@ -1323,13 +1317,13 @@ const st = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.06)',
     marginRight: 14,
   },
-  termsLinkTitle: { fontSize: 16, fontWeight: '700', color: PREMIUM.textMain, fontFamily: DISPLAY_SEMIBOLD },
-  termsLinkSubtitle: { fontSize: 13, color: PREMIUM.textMuted, fontFamily: DISPLAY, marginTop: 2 },
-  termsFootnote: { fontSize: 12, color: PREMIUM.textMuted, fontFamily: DISPLAY, textAlign: 'center', width: '100%' },
+  termsLinkTitle: { fontSize: 16, fontWeight: '700', color: PREMIUM.textMain },
+  termsLinkSubtitle: { fontSize: 13, color: PREMIUM.textMuted, marginTop: 2 },
+  termsFootnote: { fontSize: 12, color: PREMIUM.textMuted, textAlign: 'center', width: '100%' },
   termsFooterActions: { width: '100%', gap: 16 },
   termsAcceptBtn: { borderRadius: 16, overflow: 'hidden' },
   termsBtnGradient: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  termsAcceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817', fontFamily: DISPLAY_BOLD },
+  termsAcceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
   
   // ── Liquid Mirror Gold Primary Action Button ──
   primaryActionBtn: {
@@ -1360,7 +1354,6 @@ const st = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     color: '#000000', // OLED black for maximum hardware tactility
-    fontFamily: DISPLAY_BOLD,
     letterSpacing: 0.3,
   },
 
@@ -1375,7 +1368,6 @@ const st = StyleSheet.create({
     fontWeight: '600',
     color: PREMIUM.textMuted,
     marginLeft: 8,
-    fontFamily: DISPLAY_SEMIBOLD,
   },
 
   // ── Single Question Layout ──
@@ -1387,7 +1379,6 @@ const st = StyleSheet.create({
     fontSize: 34,
     fontWeight: '800',
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
     marginBottom: 12,
     textAlign: 'center',
     lineHeight: 40,
@@ -1399,7 +1390,6 @@ const st = StyleSheet.create({
     marginBottom: 40,
     lineHeight: 22,
     textAlign: 'center',
-    fontFamily: DISPLAY,
   },
 
   // ── Centered Name Input ──
@@ -1416,7 +1406,6 @@ const st = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
     textAlign: 'center',
   },
   inputUnderline: {
@@ -1484,7 +1473,6 @@ const st = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: PREMIUM.titanium,
-    fontFamily: DISPLAY_SEMIBOLD,
   },
   timeDisplayButton: {
     flexDirection: 'row',
@@ -1502,7 +1490,6 @@ const st = StyleSheet.create({
     fontSize: 38,
     fontWeight: '700',
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
     letterSpacing: 1,
   },
   customTimeRow: {
@@ -1528,7 +1515,6 @@ const st = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_BOLD,
     letterSpacing: 1,
     minWidth: 60,
     textAlign: 'center',
@@ -1537,7 +1523,6 @@ const st = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     color: PREMIUM.textMuted,
-    fontFamily: DISPLAY_BOLD,
     marginBottom: 2,
   },
   customTimeAmPm: {
@@ -1553,7 +1538,6 @@ const st = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: PREMIUM.titanium,
-    fontFamily: DISPLAY_BOLD,
     letterSpacing: 1,
   },
 
@@ -1576,7 +1560,6 @@ const st = StyleSheet.create({
     fontSize: 17,
     fontWeight: '500',
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_SEMIBOLD,
   },
   suggestionsContainer: {
     marginTop: 12,
@@ -1601,13 +1584,11 @@ const st = StyleSheet.create({
     fontWeight: '600',
     color: PREMIUM.textMain,
     marginBottom: 4,
-    fontFamily: DISPLAY_SEMIBOLD,
   },
   suggestionCountry: {
     fontSize: 14,
     fontWeight: '400',
     color: PREMIUM.textMuted,
-    fontFamily: DISPLAY,
   },
   locationConfirmed: {
     flexDirection: 'row',
@@ -1621,7 +1602,6 @@ const st = StyleSheet.create({
     fontWeight: '500',
     color: PREMIUM.textMain,
     flex: 1,
-    fontFamily: DISPLAY_SEMIBOLD,
   },
 
   // ── Bottom Navigation (Solid Titanium Action) ──
@@ -1670,7 +1650,6 @@ const st = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#000000',
-    fontFamily: DISPLAY_BOLD,
     letterSpacing: 0.2,
   },
 
@@ -1725,13 +1704,11 @@ const st = StyleSheet.create({
     letterSpacing: 2.5,
     color: PREMIUM.titanium,
     marginBottom: 12,
-    fontFamily: DISPLAY_BOLD,
   },
   processingMessage: {
     fontSize: 22,
     fontWeight: '600',
     color: PREMIUM.textMain,
-    fontFamily: DISPLAY_SEMIBOLD,
     textAlign: 'center',
   },
 
@@ -1759,7 +1736,6 @@ const st = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: PREMIUM.textMuted,
-    fontFamily: DISPLAY_SEMIBOLD,
   },
 
   // ── Passphrase ──
@@ -1783,6 +1759,5 @@ const st = StyleSheet.create({
     fontWeight: '500',
     color: PREMIUM.textMain,
     textAlign: 'center',
-    fontFamily: DISPLAY_SEMIBOLD,
   },
 });

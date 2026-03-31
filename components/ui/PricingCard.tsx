@@ -161,7 +161,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: luxuryTheme.text.dim,
     marginLeft: 6,
-    fontStyle: 'italic',
   },
   description: {
     fontSize: 14,

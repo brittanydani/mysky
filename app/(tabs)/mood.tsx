@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   trendValue: { fontSize: 13, color: '#E2C27A', fontWeight: '700', letterSpacing: 0.3 },
   trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
-  trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', textAlign: 'center' },
+  trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' },
 
   slidersContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 32 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 },
@@ -931,7 +931,7 @@ const styles = StyleSheet.create({
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201, 174, 120, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
   premiumBadgeText: { color: '#C9AE78', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
-  lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.5)', fontStyle: 'italic', marginTop: 12 },
+  lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.5)', marginTop: 12 },
 
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tagButton: {
@@ -1037,7 +1037,6 @@ const styles = StyleSheet.create({
   emotionDropdownCustom: {
     fontSize: 11,
     color: 'rgba(110,140,180,0.6)',
-    fontStyle: 'italic',
     flex: 1,
   },
 });

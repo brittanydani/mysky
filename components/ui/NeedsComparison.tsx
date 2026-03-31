@@ -168,7 +168,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 13,
     color: 'rgba(240, 234, 214, 0.45)',
-    fontStyle: 'italic',
     lineHeight: 18,
   },
   dividerContainer: {

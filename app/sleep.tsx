@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   moonRow: { flexDirection: 'row', gap: 20, marginBottom: 12 },
   moon: { fontSize: 38, color: '#6E8CB4' },
   qualityLabel: {
-    color: '#6E8CB4', fontStyle: 'italic',
+    color: '#6E8CB4',
     fontSize: 14, marginBottom: 48,
   },
 

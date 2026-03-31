@@ -1798,10 +1798,10 @@ export default function ChartScreen() {
                       <Text style={[styles.patternDesc, { marginTop: 10, lineHeight: 22 }]}>{stellium.narrative}</Text>
                     ) : null}
                     {stellium.planetMixNote && (
-                      <Text style={[styles.patternDesc, { marginTop: 6, fontStyle: 'italic', opacity: 0.8 }]}>{stellium.planetMixNote}</Text>
+                      <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.planetMixNote}</Text>
                     )}
                     {stellium.retroNote && (
-                      <Text style={[styles.patternDesc, { marginTop: 6, fontStyle: 'italic', opacity: 0.8 }]}>{stellium.retroNote}</Text>
+                      <Text style={[styles.patternDesc, { marginTop: 6, opacity: 0.8 }]}>{stellium.retroNote}</Text>
                     )}
                     {stellium.elementCloser && (
                       <View style={styles.tooltipBox}>
@@ -2765,7 +2765,6 @@ const styles = StyleSheet.create({
   center: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: theme.textSecondary,
-    fontStyle: 'italic',
     textAlign: 'center',
     paddingHorizontal: 32,
   },
@@ -2797,7 +2796,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    fontStyle: 'italic',
   },
   headerFrame: {
     fontSize: 12,
@@ -2988,7 +2986,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: theme.textMuted,
     fontSize: 11,
-    fontStyle: 'italic',
     textAlign: 'center',
     opacity: 0.85,
   },
@@ -3008,7 +3005,6 @@ const styles = StyleSheet.create({
   houseSystemLabel: {
     color: theme.textMuted,
     fontSize: 12,
-    fontStyle: 'italic',
     textAlign: 'center',
     marginBottom: theme.spacing.sm,
     width: '100%',
@@ -3021,9 +3017,9 @@ const styles = StyleSheet.create({
   aspectPlanetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 13, textAlign: 'center' },
   aspectSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', fontWeight: '700', textAlign: 'center' },
   aspectName: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  aspectNature: { fontSize: 9, fontStyle: 'italic', textAlign: 'center' },
+  aspectNature: { fontSize: 9, textAlign: 'center' },
   orbText: { fontWeight: '700', fontSize: 14, textAlign: 'center' },
-  applyingLabel: { color: theme.textMuted, fontSize: 9, fontStyle: 'italic', textAlign: 'center' },
+  applyingLabel: { color: theme.textMuted, fontSize: 9, textAlign: 'center' },
 
   legend: {
     marginTop: theme.spacing.lg,
@@ -3044,7 +3040,7 @@ const styles = StyleSheet.create({
   legendRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, justifyContent: 'center' },
   legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
   legendText: { color: theme.textSecondary, fontSize: 13, textAlign: 'center' },
-  legendNote: { color: theme.textMuted, fontSize: 11, fontStyle: 'italic', marginTop: theme.spacing.sm, textAlign: 'center' },
+  legendNote: { color: theme.textMuted, fontSize: 11, marginTop: theme.spacing.sm, textAlign: 'center' },
 
   aspectUpsell: {
     flexDirection: 'row',
@@ -3054,7 +3050,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
     gap: 8,
   },
-  aspectUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },
+  aspectUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, lineHeight: 18, textAlign: 'center' },
 
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: theme.textMuted, fontSize: 14, marginTop: 12, textAlign: 'center' },
@@ -3074,7 +3070,7 @@ const styles = StyleSheet.create({
   patternHighlightText: { color: '#CFAE73', fontWeight: '700', fontSize: 15, textAlign: 'center' },
   patternDesc: { color: theme.textSecondary, fontSize: 12, lineHeight: 19, marginTop: theme.spacing.sm, textAlign: 'center' },
   tooltipBox: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', backgroundColor: 'transparent', borderRadius: theme.borderRadius.md, padding: 10, marginTop: theme.spacing.md },
-  tooltipText: { color: theme.textMuted, fontSize: 11, lineHeight: 16, marginLeft: 6, flex: 1, fontStyle: 'italic', textAlign: 'center' },
+  tooltipText: { color: theme.textMuted, fontSize: 11, lineHeight: 16, marginLeft: 6, flex: 1, textAlign: 'center' },
 
   // ── People Bar (Multi-Chart) ──
   peopleBar: {
@@ -3107,7 +3103,7 @@ const styles = StyleSheet.create({
     maxWidth: 80,
   },
   personChipTextActive: { color: '#CFAE73' },
-  personChipRelation: { color: theme.textMuted, fontSize: 10, fontStyle: 'italic', opacity: 0.7 },
+  personChipRelation: { color: theme.textMuted, fontSize: 10, opacity: 0.7 },
 
   addPersonChip: {
     flexDirection: 'row',
@@ -3171,7 +3167,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: theme.spacing.xl,
   },
-  overlayUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, fontStyle: 'italic', lineHeight: 18, textAlign: 'center' },
+  overlayUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, lineHeight: 18, textAlign: 'center' },
 
   // ── Chart Settings card ──
   chartSettingsCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, marginBottom: theme.spacing.md },
@@ -3224,7 +3220,6 @@ const styles = StyleSheet.create({
   transparencyNote: {
     fontSize: 11,
     color: '#C2955A',
-    fontStyle: 'italic',
     marginTop: 2,
   },
 
@@ -3262,7 +3257,6 @@ const styles = StyleSheet.create({
   aspectInterp: {
     fontSize: 12,
     color: theme.textMuted,
-    fontStyle: 'italic',
     lineHeight: 17,
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.sm,

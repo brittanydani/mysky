@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     opacity: 0.95,
   },
-  lastUpdated: { fontSize: 13, color: theme.textMuted, marginBottom: 24, fontStyle: 'italic', textAlign: 'center' },
+  lastUpdated: { fontSize: 13, color: theme.textMuted, marginBottom: 24, textAlign: 'center' },
   
   sectionTitle: {
     fontSize: 20,

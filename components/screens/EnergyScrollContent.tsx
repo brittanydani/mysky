@@ -511,7 +511,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
             </View>
           </View>
         </View>
-        <Text style={[styles.bodyMuted, { marginTop: 6, fontStyle: 'italic', color: 'rgba(255,255,255,0.80)' }]}>
+        <Text style={[styles.bodyMuted, { marginTop: 6, color: 'rgba(255,255,255,0.80)' }]}>
           You may notice: {chakra.bodyCue.charAt(0).toLowerCase() + chakra.bodyCue.slice(1)}
         </Text>
         <View style={styles.chakraDetailRow}>
@@ -631,7 +631,6 @@ const styles = StyleSheet.create({
   somaticPrompt: {
     color: 'rgba(255,255,255,0.40)',
     fontSize: 13,
-    fontStyle: 'italic',
     textAlign: 'center',
   },
 
@@ -808,7 +807,6 @@ const styles = StyleSheet.create({
     color: theme.primary,
     fontSize: 13,
     lineHeight: 18,
-    fontStyle: 'italic',
   },
   domainSuggestionRow: {
     flexDirection: 'row',
@@ -911,7 +909,6 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     fontSize: 14,
     lineHeight: 20,
-    fontStyle: 'italic',
   },
   focusHelpText: {
     color: theme.textPrimary,
@@ -930,7 +927,6 @@ const styles = StyleSheet.create({
     color: theme.primary,
     fontSize: 14,
     lineHeight: 20,
-    fontStyle: 'italic',
     textAlign: 'center',
   },
   bgChakraSection: {
@@ -941,7 +937,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: theme.textMuted,
     marginBottom: 8,
-    fontStyle: 'italic',
   },
   guidanceBlock: {
     marginBottom: 4,
@@ -980,7 +975,6 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     fontSize: 14,
     lineHeight: 20,
-    fontStyle: 'italic',
   },
   guidanceFree: {
     color: theme.textPrimary,
@@ -995,7 +989,6 @@ const styles = StyleSheet.create({
   footerText: {
     color: theme.textMuted,
     fontSize: 12,
-    fontStyle: 'italic',
     textAlign: 'center',
     maxWidth: 280,
   },

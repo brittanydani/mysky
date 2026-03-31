@@ -303,11 +303,11 @@ const styles = StyleSheet.create({
   actionSub: { fontSize: 13, color: "#FFFFFF", lineHeight: 18 },
 
   emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 20, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  emptyText: { color: "#FFFFFF", fontSize: 14, fontStyle: 'italic' },
+  emptyText: { color: "#FFFFFF", fontSize: 14,  },
 
   rightsContainer: { gap: 12, paddingLeft: 4 },
   rightNode: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rightNodeText: { fontSize: 14, color: "#FFFFFF" },
 
-  complianceNote: { fontSize: 12, color: "#FFFFFF", textAlign: 'center', fontStyle: 'italic', lineHeight: 18, paddingHorizontal: 20 },
+  complianceNote: { fontSize: 12, color: "#FFFFFF", textAlign: 'center', lineHeight: 18, paddingHorizontal: 20 },
 });

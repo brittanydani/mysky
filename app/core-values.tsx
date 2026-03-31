@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   topNumberText: { color: PALETTE.gold, fontSize: 11, fontWeight: '800' },
   topItemText: { fontSize: 16, color: PALETTE.textMain, fontWeight: '600' },
   
-  summaryHint: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 20, fontStyle: 'italic', textAlign: 'center' },
+  summaryHint: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 20, textAlign: 'center' },
 
   // Paradox Engine Cards
   paradoxCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 28, marginBottom: 20, backgroundColor: 'rgba(205, 127, 93, 0.05)' },
@@ -299,10 +299,10 @@ const styles = StyleSheet.create({
   paradoxEyebrow: { fontSize: 10, color: PALETTE.copper, fontWeight: '800', letterSpacing: 1.5 },
   paradoxTitle: { fontSize: 20, color: PALETTE.textMain, fontWeight: '700', marginBottom: 10 },
   paradoxBody: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 22, marginBottom: 16 },
-  paradoxFooter: { fontSize: 12, color: PALETTE.textMuted, fontStyle: 'italic', lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
+  paradoxFooter: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
 
   promptCard: { borderRadius: 16, padding: 20, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  promptText: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 20, fontStyle: 'italic', textAlign: 'center' },
+  promptText: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 20, textAlign: 'center' },
 
   saveRow: { alignItems: 'center', marginTop: 12 },
   saveBtn: { height: 52, paddingHorizontal: 44, borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.5)', justifyContent: 'center', alignItems: 'center' },

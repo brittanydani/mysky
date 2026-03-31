@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
   // Blended
   blendedTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 10 },
   journalPromptBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: 'rgba(201,174,120,0.06)', borderWidth: 1, borderColor: 'rgba(201,174,120,0.15)' },
-  journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 22, fontStyle: 'italic' },
+  journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 22,  },
   statText: { fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 12, lineHeight: 16 },
 
   // Lift & Drain

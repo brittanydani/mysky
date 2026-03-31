@@ -42,6 +42,5 @@ export const GoldSubtitle: React.FC<GoldSubtitleProps> = ({ children, style }) =
 const styles = StyleSheet.create({
   base: {
     fontSize: 14,
-    fontStyle: 'italic',
   },
 });

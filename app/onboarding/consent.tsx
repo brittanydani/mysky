@@ -220,5 +220,5 @@ const styles = StyleSheet.create({
   checkboxOn: { backgroundColor: theme.textGold, borderColor: theme.textGold },
   checkText: { flex: 1, color: theme.textPrimary, fontSize: 15, lineHeight: 22 },
   
-  note: { marginTop: 20, textAlign: 'center', color: theme.textMuted, fontSize: 12, fontStyle: 'italic' },
+  note: { marginTop: 20, textAlign: 'center', color: theme.textMuted, fontSize: 12,  },
 });

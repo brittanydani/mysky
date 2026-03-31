@@ -405,12 +405,12 @@ const styles = StyleSheet.create({
   metaRow: { marginBottom: 24 },
   metaDate: {
     color: 'rgba(255,255,255,0.6)', fontSize: 13,
-    fontStyle: 'italic', marginBottom: 8,
+    marginBottom: 8,
   },
   qualityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   qualityLabel: {
     color: '#8BC4E8', fontSize: 12,
-    fontStyle: 'italic', marginLeft: 6,
+    marginLeft: 6,
   },
 
   card: {
@@ -440,11 +440,10 @@ const styles = StyleSheet.create({
 
   interpretationParagraph: {
     color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 24,
-    fontStyle: 'italic',
   },
   reflectionQuestion: {
     color: '#D9BF8C', fontSize: 14,
-    fontStyle: 'italic', lineHeight: 22,
+    lineHeight: 22,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(217,191,140,0.2)',
     paddingTop: 16, marginTop: 4,
@@ -460,7 +459,7 @@ const styles = StyleSheet.create({
   aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(217,191,140,0.08)', borderWidth: 1, borderColor: 'rgba(217,191,140,0.25)' },
   aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
-  aiLoadingText: { fontSize: 13, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' },
+  aiLoadingText: { fontSize: 13, color: 'rgba(255,255,255,0.4)',  },
   aiErrorText: { fontSize: 13, color: '#CD7F5D', textAlign: 'center', paddingVertical: 8 },
   aiResultBox: { marginTop: 4, width: '100%' },
   aiResultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },

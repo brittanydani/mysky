@@ -151,7 +151,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 20,
-    fontStyle: 'italic',
   },
   perksCard: {
     width: '100%',
@@ -212,7 +211,6 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
     fontSize: 13,
     marginTop: 14,
-    fontStyle: 'italic',
   },
   skipButton: {
     marginTop: 20,

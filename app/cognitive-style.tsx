@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, fontStyle: 'italic', marginBottom: 28 },
+  instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, marginBottom: 28 },
 
   synthesisCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(139,196,232,0.25)', padding: 28, marginBottom: 32, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)' },
   synthesisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 16 },

@@ -175,7 +175,6 @@ const styles = StyleSheet.create({
   },
   lockedContent: {
     color: luxuryTheme.text.dim,
-    fontStyle: 'italic',
     opacity: 0.82,
   },
   lockedHintRow: {

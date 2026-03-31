@@ -381,7 +381,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.45)',
     lineHeight: 20,
-    fontStyle: 'italic',
     marginBottom: 28,
   },
 
@@ -437,7 +436,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
-    fontStyle: 'italic',
     lineHeight: 20,
   },
   divider: { width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 20 },

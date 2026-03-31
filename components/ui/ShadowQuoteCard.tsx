@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
   quoteText: {
     fontSize: 17,
     color: PALETTE.textMain,
-    fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 28,
     opacity: 0.95,
@@ -160,7 +159,6 @@ const styles = StyleSheet.create({
   inlineText: {
     fontSize: 15,
     color: theme.textSecondary,
-    fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 24,
     opacity: 0.8,
@@ -179,7 +177,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     color: theme.textMuted,
-    fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 22,
     opacity: 0.7,

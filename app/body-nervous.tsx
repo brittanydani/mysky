@@ -165,7 +165,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.55)',
     lineHeight: 20,
-    fontStyle: 'italic',
   },
 
   grid: { gap: 20 },

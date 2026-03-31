@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   selectionDot:  { width: 7, height: 7, borderRadius: 3.5 },
   selectionText: { fontSize: 11, fontWeight: '600' },
   selectionClear:{ fontSize: 18, color: 'rgba(255,255,255,0.35)', lineHeight: 20 },
-  tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' },
+  tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.25)',  },
 
   sectionLabel: {
     fontSize: 10,

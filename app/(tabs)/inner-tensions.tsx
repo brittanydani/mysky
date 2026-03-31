@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   // Empty state
   emptyStateText: {
     fontSize: 13, color: PALETTE.textDim, lineHeight: 20,
-    fontStyle: 'italic', marginTop: 4,
+    marginTop: 4,
   },
   seedChip: {
     marginTop: 14, alignSelf: 'flex-start',
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   stateDesc:            { fontSize: 11, color: PALETTE.textDim, letterSpacing: 0.2 },
   conflictInterpretation: {
     fontSize: 13, color: PALETTE.textMuted, lineHeight: 19,
-    fontStyle: 'italic', borderTopWidth: 1, borderTopColor: PALETTE.glassBorder,
+    borderTopWidth: 1, borderTopColor: PALETTE.glassBorder,
     paddingTop: 14, marginTop: 4,
   },
 
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   ambivalenceIntensity: { fontSize: 12, color: PALETTE.textDim, minWidth: 36, textAlign: 'right' },
   ambivalenceBarBg:   { height: 4, backgroundColor: PALETTE.glassBorder, borderRadius: 2, marginBottom: 10 },
   ambivalenceBarFill: { height: 4, backgroundColor: PALETTE.gold + '80', borderRadius: 2 },
-  ambivalenceReflection: { fontSize: 12, color: PALETTE.textDim, fontStyle: 'italic', lineHeight: 18 },
+  ambivalenceReflection: { fontSize: 12, color: PALETTE.textDim, lineHeight: 18 },
 
   // Dream patterns
   patternGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   triggerQuestionMark: { fontSize: 18, lineHeight: 22 },
   triggerQuestionText: {
     flex: 1, fontSize: 13, color: PALETTE.textMain,
-    fontStyle: 'italic', lineHeight: 20,
+    lineHeight: 20,
   },
 
 });

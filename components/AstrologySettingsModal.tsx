@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   orbLabel: { fontSize: 13, fontWeight: '700', color: theme.textSecondary },
 
   infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'transparent', padding: 12, borderRadius: 12 },
-  infoNoteText: { flex: 1, fontSize: 12, color: theme.textMuted, fontStyle: 'italic' },
+  infoNoteText: { flex: 1, fontSize: 12, color: theme.textMuted,  },
 
   footer: { padding: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
 });

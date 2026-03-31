@@ -635,7 +635,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.55)',
     fontSize: 14,
     lineHeight: 21,
-    fontStyle: 'italic',
   },
 
   calibrationZone: {
@@ -678,14 +677,12 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     fontSize: 12,
     marginTop: 12,
-    fontStyle: 'italic',
   },
 
   // ── All-categories summary ──
   summaryHint: {
     color: 'rgba(255,255,255,0.3)',
     fontSize: 12,
-    fontStyle: 'italic',
     marginBottom: 8,
   },
   summaryCard: {

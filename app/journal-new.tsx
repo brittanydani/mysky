@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   promptFooter: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  promptFooterText: { fontSize: 11, color: PALETTE.textMuted, fontStyle: 'italic' },
+  promptFooterText: { fontSize: 11, color: PALETTE.textMuted,  },
 
   // Input Area
   inputSection: { flex: 1, minHeight: 250 },

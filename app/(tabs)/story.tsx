@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   backButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   backText: { fontSize: 14, color: PALETTE.gold, fontWeight: '600' },
 
-  loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14, marginTop: 12 },
+  loadingText: { color: PALETTE.textMuted, fontSize: 14, marginTop: 12 },
 
   header: { alignItems: 'center', marginTop: 20, marginBottom: 28 },
   title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 4 },
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
 
   archetypeIcon: { fontSize: 20 },
   archetypeName: { fontSize: 22, fontWeight: '700', alignSelf: 'flex-start', marginBottom: 4 },
-  archetypeTagline: { fontSize: 13, color: PALETTE.textMuted, alignSelf: 'flex-start', fontStyle: 'italic', marginBottom: 16, lineHeight: 18 },
+  archetypeTagline: { fontSize: 13, color: PALETTE.textMuted, alignSelf: 'flex-start', marginBottom: 16, lineHeight: 18 },
 
   dualRow: { flexDirection: 'row', gap: 12, alignSelf: 'stretch' },
   dualItem: { flex: 1, gap: 4 },

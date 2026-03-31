@@ -235,7 +235,6 @@ const styles = StyleSheet.create({
   },
   lockedContent: {
     color: theme.textMuted,
-    fontStyle: 'italic',
     opacity: 0.9,
   },
   lockedCta: {
@@ -279,7 +278,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.textSecondary,
     lineHeight: 22,
-    fontStyle: 'italic',
   },
   affirmationBox: {
     marginTop: 16,
@@ -293,7 +291,6 @@ const styles = StyleSheet.create({
   affirmationText: {
     fontSize: 15,
     color: PALETTE.textMain,
-    fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 22,
   },

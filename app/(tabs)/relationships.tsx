@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
-  loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15, fontStyle: 'italic' },
+  loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15,  },
   emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '700', color: theme.textPrimary },
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
   
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   backButton: { padding: 8 },
   detailHeaderCenter: { flex: 1, alignItems: 'center' },
   detailTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
-  detailSubtitle: { fontSize: 13, color: theme.textSecondary, marginTop: 4, fontStyle: 'italic' },
+  detailSubtitle: { fontSize: 13, color: theme.textSecondary, marginTop: 4,  },
   exportButton: { padding: 8 },
   deleteButton: { padding: 8 },
   detailScroll: { flex: 1 },
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   personPillPartner: { flex: 1 },
   personPillActive: { borderColor: 'rgba(230, 213, 184, 0.4)', backgroundColor: 'rgba(230, 213, 184, 0.1)' },
   personPillText: { fontSize: 14, fontWeight: '600', color: theme.textMuted },
-  personPillType: { fontSize: 11, color: theme.textMuted, fontStyle: 'italic', marginLeft: 4 },
+  personPillType: { fontSize: 11, color: theme.textMuted, marginLeft: 4 },
   personPillAdd: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(230, 213, 184, 0.3)', borderStyle: 'dashed' },
   personPillAddText: { fontSize: 14, fontWeight: '600', color: theme.textGold },
 
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
   sectionHeader: { fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 16 },
   
   reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'transparent', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: theme.textGold },
-  reminderText: { fontSize: 16, color: theme.textPrimary, fontStyle: 'italic', lineHeight: 24 },
+  reminderText: { fontSize: 16, color: theme.textPrimary, lineHeight: 24 },
   
   upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
   upsellTitle: { fontSize: 16, fontWeight: '600', color: theme.textGold },

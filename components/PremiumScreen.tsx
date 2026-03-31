@@ -910,6 +910,5 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
     textAlign: 'center',
     marginTop: theme.spacing.xl,
-    fontStyle: 'italic',
   },
 });

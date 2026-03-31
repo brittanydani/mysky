@@ -384,7 +384,6 @@ const styles = StyleSheet.create({
     color: PALETTE.textMuted,
     textAlign: 'center',
     marginBottom: 12,
-    fontStyle: 'italic',
   },
   sealBtn: {
     height: 56,

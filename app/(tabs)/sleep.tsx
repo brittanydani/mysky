@@ -1261,7 +1261,7 @@ const styles = StyleSheet.create({
   tierPillText: { color: PALETTE.textMuted, fontSize: 12, fontWeight: '600' },
   tierBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
   tierBadgeText: { color: '#020817', fontSize: 11, fontWeight: '700' },
-  tierHint: { color: PALETTE.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16, fontStyle: 'italic' },
+  tierHint: { color: PALETTE.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16,  },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
   intensityLabel: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -1304,14 +1304,14 @@ const styles = StyleSheet.create({
   statCard: { flex: 1, borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
   statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
   statValue: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain },
-  statSub: { fontSize: 11, color: PALETTE.textMuted, marginTop: 4, textAlign: 'center', fontStyle: 'italic' },
+  statSub: { fontSize: 11, color: PALETTE.textMuted, marginTop: 4, textAlign: 'center',  },
 
   // Obsidian graph / cluster cards
   obsidianCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(139, 196, 232, 0.15)', overflow: 'hidden', alignItems: 'center' },
   obsidianCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 12 },
   obsidianCardEyebrow: { fontSize: 11, fontWeight: '800', color: PALETTE.silverBlue, letterSpacing: 1.5 },
   obsidianCardFooter: { marginTop: 10, alignSelf: 'center' },
-  obsidianCardFooterText: { fontSize: 11, color: 'rgba(240, 234, 214, 0.3)', fontStyle: 'italic', textAlign: 'center' },
+  obsidianCardFooterText: { fontSize: 11, color: 'rgba(240, 234, 214, 0.3)', textAlign: 'center' },
 
   // Entry history
   entryCard: { marginBottom: 16 },
@@ -1322,10 +1322,10 @@ const styles = StyleSheet.create({
   entryMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   entryMetaText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
   entryMoons: { flexDirection: 'row', gap: 2 },
-  entryDream: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 24, fontStyle: 'italic', marginBottom: 8 },
+  entryDream: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 24, marginBottom: 8 },
   entryDreamMoodRow: { marginTop: 4 },
   entryDreamMoodText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
-  deleteHint: { fontSize: 12, color: PALETTE.textMuted, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
+  deleteHint: { fontSize: 12, color: PALETTE.textMuted, textAlign: 'center', marginTop: 8,  },
 
   reflectBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.1)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
   reflectBtnPressed: { opacity: 0.7 },
@@ -1339,7 +1339,7 @@ const styles = StyleSheet.create({
 
   sitWithBox: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(157, 118, 193, 0.15)' },
   sitWithLabel: { fontSize: 11, fontWeight: '700', color: PALETTE.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24, fontStyle: 'italic' },
+  sitWithText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24,  },
 
   // AI Gemini interpretation
   aiSection: { marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(201, 174, 120, 0.15)' },
@@ -1347,7 +1347,7 @@ const styles = StyleSheet.create({
   aiBtnPressed: { opacity: 0.7 },
   aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
-  aiLoadingText: { fontSize: 13, color: PALETTE.textMuted, fontStyle: 'italic' },
+  aiLoadingText: { fontSize: 13, color: PALETTE.textMuted,  },
   aiErrorText: { fontSize: 13, color: PALETTE.copper, textAlign: 'center', paddingVertical: 8 },
   aiResultBox: { marginTop: 4 },
   aiResultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },

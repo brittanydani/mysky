@@ -212,7 +212,6 @@ const styles = StyleSheet.create({
     color: theme.textSecondary,
     lineHeight: 22,
     marginBottom: 32,
-    fontStyle: 'italic',
   },
   inputGroup: {
     marginBottom: 24,

@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
   legendNote: {
     color: theme.textMuted,
     fontSize: 9,
-    fontStyle: 'italic',
     marginLeft: 'auto',
   },
 });

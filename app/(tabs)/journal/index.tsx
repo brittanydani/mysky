@@ -874,7 +874,6 @@ const styles = StyleSheet.create({
   checkInTrendSubtitle: {
     fontSize: 13,
     color: theme.textSecondary,
-    fontStyle: 'italic',
     marginBottom: 20,
   },
 
@@ -895,7 +894,7 @@ const styles = StyleSheet.create({
 
   insightsSection: { marginBottom: 32 },
   insightsTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 4, fontWeight: '700' },
-  insightsSubtitle: { fontSize: 13, color: theme.textSecondary, fontStyle: 'italic', marginBottom: 20 },
+  insightsSubtitle: { fontSize: 13, color: theme.textSecondary, marginBottom: 20 },
 
   insightCard: {
     padding: 28,
@@ -912,7 +911,7 @@ const styles = StyleSheet.create({
   confidenceSuggested: { backgroundColor: 'transparent' },
   confidenceText: { fontSize: 10, color: theme.textPrimary, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
   insightDescription: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 24, marginBottom: 10 },
-  insightEvidence: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic', marginBottom: 8 },
+  insightEvidence: { fontSize: 13, color: theme.textMuted, marginBottom: 8 },
   insightActionable: { fontSize: 14, fontWeight: '600', marginTop: 4 },
 
   filterSection: {
@@ -963,10 +962,10 @@ const styles = StyleSheet.create({
   entriesSection: { marginBottom: 28 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sectionTitle: { fontSize: 20, color: theme.textPrimary, fontWeight: '700' },
-  entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic', fontVariant: ['tabular-nums'] },
+  entriesCount: { fontSize: 14, color: theme.textMuted, fontVariant: ['tabular-nums'] },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
-  loadingText: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic' },
+  loadingText: { fontSize: 15, color: theme.textSecondary,  },
 
   emptyContainer: { paddingVertical: 32 },
   emptyCard: { borderRadius: 32, padding: 40, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
@@ -1075,12 +1074,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255,255,255,0.85)',
     lineHeight: 24,
-    fontStyle: 'italic',
   },
   dreamNone: {
     fontSize: 15,
     color: theme.textMuted,
-    fontStyle: 'italic',
   },
 });
 

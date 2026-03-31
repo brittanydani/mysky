@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   weekInfoPhase: { fontSize: 15, color: '#FFF', fontWeight: '700' },
   weekInfoSign: { fontSize: 13, color: 'rgba(212,184,114,0.85)', fontWeight: '600' },
-  weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', fontStyle: 'italic', textAlign: 'center', marginTop: 2 },
+  weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginTop: 2 },
 
   moonTitle: { fontSize: 22, color: '#FFF', fontWeight: '700', marginTop: 20, marginBottom: 4 },
   moonDegree: { fontSize: 14, color: '#D4B872', letterSpacing: 1, marginBottom: 16 },
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#D9BF8C', letterSpacing: 1.5 },
   premiumIcon: { color: '#D9BF8C', fontSize: 14 },
-  affirmationText: { fontSize: 18, color: '#FFF', fontStyle: 'italic', lineHeight: 28 },
+  affirmationText: { fontSize: 18, color: '#FFF', lineHeight: 28 },
 
   // ── Transits ──────────────────────────────────────────────────────────────
   transitsSection: { marginBottom: 32 },

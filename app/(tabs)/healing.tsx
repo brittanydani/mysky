@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: { fontSize: 14 },
 
-  loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14 },
+  loadingText: { color: PALETTE.textMuted, fontSize: 14 },
 
   lockTitle: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12, textAlign: 'center' },
   lockSub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
@@ -308,11 +308,11 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   cardTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12 },
-  promptText: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, fontStyle: 'italic', marginBottom: 24 },
+  promptText: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, marginBottom: 24 },
   bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 24 },
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
   affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  affirmationText: { fontSize: 15, color: '#D9BF8C', lineHeight: 22, fontStyle: 'italic' },
+  affirmationText: { fontSize: 15, color: '#D9BF8C', lineHeight: 22,  },
 });
 

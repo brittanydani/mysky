@@ -281,6 +281,6 @@ const styles = StyleSheet.create({
     textAlign: 'center', 
     color: theme.textMuted, 
     fontSize: 12, 
-    fontStyle: 'italic' 
+     
   },
 });

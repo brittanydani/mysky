@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     color: theme.textMuted, 
     marginBottom: 32, 
     textAlign: 'center',
-    fontStyle: 'italic'
+    
   },
   faqSection: {
     gap: 8,

@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     opacity: 0.95,
   },
-  lastUpdated: { fontSize: 13, color: "#FFFFFF", marginBottom: 24, fontStyle: 'italic', textAlign: 'center' },
+  lastUpdated: { fontSize: 13, color: "#FFFFFF", marginBottom: 24, textAlign: 'center' },
   
   section: { marginBottom: 32 },
   glassSection: {
@@ -460,5 +460,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
-  footerText: { fontSize: 13, color: "#FFFFFF", fontStyle: 'italic' },
+  footerText: { fontSize: 13, color: "#FFFFFF",  },
 });

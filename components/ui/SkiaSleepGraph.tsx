@@ -282,7 +282,6 @@ const localStyles = StyleSheet.create({
   emptyText: {
     color: 'rgba(240, 234, 214, 0.4)',
     fontSize: 13,
-    fontStyle: 'italic',
     textAlign: 'center',
   },
 });

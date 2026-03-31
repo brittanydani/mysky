@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
 
   primaryBtn: { flex: 1.4, borderRadius: 16, overflow: 'hidden' },
 
-  footnote: { color: theme.textMuted, fontSize: 12, textAlign: 'center', fontStyle: 'italic' },
+  footnote: { color: theme.textMuted, fontSize: 12, textAlign: 'center',  },
 
   pressed: { opacity: 0.8, transform: [{ scale: 0.985 }] },
 });

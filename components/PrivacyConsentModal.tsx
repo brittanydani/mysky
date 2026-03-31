@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     marginBottom: 8, 
     textAlign: 'center' 
   },
-  subtitle: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5, color: '#C5B5A1', textAlign: 'center', paddingHorizontal: 20, lineHeight: 20, fontStyle: 'italic' },
+  subtitle: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5, color: '#C5B5A1', textAlign: 'center', paddingHorizontal: 20, lineHeight: 20,  },
   
   contentContainer: { marginBottom: 28 },
   glassSection: {
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   acceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },
   declineBtnText: { fontSize: 12, color: "#FFFFFF", fontWeight: '600', textDecorationLine: 'underline' },
-  declineHint: { fontSize: 13, color: '#C5B5A1', textAlign: 'center', fontStyle: 'italic', marginTop: 4 },
+  declineHint: { fontSize: 13, color: '#C5B5A1', textAlign: 'center', marginTop: 4 },
 
 
 });

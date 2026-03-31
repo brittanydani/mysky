@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
 
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
   footerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  wordCount: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontStyle: 'italic' },
+  wordCount: { color: 'rgba(255,255,255,0.3)', fontSize: 12,  },
   autoSaveText: { color: '#8CBEAA', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, textTransform: 'uppercase' },
 
   aiPromptButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(217, 191, 140, 0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
