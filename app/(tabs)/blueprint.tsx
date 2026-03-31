@@ -17,7 +17,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -191,22 +190,17 @@ export default function BlueprintScreen() {
                 entering={FadeInDown.delay(160 + i * 80).duration(600)}
               >
                 <Pressable
-                  style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                  style={({ pressed }) => [pressed && styles.cardPressed]}
                   onPress={() => nav(card.route, card.premium)}
                 >
-                  <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-                  <LinearGradient colors={card.gradientColors} style={StyleSheet.absoluteFill} />
-
-                  <View style={styles.cardContent}>
+                  <LinearGradient colors={card.gradientColors} style={styles.card}>
                     <View style={styles.cardIconRow}>
                       <MetallicText style={[styles.cardIcon, card.iconStyle]} color={card.iconStyle.color as string}>{card.icon}</MetallicText>
                       {card.premium && <PremiumBadge />}
                     </View>
-                    <View>
-                      <Text style={styles.cardTitle}>{card.title}</Text>
-                      <Text style={styles.cardSubtitle}>{card.description}</Text>
-                    </View>
-                  </View>
+                    <Text style={styles.cardTitle}>{card.title}</Text>
+                    <Text style={styles.cardSubtitle}>{card.description}</Text>
+                  </LinearGradient>
                 </Pressable>
               </Animated.View>
             ))}
@@ -244,7 +238,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -256,30 +249,27 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    height: 180,
+    padding: 28,
     borderRadius: 24,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
-  cardContent: { flex: 1, padding: 24, justifyContent: 'space-between' },
 
-  cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
 
   cardIcon: { fontSize: 32 },
   cardTitle: {
     fontSize: 20,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
-    fontWeight: '400',
-    marginBottom: 6,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   cardSubtitle: {
-    fontSize: 13,
+    fontSize: 16,
     color: PALETTE.textMuted,
-    lineHeight: 18,
-    paddingRight: 20,
+    lineHeight: 24,
   },
 
   // Premium badge

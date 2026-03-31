@@ -1,9 +1,7 @@
-import React, { memo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
-import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { luxuryTheme } from '../../constants/luxuryTheme';
-import { SkiaGlassSurface } from './skia/SkiaGlassSurface';
 
 interface PricingCardProps {
   name: string;
@@ -24,58 +22,20 @@ function PricingCard({
   selected = false,
   onPress,
 }: PricingCardProps) {
-  const [w, setW] = useState(0);
-  const [h, setH] = useState(0);
-
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    setW(e.nativeEvent.layout.width);
-    setH(e.nativeEvent.layout.height);
-  }, []);
-
   return (
     <Pressable
       style={({ pressed }) => [
         styles.container,
-        selected && styles.selectedContainer,
+        selected ? styles.selectedContainer : styles.unselectedContainer,
         pressed && styles.pressed,
       ]}
       onPress={onPress}
-      onLayout={onLayout}
       accessibilityRole="button"
       accessibilityState={{ selected }}
     >
-      {w > 0 && h > 0 && (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          {selected ? (
-            <Canvas style={StyleSheet.absoluteFillObject}>
-              <RoundedRect x={0} y={0} width={w} height={h} r={20}>
-                <LinearGradient
-                  start={vec(0, 0)}
-                  end={vec(0, h)}
-                  colors={['rgba(232,214,174,0.15)', 'rgba(2,8,23,0.80)']}
-                />
-              </RoundedRect>
-            </Canvas>
-          ) : (
-            <SkiaGlassSurface width={w} height={h} borderRadius={20} />
-          )}
-        </View>
-      )}
-
       {popular && (
         <View style={styles.popularBadgeContainer}>
           <View style={styles.popularBadge}>
-            <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-              <Canvas style={StyleSheet.absoluteFillObject}>
-                <RoundedRect x={0} y={0} width={120} height={30} r={0}>
-                  <LinearGradient
-                    start={vec(0, 0)}
-                    end={vec(120, 30)}
-                    colors={luxuryTheme.gradients.goldSoft}
-                  />
-                </RoundedRect>
-              </Canvas>
-            </View>
             <Ionicons name="sparkles-outline" size={10} color={luxuryTheme.text.onGold} />
             <Text style={styles.popularText}>Most Popular</Text>
           </View>
@@ -114,12 +74,16 @@ const styles = StyleSheet.create({
     borderTopColor: luxuryTheme.card.borderTop,
     marginBottom: 16,
     position: 'relative',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  unselectedContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
   selectedContainer: {
     borderColor: 'rgba(232,214,174,0.28)',
     borderTopColor: 'rgba(255,248,220,0.42)',
     borderWidth: 1.5,
+    backgroundColor: 'rgba(232, 214, 174, 0.08)',
   },
   pressed: {
     opacity: 0.9,
@@ -143,6 +107,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     minHeight: 26,
     minWidth: 110,
+    backgroundColor: luxuryTheme.text.goldPrimary,
   },
   popularText: {
     fontSize: 10,
@@ -187,7 +152,6 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 32,
     color: luxuryTheme.text.white,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     fontWeight: '700',
   },
   selectedPrice: {

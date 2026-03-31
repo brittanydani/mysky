@@ -11,7 +11,6 @@ import {
   Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -234,7 +233,6 @@ export default function NewJournalEntryScreen() {
             style={styles.inputSection}
           >
             <View style={styles.inputGlass}>
-              <BlurView intensity={10} tint="dark" style={StyleSheet.absoluteFill} />
               <TextInput
                 style={styles.textInput}
                 placeholder="Write freely. The Archive is secure..."
@@ -290,7 +288,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -327,7 +324,6 @@ const styles = StyleSheet.create({
   promptQuestion: {
     fontSize: 18,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     lineHeight: 26,
     marginBottom: 16,
   },
@@ -339,16 +335,15 @@ const styles = StyleSheet.create({
   inputGlass: {
     flex: 1,
     borderRadius: 20,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   textInput: {
     flex: 1,
     padding: 20,
     color: PALETTE.textMain,
     fontSize: 16,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     lineHeight: 26,
   },
 

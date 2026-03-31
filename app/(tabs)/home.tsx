@@ -426,7 +426,6 @@ export default function HomeScreen() {
 
           {/* ── Daily Balance Score ── */}
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.scoreCard}>
-            <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
             <View style={styles.scoreHeader}>
               <Text style={styles.cardLabel}>DAILY BALANCE</Text>
               <View style={styles.trendBadgeScore}>
@@ -811,8 +810,7 @@ const styles = StyleSheet.create({
   greeting: {
     color: '#FFFFFF',
     fontSize: 24,
-    fontWeight: '300',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontWeight: '700',
   },
   dateLabel: {
     color: 'rgba(255, 255, 255, 0.45)', // further muted
@@ -848,7 +846,6 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 15,
     lineHeight: 24,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
 
   // Premium preview
@@ -877,8 +874,7 @@ const styles = StyleSheet.create({
   premiumPreviewTitle: {
     fontSize: 20,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '400',
+    fontWeight: '700',
     lineHeight: 28,
     marginBottom: 8,
   },
@@ -912,7 +908,6 @@ const styles = StyleSheet.create({
     color: PALETTE.gold,
     fontSize: 16,
     fontWeight: '700',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontVariant: ['tabular-nums'] as const,
   },
   streakLabel: {
@@ -936,7 +931,6 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 14,
     lineHeight: 22,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   weeklyMetrics: {
     flexDirection: 'row',
@@ -955,7 +949,6 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 18,
     fontWeight: '700',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontVariant: ['tabular-nums'] as const,
   },
   metricLabel: {
@@ -992,10 +985,10 @@ const styles = StyleSheet.create({
   scoreCard: {
     padding: 24,
     borderRadius: 28,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     marginBottom: 16,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   scoreHeader: {
     flexDirection: 'row',
@@ -1024,8 +1017,8 @@ const styles = StyleSheet.create({
   },
   scoreValue: {
     fontSize: 60,
+    fontWeight: '700',
     color: '#FFFFFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   noDataText: {
     fontSize: 18,
@@ -1107,9 +1100,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '300',
+    fontWeight: '700',
     color: '#FFFFFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginBottom: 12,
   },
   quickLinksRow: {
@@ -1138,9 +1130,8 @@ const styles = StyleSheet.create({
   },
   quickLinkTitle: {
     fontSize: 13,
-    fontWeight: '400',
+    fontWeight: '600',
     color: '#FFFFFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     textAlign: 'center',
   },
   quickLinkSub: {

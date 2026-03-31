@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -185,9 +184,8 @@ export default function CoreValuesScreen() {
 
           {/* Top 5 North Star Summary */}
           {state.topFive.length > 0 && (
-            <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)} style={styles.summaryCard}>
-              <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={['rgba(217,191,140,0.15)', 'transparent']} style={StyleSheet.absoluteFill} />
+            <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)}>
+              <LinearGradient colors={['rgba(217,191,140,0.15)', 'rgba(10,10,12,0.85)']} style={styles.summaryCard}>
               
               <View style={styles.summaryHeaderRow}>
                 <MetallicIcon name="compass-outline" size={18} color={PALETTE.gold} />
@@ -208,13 +206,14 @@ export default function CoreValuesScreen() {
               {state.topFive.length < MAX_TOP && (
                 <Text style={styles.summaryHint}>Long-press a selected value to elevate it to your Top 5.</Text>
               )}
+              </LinearGradient>
             </Animated.View>
           )}
 
           {/* The Paradox Engine Insight */}
           {activeParadoxes.map((paradox, index) => (
-            <Animated.View key={paradox.name} layout={Layout.springify()} entering={FadeIn.delay(index * 150).duration(600)} style={styles.paradoxCard}>
-              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+            <Animated.View key={paradox.name} layout={Layout.springify()} entering={FadeIn.delay(index * 150).duration(600)}>
+              <View style={styles.paradoxCard}>
               <View style={styles.paradoxHeader}>
                 <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.copper} />
                 <MetallicText style={styles.paradoxEyebrow} color={PALETTE.copper}>CORE PARADOX DETECTED</MetallicText>
@@ -224,6 +223,7 @@ export default function CoreValuesScreen() {
               <Text style={styles.paradoxFooter}>
                 When making decisions, notice which of these two values you are sacrificing. Growth lives in balancing this tension.
               </Text>
+              </View>
             </Animated.View>
           ))}
 
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
   sectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, fontWeight: '800', marginBottom: 16 },
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   chipTextSelected: { color: PALETTE.gold, fontWeight: '600' },
   chipTextTop: { color: PALETTE.bg, fontWeight: '800' },
 
-  summaryCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)', padding: 24, marginBottom: 20 },
+  summaryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)', padding: 28, marginBottom: 20, backgroundColor: 'rgba(255,255,255,0.02)' },
   summaryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
   summaryTitle: { fontSize: 11, color: PALETTE.gold, fontWeight: '800', letterSpacing: 1.5 },
   
@@ -289,15 +289,15 @@ const styles = StyleSheet.create({
   topItemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
   topNumberBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(217,191,140,0.2)', justifyContent: 'center', alignItems: 'center' },
   topNumberText: { color: PALETTE.gold, fontSize: 11, fontWeight: '800' },
-  topItemText: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontWeight: '500' },
+  topItemText: { fontSize: 16, color: PALETTE.textMain, fontWeight: '600' },
   
   summaryHint: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 20, fontStyle: 'italic', textAlign: 'center' },
 
   // Paradox Engine Cards
-  paradoxCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 24, marginBottom: 20, backgroundColor: 'rgba(205, 127, 93, 0.05)' },
+  paradoxCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 28, marginBottom: 20, backgroundColor: 'rgba(205, 127, 93, 0.05)' },
   paradoxHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   paradoxEyebrow: { fontSize: 10, color: PALETTE.copper, fontWeight: '800', letterSpacing: 1.5 },
-  paradoxTitle: { fontSize: 20, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 10 },
+  paradoxTitle: { fontSize: 20, color: PALETTE.textMain, fontWeight: '700', marginBottom: 10 },
   paradoxBody: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 22, marginBottom: 16 },
   paradoxFooter: { fontSize: 12, color: PALETTE.textMuted, fontStyle: 'italic', lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
 

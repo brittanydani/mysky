@@ -1,6 +1,5 @@
-import React, { memo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, LayoutChangeEvent } from 'react-native';
-import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { luxuryTheme } from '../../constants/luxuryTheme';
 import { MetallicIcon } from './MetallicIcon';
@@ -34,48 +33,26 @@ function InsightCard({
   variant = 'default',
 }: InsightCardProps) {
   const isFeatured = variant === 'featured';
-  const [w, setW] = useState(0);
-  const [h, setH] = useState(0);
-
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    setW(e.nativeEvent.layout.width);
-    setH(e.nativeEvent.layout.height);
-  }, []);
 
   const accentColor = locked ? PALETTE.amethyst : isFeatured ? PALETTE.gold : PALETTE.silverBlue;
 
-  // Determine gradients directly inside Skia
-  const gradientColors = locked
-    ? ['rgba(157, 118, 193, 0.12)', 'rgba(2,8,23,0.80)']
+  const backgroundColor = locked
+    ? 'rgba(157, 118, 193, 0.06)'
     : isFeatured
-    ? ['rgba(232,214,174,0.15)', 'rgba(2,8,23,0.80)']
-    : ['rgba(255,255,255,0.035)', 'rgba(255,255,255,0.01)'];
+    ? 'rgba(232, 214, 174, 0.06)'
+    : 'rgba(255, 255, 255, 0.03)';
 
   return (
     <Pressable
       onPress={onPress}
-      onLayout={onLayout}
       accessibilityRole="button"
       style={({ pressed }) => [
         styles.container,
+        { backgroundColor },
         locked && styles.lockedContainer,
         pressed && styles.pressed,
       ]}
     >
-      {w > 0 && h > 0 && (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          <Canvas style={StyleSheet.absoluteFillObject}>
-            <RoundedRect x={0} y={0} width={w} height={h} r={20}>
-              <LinearGradient
-                start={vec(0, 0)}
-                end={vec(0, h)}
-                colors={gradientColors}
-              />
-            </RoundedRect>
-          </Canvas>
-        </View>
-      )}
-
       <View style={styles.gradient}>
         <View style={styles.header}>
           {icon && (
@@ -171,8 +148,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
   lockIcon: {

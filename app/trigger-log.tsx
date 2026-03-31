@@ -316,7 +316,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -354,7 +353,6 @@ const styles = StyleSheet.create({
   textInput: {
     color: PALETTE.textMain,
     fontSize: 16,
-    fontFamily: 'Georgia',
     lineHeight: 24,
   },
 

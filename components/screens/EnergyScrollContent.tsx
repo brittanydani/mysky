@@ -658,7 +658,6 @@ const styles = StyleSheet.create({
     color: theme.textPrimary,
     fontSize: 24,
     fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   intensityBadge: {
     fontSize: 12,
@@ -677,7 +676,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: 'serif',
   },
 
   body: {
@@ -704,7 +702,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: theme.textPrimary,
-    fontFamily: 'serif',
   },
   lockBanner: {
     flexDirection: 'row',
@@ -856,7 +853,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: 'serif',
   },
   focusStateBadge: {
     flexDirection: 'row',
@@ -991,7 +987,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '600',
-    fontFamily: 'serif',
   },
   footer: {
     paddingVertical: theme.spacing.xl,

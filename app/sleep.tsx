@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 16,
   },
   modalTitle: {
-    color: '#FFF', fontSize: 24, fontFamily: 'Georgia',
+    color: '#FFF', fontSize: 24,
     marginBottom: 36, letterSpacing: 0.5,
   },
   sectionLabel: {
@@ -184,12 +184,12 @@ const styles = StyleSheet.create({
     minWidth: 160, alignItems: 'center',
   },
   hoursValue: {
-    color: '#D9BF8C', fontSize: 36, fontFamily: 'Georgia', letterSpacing: 0.5,
+    color: '#D9BF8C', fontSize: 36, letterSpacing: 0.5,
   },
   moonRow: { flexDirection: 'row', gap: 20, marginBottom: 12 },
   moon: { fontSize: 38, color: '#6E8CB4' },
   qualityLabel: {
-    color: '#6E8CB4', fontFamily: 'Georgia', fontStyle: 'italic',
+    color: '#6E8CB4', fontStyle: 'italic',
     fontSize: 14, marginBottom: 48,
   },
 

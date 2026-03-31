@@ -604,7 +604,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 34,
     fontWeight: '800',
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     letterSpacing: -0.5,
     marginTop: 8,
   },

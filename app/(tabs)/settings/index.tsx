@@ -583,7 +583,7 @@ export default function SettingsScreen() {
           {/* ── Your Identity ── */}
           <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Your Identity" subtitle="Birth chart anchor point">
-              <View style={{ paddingHorizontal: 16 }}>
+              <View style={{ paddingHorizontal: 20 }}>
                 <View style={styles.identityCard}>
                   <View style={styles.identityRow}>
                     <View style={styles.identityAvatarContainer}>
@@ -618,7 +618,7 @@ export default function SettingsScreen() {
 
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key">
-                <View style={{ paddingHorizontal: 16 }}>
+                <View style={{ paddingHorizontal: 20 }}>
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
                       <View style={styles.settingHeader}>
@@ -670,7 +670,7 @@ export default function SettingsScreen() {
 
           <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Export" subtitle="Download your data as a PDF">
-              <View style={{ paddingHorizontal: 16 }}>
+              <View style={{ paddingHorizontal: 20 }}>
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
@@ -757,7 +757,7 @@ export default function SettingsScreen() {
           <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Personalization" subtitle="Fine-tune your experience">
               <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                 onPress={async () => {
                   try { await Haptics.selectionAsync(); } catch {}
                   router.push('/settings/notifications' as Href);
@@ -811,7 +811,7 @@ export default function SettingsScreen() {
 
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Privacy & Data" subtitle="Device-only, encrypted at rest">
-              <Pressable style={{ paddingHorizontal: 16, paddingVertical: 12 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
+              <Pressable style={{ paddingHorizontal: 20, paddingVertical: 14 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
@@ -899,7 +899,7 @@ export default function SettingsScreen() {
           <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Legal" subtitle="Policies and documentation">
               <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                 onPress={openPrivacyPolicy}
                 accessibilityRole="button"
                 accessibilityLabel="Privacy Policy"
@@ -919,7 +919,7 @@ export default function SettingsScreen() {
               </Pressable>
               <ObsidianDivider />
               <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                 onPress={openTerms}
                 accessibilityRole="button"
                 accessibilityLabel="Terms of Use (EULA)"
@@ -939,7 +939,7 @@ export default function SettingsScreen() {
               </Pressable>
               <ObsidianDivider />
               <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                 onPress={openFaq}
                 accessibilityRole="button"
                 accessibilityLabel="FAQ"
@@ -963,7 +963,7 @@ export default function SettingsScreen() {
           <Animated.View entering={FadeInDown.delay(625).duration(600)} style={styles.section}>
             <ObsidianSettingsGroup title="Support" subtitle="We're here to help">
               <Pressable
-                style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                 onPress={openSupportEmail}
                 accessibilityRole="link"
                 accessibilityLabel="Contact us via email"
@@ -1063,7 +1063,7 @@ export default function SettingsScreen() {
             <Animated.View entering={FadeInDown.delay(750).duration(600)} style={styles.section}>
               <ObsidianSettingsGroup title="Account" subtitle={user.email ?? ''}>
                 <Pressable
-                  style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                  style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                   onPress={() => {
                     Alert.alert(
                       'Sign Out',
@@ -1093,7 +1093,7 @@ export default function SettingsScreen() {
                 </Pressable>
                 <ObsidianDivider />
                 <Pressable
-                  style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                  style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                   onPress={() => {
                     Alert.alert(
                       'Delete Account',
@@ -1189,7 +1189,6 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '800',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     letterSpacing: -0.5,
     marginBottom: 4,
   },
@@ -1236,7 +1235,7 @@ const styles = StyleSheet.create({
   },
   premiumText: { fontSize: 10, color: theme.primary, fontWeight: '600' },
 
-  settingDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, flexShrink: 1, flexWrap: "wrap" },
+  settingDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, flexShrink: 1, flexWrap: "wrap" },
   lastSyncText: { fontSize: 12, color: theme.textMuted, marginTop: theme.spacing.xs },
 
   backupActions: { gap: theme.spacing.sm },
@@ -1276,9 +1275,8 @@ const styles = StyleSheet.create({
   },
   identityName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 2,
   },
   identityDetail: {
@@ -1332,7 +1330,7 @@ const styles = StyleSheet.create({
   privacyItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   privacyText: { fontSize: 12, color: theme.textSecondary, flex: 1 },
 
-  securityGrid: { gap: theme.spacing.md, paddingHorizontal: 16 },
+  securityGrid: { gap: theme.spacing.lg, paddingHorizontal: 20, paddingVertical: 4 },
   securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
   securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(72, 187, 120, 0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   securityContent: { flex: 1 },
@@ -1352,7 +1350,7 @@ const styles = StyleSheet.create({
   glossaryRow: { paddingVertical: theme.spacing.md },
   glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
+  glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, flex: 1 },
   glossaryDefinition: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs },
 
   versionText: { fontSize: 11, color: 'rgba(226,232,240,0.25)', textAlign: 'center', marginTop: theme.spacing.xl, marginBottom: theme.spacing.sm, letterSpacing: 0.5 },
@@ -1378,7 +1376,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#E07A7A',
-    fontFamily: 'serif',
   },
   keyLossBannerText: {
     fontSize: 14,

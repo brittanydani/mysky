@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   errorTitle: { 
     color: '#FFFFFF', 
     fontSize: 26, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), 
+    fontWeight: '700',
     marginBottom: 12,
     textAlign: 'center'
   },

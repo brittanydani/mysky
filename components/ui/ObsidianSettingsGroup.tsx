@@ -1,17 +1,4 @@
 // File: components/ui/ObsidianSettingsGroup.tsx
-/**
- * ObsidianSettingsGroup — "The Core Framework"
- *
- * A premium settings section container with:
- *   1. Obsidian glass surface with specular edge highlights.
- *   2. Section dividers rendered as luminous hairlines.
- *   3. Static high-contrast nebula tint in the background.
- *
- * Each group wraps its children (typically SkiaCelestialToggle rows
- * or standard Pressable setting rows) in a cohesive obsidian card.
- *
- * Requires: @shopify/react-native-skia 2.x
- */
 
 import React, { memo } from 'react';
 import {
@@ -20,27 +7,9 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import {
-  Canvas,
-  RoundedRect,
-  LinearGradient,
-  Rect,
-  BlurMask,
-  vec,
-} from '@shopify/react-native-skia';
+
 const { width: SCREEN_W } = Dimensions.get('window');
 const GROUP_W = SCREEN_W - 32;
-
-// ── Glass palette ───────────────────────────────────────────────────────────
-
-const GLASS = {
-  surface: 'rgba(15, 18, 25, 0.88)',
-  border: 'rgba(201, 174, 120, 0.08)',
-  specularTop: 'rgba(201, 174, 120, 0.06)',
-  specularBot: 'rgba(255, 255, 255, 0.0)',
-  divider: 'rgba(201, 174, 120, 0.06)',
-  nebulaHint: 'rgba(100, 70, 160, 0.06)',
-};
 
 // ── Props ───────────────────────────────────────────────────────────────────
 
@@ -62,91 +31,20 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
   subtitle,
   children,
 }: Props) {
-  // Measure height dynamically — we use a fixed min-height and let React
-  // measure the actual content. The Skia canvas is positioned absolute.
-  const [cardH, setCardH] = React.useState(150);
-
   return (
     <View style={styles.wrapper}>
-      {/* ── Skia Glass Background ── */}
-      <Canvas
-        style={[styles.canvas, { width: GROUP_W, height: cardH }]}
-        pointerEvents="none">
-        {/* Glass surface */}
-        <RoundedRect
-          x={0}
-          y={0}
-          width={GROUP_W}
-          height={cardH}
-          r={16}
-          color={GLASS.surface}
-        />
+      {/* Section header */}
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{title}</Text>
+        {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+      </View>
 
-        {/* Nebula tint (subtle amethyst) */}
-        <RoundedRect
-          x={0}
-          y={0}
-          width={GROUP_W}
-          height={cardH}
-          r={16}
-          color={GLASS.nebulaHint}
-        >
-          <BlurMask blur={20} style="normal" />
-        </RoundedRect>
+      {/* Divider */}
+      <View style={styles.divider} />
 
-        {/* Specular top-edge */}
-        <RoundedRect
-          x={1}
-          y={1}
-          width={GROUP_W - 2}
-          height={cardH * 0.3}
-          r={16}
-        >
-          <LinearGradient
-            start={vec(0, 0)}
-            end={vec(0, cardH * 0.3)}
-            colors={[GLASS.specularTop, GLASS.specularBot]}
-          />
-        </RoundedRect>
-
-        {/* Border */}
-        <RoundedRect
-          x={0.5}
-          y={0.5}
-          width={GROUP_W - 1}
-          height={cardH - 1}
-          r={16}
-          style="stroke"
-          strokeWidth={1}
-          color={GLASS.border}
-        />
-
-        {/* Specular edge highlight (left accent bar) */}
-        <Rect x={0} y={20} width={2} height={cardH - 40} color="rgba(201, 174, 120, 0.20)">
-          <BlurMask blur={3} style="outer" />
-        </Rect>
-
-        {/* Right edge accent (subtle symmetry) */}
-        <Rect x={GROUP_W - 2} y={20} width={2} height={cardH - 40} color="rgba(157, 118, 193, 0.10)">
-          <BlurMask blur={3} style="outer" />
-        </Rect>
-      </Canvas>
-
-      {/* ── Content Layer ── */}
-      <View style={styles.content} onLayout={(e) => setCardH(e.nativeEvent.layout.height)}>
-        {/* Section header */}
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-        </View>
-
-        {/* Divider */}
-        <View style={styles.divider} />
-
-        {/* Children (setting rows) */}
-        <View style={styles.childWrap}>
-          {children}
-        </View>
+      {/* Children (setting rows) */}
+      <View style={styles.childWrap}>
+        {children}
       </View>
     </View>
   );
@@ -167,43 +65,34 @@ const styles = StyleSheet.create({
     width: GROUP_W,
     alignSelf: 'center',
     marginBottom: 20,
-    position: 'relative',
-  },
-  canvas: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
     borderRadius: 16,
-    overflow: 'hidden',
-  },
-  content: {
-    paddingTop: 16,
-    paddingBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(201,174,120,0.10)',
+    backgroundColor: 'rgba(15,18,25,0.88)',
   },
   headerRow: {
-    paddingHorizontal: 16,
-    marginBottom: 4,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 8,
   },
   title: {
-    color: '#9A9A9F',
-    fontSize: 11,
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 20,
     fontWeight: '700',
-    letterSpacing: 2.5,
-    textTransform: 'uppercase',
   },
   subtitle: {
-    color: 'rgba(226,232,240,0.40)',
-    fontSize: 11,
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: 13,
     marginTop: 3,
-    letterSpacing: 0.2,
+    lineHeight: 18,
   },
   divider: {
     height: 1,
-    backgroundColor: GLASS.divider,
-    marginHorizontal: 16,
-    marginVertical: 6,
+    backgroundColor: 'rgba(201,174,120,0.06)',
+    marginHorizontal: 20,
+    marginVertical: 8,
   },
   childWrap: {
-    // Children provide their own padding
+    paddingBottom: 12,
   },
 });

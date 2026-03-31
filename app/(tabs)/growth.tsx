@@ -19,8 +19,6 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
-import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
@@ -55,6 +53,7 @@ const PALETTE = {
 
 interface SnapshotData {
   avgMood: number | null;
+  avgStress: number | null;
   checkInCount: number;
   stressTrend: 'improving' | 'worsening' | 'stable' | null;
 }
@@ -109,7 +108,6 @@ function buildWeeklyChangeCard(deepBundle: DeepPatternBundle | null, snapshot: S
 function buildLearningCard(deepBundle: DeepPatternBundle | null, enhanced: EnhancedInsightBundle | null): LoopCardContent | null {
   const bundle = deepBundle?.bundle;
   const relational = deepBundle?.relational;
-  const blueprintTheme = deepBundle?.blueprint[0];
 
   if (bundle?.tagInsights?.hasTagData) {
     const restore = bundle.tagInsights.restores[0]?.label;
@@ -148,15 +146,6 @@ function buildLearningCard(deepBundle: DeepPatternBundle | null, enhanced: Enhan
     };
   }
 
-  if (blueprintTheme) {
-    return {
-      label: "WHAT YOU'RE LEARNING",
-      title: blueprintTheme.title,
-      body: blueprintTheme.body,
-      accent: PALETTE.gold,
-    };
-  }
-
   return null;
 }
 
@@ -165,6 +154,7 @@ export default function PatternsScreen() {
   const { isPremium } = usePremium();
   const [snapshot, setSnapshot] = useState<SnapshotData>({
     avgMood: null,
+    avgStress: null,
     checkInCount: 0,
     stressTrend: null,
   });
@@ -198,7 +188,7 @@ export default function PatternsScreen() {
           const levelToScore = (level: string | null | undefined): number | null => {
             if (level === 'low') return 2;
             if (level === 'medium') return 5;
-            if (level === 'high') return 9;
+            if (level === 'high') return 8;
             return null;
           };
           let stressTrend: SnapshotData['stressTrend'] = null;
@@ -212,32 +202,23 @@ export default function PatternsScreen() {
             else stressTrend = 'stable';
           }
 
+          const avgStress = stresses.length
+            ? Math.round((stresses.reduce((a, b) => a + b, 0) / stresses.length) * 10) / 10
+            : null;
+
           const sorted = [...checkIns].sort((a, b) => a.date.localeCompare(b.date));
           setTrendCheckIns(sorted);
-          setSnapshot({ avgMood, checkInCount: checkIns.length, stressTrend });
+          setSnapshot({ avgMood, avgStress, checkInCount: checkIns.length, stressTrend });
 
           // Enhanced insights pipeline + deep bundle
           try {
-            const saved = charts[0];
-            const birthData = {
-              date: saved.birthDate,
-              time: saved.birthTime,
-              hasUnknownTime: saved.hasUnknownTime,
-              place: saved.birthPlace,
-              latitude: saved.latitude,
-              longitude: saved.longitude,
-              timezone: saved.timezone,
-              houseSystem: saved.houseSystem,
-            };
-            const astroSettings = await AstrologySettingsService.getSettings();
-            const natalChart = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
             const journalEntries = await localDb.getJournalEntriesPaginated(90);
             const sleepEntries = await localDb.getSleepEntries(chartId, 90);
 
-            const pipelineResult = runPipeline({ checkIns, journalEntries, chart: natalChart, todayContext: null });
-            setEnhanced(computeEnhancedInsights(pipelineResult.dailyAggregates, pipelineResult.chartProfile));
+            const pipelineResult = runPipeline({ checkIns, journalEntries, chart: null, todayContext: null });
+            setEnhanced(computeEnhancedInsights(pipelineResult.dailyAggregates, null));
 
-            const deep = computeDeepPatternBundle(checkIns, journalEntries, sleepEntries, natalChart);
+            const deep = computeDeepPatternBundle(checkIns, journalEntries, sleepEntries, null);
             setDeepBundle(deep);
           } catch (e) {
             logger.error('Enhanced insights pipeline failed:', e);
@@ -251,11 +232,11 @@ export default function PatternsScreen() {
     }, [])
   );
 
-  const stressLabel = (trend: SnapshotData['stressTrend']): string => {
+  const stressLabel = (trend: SnapshotData['stressTrend']): string | null => {
     if (trend === 'improving') return 'Easing';
     if (trend === 'worsening') return 'Rising';
     if (trend === 'stable') return 'Stable';
-    return '—';
+    return null;
   };
 
   return (
@@ -272,7 +253,7 @@ export default function PatternsScreen() {
           {/* ── Hub 1: Quantitative Snapshot ── */}
           <View style={styles.snapshotRow}>
             <MetricCard label="AVG MOOD" value={snapshot.avgMood?.toFixed(1) ?? '—'} color={PALETTE.silverBlue} sub={snapshot.avgMood ? moodSubLabel(snapshot.avgMood) : 'No data'} />
-            <MetricCard label="STRESS" value={stressLabel(snapshot.stressTrend)} color={PALETTE.copper} isText />
+            <MetricCard label="STRESS" value={snapshot.avgStress?.toFixed(1) ?? '—'} color={PALETTE.copper} sub={stressLabel(snapshot.stressTrend) ?? undefined} />
             <MetricCard label="LOGGED" value={snapshot.checkInCount.toString()} color={PALETTE.gold} sub="last 30 days" />
           </View>
 
@@ -287,7 +268,7 @@ export default function PatternsScreen() {
             ) : (
               <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
                 <MetallicIcon name="planet-outline" size={36} variant="gold" />
-                <Text style={{ color: PALETTE.gold, fontSize: 14, textAlign: 'center', marginTop: 12, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' }}>
+                <Text style={{ color: PALETTE.gold, fontSize: 14, textAlign: 'center', marginTop: 12 }}>
                   Log a few check-ins to reveal your pattern orbit map.
                 </Text>
               </View>
@@ -409,7 +390,7 @@ function DeepInsightLenses({
   deepBundle: DeepPatternBundle;
   enhanced: EnhancedInsightBundle | null;
 }) {
-  const { bundle, innerTensions, blueprint, relational, bodyTagStats } = deepBundle;
+  const { bundle, innerTensions, relational, bodyTagStats } = deepBundle;
   const b = bundle;
 
   return (
@@ -617,27 +598,7 @@ function DeepInsightLenses({
         </View>
       )}
 
-      {/* ── 5. Inner Blueprint ── */}
-      {blueprint.length > 0 && (
-        <View style={{ gap: 10 }}>
-          <LensHeader icon="diamond-outline" title="Inner Blueprint" color={PALETTE.gold} />
-          {blueprint.map((theme, i) => (
-            <LinearGradient
-              key={i}
-              colors={['rgba(212,184,114,0.07)', 'rgba(10,10,12,0.85)']}
-              style={styles.insightCard}
-            >
-              <View style={lensStyles.blueprintHeader}>
-                <Text style={lensStyles.blueprintIcon}>{theme.icon}</Text>
-                <Text style={[styles.insightLabel, { marginBottom: 0 }]}>{theme.title.toUpperCase()}</Text>
-              </View>
-              <Text style={[styles.insightBody, { marginTop: 10 }]}>{theme.body}</Text>
-            </LinearGradient>
-          ))}
-        </View>
-      )}
-
-      {/* ── 6. Body & Nervous System ── */}
+      {/* ── 5. Body & Nervous System ── */}
       {(innerTensions.dataQuality.entriesWithFeelings > 0 || bodyTagStats.entries.length > 0) && (
         <View style={{ gap: 10 }}>
           <LensHeader icon="body-outline" title="Body & Nervous System" color={PALETTE.copper} />
@@ -767,27 +728,27 @@ function DeepInsightLenses({
 }
 
 const lensStyles = StyleSheet.create({
-  lensHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  lensIcon: { fontSize: 18 },
-  lensTitle: { fontSize: 17, fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  lensSubtitle: { fontSize: 15, fontWeight: '600', marginBottom: 6 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1 },
+  lensHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  lensIcon: { fontSize: 20 },
+  lensTitle: { fontSize: 18, fontWeight: '700' },
+  lensSubtitle: { fontSize: 16, fontWeight: '600', marginBottom: 10 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 24, borderWidth: 1 },
   chipText: { fontSize: 13, fontWeight: '600' },
-  statLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  statLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 13 },
-  statValue: { fontSize: 13, fontWeight: '600' },
-  nsBarRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  nsBarLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 12, width: 60 },
-  nsBarTrack: { flex: 1, height: 4, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' },
-  nsBarFill: { height: 4, borderRadius: 2 },
-  nsBarPct: { fontSize: 12, fontWeight: '600', width: 34, textAlign: 'right' },
-  nsDot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
-  blueprintHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  blueprintIcon: { fontSize: 18, color: '#FFFFFF' },
-  dreamPatternRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dreamPatternLabel: { fontSize: 14, fontWeight: '600', flex: 1 },
-  dreamPatternCount: { color: 'rgba(255,255,255,0.4)', fontSize: 13 },
+  statLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
+  statLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: '500' },
+  statValue: { fontSize: 14, fontWeight: '600' },
+  nsBarRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
+  nsBarLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 13, width: 64, fontWeight: '500' },
+  nsBarTrack: { flex: 1, height: 6, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' },
+  nsBarFill: { height: 6, borderRadius: 3 },
+  nsBarPct: { fontSize: 13, fontWeight: '600', width: 36, textAlign: 'right' },
+  nsDot: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },
+  blueprintHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  blueprintIcon: { fontSize: 20, color: '#FFFFFF' },
+  dreamPatternRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
+  dreamPatternLabel: { fontSize: 15, fontWeight: '600', flex: 1, color: 'rgba(255,255,255,0.9)' },
+  dreamPatternCount: { color: 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '500' },
 });
 
 const styles = StyleSheet.create({
@@ -795,28 +756,28 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   header: { marginTop: 20, marginBottom: 32 },
-  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5, marginBottom: 4 },
-  subtitle: { fontSize: 14 },
-  snapshotRow: { flexDirection: 'row', gap: 10, marginBottom: 32 },
-  metricCard: { flex: 1, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', minHeight: 100 },
-  metricLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 8 },
-  metricValue: { color: PALETTE.textMain, fontSize: 24, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  metricSub: { color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 4, textAlign: 'center' },
-  visualSection: { alignItems: 'center', marginBottom: 32 },
-  chartWrapper: { width: '100%', marginTop: 24, padding: 20, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
-  chartLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.8, marginBottom: 20, textAlign: 'center' },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  sectionTitle: { color: PALETTE.textMain, fontSize: 18, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
-  insightColumn: { gap: 12 },
-  insightCard: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  insightLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: 1, marginBottom: 8 },
-  insightBody: { color: PALETTE.textMain, fontSize: 15, lineHeight: 24 },
-  loopCard: { marginBottom: 24 },
-  loopTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  premiumLock: { padding: 24, borderRadius: 24, flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 4 },
+  subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
+  snapshotRow: { flexDirection: 'row', gap: 12, marginBottom: 40 },
+  metricCard: { flex: 1, padding: 20, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', minHeight: 110, backgroundColor: 'rgba(255,255,255,0.02)' },
+  metricLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, marginBottom: 10, textTransform: 'uppercase', textAlign: 'center' },
+  metricValue: { color: PALETTE.textMain, fontSize: 26, fontWeight: '500', fontVariant: ['tabular-nums'] },
+  metricSub: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '500' },
+  visualSection: { alignItems: 'center', marginBottom: 40 },
+  chartWrapper: { width: '100%', marginTop: 24, padding: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 32, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.1)', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 24, elevation: 10 },
+  chartLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, marginBottom: 24, textAlign: 'center', textTransform: 'uppercase' },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
+  sectionTitle: { color: PALETTE.textMain, fontSize: 19, fontWeight: '700' },
+  insightColumn: { gap: 16 },
+  insightCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  insightLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.5)', letterSpacing: 1.2, marginBottom: 12, textTransform: 'uppercase' },
+  insightBody: { color: 'rgba(255,255,255,0.9)', fontSize: 16, lineHeight: 24 },
+  loopCard: { marginBottom: 32 },
+  loopTitle: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
+  premiumLock: { padding: 28, borderRadius: 32, flexDirection: 'row', alignItems: 'flex-start', gap: 16, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(212, 184, 114, 0.15)' },
   premiumLockIcon: { paddingTop: 2 },
   premiumLockTextWrap: { flex: 1 },
-  premiumText: { color: PALETTE.gold, fontWeight: '600' },
-  premiumTeaserText: { color: 'rgba(255,255,255,0.72)', fontSize: 13, lineHeight: 20, marginTop: 8 },
+  premiumText: { color: PALETTE.gold, fontWeight: '700', fontSize: 15 },
+  premiumTeaserText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 22, marginTop: 8 },
 });
 

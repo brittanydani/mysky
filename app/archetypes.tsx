@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -244,11 +243,6 @@ export default function ArchetypesScreen() {
           {showResult && dominant && savedProfile ? (
             <Animated.View entering={FadeIn.duration(600)}>
               <View style={[styles.resultCard, { borderColor: `${dominant.color}40` }]}>
-                <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
-                <LinearGradient
-                  colors={[`${dominant.color}18`, 'transparent']}
-                  style={StyleSheet.absoluteFill}
-                />
                 <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
                 <MetallicText style={styles.resultName} color={dominant.color}>{dominant.name}</MetallicText>
                 <Text style={styles.resultTagline}>{dominant.tagline}</Text>
@@ -266,7 +260,6 @@ export default function ArchetypesScreen() {
 
               {/* Score breakdown */}
               <View style={styles.scoresCard}>
-                <BlurView intensity={15} tint="dark" style={StyleSheet.absoluteFill} />
                 <Text style={styles.scoresTitle}>SCORE BREAKDOWN</Text>
                 {(Object.keys(savedProfile.scores) as ArchetypeKey[])
                   .sort((a, b) => savedProfile.scores[b] - savedProfile.scores[a])
@@ -378,7 +371,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -405,7 +397,7 @@ const styles = StyleSheet.create({
   promptQuestion: {
     fontSize: 16,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
+    fontWeight: '700',
     marginBottom: 14,
     lineHeight: 22,
   },
@@ -438,16 +430,9 @@ const styles = StyleSheet.create({
   submitBtnText: { fontSize: 15, color: PALETTE.lavender, fontWeight: '700' },
 
   // Result
-  resultCard: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 1,
-    padding: 28,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
+  resultCard: { borderRadius: 24, borderWidth: 1, padding: 28, marginBottom: 20, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)' },
   resultIcon: { fontSize: 48, marginBottom: 12 },
-  resultName: { fontSize: 26, fontFamily: 'Georgia', fontWeight: '400', marginBottom: 6 },
+  resultName: { fontSize: 26, fontWeight: '700', marginBottom: 6 },
   resultTagline: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
@@ -467,15 +452,7 @@ const styles = StyleSheet.create({
   },
   traitText: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 20, alignSelf: 'flex-start' },
 
-  scoresCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
-    padding: 20,
-    marginBottom: 20,
-    gap: 12,
-  },
+  scoresCard: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', padding: 20, marginBottom: 20, gap: 12, backgroundColor: 'rgba(255,255,255,0.02)' },
   scoresTitle: {
     fontSize: 10,
     fontWeight: '700',

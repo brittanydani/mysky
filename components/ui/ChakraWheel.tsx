@@ -290,9 +290,8 @@ const styles = StyleSheet.create({
   centerName: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 1.5,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   centerState: {
     marginTop: 4,

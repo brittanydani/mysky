@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14, marginTop: 12 },
 
   header: { alignItems: 'center', marginTop: 20, marginBottom: 28 },
-  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5, marginBottom: 4 },
+  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 4 },
   headerSub: { fontSize: 14, textAlign: 'center' },
 
   sectionCard: {
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   emptyHintText: { color: PALETTE.textMuted, fontSize: 14, textAlign: 'center', lineHeight: 20 },
 
   archetypeIcon: { fontSize: 20 },
-  archetypeName: { fontSize: 22, fontWeight: '300', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), alignSelf: 'flex-start', marginBottom: 4 },
+  archetypeName: { fontSize: 22, fontWeight: '700', alignSelf: 'flex-start', marginBottom: 4 },
   archetypeTagline: { fontSize: 13, color: PALETTE.textMuted, alignSelf: 'flex-start', fontStyle: 'italic', marginBottom: 16, lineHeight: 18 },
 
   dualRow: { flexDirection: 'row', gap: 12, alignSelf: 'stretch' },
@@ -441,12 +441,12 @@ const styles = StyleSheet.create({
 
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   statCard: { borderRadius: 20, padding: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', gap: 4 },
-  statValue: { fontSize: 22, fontWeight: '300', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  statValue: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
   statLabel: { fontSize: 11, color: PALETTE.textMuted, textAlign: 'center', fontWeight: '600', letterSpacing: 0.5 },
   statSub: { fontSize: 11, color: PALETTE.gold, textAlign: 'center' },
 
   emptyCard: { borderRadius: 24, padding: 32, borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
-  emptyTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 10, textAlign: 'center' },
+  emptyTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, marginBottom: 10, textAlign: 'center' },
   emptySubtitle: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   emptyLinks: { flexDirection: 'row', gap: 12 },
   emptyButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(201,174,120,0.4)' },

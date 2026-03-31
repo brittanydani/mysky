@@ -87,7 +87,6 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '800',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     letterSpacing: -0.5,
     marginBottom: 4,
   },

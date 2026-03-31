@@ -344,14 +344,16 @@ export default function SettingsHub() {
         {/* Group 1: Preferences */}
         <SettingsGroup title="PREFERENCES">
           <SettingsRow
-            icon="star-outline"
+            icon="star"
+            iconColor="#007AFF"
             title="Edit Birth Data"
             subtitle="Update time and location"
             onPress={() => handleRoute('/onboarding/birth')}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="color-palette-outline"
+            icon="color-palette"
+            iconColor="#AF52DE"
             title="Color Calibration"
             subtitle="Map colors to your mood states"
             onPress={() => handleRoute('/settings/calibration')}
@@ -361,21 +363,24 @@ export default function SettingsHub() {
         {/* Group 2: Data & Privacy */}
         <SettingsGroup title="DATA & SECURITY">
           <SettingsRow
-            icon="lock-closed-outline"
+            icon="lock-closed"
+            iconColor="#8E8E93"
             title="Privacy & Security"
             subtitle="AES-256-GCM encryption details"
             onPress={() => handleRoute('/privacy')}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="download-outline"
+            icon="download"
+            iconColor="#34C759"
             title="Export Data"
             subtitle="Download a CSV of your journal & check-ins"
             onPress={handleExportCsv}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="cloud-outline"
+            icon="cloud"
+            iconColor="#007AFF"
             title="Backup & Sync"
             subtitle={backupInProgress ? 'Creating backup…' : 'Encrypted .msky vault backup'}
             onPress={handleBackup}
@@ -385,21 +390,24 @@ export default function SettingsHub() {
         {/* Group 3: Support */}
         <SettingsGroup title="SUPPORT">
           <SettingsRow
-            icon="help-circle-outline"
+            icon="help-circle"
+            iconColor="#FF9500"
             title="FAQ & Guides"
             subtitle="How to read your chart and patterns"
             onPress={() => handleRoute('/faq')}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="mail-outline"
+            icon="mail"
+            iconColor="#007AFF"
             title="Contact Us"
             subtitle="Reach the development team"
             onPress={handleContact}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="document-text-outline"
+            icon="document-text"
+            iconColor="#8E8E93"
             title="Terms of Use (EULA)"
             onPress={() => handleRoute('/terms')}
           />
@@ -408,13 +416,15 @@ export default function SettingsHub() {
         {/* Group 4: Account */}
         <SettingsGroup title="ACCOUNT">
           <SettingsRow
-            icon="log-out-outline"
+            icon="log-out"
+            iconColor="#FF3B30"
             title="Sign Out"
             onPress={handleSignOut}
           />
           <View style={styles.divider} />
           <SettingsRow
-            icon="trash-outline"
+            icon="trash"
+            iconColor="#FF3B30"
             title="Delete Account"
             subtitle="Permanently remove your account and data"
             onPress={handleDeleteAccount}
@@ -425,12 +435,12 @@ export default function SettingsHub() {
         {/* Group 5: Danger Zone */}
         <View style={styles.dangerZone}>
           <Pressable
-            style={({ pressed }) => [styles.dangerButton, pressed && { opacity: 0.7 }, isResetting && { opacity: 0.5 }]}
+            style={({ pressed }) => [styles.dangerButton, pressed && { backgroundColor: 'rgba(255,255,255,0.05)' }]}
             onPress={handleHardReset}
             disabled={isResetting}
           >
             {isResetting ? (
-              <ActivityIndicator color="#FF453A" />
+              <ActivityIndicator color="#FF3B30" />
             ) : (
               <Text style={styles.dangerButtonText}>Erase All Data & Reset</Text>
             )}
@@ -438,7 +448,6 @@ export default function SettingsHub() {
         </View>
 
         <Text style={styles.versionText}>Version {Constants.expoConfig?.version ?? '1.0.0'}</Text>
-        <View style={{ height: 60 }} />
       </ScrollView>
 
       <BackupPassphraseModal
@@ -457,13 +466,12 @@ const SettingsGroup = ({
   title,
   children,
 }: {
-  title: string;
+  title?: string;
   children: React.ReactNode;
 }) => (
   <View style={styles.groupContainer}>
-    <Text style={styles.groupTitle}>{title}</Text>
+    {title && <Text style={styles.groupTitle}>{title}</Text>}
     <View style={styles.groupCard}>
-      <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
       {children}
     </View>
   </View>
@@ -471,37 +479,31 @@ const SettingsGroup = ({
 
 const SettingsRow = ({
   icon,
+  iconColor = '#007AFF', // Default iOS blue
   title,
   subtitle,
   onPress,
   danger,
 }: {
   icon: string;
+  iconColor?: string;
   title: string;
   subtitle?: string;
   onPress: () => void;
   danger?: boolean;
 }) => (
   <Pressable
-    style={({ pressed }) => [styles.row, pressed && { backgroundColor: 'rgba(255,255,255,0.02)' }]}
+    style={({ pressed }) => [styles.row, pressed && { backgroundColor: 'rgba(255,255,255,0.05)' }]}
     onPress={onPress}
   >
-    <View style={styles.rowIconContainer}>
-      {icon.includes('-') ? (
-        <Ionicons name={icon as any} size={16} color="#D9BF8C" />
-      ) : (
-        <Text style={styles.rowIcon}>{icon}</Text>
-      )}
+    <View style={[styles.rowIconContainer, { backgroundColor: iconColor }]}>
+      <Ionicons name={icon as any} size={18} color="#FFFFFF" />
     </View>
     <View style={styles.rowTextContainer}>
-      {danger ? (
-        <MetallicText color="#FF453A" style={styles.rowTitle}>{title}</MetallicText>
-      ) : (
-        <Text style={styles.rowTitle}>{title}</Text>
-      )}
+      <Text style={[styles.rowTitle, danger && { color: '#FF3B30' }]}>{title}</Text>
       {subtitle && <Text style={styles.rowSubtitle}>{subtitle}</Text>}
     </View>
-    <Text style={styles.chevron}>›</Text>
+    <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.3)" style={styles.chevron} />
   </Pressable>
 );
 
@@ -511,73 +513,94 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
-  header: { paddingTop: 80, paddingHorizontal: 24, paddingBottom: 20 },
+  header: { paddingTop: 60, paddingHorizontal: 24, paddingBottom: 10 },
   headerTitle: {
     fontSize: 34,
     color: '#FFF',
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
-    marginBottom: 4,
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { 
+    fontSize: 12, 
+    fontStyle: 'normal', 
+    fontWeight: '600', 
+    letterSpacing: 1.2, 
+    textTransform: 'uppercase', 
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 60 },
 
   groupContainer: { marginBottom: 32 },
   groupTitle: {
     fontSize: 11,
-    fontWeight: 'bold',
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: 1.5,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginLeft: 16,
     marginBottom: 12,
-    marginLeft: 8,
   },
   groupCard: {
     borderRadius: 24,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.02)',
+    paddingVertical: 8,
   },
 
-  row: { flexDirection: 'row', alignItems: 'center', padding: 20 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16 },
   rowIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(217, 191, 140, 0.1)',
+    width: 28,
+    height: 28,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
-  rowIcon: { color: '#D9BF8C', fontSize: 16 },
   rowTextContainer: { flex: 1, justifyContent: 'center' },
-  rowTitle: { fontSize: 16, color: '#FFF', fontWeight: '500', marginBottom: 2 },
-  rowSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)' },
+  rowTitle: { 
+    fontSize: 17, 
+    color: '#FFF',
+    letterSpacing: -0.4,
+  },
+  rowSubtitle: { 
+    fontSize: 13, 
+    color: 'rgba(255,255,255,0.5)', 
+    marginTop: 2,
+  },
   chevron: {
-    fontSize: 24,
-    color: 'rgba(255,255,255,0.2)',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    marginLeft: 16,
+    marginLeft: 8,
+    opacity: 0.7,
   },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginLeft: 72 },
+  divider: { 
+    height: StyleSheet.hairlineWidth, 
+    backgroundColor: 'rgba(255,255,255,0.15)', 
+    marginLeft: 60, 
+  },
 
-  dangerZone: { marginTop: 16, marginBottom: 40, alignItems: 'center' },
+  dangerZone: { marginTop: 16, marginBottom: 24 },
   dangerButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 24,
-    backgroundColor: 'rgba(217, 140, 140, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: 'rgba(217, 140, 140, 0.3)',
+    borderColor: 'rgba(255,59,48,0.2)',
+    borderRadius: 24,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  dangerButtonText: { color: '#D98C8C', fontSize: 14, fontWeight: '600' },
+  dangerButtonText: { 
+    color: '#FF3B30', 
+    fontSize: 17, 
+    fontWeight: '500',
+    letterSpacing: -0.4,
+  },
   versionText: {
     textAlign: 'center',
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.2)',
-    marginTop: 8,
-    marginBottom: 16,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: 16,
   },
 });

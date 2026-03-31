@@ -195,7 +195,6 @@ const styles = StyleSheet.create({
     fontSize: 18, 
     fontWeight: '600', 
     color: PALETTE.textMain, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) 
   },
   
   content: { paddingHorizontal: 20, paddingTop: 32 },
@@ -214,7 +213,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 22,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+    fontWeight: '700',
     marginBottom: 8,
     textAlign: 'center',
   },

@@ -299,8 +299,7 @@ const styles = StyleSheet.create({
   chapterTitle: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-    fontWeight: '600',
+    fontWeight: '700',
   },
   lockedText: {
     opacity: 0.5,

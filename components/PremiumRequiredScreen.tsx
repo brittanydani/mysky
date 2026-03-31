@@ -139,9 +139,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontWeight: '700',
     color: PALETTE.textMain,
     marginBottom: 12,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     textAlign: 'center',
     letterSpacing: 0.5,
   },
@@ -207,7 +207,6 @@ const styles = StyleSheet.create({
     color: '#020817',
     fontWeight: '700',
     fontSize: 16,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   priceHint: {
     color: theme.textMuted,

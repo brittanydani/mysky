@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -170,9 +169,8 @@ export default function HealingSpaceScreen() {
 
           {/* 1. ARCHETYPE SHADOW WORK */}
           {hasArchetype && archetypeData && (
-            <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.card}>
-              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={['rgba(168, 155, 200, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
+            <Animated.View entering={FadeInDown.delay(140).duration(600)}>
+              <LinearGradient colors={['rgba(168, 155, 200, 0.1)', 'rgba(10,10,12,0.85)']} style={styles.card}>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="moon-outline" size={16} color={PALETTE.lavender} />
@@ -186,14 +184,14 @@ export default function HealingSpaceScreen() {
                 <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
                 <MetallicText style={styles.affirmationText} variant="gold">{'"' + archetypeData.affirmation + '"'}</MetallicText>
               </View>
+              </LinearGradient>
             </Animated.View>
           )}
 
           {/* 2. SOMATIC RELEASE RITUAL */}
           {hasSomatic && topRegion && SOMATIC_RITUALS[topRegion] && (
-            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.card}>
-              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
+            <Animated.View entering={FadeInDown.delay(220).duration(600)}>
+              <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(10,10,12,0.85)']} style={styles.card}>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="body-outline" size={16} color={PALETTE.emerald} />
@@ -212,14 +210,14 @@ export default function HealingSpaceScreen() {
                   {SOMATIC_RITUALS[topRegion]}
                 </Text>
               </View>
+              </LinearGradient>
             </Animated.View>
           )}
 
           {/* 3. RELATIONAL PATTERN INTERVENTION */}
           {hasRelational && (
-            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.card}>
-              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={['rgba(212, 163, 179, 0.1)', 'transparent']} style={StyleSheet.absoluteFill} />
+            <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+              <LinearGradient colors={['rgba(212, 163, 179, 0.1)', 'rgba(10,10,12,0.85)']} style={styles.card}>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.rose} />
@@ -233,13 +231,13 @@ export default function HealingSpaceScreen() {
               <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} variant="rose">
                 Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
               </MetallicText>
+              </LinearGradient>
             </Animated.View>
           )}
 
           {!hasHealingInputs && (
-            <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.card}>
-              <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-              <LinearGradient colors={['rgba(255,255,255,0.06)', 'transparent']} style={StyleSheet.absoluteFill} />
+            <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+              <LinearGradient colors={['rgba(255,255,255,0.06)', 'rgba(10,10,12,0.85)']} style={styles.card}>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="sparkles-outline" size={16} color={PALETTE.gold} />
@@ -255,6 +253,7 @@ export default function HealingSpaceScreen() {
               <Pressable style={[styles.actionBtn, { marginTop: 16 }]} onPress={() => router.push('/(tabs)/blueprint' as Href)}>
                 <Text style={styles.actionBtnText}>Open Blueprint</Text>
               </Pressable>
+              </LinearGradient>
             </Animated.View>
           )}
 
@@ -279,7 +278,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -288,7 +286,7 @@ const styles = StyleSheet.create({
 
   loadingText: { color: PALETTE.textMuted, fontStyle: 'italic', fontSize: 14 },
 
-  lockTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12, textAlign: 'center' },
+  lockTitle: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12, textAlign: 'center' },
   lockSub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   premiumBtn: {
     flexDirection: 'row',
@@ -301,20 +299,20 @@ const styles = StyleSheet.create({
   },
   premiumBtnText: { color: '#0A0A0C', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
 
-  emptyTitle: { fontSize: 24, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12, textAlign: 'center' },
+  emptyTitle: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12, textAlign: 'center' },
   emptySub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   actionBtn: { borderWidth: 1, borderColor: PALETTE.glassBorder, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 28 },
   actionBtnText: { color: PALETTE.textMain, fontSize: 14, fontWeight: '600' },
 
-  card: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 24, marginBottom: 24 },
+  card: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 28, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
-  cardTitle: { fontSize: 22, color: PALETTE.textMain, fontFamily: 'Georgia', marginBottom: 12 },
+  cardTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12 },
   promptText: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, fontStyle: 'italic', marginBottom: 24 },
   bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 24 },
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
   affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  affirmationText: { fontSize: 15, color: '#D9BF8C', lineHeight: 22, fontStyle: 'italic', fontFamily: 'Georgia' },
+  affirmationText: { fontSize: 15, color: '#D9BF8C', lineHeight: 22, fontStyle: 'italic' },
 });
 

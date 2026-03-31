@@ -202,7 +202,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   scrollContent: {
     paddingHorizontal: 24,

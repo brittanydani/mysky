@@ -130,6 +130,5 @@ const styles = StyleSheet.create({
     color: '#020817',
     fontSize: 18,
     fontWeight: '700',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
 });

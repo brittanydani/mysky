@@ -1184,7 +1184,7 @@ function buildJournalThemes(journalEntries: JournalEntry[]): JournalThemesCard |
     const raw = entry.content ?? '';
     // Skip encrypted entries — processing ciphertext produces meaningless tokens.
     if (raw.startsWith('ENC2:') || raw.startsWith('ENC1:')) continue;
-    const text = raw.toLowerCase().replace(/[^a-z\s'-]/g, ' ');
+    const text = raw.toLowerCase().replace(/['\u2018\u2019]/g, '').replace(/[^a-z\s-]/g, ' ');
     const words = text.split(/\s+/).filter(w => w.length >= 3 && !STOPWORDS.has(w));
     const seen = new Set<string>(); // count each word once per entry
     for (const w of words) {

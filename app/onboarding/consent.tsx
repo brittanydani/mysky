@@ -165,7 +165,6 @@ const styles = StyleSheet.create({
     fontSize: 18, 
     fontWeight: '600', 
     color: theme.textPrimary, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) 
   },
   
   scrollView: { flex: 1 },
@@ -182,7 +181,7 @@ const styles = StyleSheet.create({
   title: { 
     fontSize: 24, 
     color: theme.textPrimary, 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), 
+    fontWeight: '700',
     marginBottom: 12,
     letterSpacing: 0.5,
   },

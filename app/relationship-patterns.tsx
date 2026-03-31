@@ -18,7 +18,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -177,7 +176,6 @@ export default function RelationshipPatternsScreen() {
             {/* Relational Gravity Visualization */}
             {gravityStats.total > 0 && (
               <Animated.View entering={FadeIn.duration(600)} style={styles.summaryCard}>
-                <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
                 <View style={styles.summaryHeader}>
                   <MetallicIcon name="planet-outline" size={16} color={PALETTE.gold} />
                   <MetallicText style={styles.summaryTitle} color={PALETTE.gold}>YOUR RELATIONAL GRAVITY</MetallicText>
@@ -227,7 +225,6 @@ export default function RelationshipPatternsScreen() {
 
             {/* Log Entry Form */}
             <Animated.View entering={FadeInDown.delay(220).duration(500)} style={styles.formCard}>
-              <BlurView intensity={15} tint="dark" style={StyleSheet.absoluteFill} />
               <Text style={styles.formTitle}>LOG A PATTERN</Text>
 
               <TextInput
@@ -286,7 +283,6 @@ export default function RelationshipPatternsScreen() {
                 <View style={styles.entryList}>
                   {entries.slice(0, 15).map((entry) => (
                     <View key={entry.id} style={styles.entryCard}>
-                      <BlurView intensity={12} tint="dark" style={StyleSheet.absoluteFill} />
                       <View style={styles.entryHeaderRow}>
                         <Ionicons name="journal-outline" size={14} color={PALETTE.textMuted} />
                         <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
@@ -332,42 +328,42 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  summaryCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.2)', padding: 24, marginBottom: 24 },
-  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  summaryTitle: { fontSize: 11, color: PALETTE.gold, fontWeight: '800', letterSpacing: 1.5 },
-  summaryDescription: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18, marginBottom: 24 },
+  summaryCard: { borderRadius: 32, borderWidth: 1, borderColor: 'rgba(212,163,179,0.15)', padding: 32, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  summaryTitle: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
+  summaryDescription: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 32, fontWeight: '400' },
 
-  gravityBarContainer: { height: 12, borderRadius: 6, flexDirection: 'row', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: 16, gap: 2 },
+  gravityBarContainer: { height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 24, gap: 3 },
   gravitySegment: { height: '100%', borderRadius: 4 },
 
   legendRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '600' },
+  legendText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '500' },
 
-  formCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 24, marginBottom: 32 },
-  formTitle: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
-  noteInput: { minHeight: 100, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)', padding: 16, color: PALETTE.textMain, fontSize: 15, fontFamily: 'Georgia', lineHeight: 22, marginBottom: 24 },
-  tagSectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 12 },
-  tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
+  formCard: { borderRadius: 32, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 32, marginBottom: 40, backgroundColor: 'rgba(255,255,255,0.02)' },
+  formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
+  tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 16, textTransform: 'uppercase' },
+  tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
 
-  patternTag: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(255,255,255,0.02)' },
-  patternTagText: { fontSize: 11, color: PALETTE.textMuted },
+  patternTag: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)' },
+  patternTagText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
 
-  submitBtn: { height: 52, borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.5)', justifyContent: 'center', alignItems: 'center' },
-  submitBtnText: { fontSize: 14, color: PALETTE.anxious, fontWeight: '800', letterSpacing: 0.5 },
+  submitBtn: { height: 56, borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.4)', justifyContent: 'center', alignItems: 'center' },
+  submitBtnText: { fontSize: 15, color: PALETTE.anxious, fontWeight: '700', letterSpacing: 0.5 },
 
-  historySection: { marginTop: 8 },
-  historyTitle: { fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
-  entryList: { gap: 12 },
-  entryCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', padding: 20 },
-  entryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-  entryDate: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '600' },
-  entryNote: { fontSize: 15, color: 'rgba(255,255,255,0.85)', fontFamily: 'Georgia', lineHeight: 22, marginBottom: 16 },
+  historySection: { marginTop: 16 },
+  historyTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  entryList: { gap: 16 },
+  entryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
+  entryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  entryDate: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
+  entryNote: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 20 },
   entryTagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  entryTag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1 },
-  entryTagText: { fontSize: 11, fontWeight: '700' },
+  entryTag: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
+  entryTagText: { fontSize: 12, fontWeight: '600' },
 });

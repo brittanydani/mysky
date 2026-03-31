@@ -46,23 +46,23 @@ import { MetallicText } from './MetallicText';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = SCREEN_W - 32;
-const CARD_H = 160;
-const BORDER_R = 16;
+const CARD_H = 170;
+const BORDER_R = 32;
 
 // ── Obsidian Glass Palette ──────────────────────────────────────────────────
 
 const GLASS = {
-  surface: 'rgba(255,255,255,0.03)',
-  border: 'rgba(255,255,255,0.06)',
+  surface: 'rgba(255,255,255,0.02)',
+  border: 'rgba(255,255,255,0.08)',
   highlight: 'rgba(255,255,255,0.08)',
   specularTop: 'rgba(255, 255, 255, 0.08)',
   specularBot: 'rgba(255, 255, 255, 0.0)',
   inkRipple: 'rgba(232, 214, 174, 0.15)',
-  gold: '#C9AE78',
+  gold: '#D4B872',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
-  amethyst: '#9D76C1',
+  amethyst: '#A89BC8',
 };
 
 // ── Archetype → accent color mapping ────────────────────────────────────────
@@ -392,8 +392,7 @@ const styles = StyleSheet.create({
   },
   content: {
     ...StyleSheet.absoluteFillObject,
-    padding: 16,
-    paddingTop: 14,
+    padding: 24,
     justifyContent: 'space-between',
   },
   headerRow: {
@@ -413,7 +412,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   timeText: {
     color: theme.textMuted,
@@ -423,7 +421,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 4,
   },
   body: {

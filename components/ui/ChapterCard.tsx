@@ -1,6 +1,5 @@
 import React, { memo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle, Platform, LayoutChangeEvent } from 'react-native';
-import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
+import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle, Platform } from 'react-native';
 import { theme } from '../../constants/theme';
 import { MetallicText } from './MetallicText';
 import { MetallicIcon } from './MetallicIcon';
@@ -55,13 +54,6 @@ function ChapterCard({
   style,
 }: ChapterCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [w, setW] = useState(0);
-  const [h, setH] = useState(0);
-
-  const onLayout = React.useCallback((e: LayoutChangeEvent) => {
-    setW(e.nativeEvent.layout.width);
-    setH(e.nativeEvent.layout.height);
-  }, []);
   const displayText = isLocked ? preview ?? '' : content ?? '';
   const isLong = !isLocked && !!content && content.length > 200;
 
@@ -89,34 +81,17 @@ function ChapterCard({
   return (
     <Pressable
       onPress={handlePress}
-      onLayout={onLayout}
       style={({ pressed }) => [
         styles.container,
         {
           borderColor: `${dominantColor}55`,
           borderTopColor: `${dominantColor}88`,
+          backgroundColor: isLocked ? 'rgba(25, 30, 45, 0.4)' : 'rgba(255, 255, 255, 0.03)',
         },
         style,
         pressed && styles.pressed,
       ]}
     >
-      {w > 0 && h > 0 && (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          <Canvas style={StyleSheet.absoluteFillObject}>
-            <RoundedRect x={0} y={0} width={w} height={h} r={24}>
-              <LinearGradient
-                start={vec(0, 0)}
-                end={vec(0, h)}
-                colors={
-          isLocked
-            ? ['rgba(25, 30, 45, 0.4)', 'rgba(15, 20, 30, 0.6)'] // Deeper cool for locked
-            : ['rgba(18,32,64,0.48)', 'rgba(2,8,23,0.66)']
-        }
-              />
-            </RoundedRect>
-          </Canvas>
-        </View>
-      )}
       <View style={styles.gradient}>
         {/* Header Row */}
         <View style={styles.header}>
@@ -244,8 +219,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 21,
+    fontWeight: '700',
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     marginBottom: 16,
     lineHeight: 27,
   },
@@ -321,7 +296,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 22,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
   },
   readMoreRow: {
     flexDirection: 'row',

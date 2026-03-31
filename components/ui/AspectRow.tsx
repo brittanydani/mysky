@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontSize: 18,
+    fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 6,
     letterSpacing: 0.2,

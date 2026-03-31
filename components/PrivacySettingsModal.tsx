@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 20, color: "#FFFFFF", fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  headerTitle: { fontSize: 20, color: "#FFFFFF", fontWeight: '700' },
   closeBtn: { padding: 4 },
   
   scrollView: { flex: 1 },

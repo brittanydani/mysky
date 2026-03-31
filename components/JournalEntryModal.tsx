@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 18, color: '#FFFFFF', fontWeight: '600', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  headerTitle: { fontSize: 18, color: '#FFFFFF', fontWeight: '600' },
   iconBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
 
   // ── Writing mode header ──
@@ -1014,7 +1014,7 @@ const styles = StyleSheet.create({
   saveIndicatorText: { fontSize: 11, color: '#6EBF8B', fontWeight: '600', letterSpacing: 0.5 },
 
   // ── Distraction-free writing surface ──
-  focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 20, paddingBottom: 12, color: PALETTE.textMain, fontSize: 17, lineHeight: 28, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), textAlignVertical: 'top' },
+  focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 20, paddingBottom: 12, color: PALETTE.textMain, fontSize: 17, lineHeight: 28, textAlignVertical: 'top' },
 
   // ── Mood quick-pick toolbar (sits above keyboard in writing mode) ──
   moodToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.75)' },
@@ -1027,11 +1027,11 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   sectionLabel: { fontSize: 11, fontWeight: '700', color: PALETTE.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12, paddingLeft: 4 },
   
-  glassInteractive: { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  glassInteractive: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
   innerGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
   interactiveText: { color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
   
-  glassInput: { backgroundColor: 'transparent', borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder },
+  glassInput: { backgroundColor: 'transparent', borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
   titleInput: { padding: 16, color: PALETTE.textMain, fontSize: 16 },
   
   reflectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
@@ -1040,21 +1040,21 @@ const styles = StyleSheet.create({
   
   promptZone: { marginBottom: 20 },
   transitContext: { fontSize: 13, color: PALETTE.silverBlue, fontStyle: 'italic', marginBottom: 12, textAlign: 'center' },
-  primaryPromptCard: { backgroundColor: 'transparent', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
+  primaryPromptCard: { backgroundColor: 'transparent', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
   promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
-  primaryPromptText: { fontSize: 16, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontStyle: 'italic', lineHeight: 24 },
+  primaryPromptText: { fontSize: 16, color: PALETTE.textMain, fontStyle: 'italic', lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
   
   contentBox: { minHeight: 240 },
   contentInput: { padding: 16, color: PALETTE.textMain, fontSize: 16, lineHeight: 26 },
 
   // ── Archetype lens prompt card ──
-  archetypePromptCard: { flexDirection: 'row', borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.025)', marginBottom: 16 },
+  archetypePromptCard: { flexDirection: 'row', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.025)', marginBottom: 16 },
   archetypeAccent: { width: 3 },
   archetypePromptInner: { flex: 1, padding: 14, gap: 4 },
   archetypeLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1.5 },
   archetypeContext: { fontSize: 12, color: 'rgba(255,255,255,0.40)', fontStyle: 'italic', lineHeight: 17 },
-  archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), lineHeight: 21, marginTop: 2 },
+  archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 21, marginTop: 2 },
   
   // ── Mood row ──
   moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -1122,5 +1122,5 @@ const styles = StyleSheet.create({
   footer: { marginTop: 24 },
   saveBtn: { borderRadius: 16, overflow: 'hidden', },
   saveGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
-  saveBtnText: { color: '#020817', fontSize: 17, fontWeight: '700', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  saveBtnText: { color: '#020817', fontSize: 17, fontWeight: '700' },
 });

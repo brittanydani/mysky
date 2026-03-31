@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
+
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicIcon } from '../../../components/ui/MetallicIcon';
@@ -12,7 +12,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
 import { theme } from '../../../constants/theme';
-import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
+
 import { GoldIcon } from '../../../components/ui/GoldIcon';
 import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
 import { localDb } from '../../../services/storage/localDb';
@@ -77,13 +77,13 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamC
               <Text style={styles.dreamCardDate}>{formatDate(entry.date)}</Text>
               {(moons || durationText) && (
                 <View style={styles.dreamMeta}>
-                  {moons && <MetallicText color="#9D76C1" style={styles.dreamMoons}>{moons}</MetallicText>}
-                  {qualityLabel && <MetallicText color="#9D76C1" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
+                  {moons && <MetallicText color="#8BC4E8" style={styles.dreamMoons}>{moons}</MetallicText>}
+                  {qualityLabel && <MetallicText color="#8BC4E8" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
                   {durationText && <Text style={styles.dreamDuration}> · {durationText}</Text>}
                 </View>
               )}
             </View>
-            <MetallicIcon name="moon-outline" size={16} color="#9D76C1" />
+            <MetallicIcon name="moon-outline" size={16} color="#8BC4E8" />
           </View>
           {hasDream ? (
             <Text style={styles.dreamExcerpt} numberOfLines={3}>{entry.dreamText}</Text>
@@ -508,7 +508,7 @@ export default function JournalScreen() {
               : ['rgba(232, 214, 174, 0.15)', 'rgba(122, 92, 19, 0.6)']; // Gold tone
 
             return (
-              <LinearGradient key={`${insight.title}-${idx}`} colors={colors as any} style={styles.insightCard}>
+              <View key={`${insight.title}-${idx}`} style={[styles.insightCard, { backgroundColor: colors[0] }]}>
                 <View style={styles.insightHeader}>
                   <Text style={styles.insightTitle}>{insight.title}</Text>
                   <View style={[styles.confidenceBadge, insight.confidence === 'strong' && styles.confidenceStrong, insight.confidence === 'suggested' && styles.confidenceSuggested]}>
@@ -524,7 +524,7 @@ export default function JournalScreen() {
                     <Text style={[styles.insightActionable, { color: theme.textGold }]}>{insight.actionable}</Text>
                   )
                 )}
-              </LinearGradient>
+              </View>
             );
           })}
         </Animated.View>
@@ -533,7 +533,7 @@ export default function JournalScreen() {
       {activeTab === 'reflections' && !isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-            <LinearGradient colors={['rgba(232, 214, 174, 0.10)', theme.cardGradientEnd]} style={[styles.insightCard, { borderColor: 'rgba(232, 214, 174, 0.18)', borderTopColor: theme.glass.highlight }]}>
+            <View style={[styles.insightCard, { backgroundColor: 'rgba(232, 214, 174, 0.05)', borderColor: 'rgba(232, 214, 174, 0.3)', borderTopColor: theme.glass.highlight }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Ionicons name="analytics-outline" size={18} color={theme.textGold} />
                 <Text style={styles.insightTitle}>Pattern Insights</Text>
@@ -549,7 +549,7 @@ export default function JournalScreen() {
                 <Text style={[styles.insightActionable, { marginTop: 0, color: theme.textGold }]}>Reveal your patterns</Text>
                 <Ionicons name="arrow-forward-outline" size={14} color={theme.textGold} />
               </View>
-            </LinearGradient>
+            </View>
           </Pressable>
         </Animated.View>
       )}
@@ -601,7 +601,7 @@ export default function JournalScreen() {
       if (sleepEntries.length > 0 && filteredSleepEntries.length === 0) {
         return (
           <View style={styles.emptyContainer}>
-            <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
+            <View style={[styles.emptyCard, { backgroundColor: 'rgba(255, 255, 255, 0.03)' }]}>
               <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
               <Text style={styles.emptyTitle}>No dreams this month</Text>
               <Text style={styles.emptyDescription}>
@@ -609,19 +609,19 @@ export default function JournalScreen() {
                   ? `No dream entries matching "${searchQuery}" in ${MONTH_NAMES[filterMonth]} ${filterYear}.`
                   : `No sleep entries in ${MONTH_NAMES[filterMonth]} ${filterYear}. Try another month.`}
               </Text>
-            </LinearGradient>
+            </View>
           </View>
         );
       }
       return (
         <View style={styles.emptyContainer}>
-          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
+          <View style={[styles.emptyCard, { backgroundColor: 'rgba(255, 255, 255, 0.03)' }]}>
             <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No dreams logged yet</Text>
             <Text style={styles.emptyDescription}>
               Visit the Sleep tab to record your nightly rest and dream experiences.
             </Text>
-          </LinearGradient>
+          </View>
         </View>
       );
     }
@@ -629,7 +629,7 @@ export default function JournalScreen() {
     if (totalCount > 0 && filteredEntries.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.emptyCard}>
+          <View style={[styles.emptyCard, { backgroundColor: 'rgba(255, 255, 255, 0.03)' }]}>
             <Ionicons name="search-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No entries found</Text>
             <Text style={styles.emptyDescription}>
@@ -637,13 +637,13 @@ export default function JournalScreen() {
                 ? `No entries matching "${searchQuery}" in ${MONTH_NAMES[filterMonth]} ${filterYear}.`
                 : `No entries in ${MONTH_NAMES[filterMonth]} ${filterYear}. Try navigating to another month.`}
             </Text>
-          </LinearGradient>
+          </View>
         </View>
       );
     }
     return (
       <View style={styles.emptyContainer}>
-        <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={[styles.emptyCard, { position: 'relative' }]}>
+        <View style={[styles.emptyCard, { position: 'relative', backgroundColor: 'rgba(255, 255, 255, 0.03)' }]}>
           <View style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
             <Pressable 
               onPress={() => void handleAddEntry()} 
@@ -660,9 +660,8 @@ export default function JournalScreen() {
                 backgroundColor: 'rgba(20, 30, 50, 0.5)',
               }, pressed && { opacity: 0.8 }]}
             >
-              <LinearGradient 
-                colors={['rgba(201, 174, 120, 0.25)', 'rgba(201, 174, 120, 0.05)']} 
-                style={StyleSheet.absoluteFillObject}
+              <View 
+                style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(201, 174, 120, 0.1)' }]}
               />
               <GoldIcon name="add-outline" size={28}  style={{ fontWeight: '900' }}  />
             </Pressable>
@@ -670,7 +669,7 @@ export default function JournalScreen() {
           <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>Start Your Journey</Text>
           <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
-        </LinearGradient>
+        </View>
       </View>
     );
   }, [loading, activeTab, sleepEntries.length, filteredSleepEntries.length, totalCount, filteredEntries.length, searchQuery, filterMonth, filterYear]);
@@ -734,7 +733,7 @@ export default function JournalScreen() {
 
   return (
     <View style={styles.container}>
-      <SkiaDynamicCosmos />
+      
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
           <FlatList
@@ -860,15 +859,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
 
-  header: { marginTop: 20, marginBottom: 28 },
+  header: { marginTop: 24, marginBottom: 32 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5, marginBottom: 4 },
-  subtitle: { fontSize: 14 },
+  title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.5, marginBottom: 4 },
+  subtitle: { fontSize: 12, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, fontWeight: '600' },
 
   chartTitle: {
     fontSize: 20,
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    fontWeight: '600',
     marginBottom: 4,
   },
   checkInTrendSection: { marginBottom: 32 },
@@ -886,38 +885,38 @@ const styles = StyleSheet.create({
     height: 140,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: 32,
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   lockTitle: { color: theme.textGold, marginTop: 12, fontWeight: '600', fontSize: 16 },
   lockSubtitle: { color: theme.textSecondary, fontSize: 14, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
 
   insightsSection: { marginBottom: 32 },
-  insightsTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 4 },
+  insightsTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 4, fontWeight: '700' },
   insightsSubtitle: { fontSize: 13, color: theme.textSecondary, fontStyle: 'italic', marginBottom: 20 },
 
   insightCard: {
-    padding: 20,
-    borderRadius: 20,
+    padding: 28,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    borderTopColor: theme.glass.highlight,
-    marginBottom: 12,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    marginBottom: 16,
   },
   insightHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  insightTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, flex: 1 },
+  insightTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary, flex: 1 },
   confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'transparent', marginLeft: 12 },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
   confidenceSuggested: { backgroundColor: 'transparent' },
   confidenceText: { fontSize: 10, color: theme.textPrimary, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.5 },
-  insightDescription: { fontSize: 15, color: theme.textSecondary, lineHeight: 22, marginBottom: 10 },
+  insightDescription: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 24, marginBottom: 10 },
   insightEvidence: { fontSize: 13, color: theme.textMuted, fontStyle: 'italic', marginBottom: 8 },
   insightActionable: { fontSize: 14, fontWeight: '600', marginTop: 4 },
 
   filterSection: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   monthNav: {
     flexDirection: 'row',
@@ -940,7 +939,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     minWidth: 140,
     textAlign: 'center',
   },
@@ -962,26 +960,26 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
-  entriesSection: { marginBottom: 16 },
+  entriesSection: { marginBottom: 28 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 20, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }) },
+  sectionTitle: { fontSize: 20, color: theme.textPrimary, fontWeight: '700' },
   entriesCount: { fontSize: 14, color: theme.textMuted, fontStyle: 'italic', fontVariant: ['tabular-nums'] },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
   loadingText: { fontSize: 15, color: theme.textSecondary, fontStyle: 'italic' },
 
   emptyContainer: { paddingVertical: 32 },
-  emptyCard: { borderRadius: 20, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight },
-  emptyTitle: { fontSize: 22, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 8 },
-  emptyDescription: { fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22 },
+  emptyCard: { borderRadius: 32, padding: 40, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  emptyTitle: { fontSize: 22, color: theme.textPrimary, marginBottom: 8, fontWeight: '700' },
+  emptyDescription: { fontSize: 16, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 24 },
 
-  entryCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
-  entryGradient: { padding: 20 },
+  entryCard: { borderRadius: 32, backgroundColor: 'rgba(212,184,114,0.03)', borderWidth: 1, borderColor: 'rgba(212,184,114,0.12)', marginBottom: 16 },
+  entryGradient: { padding: 24 },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
   entryTime: { fontSize: 12, color: theme.textMuted },
 
-  entryTitle: { fontSize: 18, color: theme.textPrimary, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }), marginBottom: 8 },
+  entryTitle: { fontSize: 18, color: theme.textPrimary, marginBottom: 8 },
   entryContent: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
 
@@ -1024,22 +1022,20 @@ const styles = StyleSheet.create({
 
   // ── Dream card ──
   dreamCard: {
-    borderRadius: 16,
+    borderRadius: 32,
     borderWidth: 1,
-    borderColor: 'rgba(157,118,193,0.15)',
-    borderTopColor: 'rgba(157,118,193,0.30)',
-    backgroundColor: 'rgba(157,118,193,0.05)',
-    marginBottom: 12,
-    overflow: 'hidden',
+    borderColor: 'rgba(139,196,232,0.12)',
+    backgroundColor: 'rgba(139,196,232,0.03)',
+    marginBottom: 16,
   },
   dreamCardInner: {
     flexDirection: 'row',
-    padding: 16,
+    padding: 28,
   },
   dreamAccentBar: {
     width: 3,
     borderRadius: 2,
-    backgroundColor: 'rgba(157,118,193,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.20)',
     marginRight: 14,
   },
   dreamCardHeader: {
@@ -1049,8 +1045,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dreamCardDate: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: theme.textPrimary,
     marginBottom: 4,
   },
@@ -1060,12 +1056,12 @@ const styles = StyleSheet.create({
   },
   dreamMoons: {
     fontSize: 13,
-    color: '#9D76C1',
+    color: '#8BC4E8',
     letterSpacing: 1,
   },
   dreamQualityLabel: {
     fontSize: 11,
-    color: 'rgba(157,118,193,0.75)',
+    color: 'rgba(139,196,232,0.7)',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     fontWeight: '600',
@@ -1076,13 +1072,13 @@ const styles = StyleSheet.create({
     color: theme.textMuted,
   },
   dreamExcerpt: {
-    fontSize: 14,
-    color: theme.textSecondary,
-    lineHeight: 22,
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.85)',
+    lineHeight: 24,
     fontStyle: 'italic',
   },
   dreamNone: {
-    fontSize: 13,
+    fontSize: 15,
     color: theme.textMuted,
     fontStyle: 'italic',
   },

@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -476,15 +475,11 @@ export default function DailyReflectionScreen() {
                       <Animated.View
                         key={q.id}
                         entering={FadeInDown.delay(280 + catIdx * 120 + qIdx * 80).duration(500)}
-                        style={styles.questionCard}
                       >
-                        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                         <LinearGradient
-                          colors={[`rgba(${rgb}, 0.06)`, 'transparent']}
-                          style={StyleSheet.absoluteFill}
-                        />
-
-                        <View style={styles.questionContent}>
+                          colors={[`rgba(${rgb}, 0.06)`, 'rgba(10,10,12,0.85)']}
+                          style={styles.questionCard}
+                        >
                           <Text style={styles.questionText}>{q.text}</Text>
 
                           <ReflectionSlider
@@ -503,7 +498,7 @@ export default function DailyReflectionScreen() {
                               </Text>
                             </View>
                           )}
-                        </View>
+                        </LinearGradient>
                       </Animated.View>
                     );
                   })}
@@ -614,7 +609,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -663,16 +657,15 @@ const styles = StyleSheet.create({
   // Question cards
   questionCard: {
     borderRadius: 20,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     marginBottom: 14,
+    padding: 20,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
-  questionContent: { padding: 20 },
   questionText: {
     fontSize: 15,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '400',
     lineHeight: 22,
     marginBottom: 14,

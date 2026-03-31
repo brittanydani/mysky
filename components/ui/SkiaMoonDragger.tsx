@@ -361,8 +361,7 @@ const localStyles = StyleSheet.create({
     color: theme.textPrimary,
     fontSize: 36,
     fontWeight: '800',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
-    fontVariant: ['tabular-nums'], // Prevents layout jitter as digits change
+    fontVariant: ['tabular-nums'],
   },
   qualityText: {
     fontSize: 12,

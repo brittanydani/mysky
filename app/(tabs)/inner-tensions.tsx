@@ -530,8 +530,7 @@ const styles = StyleSheet.create({
   // Header
   backButton:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, gap: 4 },
   backLabel:   { fontSize: 14, color: PALETTE.textMuted, letterSpacing: 0.3 },
-  screenTitle: { fontSize: 34, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, marginBottom: 4,
-                 fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }) },
+  screenTitle: { fontSize: 34, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, marginBottom: 4 },
   screenSubtitle: { fontSize: 14, marginBottom: 32 },
 
   // Section label

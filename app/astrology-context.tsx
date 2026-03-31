@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SkiaGradient as LinearGradient, SkiaGradient } from '../components/ui/SkiaGradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import { BlurView } from 'expo-blur';
 import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -378,7 +377,6 @@ export default function CosmicContext() {
 
         {/* ── Daily Alignment ────────────────────────────────────────── */}
         <View style={styles.affirmationCard}>
-          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
           <View style={styles.premiumHeaderRow}>
             <MetallicText style={styles.affirmationLabel} color="#D9BF8C">DAILY ALIGNMENT</MetallicText>
             <MetallicText style={styles.premiumIcon} color="#D9BF8C">✦</MetallicText>
@@ -440,7 +438,7 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   backText: { fontSize: 14, fontWeight: '600' },
   titleHeader: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
@@ -478,7 +476,7 @@ const styles = StyleSheet.create({
   weekInfoSign: { fontSize: 13, color: 'rgba(212,184,114,0.85)', fontWeight: '600' },
   weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', fontStyle: 'italic', textAlign: 'center', marginTop: 2 },
 
-  moonTitle: { fontSize: 22, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginTop: 20, marginBottom: 4 },
+  moonTitle: { fontSize: 22, color: '#FFF', fontWeight: '700', marginTop: 20, marginBottom: 4 },
   moonDegree: { fontSize: 14, color: '#D4B872', letterSpacing: 1, marginBottom: 16 },
 
   // VoC
@@ -493,11 +491,11 @@ const styles = StyleSheet.create({
   rxAlertBody: { fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 20 },
 
   // ── Daily Alignment ───────────────────────────────────────────────────────
-  affirmationCard: { padding: 24, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32 },
+  affirmationCard: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#D9BF8C', letterSpacing: 1.5 },
   premiumIcon: { color: '#D9BF8C', fontSize: 14 },
-  affirmationText: { fontSize: 18, color: '#FFF', fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), fontStyle: 'italic', lineHeight: 28 },
+  affirmationText: { fontSize: 18, color: '#FFF', fontStyle: 'italic', lineHeight: 28 },
 
   // ── Transits ──────────────────────────────────────────────────────────────
   transitsSection: { marginBottom: 32 },

@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -116,7 +115,6 @@ export default function PastReflectionsScreen() {
   const [groups, setGroups] = useState<DayGroup[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [allAnswers, setAllAnswers] = useState<ReflectionAnswer[]>([]);
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
   useFocusEffect(
     useCallback(() => {
@@ -124,11 +122,6 @@ export default function PastReflectionsScreen() {
         const data = await loadReflections();
         setAllAnswers(data.answers);
         setGroups(groupByDate(data.answers, 'all'));
-        // Auto-expand the most recent day
-        if (data.answers.length > 0) {
-          const sorted = [...data.answers].sort((a, b) => b.date.localeCompare(a.date));
-          setExpandedDates(new Set([sorted[0].date]));
-        }
       };
       init();
     }, []),
@@ -138,19 +131,6 @@ export default function PastReflectionsScreen() {
     Haptics.selectionAsync().catch(() => {});
     setFilter(f);
     setGroups(groupByDate(allAnswers, f));
-  };
-
-  const toggleDate = (date: string) => {
-    Haptics.selectionAsync().catch(() => {});
-    setExpandedDates(prev => {
-      const next = new Set(prev);
-      if (next.has(date)) {
-        next.delete(date);
-      } else {
-        next.add(date);
-      }
-      return next;
-    });
   };
 
   const FILTERS: { key: FilterOption; label: string }[] = [
@@ -217,7 +197,6 @@ export default function PastReflectionsScreen() {
           {/* Empty State */}
           {groups.length === 0 && (
             <Animated.View entering={FadeIn.duration(500)} style={styles.emptyCard}>
-              <BlurView intensity={15} tint="dark" style={StyleSheet.absoluteFill} />
               <MetallicIcon name="document-text-outline" size={36} color={PALETTE.textMuted} />
               <Text style={styles.emptyText}>
                 No sealed reflections yet.{'\n'}Complete your first daily reflection to see them here.
@@ -226,55 +205,39 @@ export default function PastReflectionsScreen() {
           )}
 
           {/* Day Groups */}
-          {groups.map((group, gIdx) => {
-            const isExpanded = expandedDates.has(group.date);
+          {groups.map((group, gIdx) => (
+            <Animated.View
+              key={group.date}
+              entering={FadeInDown.delay(200 + gIdx * 80).duration(500)}
+              style={styles.dayGroup}
+            >
+              {/* Day Header */}
+              <View style={styles.dayHeader}>
+                <View style={styles.dayHeaderLeft}>
+                  <Text style={styles.dayLabel}>{group.label}</Text>
+                  <Text style={styles.dayDate}>{group.date}</Text>
+                </View>
+              </View>
 
-            return (
-              <Animated.View
-                key={group.date}
-                entering={FadeInDown.delay(200 + gIdx * 80).duration(500)}
-                style={styles.dayGroup}
-              >
-                {/* Day Header (tap to expand/collapse) */}
-                <Pressable
-                  style={styles.dayHeader}
-                  onPress={() => toggleDate(group.date)}
-                >
-                  <View style={styles.dayHeaderLeft}>
-                    <MetallicIcon
-                      name={isExpanded ? 'chevron-down' : 'chevron-forward'}
-                      size={16}
-                      color={PALETTE.gold}
-                    />
-                    <Text style={styles.dayLabel}>{group.label}</Text>
-                    <Text style={styles.dayDate}>{group.date}</Text>
-                  </View>
-                  <View style={styles.dayBadge}>
-                    <Text style={styles.dayBadgeText}>
-                      {group.answers.length} {group.answers.length === 1 ? 'answer' : 'answers'}
-                    </Text>
-                  </View>
-                </Pressable>
-
-                {/* Answers */}
-                {isExpanded && group.answers.map((a, aIdx) => {
+              {/* Answers — always visible */}
+              {group.answers.map((a, aIdx) => {
                   const catColor = CATEGORY_COLORS[a.category];
 
                   return (
                     <Animated.View
                       key={`${a.date}-${a.category}-${a.questionId}`}
                       entering={FadeInDown.delay(aIdx * 50).duration(400)}
-                      style={styles.answerCard}
                     >
-                      <BlurView intensity={15} tint="dark" style={StyleSheet.absoluteFill} />
-
-                      <View style={styles.answerContent}>
+                      <LinearGradient
+                        colors={[`${catColor}12`, 'rgba(10,10,12,0.85)']}
+                        style={styles.answerCard}
+                      >
                         {/* Category tag */}
                         <View style={styles.categoryTag}>
                           <Text style={[styles.categoryTagIcon, { color: catColor }]}>
                             {CATEGORY_ICONS[a.category]}
                           </Text>
-                          <Text style={[styles.categoryTagText, { color: catColor }]}>
+                          <Text style={[styles.categoryTagText]}>
                             {CATEGORY_LABELS[a.category]}
                           </Text>
                         </View>
@@ -286,13 +249,12 @@ export default function PastReflectionsScreen() {
                         <View style={styles.answerBubble}>
                           <Text style={styles.answerText}>{a.answer}</Text>
                         </View>
-                      </View>
+                      </LinearGradient>
                     </Animated.View>
                   );
                 })}
-              </Animated.View>
-            );
-          })}
+            </Animated.View>
+          ))}
 
           <View style={{ height: 120 }} />
         </ScrollView>
@@ -306,7 +268,7 @@ export default function PastReflectionsScreen() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
@@ -320,24 +282,23 @@ const styles = StyleSheet.create({
   },
   backText: { fontSize: 14, color: PALETTE.gold, fontWeight: '600' },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
-  header: { marginBottom: 20 },
+  header: { marginTop: 8, marginBottom: 28 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
 
   // Filter chips
   filterRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   filterChip: {
     paddingHorizontal: 14,
@@ -355,15 +316,7 @@ const styles = StyleSheet.create({
   },
 
   // Empty state
-  emptyCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    padding: 40,
-    alignItems: 'center',
-    gap: 16,
-  },
+  emptyCard: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 40, alignItems: 'center', gap: 16, backgroundColor: 'rgba(255,255,255,0.02)' },
   emptyText: {
     fontSize: 14,
     color: PALETTE.textMuted,
@@ -373,26 +326,23 @@ const styles = StyleSheet.create({
 
   // Day groups
   dayGroup: {
-    marginBottom: 20,
+    marginBottom: 32,
   },
   dayHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: PALETTE.glassBorder,
-    marginBottom: 10,
+    marginBottom: 16,
   },
   dayHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   dayLabel: {
-    fontSize: 16,
+    fontSize: 19,
     color: PALETTE.textMain,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   dayDate: {
     fontSize: 12,
@@ -412,47 +362,38 @@ const styles = StyleSheet.create({
   },
 
   // Answer cards
-  answerCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    marginBottom: 10,
-  },
-  answerContent: {
-    padding: 16,
-  },
+  answerCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 12 },
   categoryTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   categoryTagIcon: { fontSize: 14 },
   categoryTagText: {
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.5)',
   },
   questionText: {
-    fontSize: 14,
-    color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '400',
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '700',
+    lineHeight: 26,
+    marginBottom: 16,
   },
   answerBubble: {
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(217, 191, 140, 0.1)',
+    borderColor: 'rgba(255,255,255,0.07)',
   },
   answerText: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-    lineHeight: 19,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 24,
   },
 });

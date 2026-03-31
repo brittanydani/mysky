@@ -759,11 +759,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 4,
   },
-  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), letterSpacing: -0.5, marginBottom: 4 },
+  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 4 },
   subtitle: { fontSize: 14 },
 
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 16 },
 
   sectionHeaderWrap: { marginBottom: 14 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -774,7 +774,7 @@ const styles = StyleSheet.create({
 
   promptHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   promptEyebrow: { color: PALETTE.gold, fontSize: 10, fontWeight: '800', letterSpacing: 2 },
-  promptText: { color: PALETTE.textMain, fontSize: 20, lineHeight: 30, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 20 },
+  promptText: { color: PALETTE.textMain, fontSize: 20, lineHeight: 30, fontWeight: '700', marginBottom: 20 },
 
   actionRow: { flexDirection: 'row', gap: 12 },
   actionPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 16, borderWidth: 1 },
@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
   trendChange: { fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 4 },
 
   // Blended
-  blendedTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 10 },
+  blendedTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 10 },
   journalPromptBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: 'rgba(201,174,120,0.06)', borderWidth: 1, borderColor: 'rgba(201,174,120,0.15)' },
   journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 22, fontStyle: 'italic' },
   statText: { fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 12, lineHeight: 16 },
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   terrainContainer: { borderRadius: 24, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.3)', borderWidth: 1, borderColor: PALETTE.glassBorder },
 
   patternLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-  patternTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 8 },
+  patternTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 8 },
   insightLabel: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, marginBottom: 12 },
   insightBody: { color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 24 },
 

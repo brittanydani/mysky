@@ -375,7 +375,6 @@ const styles = StyleSheet.create({
   headerTitle: { 
     fontSize: 16,
     color: '#FFF',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 2,
     textTransform: 'uppercase',
     opacity: 0.6,
@@ -400,9 +399,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 22,
-    fontWeight: '600',
+    fontWeight: '700',
     color: "#FFFFFF",
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 16,
     paddingLeft: 4,
   },

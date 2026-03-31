@@ -190,7 +190,6 @@ const styles = StyleSheet.create({
     fontSize: 18, 
     fontWeight: '700', 
     letterSpacing: 0.5,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
 
   card: {
@@ -212,7 +211,6 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     textAlign: 'center',
     marginBottom: 12,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.3,
   },
   body: {

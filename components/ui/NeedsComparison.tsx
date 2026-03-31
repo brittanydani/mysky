@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     fontWeight: '700',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     flex: 1,
   },
   needsList: {

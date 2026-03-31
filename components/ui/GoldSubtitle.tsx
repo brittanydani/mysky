@@ -43,6 +43,5 @@ const styles = StyleSheet.create({
   base: {
     fontSize: 14,
     fontStyle: 'italic',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) ?? 'serif',
   },
 });

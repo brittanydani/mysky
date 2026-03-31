@@ -82,7 +82,7 @@ const DIMENSIONS: Dimension[] = [
 const NUM_DIM = DIMENSIONS.length;
 
 const SERIF_FAMILY = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' })!;
-const SANS_FAMILY = Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'sans-serif' })!;
+const SANS_FAMILY = Platform.select({ ios: 'System', android: 'sans-serif-medium', default: 'sans-serif' })!;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -187,22 +187,13 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   const themes = useMemo(() => deriveThemes(scores), [scores]);
   const summary = useMemo(() => deriveSummary(scores), [scores]);
 
-  // Month label
-  const monthLabel = useMemo(() => {
-    if (!checkIns.length) return '';
-    const dates = checkIns.map(c => new Date(c.date + 'T12:00:00'));
-    const latest = dates.reduce((a, b) => a > b ? a : b);
-    return latest.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-  }, [checkIns]);
-
   // ── Animation: breathing pulse ──────────────────────────────────────────
   const breath = useSharedValue(0);
 
   // ── Skia fonts for in-canvas text ──────────────────────────────────────
-  const serifTheme = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 13, fontWeight: '600' }), []);
-  const sansMonth = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 11, fontWeight: '500' }), []);
-  const sansSummary = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 10, fontWeight: '400' }), []);
-  const sansDimLabel = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 9, fontWeight: '700' }), []);
+  const serifTheme = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 18, fontWeight: '800' }), []);
+  const sansSummary = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 12, fontWeight: '500' }), []);
+  const sansDimLabel = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 11, fontWeight: '800' }), []);
   useEffect(() => {
     breath.value = withRepeat(
       withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
@@ -221,13 +212,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
     );
   }, [orbitAngle]);
 
-  // Animated orbit particle position
-  const particleX = useDerivedValue(() => cx + orbitR * Math.cos(orbitAngle.value));
-  const particleY = useDerivedValue(() => cy + orbitR * Math.sin(orbitAngle.value));
-
-  // Second particle (opposite phase, inner orbit)
-  const particle2X = useDerivedValue(() => cx + innerR * 1.1 * Math.cos(orbitAngle.value + Math.PI));
-  const particle2Y = useDerivedValue(() => cy + innerR * 1.1 * Math.sin(orbitAngle.value + Math.PI));
+  const rotateTransform = useDerivedValue(() => [{ rotate: orbitAngle.value }]);
 
   const { nodes, flowArcs, outerRingPath, innerRingPath } = useMemo(() => {
     const startAngle = -Math.PI / 2; // top
@@ -420,48 +405,43 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
         {/* Tiny star at center */}
         <Circle cx={cx} cy={cy} r={2} color="#C9AE78" opacity={0.6} />
 
-        {/* ── Orbiting particle (metallic gold) ── */}
-        <Circle cx={particleX} cy={particleY} r={2.5} color="rgba(201, 174, 120, 0.7)">
-          <BlurMask blur={4} style="solid" />
-        </Circle>
-        <Circle cx={particleX} cy={particleY} r={6} color="rgba(255, 244, 214, 0.10)">
-          <BlurMask blur={10} style="normal" />
-        </Circle>
-
-        {/* Second particle (metallic blue) */}
-        <Circle cx={particle2X} cy={particle2Y} r={2} color="rgba(139, 196, 232, 0.5)">
-          <BlurMask blur={3} style="solid" />
-        </Circle>
-        <Circle cx={particle2X} cy={particle2Y} r={5} color="rgba(214, 238, 255, 0.08)">
-          <BlurMask blur={8} style="normal" />
-        </Circle>
+        {/* ── Orbiting particles (one per dimension) ── */}
+        <Group origin={vec(cx, cy)} transform={rotateTransform}>
+          {DIMENSIONS.map((dim, j) => {
+            const angleOffset = (j * Math.PI * 2) / NUM_DIM;
+            // Place particles at different radii to make it staggered and organic
+            const radiusJitter = (j % 2 === 0) ? orbitR : innerR * 1.08;
+            const px = cx + radiusJitter * Math.cos(angleOffset);
+            const py = cy + radiusJitter * Math.sin(angleOffset);
+            return (
+              <React.Fragment key={`orb-${j}`}>
+                <Circle cx={px} cy={py} r={2} color={dim.color} opacity={0.7}>
+                  <BlurMask blur={3} style="solid" />
+                </Circle>
+                <Circle cx={px} cy={py} r={6} color={dim.glow} opacity={0.2}>
+                  <BlurMask blur={8} style="normal" />
+                </Circle>
+              </React.Fragment>
+            );
+          })}
+        </Group>
 
         {/* ── Center text (white, precisely centered) ── */}
         {(() => {
           const themeStr = themes.join(' · ');
-          const monthW = sansMonth ? sansMonth.getTextWidth(monthLabel) : monthLabel.length * 5;
           const themeW = serifTheme ? serifTheme.getTextWidth(themeStr) : themeStr.length * 6;
           const summaryW = sansSummary ? sansSummary.getTextWidth(summary) : summary.length * 4.5;
 
-          // Total block height: month(11) + gap(6) + theme(13) + gap(5) + summary(10) = 45
-          const blockH = 45;
+          // Total block height: theme(18) + gap(6) + summary(12) = 36
+          const blockH = 36;
           const topY = cy - blockH / 2;
 
           return (
             <Group>
-              {sansMonth && (
-                <SkiaText
-                  x={cx - monthW / 2}
-                  y={topY + 11}
-                  text={monthLabel}
-                  font={sansMonth}
-                  color="rgba(255,255,255,0.45)"
-                />
-              )}
               {serifTheme && (
                 <SkiaText
                   x={cx - themeW / 2}
-                  y={topY + 11 + 6 + 13}
+                  y={topY + 18}
                   text={themeStr}
                   font={serifTheme}
                   color="#FFFFFF"
@@ -470,10 +450,10 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
               {sansSummary && (
                 <SkiaText
                   x={cx - summaryW / 2}
-                  y={topY + 11 + 6 + 13 + 5 + 10}
+                  y={topY + 18 + 6 + 12}
                   text={summary}
                   font={sansSummary}
-                  color="rgba(255,255,255,0.5)"
+                  color="rgba(255,255,255,0.6)"
                 />
               )}
             </Group>
@@ -481,15 +461,11 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
         })()}
       </Canvas>
 
-      {/* ── Dimension labels ── */}
+      {/* ── Dimension icons ── */}
       {nodes.map((node, i) => {
-        const labelR = orbitR + 44;
+        const labelR = orbitR + 28;
         const lx = cx + labelR * Math.cos(node.angle);
         const ly = cy + labelR * Math.sin(node.angle);
-        const lines = node.label.split('\n');
-        const canvasW = 80;
-        const lineH = 11;
-        const canvasH = lines.length * lineH;
 
         return (
           <View
@@ -497,34 +473,16 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
             style={[
               styles.dimLabel,
               {
-                left: lx - 40,
-                top: ly - 12,
-                width: 80,
+                left: lx - 20,
+                top: ly - 20,
+                width: 40,
+                height: 40,
+                justifyContent: 'center',
+                alignItems: 'center',
               },
             ]}
           >
             <Text style={[styles.dimIcon, { color: node.color }]}>{node.icon}</Text>
-            <Canvas style={{ width: canvasW, height: canvasH }}>
-              <Group>
-                <LinearGradient
-                  start={vec(0, 0)}
-                  end={vec(canvasW, canvasH)}
-                  colors={[node.glow, node.color, node.glow]}
-                />
-                {sansDimLabel && lines.map((line, j) => {
-                  const tw = sansDimLabel.getTextWidth(line);
-                  return (
-                    <SkiaText
-                      key={j}
-                      x={(canvasW - tw) / 2}
-                      y={j * lineH + lineH - 1}
-                      text={line}
-                      font={sansDimLabel}
-                    />
-                  );
-                })}
-              </Group>
-            </Canvas>
           </View>
         );
       })}
@@ -552,11 +510,14 @@ const styles = StyleSheet.create({
   dimLabel: {
     position: 'absolute',
     alignItems: 'center',
-    gap: 1,
+    gap: 2,
   },
   dimIcon: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '400',
     textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });

@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -95,11 +94,15 @@ export default function BodyNervousScreen() {
             <GoldSubtitle style={styles.headerSubtitle}>Somatic awareness & regulation</GoldSubtitle>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(140).duration(600)} style={styles.infoCard}>
-            <BlurView intensity={15} tint="dark" style={StyleSheet.absoluteFill} />
-            <Text style={styles.infoText}>
-              Your body holds wisdom your mind hasn't named yet. These tools help you listen.
-            </Text>
+          <Animated.View entering={FadeInDown.delay(140).duration(600)}>
+            <LinearGradient
+              colors={['rgba(140,190,170,0.08)', 'rgba(10,10,12,0.85)']}
+              style={styles.infoCard}
+            >
+              <Text style={styles.infoText}>
+                Your body holds wisdom your mind hasn't named yet. These tools help you listen.
+              </Text>
+            </LinearGradient>
           </Animated.View>
 
           <View style={[styles.grid, { marginTop: 20 }]}>
@@ -107,24 +110,19 @@ export default function BodyNervousScreen() {
               <Animated.View
                 key={tool.route as string}
                 entering={FadeInDown.delay(220 + i * 80).duration(600)}
-                style={styles.card}
               >
                 <Pressable
-                  style={({ pressed }) => [StyleSheet.absoluteFill, pressed && styles.cardPressed]}
+                  style={({ pressed }) => [pressed && styles.cardPressed]}
                   onPress={() => nav(tool.route)}
                 >
-                  <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                   <LinearGradient
-                    colors={[`rgba(${tool.accentRgb}, 0.1)`, 'transparent']}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <View style={styles.cardContent}>
+                    colors={[`rgba(${tool.accentRgb}, 0.1)`, 'rgba(10,10,12,0.85)']}
+                    style={styles.card}
+                  >
                     <MetallicText style={[styles.cardIcon, { marginBottom: tool.iconOffset ?? 0, marginLeft: tool.iconLeft ?? 0 }]} color={tool.iconColor}>{tool.icon}</MetallicText>
-                    <View>
-                      <Text style={styles.cardTitle}>{tool.title}</Text>
-                      <Text style={styles.cardSubtitle}>{tool.description}</Text>
-                    </View>
-                  </View>
+                    <Text style={styles.cardTitle}>{tool.title}</Text>
+                    <Text style={styles.cardSubtitle}>{tool.description}</Text>
+                  </LinearGradient>
                 </Pressable>
               </Animated.View>
             ))}
@@ -150,7 +148,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -159,10 +156,10 @@ const styles = StyleSheet.create({
 
   infoCard: {
     borderRadius: 16,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(140,190,170,0.15)',
     padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   infoText: {
     fontSize: 13,
@@ -173,26 +170,23 @@ const styles = StyleSheet.create({
 
   grid: { gap: 20 },
   card: {
-    height: 190,
+    padding: 28,
     borderRadius: 24,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
-  cardContent: { flex: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 32, justifyContent: 'center', gap: 4 },
-  cardIcon: { fontSize: 32 },
+  cardIcon: { fontSize: 32, marginBottom: 16 },
   cardTitle: {
     fontSize: 20,
     color: PALETTE.textMain,
-    fontFamily: 'Georgia',
-    fontWeight: '400',
+    fontWeight: '700',
     marginBottom: 6,
   },
   cardSubtitle: {
-    fontSize: 13,
+    fontSize: 16,
     color: PALETTE.textMuted,
-    lineHeight: 18,
-    paddingRight: 20,
+    lineHeight: 24,
   },
 });

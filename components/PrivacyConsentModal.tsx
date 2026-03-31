@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
     fontWeight: '800', 
     letterSpacing: -0.7, 
     color: '#F5F5F7', 
-    fontFamily: 'SF Pro Display', 
     marginBottom: 8, 
     textAlign: 'center' 
   },
@@ -233,7 +232,7 @@ const styles = StyleSheet.create({
   footerActions: { marginTop: 24, gap: 16 },
   acceptBtn: { borderRadius: 16, overflow: 'hidden', },
   btnGradient: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  acceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817', fontFamily: 'SF Pro Display' },
+  acceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },
   declineBtnText: { fontSize: 12, color: "#FFFFFF", fontWeight: '600', textDecorationLine: 'underline' },
   declineHint: { fontSize: 13, color: '#C5B5A1', textAlign: 'center', fontStyle: 'italic', marginTop: 4 },

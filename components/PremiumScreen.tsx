@@ -558,7 +558,6 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.3,
     marginBottom: 8,
     textAlign: 'center',
@@ -596,9 +595,8 @@ const styles = StyleSheet.create({
   },
   valueTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     marginBottom: 4,
   },
   valueDesc: {
@@ -832,7 +830,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: '#3A2A10',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
   },
   ctaHint: {
     marginTop: 12,
@@ -873,7 +870,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
     letterSpacing: 0.3,
     marginBottom: theme.spacing.sm,
     textAlign: 'center',

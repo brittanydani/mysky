@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -340,16 +339,13 @@ export default function InnerWorldScreen() {
                     layout={Layout.springify()}
                   >
                     <Pressable
-                      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                      style={({ pressed }) => [pressed && styles.cardPressed]}
                       onPress={() => nav(tool.route)}
                     >
-                      <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                       <LinearGradient
-                        colors={[`rgba(${tool.accentRgb}, 0.1)`, 'transparent']}
-                        style={StyleSheet.absoluteFill}
-                      />
-
-                      <View style={styles.cardContent}>
+                        colors={[`rgba(${tool.accentRgb}, 0.1)`, 'rgba(10,10,15,0.85)']}
+                        style={styles.card}
+                      >
                         <View style={styles.cardHeader}>
                           <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
 
@@ -363,11 +359,9 @@ export default function InnerWorldScreen() {
                           </View>
                         </View>
 
-                        <View>
-                          <Text style={styles.cardTitle}>{tool.title}</Text>
-                          <Text style={styles.cardSubtitle}>{tool.description}</Text>
-                        </View>
-                      </View>
+                        <Text style={styles.cardTitle}>{tool.title}</Text>
+                        <Text style={styles.cardSubtitle}>{tool.description}</Text>
+                      </LinearGradient>
                     </Pressable>
                   </Animated.View>
                 );
@@ -423,15 +417,11 @@ export default function InnerWorldScreen() {
                       <Animated.View
                         key={q.id}
                         entering={FadeInDown.delay(620 + catIdx * 100 + qIdx * 60).duration(500)}
-                        style={styles.questionCard}
                       >
-                        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                         <LinearGradient
-                          colors={[`rgba(${rgb}, 0.06)`, 'transparent']}
-                          style={StyleSheet.absoluteFill}
-                        />
-
-                        <View style={styles.questionContent}>
+                          colors={[`rgba(${rgb}, 0.06)`, 'rgba(10,10,15,0.85)']}
+                          style={styles.questionCard}
+                        >
                           <Text style={styles.questionText}>{q.text}</Text>
 
                           <View style={styles.scaleRow}>
@@ -471,7 +461,7 @@ export default function InnerWorldScreen() {
                               </Text>
                             </View>
                           )}
-                        </View>
+                        </LinearGradient>
                       </Animated.View>
                     );
                   })}
@@ -557,7 +547,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -613,16 +602,15 @@ const styles = StyleSheet.create({
 
   grid: { gap: 20, marginBottom: 36 },
   card: {
-    height: 160,
+    padding: 28,
     borderRadius: 24,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
-  cardContent: { flex: 1, padding: 24, justifyContent: 'space-between' },
 
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   cardIcon: { fontSize: 32 },
 
   badge: {
@@ -638,23 +626,20 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '400',
+    fontWeight: '700',
     marginBottom: 6,
   },
   cardSubtitle: {
-    fontSize: 13,
+    fontSize: 16,
     color: PALETTE.textMuted,
-    lineHeight: 18,
-    paddingRight: 10,
+    lineHeight: 24,
   },
 
   // Daily questions header
   dailyHeader: { marginBottom: 24 },
   dailyHeaderTitle: {
     fontSize: 22,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
-    fontWeight: '400',
+    fontWeight: '700',
     marginBottom: 6,
   },
   dailyHeaderSub: { fontSize: 13 },
@@ -681,16 +666,15 @@ const styles = StyleSheet.create({
   // Question cards
   questionCard: {
     borderRadius: 20,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     marginBottom: 14,
+    padding: 20,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
-  questionContent: { padding: 20 },
   questionText: {
     fontSize: 15,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontWeight: '400',
     lineHeight: 22,
     marginBottom: 14,

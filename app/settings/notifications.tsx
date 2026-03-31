@@ -182,7 +182,6 @@ export default function NotificationSettings() {
 
     return (
       <View style={[styles.card, !isRhythmEnabled && styles.cardDisabled]}>
-        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
 
         {/* Time row */}
         <View style={styles.row}>
@@ -269,7 +268,6 @@ export default function NotificationSettings() {
         {/* Master enable toggle */}
         <Text style={styles.sectionLabel}>LOCAL TRIGGERS</Text>
         <View style={styles.card}>
-          <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
           <View style={styles.row}>
             <View style={styles.textContainer}>
               <Text style={styles.title}>Enable Check-in Prompts</Text>
@@ -323,7 +321,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: '#FFFFFF',
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -339,14 +336,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  card: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
+  card: { borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
   cardDisabled: { opacity: 0.45 },
 
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -405,7 +395,6 @@ const styles = StyleSheet.create({
     marginTop: 28,
     fontSize: 12,
     color: 'rgba(255,255,255,0.3)',
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     fontStyle: 'italic',
     textAlign: 'center',
     paddingHorizontal: 16,

@@ -7,7 +7,6 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
-import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -84,15 +83,7 @@ export default function ShadowQuoteCard({
         entering={FadeIn.delay(animationDelay).duration(1200)}
         style={styles.footerContainer}
       >
-        <View style={[styles.footerDivider, { overflow: 'hidden' }]}>
-          <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject}>
-              <RoundedRect x={0} y={0} width={60} height={1} r={0}>
-                <LinearGradient start={vec(0, 0)} end={vec(60, 0)} colors={['rgba(255,255,255,0)', PALETTE.glassHighlight, 'rgba(255,255,255,0)']} />
-              </RoundedRect>
-            </Canvas>
-          </View>
-        </View>
+        <View style={[styles.footerDivider, { backgroundColor: PALETTE.glassHighlight }]} />
         <Text style={styles.footerText}>"{quote.text}"</Text>
       </Animated.View>
     );
@@ -108,17 +99,10 @@ export default function ShadowQuoteCard({
         <View
           style={[
             styles.card,
-            { borderColor: PALETTE.glassBorder, borderTopColor: tone.highlight },
+            { borderColor: PALETTE.glassBorder, borderTopColor: tone.highlight, backgroundColor: tone.colors[0] },
             isCloseQuote && styles.closeCard,
           ]}
         >
-          <View style={[StyleSheet.absoluteFillObject, { borderRadius: 24, overflow: 'hidden' }]} pointerEvents="none">
-            <Canvas style={StyleSheet.absoluteFillObject}>
-              <RoundedRect x={0} y={0} width={400} height={400} r={24}>
-                <LinearGradient start={vec(0, 0)} end={vec(0, 400)} colors={tone.colors} />
-              </RoundedRect>
-            </Canvas>
-          </View>
           <Text style={[
             styles.quoteText,
             isCloseQuote && styles.closeQuoteText,
@@ -160,7 +144,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 28,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     opacity: 0.95,
     letterSpacing: 0.2,
   },
@@ -180,7 +163,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 24,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     opacity: 0.8,
   },
   footerContainer: {
@@ -200,7 +182,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     lineHeight: 22,
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     opacity: 0.7,
   },
 });

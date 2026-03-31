@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -376,7 +375,6 @@ export default function SomaticMapScreen() {
                         deleteEntry(entry.id);
                       }}
                     >
-                      <BlurView intensity={10} tint="dark" style={StyleSheet.absoluteFill} />
                       <View style={[styles.entryDot, { backgroundColor: color }]} />
                       <View style={styles.entryMeta}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -420,7 +418,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -523,9 +520,10 @@ const styles = StyleSheet.create({
   entryList:      { gap: 8 },
   entryRow: {
     flexDirection: 'row', alignItems: 'center',
-    borderRadius: 14, overflow: 'hidden',
+    borderRadius: 14,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 14, paddingVertical: 12, gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   entryDot:  { width: 8, height: 8, borderRadius: 4 },
   entryMeta: { flex: 1 },

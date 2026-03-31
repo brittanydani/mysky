@@ -123,7 +123,6 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain, 
     fontSize: 22, 
     fontWeight: '700', 
-    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
     letterSpacing: 0.5,
   },
 });

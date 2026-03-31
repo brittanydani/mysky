@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
   headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginBottom: 20 },
   headerRow: { flexDirection: 'row', width: '100%', paddingHorizontal: 24, justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 24, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }) },
+  title: { fontSize: 24, color: PALETTE.textMain, fontWeight: '700' },
   closeBtn: { padding: 4 },
 
   loadingContainer: { padding: 60, alignItems: 'center' },

@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
@@ -213,7 +212,6 @@ export default function CognitiveStyleScreen() {
               layout={Layout.springify()}
               style={styles.synthesisCard}
             >
-              <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
               <View style={styles.synthesisHeader}>
                 <MetallicIcon name="git-network-outline" size={18} color={PALETTE.silverBlue} />
                 <MetallicText style={styles.synthesisEyebrow} color={PALETTE.silverBlue}>COGNITIVE BLUEPRINT</MetallicText>
@@ -258,7 +256,6 @@ export default function CognitiveStyleScreen() {
                   entering={FadeInDown.delay(200 + i * 80).duration(500)}
                   style={styles.dimensionBlock}
                 >
-                  <BlurView intensity={15} tint="dark" style={StyleSheet.absoluteFill} />
                   <View style={styles.dimInner}>
                     <Text style={styles.dimQuestion}>{dim.question}</Text>
 
@@ -318,15 +315,15 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   header: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
   instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, fontStyle: 'italic', marginBottom: 28 },
 
-  synthesisCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(139,196,232,0.25)', padding: 24, marginBottom: 32, alignItems: 'center' },
+  synthesisCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(139,196,232,0.25)', padding: 28, marginBottom: 32, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)' },
   synthesisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 16 },
   synthesisEyebrow: { fontSize: 11, color: PALETTE.silverBlue, fontWeight: '800', letterSpacing: 1.5 },
-  synthesisTitle: { fontSize: 26, fontFamily: 'Georgia', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start' },
+  synthesisTitle: { fontSize: 26, fontWeight: '700', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start' },
 
   radarContainer: { position: 'relative', width: 220, height: 220, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   radarLabel: { position: 'absolute', fontSize: 9, fontWeight: '800', color: PALETTE.textMuted, letterSpacing: 1 },
@@ -338,9 +335,9 @@ const styles = StyleSheet.create({
   saveBtnText: { fontSize: 13, color: PALETTE.silverBlue, fontWeight: '700', letterSpacing: 0.5 },
 
   dimensionsContainer: { gap: 16 },
-  dimensionBlock: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
+  dimensionBlock: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' },
   dimInner: { padding: 20 },
-  dimQuestion: { fontSize: 15, color: PALETTE.textMain, fontFamily: 'Georgia', lineHeight: 22, marginBottom: 20 },
+  dimQuestion: { fontSize: 15, fontWeight: '400', color: PALETTE.textMain, lineHeight: 22, marginBottom: 20 },
 
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, gap: 8 },
   scaleBtn: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center', alignItems: 'center' },

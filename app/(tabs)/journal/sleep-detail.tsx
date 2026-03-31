@@ -396,8 +396,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
-    fontWeight: '800', letterSpacing: -0.5, marginBottom: 4,
+    fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
   saveText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },
@@ -405,34 +404,34 @@ const styles = StyleSheet.create({
 
   metaRow: { marginBottom: 24 },
   metaDate: {
-    color: 'rgba(255,255,255,0.6)', fontSize: 13, fontFamily: 'Georgia',
+    color: 'rgba(255,255,255,0.6)', fontSize: 13,
     fontStyle: 'italic', marginBottom: 8,
   },
   qualityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   qualityLabel: {
-    color: '#6E8CB4', fontSize: 12, fontFamily: 'Georgia',
+    color: '#8BC4E8', fontSize: 12,
     fontStyle: 'italic', marginLeft: 6,
   },
 
   card: {
-    backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 24,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 24,
+    backgroundColor: 'rgba(139,196,232,0.03)', borderRadius: 32, padding: 24,
+    borderWidth: 1, borderColor: 'rgba(139,196,232,0.12)', marginBottom: 24,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   label: { fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 2 },
   fullInput: {
-    color: '#FFF', fontSize: 16, fontFamily: 'Georgia',
+    color: '#FFF', fontSize: 16,
     lineHeight: 26, textAlignVertical: 'top', minHeight: 250,
   },
 
   premiumSection: {
-    alignItems: 'center', padding: 32, borderRadius: 24,
+    alignItems: 'center', padding: 32, borderRadius: 32,
     borderWidth: 1, borderColor: '#D9BF8C',
     backgroundColor: 'rgba(217,191,140,0.04)', gap: 12,
   },
   lockedSection: { borderStyle: 'dashed' },
   premiumTitle: {
-    color: '#D9BF8C', fontSize: 16, fontFamily: 'Georgia', textAlign: 'center',
+    color: '#D9BF8C', fontSize: 16, fontWeight: '600', textAlign: 'center',
   },
   premiumBody: {
     color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center', lineHeight: 20,
@@ -441,10 +440,10 @@ const styles = StyleSheet.create({
 
   interpretationParagraph: {
     color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 24,
-    fontFamily: 'Georgia', fontStyle: 'italic',
+    fontStyle: 'italic',
   },
   reflectionQuestion: {
-    color: '#D9BF8C', fontSize: 14, fontFamily: 'Georgia',
+    color: '#D9BF8C', fontSize: 14,
     fontStyle: 'italic', lineHeight: 22,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(217,191,140,0.2)',

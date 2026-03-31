@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
   titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  headerTitle: { fontSize: 34, color: '#FFFFFF', fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }), fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerEditingBadge: { fontSize: 10, color: '#D9BF8C', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
 
   sliderWrapper: { width: '100%' },
   sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  sliderTitle: { fontSize: 16, color: '#FFF', fontFamily: 'Georgia' },
+  sliderTitle: { fontSize: 16, fontWeight: '700', color: '#FFF' },
   sliderValue: { fontSize: 18, fontWeight: 'bold' },
 
   trackContainer: { height: 32, justifyContent: 'center' },
