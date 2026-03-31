@@ -99,9 +99,18 @@ export default function AnalyticsInspectorScreen() {
     }
   }, [sharing, snapshot]);
 
-  const counts = Object.entries(snapshot?.counts ?? {}).sort((a, b) => b[1] - a[1]);
+  const counts = Object.entries(snapshot?.counts ?? {}).sort((a, b) => (b[1] as number) - (a[1] as number)) as [string, number][];
   const experiments = Object.entries(snapshot?.experiments ?? {});
   const recentEvents = [...(snapshot?.recentEvents ?? [])].reverse();
+
+  // This screen is for internal development only
+  if (!__DEV__) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
+        <Text style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>Not available</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -154,7 +163,7 @@ export default function AnalyticsInspectorScreen() {
                   experiments.map(([name, value]) => (
                     <View key={name} style={styles.row}>
                       <Text style={styles.rowLabel}>{name}</Text>
-                      <Text style={styles.rowValue}>{value}</Text>
+                      <Text style={styles.rowValue}>{String(value)}</Text>
                     </View>
                   ))
                 )}
@@ -172,7 +181,7 @@ export default function AnalyticsInspectorScreen() {
                         <Text style={styles.rowMeta}>First {formatDate(snapshot?.firstSeenAt[key])}</Text>
                         <Text style={styles.rowMeta}>Last {formatDate(snapshot?.lastSeenAt[key])}</Text>
                       </View>
-                      <Text style={styles.countValue}>{value}</Text>
+                      <Text style={styles.countValue}>{String(value)}</Text>
                     </View>
                   ))
                 )}

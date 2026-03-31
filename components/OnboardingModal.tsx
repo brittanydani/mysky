@@ -32,7 +32,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
@@ -41,16 +40,17 @@ import { MetallicIcon } from './ui/MetallicIcon';
 import { MetallicText } from './ui/MetallicText';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import { LegalOverlay } from './LegalOverlay';
-import { theme } from '../constants/theme';
 
 import { BirthData, HouseSystem, NatalChart } from '../services/astrology/types';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { InputValidator } from '../services/astrology/inputValidator';
 import { localDb } from '../services/storage/localDb';
 import { BackupService } from '../services/storage/backupService';
+import { IdentityVault } from '../utils/IdentityVault';
 import { toLocalDateString } from '../utils/dateUtils';
 import { logger } from     '../utils/logger';
 import Constants from 'expo-constants';
+import { supabase } from '../lib/supabase';
 
 const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
 const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
@@ -94,7 +94,7 @@ interface LocationSuggestion {
   lon: string;
 }
 
-type OnboardingStep = 'welcome' | 'privacy' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
+type OnboardingStep = 'welcome' | 'privacy' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase' | 'auth';
 
 const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   welcome: -1,
@@ -105,6 +105,7 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   location: 3,
   processing: -1,
   passphrase: -1,
+  auth: -1,
 };
 
 // ── Living Volumetric Nebula ──
@@ -117,7 +118,8 @@ function LivingBackground() {
       -1,
       false,
     );
-  }, [rotation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
@@ -144,7 +146,8 @@ function ProcessingOrb() {
       -1,
       true,
     );
-  }, [pulse]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const glowStyle = useAnimatedStyle(() => ({
     transform: [{ scale: 0.85 + pulse.value * 0.3 }],
@@ -279,9 +282,13 @@ export default function OnboardingModal({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const [backupUri, setBackupUri] = useState<string | null>(null);
+  const [pendingChart, setPendingChart] = useState<NatalChart | null>(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'sign-up' | 'sign-in'>('sign-up');
+  const [authLoading, setAuthLoading] = useState(false);
   const [passphrase, setPassphrase] = useState('');
   const [isNameFocused, setIsNameFocused] = useState(false);
-  const [isTimePickerVisible, setIsTimePickerVisible] = useState(false);
 
   // ── Hardware Tactility: Scale animations ──
   const ctaScale = useSharedValue(1);
@@ -395,8 +402,21 @@ export default function OnboardingModal({
 
       await localDb.saveChart(savedChart);
 
+      // Seal the sensitive birth data into the hardware keychain — mirrors app/onboarding/birth.tsx
+      IdentityVault.sealIdentity({
+        name: userName.trim() || 'My Chart',
+        birthDate: birthData.date,
+        birthTime: birthData.time,
+        hasUnknownTime: birthData.hasUnknownTime,
+        locationCity: birthData.place,
+        locationLat: birthData.latitude,
+        locationLng: birthData.longitude,
+        timezone: chart.birthData.timezone,
+      }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
+
       timeoutRef.current = setTimeout(() => {
-        onComplete(chart);
+        setPendingChart(chart);
+        setStep('auth');
       }, 4000);
     } catch (error) {
       logger.error('Failed to generate chart:', error);
@@ -493,8 +513,22 @@ export default function OnboardingModal({
           timezone: charts[0].timezone,
         };
         const chart = AstrologyCalculator.generateNatalChart(birthDataFromChart);
+
+        // Seal the restored identity into the hardware keychain
+        IdentityVault.sealIdentity({
+          name: charts[0].name ?? 'My Chart',
+          birthDate: charts[0].birthDate,
+          birthTime: charts[0].birthTime,
+          hasUnknownTime: charts[0].hasUnknownTime,
+          locationCity: charts[0].birthPlace,
+          locationLat: charts[0].latitude,
+          locationLng: charts[0].longitude,
+          timezone: charts[0].timezone,
+        }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
+
         timeoutRef.current = setTimeout(() => {
-          onComplete(chart);
+          setPendingChart(chart);
+          setStep('auth');
         }, 900);
       } else {
         Alert.alert('No Data Found', 'The backup did not contain any profile data.', [
@@ -509,6 +543,35 @@ export default function OnboardingModal({
     }
   };
 
+  // ── Shared auth handler used by both button press and keyboard submit ──
+  const handleAuthSubmit = async () => {
+    if (!authEmail.trim() || !authPassword.trim()) {
+      Alert.alert('Missing fields', 'Please enter your email and password.');
+      return;
+    }
+    Keyboard.dismiss();
+    setAuthLoading(true);
+    try {
+      if (authMode === 'sign-up') {
+        const { data, error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword });
+        if (error) throw error;
+        if (!data.session) {
+          Alert.alert('Check your email', 'We sent a confirmation link. Tap it, then come back and sign in.');
+          setAuthMode('sign-in');
+        } else if (pendingChart) {
+          onComplete(pendingChart);
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
+        if (error) throw error;
+        if (pendingChart) onComplete(pendingChart);
+      }
+    } catch (err: unknown) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
 
   const showProgress = STEP_PROGRESS_INDEX[step] >= 0;
@@ -949,6 +1012,85 @@ export default function OnboardingModal({
                     </View>
                   </Animated.View>
                 </View>
+              )}
+
+              {/* ══════ AUTH (Sign Up / Sign In) ══════ */}
+              {step === 'auth' && (
+                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
+                  <Animated.View entering={FadeInUp.delay(100).duration(800)} style={st.singleQuestionContainer}>
+                    <View style={[st.passphraseIconWrap, { marginBottom: 8 }]}>
+                      <MetallicIcon name="sparkles-outline" size={32} color={PREMIUM.titanium} />
+                    </View>
+                    <Text style={st.etherealQuestion}>
+                      {authMode === 'sign-up' ? 'Create your account' : 'Welcome back'}
+                    </Text>
+                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
+                      {authMode === 'sign-up'
+                        ? 'Your reflections stay private, encrypted, and yours.'
+                        : 'Sign in to restore access to your data.'}
+                    </MetallicText>
+
+                    <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginTop: 24, marginBottom: 10 }]}>
+                      <TextInput
+                        style={st.passphraseInput}
+                        value={authEmail}
+                        onChangeText={setAuthEmail}
+                        placeholder="Email"
+                        placeholderTextColor={PREMIUM.textMuted}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        selectionColor={PREMIUM.titanium}
+                      />
+                    </BlurView>
+                    <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 20 }]}>
+                      <TextInput
+                        style={st.passphraseInput}
+                        value={authPassword}
+                        onChangeText={setAuthPassword}
+                        placeholder="Password"
+                        placeholderTextColor={PREMIUM.textMuted}
+                        secureTextEntry
+                        returnKeyType="done"
+                        onSubmitEditing={handleAuthSubmit}
+                        selectionColor={PREMIUM.titanium}
+                      />
+                    </BlurView>
+
+                    <Animated.View style={[st.primaryActionBtn, { width: '100%', marginBottom: 16 }, ctaAnimStyle]}>
+                      <Pressable
+                        disabled={authLoading}
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                        onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
+                        onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
+                        onPress={handleAuthSubmit}
+                      >
+                        <LinearGradient
+                          colors={LIQUID_GOLD}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={st.liquidGoldFill}
+                        />
+                        {authLoading ? (
+                          <ActivityIndicator color={PREMIUM.bgOled} />
+                        ) : (
+                          <Text style={st.primaryActionBtnText}>
+                            {authMode === 'sign-up' ? 'Create Account' : 'Sign In'}
+                          </Text>
+                        )}
+                      </Pressable>
+                    </Animated.View>
+
+                    <Pressable
+                      style={st.restoreButton}
+                      onPress={() => setAuthMode(authMode === 'sign-up' ? 'sign-in' : 'sign-up')}
+                    >
+                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>
+                        {authMode === 'sign-up' ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                      </MetallicText>
+                    </Pressable>
+                  </Animated.View>
+                </Pressable>
               )}
 
               {/* ══════ PASSPHRASE (Restore) ══════ */}

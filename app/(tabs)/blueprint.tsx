@@ -25,6 +25,7 @@ import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -121,8 +122,16 @@ export default function BlueprintScreen() {
     useCallback(() => {
       (async () => {
         try {
-          const charts = await localDb.getCharts();
-          if (charts.length > 0) setChartName(charts[0].name ?? null);
+          const storedName = await EncryptedAsyncStorage.getItem('msky_user_name');
+          if (storedName) { setChartName(storedName); }
+          else {
+            const charts = await localDb.getCharts();
+            if (charts.length > 0) {
+              const name = charts[0].name;
+              const place = charts[0].birthPlace;
+              setChartName(name && name !== place ? name : null);
+            }
+          }
         } catch (err) {
           logger.error('Blueprint: failed to load chart name', err);
         }

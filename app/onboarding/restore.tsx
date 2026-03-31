@@ -13,6 +13,7 @@ import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { BackupService } from '../../services/storage/backupService';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { IdentityVault } from '../../utils/IdentityVault';
 import { logger } from '../../utils/logger';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
@@ -75,6 +76,19 @@ export default function OnboardingRestoreScreen() {
       };
 
       AstrologyCalculator.generateNatalChart(birthData); // sanity compute
+
+      // Seal the restored identity into the hardware keychain
+      IdentityVault.sealIdentity({
+        name: charts[0].name ?? 'My Chart',
+        birthDate: charts[0].birthDate,
+        birthTime: charts[0].birthTime,
+        hasUnknownTime: charts[0].hasUnknownTime,
+        locationCity: charts[0].birthPlace,
+        locationLat: charts[0].latitude,
+        locationLng: charts[0].longitude,
+        timezone: charts[0].timezone,
+      }).catch((err) => logger.error('[Restore] IdentityVault seal failed:', err));
+
       DeviceEventEmitter.emit('ONBOARDING_COMPLETE');
       router.replace('/(tabs)/home' as Href);
     } catch (e) {
@@ -137,7 +151,7 @@ export default function OnboardingRestoreScreen() {
                 style={styles.input}
                 value={passphrase}
                 onChangeText={setPassphrase}
-                placeholder="Enter 8+ character passphrase"
+                placeholder="Enter passphrase"
                 placeholderTextColor={theme.textMuted}
                 secureTextEntry
                 autoCapitalize="none"

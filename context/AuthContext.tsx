@@ -21,6 +21,12 @@ import * as Haptics from 'expo-haptics';
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
+import { useDreamMapStore } from '../store/dreamMapStore';
+import { useResonanceStore } from '../store/resonanceStore';
+import { useSceneStore } from '../store/sceneStore';
+import { useCircadianStore } from '../store/circadianStore';
+import { useCorrelationStore } from '../store/correlationStore';
+import { useCheckInStore } from '../store/checkInStore';
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -112,6 +118,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+
+      // Clear sensitive cached data from Zustand stores
+      useDreamMapStore.getState().clearCache();
+      useResonanceStore.getState().clearCache();
+      useSceneStore.getState().clearScene();
+      useCircadianStore.getState().clearCache();
+      useCorrelationStore.getState().clearCache();
+      useCheckInStore.getState().resetStatus();
 
       if (isMounted.current) {
         setSession(null);

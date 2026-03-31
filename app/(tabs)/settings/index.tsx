@@ -31,6 +31,7 @@ import { BirthData } from '../../../services/astrology/types';
 import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../../services/storage/fieldEncryption';
+import { IdentityVault } from '../../../utils/IdentityVault';
 import { logger } from '../../../utils/logger';
 import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';
@@ -154,7 +155,6 @@ export default function SettingsScreen() {
   // ── Identity state ──
   const [identityName, setIdentityName] = useState<string>('');
   const [identityBirthSummary, setIdentityBirthSummary] = useState<string>('');
-  const [identityPlace, setIdentityPlace] = useState<string>('');
   const [showBirthModal, setShowBirthModal] = useState(false);
   const [birthInitial, setBirthInitial] = useState<Partial<BirthData> & { chartName?: string } | undefined>(undefined);
   const [identityChartId, setIdentityChartId] = useState<string | null>(null);
@@ -203,7 +203,6 @@ export default function SettingsScreen() {
           const chart = charts[0];
           setIdentityChartId(chart.id);
           setIdentityName(chart.name || '');
-          setIdentityPlace(chart.birthPlace || '');
           const dateStr = chart.birthDate
             ? new Date(chart.birthDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
             : '';
@@ -346,6 +345,26 @@ export default function SettingsScreen() {
     try {
       setRestoreInProgress(true);
       await BackupService.restoreFromBackupFile(restoreUri, passphrase);
+
+      // Re-seal identity from restored chart data
+      try {
+        const charts = await localDb.getCharts();
+        if (charts.length > 0) {
+          await IdentityVault.sealIdentity({
+            name: charts[0].name ?? 'My Chart',
+            birthDate: charts[0].birthDate,
+            birthTime: charts[0].birthTime,
+            hasUnknownTime: charts[0].hasUnknownTime,
+            locationCity: charts[0].birthPlace,
+            locationLat: charts[0].latitude,
+            locationLng: charts[0].longitude,
+            timezone: charts[0].timezone,
+          });
+        }
+      } catch (sealErr) {
+        logger.error('[Settings] IdentityVault seal after restore failed:', sealErr);
+      }
+
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
@@ -450,7 +469,6 @@ export default function SettingsScreen() {
         isDeleted: false,
       });
       setIdentityName(extra?.chartName ?? chart.name ?? '');
-      setIdentityPlace(chart.birthData.place);
       const dateStr = chart.birthData.date
         ? new Date(chart.birthData.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         : '';
@@ -580,9 +598,6 @@ export default function SettingsScreen() {
                       <Text style={styles.identityName}>{identityName || 'Your Chart'}</Text>
                       {identityBirthSummary ? (
                         <Text style={styles.identityDetail}>{identityBirthSummary}</Text>
-                      ) : null}
-                      {identityPlace ? (
-                        <Text style={styles.identityDetail}>{identityPlace}</Text>
                       ) : null}
                     </View>
                   </View>

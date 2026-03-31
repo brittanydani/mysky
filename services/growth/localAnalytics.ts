@@ -22,7 +22,9 @@ export type GrowthEventName =
   | 'paywall_purchase_started'
   | 'paywall_purchase_succeeded'
   | 'paywall_restore_succeeded'
-  | 'home_quickstart_selected';
+  | 'home_quickstart_selected'
+  | 'analytics_screen_viewed'
+  | 'analytics_snapshot_shared';
 
 export interface GrowthEventRecord {
   name: GrowthEventName;
@@ -30,7 +32,7 @@ export interface GrowthEventRecord {
   metadata?: Record<string, PrimitiveValue>;
 }
 
-interface GrowthAnalyticsState {
+export interface GrowthAnalyticsState {
   schemaVersion: 1;
   counts: Record<string, number>;
   firstSeenAt: Record<string, string>;
@@ -39,14 +41,16 @@ interface GrowthAnalyticsState {
   experiments: Record<string, string>;
 }
 
-const DEFAULT_STATE: GrowthAnalyticsState = {
-  schemaVersion: 1,
-  counts: {},
-  firstSeenAt: {},
-  lastSeenAt: {},
-  recentEvents: [],
-  experiments: {},
-};
+function createDefaultState(): GrowthAnalyticsState {
+  return {
+    schemaVersion: 1,
+    counts: {},
+    firstSeenAt: {},
+    lastSeenAt: {},
+    recentEvents: [],
+    experiments: {},
+  };
+}
 
 function normalizeMetadata(metadata?: Record<string, PrimitiveValue>): Record<string, PrimitiveValue> | undefined {
   if (!metadata) return undefined;
@@ -60,7 +64,7 @@ function normalizeMetadata(metadata?: Record<string, PrimitiveValue>): Record<st
 }
 
 function buildCountKeys(name: GrowthEventName, metadata?: Record<string, PrimitiveValue>): string[] {
-  const keys = [name];
+  const keys: string[] = [name];
   if (!metadata) return keys;
 
   for (const [key, value] of Object.entries(metadata)) {
@@ -75,7 +79,7 @@ function buildCountKeys(name: GrowthEventName, metadata?: Record<string, Primiti
 async function readState(): Promise<GrowthAnalyticsState> {
   try {
     const raw = await AsyncStorage.getItem(ANALYTICS_KEY);
-    if (!raw) return DEFAULT_STATE;
+    if (!raw) return createDefaultState();
 
     const parsed = JSON.parse(raw) as Partial<GrowthAnalyticsState>;
     return {
@@ -88,7 +92,7 @@ async function readState(): Promise<GrowthAnalyticsState> {
     };
   } catch (error) {
     logger.error('[GrowthAnalytics] Failed to read state:', error);
-    return DEFAULT_STATE;
+    return createDefaultState();
   }
 }
 

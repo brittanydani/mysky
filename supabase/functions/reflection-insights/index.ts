@@ -56,7 +56,7 @@ async function isRateLimited(
   if (error) {
     // If the rate-limit table/function doesn't exist yet, allow the request
     // but log the error so you know to run the migration
-    console.error("Rate limit check failed (migration missing?):", error.message);
+    console.error("Rate limit check failed:", error.code);
     return false;
   }
 
@@ -259,8 +259,11 @@ serve(async (req: Request) => {
     }
 
     // ── Call Anthropic API ──────────────────────────────────────────────────
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "content-type": "application/json",
         "x-api-key": apiKey,
@@ -273,6 +276,7 @@ serve(async (req: Request) => {
         messages: [{ role: "user", content: buildUserPrompt(payload) }],
       }),
     });
+    clearTimeout(timeout);
 
     if (!anthropicRes.ok) {
       const errText = await anthropicRes.text().catch(() => "");
@@ -334,10 +338,8 @@ serve(async (req: Request) => {
     });
   } catch (err) {
     console.error("reflection-insights error:", err);
-    const message =
-      err instanceof Error ? err.message : "Internal server error";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
+    return new Response(JSON.stringify({ error: "Unable to generate reflection insights" }), {
+      status: 500,
       headers: { ...corsHeaders, "content-type": "application/json" },
     });
   }

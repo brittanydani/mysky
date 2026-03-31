@@ -132,6 +132,24 @@ export default function BirthDataModal({
     }
   }, [visible, initialData]);
 
+  // Cleanup pending search timeout and in-flight request on unmount or when modal closes
+  useEffect(() => {
+    if (!visible) {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    }
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+    };
+  }, [visible]);
+
   const searchLocation = (query: string) => {
     if (abortControllerRef.current) abortControllerRef.current.abort();
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);

@@ -32,7 +32,6 @@ import { MetallicIcon } from '../../components/ui/MetallicIcon';
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
 const CARD_INNER_W = width - 88;
-const FONT_SERIF = Platform.select({ ios: 'Georgia', android: 'serif' });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

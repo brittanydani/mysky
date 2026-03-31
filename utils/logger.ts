@@ -36,6 +36,9 @@ function redact(value: unknown): unknown {
         'email','phone','address',
         'birthchart','natalchart','birth_chart','natal_chart',
         'gemini_key','revenuecat_key',
+        'userid','user_id','uuid','user_uuid',
+        'sessionid','session_id','nonce',
+        'transactionid','transaction_id',
       ];
 
       if (!Array.isArray(obj)) {

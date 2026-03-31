@@ -45,6 +45,14 @@ export default function AuthRequiredModal({ visible }: Props) {
       Alert.alert('Missing fields', 'Please enter your email and password.');
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Password too short', 'Password must be at least 6 characters.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -72,7 +80,11 @@ export default function AuthRequiredModal({ visible }: Props) {
         // AuthContext SIGNED_IN event fires → session updates → modal hides automatically
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Something went wrong';
+      // Avoid leaking Supabase error details (e.g. "Invalid login credentials"
+      // vs "Email not confirmed") which would enable email enumeration.
+      const message = mode === 'sign-in'
+        ? 'Sign-in failed. Please check your email and password.'
+        : (err instanceof Error ? err.message : 'Something went wrong');
       Alert.alert('Error', message);
     } finally {
       setLoading(false);
@@ -119,6 +131,8 @@ export default function AuthRequiredModal({ visible }: Props) {
                 value={password}
                 onChangeText={setPassword}
                 accessibilityLabel="Password"
+                returnKeyType="done"
+                onSubmitEditing={handleAuth}
               />
 
               <Pressable onPress={handleAuth} disabled={loading} style={styles.btnWrap}

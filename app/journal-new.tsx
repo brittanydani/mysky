@@ -22,6 +22,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { localDb } from '../services/storage/localDb';
+import { logger } from '../utils/logger';
 import { generateId } from '../services/storage/models';
 import type { JournalEntry } from '../services/storage/models';
 
@@ -109,7 +110,7 @@ export default function NewJournalEntryScreen() {
       };
       await localDb.saveJournalEntry(entry);
     } catch (e) {
-      console.error('Failed to seal entry:', e);
+      logger.error('Failed to seal entry:', e);
     }
 
     setTimeout(() => {

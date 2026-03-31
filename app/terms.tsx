@@ -96,7 +96,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Accounts</Text>
             <Text style={styles.paragraph}>
-              Account creation is entirely optional and required only for the AI Reflection Insights feature. Accounts are managed via Supabase Auth (email and password). All other features work without an account.
+              A free account is required to use MySky. Accounts are managed via Supabase Auth (email and password) and are used to keep your reflections safe and synced across devices. A Deeper Sky subscription is required for premium features.
             </Text>
 
             <LinearGradient 

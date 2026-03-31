@@ -64,11 +64,13 @@ export default function BackupPassphraseModal({
 
   const validation = useMemo(() => {
     const trimmed = passphrase.trim();
-    const isTooShort = trimmed.length > 0 && trimmed.length < 8;
+    // Backup requires 12+ chars; restore accepts 8+ for backward compatibility
+    const minLength = mode === 'backup' ? 12 : 8;
+    const isTooShort = trimmed.length > 0 && trimmed.length < minLength;
     const mismatch = needsConfirm && confirm.length > 0 && trimmed !== confirm;
-    const canSubmit = trimmed.length >= 8 && (!needsConfirm || (trimmed === confirm)) && !submitting;
+    const canSubmit = trimmed.length >= minLength && (!needsConfirm || (trimmed === confirm)) && !submitting;
     return { trimmed, isTooShort, mismatch, canSubmit };
-  }, [passphrase, confirm, needsConfirm, submitting]);
+  }, [passphrase, confirm, needsConfirm, submitting, mode]);
 
   const handleSubmit = async () => {
     if (!validation.canSubmit) return;
@@ -122,7 +124,7 @@ export default function BackupPassphraseModal({
                     style={[styles.input, validation.isTooShort && styles.inputError]}
                     value={passphrase}
                     onChangeText={setPassphrase}
-                    placeholder="At least 8 characters"
+                    placeholder={mode === 'backup' ? 'At least 12 characters' : 'Enter passphrase'}
                     placeholderTextColor={theme.textMuted}
                     secureTextEntry
                     autoCapitalize="none"
@@ -133,7 +135,9 @@ export default function BackupPassphraseModal({
                     }}
                   />
                   {validation.isTooShort && (
-                    <MetallicText color={PALETTE.copper} style={styles.warningText}>Required: 8 characters minimum</MetallicText>
+                    <MetallicText color={PALETTE.copper} style={styles.warningText}>
+                      Required: {mode === 'backup' ? '12' : '8'} characters minimum
+                    </MetallicText>
                   )}
                 </View>
 

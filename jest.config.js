@@ -19,5 +19,6 @@ module.exports = {
     '^@noble/hashes/hmac$': '<rootDir>/__mocks__/noble-hashes-hmac.js',
     '^@noble/hashes/sha2$': '<rootDir>/__mocks__/noble-hashes-sha2.js',
     '^@noble/hashes/utils$': '<rootDir>/__mocks__/noble-hashes-utils.js',
+    '^@noble/hashes/pbkdf2$': '<rootDir>/__mocks__/noble-hashes-pbkdf2.js',
   },
 };

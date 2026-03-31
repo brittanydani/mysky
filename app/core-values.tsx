@@ -75,8 +75,9 @@ export default function CoreValuesScreen() {
       AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
         if (raw) {
           try {
-            setState(JSON.parse(raw));
-            if (JSON.parse(raw).topFive.length > 0) setSaved(true);
+            const parsed = JSON.parse(raw);
+            setState(parsed);
+            if (parsed.topFive?.length > 0) setSaved(true);
           } catch {}
         }
       });

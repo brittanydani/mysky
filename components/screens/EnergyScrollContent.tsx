@@ -40,12 +40,12 @@ import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import ChakraWheelComponent from '../ui/ChakraWheel';
 import { SkiaChakraGlyph } from '../ui/SkiaChakraNode';
+import { useCorrelationStore } from '../../store/correlationStore';
+import { updateWidgetData } from '../../services/widgets/widgetDataService';
 
 const CorrelationGyroscope = React.lazy(() =>
   import('../ui/CorrelationGyroscope').then(m => ({ default: m.CorrelationGyroscope }))
 );
-import { useCorrelationStore } from '../../store/correlationStore';
-import { updateWidgetData } from '../../services/widgets/widgetDataService';
 
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');

@@ -3,6 +3,8 @@ import { localDb } from '../storage/localDb';
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
+import { FieldEncryptionService } from '../storage/fieldEncryption';
+import { IdentityVault } from '../../utils/IdentityVault';
 import {
   ConsentData,
   ConsentRecord,
@@ -256,6 +258,14 @@ export class PrivacyComplianceManager {
       // Core values contains psychological profiling data — delete via EncryptedAsyncStorage.
       EncryptedAsyncStorage.removeItem('@mysky:core_values'),
     ]);
+
+    // Destroy the data encryption key and identity vault so no plaintext can be recovered
+    await IdentityVault.destroyIdentity().catch((e: unknown) =>
+      secureStorage.auditDataAccess('gdpr_destroy_identity_error', { error: String(e) })
+    );
+    await FieldEncryptionService.destroyDek().catch((e: unknown) =>
+      secureStorage.auditDataAccess('gdpr_destroy_dek_error', { error: String(e) })
+    );
 
     return {
       success: true,

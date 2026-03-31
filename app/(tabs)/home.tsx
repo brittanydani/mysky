@@ -141,6 +141,12 @@ export default function HomeScreen() {
   // Weekly check-ins — used by 7-day Stability Map
   const [weeklyCheckIns, setWeeklyCheckIns] = useState<DailyCheckIn[]>([]);
 
+  // True only when a check-in exists for today's date
+  const hasDataToday = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return weeklyCheckIns.some(c => c.date === today);
+  }, [weeklyCheckIns]);
+
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
 
@@ -423,15 +429,23 @@ export default function HomeScreen() {
                 <MetallicText style={styles.trendTextScore} color="#8CBEAA">Score</MetallicText>
               </View>
             </View>
-            <View style={styles.scoreMain}>
-              <Text style={styles.scoreValue}>{balanceScore.toFixed(1)}</Text>
-              <Text style={styles.scoreMax}>/ 10</Text>
-            </View>
-            <View style={styles.pillsRow}>
-              <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
-              <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
-              <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
-            </View>
+            {hasDataToday ? (
+              <>
+                <View style={styles.scoreMain}>
+                  <Text style={styles.scoreValue}>{balanceScore.toFixed(1)}</Text>
+                  <Text style={styles.scoreMax}>/ 10</Text>
+                </View>
+                <View style={styles.pillsRow}>
+                  <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
+                  <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
+                  <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
+                </View>
+              </>
+            ) : (
+              <View style={styles.scoreMain}>
+                <Text style={styles.noDataText}>No data yet</Text>
+              </View>
+            )}
           </Animated.View>
 
           {/* ── 7-Day Internal Weather ── */}
@@ -1007,6 +1021,12 @@ const styles = StyleSheet.create({
     fontSize: 60,
     color: '#FFFFFF',
     fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }),
+  },
+  noDataText: {
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.4)',
+    fontStyle: 'italic',
+    marginBottom: 20,
   },
   scoreMax: {
     fontSize: 18,

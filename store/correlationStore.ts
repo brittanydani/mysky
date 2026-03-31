@@ -28,6 +28,7 @@ interface CorrelationStore {
   isFetching:   boolean;
   error:        string | null;
   syncCorrelations: () => Promise<void>;
+  clearCache: () => void;
 }
 
 // Empty until real user data arrives from the RPC.
@@ -70,4 +71,6 @@ export const useCorrelationStore = create<CorrelationStore>((set) => ({
 
     set({ correlations: data as CorrelationPair[], isFetching: false });
   },
+
+  clearCache: () => set({ correlations: INITIAL_CORRELATIONS, error: null }),
 }));

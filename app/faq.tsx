@@ -54,7 +54,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <View style={styles.faqCard}>
             <Text style={styles.question}>Do I need an account to use MySky?</Text>
             <Text style={styles.answer}>
-              Yes. A free account is required to use MySky. Sign-up takes only an email address and is used to sync and protect your data. All core features — mood tracking, journaling, sleep logging, birth chart, and relationships — are available on the free plan. A Deeper Sky subscription is required for premium features such as dream analysis, AI Reflection Insights, and encrypted backup.
+              Yes. A free account (email and password) is required to use MySky. It keeps your reflections safe and synced across devices. Sign-up takes only a minute. All core features — mood tracking, journaling, sleep logging, birth chart, and relationships — are available on the free plan. A Deeper Sky subscription is required for premium features such as dream analysis, AI Reflection Insights, and encrypted backup.
             </Text>
 
             <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>

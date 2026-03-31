@@ -26,6 +26,7 @@ interface CircadianStore {
   isFetching: boolean;
   error: string | null;
   syncRhythm: () => Promise<void>;
+  clearCache: () => void;
 }
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
@@ -72,4 +73,6 @@ export const useCircadianStore = create<CircadianStore>((set) => ({
 
     set({ grid: data, isFetching: false });
   },
+
+  clearCache: () => set({ grid: generateDefaultGrid(), error: null }),
 }));

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { toLocalDateString } from '../utils/dateUtils';
 
 export type CheckInSaveStatus = 'idle' | 'success' | 'error';
 
@@ -12,14 +13,6 @@ interface CheckInStore {
   saveDailyLog: (moodValue: number) => Promise<void>;
   loadTodayCheckIn: () => Promise<number | null>;
   resetStatus: () => void;
-}
-
-function getTodayDateString() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 function clampMood(value: number) {
@@ -60,7 +53,7 @@ export const useCheckInStore = create<CheckInStore>((set) => ({
           {
             user_id:    user.id,
             mood_value: safeMood,
-            log_date:   getTodayDateString(),
+            log_date:   toLocalDateString(),
           },
           { onConflict: 'user_id,log_date' }
         );

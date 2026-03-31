@@ -8,15 +8,37 @@ import { gcm } from '@noble/ciphers/aes.js';
 import { pbkdf2Async } from '@noble/hashes/pbkdf2';
 import { sha256 } from '@noble/hashes/sha2';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { localDb } from './localDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
+import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEntry } from './models';
 import type { SavedInsight } from './insightHistory';
+import { logger } from '../../utils/logger';
 
 /* ============================================================================
  * Types
  * ============================================================================
  */
+
+/**
+ * AsyncStorage keys that hold user-generated personal data.
+ * Encrypted keys use EncryptedAsyncStorage (DEK-based AES-256-GCM).
+ * Plain keys use raw AsyncStorage.
+ */
+const ENCRYPTED_ASYNC_KEYS = [
+  '@mysky:archetype_profile',
+  '@mysky:cognitive_style',
+  '@mysky:somatic_entries',
+  '@mysky:trigger_events',
+  '@mysky:relationship_patterns',
+  '@mysky:daily_reflections',
+] as const;
+
+const PLAIN_ASYNC_KEYS = [
+  '@mysky:core_values',
+  'mysky_custom_journal_tags',
+] as const;
 
 type BackupPayload = {
   schemaVersion: 1;
@@ -28,6 +50,8 @@ type BackupPayload = {
   sleepEntries: SleepEntry[];
   checkIns?: import('../patterns/types').DailyCheckIn[];
   settings: AppSettings | null;
+  /** Decrypted user profile data from AsyncStorage (added in backup v1.1). */
+  asyncStorageData?: Record<string, string>;
 };
 
 type BackupEnvelope = {
@@ -128,8 +152,8 @@ export class BackupService {
   static async createEncryptedBackupFile(
     passphrase: string
   ): Promise<{ uri: string; filename: string }> {
-    if (!passphrase || passphrase.length < 8) {
-      throw new Error('Passphrase must be at least 8 characters long');
+    if (!passphrase || passphrase.trim().length < 12) {
+      throw new Error('Passphrase must be at least 12 characters long');
     }
 
     // Guard: refuse to create a backup when the encryption key is missing.
@@ -183,6 +207,27 @@ export class BackupService {
       );
     }
 
+    // Gather user profile data from AsyncStorage (decrypted for backup)
+    const asyncStorageData: Record<string, string> = {};
+    await Promise.all([
+      ...ENCRYPTED_ASYNC_KEYS.map(async (key) => {
+        try {
+          const val = await EncryptedAsyncStorage.getItem(key);
+          if (val) asyncStorageData[key] = val;
+        } catch (e) {
+          logger.error(`[Backup] Failed to read encrypted key ${key}:`, e);
+        }
+      }),
+      ...PLAIN_ASYNC_KEYS.map(async (key) => {
+        try {
+          const val = await AsyncStorage.getItem(key);
+          if (val) asyncStorageData[key] = val;
+        } catch (e) {
+          logger.error(`[Backup] Failed to read plain key ${key}:`, e);
+        }
+      }),
+    ]);
+
     const payload: BackupPayload = {
       schemaVersion: 1,
       exportedAt: new Date().toISOString(),
@@ -193,9 +238,17 @@ export class BackupService {
       sleepEntries,
       checkIns,
       settings,
+      asyncStorageData: Object.keys(asyncStorageData).length > 0 ? asyncStorageData : undefined,
     };
 
     const plaintext = encodeUtf8(JSON.stringify(payload));
+
+    const MAX_BACKUP_SIZE = 50 * 1024 * 1024;
+    if (plaintext.length > MAX_BACKUP_SIZE) {
+      throw new Error(
+        `Backup too large (${Math.round(plaintext.length / 1024 / 1024)} MB). The maximum is 50 MB.`
+      );
+    }
 
     const salt = await Crypto.getRandomBytesAsync(SALT_LEN);
     const iv = await Crypto.getRandomBytesAsync(IV_LEN);
@@ -204,6 +257,8 @@ export class BackupService {
     await new Promise<void>((r) => setTimeout(r, 50));
 
     const key = await deriveAesKeyPBKDF2(passphrase, salt);
+    // Yield before synchronous AES-GCM so the UI remains responsive
+    await new Promise<void>((r) => setTimeout(r, 0));
     const ciphertext = await encryptAesGcm(plaintext, key, iv);
 
     const envelope: BackupEnvelope = {
@@ -246,7 +301,8 @@ export class BackupService {
     uri: string,
     passphrase: string
   ): Promise<void> {
-    if (!passphrase || passphrase.length < 8) {
+    // Accept 8-char minimum for backward compatibility with older backups
+    if (!passphrase || passphrase.trim().length < 8) {
       throw new Error('Passphrase must be at least 8 characters long');
     }
 
@@ -288,6 +344,8 @@ export class BackupService {
 
     const key = await deriveAesKeyPBKDF2(passphrase, salt);
 
+    // Yield before synchronous AES-GCM so the UI remains responsive
+    await new Promise<void>((r) => setTimeout(r, 0));
     let plaintextBytes: Uint8Array;
     try {
       plaintextBytes = await decryptAesGcm(ciphertext, key, iv);
@@ -341,6 +399,26 @@ export class BackupService {
 
     if (payload.settings) {
       await localDb.saveSettings(payload.settings);
+    }
+
+    // Restore AsyncStorage user profile data (re-encrypts with new device DEK)
+    if (payload.asyncStorageData) {
+      const ALLOWED_ASYNC_KEYS = new Set<string>([
+        ...(ENCRYPTED_ASYNC_KEYS as readonly string[]),
+        ...(PLAIN_ASYNC_KEYS as readonly string[]),
+      ]);
+      for (const [key, value] of Object.entries(payload.asyncStorageData)) {
+        if (!ALLOWED_ASYNC_KEYS.has(key)) continue;
+        try {
+          if ((ENCRYPTED_ASYNC_KEYS as readonly string[]).includes(key)) {
+            await EncryptedAsyncStorage.setItem(key, value);
+          } else {
+            await AsyncStorage.setItem(key, value);
+          }
+        } catch (e) {
+          logger.error(`[Restore] Failed to restore AsyncStorage key ${key}:`, e);
+        }
+      }
     }
 
     await localDb.setMigrationMarker('data_migration_completed');

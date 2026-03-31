@@ -62,11 +62,12 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         set({ isPro: revenueCatService.isPremium(info) });
       }
 
-      // Keep isPro in sync whenever RevenueCat pushes an update
-      // (covers background receipt refresh, subscription renewal, etc.)
-      Purchases.addCustomerInfoUpdateListener((updatedInfo) => {
+      // Keep isPro in sync whenever RevenueCat pushes an update.
+      // Store the reference so React Native Purchases can match and remove it if needed.
+      const listener = (updatedInfo: import('react-native-purchases').CustomerInfo) => {
         set({ isPro: revenueCatService.isPremium(updatedInfo) });
-      });
+      };
+      Purchases.addCustomerInfoUpdateListener(listener);
 
       set({ isConfigured: true });
     } catch (e) {

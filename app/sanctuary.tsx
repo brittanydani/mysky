@@ -6,6 +6,7 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { localDb } from '../services/storage/localDb';
 import { generateId } from '../services/storage/models';
 import * as Haptics from 'expo-haptics';
+import { logger } from '../utils/logger';
 
 export default function SanctuaryWorkspace() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function SanctuaryWorkspace() {
         isDeleted: false,
       });
     } catch (e) {
-      console.error('Failed to seal sanctuary entry:', e);
+      logger.error('Failed to seal sanctuary entry:', e);
     }
     router.back();
   };

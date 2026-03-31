@@ -55,6 +55,14 @@ const ALLOWED_NOTIFICATION_ROUTES = new Set([
   '/journal-new',
   '/sanctuary',
   '/premium',
+  '/inner-world',
+  '/relationship-patterns',
+  '/past-reflections',
+  '/trigger-log',
+  '/somatic-map',
+  '/body-nervous',
+  '/cognitive-style',
+  '/archetypes',
 ]);
 
 // ── Cinematic Error Boundary ──
@@ -140,13 +148,21 @@ function AppShell() {
   const [initTimedOut, setInitTimedOut] = useState(false);
 
   const [needsPrivacyConsent, setNeedsPrivacyConsent] = useState(false);
+  // Terms consent is tracked alongside privacy consent (combined modal).
+  // The value is unused but setters maintain state for future separation.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [needsTermsConsent, setNeedsTermsConsent] = useState(false);
 
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  // Suppresses AuthRequiredModal during the window between onboardingComplete
+  // becoming true and the Supabase SIGNED_IN event updating session in AuthContext.
+  const [completingOnboarding, setCompletingOnboarding] = useState(false);
 
   // Prevent double-running the heavy init in edge cases
   const didRunPostConsentInitRef = useRef(false);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Prevent double-navigation after onboarding completes
+  const didNavigatePostOnboarding = useRef(false);
 
   const checkIfOnboardingCanBeSkipped = async () => {
     try {
@@ -249,7 +265,9 @@ function AppShell() {
     setInitTimedOut(false);
     setCheckingConsent(true);
     setDbReady(false);
+    setCompletingOnboarding(false);
     didRunPostConsentInitRef.current = false;
+    didNavigatePostOnboarding.current = false;
 
     initTimeoutRef.current = setTimeout(() => {
       setInitTimedOut(true);
@@ -360,7 +378,32 @@ function AppShell() {
     }
   };
 
+  // Reset the navigation guard whenever session is lost (sign-out) so that
+  // signing back in via AuthRequiredModal correctly navigates to home.
+  useEffect(() => {
+    if (!session) {
+      didNavigatePostOnboarding.current = false;
+    }
+  }, [session]);
+
+  // Navigate to home once both onboarding is complete and session is confirmed.
+  // Using an effect avoids a race where handleOnboardingComplete fires before
+  // AuthContext has processed the SIGNED_IN event from the onboarding auth step.
+  useEffect(() => {
+    if (
+      onboardingComplete &&
+      !!session &&
+      !needsPrivacyConsent &&
+      !didNavigatePostOnboarding.current
+    ) {
+      didNavigatePostOnboarding.current = true;
+      setCompletingOnboarding(false);
+      router.replace('/(tabs)/home');
+    }
+  }, [onboardingComplete, session, needsPrivacyConsent, router]);
+
   const handleOnboardingComplete = async () => {
+    setCompletingOnboarding(true);
     setOnboardingComplete(true);
 
     try {
@@ -369,10 +412,7 @@ function AppShell() {
     } catch (e) {
       logger.error('[RootLayout] Failed to track onboarding_completed:', e);
     }
-
-    if (!needsPrivacyConsent) {
-      router.replace('/(tabs)/home');
-    }
+    // Navigation is handled by the useEffect above once session confirms.
   };
 
   if (checkingConsent || !dbReady) {
@@ -459,6 +499,7 @@ function AppShell() {
           {/* Auth gate — shown after onboarding when no session exists */}
           <AuthRequiredModal
             visible={
+              !completingOnboarding &&
               !needsPrivacyConsent &&
               onboardingComplete &&
               !authLoading &&

@@ -4,6 +4,7 @@
 // with daily reflection questions embedded per-category.
 
 import React, { useCallback, useState, useRef } from 'react';
+import { logger } from '../utils/logger';
 import {
   View,
   Text,
@@ -192,7 +193,7 @@ export default function InnerWorldScreen() {
           setStreak(currentStreak);
           setTotalDays(new Set(reflData.answers.map(a => a.date)).size);
         } catch (e) {
-          console.warn('[InnerWorld] Failed to load progress', e);
+          logger.warn('[InnerWorld] Failed to load progress', e);
         }
       };
 

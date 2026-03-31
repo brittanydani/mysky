@@ -57,6 +57,18 @@ export class EncryptionManager {
   }
 
   /**
+   * Constant-time string comparison to prevent timing attacks on HMAC validation.
+   */
+  private static timingSafeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+  }
+
+  /**
    * Sign data with HMAC-SHA256 for tamper detection.
    * NOTE: The payload.data field is plaintext JSON — confidentiality
    * relies on SecureStore's OS-level Keychain/Keystore encryption.
@@ -132,9 +144,9 @@ export class EncryptionManager {
     if (!payload?.data || !payload?.digest) return false;
     try {
       const hmacKey = await this.getHmacKey();
-      // Check with proper HMAC-SHA256 first
+      // Check with proper HMAC-SHA256 first (constant-time comparison)
       const expectedDigest = this.hmacSha256(hmacKey, payload.data);
-      if (expectedDigest === payload.digest) return true;
+      if (this.timingSafeEqual(expectedDigest, payload.digest)) return true;
 
       // Backward compat: check legacy SHA256(key + ':' + data) digest.
       // If it matches, the data is valid but uses the old scheme —
@@ -143,7 +155,7 @@ export class EncryptionManager {
         Crypto.CryptoDigestAlgorithm.SHA256,
         hmacKey + ':' + payload.data
       );
-      if (legacyDigest === payload.digest) return true;
+      if (this.timingSafeEqual(legacyDigest, payload.digest)) return true;
 
       return false;
     } catch {
