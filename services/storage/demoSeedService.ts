@@ -22,7 +22,7 @@ import { logger } from '../../utils/logger';
 const DEMO_EMAIL = 'brittanyapps@outlook.com';
 
 // Flag stored in AsyncStorage to prevent re-seeding on subsequent logins
-const SEED_FLAG_KEY = '@mysky:demo_seeded';
+const SEED_FLAG_KEY = '@mysky:demo_seeded_v3';
 // Tracks the last date a daily entry was seeded (YYYY-MM-DD)
 const DAILY_SEED_KEY = '@mysky:demo_last_seeded';
 
@@ -37,7 +37,7 @@ function isoDate(d: Date): string {
 }
 
 function daysBefore(n: number): Date {
-  const d = new Date('2026-03-30T12:00:00.000Z');
+  const d = new Date();
   d.setDate(d.getDate() - n);
   return d;
 }
@@ -54,7 +54,8 @@ function hashDate(dateStr: string): number {
 // ─── Static seed data ─────────────────────────────────────────────────────────
 
 const CHART_ID = uid();
-const CHART_CREATED = new Date('2026-03-16T09:00:00.000Z').toISOString();
+const SEED_DAYS = 91; // ~3 months of history
+const CHART_CREATED = new Date('2025-12-31T09:00:00.000Z').toISOString();
 
 const MOON_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
 const LUNAR_PHASES: MoonPhaseKeyTag[] = ['waxing_crescent','first_quarter','waxing_gibbous','full','waning_gibbous','last_quarter','waning_crescent','new'];
@@ -462,9 +463,9 @@ export const DemoSeedService = {
       });
     }
 
-    // ── 14 days of historical entries (reuses _seedDay for DRY logic) ───────
-    for (let i = 0; i < 14; i++) {
-      const d = daysBefore(13 - i);
+    // ── 91 days (~3 months) of historical entries ───────────────────────────
+    for (let i = 0; i < SEED_DAYS; i++) {
+      const d = daysBefore(SEED_DAYS - 1 - i);
       await DemoSeedService._seedDay(isoDate(d), d, activeChartId, i);
     }
 
@@ -502,29 +503,44 @@ export const DemoSeedService = {
     }));
 
     await EncryptedAsyncStorage.setItem('@mysky:somatic_entries', JSON.stringify([
-      { id: uid(), date: new Date('2026-03-17T10:00:00Z').toISOString(), region: 'chest', emotion: 'anxiety', intensity: 3, note: 'Tightness before a difficult conversation.' },
-      { id: uid(), date: new Date('2026-03-19T08:00:00Z').toISOString(), region: 'belly', emotion: 'anticipation', intensity: 4, note: 'Excited about something new starting.' },
-      { id: uid(), date: new Date('2026-03-21T12:00:00Z').toISOString(), region: 'heart', emotion: 'longing', intensity: 4, note: 'Missed someone I love.' },
-      { id: uid(), date: new Date('2026-03-23T18:00:00Z').toISOString(), region: 'jaw', emotion: 'frustration', intensity: 3, note: 'Old pattern I caught in the moment.' },
-      { id: uid(), date: new Date('2026-03-25T15:00:00Z').toISOString(), region: 'legs', emotion: 'restlessness', intensity: 3, note: 'Needed to move more than I did.' },
-      { id: uid(), date: new Date('2026-03-27T10:00:00Z').toISOString(), region: 'chest', emotion: 'grief', intensity: 3, note: 'Something from the past surfaced.' },
-      { id: uid(), date: new Date('2026-03-29T11:00:00Z').toISOString(), region: 'belly', emotion: 'excitement', intensity: 4, note: 'Working on something meaningful.' },
+      { id: uid(), date: new Date('2026-01-05T09:00:00Z').toISOString(), region: 'chest', emotion: 'anxiety', intensity: 3, note: 'Tight chest going into the week. New year pressure.' },
+      { id: uid(), date: new Date('2026-01-12T11:00:00Z').toISOString(), region: 'belly', emotion: 'anticipation', intensity: 4, note: 'Excited about a project taking shape.' },
+      { id: uid(), date: new Date('2026-01-20T18:00:00Z').toISOString(), region: 'jaw', emotion: 'frustration', intensity: 3, note: 'Old pattern I caught in real time for once.' },
+      { id: uid(), date: new Date('2026-01-28T10:00:00Z').toISOString(), region: 'heart', emotion: 'longing', intensity: 4, note: 'Missed someone I used to feel close to.' },
+      { id: uid(), date: new Date('2026-02-05T08:00:00Z').toISOString(), region: 'legs', emotion: 'restlessness', intensity: 3, note: 'Body wanted to move. Sat too long.' },
+      { id: uid(), date: new Date('2026-02-12T15:00:00Z').toISOString(), region: 'chest', emotion: 'grief', intensity: 3, note: 'A memory surfaced I hadn\'t expected.' },
+      { id: uid(), date: new Date('2026-02-19T12:00:00Z').toISOString(), region: 'belly', emotion: 'excitement', intensity: 4, note: 'Starting to feel momentum with something I care about.' },
+      { id: uid(), date: new Date('2026-02-26T19:00:00Z').toISOString(), region: 'shoulders', emotion: 'tension', intensity: 3, note: 'Carrying too much without asking for help.' },
+      { id: uid(), date: new Date('2026-03-05T10:00:00Z').toISOString(), region: 'chest', emotion: 'openness', intensity: 4, note: 'Felt genuinely relaxed for the first time in weeks.' },
+      { id: uid(), date: new Date('2026-03-12T08:00:00Z').toISOString(), region: 'belly', emotion: 'anticipation', intensity: 4, note: 'Big thing coming up. Body knew before I did.' },
+      { id: uid(), date: new Date('2026-03-19T12:00:00Z').toISOString(), region: 'heart', emotion: 'warmth', intensity: 4, note: 'A genuine moment of connection today.' },
+      { id: uid(), date: new Date('2026-03-26T15:00:00Z').toISOString(), region: 'jaw', emotion: 'frustration', intensity: 2, note: 'Noticed and let it go faster than usual.' },
+      { id: uid(), date: new Date('2026-03-29T11:00:00Z').toISOString(), region: 'belly', emotion: 'excitement', intensity: 4, note: 'Working on something that feels truly meaningful.' },
     ]));
 
     await EncryptedAsyncStorage.setItem('@mysky:trigger_events', JSON.stringify([
-      { id: uid(), timestamp: new Date('2026-03-18T16:00:00Z').getTime(), mode: 'nourish', event: 'Long walk in nature', nsState: 'ventral_vagal', sensations: ['warmth in chest','shoulders dropping'] },
-      { id: uid(), timestamp: new Date('2026-03-20T10:00:00Z').getTime(), mode: 'nourish', event: 'Creative work with no agenda', nsState: 'ventral_vagal', sensations: ['open chest','easy breathing'] },
-      { id: uid(), timestamp: new Date('2026-03-22T19:00:00Z').getTime(), mode: 'nourish', event: 'Deep conversation with a trusted friend', nsState: 'ventral_vagal', sensations: ['heart warmth','full breath'] },
-      { id: uid(), timestamp: new Date('2026-03-24T15:00:00Z').getTime(), mode: 'nourish', event: 'Morning movement routine', nsState: 'ventral_vagal', sensations: ['grounded legs','calm energy'] },
-      { id: uid(), timestamp: new Date('2026-03-26T12:00:00Z').getTime(), mode: 'nourish', event: 'Saying something honest and being heard', nsState: 'ventral_vagal', sensations: ['relief in chest','lighter shoulders'] },
-      { id: uid(), timestamp: new Date('2026-03-19T20:00:00Z').getTime(), mode: 'drain', event: 'Overcommitting, then regretting it', nsState: 'sympathetic', sensations: ['stomach knotting','jaw clenching'] },
-      { id: uid(), timestamp: new Date('2026-03-23T09:00:00Z').getTime(), mode: 'drain', event: 'Poor sleep', nsState: 'dorsal_vagal', sensations: ['heaviness','foggy head'] },
+      { id: uid(), timestamp: new Date('2026-01-07T16:00:00Z').getTime(), mode: 'nourish', event: 'Long walk in nature', nsState: 'ventral_vagal', sensations: ['warmth in chest','shoulders dropping'] },
+      { id: uid(), timestamp: new Date('2026-01-15T10:00:00Z').getTime(), mode: 'nourish', event: 'Creative work with no agenda', nsState: 'ventral_vagal', sensations: ['open chest','easy breathing'] },
+      { id: uid(), timestamp: new Date('2026-01-22T19:00:00Z').getTime(), mode: 'drain', event: 'Overcommitting, then regretting it', nsState: 'sympathetic', sensations: ['stomach knotting','jaw clenching'] },
+      { id: uid(), timestamp: new Date('2026-01-29T09:00:00Z').getTime(), mode: 'drain', event: 'Poor sleep after a hard day', nsState: 'dorsal_vagal', sensations: ['heaviness','foggy head'] },
+      { id: uid(), timestamp: new Date('2026-02-04T19:00:00Z').getTime(), mode: 'nourish', event: 'Deep conversation with a trusted friend', nsState: 'ventral_vagal', sensations: ['heart warmth','full breath'] },
+      { id: uid(), timestamp: new Date('2026-02-11T15:00:00Z').getTime(), mode: 'nourish', event: 'Morning movement routine', nsState: 'ventral_vagal', sensations: ['grounded legs','calm energy'] },
+      { id: uid(), timestamp: new Date('2026-02-18T12:00:00Z').getTime(), mode: 'drain', event: 'Unexpected conflict with no resolution', nsState: 'sympathetic', sensations: ['chest tightening','held breath'] },
+      { id: uid(), timestamp: new Date('2026-02-25T20:00:00Z').getTime(), mode: 'nourish', event: 'Saying something honest and being heard', nsState: 'ventral_vagal', sensations: ['relief in chest','lighter shoulders'] },
+      { id: uid(), timestamp: new Date('2026-03-04T16:00:00Z').getTime(), mode: 'nourish', event: 'Slow morning with no plans', nsState: 'ventral_vagal', sensations: ['softness in body','open breathing'] },
+      { id: uid(), timestamp: new Date('2026-03-11T10:00:00Z').getTime(), mode: 'drain', event: 'Scrolling too long before sleep', nsState: 'dorsal_vagal', sensations: ['flat energy','disconnected'] },
+      { id: uid(), timestamp: new Date('2026-03-18T19:00:00Z').getTime(), mode: 'nourish', event: 'Being fully present in a meaningful moment', nsState: 'ventral_vagal', sensations: ['alive in chest','eyes soft'] },
+      { id: uid(), timestamp: new Date('2026-03-25T09:00:00Z').getTime(), mode: 'nourish', event: 'Morning movement routine', nsState: 'ventral_vagal', sensations: ['grounded legs','calm energy'] },
     ]));
 
     await EncryptedAsyncStorage.setItem('@mysky:relationship_patterns', JSON.stringify([
-      { id: uid(), date: new Date('2026-03-17T17:00:00Z').toISOString(), note: 'I tend to become the emotional caretaker in friendships before I\'ve established my own ground. I watched myself do it today with awareness for the first time.', tags: ['over-giving','caretaking','awareness'] },
-      { id: uid(), date: new Date('2026-03-21T21:00:00Z').toISOString(), note: 'Something I\'m learning: I attach a lot of meaning to how quickly someone responds to me. Working on tracking that without acting from it.', tags: ['anxious-attachment','noticing','growth'] },
-      { id: uid(), date: new Date('2026-03-24T18:00:00Z').toISOString(), note: 'I have a pattern of testing people before I trust them — small tests they don\'t know they\'re taking. Starting to see how this creates distance.', tags: ['trust','testing','vulnerability'] },
+      { id: uid(), date: new Date('2026-01-08T17:00:00Z').toISOString(), note: 'I tend to become the emotional caretaker in friendships before I\'ve established my own ground. I watched myself do it today with awareness for the first time.', tags: ['over-giving','caretaking','awareness'] },
+      { id: uid(), date: new Date('2026-01-21T21:00:00Z').toISOString(), note: 'Something I\'m learning: I attach a lot of meaning to how quickly someone responds to me. Working on tracking that without acting from it.', tags: ['anxious-attachment','noticing','growth'] },
+      { id: uid(), date: new Date('2026-02-03T18:00:00Z').toISOString(), note: 'I have a pattern of testing people before I trust them — small tests they don\'t know they\'re taking. Starting to see how this creates distance.', tags: ['trust','testing','vulnerability'] },
+      { id: uid(), date: new Date('2026-02-14T20:00:00Z').toISOString(), note: 'Valentine\'s Day made me aware of how much I perform connection instead of feeling it. Something to sit with.', tags: ['performance','authenticity','intimacy'] },
+      { id: uid(), date: new Date('2026-02-24T17:00:00Z').toISOString(), note: 'I said no to something today and didn\'t spiral about it afterward. That\'s genuinely new. Boundaries without guilt.', tags: ['boundaries','self-respect','growth'] },
+      { id: uid(), date: new Date('2026-03-05T21:00:00Z').toISOString(), note: 'Realized I\'ve been keeping certain people at a precise emotional distance — close enough to feel connected, far enough to stay safe. Noticing the design of it.', tags: ['avoidance','distance-regulation','awareness'] },
+      { id: uid(), date: new Date('2026-03-17T18:00:00Z').toISOString(), note: 'Let someone see me struggling today instead of managing the moment. It felt uncomfortable and also necessary.', tags: ['vulnerability','authenticity','trust'] },
       { id: uid(), date: new Date('2026-03-27T20:00:00Z').toISOString(), note: 'I showed up for someone today without needing anything in return and it felt clean. That\'s who I want to be — giving without ledger-keeping.', tags: ['generosity','secure-attachment','healing'] },
     ]));
 
@@ -532,8 +548,8 @@ export const DemoSeedService = {
     const reflectionAnswers: object[] = [];
     const AGREEMENT = ['Not True','Somewhat True','True','Very True'];
     const FREQUENCY = ['Not at All','Some of the Time','Almost Always','Always'];
-    for (let i = 0; i < 14; i++) {
-      const d = daysBefore(13 - i);
+    for (let i = 0; i < SEED_DAYS; i++) {
+      const d = daysBefore(SEED_DAYS - 1 - i);
       const dateStr = isoDate(d);
       const sealedAt = new Date(d.getTime() + 21 * 60 * 60 * 1000).toISOString();
       reflectionAnswers.push(
@@ -547,8 +563,8 @@ export const DemoSeedService = {
     }
     await EncryptedAsyncStorage.setItem('@mysky:daily_reflections', JSON.stringify({
       answers: reflectionAnswers,
-      totalDaysCompleted: 14,
-      startedAt: new Date('2026-03-17T00:00:00.000Z').toISOString(),
+      totalDaysCompleted: SEED_DAYS,
+      startedAt: new Date('2025-12-31T00:00:00.000Z').toISOString(),
     }));
 
     // ── Supabase cloud tables (powers RPC-driven charts) ──────────────────
@@ -569,34 +585,15 @@ export const DemoSeedService = {
     }
     const userId = session.user.id;
 
-    const dreamSymbolSets = [
-      ['water', 'light', 'door'],
-      ['forest', 'running', 'trees'],
-      ['ocean', 'stillness', 'horizon'],
-      ['flying', 'city', 'wind'],
-      ['classroom', 'test', 'mountains'],
-      ['flowers', 'field', 'clouds'],
-      ['childhood', 'home', 'safety'],
-      ['cliff', 'bridge', 'water'],
-      ['car', 'direction', 'road'],
-      ['library', 'books', 'sky'],
-      ['figure', 'table', 'paper'],
-      ['swimming', 'stars', 'night'],
-      ['neighborhood', 'memory', 'shift'],
-      ['light', 'color', 'rest'],
-    ];
+    const dreamSymbolPool = ['water','light','door','forest','ocean','flying','field','home','bridge','library','figure','swimming','memory','color','shadow','mirror','path','garden','stars','fire','trees','clouds','city','mountains','night','sky'];
 
-    const stressLevels  = [3, 6, 2, 4, 5, 3, 6, 2, 4, 5, 3, 4, 5, 2];
-    const anxietyLevels = [4, 5, 3, 4, 6, 2, 5, 3, 5, 4, 3, 4, 5, 2];
-    const moodValues    = [7, 5, 8, 6, 5, 8, 7, 6, 9, 5, 7, 8, 6, 8];
-
-    // Insert daily_check_ins (one per day for 14 days)
-    const checkInRows = Array.from({ length: 14 }, (_, i) => {
-      const d = daysBefore(13 - i);
+    // 91 days — generated deterministically from hash
+    const checkInRows = Array.from({ length: SEED_DAYS }, (_, i) => {
+      const d = daysBefore(SEED_DAYS - 1 - i);
       return {
         user_id:    userId,
         log_date:   isoDate(d),
-        mood_value: moodValues[i],
+        mood_value: 5 + (hashDate(isoDate(d)) % 5),
       };
     });
 
@@ -608,23 +605,18 @@ export const DemoSeedService = {
       logger.warn('[DemoSeed] daily_check_ins upsert error:', ciError.message);
     }
 
-    // Insert daily_logs (one per day for 14 days)
-    // log_date is a GENERATED column derived from created_at, so we supply created_at.
-    const dailyLogRows = Array.from({ length: 14 }, (_, i) => {
-      const d = daysBefore(13 - i);
-      // Mid-evening timestamp to give each day a distinct log_date in UTC
-      const created_at = new Date(d.getTime() + 20 * 60 * 60 * 1000).toISOString();
+    const dailyLogRows = Array.from({ length: SEED_DAYS }, (_, i) => {
+      const d = daysBefore(SEED_DAYS - 1 - i);
+      const h = hashDate(isoDate(d));
       return {
-        user_id: userId,
-        created_at,
-        stress:         stressLevels[i],
-        anxiety:        anxietyLevels[i],
-        dream_symbols:  dreamSymbolSets[i],
+        user_id:      userId,
+        created_at:   new Date(d.getTime() + 20 * 60 * 60 * 1000).toISOString(),
+        stress:       1 + (h % 6),
+        anxiety:      1 + ((h + 2) % 6),
+        dream_symbols: [dreamSymbolPool[h % dreamSymbolPool.length], dreamSymbolPool[(h + 7) % dreamSymbolPool.length], dreamSymbolPool[(h + 13) % dreamSymbolPool.length]],
       };
     });
 
-    // daily_logs uses a unique constraint on (user_id, log_date).
-    // upsert via ignoreDuplicates since log_date is generated and can't be in onConflict.
     const { error: dlError } = await supabase
       .from('daily_logs')
       .upsert(dailyLogRows, { ignoreDuplicates: true });

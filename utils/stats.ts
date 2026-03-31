@@ -102,6 +102,29 @@ export function computeTrend(vals: number[]): TrendResult {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Effect Size
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Cohen's d — standardised effect size between two independent groups.
+ * Uses pooled standard deviation.  Returns 0 when either group has < 2 values.
+ * |d| < 0.2 = negligible, 0.2–0.5 = small, 0.5–0.8 = medium, > 0.8 = large.
+ */
+export function cohensD(a: number[], b: number[]): number {
+  if (a.length < 2 || b.length < 2) return 0;
+  const mA = mean(a);
+  const mB = mean(b);
+  const sdA = stdDev(a);
+  const sdB = stdDev(b);
+  const pooled = Math.sqrt(
+    ((a.length - 1) * sdA ** 2 + (b.length - 1) * sdB ** 2) /
+      (a.length + b.length - 2),
+  );
+  if (pooled < 1e-10) return 0;
+  return (mA - mB) / pooled;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Confidence
 // ─────────────────────────────────────────────────────────────────────────────
 

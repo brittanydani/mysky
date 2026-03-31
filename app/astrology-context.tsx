@@ -16,6 +16,24 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
+// ── Rotating daily reflection prompts ──
+const REFLECTION_PROMPTS = [
+  'What felt most charged for you today?',
+  'Where did you notice tension — and what was underneath it?',
+  'What restored your energy today?',
+  'What are you quietly proud of, even if no one else noticed?',
+  'What did you want to say but held back?',
+  'Who or what brought a moment of ease today?',
+  'What do you want to release before tomorrow?',
+];
+
+function getDailyPrompt(): string {
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000
+  );
+  return REFLECTION_PROMPTS[dayOfYear % REFLECTION_PROMPTS.length];
+}
+
 // Mean lunar velocity ≈ 13.176°/day → hours per degree
 const MOON_DEG_PER_HOUR = 13.176 / 24;
 
@@ -179,6 +197,13 @@ function GradientSymbol({
     </MaskedView>
   );
 }
+
+const ActionPill = ({ label, icon, color, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }) => (
+  <Pressable onPress={onPress} style={[styles.actionPill, { borderColor: `${color}40` }]}>
+    <MetallicIcon name={icon} size={16} color={color} />
+    <MetallicText style={styles.actionLabel} color={color}>{label}</MetallicText>
+  </Pressable>
+);
 
 export default function CosmicContext() {
   const router = useRouter();
@@ -423,6 +448,21 @@ export default function CosmicContext() {
           </View>
         </View>
 
+        {/* ── Reflection Prompt ── */}
+        <Animated.View entering={FadeInDown.delay(300)} style={{ marginBottom: 24 }}>
+          <LinearGradient colors={['rgba(212, 184, 114, 0.12)', 'rgba(10, 10, 12, 0.8)']} style={styles.reflectionCard}>
+            <View style={styles.promptHeader}>
+              <MetallicIcon name="sparkles-outline" size={14} variant="gold" />
+              <MetallicText style={styles.promptEyebrow} variant="gold">TODAY'S REFLECTION</MetallicText>
+            </View>
+            <Text style={styles.promptText}>{getDailyPrompt()}</Text>
+            <View style={styles.actionRow}>
+              <ActionPill label="Log Mood" icon="happy-outline" color="#8BC4E8" onPress={() => router.push('/(tabs)/mood')} />
+              <ActionPill label="Journal" icon="create-outline" color="#D4B872" onPress={() => router.push('/(tabs)/journal')} />
+            </View>
+          </LinearGradient>
+        </Animated.View>
+
         <View style={{ height: 60 }} />
       </ScrollView>
       </SafeAreaView>
@@ -509,5 +549,12 @@ const styles = StyleSheet.create({
   transitImpact: { fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 20, marginLeft: 44 },
 
-
+  // Reflection prompt
+  reflectionCard: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: 8 },
+  promptHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  promptEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
+  promptText: { color: '#FFFFFF', fontSize: 20, lineHeight: 30, fontWeight: '700', marginBottom: 20 },
+  actionRow: { flexDirection: 'row', gap: 12 },
+  actionPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 16, borderWidth: 1 },
+  actionLabel: { fontWeight: '700', fontSize: 13 },
 });

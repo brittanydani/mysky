@@ -24,6 +24,7 @@
 import { DailyCheckIn, ThemeTag, EnergyLevel, StressLevel } from '../services/patterns/types';
 import { JournalEntry } from '../services/storage/models';
 import { NatalChart } from '../services/astrology/types';
+import type { ReflectionAnswer } from '../services/insights/dailyReflectionService';
 import {
   PipelineResult,
 } from '../services/insights/types';
@@ -279,6 +280,23 @@ export interface NoteThemesCard {
   confidence: ConfidenceLevel;
 }
 
+export interface ReflectionThemeItem {
+  theme: string;
+  strength: number;     // 0..1 — average endorsement (0=low, 1=high)
+  endorsements: number; // how many strongly-endorsed statements contributed
+  category: 'values' | 'archetypes' | 'cognitive';
+}
+
+export interface ReflectionThemesCard {
+  /** Top endorsed themes extracted from strongly-rated reflection statements */
+  topThemes: ReflectionThemeItem[];
+  /** Total reflection answers analyzed */
+  totalAnswers: number;
+  /** Total unique reflection days */
+  totalDays: number;
+  insight: string;
+}
+
 export interface InsightBundle {
   generatedAt: string;
   cacheKey: string;
@@ -306,6 +324,8 @@ export interface InsightBundle {
   moonSign: MoonSignCard | null;
   /** Free-text keyword lift analysis from check-in note/wins/challenges fields */
   noteThemes: NoteThemesCard | null;
+  /** Themes extracted from daily reflection answers (scale-based endorsements) */
+  reflectionThemes: ReflectionThemesCard | null;
   /** V3 journal-enhanced insights (null until pipeline is used) */
   enhanced: EnhancedInsightBundle | null;
   /** V3 tag analytics: lift, impact, pairs, classification, cross-system agreements */
@@ -1139,6 +1159,124 @@ function buildTodaySupport(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Reflection theme analysis (structured scale data from daily reflections)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Theme keywords mapped from reflection question text patterns.
+ * Each category has statement themes that map to human-readable insight labels.
+ */
+const REFLECTION_THEME_PATTERNS: { pattern: RegExp; theme: string }[] = [
+  // Values
+  { pattern: /\bpurpose\b|\bmeaning\b|\baligned\b/i, theme: 'purpose' },
+  { pattern: /\bboundar/i, theme: 'boundaries' },
+  { pattern: /\brelationship|\bloved?\b|\bconnect/i, theme: 'connection' },
+  { pattern: /\bgrowth\b|\bbecoming\b|\blearning\b/i, theme: 'growth' },
+  { pattern: /\bcourage\b|\bbrave\b|\bfear\b/i, theme: 'courage' },
+  { pattern: /\brest\b|\bpeace\b|\bcalm\b|\bstill/i, theme: 'rest' },
+  { pattern: /\bcontrol\b|\bpower\b|\bautonomous\b|\bauthority\b/i, theme: 'control' },
+  { pattern: /\bvulnerab/i, theme: 'vulnerability' },
+  { pattern: /\bgratitude\b|\bgrateful\b|\bthank/i, theme: 'gratitude' },
+  { pattern: /\bintegrity\b|\bvalues?\b|\bhonest/i, theme: 'integrity' },
+  { pattern: /\btrust\b|\bself-trust\b|\binstinct/i, theme: 'self-trust' },
+  { pattern: /\bjoy\b|\balive\b|\bplay\b|\bsatisfact/i, theme: 'joy' },
+  { pattern: /\bguilt\b|\bshame\b|\bjudg/i, theme: 'shame' },
+  { pattern: /\bloss\b|\bgriev\b|\bgrief\b|\bletting go\b/i, theme: 'grief' },
+  { pattern: /\bconflic\b|\btension\b|\bstruggl/i, theme: 'inner conflict' },
+  { pattern: /\bsafety\b|\bsafe\b|\bprotect/i, theme: 'safety' },
+  { pattern: /\bcreativi?\b|\bcreative\b|\bimagina/i, theme: 'creativity' },
+  { pattern: /\bspiritua|\bfaith\b|\bsacred\b/i, theme: 'spirituality' },
+  { pattern: /\bidentity\b|\bself\b|\bwho I (am|really)\b/i, theme: 'identity' },
+  { pattern: /\balone\b|\bloneli?\b|\bisolat/i, theme: 'solitude' },
+  // Archetypes
+  { pattern: /\bhelp\b|\bcaregiv|\bnurtur|\bsupport others\b/i, theme: 'caregiving' },
+  { pattern: /\brebel\b|\bdefy|\bchallenge (the|norms|rules)\b/i, theme: 'rebellion' },
+  { pattern: /\bwisdom\b|\bunderstand|\binsight\b|\bpattern/i, theme: 'wisdom' },
+  { pattern: /\bexplor|\bseek|\badventur|\bcurios/i, theme: 'seeking' },
+  { pattern: /\blead\b|\bprotect|\bstand up\b|\bdefend/i, theme: 'protection' },
+  // Cognitive
+  { pattern: /\boverwhelm|\bscatter|\bfocus\b/i, theme: 'focus' },
+  { pattern: /\bdecisio|\bchoice|\bcommit/i, theme: 'decisions' },
+  { pattern: /\bintuit|\bgut\b|\binstinct/i, theme: 'intuition' },
+  { pattern: /\bplan\b|\bstructur|\borganiz/i, theme: 'structure' },
+];
+
+const REFLECTION_THEME_LABELS: Record<string, string> = {
+  purpose: 'Purpose & Meaning', boundaries: 'Boundaries', connection: 'Connection & Love',
+  growth: 'Growth', courage: 'Courage', rest: 'Rest & Peace', control: 'Control & Power',
+  vulnerability: 'Vulnerability', gratitude: 'Gratitude', integrity: 'Integrity',
+  'self-trust': 'Self-Trust', joy: 'Joy & Aliveness', shame: 'Shame & Judgment',
+  grief: 'Grief & Letting Go', 'inner conflict': 'Inner Conflict', safety: 'Safety',
+  creativity: 'Creativity', spirituality: 'Spirituality', identity: 'Identity',
+  solitude: 'Solitude', caregiving: 'Caregiving', rebellion: 'Rebellion',
+  wisdom: 'Wisdom', seeking: 'Seeking', protection: 'Protection',
+  focus: 'Focus', decisions: 'Decision-Making', intuition: 'Intuition',
+  structure: 'Structure',
+};
+
+function buildReflectionThemes(answers: ReflectionAnswer[]): ReflectionThemesCard | null {
+  if (answers.length < 5) return null;
+
+  // Only consider answers from the last 30 days
+  const cutoff = isoDateDaysAgo(30);
+  const recent = answers.filter(a => a.date >= cutoff);
+  if (recent.length < 5) return null;
+
+  // Group theme endorsements: for each matching theme, track endorsement scores
+  const themeData: Record<string, {
+    totalScore: number;
+    count: number;
+    strongCount: number; // scaleValue >= 2
+    category: 'values' | 'archetypes' | 'cognitive';
+  }> = {};
+
+  for (const answer of recent) {
+    const sv = answer.scaleValue ?? 0;
+    const text = answer.questionText;
+
+    for (const { pattern, theme } of REFLECTION_THEME_PATTERNS) {
+      if (pattern.test(text)) {
+        if (!themeData[theme]) {
+          themeData[theme] = { totalScore: 0, count: 0, strongCount: 0, category: answer.category };
+        }
+        themeData[theme].totalScore += sv;
+        themeData[theme].count++;
+        if (sv >= 2) themeData[theme].strongCount++;
+      }
+    }
+  }
+
+  // Build items: require at least 2 endorsements and average score >= 1.5 (above midpoint)
+  const items: ReflectionThemeItem[] = Object.entries(themeData)
+    .filter(([, d]) => d.count >= 2 && d.strongCount >= 1)
+    .map(([theme, d]) => ({
+      theme: REFLECTION_THEME_LABELS[theme] ?? theme,
+      strength: Math.min(1, d.totalScore / (d.count * 3)), // normalize to 0..1
+      endorsements: d.strongCount,
+      category: d.category,
+    }))
+    .sort((a, b) => b.strength - a.strength || b.endorsements - a.endorsements)
+    .slice(0, 6);
+
+  if (items.length < 2) return null;
+
+  const totalDays = new Set(recent.map(a => a.date)).size;
+
+  // Build an insight sentence from the top themes
+  const top2 = items.slice(0, 2).map(i => i.theme.toLowerCase());
+  const insight = items.length >= 3
+    ? `Your reflections center on ${top2[0]} and ${top2[1]}, with ${items[2].theme.toLowerCase()} also showing up consistently.`
+    : `Your reflections keep returning to ${top2[0]} and ${top2[1]}.`;
+
+  return {
+    topThemes: items,
+    totalAnswers: recent.length,
+    totalDays,
+    insight,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Journal text analysis (basic keyword frequency — local only, no API)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1215,9 +1353,22 @@ function buildJournalThemes(journalEntries: JournalEntry[]): JournalThemesCard |
 
   if (topWords.length < 2) return null;
 
+  // Build a richer insight based on what types of words surfaced
+  const emotionCount = topWords.filter(w => EMOTION_WORDS.has(w)).length;
+  let insight: string;
+  if (emotionCount >= 3) {
+    insight = `Your writing keeps returning to ${topWords.slice(0, 3).join(', ')} — these emotional threads are woven through ${journalEntries.length} recent entries.`;
+  } else if (emotionCount >= 1) {
+    const emotionWord = topWords.find(w => EMOTION_WORDS.has(w));
+    const otherWords = topWords.filter(w => w !== emotionWord).slice(0, 2);
+    insight = `"${emotionWord}" runs through your recent writing, alongside ${otherWords.join(' and ')}. These are the themes your mind keeps processing.`;
+  } else {
+    insight = `Across ${journalEntries.length} entries, ${topWords.slice(0, 3).join(', ')} keep surfacing — your writing is circling something worth noticing.`;
+  }
+
   return {
     topWords,
-    insight: `Common themes lately: ${topWords.join(', ')}`,
+    insight,
     sampleSize: journalEntries.length,
   };
 }
@@ -1809,6 +1960,7 @@ export function computeInsightBundle(
   chart: NatalChart | null,
   todayMantra?: string | null,
   todayTheme?: string | null,
+  reflectionAnswers?: ReflectionAnswer[],
 ): InsightBundle {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
@@ -1850,6 +2002,7 @@ export function computeInsightBundle(
       retrograde: null,
       moonSign: null,
       noteThemes: null,
+      reflectionThemes: null,
       enhanced: null,
       tagAnalytics: null,
     };
@@ -1886,6 +2039,11 @@ export function computeInsightBundle(
 
   // Note keyword lift: analyze free-text from note/wins/challenges fields
   const noteThemesCard = buildNoteThemesCard(window);
+
+  // Reflection themes: extract patterns from structured daily reflection answers
+  const reflectionThemesCard = reflectionAnswers
+    ? buildReflectionThemes(reflectionAnswers)
+    : null;
 
   const chartThemes = chart ? buildChartThemes(chart) : [];
   const blended = chart ? buildBlendedCards(weekSummary, stability, chart, window.length, {
@@ -1926,6 +2084,7 @@ export function computeInsightBundle(
     retrograde: retrogradeCard,
     moonSign: moonSignCard,
     noteThemes: noteThemesCard,
+    reflectionThemes: reflectionThemesCard,
     enhanced: null,
     tagAnalytics: null,
   };
@@ -1991,6 +2150,7 @@ export function computeInsightBundleFromPipeline(
   journalEntries: JournalEntry[],
   todayMantra?: string | null,
   todayTheme?: string | null,
+  reflectionAnswers?: ReflectionAnswer[],
 ): InsightBundle {
   // Delegate to the original function which already handles everything.
   // The pipeline result enriches the cache key with chartProfile hash.
@@ -2000,6 +2160,7 @@ export function computeInsightBundleFromPipeline(
     chart,
     todayMantra,
     todayTheme,
+    reflectionAnswers,
   );
 
   // Enrich the cache key with chart profile version hash

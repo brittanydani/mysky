@@ -336,8 +336,21 @@ export async function generateGeminiDreamInterpretation(
         throw new Error('No content returned from Gemini');
       }
 
-      // Parse the JSON response
-      const parsed = JSON.parse(text);
+      // Strip markdown fences / trailing junk and extract the JSON object
+      let jsonText = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+      // If the model emitted extra text around the JSON, extract the first { … } block
+      const firstBrace = jsonText.indexOf('{');
+      const lastBrace = jsonText.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+      }
+      let parsed: any;
+      try {
+        parsed = JSON.parse(jsonText);
+      } catch (parseErr) {
+        logger.error('[GeminiDream] JSON parse failed, raw text:', text);
+        throw new Error('AI response was malformed. Tap RE-INTERPRET to try again.');
+      }
 
       if (!parsed.paragraph || !parsed.question) {
         throw new Error('Invalid response structure from Gemini');

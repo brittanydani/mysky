@@ -217,40 +217,37 @@ export default function PastReflectionsScreen() {
                   <Text style={styles.dayLabel}>{group.label}</Text>
                   <Text style={styles.dayDate}>{group.date}</Text>
                 </View>
+                <View style={styles.dayBadge}>
+                  <Text style={styles.dayBadgeText}>{group.answers.length}</Text>
+                </View>
               </View>
 
-              {/* Answers — always visible */}
+              {/* Answers */}
               {group.answers.map((a, aIdx) => {
                   const catColor = CATEGORY_COLORS[a.category];
 
                   return (
-                    <Animated.View
+                    <LinearGradient
                       key={`${a.date}-${a.category}-${a.questionId}`}
-                      entering={FadeInDown.delay(aIdx * 50).duration(400)}
+                      colors={[`${catColor}18`, 'transparent']}
+                      style={styles.answerCard}
                     >
-                      <LinearGradient
-                        colors={[`${catColor}12`, 'rgba(10,10,12,0.85)']}
-                        style={styles.answerCard}
-                      >
-                        {/* Category tag */}
-                        <View style={styles.categoryTag}>
-                          <Text style={[styles.categoryTagIcon, { color: catColor }]}>
-                            {CATEGORY_ICONS[a.category]}
-                          </Text>
-                          <Text style={[styles.categoryTagText]}>
-                            {CATEGORY_LABELS[a.category]}
-                          </Text>
-                        </View>
+                      {/* Category tag */}
+                      <View style={styles.categoryTag}>
+                        <Text style={[styles.categoryTagIcon, { color: catColor }]}>
+                          {CATEGORY_ICONS[a.category]}
+                        </Text>
+                        <Text style={[styles.categoryTagText, { color: catColor }]}>
+                          {CATEGORY_LABELS[a.category]}
+                        </Text>
+                      </View>
 
-                        {/* Question */}
-                        <Text style={styles.questionText}>{a.questionText}</Text>
+                      {/* Question */}
+                      <Text style={styles.questionText}>{a.questionText}</Text>
 
-                        {/* Answer */}
-                        <View style={styles.answerBubble}>
-                          <Text style={styles.answerText}>{a.answer}</Text>
-                        </View>
-                      </LinearGradient>
-                    </Animated.View>
+                      {/* Answer */}
+                      <Text style={styles.answerText}>{a.answer}</Text>
+                    </LinearGradient>
                   );
                 })}
             </Animated.View>
@@ -361,13 +358,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Answer cards
-  answerCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 12 },
+  // Answer cards — match blueprint identity card style
+  answerCard: {
+    padding: 28,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    marginBottom: 16,
+  },
   categoryTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   categoryTagIcon: { fontSize: 14 },
   categoryTagText: {
@@ -375,25 +379,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.5)',
   },
   questionText: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
+    fontSize: 20,
+    color: PALETTE.textMain,
     fontWeight: '700',
-    lineHeight: 26,
-    marginBottom: 16,
-  },
-  answerBubble: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    lineHeight: 28,
+    marginBottom: 8,
   },
   answerText: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 16,
+    color: PALETTE.textMuted,
     lineHeight: 24,
   },
 });

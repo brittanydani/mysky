@@ -1,4 +1,4 @@
-import { mean, stdDev, clamp, linearRegression, computeTrend, confidence, confidenceLabel, trendArrow, stressTrendArrow } from '../stats';
+import { mean, stdDev, clamp, linearRegression, computeTrend, confidence, confidenceLabel, trendArrow, stressTrendArrow, cohensD } from '../stats';
 
 // ── mean ─────────────────────────────────────────────────────────────────────
 
@@ -189,5 +189,30 @@ describe('stressTrendArrow', () => {
     expect(stressTrendArrow('down')).toBe('↓');
     expect(stressTrendArrow('up')).toBe('↑');
     expect(stressTrendArrow('stable')).toBe('→');
+  });
+});
+
+// ── cohensD ──────────────────────────────────────────────────────────────────
+
+describe('cohensD', () => {
+  it('returns 0 for groups with < 2 values', () => {
+    expect(cohensD([5], [3, 4, 5])).toBe(0);
+    expect(cohensD([3, 4], [5])).toBe(0);
+  });
+
+  it('returns large effect for well-separated groups', () => {
+    const d = cohensD([8, 9, 8, 9, 8], [2, 3, 2, 3, 2]);
+    expect(Math.abs(d)).toBeGreaterThan(0.8);
+  });
+
+  it('returns near-zero for identical groups', () => {
+    const d = cohensD([5, 5, 5, 5], [5, 5, 5, 5]);
+    expect(Math.abs(d)).toBeLessThan(0.01);
+  });
+
+  it('returns moderate effect for overlapping groups', () => {
+    const d = cohensD([6, 7, 5, 6, 7], [4, 5, 4, 5, 6]);
+    expect(Math.abs(d)).toBeGreaterThan(0.2);
+    expect(Math.abs(d)).toBeLessThan(2.0);
   });
 });

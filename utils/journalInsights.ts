@@ -16,6 +16,7 @@ import {
   stdDev,
   confidence,
   linearRegression,
+  cohensD,
 } from './stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,7 +28,9 @@ function journalConfidence(
   journalDays: number,
 ): ConfidenceLevel {
   const base = confidence(totalDays);
+  // Require meaningful journal coverage for higher confidence
   if (journalDays < 6) return 'low';
+  if (base === 'high' && journalDays < 14) return 'medium';
   return base;
 }
 
@@ -327,7 +330,7 @@ export function computeEmotionBucketLift(
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface JournalImpactCard {
-  type: 'journaling_vs_not' | 'writing_intensity' | 'weekly_consistency';
+  type: 'journaling_vs_not' | 'writing_intensity' | 'weekly_consistency' | 'streak_impact' | 'emotional_processing';
   insight: string;
   stat: string;
   confidence: ConfidenceLevel;
@@ -336,6 +339,9 @@ export interface JournalImpactCard {
 
 /**
  * 8A. Journaling days vs non-journaling days.
+ *
+ * Uses Cohen's d to filter out noise and checks next-day mood
+ * to distinguish "journaling improves mood" from "good mood triggers journaling."
  */
 export function computeJournalingImpact(
   aggregates: DailyAggregate[],
@@ -343,21 +349,59 @@ export function computeJournalingImpact(
   const journalDays = aggregates.filter(d => d.journalCount >= 1);
   const noJournalDays = aggregates.filter(d => d.journalCount === 0);
 
-  if (journalDays.length < 6 || noJournalDays.length < 6) return null;
+  if (journalDays.length < 4 || noJournalDays.length < 4) return null;
 
-  const avgMoodJournal = mean(journalDays.map(d => d.moodAvg));
-  const avgMoodNoJournal = mean(noJournalDays.map(d => d.moodAvg));
+  const moodsJournal = journalDays.map(d => d.moodAvg);
+  const moodsNoJournal = noJournalDays.map(d => d.moodAvg);
+  const avgMoodJournal = mean(moodsJournal);
+  const avgMoodNoJournal = mean(moodsNoJournal);
   const diffMood = avgMoodJournal - avgMoodNoJournal;
 
-  const avgStressJournal = mean(journalDays.map(d => d.stressAvg));
-  const avgStressNoJournal = mean(noJournalDays.map(d => d.stressAvg));
+  const stressJournal = journalDays.map(d => d.stressAvg);
+  const stressNoJournal = noJournalDays.map(d => d.stressAvg);
+  const avgStressJournal = mean(stressJournal);
+  const avgStressNoJournal = mean(stressNoJournal);
   const diffStress = avgStressJournal - avgStressNoJournal;
 
-  if (Math.abs(diffMood) < 0.5 && Math.abs(diffStress) < 0.5) return null;
+  // Effect-size gate: require at least a small effect (|d| >= 0.2)
+  const moodD = cohensD(moodsJournal, moodsNoJournal);
+  const stressD = cohensD(stressNoJournal, stressJournal); // reversed: lower stress = positive
+
+  if (Math.abs(moodD) < 0.2 && Math.abs(stressD) < 0.2) return null;
+
+  // Next-day causal check: does journaling today predict better mood tomorrow?
+  const sorted = [...aggregates].sort((a, b) => a.dayKey.localeCompare(b.dayKey));
+  const dayIndex = new Map(sorted.map((d, i) => [d.dayKey, i]));
+  const nextDayAfterJournal: number[] = [];
+  const nextDayAfterNoJournal: number[] = [];
+
+  for (const d of sorted) {
+    const idx = dayIndex.get(d.dayKey)!;
+    if (idx + 1 >= sorted.length) continue;
+    const next = sorted[idx + 1];
+    // Only count consecutive calendar days
+    if (prevDayKey(next.dayKey) !== d.dayKey) continue;
+    if (d.journalCount >= 1) {
+      nextDayAfterJournal.push(next.moodAvg);
+    } else {
+      nextDayAfterNoJournal.push(next.moodAvg);
+    }
+  }
+
+  const hasNextDaySignal =
+    nextDayAfterJournal.length >= 3 &&
+    nextDayAfterNoJournal.length >= 3;
+  const nextDayDiff = hasNextDaySignal
+    ? mean(nextDayAfterJournal) - mean(nextDayAfterNoJournal)
+    : 0;
 
   let insight: string;
-  if (diffMood >= 0.5) {
+  if (diffMood >= 0.5 && nextDayDiff >= 0.3) {
+    insight = 'Journaling lifts your mood — and the effect carries into the next day.';
+  } else if (diffMood >= 0.5) {
     insight = 'Days you journal tend to be calmer.';
+  } else if (diffMood <= -0.5 && nextDayDiff >= 0.3) {
+    insight = 'You journal on harder days, but your next day tends to be better for it.';
   } else if (diffMood <= -0.5) {
     insight = 'You tend to journal on harder days — that\'s the practice working.';
   } else if (diffStress <= -0.5) {
@@ -366,10 +410,12 @@ export function computeJournalingImpact(
     insight = 'Journaling days show higher stress — you process when it matters.';
   }
 
+  const effectLabel = Math.abs(moodD) >= 0.8 ? 'strong' : Math.abs(moodD) >= 0.5 ? 'clear' : 'subtle';
+
   return {
     type: 'journaling_vs_not',
     insight,
-    stat: `Mood ${diffMood >= 0 ? '+' : ''}${diffMood.toFixed(1)} on journaling days`,
+    stat: `Mood ${diffMood >= 0 ? '+' : ''}${diffMood.toFixed(1)} on journaling days (${effectLabel} effect)`,
     confidence: journalConfidence(aggregates.length, journalDays.length),
     data: {
       avgMoodJournal: parseFloat(avgMoodJournal.toFixed(1)),
@@ -378,12 +424,17 @@ export function computeJournalingImpact(
       avgStressJournal: parseFloat(avgStressJournal.toFixed(1)),
       avgStressNoJournal: parseFloat(avgStressNoJournal.toFixed(1)),
       diffStress: parseFloat(diffStress.toFixed(1)),
+      effectSize: parseFloat(moodD.toFixed(2)),
+      nextDayDiff: parseFloat(nextDayDiff.toFixed(1)),
     },
   };
 }
 
 /**
  * 8B. Writing intensity effect on mood.
+ *
+ * Buckets by word count, uses Cohen's d between short and long entries
+ * to validate the signal isn't noise.
  */
 export function computeWritingIntensityEffect(
   aggregates: DailyAggregate[],
@@ -396,19 +447,25 @@ export function computeWritingIntensityEffect(
   );
   const high = withJournal.filter(d => d.journalWordCount > 250);
 
-  if (low.length < 4 || medium.length < 4 || high.length < 4) return null;
+  if (low.length < 3 || medium.length < 3 || high.length < 3) return null;
 
-  const moodLow = mean(low.map(d => d.moodAvg));
-  const moodMed = mean(medium.map(d => d.moodAvg));
-  const moodHigh = mean(high.map(d => d.moodAvg));
+  const moodsLow = low.map(d => d.moodAvg);
+  const moodsMed = medium.map(d => d.moodAvg);
+  const moodsHigh = high.map(d => d.moodAvg);
+  const moodLow = mean(moodsLow);
+  const moodMed = mean(moodsMed);
+  const moodHigh = mean(moodsHigh);
 
-  const volLow = stdDev(low.map(d => d.moodAvg));
-  const volHigh = stdDev(high.map(d => d.moodAvg));
+  const volLow = stdDev(moodsLow);
+  const volHigh = stdDev(moodsHigh);
+
+  // Effect-size gate between short and long entries
+  const intensityD = cohensD(moodsHigh, moodsLow);
 
   let insight: string;
-  if (moodHigh - moodLow >= 0.5) {
+  if (moodHigh - moodLow >= 0.5 && Math.abs(intensityD) >= 0.2) {
     insight = 'Longer reflections correlate with steadier mood.';
-  } else if (moodLow - moodHigh >= 0.5) {
+  } else if (moodLow - moodHigh >= 0.5 && Math.abs(intensityD) >= 0.2) {
     insight = 'Shorter entries tend to come on calmer days — longer ones signal deeper processing.';
   } else if (volLow - volHigh >= 0.3) {
     insight = 'Writing more tends to stabilize your emotional range.';
@@ -428,6 +485,7 @@ export function computeWritingIntensityEffect(
       countLow: low.length,
       countMed: medium.length,
       countHigh: high.length,
+      effectSize: parseFloat(intensityD.toFixed(2)),
     },
   };
 }
@@ -508,6 +566,149 @@ function isoWeekKey(dayKey: string): string {
     ((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7,
   );
   return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+/**
+ * 8D. Streak impact — compares mood on consecutive journaling days
+ * vs isolated journal days.
+ */
+export function computeStreakImpact(
+  aggregates: DailyAggregate[],
+): JournalImpactCard | null {
+  const sorted = [...aggregates].sort((a, b) => a.dayKey.localeCompare(b.dayKey));
+
+  // Build array of streak lengths for each journal day
+  const journalDayIndices: number[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    if (sorted[i].journalCount >= 1) journalDayIndices.push(i);
+  }
+
+  if (journalDayIndices.length < 5) return null;
+
+  // Determine streak membership: a journal day is in a streak if
+  // the previous calendar day also has a journal entry
+  const streakDayMoods: number[] = [];
+  const isolatedDayMoods: number[] = [];
+
+  const journalDaySet = new Set(sorted.filter(d => d.journalCount >= 1).map(d => d.dayKey));
+
+  for (const d of sorted) {
+    if (d.journalCount < 1) continue;
+    const prev = prevDayKey(d.dayKey);
+    if (journalDaySet.has(prev)) {
+      streakDayMoods.push(d.moodAvg);
+    } else {
+      isolatedDayMoods.push(d.moodAvg);
+    }
+  }
+
+  if (streakDayMoods.length < 3 || isolatedDayMoods.length < 3) return null;
+
+  const avgStreak = mean(streakDayMoods);
+  const avgIsolated = mean(isolatedDayMoods);
+  const diff = avgStreak - avgIsolated;
+
+  // Effect-size gate
+  const streakD = cohensD(streakDayMoods, isolatedDayMoods);
+  if (Math.abs(streakD) < 0.15) return null;
+
+  let insight: string;
+  if (diff >= 0.4) {
+    insight = 'Journaling multiple days in a row lifts your mood over time.';
+  } else if (diff <= -0.4) {
+    insight = 'Your mood benefits from journaling even on single days — no streak needed.';
+  } else {
+    insight = 'Whether you journal one day or several in a row, the benefit is steady.';
+  }
+
+  return {
+    type: 'streak_impact',
+    insight,
+    stat: `Streak days ${avgStreak.toFixed(1)} avg mood · isolated ${avgIsolated.toFixed(1)}`,
+    confidence: journalConfidence(aggregates.length, journalDayIndices.length),
+    data: {
+      avgStreakMood: parseFloat(avgStreak.toFixed(1)),
+      avgIsolatedMood: parseFloat(avgIsolated.toFixed(1)),
+      diff: parseFloat(diff.toFixed(1)),
+      streakDays: streakDayMoods.length,
+      isolatedDays: isolatedDayMoods.length,
+    },
+  };
+}
+
+function prevDayKey(dayKey: string): string {
+  const d = new Date(dayKey + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * 8E. Emotional processing depth — days with richer emotion vocabulary
+ * (more distinct emotions detected) vs sparse entries.
+ */
+export function computeEmotionalProcessing(
+  aggregates: DailyAggregate[],
+): JournalImpactCard | null {
+  const withEmotions = aggregates.filter(
+    d => d.journalCount >= 1 && Object.keys(d.emotionCountsTotal).length > 0,
+  );
+
+  if (withEmotions.length < 6) return null;
+
+  // Count distinct emotions per day
+  const entries = withEmotions.map(d => ({
+    distinctEmotions: Object.keys(d.emotionCountsTotal).length,
+    moodAvg: d.moodAvg,
+    stressAvg: d.stressAvg,
+  }));
+
+  const medianDistinct = entries
+    .map(e => e.distinctEmotions)
+    .sort((a, b) => a - b)[Math.floor(entries.length / 2)];
+
+  const deep = entries.filter(e => e.distinctEmotions > medianDistinct);
+  const shallow = entries.filter(e => e.distinctEmotions <= medianDistinct);
+
+  if (deep.length < 3 || shallow.length < 3) return null;
+
+  const moodDeep = mean(deep.map(e => e.moodAvg));
+  const moodShallow = mean(shallow.map(e => e.moodAvg));
+  const stressDeep = mean(deep.map(e => e.stressAvg));
+  const stressShallow = mean(shallow.map(e => e.stressAvg));
+
+  const moodDiff = moodDeep - moodShallow;
+  const stressDiff = stressDeep - stressShallow;
+
+  // Effect-size gate on mood difference
+  const depthD = cohensD(deep.map(e => e.moodAvg), shallow.map(e => e.moodAvg));
+  if (Math.abs(depthD) < 0.15 && Math.abs(stressDiff) < 0.3) return null;
+
+  let insight: string;
+  if (moodDiff >= 0.4) {
+    insight = 'Entries where you name more emotions tend to align with better mood days.';
+  } else if (moodDiff <= -0.4) {
+    insight = 'You dig deeper emotionally on harder days — that\'s healthy processing.';
+  } else if (stressDiff <= -0.4) {
+    insight = 'Richer emotional vocabulary in your entries correlates with lower stress.';
+  } else {
+    insight = 'You express a range of emotions in your writing — that awareness is itself the benefit.';
+  }
+
+  return {
+    type: 'emotional_processing',
+    insight,
+    stat: `${medianDistinct}+ emotions: mood ${moodDeep.toFixed(1)} · stress ${stressDeep.toFixed(1)}`,
+    confidence: journalConfidence(aggregates.length, withEmotions.length),
+    data: {
+      moodDeep: parseFloat(moodDeep.toFixed(1)),
+      moodShallow: parseFloat(moodShallow.toFixed(1)),
+      stressDeep: parseFloat(stressDeep.toFixed(1)),
+      stressShallow: parseFloat(stressShallow.toFixed(1)),
+      medianDistinct,
+      deepDays: deep.length,
+      shallowDays: shallow.length,
+    },
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1097,6 +1298,10 @@ export function computeEnhancedInsights(
   if (wi) journalImpact.push(wi);
   const wc = computeWeeklyConsistency(sorted);
   if (wc) journalImpact.push(wc);
+  const si = computeStreakImpact(sorted);
+  if (si) journalImpact.push(si);
+  const ep = computeEmotionalProcessing(sorted);
+  if (ep) journalImpact.push(ep);
 
   const timePatterns: TimePatternCard[] = [];
   const tod = computeTimeOfDayPatterns(sorted);

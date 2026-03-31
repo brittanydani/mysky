@@ -16,54 +16,17 @@
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
  */
 
-import React, { memo, useMemo, useCallback } from 'react';
+import React, { memo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
-  Dimensions,
-  Platform,
 } from 'react-native';
-import {
-  Canvas,
-  RoundedRect,
-  Group,
-  LinearGradient,
-  BlurMask,
-  Rect,
-  vec,
-} from '@shopify/react-native-skia';
-import {
-  useSharedValue,
-  useDerivedValue,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
+import { SkiaGradient as LinearGradient } from './SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { MetallicText } from './MetallicText';
-
-const { width: SCREEN_W } = Dimensions.get('window');
-const CARD_W = SCREEN_W - 32;
-const CARD_H = 170;
-const BORDER_R = 32;
-
-// ── Obsidian Glass Palette ──────────────────────────────────────────────────
-
-const GLASS = {
-  surface: 'rgba(255,255,255,0.02)',
-  border: 'rgba(255,255,255,0.08)',
-  highlight: 'rgba(255,255,255,0.08)',
-  specularTop: 'rgba(255, 255, 255, 0.08)',
-  specularBot: 'rgba(255, 255, 255, 0.0)',
-  inkRipple: 'rgba(232, 214, 174, 0.15)',
-  gold: '#D4B872',
-  silverBlue: '#8BC4E8',
-  copper: '#CD7F5D',
-  emerald: '#6EBF8B',
-  amethyst: '#A89BC8',
-};
 
 // ── Archetype → accent color mapping ────────────────────────────────────────
 
@@ -83,69 +46,14 @@ function toneFromMood(mood?: string): ArchetoneTone {
 
 function toneColor(tone: ArchetoneTone): string {
   const map: Record<ArchetoneTone, string> = {
-    reflective: GLASS.silverBlue,
-    energised: GLASS.gold,
-    heavy: GLASS.copper,
-    calm: GLASS.emerald,
+    reflective: '#8BC4E8',
+    energised: '#D4B872',
+    heavy: '#CD7F5D',
+    calm: '#6EBF8B',
     stormy: '#E07A7A',
-    neutral: GLASS.gold,
+    neutral: '#D4B872',
   };
   return map[tone];
-}
-
-// ── Sigil geometry — generates a small unique path per archetype tone ────────
-
-function sigilPoints(tone: ArchetoneTone): { x: number; y: number }[] {
-  const cx = 20;
-  const cy = 20;
-  const r = 14;
-
-  switch (tone) {
-    case 'calm':
-      // Circle approximation (octagon)
-      return Array.from({ length: 8 }, (_, i) => {
-        const a = (i / 8) * Math.PI * 2;
-        return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
-      });
-    case 'reflective':
-      // Diamond
-      return [
-        { x: cx, y: cy - r },
-        { x: cx + r * 0.6, y: cy },
-        { x: cx, y: cy + r },
-        { x: cx - r * 0.6, y: cy },
-      ];
-    case 'heavy':
-      // Inverted triangle
-      return [
-        { x: cx, y: cy + r },
-        { x: cx - r, y: cy - r * 0.5 },
-        { x: cx + r, y: cy - r * 0.5 },
-      ];
-    case 'stormy':
-      // Lightning-zig
-      return [
-        { x: cx - 4, y: cy - r },
-        { x: cx + 4, y: cy - 4 },
-        { x: cx - 2, y: cy },
-        { x: cx + 6, y: cy + r },
-      ];
-    case 'energised':
-      // Upward triangle
-      return [
-        { x: cx, y: cy - r },
-        { x: cx + r, y: cy + r * 0.5 },
-        { x: cx - r, y: cy + r * 0.5 },
-      ];
-    default:
-      // Small cross
-      return [
-        { x: cx, y: cy - r * 0.6 },
-        { x: cx, y: cy + r * 0.6 },
-        { x: cx - r * 0.6, y: cy },
-        { x: cx + r * 0.6, y: cy },
-      ];
-  }
 }
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -192,130 +100,24 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
 }: Props) {
   const tone = toneFromMood(mood);
   const accent = toneColor(tone);
-  const sigil = useMemo(() => sigilPoints(tone), [tone]);
-
-  // ── Ink ripple animation ──
-  const rippleProgress = useSharedValue(0);
-
-  const fireRipple = useCallback(() => {
-    rippleProgress.value = 0;
-    rippleProgress.value = withTiming(1, {
-      duration: 1200,
-      easing: Easing.out(Easing.cubic),
-    });
-  }, [rippleProgress]);
-
-  const handlePress = useCallback(() => {
-    fireRipple();
-    onPress?.();
-  }, [fireRipple, onPress]);
-
-  // Ripple opacity fades out as progress → 1
-  const rippleOpacity = useDerivedValue(() => {
-    'worklet';
-    return 0.3 * (1 - rippleProgress.value);
-  });
-
-  // Ripple radius expands
 
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={onPress}
       onLongPress={onLongPress}
-      style={styles.wrapper}
+      style={({ pressed }) => [styles.wrapper, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
       accessibilityRole="button"
       accessibilityLabel={`Journal entry: ${title || dateLabel}`}
     >
-      {/* ── Skia Glass Layer ── */}
-      <Canvas style={styles.canvas}>
-        <Group>
-          {/* 1. Obsidian glass surface */}
-          <RoundedRect
-            x={0}
-            y={0}
-            width={CARD_W}
-            height={CARD_H}
-            r={BORDER_R}
-            color={GLASS.surface}
-          />
-
-          {/* 2. Specular top-edge highlight */}
-          <RoundedRect
-            x={1}
-            y={1}
-            width={CARD_W - 2}
-            height={CARD_H * 0.4}
-            r={BORDER_R}
-          >
-            <LinearGradient
-              start={vec(0, 0)}
-              end={vec(0, CARD_H * 0.4)}
-              colors={[GLASS.specularTop, GLASS.specularBot]}
-            />
-          </RoundedRect>
-
-          {/* 3. Ink ripple glow (center of card) */}
-          <Group opacity={rippleOpacity}>
-            <RoundedRect
-              x={CARD_W / 2 - 60}
-              y={CARD_H / 2 - 60}
-              width={120}
-              height={120}
-              r={60}
-              color={accent}
-            >
-              <BlurMask blur={40} style="normal" />
-            </RoundedRect>
-          </Group>
-
-          {/* 4. Glass border */}
-          <RoundedRect
-            x={0.5}
-            y={0.5}
-            width={CARD_W - 1}
-            height={CARD_H - 1}
-            r={BORDER_R}
-            color={GLASS.border}
-            style="stroke"
-            strokeWidth={1}
-          />
-
-          {/* 5. Accent edge (left side, archetype color) */}
-          <Rect x={0} y={24} width={2.5} height={CARD_H - 48} color={accent}>
-            <BlurMask blur={4} style="outer" />
-          </Rect>
-        </Group>
-      </Canvas>
-
-      {/* ── Content Layer (React Native) ── */}
-      <View style={styles.content}>
+      <LinearGradient
+        colors={[accent + '22', 'transparent']}
+        style={[styles.card, { borderColor: accent + '35' }]}
+      >
         {/* Header row */}
         <View style={styles.headerRow}>
-          {/* Dynamic sigil */}
-          <Canvas style={styles.sigilCanvas}>
-            <Group opacity={0.6}>
-              {sigil.map((pt, i) => {
-                return (
-                  <Rect
-                    key={i}
-                    x={pt.x - 0.5}
-                    y={pt.y - 0.5}
-                    width={1}
-                    height={1}
-                    color={accent}
-                  >
-                    <BlurMask blur={2} style="solid" />
-                  </Rect>
-                );
-              })}
-            </Group>
-          </Canvas>
-
           <View style={styles.headerText}>
             <Text style={styles.dateText}>{dateLabel}</Text>
-            <Text style={styles.timeText}>{timeLabel}</Text>
           </View>
-
           <Ionicons
             name={isExpanded ? 'chevron-up' : 'chevron-down'}
             size={16}
@@ -325,7 +127,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
 
         {/* Title */}
         {!!title && (
-          <Text style={[styles.title, { color: accent }]} numberOfLines={1}>
+          <Text style={styles.title} numberOfLines={isExpanded ? undefined : 2}>
             {title}
           </Text>
         )}
@@ -342,11 +144,8 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
         <View style={styles.footer}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             {wordCount != null && (
-              <Text style={styles.footerMeta}>
-                {wordCount} words
-              </Text>
+              <Text style={styles.footerMeta}>{wordCount} words</Text>
             )}
-            
             {stabilityDelta !== undefined && (
               <View style={[styles.toneBadge, { backgroundColor: stabilityDelta >= 0 ? 'rgba(110, 191, 139, 0.15)' : 'rgba(205, 127, 93, 0.15)' }]}>
                 <MetallicText style={styles.toneBadgeText} color={stabilityDelta >= 0 ? '#6EBF8B' : '#CD7F5D'}>
@@ -354,19 +153,14 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
                 </MetallicText>
               </View>
             )}
-            
-            {somaticSnapshotColor && (
-              <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: somaticSnapshotColor, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }} />
-            )}
           </View>
-          
           <View style={[styles.toneBadge, { backgroundColor: accent + '20' }]}>
             <MetallicText style={styles.toneBadgeText} color={accent}>
               {tone}
             </MetallicText>
           </View>
         </View>
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 });
@@ -377,76 +171,63 @@ export default ObsidianJournalEntry;
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: CARD_W,
-    height: CARD_H,
-    marginBottom: 14,
-    alignSelf: 'center',
-    position: 'relative',
+    marginBottom: 16,
   },
-  canvas: {
-    ...StyleSheet.absoluteFillObject,
-    width: CARD_W,
-    height: CARD_H,
-    borderRadius: BORDER_R,
-    overflow: 'hidden',
-  },
-  content: {
-    ...StyleSheet.absoluteFillObject,
+  card: {
     padding: 24,
-    justifyContent: 'space-between',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
-  },
-  sigilCanvas: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   headerText: {
     flex: 1,
   },
   dateText: {
-    color: '#FFFFFF',
-    fontSize: 13,
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: 12,
     fontWeight: '600',
-  },
-  timeText: {
-    color: theme.textMuted,
-    fontSize: 11,
-    marginTop: 1,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   title: {
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 4,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    lineHeight: 28,
   },
   body: {
-    color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 13,
-    lineHeight: 19,
-    flex: 1,
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 15,
+    lineHeight: 24,
+    marginBottom: 16,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 6,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.06)',
   },
   footerMeta: {
     color: theme.textMuted,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
   },
   toneBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   toneBadgeText: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,

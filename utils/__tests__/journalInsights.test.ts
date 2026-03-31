@@ -16,6 +16,8 @@ import {
   computeKeywordLift,
   computeEmotionBucketLift,
   computeJournalingImpact,
+  computeStreakImpact,
+  computeEmotionalProcessing,
 } from '../journalInsights';
 import type { DailyAggregate } from '../../services/insights/types';
 
@@ -310,28 +312,168 @@ describe('computeJournalingImpact', () => {
   });
 
   it('returns a card when both journal and non-journal groups have >=6 days', () => {
-    const aggs = [
-      ...makeAggregates(6, { journalCount: 1, journalWordCount: 200, moodAvg: 7 }),
-      ...makeAggregates(6, { journalCount: 0, journalWordCount: 0, moodAvg: 4 }, '2026-02-01'),
-    ];
+    const journalDays = makeAggregates(6, { journalCount: 1, journalWordCount: 200 });
+    journalDays.forEach((d, i) => { d.moodAvg = 6.5 + (i % 2 === 0 ? 0.5 : -0.5); });
+    const noJournalDays = makeAggregates(6, { journalCount: 0, journalWordCount: 0 }, '2026-02-01');
+    noJournalDays.forEach((d, i) => { d.moodAvg = 3.5 + (i % 2 === 0 ? 0.5 : -0.5); });
+    const aggs = [...journalDays, ...noJournalDays];
     const result = computeJournalingImpact(aggs);
     expect(result).not.toBeNull();
     expect(result!.type).toBe('journaling_vs_not');
   });
 
-  it('null when journal days < 6', () => {
+  it('null when journal days < 4', () => {
     const aggs = [
-      ...makeAggregates(4, { journalCount: 1 }),
+      ...makeAggregates(3, { journalCount: 1 }),
       ...makeAggregates(10, { journalCount: 0 }, '2026-02-01'),
     ];
     expect(computeJournalingImpact(aggs)).toBeNull();
   });
 
-  it('null when non-journal days < 6', () => {
+  it('null when non-journal days < 4', () => {
     const aggs = [
       ...makeAggregates(10, { journalCount: 1 }),
-      ...makeAggregates(4, { journalCount: 0 }, '2026-02-01'),
+      ...makeAggregates(3, { journalCount: 0 }, '2026-02-01'),
     ];
     expect(computeJournalingImpact(aggs)).toBeNull();
+  });
+
+  it('includes effect size and next-day data', () => {
+    const journalDays = makeAggregates(8, { journalCount: 1, journalWordCount: 200 });
+    journalDays.forEach((d, i) => { d.moodAvg = 7.5 + (i % 2 === 0 ? 0.5 : -0.5); });
+    const noJournalDays = makeAggregates(8, { journalCount: 0, journalWordCount: 0 }, '2026-02-01');
+    noJournalDays.forEach((d, i) => { d.moodAvg = 3.5 + (i % 2 === 0 ? 0.5 : -0.5); });
+    const aggs = [...journalDays, ...noJournalDays];
+    const result = computeJournalingImpact(aggs);
+    expect(result).not.toBeNull();
+    expect(result!.data.effectSize).toBeDefined();
+    expect(typeof result!.data.effectSize).toBe('number');
+    expect(result!.stat).toMatch(/effect/);
+  });
+
+  it('returns null when effect size is negligible', () => {
+    // Mood difference exists (5.1 vs 5.0) but effect size is tiny
+    const aggs = [
+      ...makeAggregates(6, { journalCount: 1, moodAvg: 5.1 }),
+      ...makeAggregates(6, { journalCount: 0, moodAvg: 5.0 }, '2026-02-01'),
+    ];
+    expect(computeJournalingImpact(aggs)).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeStreakImpact
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeStreakImpact', () => {
+  it('returns null with fewer than 5 journal days', () => {
+    const aggs = makeAggregates(10, { journalCount: 0 });
+    // Only 3 journal days
+    aggs[0].journalCount = 1;
+    aggs[1].journalCount = 1;
+    aggs[2].journalCount = 1;
+    expect(computeStreakImpact(aggs)).toBeNull();
+  });
+
+  it('returns a card when streak and isolated days both have >= 3 days', () => {
+    // 5 consecutive journal days (days 1-5) → days 2-5 are streak, day 1 is isolated
+    // Plus 3 isolated journal days with gaps
+    const aggs = makeAggregates(14);
+    // Consecutive streak: days 0-4
+    for (let i = 0; i < 5; i++) {
+      aggs[i].journalCount = 1;
+      aggs[i].moodAvg = 8;
+    }
+    // Isolated days: 6, 8, 10 (gaps between them)
+    aggs[6].journalCount = 1;
+    aggs[6].moodAvg = 5;
+    aggs[8].journalCount = 1;
+    aggs[8].moodAvg = 5;
+    aggs[10].journalCount = 1;
+    aggs[10].moodAvg = 5;
+
+    const result = computeStreakImpact(aggs);
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe('streak_impact');
+    expect(result!.data.streakDays).toBeGreaterThanOrEqual(3);
+  });
+
+  it('returns null when not enough isolated days', () => {
+    // All 5 journal days consecutive → 4 streak + 1 isolated = not enough isolated
+    const aggs = makeAggregates(10);
+    for (let i = 0; i < 5; i++) {
+      aggs[i].journalCount = 1;
+    }
+    expect(computeStreakImpact(aggs)).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeEmotionalProcessing
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeEmotionalProcessing', () => {
+  it('returns null with fewer than 6 journal days with emotions', () => {
+    const aggs = makeAggregates(10, {
+      journalCount: 1,
+      emotionCountsTotal: { joy: 1 },
+    });
+    // Only 5 with emotions
+    aggs.length = 5;
+    expect(computeEmotionalProcessing(aggs)).toBeNull();
+  });
+
+  it('returns a card when enough days have varied emotion depth', () => {
+    const aggs: DailyAggregate[] = [];
+    // 4 days with deep emotions (5 distinct) — above median
+    for (let i = 0; i < 4; i++) {
+      const d = new Date('2026-01-01T12:00:00');
+      d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      aggs.push(makeAggregate(key, {
+        journalCount: 1,
+        moodAvg: 7,
+        stressAvg: 3,
+        emotionCountsTotal: { joy: 2, gratitude: 1, calm: 1, hope: 1, curiosity: 1 },
+      }));
+    }
+    // 2 days with medium emotions (2 distinct) — at/near median
+    for (let i = 4; i < 6; i++) {
+      const d = new Date('2026-01-01T12:00:00');
+      d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      aggs.push(makeAggregate(key, {
+        journalCount: 1,
+        moodAvg: 5,
+        stressAvg: 5,
+        emotionCountsTotal: { sadness: 1, fatigue: 1 },
+      }));
+    }
+    // 4 days with shallow emotions (1 distinct) — below median
+    for (let i = 6; i < 10; i++) {
+      const d = new Date('2026-01-01T12:00:00');
+      d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      aggs.push(makeAggregate(key, {
+        journalCount: 1,
+        moodAvg: 4,
+        stressAvg: 7,
+        emotionCountsTotal: { anxiety: 1 },
+      }));
+    }
+
+    const result = computeEmotionalProcessing(aggs);
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe('emotional_processing');
+    expect(result!.data.deepDays).toBeGreaterThanOrEqual(3);
+    expect(result!.data.shallowDays).toBeGreaterThanOrEqual(3);
+  });
+
+  it('returns null when no entries have emotions', () => {
+    const aggs = makeAggregates(10, {
+      journalCount: 1,
+      emotionCountsTotal: {},
+    });
+    expect(computeEmotionalProcessing(aggs)).toBeNull();
   });
 });

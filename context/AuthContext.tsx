@@ -104,6 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleAppState = (state: AppStateStatus) => {
       if (state === 'active') {
         supabase.auth.startAutoRefresh();
+        // Top-up demo data for any days missed while app was closed
+        supabase.auth.getSession().then(({ data: { session: s } }) => {
+          if (s?.user?.email) DemoSeedService.seedIfNeeded(s.user.email).catch(() => {});
+        });
       } else {
         // Halt refresh to save energy for the user
         supabase.auth.stopAutoRefresh();

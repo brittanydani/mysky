@@ -49,10 +49,7 @@ const ALLOWED_NOTIFICATION_ROUTES = new Set([
   '/(tabs)/checkin',
   '/(tabs)/settings',
   '/checkin',
-  '/daily-reflection',
-  '/sleep',
   '/insights',
-  '/journal-new',
   '/sanctuary',
   '/premium',
   '/inner-world',
@@ -455,7 +452,6 @@ function AppShell() {
 
             {/* Onboarding & Auth */}
             <Stack.Screen name="onboarding" />
-            <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
 
             {/* --- HIDDEN SCREENS (MODALS) --- */}
             {/* Slide up over the tab bar — dedicated workspaces */}

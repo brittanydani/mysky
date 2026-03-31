@@ -55,6 +55,8 @@ import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStor
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 
 const { width } = Dimensions.get('window');
 
@@ -390,15 +392,14 @@ export default function HomeScreen() {
               <Text style={styles.greeting}>
                 {userChart.name || 'Welcome'}
               </Text>
-              <Text style={styles.dateLabel}>
+              <GoldSubtitle style={styles.dateLabel}>
                 {new Date().toLocaleDateString('en-US', {
                   weekday: 'long',
                   month: 'short',
                   day: 'numeric',
                 })}
-              </Text>
+              </GoldSubtitle>
             </View>
-
           </Animated.View>
 
           {/* ── Streak Row ── */}
@@ -425,50 +426,55 @@ export default function HomeScreen() {
           )}
 
           {/* ── Daily Balance Score ── */}
-          <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.scoreCard}>
-            <View style={styles.scoreHeader}>
-              <Text style={styles.cardLabel}>DAILY BALANCE</Text>
-              <View style={styles.trendBadgeScore}>
-                <MetallicIcon name="trending-up-outline" size={12} color="#8CBEAA" />
-                <MetallicText style={styles.trendTextScore} color="#8CBEAA">Score</MetallicText>
+          <SectionHeader title="Daily Balance" icon="pulse-outline" />
+          <Animated.View entering={FadeInDown.delay(400).duration(600)}>
+            <LinearGradient colors={['rgba(139, 196, 232, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.scoreCard}>
+              <View style={styles.scoreHeader}>
+                <Text style={styles.cardLabel}>DAILY BALANCE</Text>
+                <View style={styles.trendBadgeScore}>
+                  <MetallicIcon name="trending-up-outline" size={12} color="#8CBEAA" />
+                  <MetallicText style={styles.trendTextScore} color="#8CBEAA">Score</MetallicText>
+                </View>
               </View>
-            </View>
-            {hasDataToday ? (
-              <>
+              {hasDataToday ? (
+                <>
+                  <View style={styles.scoreMain}>
+                    <Text style={styles.scoreValue}>{balanceScore.toFixed(1)}</Text>
+                    <Text style={styles.scoreMax}>/ 10</Text>
+                  </View>
+                  <View style={styles.pillsRow}>
+                    <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
+                    <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
+                    <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
+                  </View>
+                </>
+              ) : (
                 <View style={styles.scoreMain}>
-                  <Text style={styles.scoreValue}>{balanceScore.toFixed(1)}</Text>
-                  <Text style={styles.scoreMax}>/ 10</Text>
+                  <Text style={styles.noDataText}>No data yet</Text>
                 </View>
-                <View style={styles.pillsRow}>
-                  <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
-                  <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
-                  <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
-                </View>
-              </>
-            ) : (
-              <View style={styles.scoreMain}>
-                <Text style={styles.noDataText}>No data yet</Text>
-              </View>
-            )}
+              )}
+            </LinearGradient>
           </Animated.View>
 
           {/* ── 7-Day Internal Weather ── */}
-          <Animated.View entering={FadeInDown.delay(550).duration(600)} style={styles.graphCard}>
-            <View style={styles.graphCardHeader}>
-              <Text style={styles.cardLabel}>INTERNAL WEATHER</Text>
-              <View style={styles.graphBadge}>
-                <Text style={styles.graphBadgeText}>7 DAYS</Text>
+          <SectionHeader title="Internal Weather" icon="cloudy-outline" />
+          <Animated.View entering={FadeInDown.delay(550).duration(600)}>
+            <LinearGradient colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={styles.graphCard}>
+              <View style={styles.graphCardHeader}>
+                <View style={styles.graphBadge}>
+                  <Text style={styles.graphBadgeText}>7 DAYS</Text>
+                </View>
               </View>
-            </View>
-            <MoodTrendGraph bars={stabilityBars} dayLabels={stabilityDayLabels} />
+              <MoodTrendGraph bars={stabilityBars} dayLabels={stabilityDayLabels} />
+            </LinearGradient>
           </Animated.View>
 
           {/* ── Actionable Insight ── */}
+          <SectionHeader title="Daily Reflection" icon="sparkles-outline" />
           <Animated.View
             entering={FadeInDown.delay(700).duration(600)}
-            style={styles.insightCard}
           >
-            <View style={styles.insightGradient}>
+            <LinearGradient colors={[`${insightAccent}18`, 'rgba(10,10,12,0.9)']} style={styles.insightGradient}>
               <View style={styles.insightHeader}>
                 <MetallicIcon name={insightIcon as any} size={16} color={insightAccent} />
                 <MetallicText style={styles.insightEyebrow} color={insightAccent}>
@@ -482,7 +488,7 @@ export default function HomeScreen() {
                 </MetallicText>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
-            </View>
+            </LinearGradient>
           </Animated.View>
 
           {/* ── Weekly Reflection ── */}
@@ -491,7 +497,7 @@ export default function HomeScreen() {
               entering={FadeInDown.delay(800).duration(600)}
               style={styles.weeklyCard}
             >
-              <View style={styles.weeklyGradient}>
+              <LinearGradient colors={['rgba(212,184,114,0.08)', 'rgba(10,10,12,0.9)']} style={styles.weeklyGradient}>
                 <View style={styles.insightHeader}>
                   <MetallicIcon name="calendar-outline" size={16} variant="gold" />
                   <MetallicText style={styles.insightEyebrow} variant="gold">THIS WEEK</MetallicText>
@@ -534,14 +540,14 @@ export default function HomeScreen() {
                     </View>
                   )}
                 </View>
-              </View>
+              </LinearGradient>
             </Animated.View>
           )}
 
           {/* ── Gentle CTA when not enough data ── */}
           {dailyLoop && !dailyLoop.weeklyReflection.hasEnoughData && dailyLoop.weeklyReflection.checkInCount > 0 && (
             <Animated.View entering={FadeInDown.delay(800).duration(600)} style={styles.weeklyCard}>
-              <View style={styles.weeklyGradient}>
+              <LinearGradient colors={['rgba(212,184,114,0.08)', 'rgba(10,10,12,0.9)']} style={styles.weeklyGradient}>
                 <View style={styles.insightHeader}>
                   <MetallicIcon name="sparkles-outline" size={16} variant="gold" />
                   <MetallicText style={styles.insightEyebrow} variant="gold">WEEKLY REFLECTION</MetallicText>
@@ -549,7 +555,7 @@ export default function HomeScreen() {
                 <Text style={styles.weeklySummaryText}>
                   {dailyLoop.weeklyReflection.summary}
                 </Text>
-              </View>
+              </LinearGradient>
             </Animated.View>
           )}
 
@@ -557,7 +563,7 @@ export default function HomeScreen() {
           {!isPremium && (
             <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
               <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
-                <View style={styles.premiumPreviewCard}>
+                <LinearGradient colors={['rgba(212,184,114,0.1)', 'rgba(10,10,12,0.9)']} style={styles.premiumPreviewCard}>
                   <View style={styles.premiumPreviewHeader}>
                     <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
                     <MetallicText style={styles.premiumPreviewLabel} variant="gold">Deeper Insight</MetallicText>
@@ -574,7 +580,7 @@ export default function HomeScreen() {
                     </MetallicText>
                     <MetallicIcon name="arrow-forward-outline" size={14} variant="gold" />
                   </View>
-                </View>
+                </LinearGradient>
               </Pressable>
             </Animated.View>
           )}
@@ -710,6 +716,17 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
   );
 }
 
+// ── Section Header (matches Patterns screen) ────────────────────────────────
+
+function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <MetallicIcon name={icon as any} size={18} color={PALETTE.gold} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
+}
+
 // ── Score Pill ──────────────────────────────────────────────────────────────
 
 function ScorePill({ label, val, color }: { label: string; val: string; color: string }) {
@@ -789,14 +806,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
   balanceAura: {
     width: 40,
@@ -808,25 +825,25 @@ const styles = StyleSheet.create({
   },
   greeting: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   dateLabel: {
-    color: 'rgba(255, 255, 255, 0.45)', // further muted
-    fontSize: 13,
-    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    marginTop: 4,
   },
 
   // Insight Card
-  insightCard: { marginTop: 20, marginBottom: 28 },
+  insightCard: { marginTop: 0, marginBottom: 32 },
   insightGradient: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    padding: 28,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
   },
   insightHeader: {
     flexDirection: 'row',
@@ -843,17 +860,16 @@ const styles = StyleSheet.create({
   },
   insightText: {
     color: PALETTE.textMain,
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 24,
   },
 
   // Premium preview
   premiumPreviewCard: {
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 28,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
     marginBottom: 32,
   },
   premiumPreviewHeader: {
@@ -918,13 +934,12 @@ const styles = StyleSheet.create({
   },
 
   // Weekly reflection
-  weeklyCard: { marginBottom: 28 },
+  weeklyCard: { marginBottom: 32 },
   weeklyGradient: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    padding: 28,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
   },
   weeklySummaryText: {
     color: PALETTE.textMain,
@@ -933,7 +948,7 @@ const styles = StyleSheet.create({
   },
   weeklyMetrics: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
@@ -942,20 +957,20 @@ const styles = StyleSheet.create({
   metricChip: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   metricValue: {
     color: PALETTE.textMain,
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '700',
     fontVariant: ['tabular-nums'] as const,
   },
   metricLabel: {
     color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   trendBadge: {
     marginLeft: 'auto',
@@ -982,11 +997,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   scoreCard: {
-    padding: 24,
-    borderRadius: 28,
+    padding: 28,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    marginBottom: 16,
+    marginBottom: 32,
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   scoreHeader: {
@@ -1020,9 +1035,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   noDataText: {
-    fontSize: 18,
+    fontSize: 16,
     color: 'rgba(255,255,255,0.4)',
-    marginBottom: 20,
   },
   scoreMax: {
     fontSize: 18,
@@ -1067,10 +1081,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 24,
     paddingBottom: 16,
-    borderRadius: 28,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    marginBottom: 16,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 32,
     overflow: 'hidden',
   },
   graphCardHeader: {
@@ -1092,15 +1106,23 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
 
+  // Section headers (matches Patterns screen)
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 20,
+    marginTop: 8,
+  },
+  sectionTitle: {
+    color: PALETTE.textMain,
+    fontSize: 19,
+    fontWeight: '700',
+  },
+
   // Explore Blueprint section
   sectionBlock: {
     marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 12,
   },
   quickLinksRow: {
     flexDirection: 'row',
