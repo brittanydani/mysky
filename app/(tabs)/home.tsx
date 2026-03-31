@@ -47,6 +47,7 @@ import { localDb } from '../../services/storage/localDb';
 import { NatalChart, BirthData } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
 import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
@@ -162,6 +163,7 @@ export default function HomeScreen() {
 
         if (charts.length > 0) {
           const savedChart = charts[0];
+          const astroSettings = await AstrologySettingsService.getSettings();
           const birthData = {
             date: savedChart.birthDate,
             time: savedChart.birthTime,
@@ -171,6 +173,8 @@ export default function HomeScreen() {
             longitude: savedChart.longitude,
             timezone: savedChart.timezone,
             houseSystem: savedChart.houseSystem,
+            zodiacSystem: astroSettings.zodiacSystem,
+            orbPreset: astroSettings.orbPreset,
           };
 
           const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -247,7 +251,8 @@ export default function HomeScreen() {
   ) => {
     setShowEditBirth(false);
     try {
-      const chart = AstrologyCalculator.generateNatalChart(birthData);
+      const astroSettings = await AstrologySettingsService.getSettings();
+      const chart = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
 
       const charts = await localDb.getCharts();
       const existingId = charts.length > 0 ? charts[0].id : chart.id;

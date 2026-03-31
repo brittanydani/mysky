@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { CheckInService, getLogicalToday } from '../../services/patterns/checkInService';
 import type { DailyCheckIn, EnergyLevel, StressLevel, ThemeTag, CheckInInput } from '../../services/patterns/types';
 import type { NatalChart } from '../../services/astrology/types';
@@ -303,7 +304,8 @@ export default function MoodCheckIn() {
             timezone: saved.timezone,
             houseSystem: saved.houseSystem,
           };
-          const natal = AstrologyCalculator.generateNatalChart(birthData);
+          const astroSettings = await AstrologySettingsService.getSettings();
+          const natal = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
           const recent = await localDb.getCheckIns(saved.id, 7);
 
           if (!cancelled) {

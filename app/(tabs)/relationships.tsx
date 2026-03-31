@@ -26,6 +26,7 @@ import { localDb } from '../../services/storage/localDb';
 import { SavedChart, RelationshipChart, generateId } from '../../services/storage/models';
 import { BirthData, NatalChart } from '../../services/astrology/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { SynastryEngine, SynastryReport, SynastryAspect } from '../../services/astrology/synastryEngine';
 import { RelationshipInsightGenerator, RelationshipInsight } from '../../services/astrology/relationshipInsights';
 import { PremiumRelationshipService, RelationshipComparison } from '../../services/premium/relationshipCharts';
@@ -118,6 +119,7 @@ export default function RelationshipsScreen() {
       if (charts.length > 0) {
         const saved = charts[0];
         setSavedUserChart(saved);
+        const astroSettings = await AstrologySettingsService.getSettings();
         
         const birthData: BirthData = {
           date: saved.birthDate,
@@ -128,6 +130,8 @@ export default function RelationshipsScreen() {
           longitude: saved.longitude,
           timezone: saved.timezone,
           houseSystem: saved.houseSystem,
+          zodiacSystem: astroSettings.zodiacSystem,
+          orbPreset: astroSettings.orbPreset,
         };
         
         const chart = AstrologyCalculator.generateNatalChart(birthData);
@@ -150,6 +154,8 @@ export default function RelationshipsScreen() {
               longitude: rel.longitude,
               timezone: rel.timezone,
               houseSystem: saved.houseSystem,
+              zodiacSystem: astroSettings.zodiacSystem,
+              orbPreset: astroSettings.orbPreset,
             };
             const otherChart = AstrologyCalculator.generateNatalChart(relBirthData);
             otherChart.name = rel.name;
@@ -224,7 +230,7 @@ export default function RelationshipsScreen() {
 
       if (userChart) {
         try {
-          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: savedUserChart?.houseSystem });
+          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: savedUserChart?.houseSystem, zodiacSystem: (await AstrologySettingsService.getSettings()).zodiacSystem, orbPreset: (await AstrologySettingsService.getSettings()).orbPreset });
           otherChart.name = extra?.chartName || 'Someone Special';
           const report = SynastryEngine.calculateSynastry(userChart, otherChart);
           const topAspects = report.aspects.filter(a => a.strength === 'strong').slice(0, 3);
@@ -257,6 +263,8 @@ export default function RelationshipsScreen() {
         date: rel.birthDate, time: rel.birthTime, hasUnknownTime: rel.hasUnknownTime,
         place: rel.birthPlace, latitude: rel.latitude, longitude: rel.longitude, timezone: rel.timezone,
         houseSystem: savedUserChart?.houseSystem,
+        zodiacSystem: (await AstrologySettingsService.getSettings()).zodiacSystem,
+        orbPreset: (await AstrologySettingsService.getSettings()).orbPreset,
       };
     
       const otherChart = AstrologyCalculator.generateNatalChart(birthData);

@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../../../services/storage/encryptedAsyncStorage';
 
 import { theme } from '../../../constants/theme';
-import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
+import CosmicBackground from '../../../components/ui/CosmicBackground';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 import BackupPassphraseModal from '../../../components/BackupPassphraseModal';
@@ -524,7 +524,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <SkiaDynamicCosmos />
+      <CosmicBackground />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>

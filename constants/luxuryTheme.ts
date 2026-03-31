@@ -3,11 +3,12 @@
 
 export const luxuryTheme = {
   background: {
-    top: '#020817',
-    bottom: '#030A18',
-    base: '#020817',
-    elevated: '#0B1220',
-    panel: 'rgba(255,255,255,0.02)',
+    top: '#040A18',
+    mid: '#060E21',
+    bottom: '#02050E',
+    base: '#02040A',
+    elevated: '#0A142A',
+    panel: 'rgba(255,255,255,0.03)',
   },
 
   text: {

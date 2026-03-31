@@ -43,6 +43,7 @@ import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
 import { localDb } from '../services/storage/localDb';
 import { AstrologyCalculator } from '../services/astrology/calculator';
+import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { NatalChart } from '../services/astrology/types';
 import { ShadowQuoteEngine, ShadowQuoteResult, ShadowQuote } from '../services/astrology/shadowQuotes';
 import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from '../services/journal/promptEngine';
@@ -430,6 +431,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       if (charts.length > 0) {
         const savedChart = charts[0];
         setChartId(savedChart.id);
+        const astroSettings = await AstrologySettingsService.getSettings();
         const chart = AstrologyCalculator.generateNatalChart({
           date: savedChart.birthDate,
           time: savedChart.birthTime,
@@ -439,6 +441,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           longitude: savedChart.longitude,
           timezone: savedChart.timezone,
           houseSystem: savedChart.houseSystem,
+          zodiacSystem: astroSettings.zodiacSystem,
+          orbPreset: astroSettings.orbPreset,
         });
         setUserChart(chart);
         try {

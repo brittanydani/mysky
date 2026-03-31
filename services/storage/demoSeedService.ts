@@ -23,6 +23,8 @@ const DEMO_EMAIL = 'brittanyapps@outlook.com';
 
 // Flag stored in AsyncStorage to prevent re-seeding on subsequent logins
 const SEED_FLAG_KEY = '@mysky:demo_seeded';
+// Tracks the last date a daily entry was seeded (YYYY-MM-DD)
+const DAILY_SEED_KEY = '@mysky:demo_last_seeded';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,15 @@ function daysBefore(n: number): Date {
   const d = new Date('2026-03-30T12:00:00.000Z');
   d.setDate(d.getDate() - n);
   return d;
+}
+
+/** Simple numeric hash of a string — used for deterministic content rotation */
+function hashDate(dateStr: string): number {
+  let h = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    h = (Math.imul(31, h) + dateStr.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
 }
 
 // ─── Static seed data ─────────────────────────────────────────────────────────
@@ -241,27 +252,185 @@ export const DemoSeedService = {
    * Seeds demo data if:
    * 1. The signed-in user is the demo account
    * 2. The device has never been seeded before (checks SEED_FLAG_KEY)
+   *
+   * Also runs a daily top-up: adds entries for any day since last seed up to today.
    */
   async seedIfNeeded(email: string | null | undefined): Promise<void> {
     if (!DemoSeedService.isDemoAccount(email)) return;
 
-    const alreadySeeded = await AsyncStorage.getItem(SEED_FLAG_KEY);
-    if (alreadySeeded === 'true') {
-      logger.info('[DemoSeed] Already seeded — skipping.');
-      return;
-    }
-
-    logger.info('[DemoSeed] Seeding demo data for reviewer account…');
-
     try {
       await localDb.initialize();
-      await DemoSeedService._seed();
-      await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
-      logger.info('[DemoSeed] Demo seed complete.');
+
+      const alreadySeeded = await AsyncStorage.getItem(SEED_FLAG_KEY);
+      if (alreadySeeded !== 'true') {
+        logger.info('[DemoSeed] Seeding demo data for reviewer account…');
+        await DemoSeedService._seed();
+        await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
+        await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
+        logger.info('[DemoSeed] Demo seed complete.');
+      } else {
+        // Daily top-up: fill any days since last seed
+        await DemoSeedService._dailyTopUp();
+      }
     } catch (e) {
       logger.error('[DemoSeed] Seed failed:', e);
-      // Non-fatal — reviewer can still use the app, just without pre-populated data
     }
+  },
+
+  /**
+   * Adds one entry per missing day between last seeded date and today.
+   * Silently skips days that already have data.
+   */
+  async _dailyTopUp(): Promise<void> {
+    const charts = await localDb.getCharts();
+    if (!charts.length) return;
+    const chartId = charts[0].id;
+
+    const lastStr = await AsyncStorage.getItem(DAILY_SEED_KEY);
+    const today = isoDate(new Date());
+    if (lastStr === today) return; // already seeded today
+
+    const start = lastStr ? new Date(lastStr + 'T12:00:00.000Z') : new Date(today + 'T12:00:00.000Z');
+    const end   = new Date(today + 'T12:00:00.000Z');
+
+    const missing: Date[] = [];
+    const cursor = new Date(start);
+    cursor.setDate(cursor.getDate() + 1); // start from day after last seed
+    while (cursor <= end) {
+      missing.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    if (!missing.length) return;
+    logger.info(`[DemoSeed] Daily top-up: adding ${missing.length} day(s).`);
+
+    for (const d of missing) {
+      const dateStr = isoDate(d);
+      const idx = hashDate(dateStr);
+      await DemoSeedService._seedDay(dateStr, d, chartId, idx);
+    }
+
+    // Cloud top-up
+    await DemoSeedService._seedSupabaseDay(missing, chartId);
+    await AsyncStorage.setItem(DAILY_SEED_KEY, today);
+  },
+
+  /**
+   * Seeds one day's full data: journal + sleep + 2 check-ins + insight.
+   */
+  async _seedDay(dateStr: string, d: Date, chartId: string, idx: number): Promise<void> {
+    const n = journalTitles.length;
+    const jTs = new Date(d.getTime() + 20 * 60 * 60 * 1000).toISOString();
+    const sTs = new Date(d.getTime() +  8 * 60 * 60 * 1000).toISOString();
+    const iTs = new Date(d.getTime() +  7 * 60 * 60 * 1000).toISOString();
+    const i14 = idx % n;
+
+    // Journal
+    await localDb.saveJournalEntry({
+      id: uid(), date: dateStr,
+      mood: MOODS[idx % MOODS.length],
+      moonPhase: 'waxing',
+      title:   journalTitles[i14],
+      content: journalContents[i14],
+      chartId,
+      tags: [(['gratitude','growth','clarity','boundaries','rest'] as const)[idx % 5]],
+      contentWordCount: journalContents[i14].split(' ').length,
+      contentReadingMinutes: 1,
+      createdAt: jTs, updatedAt: jTs, isDeleted: false,
+    });
+
+    // Sleep
+    const sleepDurations = [7.5,6.0,8.0,7.0,6.5,8.5,7.5,7.0,9.0,6.5,8.0,7.5,7.0,8.0];
+    const sleepQualities  = [4,3,5,4,3,5,4,4,5,3,4,5,4,5];
+    await localDb.saveSleepEntry({
+      id: uid(), chartId, date: dateStr,
+      durationHours: sleepDurations[idx % sleepDurations.length],
+      quality:       sleepQualities[idx % sleepQualities.length],
+      dreamText:     dreamTexts[i14],
+      dreamFeelings: JSON.stringify(dreamFeelingMaps[i14]),
+      dreamMetadata: JSON.stringify({
+        vividness:    3 + (idx % 3),
+        lucidity:     1 + (idx % 3),
+        controlLevel: 2 + (idx % 3),
+        overallTheme: DREAM_THEMES[idx % DREAM_THEMES.length],
+        awakenState:  AWAKEN_STATES[idx % AWAKEN_STATES.length],
+        recurring:    idx % 11 === 0,
+      }),
+      createdAt: sTs, updatedAt: sTs, isDeleted: false,
+    });
+
+    // Check-ins (morning + evening)
+    const tagSets = [['clarity','gratitude'],['anxiety','work'],['joy','creativity'],['boundaries','health'],['rest','alone_time'],['relationships','eq_open'],['career','productivity'],['eq_calm','nature'],['overwhelm','eq_grounded'],['growth','movement'],['eq_hopeful','social'],['grief','eq_heavy'],['confidence','eq_focused'],['family','gratitude']];
+    const notes      = ['Feeling good after morning pages.','Had a productive afternoon despite low energy start.','Noticing patterns in when I feel most myself.','Processed something difficult – feeling lighter.','Stayed off social media today, huge difference.','Midday slump but recovered well.','Really present during evening walk.','Body feels tight – need to move more.','Clear head, getting things done.','Emotional morning, breakthrough by afternoon.','Tired but content.','Creative energy high today.','Needed more space than I gave myself.','In flow most of the day.'];
+    const wins       = ['Finished a task I\'d been avoiding.','Had a vulnerable conversation.','Moved my body intentionally.','Set a boundary without over-explaining.','Got outside for a walk.','Actually rested when tired.','Asked for help instead of powering through.','Journaled before bed.','Said no to something draining.','Remembered to eat and drink water consistently.','Stayed in the present moment during a hard meeting.','Created something for no reason except joy.','Checked in with someone I care about.','Did something kind for myself.'];
+    const challenges = ['Comparison crept in during scrolling.','Underslept and it showed.','Pushed past my limit before noticing.','Overthought an old conversation.','Got pulled into someone else\'s anxiety.','Skipped movement and felt worse for it.','Procrastinated on something uncomfortable.','Had trouble staying present.','Got caught in a loop of worst-case thinking.','More reactive than I wanted to be.','Hard to rest even when tired.','Took on too much without pausing to check in.','Needed grounding and didn\'t reach for it quickly enough.','Felt disconnected for a bit.'];
+    for (let slot = 0; slot < 2; slot++) {
+      const ts = new Date(d.getTime() + (slot === 0 ? 9 : 19) * 60 * 60 * 1000).toISOString();
+      await localDb.saveCheckIn({
+        id: uid(), date: dateStr, chartId,
+        timeOfDay:   slot === 0 ? 'morning' : 'evening',
+        moodScore:   Math.max(1, Math.min(10, 5 + (idx % 4) - 1 + slot)),
+        energyLevel: ENERGY_LEVELS[(idx + slot) % 3],
+        stressLevel: STRESS_LEVELS[(idx + slot + 1) % 3],
+        tags:        tagSets[(idx + slot) % tagSets.length],
+        note:        notes[(idx + slot) % notes.length],
+        wins:        wins[(idx + slot) % wins.length],
+        challenges:  challenges[(idx + slot) % challenges.length],
+        moonSign:    MOON_SIGNS[(idx + 3) % 12],
+        moonHouse:   1 + (idx % 12),
+        sunHouse:    1 + ((idx + 6) % 12),
+        transitEvents: [{ transitPlanet: 'Moon', natalPlanet: 'Venus', aspect: 'trine', orb: 1.2, isApplying: true }],
+        lunarPhase:  LUNAR_PHASES[idx % LUNAR_PHASES.length],
+        retrogrades: idx % 4 === 0 ? ['Mercury'] : [],
+        createdAt: ts, updatedAt: ts,
+      });
+    }
+
+    // Insight
+    await localDb.saveInsight({
+      id: uid(), date: dateStr, chartId,
+      greeting:      insightGreetings[i14],
+      loveHeadline:  loveHeadlines[i14],
+      loveMessage:   loveMessages[i14],
+      energyHeadline: energyHeadlines[i14],
+      energyMessage:  energyMessages[i14],
+      growthHeadline: growthHeadlines[i14],
+      growthMessage:  growthMessages[i14],
+      gentleReminder: gentleReminders[i14],
+      journalPrompt:  journalPrompts[i14],
+      moonSign:  MOON_SIGNS[idx % 12],
+      moonPhase: LUNAR_PHASES[idx % LUNAR_PHASES.length],
+      isFavorite: idx % 3 === 0,
+      createdAt: iTs, updatedAt: iTs,
+    });
+  },
+
+  /** Upserts Supabase rows for a set of top-up dates. */
+  async _seedSupabaseDay(dates: Date[], _chartId: string): Promise<void> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const userId = session.user.id;
+
+    const dreamSymbolPool = ['water','light','door','forest','ocean','flying','field','home','bridge','library','figure','swimming','memory','color','shadow','mirror','path','garden','stars','fire'];
+
+    const checkInRows = dates.map(d => ({
+      user_id:    userId,
+      log_date:   isoDate(d),
+      mood_value: 5 + (hashDate(isoDate(d)) % 5),
+    }));
+    await supabase.from('daily_check_ins').upsert(checkInRows, { onConflict: 'user_id,log_date' });
+
+    const logRows = dates.map(d => {
+      const h = hashDate(isoDate(d));
+      return {
+        user_id:       userId,
+        created_at:    new Date(d.getTime() + 20 * 60 * 60 * 1000).toISOString(),
+        stress:        1 + (h % 6),
+        anxiety:       1 + ((h + 2) % 6),
+        dream_symbols: [dreamSymbolPool[h % dreamSymbolPool.length], dreamSymbolPool[(h + 7) % dreamSymbolPool.length], dreamSymbolPool[(h + 13) % dreamSymbolPool.length]],
+      };
+    });
+    await supabase.from('daily_logs').upsert(logRows, { ignoreDuplicates: true });
   },
 
   async _seed(): Promise<void> {
@@ -293,120 +462,10 @@ export const DemoSeedService = {
       });
     }
 
-    // ── Journal entries (14 days) ──────────────────────────────────────────
+    // ── 14 days of historical entries (reuses _seedDay for DRY logic) ───────
     for (let i = 0; i < 14; i++) {
       const d = daysBefore(13 - i);
-      const dateStr = isoDate(d);
-      const ts = new Date(d.getTime() + 20 * 60 * 60 * 1000).toISOString();
-      await localDb.saveJournalEntry({
-        id: uid(),
-        date: dateStr,
-        mood: MOODS[i % MOODS.length],
-        moonPhase: 'waxing',
-        title: journalTitles[i],
-        content: journalContents[i],
-        chartId: activeChartId,
-        tags: [(['gratitude', 'growth', 'clarity', 'boundaries', 'rest'] as const)[i % 5]],
-        contentWordCount: journalContents[i].split(' ').length,
-        contentReadingMinutes: 1,
-        createdAt: ts,
-        updatedAt: ts,
-        isDeleted: false,
-      });
-    }
-
-    // ── Sleep entries (14 days) ────────────────────────────────────────────
-    const sleepDurations = [7.5,6.0,8.0,7.0,6.5,8.5,7.5,7.0,9.0,6.5,8.0,7.5,7.0,8.0];
-    const sleepQualities = [4,3,5,4,3,5,4,4,5,3,4,5,4,5];
-
-    for (let i = 0; i < 14; i++) {
-      const d = daysBefore(13 - i);
-      const dateStr = isoDate(d);
-      const ts = new Date(d.getTime() + 8 * 60 * 60 * 1000).toISOString();
-      await localDb.saveSleepEntry({
-        id: uid(),
-        chartId: activeChartId,
-        date: dateStr,
-        durationHours: sleepDurations[i],
-        quality: sleepQualities[i],
-        dreamText: dreamTexts[i],
-        dreamFeelings: JSON.stringify(dreamFeelingMaps[i]),
-        dreamMetadata: JSON.stringify({
-          vividness: 3 + (i % 3),
-          lucidity: 1 + (i % 3),
-          controlLevel: 2 + (i % 3),
-          overallTheme: DREAM_THEMES[i % DREAM_THEMES.length],
-          awakenState: AWAKEN_STATES[i % AWAKEN_STATES.length],
-          recurring: i === 10,
-        }),
-        createdAt: ts,
-        updatedAt: ts,
-        isDeleted: false,
-      });
-    }
-
-    // ── Check-ins (28 — morning + evening × 14 days) ──────────────────────
-    const tagSets = [['clarity','gratitude'],['anxiety','work'],['joy','creativity'],['boundaries','health'],['rest','alone_time'],['relationships','eq_open'],['career','productivity'],['eq_calm','nature'],['overwhelm','eq_grounded'],['growth','movement'],['eq_hopeful','social'],['grief','eq_heavy'],['confidence','eq_focused'],['family','gratitude']];
-    const notes = ['Feeling good after morning pages.','Had a productive afternoon despite low energy start.','Noticing patterns in when I feel most myself.','Processed something difficult – feeling lighter.','Stayed off social media today, huge difference.','Midday slump but recovered well.','Really present during evening walk.','Body feels tight – need to move more.','Clear head, getting things done.','Emotional morning, breakthrough by afternoon.','Tired but content.','Creative energy high today.','Needed more space than I gave myself.','In flow most of the day.'];
-    const wins = ['Finished a task I\'d been avoiding.','Had a vulnerable conversation.','Moved my body intentionally.','Set a boundary without over-explaining.','Got outside for a walk.','Actually rested when tired.','Asked for help instead of powering through.','Journaled before bed.','Said no to something draining.','Remembered to eat and drink water consistently.','Stayed in the present moment during a hard meeting.','Created something for no reason except joy.','Checked in with someone I care about.','Did something kind for myself.'];
-    const challenges = ['Comparison crept in during scrolling.','Underslept and it showed.','Pushed past my limit before noticing.','Overthought an old conversation.','Got pulled into someone else\'s anxiety.','Skipped movement and felt worse for it.','Procrastinated on something uncomfortable.','Had trouble staying present.','Got caught in a loop of worst-case thinking.','More reactive than I wanted to be.','Hard to rest even when tired.','Took on too much without pausing to check in.','Needed grounding and didn\'t reach for it quickly enough.','Felt disconnected for a bit.'];
-
-    let ciIdx = 0;
-    for (let i = 0; i < 14; i++) {
-      const d = daysBefore(13 - i);
-      const dateStr = isoDate(d);
-      const moonSign = MOON_SIGNS[(i + 3) % 12];
-      const lunarPhase = LUNAR_PHASES[i % LUNAR_PHASES.length];
-      for (let slot = 0; slot < 2; slot++) {
-        const ts = new Date(d.getTime() + (slot === 0 ? 9 : 19) * 60 * 60 * 1000).toISOString();
-        await localDb.saveCheckIn({
-          id: uid(),
-          date: dateStr,
-          chartId: activeChartId,
-          timeOfDay: slot === 0 ? 'morning' : 'evening',
-          moodScore: Math.max(1, Math.min(10, 5 + (i % 4) - 1 + slot)),
-          energyLevel: ENERGY_LEVELS[(i + slot) % 3],
-          stressLevel: STRESS_LEVELS[(i + slot + 1) % 3],
-          tags: tagSets[ciIdx % tagSets.length],
-          note: notes[ciIdx % notes.length],
-          wins: wins[ciIdx % wins.length],
-          challenges: challenges[ciIdx % challenges.length],
-          moonSign,
-          moonHouse: 1 + (i % 12),
-          sunHouse: 1 + ((i + 6) % 12),
-          transitEvents: [{ transitPlanet: 'Moon', natalPlanet: 'Venus', aspect: 'trine', orb: 1.2, isApplying: true }],
-          lunarPhase,
-          retrogrades: i % 4 === 0 ? ['Mercury'] : [],
-          createdAt: ts,
-          updatedAt: ts,
-        });
-        ciIdx++;
-      }
-    }
-
-    // ── Insight history (14 days) ──────────────────────────────────────────
-    for (let i = 0; i < 14; i++) {
-      const d = daysBefore(13 - i);
-      const ts = new Date(d.getTime() + 7 * 60 * 60 * 1000).toISOString();
-      await localDb.saveInsight({
-        id: uid(),
-        date: isoDate(d),
-        chartId: activeChartId,
-        greeting: insightGreetings[i],
-        loveHeadline: loveHeadlines[i],
-        loveMessage: loveMessages[i],
-        energyHeadline: energyHeadlines[i],
-        energyMessage: energyMessages[i],
-        growthHeadline: growthHeadlines[i],
-        growthMessage: growthMessages[i],
-        gentleReminder: gentleReminders[i],
-        journalPrompt: journalPrompts[i],
-        moonSign: MOON_SIGNS[i % 12],
-        moonPhase: LUNAR_PHASES[i % LUNAR_PHASES.length],
-        isFavorite: i % 3 === 0,
-        createdAt: ts,
-        updatedAt: ts,
-      });
+      await DemoSeedService._seedDay(isoDate(d), d, activeChartId, i);
     }
 
     // ── App settings ───────────────────────────────────────────────────────
@@ -418,6 +477,11 @@ export const DemoSeedService = {
     });
 
     // ── AsyncStorage profile data ──────────────────────────────────────────
+    await EncryptedAsyncStorage.setItem('msky_user_name', 'Brittany');
+
+    // Grant premium for the reviewer account
+    await AsyncStorage.setItem('@mysky:demo_premium', 'true');
+
     await AsyncStorage.setItem('@mysky:core_values', JSON.stringify({
       selected: ['authenticity','freedom','growth','connection','courage','creativity','peace','integrity'],
       topFive: ['authenticity','freedom','growth','connection','courage'],

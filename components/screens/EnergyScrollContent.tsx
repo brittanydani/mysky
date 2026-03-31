@@ -26,6 +26,7 @@ import SkiaMetallicPill from '../ui/SkiaMetallicPill';
 import { localDb } from '../../services/storage/localDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../ui/MetallicIcon';
 import { MetallicText } from '../ui/MetallicText';
@@ -119,7 +120,8 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
             timezone: saved.timezone,
             houseSystem: saved.houseSystem,
           };
-          const natal = AstrologyCalculator.generateNatalChart(birthData);
+          const astroSettings = await AstrologySettingsService.getSettings();
+          const natal = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
 
           let behavior: BehaviorContext | undefined;
           try {

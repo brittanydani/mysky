@@ -25,29 +25,8 @@ const PALETTE = {
 };
 
 function LivingBackground() {
-  const rotation = useSharedValue(0);
-
-  useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 80_000, easing: Easing.linear }),
-      -1,
-      false,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
-
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020817' }]} pointerEvents="none">
-      <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
-        <View style={bgStyles.orbTitanium} />
-        <View style={bgStyles.orbStarlight} />
-      </Animated.View>
-      <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
-    </View>
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020817' }]} pointerEvents="none" />
   );
 }
 

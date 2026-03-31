@@ -37,6 +37,7 @@ import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { NatalChart } from '../../services/astrology/types';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { generateDreamInterpretation } from '../../services/premium/dreamInterpretation';
@@ -393,10 +394,12 @@ export default function SleepScreen() {
           setEntries(data); setRecentCheckIns(checkIns);
           applyEntryToForm(data.find(e => e.date === today));
           try {
+            const astroSettings = await AstrologySettingsService.getSettings();
             setNatalChart(AstrologyCalculator.generateNatalChart({
               date: savedChart.birthDate, time: savedChart.birthTime, hasUnknownTime: savedChart.hasUnknownTime,
               place: savedChart.birthPlace, latitude: savedChart.latitude, longitude: savedChart.longitude,
               timezone: savedChart.timezone, houseSystem: savedChart.houseSystem,
+              zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset,
             }));
           } catch {}
         } catch (e) {

@@ -1,131 +1,45 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import {
   Canvas,
-  Circle,
-  Group,
   LinearGradient as SkiaLinearGradient,
+  RadialGradient as SkiaRadialGradient,
   Rect,
   vec,
 } from '@shopify/react-native-skia';
-import {
-  useSharedValue,
-  useDerivedValue,
-  useFrameCallback,
-} from 'react-native-reanimated';
 import { MYSTIC } from '../../constants/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-// ── Star field: ~50 total stars, ~10 twinkle ──────
-const STATIC_COUNT = 40;
-const TWINKLE_COUNT = 10;
-
-interface Star {
-  x: number;
-  y: number;
-  r: number;
-  baseAlpha: number;
-}
-
-interface TwinkleStar extends Star {
-  phase: number;
-  speed: number;
-}
-
-function makeStaticStars(): Star[] {
-  const stars: Star[] = [];
-  for (let i = 0; i < STATIC_COUNT; i++) {
-    stars.push({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: 0.4 + Math.random() * 1.0,
-      baseAlpha: 0.25 + Math.random() * 0.55,
-    });
-  }
-  return stars;
-}
-
-function makeTwinkleStars(): TwinkleStar[] {
-  const stars: TwinkleStar[] = [];
-  for (let i = 0; i < TWINKLE_COUNT; i++) {
-    stars.push({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: 0.6 + Math.random() * 1.2,
-      baseAlpha: 0.5 + Math.random() * 0.45,
-      phase: Math.random() * Math.PI * 2,
-      speed: 0.6 + Math.random() * 1.2,
-    });
-  }
-  return stars;
-}
-
-// Twinkling star — driven by shared value, zero React re-renders
-const TwinklingStarComp = memo(({ star, time }: { star: TwinkleStar; time: any }) => {
-  const opacity = useDerivedValue(() => {
-    const t = time.value / 1000;
-    const pulse = 0.55 + 0.45 * Math.sin(t * star.speed + star.phase);
-    return star.baseAlpha * pulse;
-  });
-
-  return (
-    <Circle cx={star.x} cy={star.y} r={star.r} color={MYSTIC.star} opacity={opacity} />
-  );
-});
-TwinklingStarComp.displayName = 'TwinklingStarComp';
-
 function CosmicBackground() {
-  const staticStars = useMemo(() => makeStaticStars(), []);
-  const twinkleStars = useMemo(() => makeTwinkleStars(), []);
-
-  const time = useSharedValue(0);
-  useFrameCallback((frameInfo) => {
-    if (frameInfo.timeSinceFirstFrame !== undefined) {
-      time.value = frameInfo.timeSinceFirstFrame;
-    }
-  });
-
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Canvas style={StyleSheet.absoluteFill}>
-        {/* Dark navy-black gradient base */}
+        {/* Deep navy gradient base */}
         <Rect x={0} y={0} width={W} height={H}>
           <SkiaLinearGradient
             start={vec(0, 0)}
             end={vec(0, H)}
-            colors={[MYSTIC.bgTop, MYSTIC.bgBottom]}
+            colors={[MYSTIC.bgTop, MYSTIC.bgMid, MYSTIC.bgBottom]}
+            positions={[0, 0.5, 1]}
           />
         </Rect>
 
-        {/* Static stars — constant brightness */}
-        <Group>
-          {staticStars.map((s, i) => (
-            <Circle
-              key={`s-${i}`}
-              cx={s.x}
-              cy={s.y}
-              r={s.r}
-              color={MYSTIC.starDim}
-              opacity={s.baseAlpha}
-            />
-          ))}
-        </Group>
-
-        {/* Twinkling stars — subtle animated opacity */}
-        <Group>
-          {twinkleStars.map((s, i) => (
-            <TwinklingStarComp key={`t-${i}`} star={s} time={time} />
-          ))}
-        </Group>
+        {/* Subtle radial highlight — depth from top center */}
+        <Rect x={0} y={0} width={W} height={H * 0.6}>
+          <SkiaRadialGradient
+            c={vec(W / 2, 0)}
+            r={W * 0.85}
+            colors={['rgba(30,70,160,0.18)', 'transparent']}
+          />
+        </Rect>
 
         {/* Soft bottom vignette */}
-        <Rect x={0} y={0} width={W} height={H}>
+        <Rect x={0} y={H * 0.55} width={W} height={H * 0.45}>
           <SkiaLinearGradient
-            start={vec(0, 0)}
+            start={vec(0, H * 0.55)}
             end={vec(0, H)}
-            colors={['transparent', 'transparent', 'rgba(0,0,0,0.35)']}
-            positions={[0, 0.6, 1]}
+            colors={['transparent', 'rgba(4,10,28,0.45)']}
           />
         </Rect>
       </Canvas>

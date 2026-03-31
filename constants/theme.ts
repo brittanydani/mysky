@@ -39,7 +39,8 @@ export const GOLD_TEXT = {
 export const MYSTIC = {
   // ─ Backgrounds ─
   bgTop: '#020817',
-  bgBottom: '#030A18',
+  bgMid: '#020817',
+  bgBottom: '#020817',
   bgDeep: '#020817',
 
   // ─ Text hierarchy ─
@@ -102,10 +103,10 @@ export const theme = {
   // Background Colors — dark navy-obsidian
   background: MYSTIC.bgTop,
   backgroundDeep: MYSTIC.bgDeep,
-  backgroundSecondary: '#0A1224',
-  backgroundTertiary: '#0E1830',
-  surface: '#0E1830',
-  surfaceLight: '#122040',
+  backgroundSecondary: '#060E21',
+  backgroundTertiary: '#0A142A',
+  surface: '#0A142A',
+  surfaceLight: '#0E1A36',
 
   // Accent Colors
   indigo: '#2D3A5C',
@@ -166,20 +167,23 @@ export const theme = {
   typography: {
     headerLarge: {
       fontSize: 34,
-      fontWeight: '800' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
-      letterSpacing: -0.5,
+      fontWeight: '300' as const,
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Thin', android: 'sans-serif-light', default: 'System' }),
+      letterSpacing: 2.5,
+      textTransform: 'uppercase' as const,
     },
     headerMedium: {
       fontSize: 24,
-      fontWeight: '700' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
-      letterSpacing: -0.3,
+      fontWeight: '300' as const,
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Light', android: 'sans-serif-light', default: 'System' }),
+      letterSpacing: 2.0,
+      textTransform: 'uppercase' as const,
     },
     headerSmall: {
       fontSize: 18,
-      fontWeight: '600' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' }),
+      fontWeight: '400' as const,
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' }),
+      letterSpacing: 1.5,
     },
 
     bodyLarge: {

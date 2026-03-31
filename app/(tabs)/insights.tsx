@@ -21,6 +21,7 @@ import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
 import { CircadianRhythmTerrain } from '../../components/ui/CircadianRhythmTerrain';
@@ -184,7 +185,8 @@ export default function InsightsScreen() {
                 timezone: saved.timezone,
                 houseSystem: saved.houseSystem,
               };
-              const natalChart = AstrologyCalculator.generateNatalChart(birthData);
+              const astroSettings = await AstrologySettingsService.getSettings();
+              const natalChart = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
               const extCheckIns = await localDb.getCheckIns(chartId, 90);
               const journalEntries = await localDb.getJournalEntriesPaginated(90);
               const pipelineResult = runPipeline({ checkIns: extCheckIns, journalEntries, chart: natalChart, todayContext: null });
@@ -251,6 +253,30 @@ export default function InsightsScreen() {
 
   const prompt = getDailyPrompt();
 
+  // Direction label + icon for trends
+  const trendArrow = (direction: string) => {
+    if (direction === 'up') return { icon: 'arrow-up-outline' as const, color: PALETTE.emerald };
+    if (direction === 'down') return { icon: 'arrow-down-outline' as const, color: PALETTE.rose };
+    return { icon: 'remove-outline' as const, color: 'rgba(255,255,255,0.4)' };
+  };
+
+  const trendLabel = (metric: string, direction: string): string => {
+    const map: Record<string, Record<string, string>> = {
+      moodAvg:   { up: 'Lifting', down: 'Dipping', stable: 'Steady' },
+      energyAvg: { up: 'Rising', down: 'Fading', stable: 'Consistent' },
+      stressAvg: { up: 'Building', down: 'Easing', stable: 'Stable' },
+    };
+    return map[metric]?.[direction] ?? direction;
+  };
+
+  const correlationLabel = (r: number): string => {
+    const abs = Math.abs(r);
+    const sign = r > 0 ? 'positive' : 'negative';
+    if (abs >= 0.7) return `strong ${sign}`;
+    if (abs >= 0.4) return `moderate ${sign}`;
+    return `weak ${sign}`;
+  };
+
   const handleExportPdf = async () => {
     if (isExporting) return;
     setIsExporting(true);
@@ -297,7 +323,7 @@ export default function InsightsScreen() {
             <View style={styles.headerRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.title}>Insights</Text>
-                <GoldSubtitle style={styles.subtitle}>Personalized patterns & rhythmic guidance</GoldSubtitle>
+                <GoldSubtitle style={styles.subtitle}>A mirror for your inner patterns</GoldSubtitle>
               </View>
               {isPremium && (
                 <Pressable
@@ -317,32 +343,300 @@ export default function InsightsScreen() {
             </View>
           </Animated.View>
 
-          {/* ── Hub 1: Daily Reflection Prompt ── */}
-          <Animated.View entering={FadeInDown.delay(160)} style={styles.section}>
-            <LinearGradient colors={['rgba(212, 184, 114, 0.12)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
-              <View style={styles.promptHeader}>
-                <MetallicIcon name="sparkles-outline" size={14} variant="gold" />
-                <MetallicText style={styles.promptEyebrow} variant="gold">REFLECTION PROMPT</MetallicText>
-              </View>
-              <Text style={styles.promptText}>{prompt}</Text>
-              <View style={styles.actionRow}>
-                <ActionPill label="Log Mood" icon="happy-outline" color={PALETTE.silverBlue} onPress={() => nav('/(tabs)/mood')} />
-                <ActionPill label="Journal" icon="create-outline" color={PALETTE.gold} onPress={() => nav('/(tabs)/journal')} />
-              </View>
-            </LinearGradient>
+          {/* ── Snapshot Row ── */}
+          <Animated.View entering={FadeInDown.delay(140)}>
+            <View style={styles.metricRow}>
+              <MetricBox label="AVG MOOD" value={moodLabel(snapshot.avgMood)} color={PALETTE.silverBlue} isText />
+              <MetricBox label="STRESS" value={stressLabel(snapshot.avgStress, snapshot.stressTrend)} color={PALETTE.copper} isText />
+              <MetricBox label="CHECK-INS" value={snapshot.checkInCount.toString()} color={PALETTE.gold} />
+            </View>
           </Animated.View>
 
-          {/* ── Hub 2: Quantitative Snapshot ── */}
-          <View style={styles.metricRow}>
-            <MetricBox label="AVG MOOD" value={moodLabel(snapshot.avgMood)} color={PALETTE.silverBlue} isText />
-            <MetricBox label="STRESS" value={stressLabel(snapshot.avgStress, snapshot.stressTrend)} color={PALETTE.copper} isText />
-            <MetricBox label="LOGS" value={snapshot.checkInCount.toString()} color={PALETTE.gold} />
-          </View>
+          {/* ── Trend Directions (Premium) ── */}
+          {enhanced && enhanced.trends.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(180)} style={styles.section}>
+              <SectionHeader icon="trending-up-outline" label="YOUR TRENDS" />
+              <View style={styles.trendRow}>
+                {(['moodAvg', 'energyAvg', 'stressAvg'] as const).map(metric => {
+                  const t = enhanced.trends.find(tr => tr.metric === metric);
+                  if (!t) return null;
+                  const { icon, color } = trendArrow(t.direction);
+                  const metricName = metric === 'moodAvg' ? 'Mood' : metric === 'energyAvg' ? 'Energy' : 'Stress';
+                  return (
+                    <View key={metric} style={styles.trendCard}>
+                      <Text style={styles.trendMetricLabel}>{metricName}</Text>
+                      <View style={styles.trendValueRow}>
+                        <Ionicons name={icon} size={18} color={color} />
+                        <Text style={[styles.trendValue, { color }]}>{trendLabel(metric, t.direction)}</Text>
+                      </View>
+                      {t.displayChange !== '' && (
+                        <Text style={styles.trendChange}>{t.displayChange}</Text>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            </Animated.View>
+          )}
 
-          {/* ── Hub 3: Personal Patterns (Self-Knowledge × Behavioral Data) ── */}
+          {/* ── Where It All Connects (Blended — with journal prompts) ── */}
+          {enhanced && enhanced.blended.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(220)} style={styles.section}>
+              <SectionHeader icon="git-merge-outline" label="WHERE IT ALL CONNECTS" />
+              {enhanced.blended.map((card, i) => (
+                <LinearGradient
+                  key={i}
+                  colors={['rgba(139, 196, 232, 0.1)', 'rgba(10,10,12,0.9)']}
+                  style={styles.glassCard}
+                >
+                  <Text style={styles.blendedTitle}>{card.title}</Text>
+                  <Text style={styles.insightBody}>{card.body}</Text>
+                  {card.stat !== '' && (
+                    <Text style={styles.statText}>{card.stat}</Text>
+                  )}
+                  <View style={styles.journalPromptBox}>
+                    <MetallicIcon name="create-outline" size={13} variant="gold" />
+                    <Text style={styles.journalPromptText}>{card.journalPrompt}</Text>
+                  </View>
+                </LinearGradient>
+              ))}
+            </Animated.View>
+          )}
+
+          {/* ── What Lifts & Drains You ── */}
+          {enhanced && enhanced.keywordLift.hasData && (
+            <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
+              <SectionHeader icon="swap-vertical-outline" label="WHAT LIFTS & DRAINS YOU" />
+              <LinearGradient colors={['rgba(110, 191, 139, 0.08)', 'rgba(10, 10, 12, 0.9)']} style={styles.glassCard}>
+                <Text style={styles.liftIntro}>
+                  These themes appear more often on your best vs. hardest days — based on your own words.
+                </Text>
+                {enhanced.keywordLift.restores.length > 0 && (
+                  <View style={styles.liftGroup}>
+                    <View style={styles.liftLabelRow}>
+                      <Ionicons name="arrow-up-circle-outline" size={16} color={PALETTE.emerald} />
+                      <MetallicText style={[styles.liftGroupLabel, { color: PALETTE.emerald }]}>Restores you</MetallicText>
+                    </View>
+                    <View style={styles.pillRow}>
+                      {enhanced.keywordLift.restores.map(r => (
+                        <View key={r.label} style={[styles.liftPill, { borderColor: `${PALETTE.emerald}50`, backgroundColor: `${PALETTE.emerald}12` }]}>
+                          <Text style={[styles.pillText, { color: PALETTE.emerald }]}>{r.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+                {enhanced.keywordLift.drains.length > 0 && (
+                  <View style={[styles.liftGroup, { marginTop: 16 }]}>
+                    <View style={styles.liftLabelRow}>
+                      <Ionicons name="arrow-down-circle-outline" size={16} color={PALETTE.copper} />
+                      <MetallicText style={[styles.liftGroupLabel, { color: PALETTE.copper }]}>Drains you</MetallicText>
+                    </View>
+                    <View style={styles.pillRow}>
+                      {enhanced.keywordLift.drains.map(d => (
+                        <View key={d.label} style={[styles.liftPill, { borderColor: `${PALETTE.copper}50`, backgroundColor: `${PALETTE.copper}12` }]}>
+                          <Text style={[styles.pillText, { color: PALETTE.copper }]}>{d.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── When You Feel Best ── */}
+          {enhanced && enhanced.timePatterns.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(330)} style={styles.section}>
+              <SectionHeader icon="time-outline" label="WHEN YOU FEEL BEST" />
+              {enhanced.timePatterns.map((tp, i) => (
+                <LinearGradient
+                  key={i}
+                  colors={['rgba(168, 155, 200, 0.1)', 'rgba(10,10,12,0.9)']}
+                  style={styles.glassCard}
+                >
+                  <Text style={styles.insightBody}>{tp.insight}</Text>
+                  {tp.buckets && tp.buckets.length > 0 && (
+                    <View style={styles.timeGrid}>
+                      {tp.buckets.map(b => (
+                        <View key={b.label} style={styles.timeBucket}>
+                          <Text style={styles.timeBucketLabel}>{b.label}</Text>
+                          <View style={styles.timeBucketBar}>
+                            <View style={[styles.timeBucketFill, { width: `${(b.avgMood / 10) * 100}%` as any, backgroundColor: PALETTE.lavender }]} />
+                          </View>
+                          <Text style={styles.timeBucketValue}>{b.avgMood.toFixed(1)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  {tp.dayData && tp.dayData.length > 0 && (
+                    <View style={styles.dayGrid}>
+                      {tp.dayData.map(d => (
+                        <View key={d.day} style={styles.dayColumn}>
+                          <View style={styles.dayBarWrap}>
+                            <View style={[styles.dayBarFill, { height: `${(d.avgMood / 10) * 100}%` as any, backgroundColor: PALETTE.lavender }]} />
+                          </View>
+                          <Text style={styles.dayLabel}>{d.day.slice(0, 3)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  <Text style={styles.statText}>{tp.stat}</Text>
+                </LinearGradient>
+              ))}
+            </Animated.View>
+          )}
+
+          {/* ── Your Emotional Patterns ── */}
+          {enhanced && enhanced.emotionBucketLift.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
+              <SectionHeader icon="sparkles-outline" label="YOUR EMOTIONAL PATTERNS" />
+              <LinearGradient colors={['rgba(212, 163, 179, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.glassCard}>
+                <Text style={styles.liftIntro}>Which emotions show up more on your best and hardest days.</Text>
+                {enhanced.emotionBucketLift.map((item, i) => {
+                  const isPositive = item.lift > 0;
+                  const color = isPositive ? PALETTE.emerald : PALETTE.copper;
+                  return (
+                    <View key={item.category} style={[styles.emotionRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
+                      <Text style={styles.emotionName}>{item.category.charAt(0).toUpperCase() + item.category.slice(1)}</Text>
+                      <View style={{ flex: 1, marginHorizontal: 12 }}>
+                        <Text style={[styles.emotionInsight, { color: 'rgba(255,255,255,0.55)' }]}>{item.insight}</Text>
+                      </View>
+                      <View style={[styles.emotionBadge, { backgroundColor: `${color}20`, borderColor: `${color}40` }]}>
+                        <Text style={[styles.emotionBadgeText, { color }]}>{isPositive ? 'BEST' : 'HARD'}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── What's On Your Mind ── */}
+          {enhanced && enhanced.keywordThemes && (
+            <Animated.View entering={FadeInDown.delay(370)} style={styles.section}>
+              <SectionHeader icon="chatbubble-ellipses-outline" label="WHAT'S ON YOUR MIND" />
+              <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.glassCard}>
+                <Text style={styles.insightBody}>{enhanced.keywordThemes.insight}</Text>
+                <View style={[styles.pillRow, { marginTop: 16 }]}>
+                  {enhanced.keywordThemes.topKeywords.map(kw => (
+                    <View key={kw.word} style={[styles.keywordPill, { borderColor: `${PALETTE.gold}35` }]}>
+                      <Text style={styles.keywordPillText}>{kw.word}</Text>
+                      <Text style={styles.keywordPillCount}>{kw.dayCount}d</Text>
+                    </View>
+                  ))}
+                </View>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── Does Journaling Help You? ── */}
+          {enhanced && enhanced.journalImpact.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(390)} style={styles.section}>
+              <SectionHeader icon="book-outline" label="WHAT JOURNALING DOES FOR YOU" />
+              {enhanced.journalImpact.map((card, i) => (
+                <LinearGradient
+                  key={i}
+                  colors={['rgba(110, 191, 139, 0.08)', 'rgba(10,10,12,0.9)']}
+                  style={styles.glassCard}
+                >
+                  <Text style={styles.insightBody}>{card.insight}</Text>
+                  <Text style={styles.statText}>{card.stat}</Text>
+                </LinearGradient>
+              ))}
+            </Animated.View>
+          )}
+
+          {/* ── Emotional Tone Over Time ── */}
+          {enhanced && enhanced.emotionToneShift && (
+            <Animated.View entering={FadeInDown.delay(410)} style={styles.section}>
+              <SectionHeader icon="pulse-outline" label="HOW YOUR TONE IS SHIFTING" />
+              <LinearGradient colors={['rgba(212, 184, 114, 0.08)', 'rgba(10, 10, 12, 0.9)']} style={styles.glassCard}>
+                <Text style={styles.insightBody}>{enhanced.emotionToneShift.insight}</Text>
+                {enhanced.emotionToneShift.rising.length > 0 && (
+                  <View style={[styles.toneRow, { marginTop: 16 }]}>
+                    <Ionicons name="arrow-up-circle-outline" size={15} color={PALETTE.emerald} />
+                    <Text style={[styles.toneLabel, { color: PALETTE.emerald }]}>Rising: </Text>
+                    <Text style={styles.toneValue}>
+                      {enhanced.emotionToneShift.rising.map(r => r.category).join(', ')}
+                    </Text>
+                  </View>
+                )}
+                {enhanced.emotionToneShift.falling.length > 0 && (
+                  <View style={styles.toneRow}>
+                    <Ionicons name="arrow-down-circle-outline" size={15} color={PALETTE.rose} />
+                    <Text style={[styles.toneLabel, { color: PALETTE.rose }]}>Falling: </Text>
+                    <Text style={styles.toneValue}>
+                      {enhanced.emotionToneShift.falling.map(r => r.category).join(', ')}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.statText}>{enhanced.emotionToneShift.stat}</Text>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── Emotional Stability ── */}
+          {enhanced && enhanced.volatility.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(430)} style={styles.section}>
+              <SectionHeader icon="analytics-outline" label="EMOTIONAL STABILITY" />
+              <LinearGradient colors={['rgba(168, 155, 200, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.glassCard}>
+                <Text style={styles.liftIntro}>How consistent your scores have been day-to-day.</Text>
+                {enhanced.volatility.map((v, i) => {
+                  const label = v.metric === 'mood' ? 'Mood' : v.metric === 'stress' ? 'Stress' : 'Sentiment';
+                  const color = v.level === 'low' ? PALETTE.emerald : v.level === 'moderate' ? PALETTE.gold : PALETTE.copper;
+                  const description = v.level === 'low' ? 'Very consistent' : v.level === 'moderate' ? 'Some variation' : 'Noticeably variable';
+                  return (
+                    <View key={v.metric} style={[styles.stabilityRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
+                      <Text style={styles.stabilityMetric}>{label}</Text>
+                      <View style={styles.stabilityBar}>
+                        <View style={[styles.stabilityFill, {
+                          width: `${Math.min((v.stddev / 3) * 100, 100)}%` as any,
+                          backgroundColor: color,
+                        }]} />
+                      </View>
+                      <View style={[styles.stabilityBadge, { backgroundColor: `${color}20` }]}>
+                        <Text style={[styles.stabilityBadgeText, { color }]}>{description}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── Correlations ── */}
+          {correlations.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(450)} style={styles.section}>
+              <SectionHeader icon="git-network-outline" label="WHAT DRIVES WHAT" />
+              <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.glassCard}>
+                <Text style={styles.liftIntro}>Statistical relationships between your tracked metrics.</Text>
+                {correlations.slice(0, 5).map((c, i) => {
+                  const abs = Math.abs(c.correlation);
+                  const isPositive = c.correlation > 0;
+                  const color = abs >= 0.5 ? (isPositive ? PALETTE.emerald : PALETTE.rose) : PALETTE.gold;
+                  return (
+                    <View key={`${c.metric_a}-${c.metric_b}`} style={[styles.correlationRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
+                      <Text style={styles.correlationMetrics}>
+                        {c.metric_a} <Text style={{ color: 'rgba(255,255,255,0.3)' }}>×</Text> {c.metric_b}
+                      </Text>
+                      <View style={{ flex: 1, marginHorizontal: 12 }}>
+                        <View style={styles.correlationBarWrap}>
+                          <View style={[styles.correlationFill, { width: `${abs * 100}%` as any, backgroundColor: color }]} />
+                        </View>
+                      </View>
+                      <Text style={[styles.correlationLabel, { color }]}>{correlationLabel(c.correlation)}</Text>
+                    </View>
+                  );
+                })}
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* ── Personal Patterns (Self-Knowledge × Behavioral Data) ── */}
           {crossRefs.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(260)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Personal Patterns</Text>
+            <Animated.View entering={FadeInDown.delay(470)} style={styles.section}>
+              <SectionHeader icon="person-circle-outline" label="PERSONAL PATTERNS" subtitle="From your self-knowledge profile, confirmed by data" />
               {crossRefs.map((insight) => {
                 const accent = CROSS_REF_ACCENT[insight.accentColor] ?? PALETTE.gold;
                 return (
@@ -369,63 +663,33 @@ export default function InsightsScreen() {
             </Animated.View>
           )}
 
-          {/* ── Hub 4: Circadian Terrain (Premium) ── */}
+          {/* ── Circadian Terrain (Premium) ── */}
           {isPremium && (
-            <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Circadian Terrain</Text>
+            <Animated.View entering={FadeInDown.delay(490)} style={styles.section}>
+              <SectionHeader icon="radio-outline" label="CIRCADIAN TERRAIN" subtitle="Your mood rhythm by hour and day of week" />
               <View style={styles.terrainContainer}>
                 <CircadianRhythmTerrain height={240} />
               </View>
             </Animated.View>
           )}
 
-          {/* ── Hub 5: Narrative Pattern Insights ── */}
-          {enhanced && (
-            <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
-              {enhanced.blended.length > 0 && (
-                <LinearGradient colors={['rgba(139, 196, 232, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
-                  <View style={styles.patternLabelRow}>
-                    <MetallicIcon name="git-merge-outline" size={14} variant="gold" />
-                    <MetallicText style={styles.insightLabel} variant="gold">WHERE IT CONNECTS</MetallicText>
-                  </View>
-                  <Text style={styles.patternTitle}>{enhanced.blended[0].title}</Text>
-                  <Text style={styles.insightBody}>{enhanced.blended[0].body}</Text>
-                </LinearGradient>
-              )}
+          {/* ── Reflection Prompt ── */}
+          <Animated.View entering={FadeInDown.delay(510)} style={styles.section}>
+            <LinearGradient colors={['rgba(212, 184, 114, 0.12)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
+              <View style={styles.promptHeader}>
+                <MetallicIcon name="sparkles-outline" size={14} variant="gold" />
+                <MetallicText style={styles.promptEyebrow} variant="gold">TODAY'S REFLECTION</MetallicText>
+              </View>
+              <Text style={styles.promptText}>{prompt}</Text>
+              <View style={styles.actionRow}>
+                <ActionPill label="Log Mood" icon="happy-outline" color={PALETTE.silverBlue} onPress={() => nav('/(tabs)/mood')} />
+                <ActionPill label="Journal" icon="create-outline" color={PALETTE.gold} onPress={() => nav('/(tabs)/journal')} />
+              </View>
+            </LinearGradient>
+          </Animated.View>
 
-              {enhanced.keywordLift.hasData && (
-                <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
-                  <MetallicText style={styles.insightLabel} variant="gold">KEYWORD LIFT</MetallicText>
-                  {enhanced.keywordLift.restores.length > 0 && (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                      <MetallicText style={{ fontWeight: '600', fontSize: 15, lineHeight: 24 }} variant="gold">Restores: </MetallicText>
-                      <Text style={styles.insightBody}>
-                        {enhanced.keywordLift.restores.map(r => r.label).join(', ')}
-                      </Text>
-                    </View>
-                  )}
-                  {enhanced.keywordLift.drains.length > 0 && (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
-                      <MetallicText style={{ fontWeight: '600', fontSize: 15, lineHeight: 24 }} variant="copper">Drains: </MetallicText>
-                      <Text style={styles.insightBody}>
-                        {enhanced.keywordLift.drains.map(d => d.label).join(', ')}
-                      </Text>
-                    </View>
-                  )}
-                </LinearGradient>
-              )}
-
-              {enhanced.emotionToneShift && (
-                <LinearGradient colors={['rgba(212, 184, 114, 0.08)', 'rgba(10, 10, 12, 0.8)']} style={styles.glassCard}>
-                  <MetallicText style={styles.insightLabel} variant="gold">EMOTION TONE</MetallicText>
-                  <Text style={styles.insightBody}>{enhanced.emotionToneShift.insight}</Text>
-                </LinearGradient>
-              )}
-            </Animated.View>
-          )}
-
-          {/* ── Hub 6: Cosmic Context ── */}
-          <Animated.View entering={FadeInDown.delay(480)} style={[styles.section, { marginTop: 8 }]}>
+          {/* ── Cosmic Context ── */}
+          <Animated.View entering={FadeInDown.delay(530)} style={[styles.section, { marginTop: 4 }]}>
             <Pressable onPress={() => nav('/astrology-context')}>
               <LinearGradient colors={['rgba(212, 184, 114, 0.1)', 'rgba(212, 184, 114, 0.02)']} style={styles.cosmicCard}>
                 <View style={styles.cosmicHeader}>
@@ -464,6 +728,16 @@ const ActionPill = ({ label, icon, color, onPress }: { label: string; icon: keyo
   </Pressable>
 );
 
+const SectionHeader = ({ icon, label, subtitle }: { icon: keyof typeof Ionicons.glyphMap; label: string; subtitle?: string }) => (
+  <View style={styles.sectionHeaderWrap}>
+    <View style={styles.sectionHeaderRow}>
+      <MetallicIcon name={icon} size={14} variant="gold" />
+      <MetallicText style={styles.sectionHeaderLabel} variant="gold">{label}</MetallicText>
+    </View>
+    {subtitle && <Text style={styles.sectionHeaderSubtitle}>{subtitle}</Text>}
+  </View>
+);
+
 // ── Styles ──
 
 const styles = StyleSheet.create({
@@ -491,6 +765,11 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 16 },
 
+  sectionHeaderWrap: { marginBottom: 14 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionHeaderLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 2 },
+  sectionHeaderSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 4 },
+
   glassCard: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 8 },
 
   promptHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
@@ -505,6 +784,75 @@ const styles = StyleSheet.create({
   metricBox: { flex: 1, padding: 16, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: PALETTE.glassBorder, alignItems: 'center' },
   metricLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
   metricValue: { color: PALETTE.textMain, fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
+
+  // Trends
+  trendRow: { flexDirection: 'row', gap: 10 },
+  trendCard: { flex: 1, padding: 16, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  trendMetricLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 },
+  trendValueRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  trendValue: { fontSize: 14, fontWeight: '700' },
+  trendChange: { fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 4 },
+
+  // Blended
+  blendedTitle: { fontSize: 18, color: PALETTE.textMain, fontFamily: Platform.select({ ios: 'Georgia', android: 'serif' }), marginBottom: 10 },
+  journalPromptBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: 'rgba(201,174,120,0.06)', borderWidth: 1, borderColor: 'rgba(201,174,120,0.15)' },
+  journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 22, fontStyle: 'italic' },
+  statText: { fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 12, lineHeight: 16 },
+
+  // Lift & Drain
+  liftIntro: { fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 22, marginBottom: 16 },
+  liftGroup: {},
+  liftLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  liftGroupLabel: { fontSize: 13, fontWeight: '700' },
+  pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  liftPill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
+  pillText: { fontSize: 13, fontWeight: '600' },
+
+  // Time patterns
+  timeGrid: { marginTop: 16, gap: 10 },
+  timeBucket: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  timeBucketLabel: { width: 80, fontSize: 12, color: 'rgba(255,255,255,0.5)' },
+  timeBucketBar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  timeBucketFill: { height: '100%', borderRadius: 3 },
+  timeBucketValue: { width: 28, textAlign: 'right', fontSize: 12, color: 'rgba(255,255,255,0.5)' },
+
+  dayGrid: { flexDirection: 'row', gap: 6, marginTop: 16, height: 60, alignItems: 'flex-end' },
+  dayColumn: { flex: 1, alignItems: 'center', gap: 6 },
+  dayBarWrap: { flex: 1, width: '100%', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden', justifyContent: 'flex-end' },
+  dayBarFill: { width: '100%', borderRadius: 4 },
+  dayLabel: { fontSize: 10, color: 'rgba(255,255,255,0.35)' },
+
+  // Emotion patterns
+  emotionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  emotionName: { width: 72, fontSize: 13, color: PALETTE.textMain, fontWeight: '600' },
+  emotionInsight: { fontSize: 12, lineHeight: 18 },
+  emotionBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
+  emotionBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+
+  // Keywords
+  keywordPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, backgroundColor: 'rgba(201,174,120,0.06)' },
+  keywordPillText: { color: PALETTE.textMain, fontSize: 13 },
+  keywordPillCount: { fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: '700' },
+
+  // Tone
+  toneRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  toneLabel: { fontSize: 13, fontWeight: '700' },
+  toneValue: { fontSize: 13, color: 'rgba(255,255,255,0.6)' },
+
+  // Stability
+  stabilityRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 10 },
+  stabilityMetric: { width: 58, fontSize: 13, color: PALETTE.textMain, fontWeight: '600' },
+  stabilityBar: { flex: 1, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  stabilityFill: { height: '100%', borderRadius: 3 },
+  stabilityBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  stabilityBadgeText: { fontSize: 10, fontWeight: '700' },
+
+  // Correlations
+  correlationRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  correlationMetrics: { width: 130, fontSize: 12, color: 'rgba(255,255,255,0.6)', textTransform: 'capitalize' },
+  correlationBarWrap: { flex: 1, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  correlationFill: { height: '100%', borderRadius: 2 },
+  correlationLabel: { fontSize: 10, fontWeight: '700', textAlign: 'right', width: 90 },
 
   terrainContainer: { borderRadius: 24, overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.3)', borderWidth: 1, borderColor: PALETTE.glassBorder },
 

@@ -20,6 +20,7 @@ import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
+import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
@@ -228,7 +229,8 @@ export default function PatternsScreen() {
               timezone: saved.timezone,
               houseSystem: saved.houseSystem,
             };
-            const natalChart = AstrologyCalculator.generateNatalChart(birthData);
+            const astroSettings = await AstrologySettingsService.getSettings();
+            const natalChart = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
             const journalEntries = await localDb.getJournalEntriesPaginated(90);
             const sleepEntries = await localDb.getSleepEntries(chartId, 90);
 

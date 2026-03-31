@@ -10,8 +10,12 @@ import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-na
 import * as Haptics from 'expo-haptics';
 
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { logger } from '../utils/logger';
+
+// Key set by demoSeedService for the reviewer account only
+const DEMO_PREMIUM_KEY = '@mysky:demo_premium';
 
 type PurchaseResult = { success: boolean; error?: string; userCancelled?: boolean };
 type RestoreResult = { success: boolean; hasPremium?: boolean; error?: string };
@@ -116,6 +120,12 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
     const init = async () => {
       try {
+        // Check for demo-account premium override (set by demoSeedService)
+        const demoPremium = await AsyncStorage.getItem(DEMO_PREMIUM_KEY);
+        if (demoPremium === 'true' && isMounted.current) {
+          setIsPremium(true);
+        }
+
         await revenueCatService.initialize();
         
         // Parallel fetch for speed, but atomic state update
