@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SkiaGradient as LinearGradient, SkiaGradient } from '../components/ui/SkiaGradient';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
 import { Ionicons } from '@expo/vector-icons';
@@ -273,7 +274,7 @@ export default function CosmicContext() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['rgba(110, 140, 180, 0.15)', 'transparent']} style={styles.ambientTop} />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable onPress={handleBack} style={styles.backBtn}>
@@ -525,13 +526,13 @@ const styles = StyleSheet.create({
   vocText: { fontSize: 10, fontWeight: '800', color: '#D4B872', letterSpacing: 1.2 },
 
   // ── Retrograde Alert ──────────────────────────────────────────────────────
-  rxAlertCard: { backgroundColor: 'rgba(217,140,140,0.07)', borderWidth: 1, borderColor: 'rgba(217,140,140,0.25)', borderRadius: 20, padding: 20, marginBottom: 24 },
+  rxAlertCard: { backgroundColor: 'rgba(217,140,140,0.07)', borderWidth: 1, borderColor: 'rgba(217,140,140,0.25)', borderRadius: 24, padding: 28, marginBottom: 24 },
   rxAlertHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   rxAlertTitle: { fontSize: 14, fontWeight: '700', color: '#D98C8C' },
   rxAlertBody: { fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 20 },
 
   // ── Daily Alignment ───────────────────────────────────────────────────────
-  affirmationCard: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
+  affirmationCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#D9BF8C', letterSpacing: 1.5 },
   premiumIcon: { color: '#D9BF8C', fontSize: 14 },
@@ -539,7 +540,7 @@ const styles = StyleSheet.create({
 
   // ── Transits ──────────────────────────────────────────────────────────────
   transitsSection: { marginBottom: 32 },
-  transitsContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  transitsContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   transitRow: { flexDirection: 'row', alignItems: 'flex-start' },
   transitDetails: { flex: 1 },
   transitHeaderRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 },

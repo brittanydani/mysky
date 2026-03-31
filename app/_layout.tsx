@@ -32,14 +32,13 @@ import { useSubscriptionStore } from '../store/useSubscriptionStore';
 const ALLOWED_NOTIFICATION_ROUTES = new Set([
   '/(tabs)/home',
   '/(tabs)/journal',
-  '/(tabs)/insights',
+
   '/(tabs)/chart',
   '/(tabs)/sleep',
-  '/(tabs)/energy',
+
   '/(tabs)/mood',
   '/(tabs)/growth',
-  '/(tabs)/today',
-  '/(tabs)/story',
+
   '/(tabs)/blueprint',
   '/(tabs)/healing',
   '/(tabs)/sanctuary',

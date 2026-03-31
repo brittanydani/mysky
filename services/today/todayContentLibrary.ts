@@ -2517,3 +2517,161 @@ export const GREETING_LIBRARY: TaggedGreeting[] = [
   { id: 199, text: `Transformative energy all day. Tonight’s rest integrates the shifts.`, tags: ['intensity-intense'], timeOfDay: 'evening' },
   { id: 200, text: `What a day. The intensity was real. Here’s your evening debrief.`, tags: ['intensity-intense'], timeOfDay: 'evening' },
 ];
+
+// ═════════════════════════════════════════════════════════════
+// JOURNAL PROMPTS — 111 entries
+// One shown per day. Personalized by element, moon phase, season.
+// Designed to be thought-provoking, introspective, and safe.
+// ═════════════════════════════════════════════════════════════
+
+export const JOURNAL_PROMPT_LIBRARY: TaggedContent[] = [
+  { id: 1, text: `What lit you up today — and what drained your spark?`, tags: ['fire'] },
+  { id: 2, text: `Where in your life are you holding back when you want to leap?`, tags: ['fire'] },
+  { id: 3, text: `Write about a moment this week when you felt fully alive.`, tags: ['fire'] },
+  { id: 4, text: `What would you do today if you were not afraid of failing?`, tags: ['fire'] },
+  { id: 5, text: `Describe the anger or frustration you are carrying. What is it protecting?`, tags: ['fire'] },
+  { id: 6, text: `What bold move have you been postponing? Why?`, tags: ['fire'] },
+  { id: 7, text: `When did you last feel truly proud of yourself?`, tags: ['fire'] },
+  { id: 8, text: `Write a letter to the version of you that plays it safe.`, tags: ['fire'] },
+  { id: 9, text: `What does your passion look like when it is healthy versus destructive?`, tags: ['fire'] },
+  { id: 10, text: `If your energy today were a flame, how bright is it burning?`, tags: ['fire'] },
+  { id: 11, text: `What does safety feel like in your body right now?`, tags: ['earth'] },
+  { id: 12, text: `Name three things in your life that feel solid and dependable.`, tags: ['earth'] },
+  { id: 13, text: `Where are you overgiving? What would it look like to pull back?`, tags: ['earth'] },
+  { id: 14, text: `Write about a comfort that you depend on. Is it nourishing or numbing?`, tags: ['earth'] },
+  { id: 15, text: `What are you building right now — and is it what you actually want?`, tags: ['earth'] },
+  { id: 16, text: `Describe the last time you let yourself truly rest without guilt.`, tags: ['earth'] },
+  { id: 17, text: `What boundary have you been meaning to set?`, tags: ['earth'] },
+  { id: 18, text: `How is your relationship with money and security right now?`, tags: ['earth'] },
+  { id: 19, text: `Write about something you have been holding onto that no longer serves you.`, tags: ['earth'] },
+  { id: 20, text: `What does enough look like for you today?`, tags: ['earth'] },
+  { id: 21, text: `What conversation have you been avoiding? Write it here instead.`, tags: ['air'] },
+  { id: 22, text: `Describe a thought pattern that keeps looping. What does it need from you?`, tags: ['air'] },
+  { id: 23, text: `Who made you think differently about something this week?`, tags: ['air'] },
+  { id: 24, text: `Write about the gap between what you think and what you say.`, tags: ['air'] },
+  { id: 25, text: `What idea or question will not leave you alone right now?`, tags: ['air'] },
+  { id: 26, text: `If you could have one honest conversation with anyone, who and what?`, tags: ['air'] },
+  { id: 27, text: `What are you overthinking? Write it out, then let it breathe.`, tags: ['air'] },
+  { id: 28, text: `Describe a recent moment of genuine curiosity.`, tags: ['air'] },
+  { id: 29, text: `What do you wish people understood about the way your mind works?`, tags: ['air'] },
+  { id: 30, text: `Write about a belief you used to hold that no longer fits.`, tags: ['air'] },
+  { id: 31, text: `What emotion have you been pushing away? Let it speak here.`, tags: ['water'] },
+  { id: 32, text: `Describe a moment this week when you felt truly seen.`, tags: ['water'] },
+  { id: 33, text: `What does your intuition keep whispering that your mind keeps ignoring?`, tags: ['water'] },
+  { id: 34, text: `Write about someone you miss. What do they represent to you?`, tags: ['water'] },
+  { id: 35, text: `When did you last cry? What was underneath it?`, tags: ['water'] },
+  { id: 36, text: `What wound are you still healing from? How has it shaped you?`, tags: ['water'] },
+  { id: 37, text: `Describe the emotional weather inside you right now.`, tags: ['water'] },
+  { id: 38, text: `What are you grieving that you have not named yet?`, tags: ['water'] },
+  { id: 39, text: `Write about a dream or feeling that keeps returning.`, tags: ['water'] },
+  { id: 40, text: `What would you say to yourself if you could hold your own hand?`, tags: ['water'] },
+  { id: 41, text: `New beginnings are possible. What would you start fresh if you could?`, tags: ['phase-new'] },
+  { id: 42, text: `Set an intention for this cycle. What do you want to call in?`, tags: ['phase-new'] },
+  { id: 43, text: `Something is growing. What seeds did you plant that are starting to show?`, tags: ['phase-waxing-crescent'] },
+  { id: 44, text: `What small action could you take today to nurture what matters?`, tags: ['phase-waxing-crescent'] },
+  { id: 45, text: `A decision point. What are you being asked to commit to?`, tags: ['phase-first-quarter'] },
+  { id: 46, text: `What obstacle is testing your resolve right now?`, tags: ['phase-first-quarter'] },
+  { id: 47, text: `Trust the momentum. What is building that you cannot yet see clearly?`, tags: ['phase-waxing-gibbous'] },
+  { id: 48, text: `What needs refining before it is ready to be shared?`, tags: ['phase-waxing-gibbous'] },
+  { id: 49, text: `Everything is illuminated. What truth can you no longer ignore?`, tags: ['phase-full'] },
+  { id: 50, text: `What is this full moon asking you to release?`, tags: ['phase-full'] },
+  { id: 51, text: `The light is softening. What can you let go of today?`, tags: ['phase-waning-gibbous'] },
+  { id: 52, text: `Who or what deserves your gratitude right now?`, tags: ['phase-waning-gibbous'] },
+  { id: 53, text: `Time for honest reflection. What is not working anymore?`, tags: ['phase-last-quarter'] },
+  { id: 54, text: `What habit or pattern are you ready to leave behind?`, tags: ['phase-last-quarter'] },
+  { id: 55, text: `Be still. What emerges when you stop doing and just be?`, tags: ['phase-waning-crescent'] },
+  { id: 56, text: `Write about what rest looks like at every level — body, mind, spirit.`, tags: ['phase-waning-crescent'] },
+  { id: 57, text: `Spring energy is here. What part of you is waking up?`, tags: ['season-spring'] },
+  { id: 58, text: `What do you want to plant and grow this season?`, tags: ['season-spring'] },
+  { id: 59, text: `Summer fullness. What are you celebrating right now?`, tags: ['season-summer'] },
+  { id: 60, text: `What does joy look like for you in this season of life?`, tags: ['season-summer'] },
+  { id: 61, text: `Autumn release. What are you harvesting — and what is falling away?`, tags: ['season-autumn'] },
+  { id: 62, text: `What lesson from this year do you want to carry forward?`, tags: ['season-autumn'] },
+  { id: 63, text: `Winter stillness. What is being composted beneath the surface?`, tags: ['season-winter'] },
+  { id: 64, text: `What does this quiet season need from you?`, tags: ['season-winter'] },
+  { id: 65, text: `What are you pretending is fine that actually is not?`, tags: ['universal'] },
+  { id: 66, text: `Write about what your body is telling you today.`, tags: ['universal'] },
+  { id: 67, text: `If today had a title, what would it be?`, tags: ['universal'] },
+  { id: 68, text: `What do you need to hear right now that no one is saying?`, tags: ['universal'] },
+  { id: 69, text: `Describe the version of yourself you are growing into.`, tags: ['universal'] },
+  { id: 70, text: `What would younger you think of the life you are living now?`, tags: ['universal'] },
+  { id: 71, text: `Write about something beautiful you noticed recently.`, tags: ['universal'] },
+  { id: 72, text: `What relationship in your life needs the most attention right now?`, tags: ['universal'] },
+  { id: 73, text: `If you could change one thing about yesterday, what would it be?`, tags: ['universal'] },
+  { id: 74, text: `What are you most grateful for in this exact moment?`, tags: ['universal'] },
+  { id: 75, text: `Write a permission slip to yourself. What are you allowing?`, tags: ['universal'] },
+  { id: 76, text: `Who do you become when no one is watching?`, tags: ['universal'] },
+  { id: 77, text: `What is the kindest thing you have done for yourself this week?`, tags: ['universal'] },
+  { id: 78, text: `Name a fear that is quietly running your decisions.`, tags: ['universal'] },
+  { id: 79, text: `What would you do with an extra hour today?`, tags: ['universal'] },
+  { id: 80, text: `Write about a small moment that meant more than it seemed.`, tags: ['universal'] },
+  { id: 81, text: `What would your life look like if you trusted yourself completely?`, tags: ['universal'] },
+  { id: 82, text: `Describe how you feel right now in just five words.`, tags: ['universal'] },
+  { id: 83, text: `What is one thing you would like to do differently tomorrow?`, tags: ['universal'] },
+  { id: 84, text: `Write about a moment of courage, no matter how small.`, tags: ['universal'] },
+  { id: 85, text: `What part of your day feels most like you?`, tags: ['universal'] },
+  { id: 86, text: `If your emotions were weather, what is the forecast right now?`, tags: ['universal'] },
+  { id: 87, text: `What unfinished thought keeps surfacing? Finish it here.`, tags: ['universal'] },
+  { id: 88, text: `Name something you are learning about yourself this month.`, tags: ['universal'] },
+  { id: 89, text: `What would you say to someone going through what you are going through?`, tags: ['universal'] },
+  { id: 90, text: `Write about the space between who you are and who you want to be.`, tags: ['universal'] },
+  { id: 91, text: `What from your past is resurfacing right now? What does it need?`, tags: ['retrograde-active'] },
+  { id: 92, text: `Retrograde asks for review. What old pattern are you seeing more clearly?`, tags: ['retrograde-active'] },
+  { id: 93, text: `Is there an unresolved conversation or situation that deserves closure?`, tags: ['retrograde-active'] },
+  { id: 94, text: `What would it look like to forgive yourself for something old?`, tags: ['retrograde-active'] },
+  { id: 95, text: `Technology and communication may glitch. What can you slow down today?`, tags: ['retrograde-active'] },
+  { id: 96, text: `On calm days, what rises to the surface that noise usually drowns out?`, tags: ['intensity-calm'] },
+  { id: 97, text: `When everything is quiet, what do you hear inside?`, tags: ['intensity-calm'] },
+  { id: 98, text: `Moderate energy today. What deserves your focused attention?`, tags: ['intensity-moderate'] },
+  { id: 99, text: `Not too hot, not too cold. What can you build with this steady energy?`, tags: ['intensity-moderate'] },
+  { id: 100, text: `Intense energy is present. What is this intensity trying to transform?`, tags: ['intensity-intense'] },
+  { id: 101, text: `When things feel overwhelming, what grounds you?`, tags: ['intensity-intense'] },
+  { id: 102, text: `You checked in with high energy. What felt easy today?`, tags: ['energy-active'] },
+  { id: 103, text: `When your energy is strong, what do you tend to avoid dealing with?`, tags: ['energy-active'] },
+  { id: 104, text: `Your mood has been central lately. What emotion needs the most space?`, tags: ['mood-active'] },
+  { id: 105, text: `What is your mood trying to communicate that words have not captured yet?`, tags: ['mood-active'] },
+  { id: 106, text: `Growth is active in your life. What are you outgrowing?`, tags: ['growth-active'] },
+  { id: 107, text: `What is the hardest part of the change you are going through?`, tags: ['growth-active'] },
+  { id: 108, text: `Love is front and center. Write about what love looks like to you today.`, tags: ['love-active'] },
+  { id: 109, text: `What does your heart need that your head keeps second-guessing?`, tags: ['love-active'] },
+  { id: 110, text: `Focus is your theme. What single thing matters most today?`, tags: ['focus-active'] },
+  { id: 111, text: `When your mind is sharp, what truth becomes undeniable?`, tags: ['focus-active'] },
+];
+
+/**
+ * Select a journal prompt for today, personalized by the user's sun element.
+ * Uses day-of-year as a stable seed so the prompt stays consistent all day.
+ */
+export function getDailyJournalPrompt(sunElement?: 'fire' | 'earth' | 'air' | 'water'): TaggedContent {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000);
+
+  // Build a candidate pool: element-matched + universal
+  const pool = JOURNAL_PROMPT_LIBRARY.filter(
+    p => p.tags.includes('universal') || (sunElement ? p.tags.includes(sunElement) : false),
+  );
+
+  // Fallback to full library if filter somehow empty
+  const candidates = pool.length > 0 ? pool : JOURNAL_PROMPT_LIBRARY;
+
+  return candidates[dayOfYear % candidates.length];
+}
+
+/**
+ * Select an affirmation for today, personalized by the user's sun element.
+ * Uses day-of-year as a stable seed so the affirmation stays consistent all day.
+ */
+export function getDailyAffirmation(sunElement?: 'fire' | 'earth' | 'air' | 'water'): TaggedContent {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000);
+
+  const pool = AFFIRMATION_LIBRARY.filter(
+    p => p.tags.includes('universal') || (sunElement ? p.tags.includes(sunElement) : false),
+  );
+
+  const candidates = pool.length > 0 ? pool : AFFIRMATION_LIBRARY;
+
+  return candidates[dayOfYear % candidates.length];
+}

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
@@ -248,10 +249,7 @@ export default function NotificationSettings() {
   // ── JSX ────────────────────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['rgba(217, 191, 140, 0.05)', 'transparent']}
-        style={styles.ambientTop}
-      />
+      <SkiaDynamicCosmos />
 
       <View style={styles.header}>
         <Pressable
@@ -336,7 +334,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  card: { borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  card: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
   cardDisabled: { opacity: 0.45 },
 
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

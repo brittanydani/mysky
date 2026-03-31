@@ -38,6 +38,7 @@ import type { ComponentProps } from 'react';
 import { GoldIcon } from '../../../components/ui/GoldIcon';
 import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicIcon } from '../../../components/ui/MetallicIcon';
+import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -394,6 +395,7 @@ export default function VisualCalibration() {
 
   return (
     <View style={styles.container}>
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safe}>
         {/* ── Back button ── */}
         <Pressable

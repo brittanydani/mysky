@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     width: GROUP_W,
     alignSelf: 'center',
     marginBottom: 20,
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(201,174,120,0.10)',
     backgroundColor: 'rgba(15,18,25,0.88)',

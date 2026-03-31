@@ -139,14 +139,10 @@ export default function TabLayout() {
       <Tabs.Screen name="chart"         options={{ href: null }} />
       <Tabs.Screen name="checkin"       options={{ href: null }} />
       <Tabs.Screen name="index"         options={{ href: null }} />
-      <Tabs.Screen name="today"         options={{ href: null }} />
       <Tabs.Screen name="mood"          options={{ href: null }} />
       <Tabs.Screen name="sleep"         options={{ href: null }} />
-      <Tabs.Screen name="energy"        options={{ href: null }} />
-      <Tabs.Screen name="story"         options={{ href: null }} />
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing"       options={{ href: null }} />
-      <Tabs.Screen name="insights"      options={{ href: null }} />
       <Tabs.Screen name="premium"       options={{ href: null }} />
       <Tabs.Screen name="sanctuary"     options={{ href: null }} />
       <Tabs.Screen name="inner-tensions" options={{ href: null }} />

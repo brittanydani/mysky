@@ -480,11 +480,11 @@ const styles = StyleSheet.create({
   tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.25)',  },
 
   sectionLabel: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.30)',
+    fontSize: 19,
+    color: '#FFFFFF',
     fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 12,
+    marginTop: 8,
+    marginBottom: 20,
   },
 
   emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

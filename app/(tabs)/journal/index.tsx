@@ -26,14 +26,20 @@ import ObsidianJournalEntry from '../../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../../services/journal/nlp';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
+import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 
 const PAGE_SIZE = 30;
 
 const PALETTE = {
-  gold: '#D4B872',
-  amethyst: '#9D76C1',
+  gold: '#C9AE78',
+  silverBlue: '#C9AE78',
+  copper: '#CD7F5D',
+  emerald: '#C9AE78',
+  rose: '#D4A3B3',
   bg: '#0A0A0C',
+  textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
+  glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
 // ── Mood helpers ──
@@ -157,54 +163,35 @@ export default function JournalScreen() {
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
 
-  // ── Month/Year filter ──
-  const [filterMonth, setFilterMonth] = useState<number>(new Date().getMonth()); // 0-indexed
-  const [filterYear, setFilterYear] = useState<number>(new Date().getFullYear());
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   const filteredEntries = useMemo(() => {
-    let filtered = entries.filter(e => {
-      const d = parseLocalDate(e.date);
-      return d.getMonth() === filterMonth && d.getFullYear() === filterYear;
-    });
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(e =>
-        (e.title || '').toLowerCase().includes(q) ||
-        (e.content || '').toLowerCase().includes(q) ||
-        (e.mood || '').toLowerCase().includes(q) ||
-        (e.tags || []).some((t) => t.toLowerCase().includes(q))
-      );
-    }
-    return filtered;
-  }, [entries, filterMonth, filterYear, searchQuery]);
+    if (!searchQuery.trim()) return entries;
+    const q = searchQuery.toLowerCase();
+    return entries.filter(e =>
+      (e.title || '').toLowerCase().includes(q) ||
+      (e.content || '').toLowerCase().includes(q) ||
+      (e.mood || '').toLowerCase().includes(q) ||
+      (e.tags || []).some((t) => t.toLowerCase().includes(q))
+    );
+  }, [entries, searchQuery]);
 
   const filteredSleepEntries = useMemo(() => {
-    let filtered = sleepEntries.filter(e => {
-      const d = parseLocalDate(e.date);
-      return d.getMonth() === filterMonth && d.getFullYear() === filterYear;
-    });
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(e =>
-        (e.dreamText ?? '').toLowerCase().includes(q)
-      );
-    }
-    return filtered;
-  }, [sleepEntries, filterMonth, filterYear, searchQuery]);
+    if (!searchQuery.trim()) return sleepEntries.filter(e => !e.isDeleted);
+    const q = searchQuery.toLowerCase();
+    return sleepEntries.filter(e =>
+      !e.isDeleted && (e.dreamText ?? '').toLowerCase().includes(q)
+    );
+  }, [sleepEntries, searchQuery]);
 
-  // Available months for navigation (derived from entries)
-  const navigateMonth = useCallback((direction: -1 | 1) => {
+  const toggleBrowseSearch = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
-    setFilterMonth(prev => {
-      let newMonth = prev + direction;
-      let newYear = filterYear;
-      if (newMonth < 0) { newMonth = 11; newYear--; }
-      if (newMonth > 11) { newMonth = 0; newYear++; }
-      setFilterYear(newYear);
-      return newMonth;
+    setShowSearch(prev => {
+      if (prev) setSearchQuery('');
+      return !prev;
     });
-  }, [filterYear]);
+  }, []);
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedEntryIds(prev => {
@@ -402,26 +389,47 @@ export default function JournalScreen() {
 
   const ListHeader = useMemo(() => (
     <>
-      <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.title}>Archive</Text>
-            <GoldSubtitle style={styles.subtitle}>Subconscious field · Pattern memory</GoldSubtitle>
-          </View>
-          <Pressable
-            onPress={() => router.push('/(tabs)/growth' as Href)}
-            accessibilityRole="button"
-            accessibilityLabel="View pattern insights"
-            style={{ paddingTop: 4 }}
-          >
-            <Ionicons name="analytics-outline" size={22} color={theme.textMuted} />
-          </Pressable>
+      <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Archive</Text>
+          <GoldSubtitle style={styles.dateLabel}>
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </GoldSubtitle>
         </View>
       </Animated.View>
 
-      {/* ── Month/Year Navigation + Search ── */}
+      {/* ── Browse + Search ── */}
       {(totalCount > 0 || sleepEntries.length > 0) && (
-        <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.filterSection}>
+        <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.filterSection}>
+          <Pressable onPress={toggleBrowseSearch} style={styles.browseSectionHeader}>
+            <MetallicIcon name="library-outline" size={18} color={PALETTE.gold} />
+            <Text style={styles.browseSectionTitle}>Browse</Text>
+            <MetallicIcon name={showSearch ? 'close-outline' : 'search-outline'} size={16} color={PALETTE.gold} style={{ marginLeft: 'auto' }} />
+          </Pressable>
+          {showSearch && (
+            <Animated.View entering={FadeInDown.duration(300)} style={styles.searchContainer}>
+              <Ionicons name="search-outline" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder={activeTab === 'reflections' ? 'Search entries...' : 'Search dreams...'}
+                placeholderTextColor={theme.textMuted}
+                returnKeyType="search"
+                autoCorrect={false}
+                autoFocus
+              />
+              {searchQuery.length > 0 && (
+                <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+                  <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
+                </Pressable>
+              )}
+            </Animated.View>
+          )}
           {/* ── Tab Switcher ── */}
           <View style={styles.segmentedControl}>
             {(['reflections', 'dreams'] as const).map((tab) => (
@@ -465,57 +473,14 @@ export default function JournalScreen() {
               </Pressable>
             ))}
           </View>
-          <View style={styles.monthNav}>
-            <Pressable
-              onPress={() => navigateMonth(-1)}
-              style={styles.monthNavBtn}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Previous month"
-            >
-              <Ionicons name="chevron-back-outline" size={20} color="rgba(255,255,255,0.5)" />
-            </Pressable>
-            <Text style={styles.monthLabel}>
-              {MONTH_NAMES[filterMonth]} {filterYear}
-            </Text>
-            <Pressable
-              onPress={() => navigateMonth(1)}
-              style={styles.monthNavBtn}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Next month"
-            >
-              <Ionicons name="chevron-forward-outline" size={20} color="rgba(255,255,255,0.5)" />
-            </Pressable>
-          </View>
-          <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.searchInput}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder={activeTab === 'reflections' ? 'Search entries...' : 'Search dreams...'}
-              placeholderTextColor={theme.textMuted}
-              returnKeyType="search"
-              autoCorrect={false}
-            />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                <Ionicons name="close-circle-outline" size={16} color={theme.textMuted} />
-              </Pressable>
-            )}
-          </View>
         </Animated.View>
       )}
 
 
 
       {activeTab === 'reflections' && isPremium && patternInsights.length > 0 && (
-        <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <Ionicons name="analytics-outline" size={18} color={theme.textGold} />
-            <Text style={[styles.insightsTitle, { marginBottom: 0 }]}>Pattern Insights</Text>
-          </View>
+        <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
+          <SectionHeader title="Pattern Insights" icon="analytics-outline" />
           <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
 
           {patternInsights.map((insight, idx) => {
@@ -548,11 +513,11 @@ export default function JournalScreen() {
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
             <LinearGradient colors={['rgba(201,174,120,0.18)', 'transparent']} style={styles.insightCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Ionicons name="analytics-outline" size={18} color={theme.textGold} />
+              <View style={styles.insightHeader}>
+                <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
                 <Text style={styles.insightTitle}>Pattern Insights</Text>
                 <View style={[styles.premiumBadge, { marginLeft: 'auto' }]}>
-                  <Ionicons name="sparkles-outline" size={10} color={theme.textGold} />
+                  <MetallicIcon name="sparkles-outline" size={10} color={PALETTE.gold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
                 </View>
               </View>
@@ -560,8 +525,8 @@ export default function JournalScreen() {
                 With {totalCount} entries, Deeper Sky can reveal which energy patterns lift your mood, when you tend to journal most, and what emotional themes keep appearing.
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
-                <Text style={[styles.insightActionable, { marginTop: 0, color: theme.textGold }]}>Reveal your patterns</Text>
-                <Ionicons name="arrow-forward-outline" size={14} color={theme.textGold} />
+                <Text style={[styles.insightActionable, { marginTop: 0, color: PALETTE.gold }]}>Reveal your patterns</Text>
+                <MetallicIcon name="arrow-forward-outline" size={14} color={PALETTE.gold} />
               </View>
             </LinearGradient>
           </Pressable>
@@ -569,14 +534,15 @@ export default function JournalScreen() {
       )}
 
       <View style={styles.entriesSection}>
+        <SectionHeader
+          title={searchQuery
+            ? 'Search Results'
+            : activeTab === 'reflections'
+            ? 'Entries'
+            : 'Dreams'}
+          icon={activeTab === 'reflections' ? 'book-outline' : 'moon-outline'}
+        />
         <View style={styles.entriesHeader}>
-          <Text style={styles.sectionTitle}>
-            {searchQuery
-              ? 'Search Results'
-              : activeTab === 'reflections'
-              ? `${MONTH_NAMES[filterMonth]} Entries`
-              : `${MONTH_NAMES[filterMonth]} Dreams`}
-          </Text>
           <Text style={styles.entriesCount}>
             {activeTab === 'reflections'
               ? `${filteredEntries.length}${searchQuery ? ' found' : ''} · ${totalCount} total`
@@ -585,7 +551,7 @@ export default function JournalScreen() {
         </View>
       </View>
     </>
-  ), [isPremium, patternInsights, totalCount, sleepEntries.length, router, filterMonth, filterYear, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, navigateMonth, setActiveTab]);
+  ), [isPremium, patternInsights, totalCount, sleepEntries.length, router, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, showSearch, toggleBrowseSearch, setActiveTab]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 
@@ -617,11 +583,11 @@ export default function JournalScreen() {
           <View style={styles.emptyContainer}>
             <LinearGradient colors={['rgba(139,196,232,0.07)', 'transparent']} style={styles.emptyCard}>
               <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
-              <Text style={styles.emptyTitle}>No dreams this month</Text>
+              <Text style={styles.emptyTitle}>No dreams found</Text>
               <Text style={styles.emptyDescription}>
                 {searchQuery
-                  ? `No dream entries matching "${searchQuery}" in ${MONTH_NAMES[filterMonth]} ${filterYear}.`
-                  : `No sleep entries in ${MONTH_NAMES[filterMonth]} ${filterYear}. Try another month.`}
+                  ? `No dream entries matching "${searchQuery}".`
+                  : 'No sleep entries yet. Visit the Sleep tab to start recording.'}
               </Text>
             </LinearGradient>
           </View>
@@ -648,8 +614,8 @@ export default function JournalScreen() {
             <Text style={styles.emptyTitle}>No entries found</Text>
             <Text style={styles.emptyDescription}>
               {searchQuery
-                ? `No entries matching "${searchQuery}" in ${MONTH_NAMES[filterMonth]} ${filterYear}.`
-                : `No entries in ${MONTH_NAMES[filterMonth]} ${filterYear}. Try navigating to another month.`}
+                ? `No entries matching "${searchQuery}".`
+                : 'Start journaling to see your entries here.'}
             </Text>
           </LinearGradient>
         </View>
@@ -686,7 +652,7 @@ export default function JournalScreen() {
         </LinearGradient>
       </View>
     );
-  }, [loading, activeTab, sleepEntries.length, filteredSleepEntries.length, totalCount, filteredEntries.length, searchQuery, filterMonth, filterYear]);
+  }, [loading, activeTab, sleepEntries.length, filteredSleepEntries.length, totalCount, filteredEntries.length, searchQuery]);
 
   const handleSaveEntry = async (data: Partial<JournalEntry>) => {
     try {
@@ -747,7 +713,14 @@ export default function JournalScreen() {
 
   return (
     <View style={styles.container}>
-      
+      <SkiaDynamicCosmos />
+
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {showPremiumRequired ? (
           <FlatList
@@ -769,7 +742,7 @@ export default function JournalScreen() {
             ListHeaderComponent={ListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
-            contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 20 }}
+            contentContainerStyle={{ paddingBottom: 140, paddingHorizontal: 24 }}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
             initialNumToRender={15}
@@ -786,7 +759,7 @@ export default function JournalScreen() {
             ListHeaderComponent={ListHeader}
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
-            contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 20 }}
+            contentContainerStyle={{ paddingBottom: 140, paddingHorizontal: 24 }}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
             initialNumToRender={15}
@@ -811,6 +784,32 @@ export default function JournalScreen() {
     </View>
   );
 }
+
+// ── Section Header (matches Today screen) ────────────────────────────────
+
+function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  return (
+    <View style={sectionHeaderStyles.container}>
+      <MetallicIcon name={icon as any} size={18} color={PALETTE.gold} />
+      <Text style={sectionHeaderStyles.title}>{title}</Text>
+    </View>
+  );
+}
+
+const sectionHeaderStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 20,
+    marginTop: 8,
+  },
+  title: {
+    color: PALETTE.textMain,
+    fontSize: 19,
+    fontWeight: '700',
+  },
+});
 
 // ── Luminous Journal FAB (identical to Today) ────────────────────────────────
 
@@ -872,10 +871,36 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
 
-  header: { marginTop: 24, marginBottom: 28 },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.5, marginBottom: 6 },
-  subtitle: { fontSize: 12, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: '600' },
+  // Header — matches Today screen
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 32,
+  },
+  greeting: {
+    color: '#FFFFFF',
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 4,
+  },
+
+  // Nebula glow orbs
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
 
   chartTitle: {
     fontSize: 20,
@@ -910,10 +935,10 @@ const styles = StyleSheet.create({
   insightsSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20, lineHeight: 20 },
 
   insightCard: {
-    padding: 24,
+    padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: PALETTE.glassBorder,
     marginBottom: 16,
   },
   insightHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
@@ -927,31 +952,19 @@ const styles = StyleSheet.create({
   insightActionable: { fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 22 },
 
   filterSection: {
-    marginBottom: 28,
+    marginBottom: 32,
   },
-  monthNav: {
+  browseSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 20,
+    marginTop: 8,
   },
-  monthNavBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monthLabel: {
-    fontSize: 18,
+  browseSectionTitle: {
+    color: PALETTE.textMain,
+    fontSize: 19,
     fontWeight: '700',
-    color: theme.textPrimary,
-    minWidth: 140,
-    textAlign: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -959,10 +972,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: PALETTE.glassBorder,
     paddingLeft: 12,
     paddingRight: 12,
     paddingVertical: 12,
+    marginBottom: 16,
   },
   searchInput: {
     flex: 1,
@@ -971,21 +985,25 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
-  entriesSection: { marginBottom: 28 },
-  entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 22, color: theme.textPrimary, fontWeight: '700' },
-  entriesCount: { fontSize: 14, color: theme.textMuted, fontVariant: ['tabular-nums'] },
+  entriesSection: { marginBottom: 20 },
+  entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginTop: -12 },
+  sectionTitle: {
+    color: PALETTE.textMain,
+    fontSize: 19,
+    fontWeight: '700',
+  },
+  entriesCount: { fontSize: 12, color: 'rgba(255,255,255,0.4)', fontVariant: ['tabular-nums'], fontWeight: '600', letterSpacing: 0.5 },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
-  loadingText: { fontSize: 15, color: theme.textSecondary,  },
+  loadingText: { fontSize: 15, color: 'rgba(255,255,255,0.6)' },
 
   emptyContainer: { paddingVertical: 32 },
-  emptyCard: { borderRadius: 24, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  emptyTitle: { fontSize: 22, color: theme.textPrimary, marginBottom: 8, fontWeight: '700' },
+  emptyCard: { borderRadius: 24, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  emptyTitle: { fontSize: 22, color: PALETTE.textMain, marginBottom: 8, fontWeight: '700' },
   emptyDescription: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 26 },
 
-  entryCard: { borderRadius: 32, backgroundColor: 'rgba(212,184,114,0.03)', borderWidth: 1, borderColor: 'rgba(212,184,114,0.12)', marginBottom: 16 },
-  entryGradient: { padding: 24 },
+  entryCard: { borderRadius: 24, backgroundColor: 'rgba(212,184,114,0.03)', borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 16 },
+  entryGradient: { padding: 28 },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
   entryTime: { fontSize: 12, color: theme.textMuted },
@@ -1016,9 +1034,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   segmentBtnActive: {
-    backgroundColor: 'rgba(212,184,114,0.12)',
+    backgroundColor: `${PALETTE.gold}18`,
     borderWidth: 1,
-    borderColor: 'rgba(212,184,114,0.25)',
+    borderColor: `${PALETTE.gold}40`,
   },
   segmentText: {
     fontSize: 13,
@@ -1028,7 +1046,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   segmentTextActive: {
-    color: '#D4B872',
+    color: PALETTE.gold,
   },
   segmentCount: {
     fontSize: 10,
@@ -1042,8 +1060,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   segmentCountActive: {
-    color: '#D4B872',
-    backgroundColor: 'rgba(212,184,114,0.15)',
+    color: PALETTE.gold,
+    backgroundColor: `${PALETTE.gold}22`,
   },
 
   // ── Dream card ──
@@ -1051,10 +1069,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dreamCard: {
-    padding: 24,
+    padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: PALETTE.glassBorder,
   },
   dreamCardHeader: {
     flexDirection: 'row',

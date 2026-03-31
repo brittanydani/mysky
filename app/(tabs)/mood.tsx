@@ -15,6 +15,7 @@ import SkiaMoodSealButton from '../../components/ui/SkiaMoodSealButton';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { localDb } from '../../services/storage/localDb';
@@ -489,7 +490,7 @@ export default function MoodCheckIn() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['rgba(217, 191, 140, 0.1)', 'transparent']} style={styles.topGlow} />
+      <SkiaDynamicCosmos />
 
       {/* Header */}
       <View style={styles.header}>
@@ -887,15 +888,15 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
 
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.8, marginBottom: 16 },
+  sectionLabel: { fontSize: 19, fontWeight: '700', color: '#FFFFFF', marginTop: 8, marginBottom: 20 },
 
-  trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
+  trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   trendValue: { fontSize: 13, color: '#E2C27A', fontWeight: '700', letterSpacing: 0.3 },
   trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
   trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' },
 
-  slidersContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 32 },
+  slidersContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 32 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 },
 
   sliderWrapper: { width: '100%' },

@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   paradoxBody: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 22, marginBottom: 16 },
   paradoxFooter: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
 
-  promptCard: { borderRadius: 16, padding: 20, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  promptCard: { borderRadius: 24, padding: 28, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
   promptText: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 20, textAlign: 'center' },
 
   saveRow: { alignItems: 'center', marginTop: 12 },

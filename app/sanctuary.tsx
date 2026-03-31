@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, KeyboardAvoidingView, Platform, Keyboard, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { MetallicText } from '../components/ui/MetallicText';
 import { localDb } from '../services/storage/localDb';
 import { generateId } from '../services/storage/models';
@@ -62,8 +63,7 @@ export default function SanctuaryWorkspace() {
 
   return (
     <View style={styles.container}>
-      {/* Deep, calming background */}
-      <LinearGradient colors={['rgba(85, 65, 115, 0.08)', 'transparent']} style={styles.ambientTop} />
+      <SkiaDynamicCosmos />
 
       {/* Header controls fade out when typing for focus */}
       <View style={styles.header}>

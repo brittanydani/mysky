@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../../../services/storage/encryptedAsyncStorage';
 
 import { theme } from '../../../constants/theme';
-import CosmicBackground from '../../../components/ui/CosmicBackground';
+import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 import BackupPassphraseModal from '../../../components/BackupPassphraseModal';
@@ -524,7 +524,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <CosmicBackground />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
@@ -1195,16 +1195,15 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14 },
 
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: theme.spacing.lg },
+  scrollContent: { paddingHorizontal: 24 },
 
   section: { marginBottom: theme.spacing.xl },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 19,
     fontWeight: '700',
-    color: '#9A9A9F',
-    letterSpacing: 2.5,
-    textTransform: 'uppercase',
-    marginBottom: theme.spacing.md,
+    color: '#FFFFFF',
+    marginBottom: 20,
+    marginTop: 8,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -1214,13 +1213,13 @@ const styles = StyleSheet.create({
   },
 
   settingCard: {
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    marginBottom: theme.spacing.md,
+    borderColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 16,
   },
-  cardGradient: { padding: theme.spacing.lg },
+  cardGradient: { padding: 28 },
 
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   settingInfo: { flex: 1, flexShrink: 1, marginRight: theme.spacing.md },

@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
@@ -112,10 +113,7 @@ export default function TriggerLogScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <LinearGradient
-        colors={[`${activeColor}15`, 'transparent']}
-        style={styles.topGlow}
-      />
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.headerRow}>
@@ -335,19 +333,19 @@ const styles = StyleSheet.create({
 
   section: { marginBottom: 32 },
   sectionLabel: {
-    fontSize: 10,
+    fontSize: 19,
     fontWeight: '700',
-    letterSpacing: 1.5,
-    color: 'rgba(255,255,255,0.4)',
-    marginBottom: 12,
+    color: '#FFFFFF',
+    marginTop: 8,
+    marginBottom: 20,
   },
 
   inputSection: { marginBottom: 32 },
   inputGlass: {
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
     backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 16,
+    padding: 20,
     minHeight: 100,
   },
   textInput: {
@@ -358,11 +356,11 @@ const styles = StyleSheet.create({
 
   stateGrid: { gap: 12 },
   stateCard: {
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 16,
+    padding: 20,
   },
   stateTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, marginBottom: 4 },
   stateSub: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },

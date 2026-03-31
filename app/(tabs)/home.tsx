@@ -49,6 +49,7 @@ import { DailyCheckIn } from '../../services/patterns/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
+import { getDailyAffirmation } from '../../services/today/todayContentLibrary';
 import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
@@ -290,6 +291,13 @@ export default function HomeScreen() {
   const insightIcon = dailyLoop?.todayInsight?.icon ?? 'analytics';
   const insightAccent = ACCENT_MAP[dailyLoop?.todayInsight?.accentColor ?? 'emerald'] ?? PALETTE.emerald;
 
+  // ── Daily Affirmation ──
+  const affirmation = useMemo(() => {
+    const element = userChart?.sunSign?.element?.toLowerCase() as
+      | 'fire' | 'earth' | 'air' | 'water' | undefined;
+    return getDailyAffirmation(element);
+  }, [userChart]);
+
   // ── Balance Score + Stability Map ──
 
   const balanceScore = useMemo(() => {
@@ -488,6 +496,18 @@ export default function HomeScreen() {
                 </MetallicText>
               </View>
               <Text style={styles.insightText}>{insightText}</Text>
+            </LinearGradient>
+          </Animated.View>
+
+          {/* ── Daily Affirmation ── */}
+          <SectionHeader title="Daily Affirmation" icon="sunny-outline" />
+          <Animated.View entering={FadeInDown.delay(750).duration(600)}>
+            <LinearGradient colors={['rgba(212,184,114,0.10)', 'rgba(10,10,12,0.9)']} style={styles.affirmationCard}>
+              <View style={styles.insightHeader}>
+                <MetallicIcon name="sunny-outline" size={16} variant="gold" />
+                <MetallicText style={styles.insightEyebrow} variant="gold">TODAY'S AFFIRMATION</MetallicText>
+              </View>
+              <Text style={styles.affirmationText}>{affirmation.text}</Text>
             </LinearGradient>
           </Animated.View>
 
@@ -862,6 +882,22 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 16,
     lineHeight: 24,
+  },
+
+  // Daily Affirmation card
+  affirmationCard: {
+    borderRadius: 24,
+    padding: 28,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    marginBottom: 32,
+  },
+  affirmationText: {
+    color: PALETTE.textMain,
+    fontSize: 18,
+    lineHeight: 28,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
 
   // Premium preview

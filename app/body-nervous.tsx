@@ -155,10 +155,10 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontSize: 14 },
 
   infoCard: {
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(140,190,170,0.15)',
-    padding: 16,
+    padding: 28,
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   infoText: {

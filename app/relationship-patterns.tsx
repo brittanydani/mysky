@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  summaryCard: { borderRadius: 32, borderWidth: 1, borderColor: 'rgba(212,163,179,0.15)', padding: 32, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
+  summaryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(212,163,179,0.15)', padding: 28, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   summaryTitle: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
   summaryDescription: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 32, fontWeight: '400' },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '500' },
 
-  formCard: { borderRadius: 32, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 32, marginBottom: 40, backgroundColor: 'rgba(255,255,255,0.02)' },
+  formCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 40, backgroundColor: 'rgba(255,255,255,0.02)' },
   formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
   noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
   tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 16, textTransform: 'uppercase' },
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   historySection: { marginTop: 16 },
   historyTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
   entryList: { gap: 16 },
-  entryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
+  entryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, backgroundColor: 'rgba(255,255,255,0.02)' },
   entryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   entryDate: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
   entryNote: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 20 },

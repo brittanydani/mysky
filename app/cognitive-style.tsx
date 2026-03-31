@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   saveBtnText: { fontSize: 13, color: PALETTE.silverBlue, fontWeight: '700', letterSpacing: 0.5 },
 
   dimensionsContainer: { gap: 16 },
-  dimensionBlock: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  dimensionBlock: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' },
   dimInner: { padding: 20 },
   dimQuestion: { fontSize: 15, fontWeight: '400', color: PALETTE.textMain, lineHeight: 22, marginBottom: 20 },
 

@@ -15,7 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { theme } from '../../constants/theme';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 import { METALLIC_RED } from '../../constants/metallicPalettes';
-import ChartStarsBackground from '../../components/ui/ChartStarsBackground';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaBreathingRing from '../../components/ui/SkiaBreathingRing';
 import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import MoonPhaseView from '../../components/ui/MoonPhaseView';
@@ -781,7 +781,7 @@ export default function ChartScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ChartStarsBackground />
+        <SkiaDynamicCosmos />
         <SkiaBreathingRing size={80} color="gold" rings={2} />
         <Text style={[styles.loadingText, { marginTop: 20 }]}>Loading natal chart…</Text>
       </View>
@@ -791,7 +791,7 @@ export default function ChartScreen() {
   if (!userChart) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ChartStarsBackground />
+        <SkiaDynamicCosmos />
         <Text style={styles.loadingText}>No chart found. Create your chart from Home.</Text>
         <Pressable
           style={styles.goHomeBtn}
@@ -819,9 +819,7 @@ export default function ChartScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <ChartStarsBackground fill="#020817" />
-      </View>
+      <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView

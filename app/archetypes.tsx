@@ -230,7 +230,7 @@ export default function ArchetypesScreen() {
           style={styles.backBtn}
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
         >
-          <Text style={styles.backText}>← Inner World</Text>
+          <MetallicText variant="purple" style={styles.backText}>← Inner World</MetallicText>
         </Pressable>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   traitText: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 20, alignSelf: 'flex-start' },
 
-  scoresCard: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', padding: 20, marginBottom: 20, gap: 12, backgroundColor: 'rgba(255,255,255,0.02)' },
+  scoresCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', padding: 28, marginBottom: 20, gap: 12, backgroundColor: 'rgba(255,255,255,0.02)' },
   scoresTitle: {
     fontSize: 10,
     fontWeight: '700',

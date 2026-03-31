@@ -42,6 +42,7 @@ import {
   GeminiDreamResult,
 } from '../../../services/premium/geminiDreamInterpretation';
 import { computeDreamAggregates, computeDreamPatterns } from '../../../services/premium/dreamAggregates';
+import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import {
   DreamInterpretation,
   DreamMetadata,
@@ -236,7 +237,7 @@ export default function SleepDetailScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <LinearGradient colors={['#1A1A2E', '#050507']} style={StyleSheet.absoluteFill} />
+      <SkiaDynamicCosmos />
 
       {/* HEADER */}
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
@@ -414,7 +415,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: 'rgba(139,196,232,0.03)', borderRadius: 32, padding: 24,
+    backgroundColor: 'rgba(139,196,232,0.03)', borderRadius: 24, padding: 28,
     borderWidth: 1, borderColor: 'rgba(139,196,232,0.12)', marginBottom: 24,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
@@ -425,7 +426,7 @@ const styles = StyleSheet.create({
   },
 
   premiumSection: {
-    alignItems: 'center', padding: 32, borderRadius: 32,
+    alignItems: 'center', padding: 32, borderRadius: 24,
     borderWidth: 1, borderColor: '#D9BF8C',
     backgroundColor: 'rgba(217,191,140,0.04)', gap: 12,
   },

@@ -22,7 +22,7 @@ import { logger } from '../../utils/logger';
 const DEMO_EMAIL = 'brittanyapps@outlook.com';
 
 // Flag stored in AsyncStorage to prevent re-seeding on subsequent logins
-const SEED_FLAG_KEY = '@mysky:demo_seeded_v3';
+const SEED_FLAG_KEY = '@mysky:demo_seeded_v4';
 // Tracks the last date a daily entry was seeded (YYYY-MM-DD)
 const DAILY_SEED_KEY = '@mysky:demo_last_seeded';
 
@@ -117,20 +117,20 @@ const dreamTexts = [
 ];
 
 const dreamFeelingMaps = [
-  [{ id: 'wonder', intensity: 4 }, { id: 'peace', intensity: 3 }],
-  [{ id: 'urgency', intensity: 3 }, { id: 'curiosity', intensity: 4 }],
-  [{ id: 'longing', intensity: 4 }, { id: 'warmth', intensity: 5 }],
-  [{ id: 'freedom', intensity: 5 }, { id: 'awe', intensity: 3 }],
-  [{ id: 'relief', intensity: 4 }, { id: 'humor', intensity: 2 }],
-  [{ id: 'joy', intensity: 5 }, { id: 'tenderness', intensity: 4 }],
-  [{ id: 'nostalgia', intensity: 5 }, { id: 'safety', intensity: 4 }],
-  [{ id: 'anticipation', intensity: 4 }, { id: 'stillness', intensity: 3 }],
-  [{ id: 'surrender', intensity: 3 }, { id: 'trust', intensity: 4 }],
-  [{ id: 'wonder', intensity: 5 }, { id: 'mystery', intensity: 4 }],
-  [{ id: 'confusion', intensity: 3 }, { id: 'familiarity', intensity: 4 }],
-  [{ id: 'peace', intensity: 5 }, { id: 'awe', intensity: 4 }],
-  [{ id: 'nostalgia', intensity: 4 }, { id: 'melancholy', intensity: 2 }],
-  [{ id: 'safety', intensity: 5 }, { id: 'peace', intensity: 5 }],
+  [{ id: 'wondering', intensity: 4 }, { id: 'peaceful', intensity: 3 }],
+  [{ id: 'urgent', intensity: 3 }, { id: 'curious', intensity: 4 }],
+  [{ id: 'longing', intensity: 4 }, { id: 'warm', intensity: 5 }],
+  [{ id: 'free', intensity: 5 }, { id: 'awed', intensity: 3 }],
+  [{ id: 'relieved', intensity: 4 }, { id: 'content', intensity: 2 }],
+  [{ id: 'joyful', intensity: 5 }, { id: 'tender', intensity: 4 }],
+  [{ id: 'bittersweet', intensity: 5 }, { id: 'safe', intensity: 4 }],
+  [{ id: 'thrilled', intensity: 4 }, { id: 'settled', intensity: 3 }],
+  [{ id: 'surrendered', intensity: 3 }, { id: 'trusting', intensity: 4 }],
+  [{ id: 'wondering', intensity: 5 }, { id: 'surreal', intensity: 4 }],
+  [{ id: 'confused', intensity: 3 }, { id: 'nostalgic', intensity: 4 }],
+  [{ id: 'peaceful', intensity: 5 }, { id: 'awestruck', intensity: 4 }],
+  [{ id: 'bittersweet', intensity: 4 }, { id: 'melancholic', intensity: 2 }],
+  [{ id: 'secure', intensity: 5 }, { id: 'peaceful', intensity: 5 }],
 ];
 
 const insightGreetings = [

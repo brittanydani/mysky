@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   disabled: {
     opacity: 0.4,
@@ -286,14 +286,14 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
   description: {
     color: theme.textMuted,
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
-    lineHeight: 16,
+    lineHeight: 22,
   },
   toggleWrap: {
     width: TRACK_W,

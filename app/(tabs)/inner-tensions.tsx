@@ -535,9 +535,9 @@ const styles = StyleSheet.create({
 
   // Section label
   sectionLabel: {
-    fontSize: 10, fontWeight: '700', letterSpacing: 2.5,
-    textTransform: 'uppercase', color: PALETTE.textDim,
-    marginTop: 28, marginBottom: 10,
+    fontSize: 19, fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 8, marginBottom: 20,
   },
 
   // Glass card
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
 
   // Blurred teaser
   blurPreviewWrap:    { position: 'relative', overflow: 'hidden', borderRadius: 16 },
-  blurPreviewCard:    { backgroundColor: PALETTE.glassBg, borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, padding: 20, opacity: 0.4 },
+  blurPreviewCard: { backgroundColor: PALETTE.glassBg, borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, padding: 28, opacity: 0.4 },
   blurPreviewTitle:   { fontSize: 17, fontWeight: '500', color: PALETTE.textMain, marginBottom: 12 },
   blurPreviewRadar:   { height: 150, backgroundColor: 'rgba(168,155,200,0.08)', borderRadius: 12 },
   blurPreviewOverlay: {

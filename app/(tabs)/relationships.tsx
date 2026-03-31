@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
   listSectionTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 6 },
   listSectionSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20 },
   
-  relationshipCardGradient: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 12 },
+  relationshipCardGradient: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center' },
   relationshipIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   relationshipInfo: { flex: 1, marginLeft: 16 },
@@ -874,19 +874,19 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 15, color: theme.textMuted, fontWeight: '600' },
   tabTextActive: { color: theme.textGold },
   
-  insightCardGradient: { padding: 24, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
+  insightCardGradient: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, marginBottom: 16 },
   insightCardTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
   insightCardText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
-  sectionHeader: { fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 16 },
+  sectionHeader: { fontSize: 19, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 16 },
   
-  reminderCard: { marginTop: 24, padding: 20, backgroundColor: 'transparent', borderRadius: 16, borderLeftWidth: 3, borderLeftColor: theme.textGold },
+  reminderCard: { marginTop: 24, padding: 28, backgroundColor: 'transparent', borderRadius: 24, borderLeftWidth: 3, borderLeftColor: theme.textGold },
   reminderText: { fontSize: 16, color: theme.textPrimary, lineHeight: 24 },
   
-  upsellGradient: { padding: 24, alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
+  upsellGradient: { padding: 28, alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)', marginTop: 24 },
   upsellTitle: { fontSize: 16, fontWeight: '600', color: theme.textGold },
   upsellText: { fontSize: 14, color: theme.textSecondary, textAlign: 'center', marginTop: 10, lineHeight: 20 },
 
-  dynamicCard: { borderRadius: 20, padding: 20, marginBottom: 12, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight },
+  dynamicCard: { borderRadius: 24, padding: 28, marginBottom: 12, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight },
   dynamicLabel: { fontSize: 12, fontWeight: '700', color: theme.textGold, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 },
   dynamicText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },

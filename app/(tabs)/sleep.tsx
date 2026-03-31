@@ -1208,10 +1208,10 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14 },
 
   section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 16, paddingLeft: 4 },
+  sectionTitle: { fontSize: 19, fontWeight: '700', color: PALETTE.textMain, marginBottom: 16, paddingLeft: 4 },
 
   // ── Form Card (deep glassmorphic volume) ──
-  formCard: { borderRadius: 32, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
+  formCard: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
   formInner: { padding: 28 },
   formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
   formTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
@@ -1231,12 +1231,12 @@ const styles = StyleSheet.create({
   hoursCircleQuality: { fontSize: 9, fontWeight: '800', color: PALETTE.textMuted, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 5 },
 
   // Dream journal glass card
-  dreamGlassCard: { borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 16, backgroundColor: 'rgba(0,0,0,0.3)', minHeight: 120 },
+  dreamGlassCard: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 28, backgroundColor: 'rgba(0,0,0,0.3)', minHeight: 120 },
   dreamGlassCardActive: { borderColor: 'rgba(217, 191, 140, 0.4)', backgroundColor: 'rgba(217, 191, 140, 0.05)' },
   dreamInputInner: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24 },
 
   // Premium lock cards
-  premiumLockCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.2)', padding: 20 },
+  premiumLockCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.2)', padding: 28 },
   premiumLockTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.gold, marginBottom: 4 },
   premiumLockSub: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },
   deeperSkyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(157, 118, 193, 0.15)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.3)' },
@@ -1295,13 +1295,13 @@ const styles = StyleSheet.create({
   errorBannerText: { flex: 1, color: PALETTE.copper, fontSize: 14, lineHeight: 20 },
 
   // Today's dream reflection
-  todayInterpretCard: { borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.25)', borderTopColor: 'rgba(157, 118, 193, 0.4)' },
+  todayInterpretCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.25)', borderTopColor: 'rgba(157, 118, 193, 0.4)' },
   todayInterpretHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   todayInterpretTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain },
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 12 },
-  statCard: { flex: 1, borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
+  statCard: { flex: 1, borderRadius: 24, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
   statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
   statValue: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain },
   statSub: { fontSize: 11, color: PALETTE.textMuted, marginTop: 4, textAlign: 'center',  },
@@ -1315,7 +1315,7 @@ const styles = StyleSheet.create({
 
   // Entry history
   entryCard: { marginBottom: 16 },
-  entryCardInner: { borderRadius: 20, padding: 20, borderWidth: 1, borderColor: PALETTE.glassBorder },
+  entryCardInner: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   entryDate: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
   entryMeta: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -1331,7 +1331,7 @@ const styles = StyleSheet.create({
   reflectBtnPressed: { opacity: 0.7 },
   reflectBtnText: { fontSize: 14, color: PALETTE.amethyst, fontWeight: '600' },
 
-  interpretCard: { borderRadius: 20, padding: 24, marginTop: 6, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
+  interpretCard: { borderRadius: 24, padding: 28, marginTop: 6, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
   interpretBody: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 24 },
 
   undercurrentBox: { marginTop: 16, paddingVertical: 8, paddingHorizontal: 14, alignSelf: 'flex-start', borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.10)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.18)' },
