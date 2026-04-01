@@ -37,6 +37,7 @@ import Animated, {
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from './ui/GoldSubtitle';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import ShadowQuoteCard, { ShadowQuoteInline } from './ui/ShadowQuoteCard';
 import { JournalEntry } from '../services/storage/models';
@@ -547,11 +548,17 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
               </View>
             ) : (
               <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-                <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
-                  <Ionicons name="close-outline" size={24} color={PALETTE.textMain} />
-                </Pressable>
-                <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
-                <View style={{ width: 44 }} />
+                <View style={styles.headerTopRow}>
+                  <View>
+                    <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
+                    <GoldSubtitle style={styles.headerDateLabel}>
+                      {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    </GoldSubtitle>
+                  </View>
+                  <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
+                    <Ionicons name="close-outline" size={18} color="rgba(255,255,255,0.55)" />
+                  </Pressable>
+                </View>
               </Animated.View>
             )}
 
@@ -564,7 +571,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     value={content}
                     onChangeText={setContent}
                     placeholder="What is surfacing for you right now?"
-                    placeholderTextColor="rgba(240,234,214,0.22)"
+                    placeholderTextColor="rgba(255,255,255,0.35)"
                     multiline
                     textAlignVertical="top"
                     autoFocus
@@ -605,59 +612,62 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 
                 {/* Date Selection */}
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
-                  <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Timeline</MetallicText>
-                  <Pressable style={styles.glassInteractive} onPress={() => setShowDatePicker(true)}>
-                    <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(2,8,23,0.50)']} style={styles.innerGradient}>
-                      <MetallicIcon name="calendar-outline" size={18} color={PALETTE.silverBlue} />
-                      <Text style={styles.interactiveText}>{formatDate(date)}</Text>
-                    </LinearGradient>
-                  </Pressable>
+                  <SectionHeader title="Timeline" icon="calendar-outline" />
+                  <LinearGradient colors={['rgba(139,196,232,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                    <Pressable style={styles.cardRow} onPress={() => setShowDatePicker(true)}>
+                      <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
+                      <Text style={styles.cardRowText}>{formatDate(date)}</Text>
+                      <MetallicIcon name="chevron-forward-outline" size={14} color="rgba(255,255,255,0.25)" />
+                    </Pressable>
+                  </LinearGradient>
                 </Animated.View>
 
                 {/* Title Input */}
                 <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
-                  <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Title (Optional)</MetallicText>
-                  <View style={styles.glassInput}>
+                  <SectionHeader title="Title (Optional)" icon="text-outline" />
+                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
                     <TextInput
-                      style={styles.titleInput}
+                      style={styles.cardTextInput}
                       value={title}
                       onChangeText={setTitle}
                       placeholder="Title this moment..."
-                      placeholderTextColor={theme.textMuted}
+                      placeholderTextColor="rgba(255,255,255,0.22)"
                     />
-                  </View>
+                  </LinearGradient>
                 </Animated.View>
 
                 {/* Mood Selector */}
                 <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
-                  <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Mood</MetallicText>
-                  <View style={styles.moodRow}>
-                    {MOOD_OPTIONS.map((m) => {
-                      const isSelected = mood === m.key;
-                      return (
-                        <Pressable
-                          key={m.key}
-                          onPress={() => { setMood(m.key); Haptics.selectionAsync().catch(() => {}); }}
-                          style={[
-                            styles.moodPill,
-                            isSelected && { borderColor: m.color, backgroundColor: `${m.color}20` },
-                          ]}
-                        >
-                          {isSelected ? (
-                            <MetallicText style={styles.moodPillText} color={m.color}>{m.label}</MetallicText>
-                          ) : (
-                            <Text style={[styles.moodPillText, { color: 'rgba(255,255,255,0.4)' }]}>{m.label}</Text>
-                          )}
-                        </Pressable>
-                      );
-                    })}
-                  </View>
+                  <SectionHeader title="Mood" icon="heart-outline" />
+                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={[styles.sectionCard, { paddingVertical: 16 }]}>
+                    <View style={styles.moodRow}>
+                      {MOOD_OPTIONS.map((m) => {
+                        const isSelected = mood === m.key;
+                        return (
+                          <Pressable
+                            key={m.key}
+                            onPress={() => { setMood(m.key); Haptics.selectionAsync().catch(() => {}); }}
+                            style={[
+                              styles.moodPill,
+                              isSelected && { borderColor: m.color, backgroundColor: `${m.color}28`, shadowColor: m.color, shadowOpacity: 0.35, shadowRadius: 8, elevation: 4 },
+                            ]}
+                          >
+                            {isSelected ? (
+                              <MetallicText style={[styles.moodPillText, { fontWeight: '700' }]} color={m.color}>{m.label}</MetallicText>
+                            ) : (
+                              <Text style={[styles.moodPillText, { color: 'rgba(255,255,255,0.4)' }]}>{m.label}</Text>
+                            )}
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </LinearGradient>
                 </Animated.View>
 
                 {/* Main Reflection Area */}
                 <Animated.View entering={FadeInDown.delay(400)} style={styles.section}>
-                  <View style={styles.reflectionHeader}>
-                    <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Reflection</MetallicText>
+                  <View style={styles.sectionHeaderRow}>
+                    <SectionHeader title="Reflection" icon="create-outline" />
                     {(enginePromptSet || freePrompt) && (
                       <Pressable style={styles.promptsToggle} onPress={() => { Haptics.selectionAsync(); setShowPrompts(!showPrompts); }}>
                         <MetallicIcon name={showPrompts ? 'bulb' : 'bulb-outline'} size={16} color={PALETTE.gold} />
@@ -713,24 +723,24 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     </Animated.View>
                   ))}
 
-                  <View style={[styles.glassInput, styles.contentBox]}>
+                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
                     <TextInput
                       style={styles.contentInput}
                       value={content}
                       onChangeText={setContent}
                       onFocus={enterWritingMode}
                       placeholder="What is surfacing for you right now?"
-                      placeholderTextColor={theme.textMuted}
+                      placeholderTextColor="rgba(255,255,255,0.22)"
                       multiline
                       textAlignVertical="top"
                     />
-                  </View>
+                  </LinearGradient>
                 </Animated.View>
 
                 {/* Tags */}
                 <Animated.View entering={FadeInDown.delay(480)} style={styles.section}>
-                  <View style={styles.tagsHeader}>
-                    <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Tags</MetallicText>
+                  <View style={styles.sectionHeaderRow}>
+                    <SectionHeader title="Tags" icon="pricetags-outline" />
                     <Pressable
                       style={styles.addTagsBtn}
                       onPress={() => { Haptics.selectionAsync().catch(() => {}); setTagSearch(''); setShowTagPicker(true); }}
@@ -739,6 +749,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <Text style={styles.addTagsBtnText}>Add Tags</Text>
                     </Pressable>
                   </View>
+                  <LinearGradient colors={['rgba(107,191,163,0.06)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
                   {tags.length > 0 ? (
                     <View style={styles.tagsWrap}>
                       {tags.map((tagId) => {
@@ -768,6 +779,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <Text style={styles.tagPlaceholderText}>Healing, Growth, Parenting...</Text>
                     </Pressable>
                   )}
+                  </LinearGradient>
                 </Animated.View>
 
                 {/* Footer / Save */}
@@ -997,13 +1009,25 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   );
 }
 
+// ── Section Header (matches Today screen) ────────────────────────────────────
+function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <MetallicIcon name={icon as any} size={18} color="#C9AE78" />
+      <Text style={styles.sectionHeaderTitle}>{title}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 18, color: '#FFFFFF', fontWeight: '600' },
-  iconBtn: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
+  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 28 },
+  headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerDateLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 4 },
+  iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
 
   // ── Writing mode header ──
   writingHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
@@ -1018,35 +1042,33 @@ const styles = StyleSheet.create({
 
   // ── Mood quick-pick toolbar (sits above keyboard in writing mode) ──
   moodToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.75)' },
-  moodChip: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' },
-  moodChipText: { fontSize: 11, fontWeight: '600' },
+  moodChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },
+  moodChipText: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.65)' },
 
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 60 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 4, paddingBottom: 60 },
   
-  section: { marginBottom: 24 },
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: PALETTE.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12, paddingLeft: 4 },
-  
-  glassInteractive: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  innerGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
-  interactiveText: { color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
-  
-  glassInput: { backgroundColor: 'transparent', borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  titleInput: { padding: 16, color: PALETTE.textMain, fontSize: 16 },
-  
-  reflectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  promptsToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+  section: { marginBottom: 32 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  sectionHeaderTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+
+  sectionCard: { borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardRowText: { flex: 1, color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
+  cardTextInput: { color: PALETTE.textMain, fontSize: 17, paddingVertical: 0, minHeight: 24 },
+
+  promptsToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, marginBottom: 14 },
   promptsToggleText: { fontSize: 13, color: PALETTE.gold, fontWeight: '600' },
   
   promptZone: { marginBottom: 20 },
   transitContext: { fontSize: 13, color: PALETTE.silverBlue, marginBottom: 12, textAlign: 'center' },
-  primaryPromptCard: { backgroundColor: 'transparent', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(232,214,174,0.18)' },
+  primaryPromptCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: 'rgba(232,214,174,0.14)' },
   promptContextLabel: { fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
   primaryPromptText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
   
-  contentBox: { minHeight: 240 },
-  contentInput: { padding: 16, color: PALETTE.textMain, fontSize: 16, lineHeight: 26 },
+  contentInput: { color: PALETTE.textMain, fontSize: 17, lineHeight: 27, minHeight: 180, paddingVertical: 0 },
 
   // ── Archetype lens prompt card ──
   archetypePromptCard: { flexDirection: 'row', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.025)', marginBottom: 16 },
@@ -1059,41 +1081,41 @@ const styles = StyleSheet.create({
   // ── Mood row ──
   moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   moodPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
+    flex: 1,
+    minWidth: 60,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
   },
-  moodPillText: { fontSize: 11, fontWeight: '600' },
+  moodPillText: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.70)' },
 
   // ── Tags ──
-  tagsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   addTagsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.08)' },
   addTagsBtnText: { fontSize: 12, color: PALETTE.jade, fontWeight: '600' },
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tagPlaceholder: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 4 },
+  tagPlaceholder: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingHorizontal: 0 },
   tagPlaceholderText: { fontSize: 13, color: 'rgba(255,255,255,0.22)',  },
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   tagChipSelected: {
-    borderColor: 'rgba(107,191,163,0.45)',
-    backgroundColor: 'rgba(107,191,163,0.12)',
+    backgroundColor: 'rgba(107,191,163,0.22)',
   },
   tagChipSelectedCustom: {
-    borderColor: 'rgba(107,191,163,0.45)',
-    backgroundColor: 'rgba(107,191,163,0.12)',
+    backgroundColor: 'rgba(107,191,163,0.22)',
   },
-  tagChipText: { fontSize: 11, fontWeight: '600' },
+  tagChipText: { fontSize: 13, fontWeight: '600', letterSpacing: -0.2 },
 
   // ── Tag Picker Modal ──
   tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(2,8,23,0.72)', justifyContent: 'flex-end' },
@@ -1107,10 +1129,10 @@ const styles = StyleSheet.create({
   tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 40 },
   tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(201,174,120,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
   tagPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.03)' },
+  tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },
   tagPickerChipSelected: { borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.14)' },
   tagPickerChipSelectedCustom: { borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.14)' },
-  tagPickerChipText: { fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: '500' },
+  tagPickerChipText: { fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: '500' },
   tagPickerChipTextSelected: { color: PALETTE.jade, fontWeight: '700' },
   tagPickerChipTextSelectedCustom: { color: PALETTE.jade, fontWeight: '700' },
   createTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.35)', backgroundColor: 'rgba(107,191,163,0.10)' },
@@ -1119,7 +1141,7 @@ const styles = StyleSheet.create({
   newTagInput: { flex: 1, color: PALETTE.textMain, fontSize: 13, padding: 0, minWidth: 60 },
   tagPickerHint: { fontSize: 10, color: 'rgba(255,255,255,0.20)', textAlign: 'center', marginTop: 6, marginBottom: 2,  },
 
-  footer: { marginTop: 24 },
+  footer: { marginTop: 12 },
   saveBtn: { borderRadius: 16, overflow: 'hidden', },
   saveGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center' },
   saveBtnText: { color: '#020817', fontSize: 17, fontWeight: '700' },

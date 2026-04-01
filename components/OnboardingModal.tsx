@@ -817,7 +817,7 @@ export default function OnboardingModal({
                             Haptics.selectionAsync().catch(() => {});
                           }}
                         >
-                          <Ionicons name="chevron-up" size={28} color={PREMIUM.titanium} />
+                          <Ionicons name="chevron-up-outline" size={28} color={PREMIUM.titanium} />
                         </Pressable>
                         <Text style={st.customTimeDigit}>
                           {String(birthTime.getHours() % 12 || 12).padStart(2, '0')}
@@ -832,7 +832,7 @@ export default function OnboardingModal({
                             Haptics.selectionAsync().catch(() => {});
                           }}
                         >
-                          <Ionicons name="chevron-down" size={28} color={PREMIUM.titanium} />
+                          <Ionicons name="chevron-down-outline" size={28} color={PREMIUM.titanium} />
                         </Pressable>
                       </View>
 
@@ -850,7 +850,7 @@ export default function OnboardingModal({
                             Haptics.selectionAsync().catch(() => {});
                           }}
                         >
-                          <Ionicons name="chevron-up" size={28} color={PREMIUM.titanium} />
+                          <Ionicons name="chevron-up-outline" size={28} color={PREMIUM.titanium} />
                         </Pressable>
                         <Text style={st.customTimeDigit}>
                           {String(birthTime.getMinutes()).padStart(2, '0')}
@@ -865,7 +865,7 @@ export default function OnboardingModal({
                             Haptics.selectionAsync().catch(() => {});
                           }}
                         >
-                          <Ionicons name="chevron-down" size={28} color={PREMIUM.titanium} />
+                          <Ionicons name="chevron-down-outline" size={28} color={PREMIUM.titanium} />
                         </Pressable>
                       </View>
 
@@ -1725,17 +1725,16 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PREMIUM.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.10)',
   },
   legalPillText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-    color: PREMIUM.textMuted,
+    letterSpacing: -0.2,
+    color: 'rgba(255,255,255,0.75)',
   },
 
   // ── Passphrase ──

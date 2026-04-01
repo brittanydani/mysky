@@ -17,7 +17,7 @@ const PALETTE = {
   gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   emerald: '#6EBF8B',
-  textMain: '#F0EAD6',
+  textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
   titaniumGlow: 'rgba(197, 181, 161, 0.12)',
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     marginBottom: 8, 
     textAlign: 'center' 
   },
-  subtitle: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5, color: '#C5B5A1', textAlign: 'center', paddingHorizontal: 20, lineHeight: 20,  },
+  subtitle: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5, color: 'rgba(255,255,255,0.65)', textAlign: 'center', paddingHorizontal: 20, lineHeight: 20,  },
   
   contentContainer: { marginBottom: 28 },
   glassSection: {
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   acceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },
   declineBtnText: { fontSize: 12, color: "#FFFFFF", fontWeight: '600', textDecorationLine: 'underline' },
-  declineHint: { fontSize: 13, color: '#C5B5A1', textAlign: 'center', marginTop: 4 },
+  declineHint: { fontSize: 13, color: 'rgba(255,255,255,0.65)', textAlign: 'center', marginTop: 4 },
 
 
 });

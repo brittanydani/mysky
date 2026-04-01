@@ -543,7 +543,7 @@ export default function MoodCheckIn() {
         {/* 7-Day Trend */}
         <View style={styles.trendCard}>
           <View style={styles.trendHeader}>
-            <Text style={styles.sectionLabel}>7-DAY MOOD TREND</Text>
+            <Text style={[styles.sectionLabel, styles.trendSectionLabel]}>7-DAY MOOD TREND</Text>
             <MetallicText style={styles.trendValue} color="#E2C27A">{isLoading ? '…' : trendLabel}</MetallicText>
           </View>
           {isLoading ? (
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerEditingBadge: { fontSize: 10, color: '#D9BF8C', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
+  headerEditingBadge: { fontSize: 10, color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },
   dateArrow: { padding: 4 },
@@ -888,11 +888,12 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
 
-  sectionLabel: { fontSize: 19, fontWeight: '700', color: '#FFFFFF', marginTop: 8, marginBottom: 20 },
+  sectionLabel: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', marginTop: 8, marginBottom: 20 },
 
   trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  trendValue: { fontSize: 13, color: '#E2C27A', fontWeight: '700', letterSpacing: 0.3 },
+  trendSectionLabel: { marginTop: 0, marginBottom: 0 },
+  trendValue: { fontSize: 13, color: '#8BC4E8', fontWeight: '700', letterSpacing: 0.3 },
   trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
   trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' },
 
@@ -931,7 +932,7 @@ const styles = StyleSheet.create({
   tagsSection: { marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201, 174, 120, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
-  premiumBadgeText: { color: '#C9AE78', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
+  premiumBadgeText: { color: '#8BC4E8', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
   lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.5)', marginTop: 12 },
 
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
@@ -1019,7 +1020,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(201,174,120,0.12)',
   },
   slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: '600', letterSpacing: 0.5 },
-  slotLabelDone: { color: '#C9AE78' },
+  slotLabelDone: { color: '#8BC4E8' },
 
   emotionDropdownHeader: {
     marginBottom: 14,

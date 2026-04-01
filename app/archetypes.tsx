@@ -34,7 +34,7 @@ const PALETTE = {
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#0A0A0C',
+  bg: '#020817',
 };
 
 type ArchetypeKey = 'hero' | 'caregiver' | 'seeker' | 'sage' | 'rebel';
@@ -226,18 +226,21 @@ export default function ArchetypesScreen() {
       />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
-        >
-          <MetallicText variant="purple" style={styles.backText}>← Inner World</MetallicText>
-        </Pressable>
+        <View style={styles.header}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+          >
+            <Text style={styles.closeIcon}>×</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.titleArea}>
+          <Text style={styles.headerTitle}>Archetypes</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Your dominant inner patterns</GoldSubtitle>
+        </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.headerTitle}>Archetypes</Text>
-            <GoldSubtitle style={styles.headerSubtitle}>Your dominant inner patterns</GoldSubtitle>
-          </Animated.View>
 
           {/* Result view */}
           {showResult && dominant && savedProfile ? (
@@ -363,11 +366,12 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
 
-  backBtn: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
-  backText: { fontSize: 14, color: 'rgba(168,155,200,0.7)', fontWeight: '600' },
+  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 32 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,

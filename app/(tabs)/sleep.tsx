@@ -69,7 +69,7 @@ const SCREEN_W = Dimensions.get('window').width;
 
 // ── Cinematic Palette (Obsidian & Gold) ──
 const PALETTE = {
-  bg: '#050507',
+  bg: '#020817',
   cardBg: 'rgba(15, 18, 25, 0.65)',
   gold: '#C9AE78',
   goldGlow: 'rgba(201, 174, 120, 0.15)',
@@ -77,8 +77,8 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#C9AE78',
   amethyst: '#C9AE78',
-  textMain: '#F0EAD6',
-  textMuted: 'rgba(240, 234, 214, 0.4)',
+  textMain: '#FFFFFF',
+  textMuted: 'rgba(255, 255, 255, 0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.15)',
 };
@@ -579,10 +579,11 @@ export default function SleepScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
-          {/* ── High-End Typography Header ── */}
+          {/* ── Apple Editorial Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Nightly Archive</Text>
-            <GoldSubtitle style={styles.subtitle}>Circadian rest & symbolic memory</GoldSubtitle>
+            <Text style={styles.headerEyebrow}>SLEEP & DREAMS</Text>
+            <Text style={styles.title}>Rest Log</Text>
+            <Text style={styles.headerDesc}>Rest quality · Hours slept · Dream memory</Text>
           </Animated.View>
 
           {/* ── Main Form (Volumetric Glass Card) ── */}
@@ -903,80 +904,9 @@ export default function SleepScreen() {
             </LinearGradient>
           </Animated.View>
 
-          {/* ── Today's Dream Reflection (inline, premium) ── */}
-          {(() => {
-            const todayEntry = entries.find(e => e.date === today);
-            const todayInterp = todayEntry ? interpretations[todayEntry.id] : null;
-            if (!isPremium || !todayEntry?.dreamText || !todayInterp) return null;
-            return (
-              <Animated.View entering={FadeInDown.delay(180).duration(600)} style={styles.section}>
-                <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.todayInterpretCard}>
-                  <View style={styles.todayInterpretHeader}>
-                    <MetallicIcon name="sparkles-outline" size={18} variant="gold" />
-                    <Text style={styles.todayInterpretTitle}>Your Dream Reflection</Text>
-                  </View>
-                  {/* Show AI result as primary when available, on-device as fallback */}
-                  {(() => {
-                    const aiResult = aiInterpretations[todayEntry.id];
-                    const isLoadingAi = aiLoading === todayEntry.id;
-                    if (aiResult) {
-                      return (
-                        <>
-                          <Text style={styles.interpretBody}>{aiResult.paragraph}</Text>
-                          <View style={styles.sitWithBox}>
-                            <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                            <Text style={styles.sitWithText}>"{aiResult.question}"</Text>
-                          </View>
-                        </>
-                      );
-                    }
-                    if (isLoadingAi) {
-                      return (
-                        <>
-                          <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
-                          {todayInterp.patternAnalysis?.undercurrentLabel ? (
-                            <View style={styles.undercurrentBox}>
-                              <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</MetallicText>
-                            </View>
-                          ) : null}
-                          <View style={styles.sitWithBox}>
-                            <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                            <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
-                          </View>
-                          <View style={styles.aiLoadingRow}>
-                            <MetallicIcon name="hourglass-outline" size={14} variant="gold" />
-                            <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
-                          </View>
-                        </>
-                      );
-                    }
-                    // Gemini not available or failed — show on-device interpretation
-                    return (
-                      <>
-                        <Text style={styles.interpretBody}>{todayInterp.paragraph}</Text>
-                        {todayInterp.patternAnalysis?.undercurrentLabel ? (
-                          <View style={styles.undercurrentBox}>
-                            <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{todayInterp.patternAnalysis.undercurrentLabel}</MetallicText>
-                          </View>
-                        ) : null}
-                        <View style={styles.sitWithBox}>
-                          <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                          <Text style={styles.sitWithText}>"{todayInterp.question}"</Text>
-                        </View>
-                        {aiError && (
-                          <Text style={styles.aiErrorText}>{aiError}</Text>
-                        )}
-                      </>
-                    );
-                  })()}
-                </LinearGradient>
-              </Animated.View>
-            );
-          })()}
-
           {/* ── Stats Section ── */}
           {stats.count > 0 && (
-            <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.section}>
+            <Animated.View entering={FadeInDown.delay(180).duration(600)} style={styles.section}>
               <Text style={styles.sectionTitle}>Last 7 Days</Text>
               <View style={styles.statsRow}>
                 <View style={styles.statCard}>
@@ -1032,148 +962,6 @@ export default function SleepScreen() {
             </Animated.View>
           )}
 
-          {/* ── Dream Symbol Cluster (premium) ── */}
-          {isPremium && entries.some(e => e.dreamText) && (
-            <Animated.View entering={FadeInDown.delay(265).duration(600)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Dream Symbols</Text>
-              <View style={styles.obsidianCard}>
-                <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
-                <View style={styles.obsidianCardHeader}>
-                  <MetallicIcon name="planet-outline" size={14} variant="gold" />
-                  <MetallicText color={PALETTE.silverBlue} style={styles.obsidianCardEyebrow}>RECURRING THEMES</MetallicText>
-                </View>
-                <DreamClusterMap height={280} />
-              </View>
-            </Animated.View>
-          )}
-
-          {/* ── Recent Nights History ── */}
-          {entries.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(280).duration(600)} style={styles.section}>
-              <Text style={styles.sectionTitle}>Recent Nights</Text>
-              {entries.map(entry => {
-                const isExpanded = expandedEntryId === entry.id;
-                const interp = interpretations[entry.id];
-                return (
-                  <View key={entry.id} style={styles.entryCard}>
-                    <Pressable
-                      onPress={() => { Haptics.selectionAsync().catch(() => {}); applyEntryToForm(entry); scrollRef.current?.scrollTo({ y: 0, animated: true }); }}
-                      onLongPress={() => handleDelete(entry.id)}
-                    >
-                      <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.entryCardInner}>
-                        <View style={styles.entryHeader}>
-                          <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
-                          <View style={styles.entryMeta}>
-                            {entry.durationHours != null && (
-                              <View style={styles.entryMetaItem}>
-                                <Ionicons name="time-outline" size={14} color={theme.textMuted} />
-                                <Text style={styles.entryMetaText}>{formatDuration(entry.durationHours)}</Text>
-                              </View>
-                            )}
-                            {entry.quality != null && (
-                              <View style={styles.entryMoons}>
-                                {[1, 2, 3, 4, 5].map(n =>
-                                  n <= entry.quality! ? (
-                                    <MetallicIcon key={n} name="moon-outline" size={12} color={PALETTE.silverBlue} />
-                                  ) : (
-                                    <Ionicons key={n} name="moon-outline" size={12} color="rgba(255,255,255,0.15)" />
-                                  )
-                                )}
-                              </View>
-                            )}
-                          </View>
-                        </View>
-
-                        {entry.dreamText ? <Text style={styles.entryDream} numberOfLines={isExpanded ? undefined : 2}>{entry.dreamText}</Text> : null}
-
-                        {(entry.dreamMood || entry.dreamFeelings) ? (
-                          <View style={styles.entryDreamMoodRow}>
-                            <Text style={styles.entryDreamMoodText}>
-                              {entry.dreamFeelings ? (() => {
-                                try {
-                                  const parsed = JSON.parse(entry.dreamFeelings) as SelectedFeeling[];
-                                  return parsed.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id).join(', ');
-                                } catch { return entry.dreamMood ?? ''; }
-                              })() : entry.dreamMood ?? ''}
-                            </Text>
-                          </View>
-                        ) : null}
-
-                        {isPremium && entry.dreamText ? (
-                          <Pressable
-                            onPress={() => handleDreamReflect(entry)}
-                            style={({ pressed }) => [styles.reflectBtn, pressed && styles.reflectBtnPressed]}
-                          >
-                            <MetallicIcon name={isExpanded ? 'chevron-up' : 'sparkles'} size={14} variant="gold" />
-                            <MetallicText color={PALETTE.amethyst} style={styles.reflectBtnText}>{isExpanded ? 'Close reflection' : 'Reflect on this dream'}</MetallicText>
-                            <MetallicIcon name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={14} variant="gold" style={{ marginLeft: 'auto' }} />
-                          </Pressable>
-                        ) : null}
-                      </LinearGradient>
-                    </Pressable>
-
-                    {isExpanded && interp && (
-                      <Animated.View entering={FadeInDown.duration(300)}>
-                        <LinearGradient colors={['rgba(157, 118, 193, 0.1)', 'rgba(2,8,23,0.50)']} style={styles.interpretCard}>
-                          {(() => {
-                            const aiResult = aiInterpretations[entry.id];
-                            const isLoadingAi = aiLoading === entry.id;
-                            if (aiResult) {
-                              return (
-                                <>
-                                  <Text style={styles.interpretBody}>{aiResult.paragraph}</Text>
-                                  <View style={styles.sitWithBox}>
-                                    <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                                    <Text style={styles.sitWithText}>"{aiResult.question}"</Text>
-                                  </View>
-                                </>
-                              );
-                            }
-                            if (isLoadingAi) {
-                              return (
-                                <>
-                                  <Text style={styles.interpretBody}>{interp.paragraph}</Text>
-                                  {interp.patternAnalysis?.undercurrentLabel ? (
-                                    <View style={styles.undercurrentBox}>
-                                      <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</MetallicText>
-                                    </View>
-                                  ) : null}
-                                  <View style={styles.sitWithBox}>
-                                    <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                                    <Text style={styles.sitWithText}>"{interp.question}"</Text>
-                                  </View>
-                                  <View style={styles.aiLoadingRow}>
-                                    <MetallicIcon name="hourglass-outline" size={14} variant="gold" />
-                                    <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
-                                  </View>
-                                </>
-                              );
-                            }
-                            return (
-                              <>
-                                <Text style={styles.interpretBody}>{interp.paragraph}</Text>
-                                {interp.patternAnalysis?.undercurrentLabel ? (
-                                  <View style={styles.undercurrentBox}>
-                                    <MetallicText color={PALETTE.amethyst} style={styles.undercurrentLabel}>{interp.patternAnalysis.undercurrentLabel}</MetallicText>
-                                  </View>
-                                ) : null}
-                                <View style={styles.sitWithBox}>
-                                  <Text style={styles.sitWithLabel}>A question to sit with</Text>
-                                  <Text style={styles.sitWithText}>"{interp.question}"</Text>
-                                </View>
-                              </>
-                            );
-                          })()}
-                        </LinearGradient>
-                      </Animated.View>
-                    )}
-                  </View>
-                );
-              })}
-              <Text style={styles.deleteHint}>Tap to edit · Long press to delete</Text>
-            </Animated.View>
-          )}
-
           {loadError && entries.length === 0 && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)} style={styles.emptyState}>
               <MetallicIcon name="cloud-offline-outline" size={48} variant="copper" />
@@ -1202,13 +990,41 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },
 
-  header: { marginTop: 10, marginBottom: 24, paddingHorizontal: 4 },
+  header: { marginTop: 10, marginBottom: 32, paddingHorizontal: 4 },
   backButton: { padding: 8, paddingHorizontal: 16, alignSelf: 'flex-start' },
-  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 4 },
+  headerEyebrow: { fontSize: 11, fontWeight: '700', color: PALETTE.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 },
+  title: { fontSize: 38, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -1, lineHeight: 44, marginBottom: 6 },
   subtitle: { fontSize: 14 },
+  headerDesc: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 22, marginTop: 2 },
 
   section: { marginBottom: 32 },
   sectionTitle: { fontSize: 19, fontWeight: '700', color: PALETTE.textMain, marginBottom: 16, paddingLeft: 4 },
+  editorialSectionLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.textMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16, paddingLeft: 2 },
+
+  // Featured editorial entry card (first/most recent)
+  featuredEntryCard: { marginBottom: 12 },
+  featuredEntryInner: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(201,174,120,0.2)' },
+  featuredEntryTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  featuredEntryLead: { flex: 1, marginRight: 12 },
+  featuredEyebrow: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 },
+  featuredDate: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, letterSpacing: -0.3 },
+  featuredMeta: { alignItems: 'flex-end', gap: 6 },
+  featuredMetaPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, paddingVertical: 5, paddingHorizontal: 10 },
+  featuredMetaText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '600' },
+  featuredDream: { fontSize: 16, color: 'rgba(255,255,255,0.75)', lineHeight: 26, marginBottom: 12 },
+  featuredNoDream: { fontSize: 14, color: PALETTE.textMuted, fontStyle: 'italic', marginBottom: 12 },
+  featuredFeelingRow: { marginTop: 4, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.07)' },
+  featuredFeelingText: { fontSize: 12, color: PALETTE.gold, fontWeight: '600', letterSpacing: 0.3 },
+
+  // Editorial list row for entries after the first
+  entryListRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 4, gap: 12 },
+  entryListLeft: { flex: 1 },
+  entryListDate: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, marginBottom: 3 },
+  entryListDream: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },
+  entryListRight: { alignItems: 'flex-end', gap: 5 },
+  entryListMeta: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
+  entryListFeelingTag: { paddingBottom: 12, paddingLeft: 4, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  entryListFeelingText: { fontSize: 12, color: PALETTE.textMuted, fontStyle: 'italic' },
 
   // ── Form Card (deep glassmorphic volume) ──
   formCard: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
@@ -1311,10 +1127,10 @@ const styles = StyleSheet.create({
   obsidianCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 12 },
   obsidianCardEyebrow: { fontSize: 11, fontWeight: '800', color: PALETTE.silverBlue, letterSpacing: 1.5 },
   obsidianCardFooter: { marginTop: 10, alignSelf: 'center' },
-  obsidianCardFooterText: { fontSize: 11, color: 'rgba(240, 234, 214, 0.3)', textAlign: 'center' },
+  obsidianCardFooterText: { fontSize: 11, color: 'rgba(255, 255, 255, 0.35)', textAlign: 'center' },
 
   // Entry history
-  entryCard: { marginBottom: 16 },
+  entryCard: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)', marginBottom: 0 },
   entryCardInner: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   entryDate: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
@@ -1325,7 +1141,7 @@ const styles = StyleSheet.create({
   entryDream: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 24, marginBottom: 8 },
   entryDreamMoodRow: { marginTop: 4 },
   entryDreamMoodText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '500' },
-  deleteHint: { fontSize: 12, color: PALETTE.textMuted, textAlign: 'center', marginTop: 8,  },
+  deleteHint: { fontSize: 12, color: PALETTE.textMuted, textAlign: 'center', marginTop: 16 },
 
   reflectBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(157, 118, 193, 0.1)', borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.2)' },
   reflectBtnPressed: { opacity: 0.7 },

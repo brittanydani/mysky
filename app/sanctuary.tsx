@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   titleArea: { paddingHorizontal: 24, paddingBottom: 16 },
   iconButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 22 },
   iconText: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  sealIconText: { color: '#D9BF8C', fontSize: 20, transform: [{ rotate: '45deg' }] },
+  sealIconText: { color: '#8BC4E8', fontSize: 20, transform: [{ rotate: '45deg' }] },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
 
   editorContainer: { flex: 1, paddingHorizontal: 24 },
@@ -137,6 +137,6 @@ const styles = StyleSheet.create({
   autoSaveText: { color: '#8CBEAA', fontSize: 10, fontWeight: 'bold', letterSpacing: 1, textTransform: 'uppercase' },
 
   aiPromptButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(217, 191, 140, 0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
-  aiPromptIcon: { color: '#D9BF8C', fontSize: 14, marginRight: 6 },
-  aiPromptText: { color: '#D9BF8C', fontSize: 12, fontWeight: '600' }
+  aiPromptIcon: { color: '#8BC4E8', fontSize: 14, marginRight: 6 },
+  aiPromptText: { color: '#8BC4E8', fontSize: 12, fontWeight: '600' }
 });

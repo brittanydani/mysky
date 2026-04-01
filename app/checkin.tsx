@@ -93,7 +93,7 @@ export default function CheckInHub() {
                 <MetallicIcon name="moon-outline" size={24} color={PALETTE.amethyst} />
               </View>
               <View style={styles.cardText}>
-                <MetallicText style={styles.cardEyebrow} color={PALETTE.amethyst}>Nightly Archive</MetallicText>
+                <MetallicText style={styles.cardEyebrow} color={PALETTE.amethyst}>Rest Log</MetallicText>
                 <Text style={styles.cardTitle}>Sleep & Dreams</Text>
                 <Text style={styles.cardDescription}>Log rest quality and capture subconscious imagery.</Text>
               </View>

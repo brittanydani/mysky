@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.06)',
   },
   title: {
-    color:         '#F0EAD6',
+    color:         '#FFFFFF',
     fontSize:      14,
     fontWeight:    '700',
     letterSpacing: 0.5,
@@ -268,12 +268,12 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   itemLabel: {
-    color:      'rgba(240,234,214,0.75)',
+    color:      'rgba(255,255,255,0.75)',
     fontSize:   15,
     fontWeight: '500',
   },
   itemLabelSelected: {
-    color:      '#F0EAD6',
+    color:      '#FFFFFF',
     fontWeight: '600',
   },
 });

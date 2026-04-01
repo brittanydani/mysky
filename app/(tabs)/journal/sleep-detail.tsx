@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
-  saveText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },
+  saveText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
   scrollPadding: { padding: 24, paddingTop: 8 },
 
   metaRow: { marginBottom: 24 },
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   lockedSection: { borderStyle: 'dashed' },
   premiumTitle: {
-    color: '#D9BF8C', fontSize: 16, fontWeight: '600', textAlign: 'center',
+    color: '#FFFFFF', fontSize: 16, fontWeight: '600', textAlign: 'center',
   },
   premiumBody: {
     color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center', lineHeight: 20,
@@ -443,17 +443,17 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 24,
   },
   reflectionQuestion: {
-    color: '#D9BF8C', fontSize: 14,
+    color: '#FFFFFF', fontSize: 14,
     lineHeight: 22,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(217,191,140,0.2)',
+    borderTopColor: 'rgba(139,196,232,0.2)',
     paddingTop: 16, marginTop: 4,
   },
   rerunBtn: {
     alignSelf: 'flex-end', paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)',
   },
-  rerunBtnText: { color: '#D9BF8C', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  rerunBtnText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
 
   // AI Gemini interpretation
   aiSection: { marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(217,191,140,0.2)', width: '100%' },

@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     backgroundColor: 'transparent',
   },
-  timeText: { fontSize: 15, color: '#D9BF8C', fontWeight: '500', letterSpacing: 0.5 },
+  timeText: { fontSize: 15, color: '#FFFFFF', fontWeight: '500', letterSpacing: 0.5 },
 
   picker: { marginTop: 8 },
   doneButton: {
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'rgba(217,191,140,0.12)',
   },
-  doneText: { color: '#D9BF8C', fontSize: 14, fontWeight: '600' },
+  doneText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
 
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 16 },
 
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     borderColor: '#D9BF8C',
     backgroundColor: 'rgba(217,191,140,0.15)',
   },
-  checkmark: { fontSize: 12, color: '#D9BF8C', lineHeight: 14 },
+  checkmark: { fontSize: 12, color: '#8BC4E8', lineHeight: 14 },
   unknownLabel: { fontSize: 13, color: 'rgba(255,255,255,0.45)', flex: 1 },
 
   privacyNote: {

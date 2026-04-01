@@ -27,6 +27,7 @@ import { analyzeJournalContent } from '../../../services/journal/nlp';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
+import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
 
 const PAGE_SIZE = 30;
 
@@ -493,7 +494,13 @@ export default function JournalScreen() {
             return (
               <LinearGradient key={`${insight.title}-${idx}`} colors={gradientColors} style={styles.insightCard}>
                 <View style={styles.insightHeader}>
-                  <Text style={styles.insightTitle}>{insight.title}</Text>
+                  <MetallicIcon
+                    name={(insight.icon ?? (isTransit ? 'planet-outline' : 'analytics-outline')) as any}
+                    size={16}
+                    color={accentColor}
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={[styles.insightTitle, { color: accentColor }]}>{insight.title}</Text>
                   <View style={[styles.confidenceBadge, insight.confidence === 'strong' && styles.confidenceStrong, insight.confidence === 'suggested' && styles.confidenceSuggested]}>
                     <Text style={styles.confidenceText}>{insight.confidence}</Text>
                   </View>
@@ -530,6 +537,20 @@ export default function JournalScreen() {
               </View>
             </LinearGradient>
           </Pressable>
+        </Animated.View>
+      )}
+
+      {activeTab === 'dreams' && isPremium && sleepEntries.some(e => e.dreamText) && (
+        <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.insightsSection}>
+          <SectionHeader title="Dream Symbols" icon="planet-outline" />
+          <View style={styles.clusterCard}>
+            <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
+            <View style={styles.clusterCardHeader}>
+              <MetallicIcon name="planet-outline" size={14} color="#C9AE78" />
+              <MetallicText color="#C9AE78" style={styles.clusterCardEyebrow}>RECURRING THEMES</MetallicText>
+            </View>
+            <DreamClusterMap height={280} />
+          </View>
         </Animated.View>
       )}
 
@@ -941,8 +962,8 @@ const styles = StyleSheet.create({
     borderColor: PALETTE.glassBorder,
     marginBottom: 16,
   },
-  insightHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  insightTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary, flex: 1 },
+  insightHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  insightTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary, flex: 1 },
   confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'transparent', marginLeft: 12 },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
   confidenceSuggested: { backgroundColor: 'transparent' },
@@ -1030,6 +1051,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 10,
     gap: 6,
   },
@@ -1049,13 +1071,13 @@ const styles = StyleSheet.create({
     color: PALETTE.gold,
   },
   segmentCount: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.35)',
     backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 6,
     overflow: 'hidden',
     letterSpacing: 0.4,
   },
@@ -1117,6 +1139,27 @@ const styles = StyleSheet.create({
   dreamNone: {
     fontSize: 16,
     color: theme.textMuted,
+  },
+
+  // ── Dream cluster card ──
+  clusterCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    overflow: 'hidden',
+    padding: 20,
+  },
+  clusterCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  clusterCardEyebrow: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
 });
 

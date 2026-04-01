@@ -442,30 +442,25 @@ export default function InnerTensionsScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient
-        colors={['rgba(30,15,50,0.7)', 'rgba(10,10,15,0.9)', 'rgba(5,5,10,1)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-      />
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.header}>
+          <Pressable style={styles.closeButton} onPress={goBack}>
+            <Text style={styles.closeIcon}>×</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.titleArea}>
+          <Text style={styles.screenTitle}>Inner Tensions</Text>
+          <GoldSubtitle style={styles.screenSubtitle}>
+            Where your inner forces pull against each other
+          </GoldSubtitle>
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <Pressable style={styles.backButton} onPress={goBack}>
-            <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.lavender} />
-            <MetallicText style={styles.backLabel} color={PALETTE.lavender}>Identity</MetallicText>
-          </Pressable>
-
-          <Animated.View entering={FadeInDown.duration(400)}>
-            <Text style={styles.screenTitle}>Inner Tensions</Text>
-            <GoldSubtitle style={styles.screenSubtitle}>
-              Where your inner forces pull against each other
-            </GoldSubtitle>
-          </Animated.View>
 
           {loading ? (
             <ActivityIndicator
@@ -521,21 +516,22 @@ export default function InnerTensionsScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#060608' },
+  container:        { flex: 1, backgroundColor: '#020817' },
   safeArea:         { flex: 1 },
-  scrollContent:    { paddingHorizontal: 20, paddingBottom: 120 },
+  header:           { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:        { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton:      { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeIcon:        { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  scrollContent:    { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 120 },
   loader:           { marginTop: 80 },
   bottomSpacer:     { height: 40 },
 
-  // Header
-  backButton:  { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, gap: 4 },
-  backLabel:   { fontSize: 14, color: PALETTE.textMuted, letterSpacing: 0.3 },
   screenTitle: { fontSize: 34, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, marginBottom: 4 },
   screenSubtitle: { fontSize: 14, marginBottom: 32 },
 
   // Section label
   sectionLabel: {
-    fontSize: 19, fontWeight: '700',
+    fontSize: 16, fontWeight: '700',
     color: '#FFFFFF',
     marginTop: 8, marginBottom: 20,
   },
@@ -544,7 +540,7 @@ const styles = StyleSheet.create({
   glassCard: {
     backgroundColor: PALETTE.glassBg,
     borderWidth: 1, borderColor: PALETTE.glassBorder,
-    borderRadius: 16, padding: 20, marginBottom: 4,
+    borderRadius: 24, padding: 28, marginBottom: 4,
     overflow: 'hidden',
   },
   cardTitle: {
@@ -600,7 +596,7 @@ const styles = StyleSheet.create({
   // Premium lock banner
   lockWrap: { marginTop: 8 },
   lockBanner: {
-    borderRadius: 16, padding: 20, marginBottom: 16,
+    borderRadius: 24, padding: 28, marginBottom: 16,
     borderWidth: 1, borderColor: 'rgba(201,174,120,0.2)',
     overflow: 'hidden',
   },

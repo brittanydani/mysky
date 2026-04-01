@@ -311,7 +311,14 @@ export default function PatternsScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
+
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
+      <SafeAreaView style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
@@ -681,7 +688,7 @@ const MetricCard = ({ label, value, color, sub, isText }: { label: string; value
 const SectionHeader = ({ icon, label, subtitle }: { icon: keyof typeof Ionicons.glyphMap; label: string; subtitle?: string }) => (
   <View style={styles.sectionHeaderWrap}>
     <View style={styles.sectionHeaderRow}>
-      <MetallicIcon name={icon} size={14} variant="gold" />
+      <MetallicIcon name={icon} size={18} variant="gold" />
       <MetallicText style={styles.sectionHeaderLabel} variant="gold">{label}</MetallicText>
     </View>
     {subtitle && <Text style={styles.sectionHeaderSubtitle}>{subtitle}</Text>}
@@ -698,8 +705,15 @@ const LoopCard = ({ content }: { content: LoopCardContent }) => (
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
-  header: { marginTop: 20, marginBottom: 32 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  header: { marginBottom: 32 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   exportButton: {
     width: 44,
@@ -720,14 +734,14 @@ const styles = StyleSheet.create({
   metricValue: { color: PALETTE.textMain, fontSize: 26, fontWeight: '500', fontVariant: ['tabular-nums'] },
   metricSub: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '500' },
   visualSection: { alignItems: 'center', marginBottom: 40 },
-  section: { marginBottom: 24 },
-  sectionHeaderWrap: { marginBottom: 20 },
+  section: { marginBottom: 32 },
+  sectionHeaderWrap: { marginBottom: 20, marginTop: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sectionHeaderLabel: { fontSize: 19, fontWeight: '700', color: '#FFFFFF' },
   sectionHeaderSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4 },
-  insightCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 8 },
+  insightCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 32 },
   insightLabel: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, marginBottom: 12, textTransform: 'uppercase' },
-  insightBody: { color: 'rgba(255,255,255,0.7)', fontSize: 15, lineHeight: 24 },
+  insightBody: { color: 'rgba(255,255,255,0.7)', fontSize: 16, lineHeight: 24 },
   loopCard: { marginBottom: 32 },
   loopTitle: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
 

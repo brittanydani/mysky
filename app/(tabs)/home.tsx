@@ -451,8 +451,8 @@ export default function HomeScreen() {
                     <Text style={styles.scoreMax}>/ 10</Text>
                   </View>
                   <View style={styles.pillsRow}>
-                    <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
-                    <ScorePill label="Mood" val={mood.toFixed(1)} color="#D9BF8C" />
+                    <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#8BC4E8" />
+                    <ScorePill label="Mood" val={mood.toFixed(1)} color="#8BC4E8" />
                     <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
                   </View>
                 </>
@@ -702,7 +702,7 @@ function MoodTrendGraph({ bars, dayLabels }: { bars: number[]; dayLabels: string
               cx={pt.x}
               cy={pt.y}
               r={i === 6 ? 4.5 : hasData[i] ? 2.5 : 1.5}
-              color={i === 6 ? '#C9AE78' : hasData[i] ? 'rgba(201,174,120,0.55)' : 'rgba(255,255,255,0.1)'}
+              color={i === 6 ? '#8BC4E8' : hasData[i] ? 'rgba(139,196,232,0.55)' : 'rgba(255,255,255,0.1)'}
             />
           </React.Fragment>
         ))}
@@ -798,7 +798,7 @@ const fabStyles = StyleSheet.create({
     zIndex: 100,
   },
   glowWrapper: {
-    shadowColor: '#D4B872',
+    shadowColor: '#8BC4E8',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,

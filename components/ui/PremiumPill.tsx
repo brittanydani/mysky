@@ -72,12 +72,12 @@ const PremiumPill = memo(function PremiumPill({
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      ['rgba(255,255,255,0.04)', `${accentColor}22`], // 13% accent wash
+      ['rgba(255,255,255,0.08)', `${accentColor}26`], // subtle fill unselected, ~15% accent fill when selected
     ),
     borderColor: interpolateColor(
       progress.value,
       [0, 1],
-      ['rgba(255,255,255,0.10)', `${accentColor}88`], // 53% accent border
+      ['rgba(255,255,255,0.18)', `${accentColor}80`], // visible border unselected, accent when selected
     ),
     transform: [{ scale: scale.value }],
     opacity: disabled ? 0.38 : 1,
@@ -127,7 +127,7 @@ const PremiumPill = memo(function PremiumPill({
         <Text
           style={[
             styles.label,
-            isSelected && { color: accentColor },
+            isSelected ? { color: accentColor } : { color: 'rgba(255,255,255,0.70)' },
           ]}
           numberOfLines={1}
         >
@@ -144,15 +144,15 @@ export default PremiumPill;
 
 const styles = StyleSheet.create({
   pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: 999,
     borderWidth: 1,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: 'rgba(226,232,240,0.62)',
-    letterSpacing: 0.1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.80)',
+    letterSpacing: -0.2,
   },
 });

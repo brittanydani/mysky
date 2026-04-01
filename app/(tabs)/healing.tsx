@@ -313,6 +313,6 @@ const styles = StyleSheet.create({
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
   affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  affirmationText: { fontSize: 15, color: '#D9BF8C', lineHeight: 22,  },
+  affirmationText: { fontSize: 15, color: '#FFFFFF', lineHeight: 22,  },
 });
 

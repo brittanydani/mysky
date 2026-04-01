@@ -16,7 +16,7 @@ import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  textMain: '#F0EAD6',
+  textMain: '#FFFFFF',
 };
 
 export default function OnboardingBirthScreen() {

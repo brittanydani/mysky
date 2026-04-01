@@ -24,7 +24,7 @@ const PALETTE = {
   gold: '#C9AE78',
   silverBlue: '#8BC4E8',
   copper: '#CD7F5D',
-  textMain: '#F0EAD6',
+  textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };

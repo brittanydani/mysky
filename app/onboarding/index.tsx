@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
   title: { fontSize: 34, fontWeight: '800', color: '#FFF', marginBottom: 40, letterSpacing: -0.5 },
-  input: { fontSize: 32, color: '#D9BF8C', borderBottomWidth: 1, borderColor: 'rgba(217,191,140,0.3)', paddingBottom: 16 },
+  input: { fontSize: 32, color: '#FFFFFF', borderBottomWidth: 1, borderColor: 'rgba(139,196,232,0.3)', paddingBottom: 16 },
   footer: { paddingHorizontal: 32, paddingBottom: 60 },
 
 });

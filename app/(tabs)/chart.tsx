@@ -995,7 +995,7 @@ export default function ChartScreen() {
           {/* ── Birth time warning ── */}
           {displayChart?.warnings?.length ? (
             <View style={styles.warningBox}>
-              <Ionicons name="alert-circle" size={18} color={theme.warning} />
+              <Ionicons name="alert-circle-outline" size={18} color={theme.warning} />
               <Text style={styles.warningText}>{displayChart.warnings[0]}</Text>
             </View>
           ) : null}
@@ -1343,7 +1343,7 @@ export default function ChartScreen() {
                         </Text>
                         {retro && (
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                            <Ionicons name="arrow-undo-outline" size={10} color="#E8D6AE" />
+                            <Ionicons name="arrow-undo-outline" size={10} color="#8BC4E8" />
                             <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
                           </View>
                         )}
@@ -1397,7 +1397,7 @@ export default function ChartScreen() {
                           <Text style={styles.planetName}>{pt.label}</Text>
                           {pt.retrograde && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                              <Ionicons name="arrow-undo-outline" size={10} color="#E8D6AE" />
+                              <Ionicons name="arrow-undo-outline" size={10} color="#8BC4E8" />
                               <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
                             </View>
                           )}
@@ -1684,7 +1684,7 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.chartRuler && (
                 <LinearGradient colors={['rgba(232, 214, 174,0.15)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="ribbon-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="ribbon-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Chart Ruler</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1692,14 +1692,14 @@ export default function ChartScreen() {
                       <GradientSymbol symbol={chartPatterns.chartRuler.planetSymbol} fontSize={15} w={18} h={17} />
                       <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.planet} in </MetallicText>
                       <GradientSymbol symbol={chartPatterns.chartRuler.rulerSignSymbol} fontSize={15} w={18} h={17} />
-                      <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#8BC4E8"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
                   <View style={styles.tooltipBox}>
                     <Ionicons name="information-circle-outline" size={14} color={theme.textMuted} />
                     <Text style={styles.tooltipText}>
-                      Your chart ruler is the planet that rules your rising sign (<Text style={{ fontFamily: ZODIAC_FAMILY, color: '#E8D6AE' }}>{chartPatterns.chartRuler.risingSymbol}</Text>{' '}
+                      Your chart ruler is the planet that rules your rising sign (<Text style={{ fontFamily: ZODIAC_FAMILY, color: '#FFFFFF' }}>{chartPatterns.chartRuler.risingSymbol}</Text>{' '}
                       {chartPatterns.chartRuler.risingSign}). Its placement colors your entire life path.
                     </Text>
                   </View>
@@ -1734,7 +1734,7 @@ export default function ChartScreen() {
               {isPremium && dominantPlacement && chartPatterns && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="star-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="star-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Dominant Planet</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1784,7 +1784,7 @@ export default function ChartScreen() {
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
-                      <Ionicons name="flash-outline" size={16} color="#E8D6AE" style={styles.patternIcon} />
+                      <Ionicons name="flash-outline" size={16} color="#8BC4E8" style={styles.patternIcon} />
                       <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
                     </View>
                     <View style={styles.patternHighlight}>
@@ -1826,7 +1826,7 @@ export default function ChartScreen() {
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
-                      <Ionicons name="link-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                      <Ionicons name="link-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                       <Text style={styles.patternTitle}>Conjunction Cluster</Text>
                     </View>
                     <View style={styles.patternHighlight}>
@@ -1844,7 +1844,7 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.retrogradeEmphasis.count >= 3 && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="arrow-undo-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="arrow-undo-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1860,7 +1860,7 @@ export default function ChartScreen() {
               {chartPatterns.elementBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="flame-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="flame-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Element Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }]}>
@@ -1899,7 +1899,7 @@ export default function ChartScreen() {
               {chartPatterns.modalityBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="options-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="options-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Modality Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 16, justifyContent: 'center' }]}>
@@ -1931,7 +1931,7 @@ export default function ChartScreen() {
               {chartPatterns.polarityBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="git-compare-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="git-compare-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Polarity Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 24, justifyContent: 'center' }]}>
@@ -1990,7 +1990,7 @@ export default function ChartScreen() {
               {isPremium && extendedPatterns?.hemisphereEmphasis && extendedPatterns.hemisphereEmphasis.dominant !== 'Balanced' && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="contrast-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="contrast-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Hemisphere Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -2011,7 +2011,7 @@ export default function ChartScreen() {
               {isPremium && extendedPatterns?.houseEmphasis && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="home-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="home-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>House Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -2202,7 +2202,7 @@ export default function ChartScreen() {
               >
                 <LinearGradient colors={['rgba(232, 214, 174,0.12)', 'rgba(14, 24, 48,0.7)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="ellipse-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="ellipse-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Chart Shape: {chartShape.shape}</Text>
                   </View>
                   {chartShape.handlePlanet && (
@@ -2345,7 +2345,7 @@ export default function ChartScreen() {
               >
                 <LinearGradient colors={['rgba(232, 214, 174,0.10)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="git-network-outline" size={20} color="#E8D6AE" style={styles.patternIcon} />
+                    <Ionicons name="git-network-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Rulership & Dispositors</Text>
                   </View>
                   {dispositorChain.finalDispositor && (
@@ -2410,7 +2410,7 @@ export default function ChartScreen() {
                         )}
                         {dd.isRetrograde && (
                           <View style={[styles.themedPlacementChip, { borderColor: 'rgba(232, 214, 174, 0.3)' }]}>
-                            <Text style={[styles.themedPlacementText, { color: '#E8D6AE', fontSize: 8 }]}>℞</Text>
+                            <Text style={[styles.themedPlacementText, { color: '#FFFFFF', fontSize: 8 }]}>℞</Text>
                           </View>
                         )}
                         {dd.dignity.dignity !== 'peregrine' && (
@@ -2903,7 +2903,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: 'center',
   },
-  insightTitle: { color: '#E8D6AE', fontSize: 15, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
+  insightTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '600', fontFamily: 'serif', textAlign: 'center' },
   insightText: { color: theme.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center' },
 
   pointsDivider: {
@@ -2933,7 +2933,7 @@ const styles = StyleSheet.create({
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
   tabBtnActive: { backgroundColor: 'transparent' },
   tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  tabTextActive: { color: '#CFAE73' },
+  tabTextActive: { color: '#8BC4E8' },
 
   tableHeader: {
     flexDirection: 'row',
@@ -2990,10 +2990,10 @@ const styles = StyleSheet.create({
 
   td: { justifyContent: 'center', alignItems: 'center' },
 
-  planetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', marginRight: 10, width: 28, textAlign: 'center' },
-  signSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', marginRight: 6, width: 24, textAlign: 'center' },
+  planetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#FFFFFF', marginRight: 10, width: 28, textAlign: 'center' },
+  signSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#FFFFFF', marginRight: 6, width: 24, textAlign: 'center' },
   planetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
-  retroLabel: { color: '#E8D6AE', fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  retroLabel: { color: '#FFFFFF', fontSize: 10, fontWeight: '700', textAlign: 'center' },
   signName: { fontWeight: '600', fontSize: 10, textAlign: 'center' },
   elementLabel: { color: theme.textMuted, fontSize: 10, textAlign: 'center' },
   degreeText: { color: theme.textPrimary, fontWeight: '600', fontSize: 14, textAlign: 'center' },
@@ -3010,10 +3010,10 @@ const styles = StyleSheet.create({
   houseNumLarge: { color: theme.primary, fontWeight: '700', fontSize: 18, textAlign: 'center' },
   houseTheme: { color: theme.textSecondary, fontSize: 12, lineHeight: 16, textAlign: 'center' },
 
-  aspectPlanetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', marginRight: 6, width: 24, textAlign: 'center' },
+  aspectPlanetSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#FFFFFF', marginRight: 6, width: 24, textAlign: 'center' },
   aspectIconWrap: { width: 24, marginRight: 6, alignItems: 'center', justifyContent: 'center' },
   aspectPlanetName: { color: theme.textPrimary, fontWeight: '600', fontSize: 13, textAlign: 'center' },
-  aspectSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#E8D6AE', fontWeight: '700', textAlign: 'center' },
+  aspectSymbol: { fontFamily: ZODIAC_FAMILY, fontSize: 18, color: '#FFFFFF', fontWeight: '700', textAlign: 'center' },
   aspectName: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
   aspectNature: { fontSize: 9, textAlign: 'center' },
   orbText: { fontWeight: '700', fontSize: 14, textAlign: 'center' },
@@ -3165,7 +3165,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: theme.spacing.xl,
   },
-  overlayUpsellText: { flex: 1, color: '#CFAE73', fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  overlayUpsellText: { flex: 1, color: '#8BC4E8', fontSize: 13, lineHeight: 18, textAlign: 'center' },
 
   // ── Chart Settings card ──
   chartSettingsCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, marginBottom: theme.spacing.md },
@@ -3176,7 +3176,7 @@ const styles = StyleSheet.create({
   chartSettingsDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
   chartSettingsTags: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
   settingTag: { backgroundColor: 'transparent', paddingHorizontal: theme.spacing.sm, paddingVertical: 4, borderRadius: theme.borderRadius.sm },
-  settingTagText: { fontSize: 11, color: '#E8D6AE', fontWeight: '500' },
+  settingTagText: { fontSize: 11, color: '#FFFFFF', fontWeight: '500' },
 
   // ── Chart Glossary ──
   glossarySection: { alignSelf: 'stretch', marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.xl },
@@ -3188,7 +3188,7 @@ const styles = StyleSheet.create({
   glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, fontFamily: 'serif', flex: 1 },
-  glossaryDefinition: { fontSize: 14, color: '#E8D6AE', lineHeight: 20, marginTop: theme.spacing.xs },
+  glossaryDefinition: { fontSize: 14, color: '#FFFFFF', lineHeight: 20, marginTop: theme.spacing.xs },
 
   // ── Transparency Bar ──
   transparencyBar: {

@@ -35,7 +35,7 @@ import { InputValidator } from '../services/astrology/inputValidator';
 const PALETTE = {
   gold: '#C5B5A1',
   silverBlue: '#8BC4E8',
-  textMain: '#F0EAD6',
+  textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   surface: 'rgba(255,255,255,0.04)',
 };
@@ -270,7 +270,7 @@ export default function BirthDataModal({
                 <Text style={styles.selectButtonText}>
                   {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.3)" />
+                <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
               </Pressable>
             </Animated.View>
 
@@ -280,7 +280,7 @@ export default function BirthDataModal({
                 <Text style={styles.fieldLabel}>Birth Time</Text>
                 <Pressable style={styles.unknownToggle} onPress={() => setHasUnknownTime(!hasUnknownTime)}>
                   <View style={[styles.checkbox, hasUnknownTime && styles.checkboxChecked]}>
-                    {hasUnknownTime && <Ionicons name="checkmark" size={12} color="#020817" />}
+                    {hasUnknownTime && <Ionicons name="checkmark-outline" size={12} color="#020817" />}
                   </View>
                   <Text style={styles.unknownLabel}>I don't know</Text>
                 </Pressable>
@@ -299,7 +299,7 @@ export default function BirthDataModal({
                         Haptics.selectionAsync().catch(() => {});
                       }}
                     >
-                      <Ionicons name="chevron-up" size={22} color={PALETTE.gold} />
+                      <Ionicons name="chevron-up-outline" size={22} color={PALETTE.gold} />
                     </Pressable>
                     <Text style={styles.timeDigit}>{String(time.getHours() % 12 || 12).padStart(2, '0')}</Text>
                     <Pressable
@@ -311,7 +311,7 @@ export default function BirthDataModal({
                         Haptics.selectionAsync().catch(() => {});
                       }}
                     >
-                      <Ionicons name="chevron-down" size={22} color={PALETTE.gold} />
+                      <Ionicons name="chevron-down-outline" size={22} color={PALETTE.gold} />
                     </Pressable>
                   </View>
 
@@ -328,7 +328,7 @@ export default function BirthDataModal({
                         Haptics.selectionAsync().catch(() => {});
                       }}
                     >
-                      <Ionicons name="chevron-up" size={22} color={PALETTE.gold} />
+                      <Ionicons name="chevron-up-outline" size={22} color={PALETTE.gold} />
                     </Pressable>
                     <Text style={styles.timeDigit}>{String(time.getMinutes()).padStart(2, '0')}</Text>
                     <Pressable
@@ -340,7 +340,7 @@ export default function BirthDataModal({
                         Haptics.selectionAsync().catch(() => {});
                       }}
                     >
-                      <Ionicons name="chevron-down" size={22} color={PALETTE.gold} />
+                      <Ionicons name="chevron-down-outline" size={22} color={PALETTE.gold} />
                     </Pressable>
                   </View>
 
@@ -385,7 +385,7 @@ export default function BirthDataModal({
                   <ActivityIndicator size="small" color={PALETTE.gold} style={styles.loader} />
                 )}
                 {locationSelected && !searchingLocation && (
-                  <Ionicons name="checkmark-circle" size={18} color="#6EBF8B" style={styles.loader} />
+                  <Ionicons name="checkmark-circle-outline" size={18} color="#6EBF8B" style={styles.loader} />
                 )}
               </View>
 
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 16,
   },
   selectButton: {
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     flex: 1,
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 16,
   },
   unknownToggle: {
@@ -623,14 +623,14 @@ const styles = StyleSheet.create({
   timeDigit: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     minWidth: 52,
     textAlign: 'center',
   },
   timeColon: {
     fontSize: 28,
     fontWeight: '700',
-    color: 'rgba(197, 181, 161, 0.5)',
+    color: 'rgba(255,255,255,0.5)',
     marginBottom: 2,
   },
   amPmButton: {
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   locationInput: {
     flex: 1,
     paddingVertical: 14,
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 16,
   },
   loader: {
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   pickerTitle: {
-    color: '#F0EAD6',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

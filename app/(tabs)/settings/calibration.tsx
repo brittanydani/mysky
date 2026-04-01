@@ -397,16 +397,18 @@ export default function VisualCalibration() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safe}>
-        {/* ── Back button ── */}
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => router.back()}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Ionicons name="chevron-back-outline" size={24} color="#F8FAFC" />
-        </Pressable>
+        {/* ── Close button ── */}
+        <View style={styles.headerRow}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => router.back()}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Text style={styles.closeIcon}>×</Text>
+          </Pressable>
+        </View>
 
         <ScrollView
           style={styles.scrollView}
@@ -592,6 +594,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     alignSelf: 'flex-start',
   },
+  headerRow: { paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
   header: {
     marginBottom: 16,
   },

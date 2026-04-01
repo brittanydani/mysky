@@ -80,19 +80,21 @@ export default function BodyNervousScreen() {
       />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
-        >
-          <MetallicText style={styles.backText} variant="green">← Identity</MetallicText>
-        </Pressable>
+        <View style={styles.header}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
+          >
+            <Text style={styles.closeIcon}>×</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.titleArea}>
+          <Text style={styles.headerTitle}>Body & Nervous System</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Somatic awareness & regulation</GoldSubtitle>
+        </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.headerTitle}>Body & Nervous System</Text>
-            <GoldSubtitle style={styles.headerSubtitle}>Somatic awareness & regulation</GoldSubtitle>
-          </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(140).duration(600)}>
             <LinearGradient
@@ -136,15 +138,15 @@ export default function BodyNervousScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0C' },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  backBtn: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
-  backText: { fontSize: 14, color: 'rgba(140,190,170,0.8)', fontWeight: '600' },
+  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header: { marginBottom: 32 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,

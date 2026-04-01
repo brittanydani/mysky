@@ -37,7 +37,7 @@ const PALETTE = {
   textMain:    '#FFFFFF',
   textMuted:   'rgba(255,255,255,0.55)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg:          '#0A0A0C',
+  bg:          '#020817',
 };
 
 const EMOTIONS = [
@@ -201,23 +201,24 @@ export default function SomaticMapScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient colors={['rgba(140,190,170,0.07)', 'transparent']} style={styles.topGlow} />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync().catch(() => {}); if (router.canGoBack()) router.back(); }}
-        >
-          <MetallicText style={styles.backText} variant="green">← Body & Nervous System</MetallicText>
-        </Pressable>
+        {/* Header row — matches mood screen */}
+        <View style={styles.header}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); if (router.canGoBack()) router.back(); }}
+          >
+            <Text style={styles.closeIcon}>×</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.titleArea}>
+          <Text style={styles.headerTitle}>Somatic Map</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Where emotions live in your body</GoldSubtitle>
+        </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-          {/* Header */}
-          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.headerTitle}>Somatic Map</Text>
-            <GoldSubtitle style={styles.headerSubtitle}>Where emotions live in your body</GoldSubtitle>
-          </Animated.View>
 
           {/* Front / Back + Female / Male toggles */}
           <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.toggleRow}>
@@ -408,13 +409,13 @@ export default function SomaticMapScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: PALETTE.bg },
   safeArea:   { flex: 1 },
-  topGlow:    { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
 
-  backBtn:  { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
-  backText: { fontSize: 14, color: 'rgba(140,190,170,0.7)', fontWeight: '600' },
+  header:     { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:  { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeIcon:  { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
-  header:        { marginBottom: 24 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
@@ -443,7 +444,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   sideBtnActive: {
     borderColor: 'rgba(140,190,170,0.55)',
@@ -455,6 +456,11 @@ const styles = StyleSheet.create({
   // Body
   bodyWrap: {
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 24,
     marginBottom: 16,
   },
 
@@ -480,7 +486,7 @@ const styles = StyleSheet.create({
   tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.25)',  },
 
   sectionLabel: {
-    fontSize: 19,
+    fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '700',
     marginTop: 8,
@@ -489,14 +495,14 @@ const styles = StyleSheet.create({
 
   emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   emotionChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.09)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  emotionText: { fontSize: 11, color: PALETTE.textMuted },
+  emotionText: { fontSize: 13, color: PALETTE.textMuted },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   intensityDot: {
@@ -508,7 +514,7 @@ const styles = StyleSheet.create({
 
   logRow: { marginTop: 28, alignItems: 'center' },
   logBtn: {
-    height: 50, paddingHorizontal: 36, borderRadius: 25,
+    height: 50, paddingHorizontal: 36, borderRadius: 24,
     overflow: 'hidden', borderWidth: 1,
     borderColor: 'rgba(140,190,170,0.4)',
     justifyContent: 'center', alignItems: 'center',
@@ -520,10 +526,10 @@ const styles = StyleSheet.create({
   entryList:      { gap: 8 },
   entryRow: {
     flexDirection: 'row', alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
-    paddingHorizontal: 14, paddingVertical: 12, gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 24,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 20, paddingVertical: 16, gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   entryDot:  { width: 8, height: 8, borderRadius: 4 },
   entryMeta: { flex: 1 },

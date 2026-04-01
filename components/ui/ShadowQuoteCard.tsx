@@ -28,7 +28,7 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',
-  textMain: '#F0EAD6',
+  textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
 };

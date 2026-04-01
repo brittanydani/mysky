@@ -46,7 +46,7 @@ const PALETTE = {
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#0A0A0C',
+  bg: '#020817',
 };
 
 const CATEGORY_COLORS: Record<ReflectionCategory, string> = {
@@ -150,25 +150,26 @@ export default function PastReflectionsScreen() {
       />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
-        >
-          <MetallicIcon name="arrow-back-outline" size={20} color={PALETTE.gold} />
-          <MetallicText style={styles.backText} color={PALETTE.gold}>Daily Reflection</MetallicText>
-        </Pressable>
+        <View style={styles.header}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+          >
+            <Text style={styles.closeIcon}>×</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.titleArea}>
+          <Text style={styles.headerTitle}>Past Reflections</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>
+            Your sealed answers, organized by date
+          </GoldSubtitle>
+        </View>
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.headerTitle}>Past Reflections</Text>
-            <GoldSubtitle style={styles.headerSubtitle}>
-              Your sealed answers, organized by date
-            </GoldSubtitle>
-          </Animated.View>
 
           {/* Filter Chips */}
           <Animated.View entering={FadeInDown.delay(140).duration(500)} style={styles.filterRow}>
@@ -269,19 +270,13 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 4,
-  },
-  backText: { fontSize: 14, color: PALETTE.gold, fontWeight: '600' },
+  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 140 },
 
-  header: { marginTop: 8, marginBottom: 28 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
@@ -337,7 +332,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   dayLabel: {
-    fontSize: 19,
+    fontSize: 16,
     color: PALETTE.textMain,
     fontWeight: '700',
   },

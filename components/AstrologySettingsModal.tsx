@@ -42,7 +42,7 @@ import SkiaMetallicPill from './ui/SkiaMetallicPill';
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  textMain: '#F0EAD6',
+  textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
 };
 

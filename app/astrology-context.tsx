@@ -277,16 +277,18 @@ export default function CosmicContext() {
       <SkiaDynamicCosmos />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Pressable onPress={handleBack} style={styles.backBtn}>
-          <MetallicIcon name="arrow-back-outline" size={20} color="#D4B872" />
-          <MetallicText style={styles.backText} color="#D4B872">Identity</MetallicText>
-        </Pressable>
+        <View style={styles.header}>
+          <Pressable style={styles.closeButton} onPress={handleBack}>
+            <Text style={styles.closeIcon}>×</Text>
+          </Pressable>
+        </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.titleHeader}>
+        <View style={styles.titleArea}>
           <Text style={styles.headerTitle}>Cosmic Context</Text>
           <GoldSubtitle style={styles.headerSubtitle}>Moon, transits & cosmic weather</GoldSubtitle>
-        </Animated.View>
+        </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         {/* ── Hero Moon ──────────────────────────────────────────────── */}
         <View style={styles.heroSection}>
@@ -472,17 +474,19 @@ export default function CosmicContext() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#050507' },
+  container: { flex: 1, backgroundColor: '#020817' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   safeArea: { flex: 1 },
-  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
-  backText: { fontSize: 14, fontWeight: '600' },
+  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
   titleHeader: { marginBottom: 32 },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
   sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
 
   // ── Hero Moon ─────────────────────────────────────────────────────────────
@@ -490,13 +494,13 @@ const styles = StyleSheet.create({
 
   // ── Weekly Moon ───────────────────────────────────────────────────────────
   weekHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, marginBottom: 4 },
-  weekHeaderLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(212,184,114,0.7)', letterSpacing: 1.5 },
+  weekHeaderLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, paddingVertical: 16, paddingHorizontal: 8, borderWidth: 1, borderColor: 'rgba(212,184,114,0.12)', marginBottom: 28 },
   weekDayCol: { flex: 1, alignItems: 'center', gap: 4 },
   weekDayName: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.35)', letterSpacing: 0.8 },
-  weekDayNameToday: { color: '#D4B872' },
+  weekDayNameToday: { color: '#FFFFFF' },
   weekDayNum: { fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: '500' },
-  weekDayNumToday: { color: '#D4B872', fontWeight: '800' },
+  weekDayNumToday: { color: '#FFFFFF', fontWeight: '800' },
   weekOrb: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
   weekOrbToday: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212,184,114,0.4)' },
   weekDayColActive: { backgroundColor: 'rgba(212,184,114,0.08)', borderRadius: 12 },
@@ -514,16 +518,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   weekInfoPhase: { fontSize: 15, color: '#FFF', fontWeight: '700' },
-  weekInfoSign: { fontSize: 13, color: 'rgba(212,184,114,0.85)', fontWeight: '600' },
+  weekInfoSign: { fontSize: 13, color: 'rgba(139,196,232,0.85)', fontWeight: '600' },
   weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginTop: 2 },
 
   moonTitle: { fontSize: 22, color: '#FFF', fontWeight: '700', marginTop: 20, marginBottom: 4 },
-  moonDegree: { fontSize: 14, color: '#D4B872', letterSpacing: 1, marginBottom: 16 },
+  moonDegree: { fontSize: 14, color: '#FFFFFF', letterSpacing: 1, marginBottom: 16 },
 
   // VoC
   vocBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(212,184,114,0.08)', borderWidth: 1, borderColor: 'rgba(212,184,114,0.25)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  vocPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#D4B872', marginRight: 8 },
-  vocText: { fontSize: 10, fontWeight: '800', color: '#D4B872', letterSpacing: 1.2 },
+  vocPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#8BC4E8', marginRight: 8 },
+  vocText: { fontSize: 10, fontWeight: '800', color: '#FFFFFF', letterSpacing: 1.2 },
 
   // ── Retrograde Alert ──────────────────────────────────────────────────────
   rxAlertCard: { backgroundColor: 'rgba(217,140,140,0.07)', borderWidth: 1, borderColor: 'rgba(217,140,140,0.25)', borderRadius: 24, padding: 28, marginBottom: 24 },
@@ -534,8 +538,8 @@ const styles = StyleSheet.create({
   // ── Daily Alignment ───────────────────────────────────────────────────────
   affirmationCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#D9BF8C', letterSpacing: 1.5 },
-  premiumIcon: { color: '#D9BF8C', fontSize: 14 },
+  affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#FFFFFF', letterSpacing: 1.5 },
+  premiumIcon: { color: '#8BC4E8', fontSize: 14 },
   affirmationText: { fontSize: 18, color: '#FFF', lineHeight: 28 },
 
   // ── Transits ──────────────────────────────────────────────────────────────

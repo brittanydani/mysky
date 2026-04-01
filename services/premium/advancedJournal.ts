@@ -48,6 +48,7 @@ export interface TransitAspectSummary {
 
 export interface PatternInsight {
   type: 'mood_pattern' | 'transit_correlation' | 'theme_pattern' | 'timing_pattern';
+  icon?: string;
   title: string;
   description: string;
   confidence: 'emerging' | 'suggested' | 'strong';
@@ -298,7 +299,8 @@ export class AdvancedJournalAnalyzer {
 
         insights.push({
           type: 'transit_correlation',
-          title: `${effect === 'elevates' ? '✨' : '🌧️'} ${transit}`,
+          icon: effect === 'elevates' ? 'sunny-outline' : 'rainy-outline',
+          title: `${transit}`,
           description: diff > 0
             ? `Your mood tends to be ${Math.abs(diff).toFixed(1)} points higher when this transit is active.`
             : `Your mood tends to be ${Math.abs(diff).toFixed(1)} points lower when this transit is active.`,
@@ -340,10 +342,10 @@ export class AdvancedJournalAnalyzer {
       const diff = avgMood - overallAvg;
 
       if (Math.abs(diff) > 0.4) {
-        const phaseEmoji = this.getPhaseEmoji(phase);
         insights.push({
           type: 'mood_pattern',
-          title: `${phaseEmoji} ${phase} Pattern`,
+          icon: 'moon-outline',
+          title: `${phase} Pattern`,
           description: diff > 0
             ? `You tend to feel better during the ${phase} (avg mood: ${avgMood.toFixed(1)}).`
             : `The ${phase} can be more challenging for you (avg mood: ${avgMood.toFixed(1)}).`,
@@ -380,7 +382,8 @@ export class AdvancedJournalAnalyzer {
     if (maxDay && maxDay[1] >= 3) {
       insights.push({
         type: 'timing_pattern',
-        title: `📅 ${days[maxDay[0]]} Journaler`,
+        icon: 'calendar-outline',
+        title: `${days[maxDay[0]]} Journaler`,
         description: `You write most often on ${days[maxDay[0]]}s.`,
         confidence: 'suggested',
         evidence: `${maxDay[1]} entries on ${days[maxDay[0]]}s.`,
@@ -416,7 +419,8 @@ export class AdvancedJournalAnalyzer {
       if (avgMood >= 4) {
         insights.push({
           type: 'theme_pattern',
-          title: `💚 "${tag}" = Good Days`,
+          icon: 'happy-outline',
+          title: `"${tag}" — Good Days`,
           description: `Entries tagged "${tag}" have an average mood of ${avgMood.toFixed(1)}.`,
           confidence: moods.length >= 3 ? 'suggested' : 'emerging',
           evidence: `Based on ${moods.length} entries with this tag.`,
@@ -425,7 +429,8 @@ export class AdvancedJournalAnalyzer {
       } else if (avgMood <= 2.5) {
         insights.push({
           type: 'theme_pattern',
-          title: `🌧️ "${tag}" = Tender Days`,
+          icon: 'heart-outline',
+          title: `"${tag}" — Tender Days`,
           description: `Entries tagged "${tag}" have an average mood of ${avgMood.toFixed(1)}.`,
           confidence: moods.length >= 3 ? 'suggested' : 'emerging',
           evidence: `Based on ${moods.length} entries with this tag.`,
