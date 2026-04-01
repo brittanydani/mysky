@@ -104,7 +104,6 @@ function computeDimensionScores(checkIns: DailyCheckIn[]): number[] {
 
   const n = checkIns.length;
   const energies = checkIns.map(c => levelToNum(c.energyLevel));
-  const stresses = checkIns.map(c => levelToNum(c.stressLevel));
   const moods    = checkIns.map(c => c.moodScore);
   const allTags  = checkIns.flatMap(c => c.tags ?? []);
 
@@ -115,7 +114,6 @@ function computeDimensionScores(checkIns: DailyCheckIn[]): number[] {
   };
 
   const avgEnergy = avg(energies);
-  const avgStress = avg(stresses);
   const moodStd   = stdDev(moods);
 
   // Journaling signals — the richest self-reflection data
@@ -254,7 +252,6 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   // ── Skia fonts for in-canvas text ──────────────────────────────────────
   const serifTheme = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 18, fontWeight: '800' }), []);
   const sansSummary = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 12, fontWeight: '500' }), []);
-  const sansDimLabel = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 11, fontWeight: '800' }), []);
   useEffect(() => {
     breath.value = withRepeat(
       withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.sin) }),

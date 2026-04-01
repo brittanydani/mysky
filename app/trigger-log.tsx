@@ -15,13 +15,11 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from '../components/ui/MetallicText';
 
 const STORAGE_KEY = '@mysky:trigger_events';

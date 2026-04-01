@@ -152,7 +152,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       <View style={styles.container}>
         <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 40 }]}>
+          <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}>
             <Pressable onPress={safeGoBack} style={styles.backButton}>
               <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
             </Pressable>
@@ -213,7 +213,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 340 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Back button */}
@@ -457,6 +457,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingTop: 20,
     paddingBottom: 24,
   },
   spacer: {

@@ -2,7 +2,7 @@
 // MySky — Cinematic Skia Chakra Wheel with High-End GPU Shapes
 
 import React, { useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import {
   Canvas,
   Circle,

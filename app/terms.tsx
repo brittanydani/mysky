@@ -1,6 +1,6 @@
 // File: app/terms.tsx
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,7 +56,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
               <Ionicons name="document-text-outline" size={132} color={theme.textGold} />
             </View>
 
-            <Text style={styles.lastUpdated}>Last updated: March 30, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: April 1, 2026</Text>
 
             <Text style={styles.sectionTitle}>Acceptance of Terms of Use</Text>
             <Text style={styles.paragraph}>
@@ -73,7 +73,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Service Description</Text>
             <Text style={styles.paragraph}>
-              MySky provides a local-first personal framework for self-knowledge, growth, and reflection. Tools include daily wellness tracking, dream journaling, emotional pattern mapping, self-discovery exercises (values inventory, somatic body mapping, nervous system trigger logs), and optional astrological context. The app is intended for users aged 17 and older. Core features work fully offline without an account.
+              MySky provides a local-first personal framework for self-knowledge, growth, and reflection. Tools include daily wellness tracking, dream journaling, emotional pattern mapping, self-discovery exercises (values inventory, somatic body mapping, nervous system trigger logs), and optional astrological context. The app is intended for users aged 17 and older. A free account is required, but core features work fully offline after initial sign-in.
             </Text>
 
             <Text style={styles.sectionTitle}>License Grant</Text>
@@ -98,7 +98,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Accounts</Text>
             <Text style={styles.paragraph}>
-              A free account is required to use MySky. Accounts are managed via Supabase Auth (email and password) and are used to keep your reflections safe and synced across devices. A Deeper Sky subscription is required for premium features.
+              A free account is required to use MySky. Accounts are managed via Supabase Auth (email and password) and are used to authenticate your identity and enable optional premium features such as AI Reflection Insights. A Deeper Sky subscription is required for premium features.
             </Text>
 
             <LinearGradient 
@@ -151,7 +151,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Termination</Text>
             <Text style={styles.paragraph}>
-              You may stop using MySky at any time by uninstalling the app, which permanently erases all locally stored data. If you created an account for AI Reflection Insights, you may request account deletion by contacting support.
+              You may stop using MySky at any time by uninstalling the app, which permanently erases all locally stored data. You may request deletion of your Supabase account by contacting support.
             </Text>
 
             <Text style={styles.sectionTitle}>Age Requirement</Text>

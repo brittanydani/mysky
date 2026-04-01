@@ -9,7 +9,6 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -374,7 +373,7 @@ export default function RelationshipsScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <View style={StyleSheet.absoluteFill} pointerEvents="none"><SkiaDynamicCosmos /></View>
+        <SkiaDynamicCosmos />
         <ActivityIndicator size="large" color={theme.textGold} />
         <Text style={styles.loadingText}>Loading relationships...</Text>
       </View>
@@ -384,7 +383,7 @@ export default function RelationshipsScreen() {
   if (!userChart) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <View style={StyleSheet.absoluteFill} pointerEvents="none"><SkiaDynamicCosmos /></View>
+        <SkiaDynamicCosmos />
         <Ionicons name="people-outline" size={56} color={theme.textMuted} style={{ marginBottom: 16 }} />
         <Text style={styles.emptyTitle}>Create Your Profile First</Text>
         <Text style={styles.emptySubtitle}>Set up your birth data on the Home screen to explore relationship dynamics</Text>
@@ -399,7 +398,7 @@ export default function RelationshipsScreen() {
 
     return (
       <View style={styles.container}>
-        <View style={StyleSheet.absoluteFill} pointerEvents="none"><SkiaDynamicCosmos /></View>
+        <SkiaDynamicCosmos />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           
           <View style={styles.detailHeader}>
@@ -667,7 +666,14 @@ export default function RelationshipsScreen() {
   // ── LIST VIEW ──
   return (
     <View style={styles.container}>
-      <View style={StyleSheet.absoluteFill} pointerEvents="none"><SkiaDynamicCosmos /></View>
+      <SkiaDynamicCosmos />
+
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         
         <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
@@ -675,7 +681,7 @@ export default function RelationshipsScreen() {
           <GoldSubtitle style={styles.subtitle}>Understanding, not compatibility scores</GoldSubtitle>
         </Animated.View>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {relationships.length > 0 && (
             <Animated.View entering={FadeInDown.delay(100).duration(400)}>
               <Text style={styles.listSectionTitle}>Your People</Text>
@@ -802,6 +808,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
   loadingText: { marginTop: 16, color: theme.textMuted, fontSize: 15,  },
   emptyTitle: { marginTop: 16, fontSize: 24, fontWeight: '700', color: theme.textPrimary },
   emptySubtitle: { marginTop: 12, fontSize: 15, color: theme.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
@@ -809,7 +822,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 },
   title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.5, marginBottom: 4 },
   subtitle: { fontSize: 14 },
-  scrollView: { flex: 1, paddingHorizontal: 24 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
   
   listSectionTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, marginTop: 24, marginBottom: 6 },
   listSectionSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20 },

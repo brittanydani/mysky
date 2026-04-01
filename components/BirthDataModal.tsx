@@ -212,7 +212,7 @@ export default function BirthDataModal({
     Haptics.selectionAsync().catch(() => {});
     try {
       await Promise.resolve(onSave(data, { chartName }));
-    } catch (e) {
+    } catch {
       setSaveError('Something went wrong. Please try again.');
     } finally {
       setIsSaving(false);

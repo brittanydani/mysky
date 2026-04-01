@@ -27,6 +27,7 @@ import {
   MockSleepScreen,
   MockPatternsScreen,
   MockPersonalizeScreen,
+  MockPremiumScreen,
 } from './mocks';
 
 const { width: DEVICE_WIDTH } = Dimensions.get('window');
@@ -46,6 +47,8 @@ function getMockContent(slug: string, width: number, height: number) {
       return <MockPatternsScreen width={width} height={height} />;
     case 'personalize':
       return <MockPersonalizeScreen width={width} height={height} />;
+    case 'premium':
+      return <MockPremiumScreen width={width} height={height} />;
     default:
       return <View style={{ flex: 1, backgroundColor: '#020817' }} />;
   }

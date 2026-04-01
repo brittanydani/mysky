@@ -13,7 +13,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 
 import OnboardingModal from '../components/OnboardingModal';

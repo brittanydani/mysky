@@ -13,7 +13,6 @@ import {
   Pressable,
   ScrollView,
   TextStyle,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -151,11 +150,11 @@ export default function BlueprintScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      {/* Deep Space Atmosphere */}
-      <LinearGradient
-        colors={['rgba(85, 65, 115, 0.1)', 'transparent']}
-        style={styles.topGlow}
-      />
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
@@ -210,7 +209,6 @@ export default function BlueprintScreen() {
             <EnergyScrollContent embedded />
           )}
 
-          <View style={{ height: 120 }} />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -230,8 +228,14 @@ const PremiumBadge = () => (
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 24 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   // Header
   header: { marginBottom: 32 },

@@ -162,6 +162,20 @@ export const SCREENSHOTS: ScreenshotConfig[] = [
     highlightElement: 'color-spectrum',
     appScreen: 'settings',
   },
+  {
+    id: 7,
+    slug: 'premium',
+    step: 'Deeper Sky',
+    headline: 'See What Your\nPatterns Teach You',
+    subtext: 'Unlock weekly shifts, recurring themes, and more personal guidance.',
+    purpose: 'Show premium/paywall value proposition',
+    accentColor: NEBULA_COLORS.gold,
+    nebulaColors: [NEBULA_COLORS.gold, NEBULA_COLORS.indigo],
+    nebulaOpacity: 0.14,
+    nebulaBlur: 320,
+    highlightElement: 'diamond-eclipse',
+    appScreen: 'premium',
+  },
 ];
 
 // ─── Tagline (optional first-screenshot bottom tagline) ────────────

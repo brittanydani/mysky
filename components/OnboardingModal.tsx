@@ -52,10 +52,6 @@ import { logger } from     '../utils/logger';
 import Constants from 'expo-constants';
 import { supabase } from '../lib/supabase';
 
-const DISPLAY = Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' });
-const DISPLAY_SEMIBOLD = Platform.select({ ios: 'SFProDisplay-Semibold', android: 'sans-serif-medium', default: 'System' });
-const DISPLAY_BOLD = Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' });
-
 // ── Liquid Mirror Gold Palette ──
 const PREMIUM = {
   bgOled: '#020817',
@@ -264,7 +260,7 @@ export default function OnboardingModal({
   const [pendingChart, setPendingChart] = useState<NatalChart | null>(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'sign-up' | 'sign-in'>('sign-up');
+  const [authMode, setAuthMode] = useState<'sign-up' | 'sign-in'>('sign-in');
   const [authLoading, setAuthLoading] = useState(false);
   const [passphrase, setPassphrase] = useState('');
   const [isNameFocused, setIsNameFocused] = useState(false);
@@ -291,8 +287,12 @@ export default function OnboardingModal({
   };
 
   const goBack = () => {
-    if (step === 'privacy') {
+    if (step === 'auth') {
       goToStep('welcome');
+      return;
+    }
+    if (step === 'privacy') {
+      goToStep('auth');
       return;
     }
     const idx = STEP_ORDER.indexOf(step);
@@ -301,7 +301,7 @@ export default function OnboardingModal({
 
   const handleGetStarted = () => {
     Haptics.selectionAsync().catch(() => {});
-    goToStep('privacy');
+    goToStep('auth');
   };
 
   const handlePrivacyAccept = () => {
@@ -393,9 +393,15 @@ export default function OnboardingModal({
         timezone: chart.birthData.timezone,
       }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
 
-      timeoutRef.current = setTimeout(() => {
-        setPendingChart(chart);
-        setStep('auth');
+      timeoutRef.current = setTimeout(async () => {
+        // If already authenticated (signed in/up at start), complete directly
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession) {
+          onComplete(chart);
+        } else {
+          setPendingChart(chart);
+          setStep('auth');
+        }
       }, 4000);
     } catch (error) {
       logger.error('Failed to generate chart:', error);
@@ -505,9 +511,14 @@ export default function OnboardingModal({
           timezone: charts[0].timezone,
         }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
 
-        timeoutRef.current = setTimeout(() => {
-          setPendingChart(chart);
-          setStep('auth');
+        timeoutRef.current = setTimeout(async () => {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession) {
+            onComplete(chart);
+          } else {
+            setPendingChart(chart);
+            setStep('auth');
+          }
         }, 900);
       } else {
         Alert.alert('No Data Found', 'The backup did not contain any profile data.', [
@@ -538,12 +549,38 @@ export default function OnboardingModal({
           Alert.alert('Check your email', 'We sent a confirmation link. Tap it, then come back and sign in.');
           setAuthMode('sign-in');
         } else if (pendingChart) {
+          // Post-processing sign-up: complete with generated chart
           onComplete(pendingChart);
+        } else {
+          // Early sign-up (before chart): continue to onboarding
+          goToStep('privacy');
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
         if (error) throw error;
-        if (pendingChart) onComplete(pendingChart);
+        if (pendingChart) {
+          onComplete(pendingChart);
+        } else {
+          // Existing user sign-in: check for existing charts
+          const existingCharts = await localDb.getCharts();
+          if (existingCharts.length > 0) {
+            const bd = existingCharts[0];
+            const chart = AstrologyCalculator.generateNatalChart({
+              date: bd.birthDate,
+              time: bd.birthTime,
+              hasUnknownTime: bd.hasUnknownTime,
+              place: bd.birthPlace,
+              latitude: bd.latitude,
+              longitude: bd.longitude,
+              houseSystem: bd.houseSystem,
+              timezone: bd.timezone,
+            });
+            onComplete(chart);
+          } else {
+            // Signed in but no local data: continue onboarding to collect birth data
+            goToStep('privacy');
+          }
+        }
       }
     } catch (err: unknown) {
       Alert.alert('Error', err instanceof Error ? err.message : 'Something went wrong');

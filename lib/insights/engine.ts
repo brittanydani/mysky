@@ -452,9 +452,9 @@ function buildSleepCard(days: DailyCheckIn[], addCard: (card: InsightCard) => vo
 
   let body: string;
   if (confidence >= 70) {
-    body = 'On days with better sleep quality, your mood and energy tend to follow. Restful sleep appears to be one of the steadiest foundations for your stronger days.';
+    body = `On days with better sleep quality, your mood and energy tend to follow — a ${result.strength} ${result.relationship} relationship with a ${result.effectSize}-point effect. Restful sleep appears to be one of the steadiest foundations for your stronger days.`;
   } else {
-    body = 'There seems to be a connection between your sleep quality and how your days feel. It may be worth noticing how restful sleep appears to shape your mood.';
+    body = `There seems to be a ${result.strength} connection between your sleep quality and how your days feel (${result.effectSize}-point difference). It may be worth noticing how restful sleep appears to shape your mood.`;
   }
 
   addCard({
@@ -554,7 +554,7 @@ function buildEmergingThemeCard(days: DailyCheckIn[], addCard: (card: InsightCar
   addCard({
     type: 'emerging_theme',
     title: 'A Recurring Theme',
-    body: `A recurring pattern is showing up in your reflections: ${themes.join(', ')}. This theme may point to something worth paying attention to.`,
+    body: `A recurring pattern is showing up across ${journalDays.length} journal entries: ${themes.join(', ')}. The strongest signal is ${dominant >= 0.3 ? 'notably present' : 'emerging'} at ${Math.round(dominant * 100)}% intensity. This theme may point to something worth paying attention to.`,
     confidence,
   });
 }
@@ -585,6 +585,7 @@ function buildDreamThemeCard(days: DailyCheckIn[], addCard: (card: InsightCard) 
   if (!topTheme || topTotal < 1) return;
 
   const avgIntensity = analyses.reduce((s, a) => s + a.intensity, 0) / analyses.length;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- planned for dream narrative feature
   const undercurrent = DREAM_UNDERCURRENTS[topTheme] || 'something unresolved';
 
   const themeDescriptions: Record<string, string> = {
@@ -607,7 +608,7 @@ function buildDreamThemeCard(days: DailyCheckIn[], addCard: (card: InsightCard) 
   addCard({
     type: 'dream_theme',
     title: 'A Thread in Your Dreams',
-    body: `Your recent dreams seem to carry a thread of ${themeLabel}. This may reflect something your mind is working through — a sense of direction or searching that could point to deeper feelings worth noticing.`,
+    body: `Across ${dreamDays.length} dreams, a thread of ${themeLabel} emerges at ${Math.round(avgIntensity * 100)}% intensity. This may reflect something your mind is working through — an undercurrent of ${undercurrent.toLowerCase()} that could point to deeper feelings worth noticing.`,
     confidence,
   });
 }

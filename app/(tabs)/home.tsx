@@ -17,7 +17,6 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
-  Platform,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -105,7 +104,7 @@ function generateInsight(
     return `Your stability is ${stabilityIndex}% today. Your signals are coherent — maintain this rhythm and your vitality will continue to build.`;
   }
   if (sleepDeficit > 1.5) {
-    return `Your stability is ${stabilityIndex}% today. Increasing rest by ${sleepDeficit.toFixed(0)} hours could stabilise your emerald vitality and lift mood coherence.`;
+    return `Your stability is ${stabilityIndex}% today. Increasing rest by ${sleepDeficit.toFixed(0)} hours could help stabilise your energy and lift mood coherence.`;
   }
   if (energy < 5) {
     return `Your stability is ${stabilityIndex}% today. Your energy signal is low — consider gentle movement or sunlight exposure to restore your baseline.`;
@@ -332,8 +331,13 @@ export default function HomeScreen() {
   // Prefer daily loop insight; fall back to legacy insight engine
   const insightText = useMemo(() => {
     if (dailyLoop?.todayInsight?.text) return dailyLoop.todayInsight.text;
-    return generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep);
-  }, [dailyLoop, balanceScore, mood, energy, latestSleep]);
+    // Only generate a score-based insight if today's check-in data is present;
+    // otherwise fall back to a neutral prompt to avoid showing fabricated numbers.
+    if (hasDataToday) {
+      return generateInsight(Math.round(balanceScore * 10), mood, energy, latestSleep);
+    }
+    return 'Log a check-in today to see your personalised daily reflection.';
+  }, [dailyLoop, balanceScore, mood, energy, latestSleep, hasDataToday]);
 
   /** Pixel heights (max ~120px) for each of the past 7 days, oldest → today */
   const stabilityBars = useMemo(() => {
@@ -389,7 +393,7 @@ export default function HomeScreen() {
       </View>
 
       {/* LAYER 3: Interactive UI */}
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}

@@ -1,6 +1,6 @@
 // File: app/onboarding/restore.tsx
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Alert, Platform, Keyboard, TouchableWithoutFeedback, DeviceEventEmitter } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Alert, Keyboard, TouchableWithoutFeedback, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';

@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';

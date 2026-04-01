@@ -11,7 +11,6 @@ import {
   Pressable,
   ScrollView,
   Alert,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -63,7 +62,7 @@ const ARCHETYPES: Record<ArchetypeKey, Archetype> = {
     key: 'caregiver',
     name: 'The Caregiver',
     icon: '❧',
-    color: '#D4A3B3',
+    color: '#C9AE78',
     tagline: 'Moves through the world by nurturing',
     light: 'Empathy, generosity, emotional attunement',
     shadow: 'Self-neglect, over-giving, resentment when unseen',

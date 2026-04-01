@@ -4,9 +4,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
-import Animated, { Easing, FadeInDown, FadeInUp, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { BlurView } from 'expo-blur';
 
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { MetallicIcon } from './ui/MetallicIcon';
@@ -29,27 +28,6 @@ function LivingBackground() {
     <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020817' }]} pointerEvents="none" />
   );
 }
-
-const bgStyles = StyleSheet.create({
-  orbTitanium: {
-    position: 'absolute',
-    width: 600,
-    height: 600,
-    borderRadius: 300,
-    backgroundColor: PALETTE.titaniumGlow,
-    top: -250,
-    right: -200,
-  },
-  orbStarlight: {
-    position: 'absolute',
-    width: 450,
-    height: 450,
-    borderRadius: 225,
-    backgroundColor: PALETTE.starlight,
-    bottom: -150,
-    left: -200,
-  },
-});
 
 interface PrivacyConsentModalProps {
   visible: boolean;

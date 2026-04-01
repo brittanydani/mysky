@@ -13,7 +13,6 @@ import {
   Text,
   TextInput,
   View,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -22,7 +21,7 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { useRouter, Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { BlurView } from 'expo-blur';
+// BlurView reserved for future dream UI
 import Svg, { Circle, Defs, RadialGradient, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 
 import { theme } from '../../constants/theme';
@@ -36,6 +35,7 @@ import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { NatalChart } from '../../services/astrology/types';
@@ -57,13 +57,13 @@ import {
 } from '../../services/premium/dreamTypes';
 import { computeDreamAggregates, computeDreamPatterns } from '../../services/premium/dreamAggregates';
 import SkiaSleepGraph, { SleepPoint } from '../../components/ui/SkiaSleepGraph';
-import { DreamClusterMap } from '../../components/ui/DreamClusterMap';
+// DreamClusterMap reserved for future dream cluster view
 import { useSyncDreamData } from '../../hooks/useSyncDreamData';
 import SkiaPulseMonitor from '../../components/ui/SkiaPulseMonitor';
 import SegmentRating from '../../components/ui/SegmentRating';
 import AwakenStateSheet from '../../components/ui/AwakenStateSheet';
 import PremiumPill from '../../components/ui/PremiumPill';
-import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+// GoldSubtitle reserved for future premium labels
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -275,12 +275,16 @@ export default function SleepScreen() {
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [natalChart, setNatalChart] = useState<NatalChart | null>(null);
   const [recentCheckIns, setRecentCheckIns] = useState<DailyCheckIn[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
   const [interpretations, setInterpretations] = useState<Record<string, DreamInterpretation>>({});
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
   // Gemini AI interpretation state
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
   const [aiInterpretations, setAiInterpretations] = useState<Record<string, GeminiDreamResult>>({});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- state read pending UI wiring
   const [aiError, setAiError] = useState<string | null>(null);
 
   const [quality, setQuality] = useState(0);
@@ -480,6 +484,7 @@ export default function SleepScreen() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- handler pending UI wiring
   const handleDreamReflect = useCallback((entry: SleepEntry) => {
     if (!entry.dreamText) return;
     if (expandedEntryId === entry.id) { setExpandedEntryId(null); return; }
@@ -520,6 +525,7 @@ export default function SleepScreen() {
     }
   }, [expandedEntryId, natalChart, entries, isPremium]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- handler pending UI wiring
   const handleDelete = (id: string) => {
     Alert.alert('Delete Entry', 'Remove this sleep entry?', [
       { text: 'Cancel', style: 'cancel' },
@@ -562,6 +568,12 @@ export default function SleepScreen() {
       <SkiaDynamicCosmos />
       <SkiaRestorationField quality={quality || 3} />
 
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
           onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
@@ -574,16 +586,21 @@ export default function SleepScreen() {
         <ScrollView
           ref={scrollRef}
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 140 }]}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
-          {/* ── Apple Editorial Header ── */}
+          {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.headerEyebrow}>SLEEP & DREAMS</Text>
             <Text style={styles.title}>Rest Log</Text>
-            <Text style={styles.headerDesc}>Rest quality · Hours slept · Dream memory</Text>
+            <GoldSubtitle style={styles.subtitle}>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </GoldSubtitle>
           </Animated.View>
 
           {/* ── Main Form (Volumetric Glass Card) ── */}
@@ -987,6 +1004,13 @@ export default function SleepScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
   safeArea: { flex: 1 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 

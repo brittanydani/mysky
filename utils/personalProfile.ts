@@ -190,7 +190,7 @@ export function detectMaturity(days: number): DataMaturity {
 
 function detectTraits(profile: PatternProfile): PersonalTrait[] {
   const traits: PersonalTrait[] = [];
-  const { scoredDays, overallAvg, correlations, bestDayProfile, hardDayProfile } = profile;
+  const { scoredDays, overallAvg, bestDayProfile, hardDayProfile } = profile;
   const days = profile.windowDays;
 
   // ── Sleep sensitivity ──
@@ -593,7 +593,8 @@ function detectTodayContext(profile: PatternProfile): TodayContext {
 
   // How far is today from average?
   const deviation = Math.abs(latest.scores.stability - avg.stability);
-  const isOff = deviation > sd * 1.2;
+  // Guard against zero stdDev (all identical scores) — use absolute threshold as fallback
+  const isOff = sd > 0 ? deviation > sd * 1.2 : deviation > 5;
 
   if (!isOff) {
     return { type: 'baseline', description: 'Today looks roughly in line with your usual range.', streakDays: 0 };
@@ -647,8 +648,8 @@ function detectLowCapacity(profile: PatternProfile): boolean {
   const avgStab = mean(recent.map(d => d.scores.stability));
   const avgRest = mean(recent.map(d => d.scores.restoration));
 
-  // Low capacity: high strain + low stability + low restoration
-  return avgStrain > 60 && avgStab < 40 || avgRest < 25 && avgStab < 35;
+  // Low capacity: high strain + low stability, OR very low restoration + low stability
+  return (avgStrain > 60 && avgStab < 40) || (avgRest < 25 && avgStab < 35);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

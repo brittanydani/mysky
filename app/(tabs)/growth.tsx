@@ -6,16 +6,14 @@
  */
 
 import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
-import { theme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
@@ -26,7 +24,7 @@ import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
 import { computeNarrativeInsights, NarrativeInsightBundle, NarrativeInsight } from '../../utils/narrativeInsights';
 import { buildPersonalProfile } from '../../utils/personalProfile';
-import { computeDeepInsights, DeepInsightBundle, DeepInsight, Season, NarrativeMemory } from '../../utils/deepInsights';
+import { computeDeepInsights, DeepInsightBundle, DeepInsight } from '../../utils/deepInsights';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -42,7 +40,6 @@ import { useCircadianStore } from '../../store/circadianStore';
 import { useCorrelationStore } from '../../store/correlationStore';
 import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/insightsPdfExport';
 import { DailyAggregate, ChartProfile } from '../../services/insights/types';
-import { loadReflections } from '../../services/insights/dailyReflectionService';
 
 const SCREEN_W = Dimensions.get('window').width;
 const ORBIT_SIZE = SCREEN_W - 48;
@@ -96,10 +93,26 @@ function moodSubLabel(avg: number): string {
 
 function buildWeeklyChangeCard(deepBundle: null, snapshot: SnapshotData): LoopCardContent | null {
   if (snapshot.avgMood !== null) {
+    const moodLabel = moodSubLabel(snapshot.avgMood);
+    const stressInfo = snapshot.avgStress !== null ? ` with average stress at ${snapshot.avgStress.toFixed(1)}/10` : '';
+    const trendInfo = snapshot.stressTrend && snapshot.stressTrend !== 'stable'
+      ? ` (stress ${snapshot.stressTrend === 'improving' ? 'easing' : 'rising'})`
+      : '';
+
+    let title: string;
+    let body: string;
+    if (snapshot.checkInCount >= 14) {
+      title = `Mood: ${moodLabel}${trendInfo}`;
+      body = `Across ${snapshot.checkInCount} check-ins over the past 30 days, your average mood is ${snapshot.avgMood.toFixed(1)}/10${stressInfo}. Your pattern baseline is established — week-to-week shifts will become visible as you continue.`;
+    } else {
+      title = 'Your pattern baseline is forming';
+      body = `You have ${snapshot.checkInCount} check-ins over the past 30 days with an average mood of ${snapshot.avgMood.toFixed(1)}/10 (${moodLabel})${stressInfo}. A few more days of logging will sharpen your pattern signal.`;
+    }
+
     return {
-      label: 'WHAT CHANGED THIS WEEK',
-      title: 'Your pattern baseline is forming',
-      body: `You have ${snapshot.checkInCount} check-ins in the last 30 days and an average mood of ${snapshot.avgMood.toFixed(1)}/10. Keep logging for a fuller weekly change signal.`,
+      label: 'YOUR 30-DAY SNAPSHOT',
+      title,
+      body,
       accent: '#FFFFFF',
     };
   }
@@ -107,25 +120,7 @@ function buildWeeklyChangeCard(deepBundle: null, snapshot: SnapshotData): LoopCa
   return null;
 }
 
-function buildLearningCard(deepBundle: null, enhanced: EnhancedInsightBundle | null): LoopCardContent | null {
-  if (enhanced?.keywordLift.hasData && enhanced.keywordLift.restores.length > 0) {
-    const restoreWord = enhanced.keywordLift.restores[0]?.label;
-    const drainWord = enhanced.keywordLift.drains[0]?.label;
-    return {
-      label: "WHAT YOU'RE LEARNING",
-      title: 'Your language leaves clues',
-      body: drainWord
-        ? `Your writing shifts with your state. ${restoreWord} appears more on your better days, while ${drainWord} is more common on harder ones.`
-        : `Your writing shifts with your state. ${restoreWord} appears more often on your better days.`,
-      accent: PALETTE.gold,
-    };
-  }
-
-  return null;
-}
-
 export default function PatternsScreen() {
-  const router = useRouter();
   const { isPremium } = usePremium();
   const [snapshot, setSnapshot] = useState<SnapshotData>({
     avgMood: null,
@@ -147,7 +142,6 @@ export default function PatternsScreen() {
   const pipelineRef = useRef<{ aggregates: DailyAggregate[]; profile: ChartProfile | null; windowDays: number; totalCheckIns: number; totalJournalEntries: number } | null>(null);
   const chartNameRef = useRef<string | undefined>(undefined);
   const weeklyChangeCard = buildWeeklyChangeCard(null, snapshot);
-  const learningCard = buildLearningCard(null, enhanced);
 
   useFocusEffect(
     useCallback(() => {
@@ -270,11 +264,6 @@ export default function PatternsScreen() {
     }, [isPremium, syncRhythm, syncCorrelations])
   );
 
-  const nav = (route: string) => {
-    Haptics.selectionAsync().catch(() => {});
-    router.push(route as Href);
-  };
-
   const stressLabel = (trend: SnapshotData['stressTrend']): string | null => {
     if (trend === 'improving') return 'Easing';
     if (trend === 'worsening') return 'Rising';
@@ -327,7 +316,7 @@ export default function PatternsScreen() {
         <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
       </View>
 
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
           <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
@@ -396,19 +385,10 @@ export default function PatternsScreen() {
 
           {weeklyChangeCard && (
             <>
-              <SectionHeader label="WHAT CHANGED THIS WEEK" icon="calendar-outline" />
+              <SectionHeader label="YOUR 30-DAY SNAPSHOT" icon="calendar-outline" />
               <LoopCard content={weeklyChangeCard} />
             </>
           )}
-
-          {learningCard && (
-            <>
-              <SectionHeader label="WHAT YOU'RE LEARNING" icon="school-outline" />
-              <LoopCard content={learningCard} />
-            </>
-          )}
-
-
 
           {/* ── Where It All Connects ── */}
           {enhanced && enhanced.blended.length > 0 && (
@@ -705,7 +685,23 @@ export default function PatternsScreen() {
           )}
 
           {/* ── Deep Insights — The Mirror With Memory ── */}
-          {deepInsights && deepInsights.insights.length > 0 && (
+          {deepInsights && deepInsights.insights.length > 0 && (() => {
+            // Suppress pattern-level deep insight cards for topics already covered
+            // in detail by the narrative "YOUR INNER CLIMATE" section above.
+            const narrativeCategories = new Set(
+              narrative?.insights.map((i) => i.category) ?? []
+            );
+            const NARRATIVE_OVERLAP: Record<string, string> = {
+              'pattern-sleep':        'sleep_connection',
+              'pattern-best-day':     'best_day',
+              'pattern-connection':   'connection_pattern',
+            };
+            const dedupedInsights = deepInsights.insights.filter((insight) => {
+              const overlappingCategory = NARRATIVE_OVERLAP[insight.id];
+              return !overlappingCategory || !narrativeCategories.has(overlappingCategory);
+            });
+            if (dedupedInsights.length === 0) return null;
+            return (
             <Animated.View entering={FadeInDown.delay(600)} style={styles.section}>
               <SectionHeader label="YOUR INNER WORLD" icon="sparkles-outline" subtitle={deepInsights.maturity === 'deep' ? 'Deep reflections from months of self-knowledge' : deepInsights.maturity === 'established' ? 'Growing understanding from your patterns' : 'Early reflections as we learn about you'} />
 
@@ -727,7 +723,7 @@ export default function PatternsScreen() {
                 </LinearGradient>
               )}
 
-              {deepInsights.insights.map((insight) => (
+              {dedupedInsights.map((insight) => (
                 <DeepInsightCard key={insight.id} insight={insight} />
               ))}
 
@@ -756,7 +752,8 @@ export default function PatternsScreen() {
                 </View>
               )}
             </Animated.View>
-          )}
+            );
+          })()}
 
 
         </ScrollView>

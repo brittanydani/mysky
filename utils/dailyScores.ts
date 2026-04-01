@@ -15,7 +15,7 @@
  */
 
 import { DailyAggregate } from '../services/insights/types';
-import { mean, stdDev } from './stats';
+import { mean } from './stats';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -129,7 +129,6 @@ function clamp(v: number, lo: number, hi: number): number {
 
 const POSITIVE_CONNECTION_TAGS = ['social', 'intimacy', 'relationships', 'family'];
 const NEGATIVE_CONNECTION_TAGS = ['loneliness', 'conflict', 'isolation'];
-const SENSITIVITY_EMOTION_WORDS = ['anxiety', 'sadness', 'anger', 'fatigue', 'stress'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Daily score computation
@@ -349,20 +348,7 @@ function detectCorrelations(scoredDays: ScoredDay[]): Correlation[] {
   );
   if (sleepMood) results.push(sleepMood);
 
-  // Strain → next-day energy (lagged)
-  for (let i = 1; i < scoredDays.length; i++) {
-    // built inline below
-  }
-  const laggedStrainEnergy = groupedCorrelation(
-    scoredDays.slice(1),
-    (_d: ScoredDay) => {
-      // Can't use index in this signature — use alternate approach
-      return null;
-    },
-    d => d.scores.restoration,
-    'previous strain', 'restoration',
-  );
-  // Use manual lagged correlation instead
+  // Manual lagged correlation (groupedCorrelation can't access prior-day data)
   if (scoredDays.length >= 8) {
     const lagged: { strain: number; nextEnergy: number }[] = [];
     for (let i = 0; i < scoredDays.length - 1; i++) {

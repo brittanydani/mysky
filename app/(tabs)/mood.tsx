@@ -8,13 +8,11 @@ import {
   Dimensions,
   PanResponder,
   ActivityIndicator,
-  Platform,
   TextInput,
 } from 'react-native';
 import SkiaMoodSealButton from '../../components/ui/SkiaMoodSealButton';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
-import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -28,8 +26,10 @@ import { usePremium } from '../../context/PremiumContext';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
+import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
@@ -492,6 +492,13 @@ export default function MoodCheckIn() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable
@@ -504,12 +511,14 @@ export default function MoodCheckIn() {
 
       <View style={styles.titleArea}>
         <Text style={styles.headerTitle}>Internal Weather</Text>
-        {isEditingExisting && (
+        {isEditingExisting ? (
           <MetallicText style={styles.headerEditingBadge} variant="gold">
             {selectedDate === todayStr
               ? "Editing today's entry"
               : `Editing ${formatDisplayDate(selectedDate)}`}
           </MetallicText>
+        ) : (
+          <GoldSubtitle style={styles.headerSubtitle}>Track your mood, energy &amp; what shapes your day</GoldSubtitle>
         )}
       </View>
 
@@ -747,6 +756,7 @@ export default function MoodCheckIn() {
 
         <View style={{ height: 60 }} />
       </ScrollView>
+      </SafeAreaView>
     </View>
   );
 }
@@ -873,10 +883,18 @@ const TagButton = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 200 },
 
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 8 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
+  safeArea: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
+  headerSubtitle: { marginTop: 2 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
@@ -892,7 +910,7 @@ const styles = StyleSheet.create({
 
   trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  trendSectionLabel: { marginTop: 0, marginBottom: 0 },
+  trendSectionLabel: { marginTop: 0, marginBottom: 0, fontSize: 12 },
   trendValue: { fontSize: 13, color: '#C9AE78', fontWeight: '700', letterSpacing: 0.3 },
   trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
   trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' },

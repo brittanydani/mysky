@@ -138,8 +138,8 @@ export interface DecanInfo {
   description: string;
 }
 
-// Traditional (Chaldean) decan rulers: each sign's 3 decans ruled by
-// the planets in the order of the Chaldean sequence, starting from the sign's ruler.
+// Modern triplicity-based decan rulers: each sign's 3 decans are ruled by
+// the modern ruler of the corresponding triplicity sign (same element).
 const DECAN_RULERS: Record<string, [string, string, string]> = {
   Aries:       ['Mars', 'Sun', 'Jupiter'],
   Taurus:      ['Venus', 'Mercury', 'Saturn'],

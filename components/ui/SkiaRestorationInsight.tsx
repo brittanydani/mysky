@@ -16,7 +16,7 @@
  */
 
 import React, { memo, useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import {
   Canvas,
   Rect,

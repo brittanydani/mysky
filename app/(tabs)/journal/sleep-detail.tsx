@@ -29,7 +29,6 @@ import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicLucideIcon } from '../../../components/ui/MetallicLucideIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
-import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { localDb } from '../../../services/storage/localDb';
 import { SleepEntry, generateId } from '../../../services/storage/models';
 import { usePremium } from '../../../context/PremiumContext';

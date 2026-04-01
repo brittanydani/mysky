@@ -120,22 +120,22 @@ function buildEmotionalUndercurrent(profile: PatternProfile): NarrativeInsight |
   let effectStrength: number;
 
   if (volatility > 15) {
-    body = 'Your emotional tone has been moving through wider swings lately. This isn\'t necessarily a problem — it may reflect a period of processing, transition, or heightened sensitivity. Noticing the rhythm matters more than steadying it by force.';
+    body = `Your emotional tone has been moving through wider swings lately — variability of ${Math.round(volatility)} across your ${profile.windowDays}-day window. This isn't necessarily a problem — it may reflect a period of processing, transition, or heightened sensitivity. Noticing the rhythm matters more than steadying it by force.`;
     effectStrength = 60;
   } else if (recentDiff < -10) {
-    body = 'Your recent entries suggest a quieter heaviness beneath the surface. Even when you keep going, your system may be asking for more softness than pressure. This may be a season for gentleness.';
+    body = `Your recent entries suggest a quieter heaviness beneath the surface — stability has dipped ${Math.round(Math.abs(recentDiff))} points from your baseline of ${overallAvg.stability}. Even when you keep going, your system may be asking for more softness than pressure. This may be a season for gentleness.`;
     effectStrength = Math.abs(recentDiff);
   } else if (recentDiff > 10) {
-    body = 'There\'s a noticeable lift in your recent emotional tone. Something is settling — whether it\'s external circumstances or your own internal recalibration. Worth noticing what\'s different right now.';
+    body = `There's a noticeable lift in your recent emotional tone — stability is up ${Math.round(recentDiff)} points to ${recentAvg.stability}. Something is settling — whether it's external circumstances or your own internal recalibration. Worth noticing what's different right now.`;
     effectStrength = recentDiff;
   } else if (volatility < 5 && overallAvg.stability >= 60) {
-    body = 'Your emotional landscape has been remarkably steady. This kind of consistency often reflects either genuine stability or a practiced steadiness. Either way, it\'s something your system seems to be holding well.';
+    body = `Your emotional landscape has been remarkably steady — stability averaging ${overallAvg.stability} with very low variability across ${profile.windowDays} days. This kind of consistency often reflects either genuine stability or a practiced steadiness. Either way, it's something your system seems to be holding well.`;
     effectStrength = 40;
   } else if (overallAvg.stability < 40) {
-    body = 'Your entries carry a persistent undertone of heaviness. This isn\'t about fixing anything — it\'s about recognizing what your inner world has been carrying, and whether it needs more room to breathe.';
+    body = `Your entries carry a persistent undertone of heaviness — stability averaging ${overallAvg.stability} over ${profile.windowDays} days. This isn't about fixing anything — it's about recognizing what your inner world has been carrying, and whether it needs more room to breathe.`;
     effectStrength = 100 - overallAvg.stability;
   } else {
-    body = 'Your emotional tone has been moving through a gentle middle range — not dramatic, but textured. Subtle shifts often carry information that extremes don\'t. Pay attention to the quiet undercurrents.';
+    body = `Your emotional tone has been moving through a gentle middle range — stability around ${overallAvg.stability} with moderate variability. Not dramatic, but textured. Subtle shifts often carry information that extremes don't. Pay attention to the quiet undercurrents.`;
     effectStrength = 30;
   }
 
@@ -184,17 +184,17 @@ function buildEnergyRhythm(profile: PatternProfile): NarrativeInsight | null {
     body = `Your energy tends to drop after multiple depleted days in a row — your longest recent stretch was ${maxLowStreak} consecutive low-restoration days. Your system may be pushing through exhaustion more often than restoring from it.`;
     effectStrength = maxLowStreak * 15;
   } else if (restorationTrend?.direction === 'falling') {
-    body = 'Your restoration has been gradually declining over this window. This kind of slow drain can be easy to miss day-to-day but adds up. Consider what\'s been drawing from your reserves without replenishing them.';
+    body = `Your restoration has been gradually declining over this window — currently averaging ${overallAvg.restoration}/100. This kind of slow drain can be easy to miss day-to-day but adds up. Consider what's been drawing from your reserves without replenishing them.`;
     effectStrength = 55;
   } else if (recoveries >= 3 && lowDays >= 3) {
     const rate = Math.round((recoveries / lowDays) * 100);
     body = `You show a pattern of bouncing back after depleted days — recovering about ${rate}% of the time. Your system has a recovery rhythm — it may not feel fast enough, but the data suggests real resilience in how you recharge.`;
     effectStrength = 50;
   } else if (overallAvg.restoration >= 65) {
-    body = 'Your restoration levels have stayed relatively strong across this period. This consistency is worth protecting — notice what routines, rhythms, or choices seem to be sustaining it.';
+    body = `Your restoration levels have stayed relatively strong across this period — averaging ${overallAvg.restoration}/100. This consistency is worth protecting — notice what routines, rhythms, or choices seem to be sustaining it.`;
     effectStrength = 40;
   } else {
-    body = 'Your energy moves in waves, shifting between periods of depletion and restoration. Understanding your personal rhythm — what drains and what refills — is key to working with your capacity rather than against it.';
+    body = `Your energy moves in waves — restoration averaging ${overallAvg.restoration}/100, shifting between periods of depletion and recovery. Understanding your personal rhythm — what drains and what refills — is key to working with your capacity rather than against it.`;
     effectStrength = 30;
   }
 
@@ -245,10 +245,10 @@ function buildStressSignal(profile: PatternProfile): NarrativeInsight | null {
     body = `Your hardest days often combine both high strain and low restoration (${dualLoadDays} days in this window). When both stack up together, your system has fewer resources to cope. These are the days that matter most for self-compassion.`;
     effectStrength = dualLoadDays * 15;
   } else if (overallAvg.strain <= 35) {
-    body = 'Your strain levels have been relatively manageable. This is a genuinely good signal — low baseline strain gives your system room to handle whatever comes. Protect whatever conditions are supporting this.';
+    body = `Your strain levels have been relatively manageable — averaging ${overallAvg.strain}/100 over ${profile.windowDays} days. This is a genuinely good signal — low baseline strain gives your system room to handle whatever comes. Protect whatever conditions are supporting this.`;
     effectStrength = 35;
   } else {
-    body = 'Stress shows up regularly but hasn\'t reached a sustained peak. It appears to ebb and flow rather than spiraling. Noticing the conditions that let it recede may be more useful than fighting what raises it.';
+    body = `Stress shows up regularly — strain averaging ${overallAvg.strain}/100 — but hasn't reached a sustained peak. It appears to ebb and flow rather than spiraling. Noticing the conditions that let it recede may be more useful than fighting what raises it.`;
     effectStrength = 30;
   }
 
@@ -293,9 +293,9 @@ function buildSleepConnection(profile: PatternProfile): NarrativeInsight | null 
         `There may be an emerging connection between sleep and emotional steadiness. Good-sleep days average ${Math.round(goodStab)} stability vs ${Math.round(poorStab)}.`,
       ) + ' Even slight improvements in sleep seem to shift your day in a positive direction.';
     } else if (diff > 5) {
-      body = 'Sleep quality appears to have a gentle but real effect on your stability. The difference isn\'t dramatic, but it\'s consistent — better rest tends to create more space for emotional steadiness.';
+      body = `Sleep quality appears to have a gentle but real effect on your stability — a ${Math.round(diff)}-point difference between good and poor sleep days. The difference isn't dramatic, but it's consistent — better rest tends to create more space for emotional steadiness.`;
     } else {
-      body = 'Interestingly, your stability doesn\'t shift dramatically with sleep quality. This doesn\'t mean sleep doesn\'t matter — it may affect your strain or restoration more than your emotional tone.';
+      body = `Interestingly, your stability doesn't shift dramatically with sleep quality — only a ${Math.round(Math.abs(diff))}-point difference across ${withSleep.length} tracked days. This doesn't mean sleep doesn't matter — it may affect your strain or restoration more than your emotional tone.`;
     }
     const goodStrain = mean(goodSleep.map(d => d.scores.strain));
     const poorStrain = mean(poorSleep.map(d => d.scores.strain));
@@ -495,7 +495,7 @@ function buildSensitivityTheme(profile: PatternProfile): NarrativeInsight | null
       id: 'narrative-sensitivity-theme',
       category: 'sensitivity_theme',
       label: 'Sensitivity Theme',
-      body: 'Your emotional intensity shifts noticeably on certain days, though the triggers aren\'t yet clear in your tags. Pay attention to what\'s happening on days when your system reacts more strongly.',
+      body: `Your emotional intensity shifts noticeably on certain days — variability of ${Math.round(volatility)} — though the triggers aren't yet clear in your tags. Pay attention to what's happening on days when your system reacts more strongly.`,
       stat: `Emotional intensity variability: ${Math.round(volatility)} · Still detecting patterns`,
       confidence: 'low',
       accent: 'rose',
@@ -563,7 +563,7 @@ function buildConnectionPattern(profile: PatternProfile): NarrativeInsight | nul
         `There may be a link between connection and your emotional stability, with a ${Math.round(spread)}-point difference emerging.`,
       ) + ' Feeling supported noticeably improves your nervous system state.';
     } else {
-      body = 'Relational themes show up regularly in your data, and your stability responds — though not dramatically. Emotional safety in connection seems to matter to your wellbeing.';
+      body = `Relational themes show up regularly in your data, with a ${Math.round(Math.abs(spread))}-point stability difference between connected and strained days. Emotional safety in connection seems to matter to your wellbeing.`;
     }
   } else if (disconnectedDays.length >= 2) {
     const discStab = mean(disconnectedDays.map(d => d.scores.stability));

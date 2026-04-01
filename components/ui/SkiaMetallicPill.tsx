@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback } from 'react';
-import { Pressable, StyleSheet, Text, View, Platform, LayoutChangeEvent } from 'react-native';
+import { Pressable, StyleSheet, Text, View, LayoutChangeEvent } from 'react-native';
 import {
   Canvas,
   RoundedRect,

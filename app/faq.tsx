@@ -1,7 +1,7 @@
 // File: app/faq.tsx
 
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Href } from 'expo-router';
@@ -50,13 +50,13 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <Ionicons name="help-circle-outline" size={132} color={theme.textGold} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: March 30, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: April 1, 2026</Text>
 
           <View style={styles.faqSection}>
             <View style={styles.faqCard}>
             <Text style={styles.question}>Do I need an account to use MySky?</Text>
             <Text style={styles.answer}>
-              Yes. A free account (email and password) is required to use MySky. It keeps your reflections safe and synced across devices. Sign-up takes only a minute. All core features — mood tracking, journaling, sleep logging, birth chart, and relationships — are available on the free plan. A Deeper Sky subscription is required for premium features such as dream analysis, AI Reflection Insights, and encrypted backup.
+              Yes. A free account (email and password) is required to use MySky. Your authentication credentials are stored securely on Supabase, while all personal data (journal entries, check-ins, birth data, etc.) stays on your device. Sign-up takes only a minute. All core features — mood tracking, journaling, sleep logging, birth chart, and relationships — are available on the free plan. A Deeper Sky subscription is required for premium features such as dream analysis, AI Reflection Insights, and encrypted backup.
             </Text>
 
             <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
@@ -67,12 +67,12 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>What data does MySky store and where?</Text>
             <Text style={styles.answer}>
-              All your data — birth data, journal entries, check-ins, sleep logs, dream content, relationship charts, energy readings, and settings — is stored locally on your device in a SQLite database. Sensitive fields (journal text, birth places, coordinates, dream content, mood/stress/energy scores, emotional tags, notes, wins, and challenges) are encrypted at rest using <Text style={styles.highlight}>AES-256-GCM</Text> with keys stored in your device's hardware-backed secure enclave (iOS Keychain / Android Keystore). Nothing is uploaded to a server. The only external network calls are geocoding lookups (city name only) and anonymous subscription verification.
+              All your data — birth data, journal entries, check-ins, sleep logs, dream content, relationship charts, energy readings, and settings — is stored locally on your device in a SQLite database. Sensitive fields (journal text, birth places, coordinates, dream content, mood/stress/energy scores, emotional tags, notes, wins, and challenges) are encrypted at rest using <Text style={styles.highlight}>AES-256-GCM</Text> with keys stored in your device's hardware-backed secure enclave (iOS Keychain / Android Keystore). Your authentication credentials (email and hashed password) are stored on Supabase. The only external network calls are authentication, geocoding lookups (city name only), and anonymous subscription verification.
             </Text>
 
             <Text style={styles.question}>What are AI Reflection Insights and what data do they use?</Text>
             <Text style={styles.answer}>
-              AI Reflection Insights are an optional premium feature that requires an account. When active, only aggregated, non-identifying behavioral statistics — mood/stress/energy trends, averages, top restoring and draining tags, and correlation data — are sent to a Supabase Edge Function that calls Anthropic Claude. <Text style={styles.highlight}>Raw journal text, birth data, dream content, and personal notes are never transmitted.</Text> Requests are rate limited to 5 per hour and cached once per calendar day.
+              AI Reflection Insights are an optional premium feature. When active, only aggregated, non-identifying behavioral statistics — mood/stress/energy trends, averages, top restoring and draining tags, and correlation data — are sent to a Supabase Edge Function that calls Anthropic Claude. <Text style={styles.highlight}>Raw journal text, birth data, dream content, and personal notes are never transmitted.</Text> Requests are rate limited to 5 per hour and cached once per calendar day.
             </Text>
 
             <Text style={styles.question}>Are dream reflections powered by AI?</Text>
@@ -87,12 +87,12 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>Is my data ever sold or shared with third parties?</Text>
             <Text style={styles.answer}>
-              Never. Your data is never sold, shared for advertising, or used for AI/ML training. MySky uses zero analytics SDKs and collects zero advertising identifiers. External data flows are limited to city name geocoding (OpenStreetMap), anonymous subscription verification (RevenueCat), and optional AI reflections (Supabase/Anthropic — aggregated stats only).
+              Never. Your data is never sold, shared for advertising, or used for AI/ML training. MySky uses zero analytics SDKs and collects zero advertising identifiers. External data flows are limited to authentication (Supabase), city name geocoding (OpenStreetMap), anonymous subscription verification (RevenueCat), and optional AI features (Supabase/Anthropic/Google Gemini — aggregated stats or dream text only).
             </Text>
 
             <Text style={styles.question}>Can I export or delete my data?</Text>
             <Text style={styles.answer}>
-              Yes. All users can export a complete structured JSON archive of all personal data via Privacy Settings, and permanently delete all data using the "Hard Reset" option. Premium users can also export a PDF of their natal chart and full personal story, and create encrypted .msky backup files protected with a passphrase of your choice (AES-256-GCM with PBKDF2-SHA256, 100,000 iterations).
+              Yes. All users can export a complete structured JSON archive of all personal data via Privacy Settings, and permanently delete all data using the "Hard Reset" option. Premium users can also export a PDF of their natal chart and full personal story, and create encrypted .msky backup files protected with a passphrase of your choice (AES-256-GCM with PBKDF2-SHA256, 310,000 iterations).
             </Text>
 
             <Text style={styles.question}>How does backup and restore work?</Text>
@@ -107,7 +107,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>What happens if I uninstall the app?</Text>
             <Text style={styles.answer}>
-              Uninstalling the app permanently erases all locally stored data (SQLite database and SecureStore). If you created a backup (.msky file), your data can be restored on a new installation. If you created an account for AI Reflection Insights, you can request account deletion by contacting support.
+              Uninstalling the app permanently erases all locally stored data (SQLite database and SecureStore). If you created a backup (.msky file), your data can be restored on a new installation. You can request account deletion by contacting support.
             </Text>
 
             <Text style={styles.question}>Is MySky a mental health app or therapy substitute?</Text>
@@ -140,7 +140,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>Does MySky work offline?</Text>
             <Text style={styles.answer}>
-              Yes. All core features — daily check-ins, journaling, natal chart, dream logging, sleep tracking, somatic map, trigger log, energy readings, personal story, and self-discovery tools — work fully offline with no internet connection. The only features that require a network connection are city name geocoding (when entering a birth place), subscription verification (RevenueCat), and the optional AI Reflection Insights.
+              Yes. After initial sign-in, all core features — daily check-ins, journaling, natal chart, dream logging, sleep tracking, somatic map, trigger log, energy readings, personal story, and self-discovery tools — work fully offline with no internet connection. The only features that require a network connection are initial authentication, city name geocoding (when entering a birth place), subscription verification (RevenueCat), and the optional AI features.
             </Text>
 
             <Text style={styles.question}>What happens if I withdraw my privacy consent?</Text>
@@ -255,7 +255,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>What happens in a data breach?</Text>
             <Text style={styles.answer}>
-              In the unlikely event of a data breach affecting personal information held on our servers (limited to Supabase authentication data for users who created an account), we will notify affected users within 72 hours in accordance with GDPR and applicable law. Because nearly all your data is stored exclusively on your device and never transmitted, the risk of a server-side breach affecting personal content is extremely limited.
+              In the unlikely event of a data breach affecting personal information held on our servers (limited to Supabase authentication data), we will notify affected users within 72 hours in accordance with GDPR and applicable law. Because nearly all your data is stored exclusively on your device and never transmitted, the risk of a server-side breach affecting personal content is extremely limited.
             </Text>
               </View>
           </View>

@@ -1,6 +1,6 @@
 // File: app/onboarding/birth.tsx
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, View, StyleSheet, Platform, DeviceEventEmitter } from 'react-native';
+import { Alert, View, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';

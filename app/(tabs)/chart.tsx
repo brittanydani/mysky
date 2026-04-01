@@ -821,10 +821,16 @@ export default function ChartScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 140 }]}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header ── */}
@@ -2776,12 +2782,17 @@ const styles = StyleSheet.create({
   goHomeText: { color: '#CFAE73', fontWeight: '700' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, alignItems: 'center' },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
 
   header: {
     alignItems: 'flex-start',
-    alignSelf: 'stretch',
-    marginTop: theme.spacing.md,
     marginBottom: 32,
   },
   title: {

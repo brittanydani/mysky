@@ -644,7 +644,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Mood Selector */}
                 <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
                   <SectionHeader title="Mood" icon="heart-outline" />
-                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={[styles.sectionCard, { paddingVertical: 16 }]}>
+                  <LinearGradient colors={['rgba(201,174,120,0.06)', 'rgba(10,10,12,0.9)']} style={[styles.sectionCard, { paddingVertical: 16, paddingHorizontal: 14 }]}>
                     <View style={styles.moodRow}>
                       {MOOD_OPTIONS.map((m) => {
                         const isSelected = mood === m.key;
@@ -658,9 +658,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                             ]}
                           >
                             {isSelected ? (
-                              <MetallicText style={[styles.moodPillText, { fontWeight: '700' }]} color={m.color}>{m.label}</MetallicText>
+                              <MetallicText style={[styles.moodPillText, { fontWeight: '700' }]} color={m.color} numberOfLines={1}>{m.label}</MetallicText>
                             ) : (
-                              <Text style={[styles.moodPillText, { color: 'rgba(255,255,255,0.4)' }]}>{m.label}</Text>
+                              <Text style={[styles.moodPillText, { color: 'rgba(255,255,255,0.4)' }]} numberOfLines={1}>{m.label}</Text>
                             )}
                           </Pressable>
                         );
@@ -1085,19 +1085,19 @@ const styles = StyleSheet.create({
   archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 21, marginTop: 2 },
   
   // ── Mood row ──
-  moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  moodRow: { flexDirection: 'row', flexWrap: 'nowrap', gap: 6, justifyContent: 'space-between' },
   moodPill: {
     flex: 1,
-    minWidth: 60,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 12,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  moodPillText: { fontSize: 14, fontWeight: '600', color: 'rgba(255,255,255,0.70)' },
+  moodPillText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.70)', textAlign: 'center' },
 
   // ── Tags ──
   addTagsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.08)' },

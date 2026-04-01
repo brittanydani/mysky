@@ -20,7 +20,6 @@ import {
   Pressable,
   Dimensions,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
@@ -33,7 +32,6 @@ import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
 import { MetallicText } from '../../components/ui/MetallicText';
-import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { localDb } from '../../services/storage/localDb';
 import { usePremium } from '../../context/PremiumContext';
@@ -443,6 +441,12 @@ export default function InnerTensionsScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <Pressable style={styles.closeButton} onPress={goBack}>
@@ -518,6 +522,13 @@ export default function InnerTensionsScreen() {
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#020817' },
   safeArea:         { flex: 1 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
   header:           { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:        { paddingHorizontal: 24, paddingBottom: 8 },
   closeButton:      { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },

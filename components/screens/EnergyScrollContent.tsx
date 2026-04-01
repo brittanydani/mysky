@@ -11,7 +11,6 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { SkiaGradient as LinearGradient } from '../ui/SkiaGradient';

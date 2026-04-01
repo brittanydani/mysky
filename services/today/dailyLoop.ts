@@ -456,20 +456,25 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
     const checkIns = await localDb.getCheckIns(chartId, 30);
     if (checkIns.length < 10) return null;
 
-    const moodScores = checkIns
-      .filter(c => c.moodScore != null)
+    // Use calendar-date boundaries so "this week" and "last week" are accurate
+    // regardless of how many check-ins occurred per day.
+    const now = new Date();
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const thisWeekMoods = checkIns
+      .filter(c => c.moodScore != null && new Date(c.date) >= sevenDaysAgo)
+      .map(c => c.moodScore as number);
+    const lastWeekMoods = checkIns
+      .filter(c => c.moodScore != null && new Date(c.date) >= fourteenDaysAgo && new Date(c.date) < sevenDaysAgo)
       .map(c => c.moodScore as number);
 
-    if (moodScores.length < 7) return null;
+    if (thisWeekMoods.length < 3 || lastWeekMoods.length < 3) return null;
 
-    // Recent vs older comparison
-    const recent = moodScores.slice(0, 7);
-    const older = moodScores.slice(7, 14);
-
-    if (older.length < 5) return null;
-
-    const recentAvg = mean(recent);
-    const olderAvg = mean(older);
+    const recentAvg = mean(thisWeekMoods);
+    const olderAvg = mean(lastWeekMoods);
     const delta = recentAvg - olderAvg;
 
     if (delta > 0.5) {
@@ -490,7 +495,12 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
       };
     }
 
-    // Check for tag-based insight
+    // Check for tag-based insight using all 30-day check-ins
+    const allMoodScores = checkIns
+      .filter(c => c.moodScore != null)
+      .map(c => c.moodScore as number);
+    if (allMoodScores.length < 7) return null;
+
     const tagCounts: Record<string, { total: number; moodSum: number }> = {};
     for (const c of checkIns) {
       if (c.tags && c.moodScore != null) {
@@ -505,7 +515,7 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
     // Find a tag that lifts mood
     let bestTag: string | null = null;
     let bestLift = 0;
-    const overallAvg = mean(moodScores);
+    const overallAvg = mean(allMoodScores);
 
     for (const [tag, data] of Object.entries(tagCounts)) {
       if (data.total >= 3) {

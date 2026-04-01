@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
@@ -148,7 +147,12 @@ export default function HealingSpaceScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <LinearGradient colors={['rgba(110, 191, 139, 0.08)', 'transparent']} style={styles.topGlow} />
+
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
@@ -265,9 +269,15 @@ export default function HealingSpaceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+  container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
 
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },

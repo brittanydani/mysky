@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TextStyle, Platform, StyleSheet } from 'react-native';
+import { Text, TextStyle, StyleSheet } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { SkiaGradient } from './SkiaGradient';
 

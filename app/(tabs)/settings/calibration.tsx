@@ -17,7 +17,6 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
-  Platform,
   Pressable,
   Alert,
 } from 'react-native';

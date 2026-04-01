@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Platform, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 
@@ -44,7 +44,6 @@ const PALETTE = {
 };
 
 // ── Mood helpers ──
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 // ── Cinematic Palette ──
 
@@ -574,7 +573,7 @@ export default function JournalScreen() {
         </View>
       </View>
     </>
-  ), [isPremium, patternInsights, totalCount, sleepEntries.length, router, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, showSearch, toggleBrowseSearch, setActiveTab]);
+  ), [isPremium, patternInsights, totalCount, sleepEntries, router, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, showSearch, toggleBrowseSearch, setActiveTab]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 

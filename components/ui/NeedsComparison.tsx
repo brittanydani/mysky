@@ -2,7 +2,7 @@
 // MySky — Side-by-side "What Each Person Needs" card for Relationships
 
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
 import { MetallicText } from './MetallicText';
 import { MetallicIcon } from './MetallicIcon';

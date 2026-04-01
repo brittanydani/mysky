@@ -528,8 +528,14 @@ export default function SettingsScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-          <GoldSubtitle style={styles.subtitle}>Instrument precision · Data sovereignty</GoldSubtitle>
+          <Text style={styles.greeting}>Settings</Text>
+          <GoldSubtitle style={styles.dateLabel}>
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </GoldSubtitle>
         </Animated.View>
 
         <ScrollView
@@ -1184,15 +1190,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
 
-  header: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md },
-  title: {
+  header: { marginTop: 10, marginBottom: 8, paddingHorizontal: 24 },
+  greeting: {
+    color: '#FFFFFF',
     fontSize: 34,
     fontWeight: '800',
-    color: theme.textPrimary,
     letterSpacing: -0.5,
-    marginBottom: 4,
   },
-  subtitle: { fontSize: 14 },
+  dateLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 4 },
 
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },

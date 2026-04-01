@@ -347,7 +347,7 @@ export async function generateGeminiDreamInterpretation(
       let parsed: any;
       try {
         parsed = JSON.parse(jsonText);
-      } catch (parseErr) {
+      } catch {
         logger.error('[GeminiDream] JSON parse failed, raw text:', text);
         throw new Error('AI response was malformed. Tap RE-INTERPRET to try again.');
       }
