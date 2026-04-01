@@ -43,6 +43,11 @@ function daysBefore(n: number): Date {
   return d;
 }
 
+/** Epoch day number — guaranteed unique for consecutive days */
+function dayNumber(d: Date): number {
+  return Math.floor(d.getTime() / 86400000);
+}
+
 /** Simple numeric hash of a string — used for deterministic content rotation */
 function hashDate(dateStr: string): number {
   let h = 0;
@@ -1079,7 +1084,7 @@ export const DemoSeedService = {
 
     for (const d of missing) {
       const dateStr = isoDate(d);
-      const idx = hashDate(dateStr);
+      const idx = dayNumber(d);
       await DemoSeedService._seedDay(dateStr, d, chartId, idx);
     }
 
@@ -1315,10 +1320,11 @@ export const DemoSeedService = {
       });
     }
 
-    // ── 91 days (~3 months) of historical entries ───────────────────────────
+    // ── 28 days of historical entries ──────────────────────────────────────
     for (let i = 0; i < SEED_DAYS; i++) {
       const d = daysBefore(SEED_DAYS - 1 - i);
-      await DemoSeedService._seedDay(isoDate(d), d, activeChartId, i);
+      const dateStr = isoDate(d);
+      await DemoSeedService._seedDay(dateStr, d, activeChartId, dayNumber(d));
     }
 
     // ── App settings ───────────────────────────────────────────────────────

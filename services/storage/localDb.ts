@@ -17,22 +17,32 @@ class LocalDatabase {
 
   /**
    * Initialize DB once. Safe to call multiple times.
+   * Retries up to 3 times with exponential backoff on transient failures.
    */
   async initialize(): Promise<void> {
     if (this.db) return;
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = (async () => {
-      try {
-        this.db = await SQLite.openDatabaseAsync('mysky.db');
-        // Initialize field encryption DEK (creates key on first run)
-        await FieldEncryptionService.initialize();
-        await this.handleMigrations();
-      } catch (error) {
-        // Reset so next call can retry instead of being permanently bricked
-        this.db = null;
-        this.initPromise = null;
-        throw error;
+      const MAX_RETRIES = 3;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          this.db = await SQLite.openDatabaseAsync('mysky.db');
+          // Initialize field encryption DEK (creates key on first run)
+          await FieldEncryptionService.initialize();
+          await this.handleMigrations();
+          return; // success
+        } catch (error) {
+          this.db = null;
+          if (attempt === MAX_RETRIES) {
+            this.initPromise = null;
+            logger.error(`[LocalDB] Init failed after ${MAX_RETRIES} attempts:`, error);
+            throw error;
+          }
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 4000);
+          logger.warn(`[LocalDB] Init attempt ${attempt} failed, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
     })();
 

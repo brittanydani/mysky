@@ -76,5 +76,21 @@ export const logger = {
   debug: (...args: unknown[]) => emit('debug', ...args),
   info: (...args: unknown[]) => emit('info', ...args),
   warn: (...args: unknown[]) => emit('warn', ...args),
-  error: (...args: unknown[]) => emit('error', ...args),
+  error: (...args: unknown[]) => {
+    emit('error', ...args);
+    // Forward to Sentry in production (lazy-loaded to avoid circular deps)
+    try {
+      const { captureError } = require('./sentry');
+      const first = args[0];
+      if (first instanceof Error) {
+        captureError(first);
+      } else if (args.length > 1 && args[1] instanceof Error) {
+        captureError(args[1]);
+      } else {
+        captureError(String(first));
+      }
+    } catch {
+      // Sentry not available — ignore
+    }
+  },
 };

@@ -1,4 +1,9 @@
 import 'expo-standard-web-crypto';
+import { initSentry } from '../utils/sentry';
+
+// Initialize Sentry before any other code runs
+initSentry();
+
 import { GoldIcon } from '../components/ui/GoldIcon';
 // File: app/_layout.tsx
 
@@ -74,6 +79,12 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
     logger.error('Unhandled render error:', error, info.componentStack);
+    try {
+      const { Sentry } = require('../utils/sentry');
+      Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
+    } catch {
+      // Sentry not available
+    }
   }
 
   render() {

@@ -55,23 +55,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     isMounted.current = true;
     
-    // 1. Orbital Restoration — Hydrate session from local storage
+    // 1. Orbital Restoration — Hydrate session from local storage (with retry)
     const initializeAuth = async () => {
-      try {
-        const { data: { session: restored }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (isMounted.current) {
-          setSession(restored);
-          if (restored?.user) {
-            revenueCatService.logIn(restored.user.id);
+      const MAX_RETRIES = 3;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const { data: { session: restored }, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          
+          if (isMounted.current) {
+            setSession(restored);
+            if (restored?.user) {
+              revenueCatService.logIn(restored.user.id);
+            }
           }
+          break; // success
+        } catch (err) {
+          if (attempt === MAX_RETRIES || !isMounted.current) {
+            logger.error('[AuthContext] Session restoration failed after retries:', err);
+            break;
+          }
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 4000);
+          logger.warn(`[AuthContext] Session restore attempt ${attempt} failed, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
-      } catch (err) {
-        logger.error('[AuthContext] Session restoration failed:', err);
-      } finally {
-        if (isMounted.current) setLoading(false);
       }
+      if (isMounted.current) setLoading(false);
     };
 
     initializeAuth();
