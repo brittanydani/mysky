@@ -35,9 +35,9 @@ const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-// Force premium ON when betaPremium is set in app.json extra.
-// To disable for production: remove "betaPremium" from app.json extra.
-const DEBUG_FORCE_PREMIUM = Constants.expoConfig?.extra?.betaPremium === true;
+// Force premium ON when betaPremium is set in app.json extra (dev builds only).
+// Ignored in production builds regardless of app.json value.
+const DEBUG_FORCE_PREMIUM = __DEV__ && Constants.expoConfig?.extra?.betaPremium === true;
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState<boolean>(DEBUG_FORCE_PREMIUM);

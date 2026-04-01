@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       // Tactile confirmation of closing the session
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.info('[AuthContext] User successfully signed out');
     } catch (err) {
       logger.error('[AuthContext] Sign-out failed:', err);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     }
   }, []);
 

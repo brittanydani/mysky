@@ -20,6 +20,7 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
+import { logger } from '../utils/logger';
 
 import Body, { ExtendedBodyPart, Slug } from 'react-native-body-highlighter';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
@@ -105,8 +106,8 @@ export default function SomaticMapScreen() {
   useFocusEffect(
     useCallback(() => {
       EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-        if (raw) { try { setEntries(JSON.parse(raw)); } catch {} }
-      });
+        if (raw) { try { setEntries(JSON.parse(raw)); } catch (e) { logger.warn('[SomaticMap] Failed to parse stored entries:', e); } }
+      }).catch((e) => { logger.warn('[SomaticMap] Failed to load entries:', e); });
     }, []),
   );
 

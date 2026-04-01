@@ -1252,6 +1252,209 @@ export function computeKeywordThemes(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 14. Sleep-Mood Correlation
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SleepMoodCard {
+  /** Average mood on good-sleep days (7+ hours or quality ≥4) */
+  moodGoodSleep: number;
+  /** Average mood on poor-sleep days (<7 hours or quality ≤2) */
+  moodPoorSleep: number;
+  /** Mood difference (good − poor) */
+  moodDiff: number;
+  /** Average stress on good-sleep days */
+  stressGoodSleep: number;
+  /** Average stress on poor-sleep days */
+  stressPoorSleep: number;
+  /** Days with sleep data */
+  sleepDays: number;
+  /** Next-day effect: does tonight's sleep quality predict tomorrow's mood? */
+  nextDayMoodDiff: number | null;
+  insight: string;
+  stat: string;
+  confidence: ConfidenceLevel;
+}
+
+/**
+ * Sleep-mood correlation: compares mood/stress on good-sleep vs poor-sleep days.
+ * Also checks next-day carry-over effect.
+ */
+export function computeSleepMoodCard(
+  aggregates: DailyAggregate[],
+): SleepMoodCard | null {
+  const sorted = sortByDayKey(aggregates);
+
+  // Days with sleep data
+  const withSleep = sorted.filter(d => d.sleepDurationHours !== null || d.sleepQuality !== null);
+  if (withSleep.length < 7) return null;
+
+  // Split into good-sleep and poor-sleep
+  const goodSleep: DailyAggregate[] = [];
+  const poorSleep: DailyAggregate[] = [];
+
+  for (const d of withSleep) {
+    const dur = d.sleepDurationHours;
+    const qual = d.sleepQuality;
+
+    const isGood = (dur !== null && dur >= 7) || (qual !== null && qual >= 4);
+    const isPoor = (dur !== null && dur < 6) || (qual !== null && qual <= 2);
+
+    if (isGood) goodSleep.push(d);
+    else if (isPoor) poorSleep.push(d);
+  }
+
+  if (goodSleep.length < 3 || poorSleep.length < 3) return null;
+
+  const moodGood = mean(goodSleep.map(d => d.moodAvg));
+  const moodPoor = mean(poorSleep.map(d => d.moodAvg));
+  const moodDiff = moodGood - moodPoor;
+
+  const stressGood = mean(goodSleep.map(d => d.stressAvg));
+  const stressPoor = mean(poorSleep.map(d => d.stressAvg));
+
+  // Effect-size gate
+  const d = cohensD(goodSleep.map(d => d.moodAvg), poorSleep.map(d => d.moodAvg));
+  if (Math.abs(d) < 0.15 && Math.abs(moodDiff) < 0.3) return null;
+
+  // Next-day effect: does tonight's sleep predict tomorrow's mood?
+  const dayIndex = new Map(sorted.map((dd, i) => [dd.dayKey, i]));
+  const nextDayAfterGood: number[] = [];
+  const nextDayAfterPoor: number[] = [];
+
+  for (const day of withSleep) {
+    const idx = dayIndex.get(day.dayKey);
+    if (idx === undefined || idx + 1 >= sorted.length) continue;
+    const next = sorted[idx + 1];
+    if (prevDayKey(next.dayKey) !== day.dayKey) continue; // not consecutive
+
+    const dur = day.sleepDurationHours;
+    const qual = day.sleepQuality;
+    const isGood = (dur !== null && dur >= 7) || (qual !== null && qual >= 4);
+    const isPoor = (dur !== null && dur < 6) || (qual !== null && qual <= 2);
+
+    if (isGood) nextDayAfterGood.push(next.moodAvg);
+    else if (isPoor) nextDayAfterPoor.push(next.moodAvg);
+  }
+
+  const hasNextDay = nextDayAfterGood.length >= 3 && nextDayAfterPoor.length >= 3;
+  const nextDayMoodDiff = hasNextDay
+    ? parseFloat((mean(nextDayAfterGood) - mean(nextDayAfterPoor)).toFixed(1))
+    : null;
+
+  let insight: string;
+  if (moodDiff >= 0.8 && nextDayMoodDiff !== null && nextDayMoodDiff >= 0.4) {
+    insight = 'Good sleep lifts your mood — and the effect carries into the next day.';
+  } else if (moodDiff >= 0.5) {
+    insight = 'You feel noticeably better on days with good sleep. Protecting your rest directly protects your mood.';
+  } else if (moodDiff <= -0.3) {
+    insight = 'Interestingly, your mood isn\'t strongly tied to sleep duration — emotional factors may matter more for you.';
+  } else if (stressPoor - stressGood >= 0.8) {
+    insight = 'Poor sleep days show markedly higher stress. Your body keeps the score even when your mood seems okay.';
+  } else {
+    insight = 'Sleep and mood are connected for you, though the pattern is still emerging.';
+  }
+
+  const primaryMetric = withSleep[0].sleepQuality !== null ? 'quality' : 'duration';
+  const statLabel = primaryMetric === 'quality'
+    ? `Good sleep (4+ moons): mood ${moodGood.toFixed(1)} · Poor (≤2): mood ${moodPoor.toFixed(1)}`
+    : `7+ hours: mood ${moodGood.toFixed(1)} · <6 hours: mood ${moodPoor.toFixed(1)}`;
+
+  return {
+    moodGoodSleep: parseFloat(moodGood.toFixed(1)),
+    moodPoorSleep: parseFloat(moodPoor.toFixed(1)),
+    moodDiff: parseFloat(moodDiff.toFixed(1)),
+    stressGoodSleep: parseFloat(stressGood.toFixed(1)),
+    stressPoorSleep: parseFloat(stressPoor.toFixed(1)),
+    sleepDays: withSleep.length,
+    nextDayMoodDiff,
+    insight,
+    stat: statLabel,
+    confidence: confidence(withSleep.length),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 15. Stress Recovery Time
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface StressRecoveryCard {
+  /** Average days to recover from a stress spike to baseline */
+  avgRecoveryDays: number;
+  /** Number of spike episodes found */
+  spikeCount: number;
+  /** Average stress during spikes */
+  avgSpikeStress: number;
+  /** Baseline stress (non-spike average) */
+  baselineStress: number;
+  insight: string;
+  stat: string;
+  confidence: ConfidenceLevel;
+}
+
+/**
+ * Stress recovery: how many days after a stress spike until stress returns to baseline.
+ * A spike = stress ≥ 7 (high). Recovery = first day stress drops below baseline + 1.
+ */
+export function computeStressRecovery(
+  aggregates: DailyAggregate[],
+): StressRecoveryCard | null {
+  const sorted = sortByDayKey(aggregates);
+  const n = sorted.length;
+  if (n < 14) return null;
+
+  const overallStress = mean(sorted.map(d => d.stressAvg));
+  const recoveryThreshold = overallStress + 0.5; // consider "recovered" when back near baseline
+
+  const recoveryTimes: number[] = [];
+  const spikeStresses: number[] = [];
+
+  let i = 0;
+  while (i < n) {
+    if (sorted[i].stressAvg >= 7) {
+      // Found a spike day
+      spikeStresses.push(sorted[i].stressAvg);
+      let recoveryDays = 0;
+      let j = i + 1;
+      while (j < n && sorted[j].stressAvg > recoveryThreshold) {
+        recoveryDays++;
+        j++;
+      }
+      if (j < n) {
+        // Actually recovered (didn't just run out of data)
+        recoveryTimes.push(recoveryDays + 1); // +1 includes the spike day
+      }
+      i = j; // Skip past this episode
+    } else {
+      i++;
+    }
+  }
+
+  if (recoveryTimes.length < 2) return null;
+
+  const avgRecovery = mean(recoveryTimes);
+  const avgSpike = mean(spikeStresses);
+
+  let insight: string;
+  if (avgRecovery <= 1.5) {
+    insight = 'You bounce back quickly from stress spikes — usually within a day. Your nervous system resets well.';
+  } else if (avgRecovery <= 3) {
+    insight = `After high-stress days, it typically takes you about ${Math.round(avgRecovery)} days to reset. Understanding this rhythm helps you plan around it.`;
+  } else {
+    insight = `Stress tends to linger for you — about ${Math.round(avgRecovery)} days after a spike. Building in deliberate recovery time after intense periods could help.`;
+  }
+
+  return {
+    avgRecoveryDays: parseFloat(avgRecovery.toFixed(1)),
+    spikeCount: recoveryTimes.length,
+    avgSpikeStress: parseFloat(avgSpike.toFixed(1)),
+    baselineStress: parseFloat(overallStress.toFixed(1)),
+    insight,
+    stat: `${recoveryTimes.length} stress spikes · avg ${avgRecovery.toFixed(1)} days to recover`,
+    confidence: confidence(n),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Full V3 Enhanced Bundle
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1266,6 +1469,10 @@ export interface EnhancedInsightBundle {
   timePatterns: TimePatternCard[];
   chartBaselines: ChartBaselineCard[];
   blended: BlendedInsightCard[];
+  /** Sleep-mood correlation (null if insufficient sleep data) */
+  sleepMood: SleepMoodCard | null;
+  /** Stress recovery time (null if insufficient data) */
+  stressRecovery: StressRecoveryCard | null;
   confidence: ConfidenceLevel;
   sampleSize: number;
   journalDays: number;
@@ -1312,6 +1519,9 @@ export function computeEnhancedInsights(
   const chartBaselines = computeChartBaselines(profile);
   const blended = computeBlendedInsights(sorted, trends, volatility, profile);
 
+  const sleepMood = computeSleepMoodCard(sorted);
+  const stressRecovery = computeStressRecovery(sorted);
+
   return {
     trends,
     volatility,
@@ -1323,6 +1533,8 @@ export function computeEnhancedInsights(
     timePatterns,
     chartBaselines,
     blended,
+    sleepMood,
+    stressRecovery,
     confidence: confidence(n),
     sampleSize: n,
     journalDays,

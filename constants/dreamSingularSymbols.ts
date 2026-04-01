@@ -27,7 +27,7 @@ export interface SingleWordSymbol {
   category: string;
 }
 
-export const DREAM_SINGLE_WORD_SYMBOLS: SingleWordSymbol[] = [
+const allSymbols: SingleWordSymbol[] = [
   ...characters_symbols,
   ...activities_symbols,
   ...emotions_symbols,
@@ -52,3 +52,13 @@ export const DREAM_SINGLE_WORD_SYMBOLS: SingleWordSymbol[] = [
   ...food_eating_symbols,
   ...elements_from_past_symbols,
 ];
+
+const seen = new Set<string>();
+export const DREAM_SINGLE_WORD_SYMBOLS: SingleWordSymbol[] = allSymbols.filter(
+  (s) => {
+    const key = s.symbol.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }
+);

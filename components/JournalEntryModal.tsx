@@ -36,6 +36,7 @@ import Animated, {
 } from 'react-native-reanimated';import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
+import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from './ui/GoldSubtitle';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
@@ -406,7 +407,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     setCustomTags((prev) => {
       if (prev.some((t) => t.id === id)) return prev;
       const next = [...prev, { id, label: trimmed, categoryId }];
-      AsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch(() => {});
+      AsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch((e) => {
+        logger.warn('[JournalEntryModal] Failed to save custom tag:', e);
+      });
       return next;
     });
     setTags((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -420,7 +423,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const deleteCustomTag = useCallback((id: string) => {
     setCustomTags((prev) => {
       const next = prev.filter((t) => t.id !== id);
-      AsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch(() => {});
+      AsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch((e) => {
+        logger.warn('[JournalEntryModal] Failed to save custom tags after delete:', e);
+      });
       return next;
     });
     setTags((prev) => prev.filter((t) => t !== id));

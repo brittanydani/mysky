@@ -69,7 +69,13 @@ export const useCorrelationStore = create<CorrelationStore>((set) => ({
       return;
     }
 
-    set({ correlations: data as CorrelationPair[], isFetching: false });
+    // Clamp correlations to valid Pearson range [-1, 1] as a safety net
+    const clamped = (data as CorrelationPair[]).map(p => ({
+      ...p,
+      correlation: Math.max(-1, Math.min(1, p.correlation)),
+    }));
+
+    set({ correlations: clamped, isFetching: false });
   },
 
   clearCache: () => set({ correlations: INITIAL_CORRELATIONS, error: null }),

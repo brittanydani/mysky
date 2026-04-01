@@ -303,7 +303,7 @@ export default function JournalScreen() {
 
   const handleAddEntry = async () => {
     try {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {}
     setEditingEntry(undefined);
     setShowEntryModal(true);
@@ -311,7 +311,7 @@ export default function JournalScreen() {
 
   const handleEditEntry = useCallback(async (entry: JournalEntry) => {
     try {
-      await Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
     } catch {}
     setEditingEntry(entry);
     setShowEntryModal(true);

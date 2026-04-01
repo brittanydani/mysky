@@ -4,6 +4,7 @@ import { initSentry } from '../utils/sentry';
 // Initialize Sentry before any other code runs
 initSentry();
 
+// eslint-disable-next-line import/first
 import { GoldIcon } from '../components/ui/GoldIcon';
 // File: app/_layout.tsx
 

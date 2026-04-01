@@ -76,7 +76,7 @@ export function getReflectionDate(now: Date = new Date()): Date {
   return now;
 }
 
-/** Get 0-indexed day of year (0–365). */
+/** Get 1-indexed day of year (1–366). */
 function getDayOfYear(date: Date = new Date()): number {
   const start = new Date(date.getFullYear(), 0, 0);
   const diff = date.getTime() - start.getTime();

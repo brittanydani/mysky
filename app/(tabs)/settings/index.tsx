@@ -269,7 +269,7 @@ export default function SettingsScreen() {
   const gatePremium = async (): Promise<boolean> => {
     if (isPremium) return true;
     try {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
     } catch {}
     Alert.alert(
       'Deeper Sky Feature',
@@ -299,13 +299,13 @@ export default function SettingsScreen() {
 
       setLastBackupAt(now);
       try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       } catch {}
       Alert.alert('Backup Ready', 'Your encrypted backup is ready to save or share.');
     } catch (error: any) {
       logger.error('Backup failed:', error);
       try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       } catch {}
       Alert.alert('Backup Failed', error?.message || 'Unable to create backup');
     } finally {
@@ -366,7 +366,7 @@ export default function SettingsScreen() {
       }
 
       try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       } catch {}
       Alert.alert('Restore Complete', 'Your data has been restored on this device.');
       setRestoreUri(null);
@@ -374,7 +374,7 @@ export default function SettingsScreen() {
     } catch (error: any) {
       logger.error('Restore failed:', error);
       try {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       } catch {}
       Alert.alert('Restore Failed', error?.message || 'Unable to restore backup');
     } finally {
@@ -409,14 +409,14 @@ export default function SettingsScreen() {
 
   const openPrivacyPolicy = async () => {
     try {
-      await Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
     } catch {}
     router.navigate('/privacy' as Href);
   };
 
   const handleEditIdentity = useCallback(async () => {
     try {
-      await Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
     } catch {}
     if (birthInitial) {
       setShowBirthModal(true);
@@ -487,14 +487,14 @@ export default function SettingsScreen() {
 
   const openTerms = async () => {
     try {
-      await Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
     } catch {}
     router.navigate('/terms' as Href);
   };
 
   const openFaq = async () => {
     try {
-      await Haptics.selectionAsync();
+      Haptics.selectionAsync().catch(() => {});
     } catch {}
     router.navigate('/faq' as Href);
   };
@@ -508,14 +508,14 @@ export default function SettingsScreen() {
     }
     try {
       setPdfExporting(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       const chart = AstrologyCalculator.generateNatalChart(birthInitial as any);
       const { chapters } = FullNatalStoryGenerator.generateFullStory(chart, true);
       await exportChartToPdf(chart, chapters);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (error: any) {
       logger.error('Chart PDF export failed:', error);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       Alert.alert('Export Failed', error?.message || 'Unable to generate PDF.');
     } finally {
       setPdfExporting(false);
@@ -759,7 +759,7 @@ export default function SettingsScreen() {
               <Pressable
                 style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                 onPress={async () => {
-                  try { await Haptics.selectionAsync(); } catch {}
+                  try { Haptics.selectionAsync().catch(() => {}); } catch {}
                   router.push('/settings/notifications' as Href);
                 }}
                 accessibilityRole="button"
@@ -847,7 +847,7 @@ export default function SettingsScreen() {
             <Pressable
               style={styles.sectionTitleRow}
               onPress={async () => {
-                try { await Haptics.selectionAsync(); } catch {}
+                try { Haptics.selectionAsync().catch(() => {}); } catch {}
                 setShowFaq(prev => !prev);
               }}
               accessibilityRole="button"
@@ -872,7 +872,7 @@ export default function SettingsScreen() {
                       key={item.question}
                       onPress={async () => {
                         try {
-                          await Haptics.selectionAsync();
+                          Haptics.selectionAsync().catch(() => {});
                         } catch {}
                         setExpandedFaq(expandedFaq === item.question ? null : item.question);
                       }}
@@ -1017,7 +1017,7 @@ export default function SettingsScreen() {
               <Pressable
                 style={styles.settingCard}
                 onPress={async () => {
-                  try { await Haptics.selectionAsync(); } catch {}
+                  try { Haptics.selectionAsync().catch(() => {}); } catch {}
                   try {
                     const url = Platform.select({
                       ios: 'https://apps.apple.com/account/subscriptions',

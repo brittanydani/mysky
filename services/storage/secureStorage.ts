@@ -363,6 +363,14 @@ class SecureStorageService {
           `[SecureStorage] Trimmed array for key "${key}" from ${originalLength} → ${trimmed.length} ` +
             `(dropped ${dropped} oldest entries) to stay ≤ ${SECURE_STORE_SOFT_LIMIT} bytes`,
         );
+        // Report to crash reporter so silent data loss is visible in production
+        try {
+          const { captureError } = require('../../utils/sentry');
+          captureError(
+            new Error(`SecureStorage trimmed ${dropped} entries for key "${key}"`),
+            { key, dropped: String(dropped), original: String(originalLength) },
+          );
+        } catch {}
       }
     } else if (serialised.length > SECURE_STORE_SOFT_LIMIT) {
       logger.warn(

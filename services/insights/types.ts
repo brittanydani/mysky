@@ -105,6 +105,14 @@ export interface DailyAggregate {
 
   /** Day of week 0–6 (Sunday = 0) */
   dayOfWeek: number;
+
+  // ── Sleep data (from sleep_entries table) ─────────────────────────────────
+  /** Sleep duration in hours (null if no sleep entry for this day) */
+  sleepDurationHours: number | null;
+  /** Sleep quality 1–5 moons (null if not rated) */
+  sleepQuality: number | null;
+  /** Whether a dream was logged for this night */
+  hasDream: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -130,6 +138,8 @@ export interface PipelineInput {
   checkIns: import('../patterns/types').DailyCheckIn[];
   /** Raw journal entries (all or last 90 days) */
   journalEntries: import('../storage/models').JournalEntry[];
+  /** Sleep entries (all or last 90 days, optional) */
+  sleepEntries?: import('../storage/models').SleepEntry[];
   /** Natal chart (null if user has no chart) */
   chart: NatalChart | null;
   /** Today's context (optional) */

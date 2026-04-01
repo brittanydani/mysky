@@ -2692,7 +2692,7 @@ export default function ChartScreen() {
               style={styles.glossarySectionTitleRow}
               onPress={async () => {
                 try {
-                  await Haptics.selectionAsync();
+                  Haptics.selectionAsync().catch(() => {});
                 } catch {}
                 setShowGlossary((prev) => !prev);
               }}
@@ -2711,7 +2711,7 @@ export default function ChartScreen() {
                       key={item.term}
                       onPress={async () => {
                         try {
-                          await Haptics.selectionAsync();
+                          Haptics.selectionAsync().catch(() => {});
                         } catch {}
                         setExpandedTerm(expandedTerm === item.term ? null : item.term);
                       }}

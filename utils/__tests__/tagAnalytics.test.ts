@@ -38,6 +38,9 @@ function makeAggregate(
     checkInTimestamps: [],
     timeOfDayLabels: [],
     dayOfWeek: 0,
+    sleepDurationHours: null,
+    sleepQuality: null,
+    hasDream: false,
     ...overrides,
   };
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -466,7 +466,7 @@ export default function MoodCheckIn() {
     }
   }, []);
 
-  const trendLabel = computeTrendLabel(recentCheckIns);
+  const trendLabel = useMemo(() => computeTrendLabel(recentCheckIns), [recentCheckIns]);
   const canSeal = !isSaving && !!chartId;
   const todayStr = getLogicalToday();
   const canGoBack = () => {

@@ -8,7 +8,7 @@
  */
 
 import { DailyCheckIn, EnergyLevel, StressLevel } from '../patterns/types';
-import { JournalEntry } from '../storage/models';
+import { JournalEntry, SleepEntry } from '../storage/models';
 import { DailyAggregate, PipelineInput, PipelineResult } from './types';
 import { todayDayKey, daysBetweenKeys } from './dayKey';
 import { deriveChartProfile } from './chartProfile';
@@ -120,9 +120,28 @@ function normalizeJournal(je: JournalEntry): NormalizedJournal {
 // Step 2: Aggregate by dayKey
 // ─────────────────────────────────────────────────────────────────────────────
 
+interface NormalizedSleep {
+  dayKey: string;
+  durationHours: number | null;
+  quality: number | null;
+  hasDream: boolean;
+}
+
+function normalizeSleep(se: SleepEntry): NormalizedSleep {
+  const dur = se.durationHours;
+  const qual = se.quality;
+  return {
+    dayKey: se.date, // YYYY-MM-DD
+    durationHours: dur != null && dur >= 0 && dur <= 24 ? dur : null,
+    quality: qual != null && qual >= 1 && qual <= 5 ? qual : null,
+    hasDream: !!(se.dreamText && se.dreamText.trim().length > 0),
+  };
+}
+
 function aggregateByDay(
   checkIns: NormalizedCheckIn[],
   journals: NormalizedJournal[],
+  sleepEntries: NormalizedSleep[] = [],
 ): DailyAggregate[] {
   // Group check-ins by dayKey
   const checkInsByDay = new Map<string, NormalizedCheckIn[]>();
@@ -138,6 +157,14 @@ function aggregateByDay(
     const key = j.dayKey;
     if (!journalsByDay.has(key)) journalsByDay.set(key, []);
     journalsByDay.get(key)!.push(j);
+  }
+
+  // Group sleep entries by dayKey
+  const sleepByDay = new Map<string, NormalizedSleep[]>();
+  for (const s of sleepEntries) {
+    const key = s.dayKey;
+    if (!sleepByDay.has(key)) sleepByDay.set(key, []);
+    sleepByDay.get(key)!.push(s);
   }
 
   // Collect all unique dayKeys
@@ -195,6 +222,10 @@ function aggregateByDay(
     // Day of week from the dayKey
     const dow = new Date(dayKey + 'T12:00:00').getDay();
 
+    // Sleep data for this day (latest entry wins if multiple)
+    const daySleep = sleepByDay.get(dayKey) ?? [];
+    const sleepEntry = daySleep.length > 0 ? daySleep[daySleep.length - 1] : null;
+
     aggregates.push({
       dayKey,
       moodAvg: parseFloat(mean(moods).toFixed(1)),
@@ -211,6 +242,9 @@ function aggregateByDay(
       checkInTimestamps: dayCheckIns.map(c => c.createdAt),
       timeOfDayLabels: dayCheckIns.map(c => c.timeOfDay),
       dayOfWeek: dow,
+      sleepDurationHours: sleepEntry?.durationHours ?? null,
+      sleepQuality: sleepEntry?.quality ?? null,
+      hasDream: daySleep.some(s => s.hasDream),
     });
   }
 
@@ -231,14 +265,15 @@ function aggregateByDay(
  * ready for the insights engine.
  */
 export function runPipeline(input: PipelineInput): PipelineResult {
-  const { checkIns, journalEntries, chart, todayContext } = input;
+  const { checkIns, journalEntries, sleepEntries, chart, todayContext } = input;
 
   // Step 1: Normalize
   const normalizedCheckIns = checkIns.map(normalizeCheckIn);
   const normalizedJournals = journalEntries.map(normalizeJournal);
+  const normalizedSleep = (sleepEntries ?? []).map(normalizeSleep);
 
   // Step 2: Aggregate by day
-  const dailyAggregates = aggregateByDay(normalizedCheckIns, normalizedJournals);
+  const dailyAggregates = aggregateByDay(normalizedCheckIns, normalizedJournals, normalizedSleep);
 
   // Derive chart profile
   const chartProfile = chart ? deriveChartProfile(chart) : null;

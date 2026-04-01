@@ -24,6 +24,9 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
+import { computeNarrativeInsights, NarrativeInsightBundle, NarrativeInsight } from '../../utils/narrativeInsights';
+import { buildPersonalProfile } from '../../utils/personalProfile';
+import { computeDeepInsights, DeepInsightBundle, DeepInsight, Season, NarrativeMemory } from '../../utils/deepInsights';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
 import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -134,6 +137,8 @@ export default function PatternsScreen() {
   const [trendCheckIns, setTrendCheckIns] = useState<DailyCheckIn[]>([]);
   const [loading, setLoading] = useState(true);
   const [crossRefs, setCrossRefs] = useState<CrossRefInsight[]>([]);
+  const [narrative, setNarrative] = useState<NarrativeInsightBundle | null>(null);
+  const [deepInsights, setDeepInsights] = useState<DeepInsightBundle | null>(null);
   const syncRhythm = useCircadianStore((s) => s.syncRhythm);
   const circadianGrid = useCircadianStore((s) => s.grid);
   const correlations = useCorrelationStore((s) => s.correlations);
@@ -218,6 +223,7 @@ export default function PatternsScreen() {
             const saved = charts[0];
             const extCheckIns = await localDb.getCheckIns(chartId, 90);
             const journalEntries = await localDb.getJournalEntriesPaginated(90);
+            const sleepEntries = await localDb.getSleepEntries(chartId, 90);
 
             let natalChart = null;
             if (isPremium) {
@@ -239,7 +245,7 @@ export default function PatternsScreen() {
               }
             }
 
-            const pipelineResult = runPipeline({ checkIns: extCheckIns, journalEntries, chart: natalChart, todayContext: null });
+            const pipelineResult = runPipeline({ checkIns: extCheckIns, journalEntries, sleepEntries, chart: natalChart, todayContext: null });
             pipelineRef.current = {
               aggregates: pipelineResult.dailyAggregates,
               profile: pipelineResult.chartProfile,
@@ -248,6 +254,9 @@ export default function PatternsScreen() {
               totalJournalEntries: pipelineResult.totalJournalEntries,
             };
             setEnhanced(computeEnhancedInsights(pipelineResult.dailyAggregates, pipelineResult.chartProfile));
+            setNarrative(computeNarrativeInsights(pipelineResult.dailyAggregates));
+            const personalProfile = buildPersonalProfile(pipelineResult.dailyAggregates);
+            setDeepInsights(computeDeepInsights(personalProfile));
           } catch (e) {
             logger.error('Enhanced insights pipeline failed:', e);
           }
@@ -285,7 +294,7 @@ export default function PatternsScreen() {
     if (isExporting) return;
     setIsExporting(true);
     try {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       const pipe = pipelineRef.current;
       const input: InsightsPdfInput = {
         userName: chartNameRef.current,
@@ -685,6 +694,60 @@ export default function PatternsScreen() {
             </Animated.View>
           )}
 
+          {/* ── Narrative Insights — Personalized Reflections ── */}
+          {narrative && narrative.insights.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(500)} style={styles.section}>
+              <SectionHeader label="YOUR INNER CLIMATE" icon="cloudy-night-outline" subtitle="Personalized reflections drawn from your patterns" />
+              {narrative.insights.map((insight) => (
+                <NarrativeCard key={insight.id} insight={insight} />
+              ))}
+            </Animated.View>
+          )}
+
+          {/* ── Deep Insights — The Mirror With Memory ── */}
+          {deepInsights && deepInsights.insights.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(600)} style={styles.section}>
+              <SectionHeader label="YOUR INNER WORLD" icon="sparkles-outline" subtitle={deepInsights.maturity === 'deep' ? 'Deep reflections from months of self-knowledge' : deepInsights.maturity === 'established' ? 'Growing understanding from your patterns' : 'Early reflections as we learn about you'} />
+
+              {/* Season / Chapter */}
+              {deepInsights.season && (
+                <LinearGradient colors={[`${PALETTE.gold}10`, 'rgba(10,10,12,0.9)']} style={styles.seasonCard}>
+                  <MetallicText style={styles.seasonLabel} variant="gold">{deepInsights.season.label.toUpperCase()}</MetallicText>
+                  <Text style={styles.insightBody}>{deepInsights.season.body}</Text>
+                </LinearGradient>
+              )}
+
+              {deepInsights.insights.map((insight) => (
+                <DeepInsightCard key={insight.id} insight={insight} />
+              ))}
+
+              {/* Narrative Memory */}
+              {(deepInsights.memory.previousStruggles.length > 0 || deepInsights.memory.emergingPatterns.length > 0) && (
+                <View style={styles.memoryWrap}>
+                  <MetallicText style={styles.personalTruthsHeader} variant="gold">WHAT WE REMEMBER</MetallicText>
+                  {deepInsights.memory.previousStruggles.map((s, i) => (
+                    <Text key={`struggle-${i}`} style={styles.memoryText}>{s}</Text>
+                  ))}
+                  {deepInsights.memory.emergingPatterns.length > 0 && (
+                    <Text style={styles.memoryText}>Emerging now: {deepInsights.memory.emergingPatterns.join(', ').toLowerCase()}.</Text>
+                  )}
+                  {deepInsights.memory.persistentTruths.map((t, i) => (
+                    <Text key={`persist-${i}`} style={styles.memoryText}>{t}</Text>
+                  ))}
+                </View>
+              )}
+
+              {deepInsights.personalTruths.length > 0 && (
+                <View style={styles.personalTruthsWrap}>
+                  <MetallicText style={styles.personalTruthsHeader} variant="gold">PERSONAL TRUTHS</MetallicText>
+                  {deepInsights.personalTruths.map((truth, i) => (
+                    <Text key={i} style={styles.personalTruthText}>{truth}</Text>
+                  ))}
+                </View>
+              )}
+            </Animated.View>
+          )}
+
 
         </ScrollView>
       </SafeAreaView>
@@ -716,6 +779,99 @@ const LoopCard = ({ content }: { content: LoopCardContent }) => (
     <Text style={styles.insightBody}>{content.body}</Text>
   </LinearGradient>
 );
+
+const NARRATIVE_ACCENT: Record<string, string> = {
+  gold:       PALETTE.gold,
+  silverBlue: PALETTE.silverBlue,
+  copper:     PALETTE.copper,
+  emerald:    PALETTE.emerald,
+  rose:       PALETTE.rose,
+  lavender:   PALETTE.lavender,
+};
+
+const NARRATIVE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  emotional_undercurrent: 'water-outline',
+  energy_rhythm:          'battery-half-outline',
+  stress_signal:          'alert-circle-outline',
+  sleep_connection:       'moon-outline',
+  restoration_pattern:    'leaf-outline',
+  best_day:               'sunny-outline',
+  hard_day:               'rainy-outline',
+  sensitivity_theme:      'eye-outline',
+  connection_pattern:     'heart-outline',
+  growth_reflection:      'trending-up-outline',
+  dream_theme:            'cloudy-night-outline',
+  emerging_pattern:       'sparkles-outline',
+};
+
+const NarrativeCard = ({ insight }: { insight: NarrativeInsight }) => {
+  const accent = NARRATIVE_ACCENT[insight.accent] ?? PALETTE.gold;
+  const icon = NARRATIVE_ICONS[insight.category] ?? 'sparkles-outline';
+  return (
+    <LinearGradient colors={[`${accent}14`, 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+      <View style={styles.narrativeHeader}>
+        <MetallicIcon name={icon} size={14} variant="gold" />
+        <MetallicText style={styles.insightLabel} color={accent}>{insight.label.toUpperCase()}</MetallicText>
+        <View style={[styles.narrativeConfidence, { backgroundColor: `${accent}18`, borderColor: `${accent}40` }]}>
+          <Text style={[styles.narrativeConfidenceText, { color: accent }]}>
+            {insight.confidence === 'high' ? 'STRONG' : insight.confidence === 'medium' ? 'GROWING' : 'EMERGING'}
+          </Text>
+        </View>
+      </View>
+      <Text style={styles.insightBody}>{insight.body}</Text>
+      <Text style={styles.statText}>{insight.stat}</Text>
+    </LinearGradient>
+  );
+};
+
+const DEEP_LEVEL_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  pattern:  'repeat-outline',
+  meaning:  'layers-outline',
+  need:     'heart-circle-outline',
+  growth:   'trending-up-outline',
+  identity: 'diamond-outline',
+};
+
+const DEEP_LEVEL_LABELS: Record<string, string> = {
+  pattern:  'PATTERN',
+  meaning:  'MEANING',
+  need:     'NEED',
+  growth:   'GROWTH',
+  identity: 'IDENTITY',
+};
+
+const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
+  const accent = NARRATIVE_ACCENT[insight.accent] ?? PALETTE.gold;
+  const icon = DEEP_LEVEL_ICONS[insight.level] ?? 'sparkles-outline';
+  const levelLabel = DEEP_LEVEL_LABELS[insight.level] ?? insight.level.toUpperCase();
+  return (
+    <LinearGradient colors={[`${accent}14`, 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+      <View style={styles.narrativeHeader}>
+        <MetallicIcon name={icon} size={14} variant="gold" />
+        <MetallicText style={styles.insightLabel} color={accent}>{insight.title.toUpperCase()}</MetallicText>
+        <View style={[styles.narrativeConfidence, { backgroundColor: `${accent}18`, borderColor: `${accent}40` }]}>
+          <Text style={[styles.narrativeConfidenceText, { color: accent }]}>
+            {insight.confidence === 'strong' ? 'STRONG' : insight.confidence === 'growing' ? 'GROWING' : 'EMERGING'}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.deepLevelBadge}>
+        <Text style={[styles.deepLevelText, { color: accent }]}>{levelLabel}</Text>
+      </View>
+      <Text style={styles.insightBody}>{insight.body}</Text>
+      {insight.detail && <Text style={styles.statText}>{insight.detail}</Text>}
+      {insight.selfLanguage && (
+        <Text style={[styles.selfLanguageText, { color: `${accent}CC` }]}>&ldquo;{insight.selfLanguage}&rdquo;</Text>
+      )}
+      {insight.reflectionPrompt && (
+        <View style={styles.reflectionPromptWrap}>
+          <Ionicons name="chatbubble-ellipses-outline" size={12} color="rgba(255,255,255,0.35)" />
+          <Text style={styles.reflectionPromptText}>{insight.reflectionPrompt}</Text>
+        </View>
+      )}
+    </LinearGradient>
+  );
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
@@ -835,6 +991,22 @@ const styles = StyleSheet.create({
   confirmedText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
   patternTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.textMain, marginBottom: 8 },
 
+  // Narrative insights
+  narrativeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  narrativeConfidence: { marginLeft: 'auto', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  narrativeConfidenceText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.8 },
+  deepLevelBadge: { marginBottom: 10 },
+  deepLevelText: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' as const },
+  personalTruthsWrap: { marginTop: 20, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212,175,55,0.15)', backgroundColor: 'rgba(212,175,55,0.04)' },
+  personalTruthsHeader: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
+  personalTruthText: { color: 'rgba(255,255,255,0.78)', fontSize: 14, lineHeight: 22, marginBottom: 12, fontWeight: '400' },
+  seasonCard: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212,175,55,0.12)', marginBottom: 16, backgroundColor: 'rgba(212,175,55,0.03)' },
+  seasonLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 12 },
+  memoryWrap: { marginTop: 16, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  memoryText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 20, marginBottom: 10, fontStyle: 'italic' as const, fontWeight: '400' },
+  selfLanguageText: { fontSize: 13, fontStyle: 'italic' as const, marginTop: 10, fontWeight: '500' },
+  reflectionPromptWrap: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8, marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)' },
+  reflectionPromptText: { color: 'rgba(255,255,255,0.45)', fontSize: 13, lineHeight: 19, flex: 1, fontStyle: 'italic' as const, fontWeight: '400' },
 
 });
 

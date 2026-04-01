@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/services', '<rootDir>/utils', '<rootDir>/store'],
+  roots: ['<rootDir>/services', '<rootDir>/utils', '<rootDir>/store', '<rootDir>/lib'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   // Keep force-exit available for debugging flaky environments, but do not
@@ -20,5 +20,6 @@ module.exports = {
     '^@noble/hashes/sha2$': '<rootDir>/__mocks__/noble-hashes-sha2.js',
     '^@noble/hashes/utils$': '<rootDir>/__mocks__/noble-hashes-utils.js',
     '^@noble/hashes/pbkdf2$': '<rootDir>/__mocks__/noble-hashes-pbkdf2.js',
+    '^@/(.*)$': '<rootDir>/$1',
   },
 };
