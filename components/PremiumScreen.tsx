@@ -139,12 +139,14 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
     }
   }, []);
 
-  const navigateToLegal = useCallback((_path: '/terms' | '/privacy') => {
-    Linking.openURL(LEGAL_URL).catch(() => {
-      if (onClose) onClose();
-      setTimeout(() => router.push(_path as Href), 350);
-    });
+  const navigateToLegal = useCallback((path: '/terms' | '/privacy') => {
+    if (onClose) onClose();
+    setTimeout(() => router.push(path as Href), 350);
   }, [onClose, router]);
+
+  const openLegalWebsite = useCallback(() => {
+    Linking.openURL(LEGAL_URL).catch(() => {});
+  }, []);
 
   // ── Active Premium State ──
   if (isPremium) {
@@ -359,14 +361,17 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
           {/* Legal agreement line above CTA */}
           <Text style={styles.legalAgreement}>
             {'By continuing, you agree to our '}
+            <Text style={styles.legalAgreementLink} onPress={openLegalWebsite}>
+              Terms of Use & Privacy Policy
+            </Text>
+            {'. '}
             <Text style={styles.legalAgreementLink} onPress={() => navigateToLegal('/terms')}>
-              Terms of Use (EULA)
+              Terms
             </Text>
-            {' and '}
+            {' · '}
             <Text style={styles.legalAgreementLink} onPress={() => navigateToLegal('/privacy')}>
-              Privacy Policy
+              Privacy
             </Text>
-            .
           </Text>
 
           <Animated.View entering={FadeInUp.delay(600).duration(600)}>
