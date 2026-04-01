@@ -5,6 +5,7 @@ import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
+import { GoldSubtitle } from './ui/GoldSubtitle';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -158,15 +159,12 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             <Pressable onPress={safeGoBack} style={styles.backButton}>
               <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
             </Pressable>
-            <View style={styles.diamondContainer}>
-              <MySkyDiamondSkia size={140} />
-            </View>
             <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
               <Text style={styles.premiumBadge}>✦ Deeper Sky Active</Text>
               <Text style={styles.title}>You're a Deeper Sky member</Text>
-              <Text style={styles.subtitle}>
+              <GoldSubtitle style={styles.subtitle}>
                 All premium features are unlocked. Thank you for supporting MySky.
-              </Text>
+              </GoldSubtitle>
             </Animated.View>
 
             <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.featureList}>
@@ -223,23 +221,13 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
             <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
           </Pressable>
 
-          {/* ── Hero: Ethereal Eclipse ── */}
-          <Animated.View entering={FadeInDown.delay(100).duration(700)} style={styles.heroSection}>
-            <View style={styles.heroEclipse}>
-              <View style={styles.heroRingOuter} />
-              <View style={styles.heroRingInner} />
-              <View style={styles.heroCore} />
-              <MySkyDiamondSkia size={78} />
-            </View>
-          </Animated.View>
-
           {/* ── Value Copywriting ── */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.header}>
+          <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <Text style={styles.premiumBadge}>✦ {DEEPER_SKY_MARKETING.headline}</Text>
-            <Text style={styles.heroTitle}>See what your patterns are teaching you</Text>
-            <Text style={styles.heroSubtitle}>
+            <Text style={styles.title}>See what your patterns are teaching you</Text>
+            <GoldSubtitle style={styles.heroSubtitle}>
               Deeper Sky turns your sleep, mood, dreams, and journal history into weekly shifts, recurring themes, and more personal guidance.
-            </Text>
+            </GoldSubtitle>
           </Animated.View>
 
           {/* ── Value Propositions ── */}
@@ -551,7 +539,6 @@ const styles = StyleSheet.create({
   // ── Header ──
   header: {
     marginBottom: 8,
-    alignItems: 'center',
   },
   premiumBadge: {
     fontSize: 12,
@@ -560,21 +547,10 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 8,
   },
-  heroTitle: {
-    fontSize: 34,
-    fontWeight: '800',
-    color: theme.textPrimary,
-    letterSpacing: -0.5,
-    marginBottom: 8,
-    textAlign: 'center',
-    lineHeight: 40,
-  },
   heroSubtitle: {
     fontSize: 14,
     color: theme.textSecondary,
     lineHeight: 21,
-    textAlign: 'center',
-    paddingHorizontal: 16,
   },
 
   // ── Value Propositions ──
@@ -877,13 +853,11 @@ const styles = StyleSheet.create({
     color: theme.textPrimary,
     letterSpacing: 0.3,
     marginBottom: theme.spacing.sm,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: theme.textSecondary,
     lineHeight: 22,
-    textAlign: 'center',
   },
   featureList: {
     marginBottom: theme.spacing.xl,
