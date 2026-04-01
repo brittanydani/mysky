@@ -1035,19 +1035,37 @@ export function computeDeepInsights(profile: PersonalProfile): DeepInsightBundle
   }
   if (availableLevels.includes('growth')) {
     insights.push(...buildGrowthInsights(profile));
+    insights.push(...buildProgressInsights(profile));
   }
   if (availableLevels.includes('identity')) {
     insights.push(...buildIdentityInsights(profile));
+    insights.push(...buildStrengthInsights(profile));
   }
+
+  // Always available: discomfort differentiation and anticipation
+  insights.push(...buildDiscomfortInsights(profile));
+  insights.push(...buildAnticipationInsights(profile));
 
   const season = detectSeason(profile);
   const memory = buildNarrativeMemory(profile);
+  const whatToRemember = buildWhatToRemember(profile);
+
+  // Restraint mode: when user is low-capacity, limit insight count
+  // Show fewer, simpler insights — prefer 'name' and 'guide' jobs over 'clarify' and 'integrate'
+  let finalInsights = insights;
+  if (profile.isLowCapacity) {
+    const priorityOrder: InsightJob[] = ['name', 'guide', 'clarify', 'integrate'];
+    finalInsights = insights
+      .sort((a, b) => priorityOrder.indexOf(a.job) - priorityOrder.indexOf(b.job))
+      .slice(0, 5);
+  }
 
   return {
-    insights,
+    insights: finalInsights,
     personalTruths: profile.personalTruths,
     season,
     memory,
+    whatToRemember,
     maturity: profile.maturity,
     totalDays: profile.totalDays,
     generatedAt: new Date().toISOString(),

@@ -717,6 +717,16 @@ export default function PatternsScreen() {
                 </LinearGradient>
               )}
 
+              {/* What To Remember — distilled self-knowledge for hard days */}
+              {deepInsights.whatToRemember.length > 0 && (
+                <LinearGradient colors={[`${PALETTE.rose}10`, 'rgba(10,10,12,0.9)']} style={styles.seasonCard}>
+                  <MetallicText style={styles.seasonLabel} variant="gold">WHAT TO REMEMBER</MetallicText>
+                  {deepInsights.whatToRemember.map((r, i) => (
+                    <Text key={`remember-${i}`} style={styles.memoryText}>• {r}</Text>
+                  ))}
+                </LinearGradient>
+              )}
+
               {deepInsights.insights.map((insight) => (
                 <DeepInsightCard key={insight.id} insight={insight} />
               ))}
@@ -857,6 +867,9 @@ const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
       </View>
       <View style={styles.deepLevelBadge}>
         <Text style={[styles.deepLevelText, { color: accent }]}>{levelLabel}</Text>
+        <Text style={[styles.deepLevelText, { color: `${accent}88`, marginLeft: 8 }]}>
+          {insight.job === 'name' ? '◆ NAMING' : insight.job === 'clarify' ? '◆ CLARIFYING' : insight.job === 'guide' ? '◆ GUIDING' : '◆ INTEGRATING'}
+        </Text>
       </View>
       <Text style={styles.insightBody}>{insight.body}</Text>
       {insight.detail && <Text style={styles.statText}>{insight.detail}</Text>}
