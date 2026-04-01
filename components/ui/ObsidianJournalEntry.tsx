@@ -118,8 +118,8 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
       accessibilityLabel={`Journal entry: ${title || dateLabel}`}
     >
       <LinearGradient
-        colors={[accent + '22', 'transparent']}
-        style={[styles.card, { borderColor: accent + '35' }]}
+        colors={[accent + '14', 'rgba(10,10,12,0.9)']}
+        style={[styles.card, { borderColor: 'rgba(255,255,255,0.08)' }]}
       >
         {/* Header row */}
         <View style={styles.headerRow}>
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    padding: 24,
+    padding: 28,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',

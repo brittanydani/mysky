@@ -64,9 +64,9 @@ const { width } = Dimensions.get('window');
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#C9AE78',
+  silverBlue: '#8EB8D4',
   copper: '#CD7F5D',
-  emerald: '#C9AE78',
+  emerald: '#8CBEAA',
   rose: '#D4A3B3',
   bg: '#0A0A0C',
   textMain: '#FFFFFF',
@@ -436,12 +436,12 @@ export default function HomeScreen() {
           {/* ── Daily Balance Score ── */}
           <SectionHeader title="Daily Balance" icon="pulse-outline" />
           <Animated.View entering={FadeInDown.delay(400).duration(600)}>
-            <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.scoreCard}>
+            <LinearGradient colors={['rgba(142, 184, 212, 0.10)', 'rgba(10,10,12,0.9)']} style={styles.scoreCard}>
               <View style={styles.scoreHeader}>
                 <Text style={styles.cardLabel}>DAILY BALANCE</Text>
                 <View style={styles.trendBadgeScore}>
-                  <MetallicIcon name="trending-up-outline" size={12} color="#8CBEAA" />
-                  <MetallicText style={styles.trendTextScore} color="#8CBEAA">Score</MetallicText>
+                  <MetallicIcon name="trending-up-outline" size={12} color="#8EB8D4" />
+                  <MetallicText style={styles.trendTextScore} color="#8EB8D4">Score</MetallicText>
                 </View>
               </View>
               {hasDataToday ? (
@@ -451,8 +451,8 @@ export default function HomeScreen() {
                     <Text style={styles.scoreMax}>/ 10</Text>
                   </View>
                   <View style={styles.pillsRow}>
-                    <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#C9AE78" />
-                    <ScorePill label="Mood" val={mood.toFixed(1)} color="#C9AE78" />
+                    <ScorePill label="Sleep" val={`${latestSleep % 1 === 0 ? Math.floor(latestSleep) : latestSleep.toFixed(1)}h`} color="#8EB8D4" />
+                    <ScorePill label="Mood" val={mood.toFixed(1)} color="#8EB8D4" />
                     <ScorePill label="Energy" val={energy.toFixed(1)} color="#D98C8C" />
                   </View>
                 </>

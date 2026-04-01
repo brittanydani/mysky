@@ -23,7 +23,7 @@ import { logger } from '../../utils/logger';
 const DEMO_EMAIL = 'brittanyapps@outlook.com';
 
 // Flag stored in AsyncStorage to prevent re-seeding on subsequent logins
-const SEED_FLAG_KEY = '@mysky:demo_seeded_v7';
+const SEED_FLAG_KEY = '@mysky:demo_seeded_v8';
 // Tracks the last date a daily entry was seeded (YYYY-MM-DD)
 const DAILY_SEED_KEY = '@mysky:demo_last_seeded';
 
@@ -55,7 +55,7 @@ function hashDate(dateStr: string): number {
 // ─── Static seed data ─────────────────────────────────────────────────────────
 
 const CHART_ID = uid();
-const SEED_DAYS = 91; // ~3 months of history
+const SEED_DAYS = 28; // ~1 month of history
 const CHART_CREATED = new Date('2025-12-31T09:00:00.000Z').toISOString();
 
 const MOON_SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
@@ -1083,6 +1083,14 @@ export const DemoSeedService = {
       await DemoSeedService._seedDay(dateStr, d, chartId, idx);
     }
 
+    // Prune entries older than SEED_DAYS to keep the demo data window fixed
+    const cutoff = isoDate(daysBefore(SEED_DAYS));
+    const db = await localDb.getDb();
+    await db.runAsync('DELETE FROM journal_entries WHERE date < ?', [cutoff]);
+    await db.runAsync('DELETE FROM sleep_entries WHERE date < ?', [cutoff]);
+    await db.runAsync('DELETE FROM daily_check_ins WHERE date < ?', [cutoff]);
+    await db.runAsync('DELETE FROM insight_history WHERE date < ?', [cutoff]);
+
     // Cloud top-up
     await DemoSeedService._seedSupabaseDay(missing, chartId);
     await AsyncStorage.setItem(DAILY_SEED_KEY, today);
@@ -1124,7 +1132,7 @@ export const DemoSeedService = {
 
     // Journal
     await localDb.saveJournalEntry({
-      id: uid(), date: dateStr,
+      id: `demo-journal-${dateStr}`, date: dateStr,
       mood: MOODS[idx % MOODS.length],
       moonPhase: SIMPLE_PHASES[idx % SIMPLE_PHASES.length],
       title:   journalTitles[iJ],
@@ -1138,7 +1146,7 @@ export const DemoSeedService = {
 
     // Sleep
     await localDb.saveSleepEntry({
-      id: uid(), chartId, date: dateStr,
+      id: `demo-sleep-${dateStr}`, chartId, date: dateStr,
       durationHours: sleepDurations[idx % sleepDurations.length],
       quality:       sleepQualities[idx % sleepQualities.length],
       dreamText:     dreamTexts[iD],
@@ -1205,7 +1213,7 @@ export const DemoSeedService = {
       const moodOffset = slot === 1 ? (idx % 3 === 0 ? 1 : idx % 3 === 1 ? -1 : 0) : 0;
       const moodScore = Math.max(1, Math.min(10, rawMood + moodOffset));
       await localDb.saveCheckIn({
-        id: uid(), date: dateStr, chartId,
+        id: `demo-checkin-${dateStr}-${slot}`, date: dateStr, chartId,
         timeOfDay:   slot === 0 ? 'morning' : 'evening',
         moodScore,
         energyLevel: ENERGY_LEVELS[(idx + slot * 3) % 3],
@@ -1226,7 +1234,7 @@ export const DemoSeedService = {
 
     // Insight
     await localDb.saveInsight({
-      id: uid(), date: dateStr, chartId,
+      id: `demo-insight-${dateStr}`, date: dateStr, chartId,
       greeting:      insightGreetings[iI],
       loveHeadline:  loveHeadlines[iI],
       loveMessage:   loveMessages[iI],
@@ -1272,6 +1280,13 @@ export const DemoSeedService = {
   },
 
   async _seed(): Promise<void> {
+    // Clear old demo seed entries to prevent duplicates from previous seed versions
+    const db = await localDb.getDb();
+    await db.runAsync("DELETE FROM journal_entries WHERE id LIKE 'demo-%'");
+    await db.runAsync("DELETE FROM sleep_entries WHERE id LIKE 'demo-%'");
+    await db.runAsync("DELETE FROM daily_check_ins WHERE id LIKE 'demo-%'");
+    await db.runAsync("DELETE FROM insight_history WHERE id LIKE 'demo-%'");
+
     // ── Chart ──────────────────────────────────────────────────────────────
     // Use existing chart if the user already went through onboarding,
     // otherwise create the demo chart. This ensures all seeded entries

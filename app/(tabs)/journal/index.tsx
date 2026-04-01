@@ -500,13 +500,11 @@ export default function JournalScreen() {
                     color={accentColor}
                     style={{ marginRight: 8 }}
                   />
-                  <MetallicText color={accentColor} style={styles.insightTitle}>{insight.title}</MetallicText>
+                  <View style={{ flex: 1, flexShrink: 1, overflow: 'hidden' }}>
+                    <MetallicText color={accentColor} style={styles.insightTitle}>{insight.title}</MetallicText>
+                  </View>
                   <View style={[styles.confidenceBadge, insight.confidence === 'strong' && styles.confidenceStrong, insight.confidence === 'suggested' && styles.confidenceSuggested]}>
-                    {insight.confidence === 'suggested' ? (
-                      <GoldSubtitle style={styles.confidenceText}>{insight.confidence.toUpperCase()}</GoldSubtitle>
-                    ) : (
-                      <Text style={styles.confidenceText}>{insight.confidence.toUpperCase()}</Text>
-                    )}
+                    <Text style={[styles.confidenceText, insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
                   </View>
                 </View>
                 <Text style={styles.insightDescription}>{insight.description}</Text>
@@ -968,7 +966,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   insightHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  insightTitle: { fontSize: 14, fontWeight: '700', color: PALETTE.gold, flex: 1, flexShrink: 1, letterSpacing: 1.5, textTransform: 'uppercase' },
+  insightTitle: { fontSize: 14, fontWeight: '700', color: PALETTE.gold, letterSpacing: 1.5, textTransform: 'uppercase' },
   confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'transparent', marginLeft: 8, flexShrink: 0, overflow: 'visible' },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
   confidenceSuggested: { backgroundColor: 'transparent' },
@@ -1028,7 +1026,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 22, color: PALETTE.textMain, marginBottom: 8, fontWeight: '700' },
   emptyDescription: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 26 },
 
-  entryCard: { borderRadius: 24, backgroundColor: 'rgba(212,184,114,0.03)', borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 16 },
+  entryCard: { borderRadius: 24, backgroundColor: 'rgba(212,184,114,0.10)', borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 16 },
   entryGradient: { padding: 28 },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   entryDate: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },

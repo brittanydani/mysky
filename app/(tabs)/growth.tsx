@@ -97,7 +97,7 @@ function buildWeeklyChangeCard(deepBundle: null, snapshot: SnapshotData): LoopCa
       label: 'WHAT CHANGED THIS WEEK',
       title: 'Your pattern baseline is forming',
       body: `You have ${snapshot.checkInCount} check-ins in the last 30 days and an average mood of ${snapshot.avgMood.toFixed(1)}/10. Keep logging for a fuller weekly change signal.`,
-      accent: PALETTE.silverBlue,
+      accent: '#FFFFFF',
     };
   }
 
