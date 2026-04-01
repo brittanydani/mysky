@@ -78,7 +78,7 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamC
       accessibilityLabel={`Dream entry for ${formatDate(entry.date)}`}
     >
       <LinearGradient
-        colors={['rgba(139,196,232,0.18)', 'transparent']}
+        colors={['rgba(201,174,120,0.18)', 'transparent']}
         style={styles.dreamCard}
       >
         <View style={styles.dreamCardHeader}>
@@ -86,13 +86,13 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamC
             <Text style={styles.dreamCardDate}>{formatDate(entry.date)}</Text>
             {(moons || durationText) && (
               <View style={styles.dreamMeta}>
-                {moons && <MetallicText color="#8BC4E8" style={styles.dreamMoons}>{moons}</MetallicText>}
-                {qualityLabel && <MetallicText color="#8BC4E8" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
+                {moons && <MetallicText color="#C9AE78" style={styles.dreamMoons}>{moons}</MetallicText>}
+                {qualityLabel && <MetallicText color="#C9AE78" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
                 {durationText && <Text style={styles.dreamDuration}> · {durationText}</Text>}
               </View>
             )}
           </View>
-          <MetallicIcon name="moon-outline" size={16} color="#8BC4E8" />
+          <MetallicIcon name="moon-outline" size={16} color="#C9AE78" />
         </View>
         {hasDream ? (
           <Text style={styles.dreamExcerpt} numberOfLines={3}>{entry.dreamText}</Text>
@@ -488,8 +488,8 @@ export default function JournalScreen() {
             const isTransit = insight.type === 'transit_correlation';
             const accentColor = isTransit ? '#A89BC8' : '#C9AE78';
             const gradientColors: [string, string] = isTransit
-              ? ['rgba(168,155,200,0.18)', 'transparent']
-              : ['rgba(201,174,120,0.18)', 'transparent'];
+              ? ['rgba(168,155,200,0.18)', 'rgba(10,10,12,0.9)']
+              : ['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)'];
 
             return (
               <LinearGradient key={`${insight.title}-${idx}`} colors={gradientColors} style={styles.insightCard}>
@@ -500,15 +500,19 @@ export default function JournalScreen() {
                     color={accentColor}
                     style={{ marginRight: 8 }}
                   />
-                  <Text style={[styles.insightTitle, { color: accentColor }]}>{insight.title}</Text>
+                  <MetallicText color={accentColor} style={styles.insightTitle}>{insight.title}</MetallicText>
                   <View style={[styles.confidenceBadge, insight.confidence === 'strong' && styles.confidenceStrong, insight.confidence === 'suggested' && styles.confidenceSuggested]}>
-                    <Text style={styles.confidenceText}>{insight.confidence}</Text>
+                    {insight.confidence === 'suggested' ? (
+                      <GoldSubtitle style={styles.confidenceText}>{insight.confidence.toUpperCase()}</GoldSubtitle>
+                    ) : (
+                      <Text style={styles.confidenceText}>{insight.confidence.toUpperCase()}</Text>
+                    )}
                   </View>
                 </View>
                 <Text style={styles.insightDescription}>{insight.description}</Text>
                 {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
                 {!!insight.actionable && (
-                  <Text style={[styles.insightActionable, { color: accentColor }]}>{insight.actionable}</Text>
+                  <Text style={[styles.insightActionable, { color: 'rgba(255,255,255,0.85)' }]}>{insight.actionable}</Text>
                 )}
               </LinearGradient>
             );
@@ -519,10 +523,10 @@ export default function JournalScreen() {
       {activeTab === 'reflections' && !isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-            <LinearGradient colors={['rgba(201,174,120,0.18)', 'transparent']} style={styles.insightCard}>
+            <LinearGradient colors={['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
               <View style={styles.insightHeader}>
                 <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
-                <Text style={styles.insightTitle}>Pattern Insights</Text>
+                <MetallicText color="#C9AE78" style={styles.insightTitle}>Pattern Insights</MetallicText>
                 <View style={[styles.premiumBadge, { marginLeft: 'auto' }]}>
                   <MetallicIcon name="sparkles-outline" size={10} color={PALETTE.gold} />
                   <Text style={styles.premiumBadgeText}>Deeper Sky</Text>
@@ -602,7 +606,7 @@ export default function JournalScreen() {
       if (sleepEntries.length > 0 && filteredSleepEntries.length === 0) {
         return (
           <View style={styles.emptyContainer}>
-            <LinearGradient colors={['rgba(139,196,232,0.07)', 'transparent']} style={styles.emptyCard}>
+            <LinearGradient colors={['rgba(201,174,120,0.07)', 'transparent']} style={styles.emptyCard}>
               <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
               <Text style={styles.emptyTitle}>No dreams found</Text>
               <Text style={styles.emptyDescription}>
@@ -616,7 +620,7 @@ export default function JournalScreen() {
       }
       return (
         <View style={styles.emptyContainer}>
-          <LinearGradient colors={['rgba(139,196,232,0.07)', 'transparent']} style={styles.emptyCard}>
+          <LinearGradient colors={['rgba(201,174,120,0.07)', 'transparent']} style={styles.emptyCard}>
             <Ionicons name="moon-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No dreams logged yet</Text>
             <Text style={styles.emptyDescription}>
@@ -747,7 +751,7 @@ export default function JournalScreen() {
           <FlatList
             data={[]}
             renderItem={null}
-            contentContainerStyle={{ paddingBottom: 120 }}
+            contentContainerStyle={{ paddingBottom: 140 }}
             ListHeaderComponent={
               <PremiumRequiredScreen
                 feature="Check-In Trends"
@@ -811,8 +815,8 @@ export default function JournalScreen() {
 function SectionHeader({ title, icon }: { title: string; icon: string }) {
   return (
     <View style={sectionHeaderStyles.container}>
-      <MetallicIcon name={icon as any} size={18} color={PALETTE.gold} />
-      <Text style={sectionHeaderStyles.title}>{title}</Text>
+      <MetallicIcon name={icon as any} size={18} variant="gold" />
+      <MetallicText style={sectionHeaderStyles.title} variant="gold">{title}</MetallicText>
     </View>
   );
 }
@@ -826,9 +830,10 @@ const sectionHeaderStyles = StyleSheet.create({
     marginTop: 8,
   },
   title: {
-    color: PALETTE.textMain,
-    fontSize: 19,
+    fontSize: 14,
     fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
 });
 
@@ -953,23 +958,23 @@ const styles = StyleSheet.create({
 
   insightsSection: { marginBottom: 32 },
   insightsTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 6, fontWeight: '700' },
-  insightsSubtitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 20, lineHeight: 20 },
+  insightsSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20, lineHeight: 20 },
 
   insightCard: {
     padding: 28,
     borderRadius: 24,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    marginBottom: 16,
+    marginBottom: 32,
   },
   insightHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  insightTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary, flex: 1 },
-  confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'transparent', marginLeft: 12 },
+  insightTitle: { fontSize: 14, fontWeight: '700', color: PALETTE.gold, flex: 1, flexShrink: 1, letterSpacing: 1.5, textTransform: 'uppercase' },
+  confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'transparent', marginLeft: 8, flexShrink: 0, overflow: 'visible' },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
   confidenceSuggested: { backgroundColor: 'transparent' },
-  confidenceText: { fontSize: 10, color: theme.textPrimary, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 0.8 },
-  insightDescription: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, marginBottom: 12 },
-  insightEvidence: { fontSize: 14, color: theme.textMuted, lineHeight: 22, marginBottom: 8 },
+  confidenceText: { fontSize: 10, textTransform: 'uppercase', fontWeight: '800', letterSpacing: 1.2 },
+  insightDescription: { fontSize: 16, color: 'rgba(255,255,255,0.7)', lineHeight: 24, marginBottom: 12 },
+  insightEvidence: { fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 22, marginBottom: 8 },
   insightActionable: { fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 22 },
 
   filterSection: {
@@ -1116,12 +1121,12 @@ const styles = StyleSheet.create({
   },
   dreamMoons: {
     fontSize: 14,
-    color: '#8BC4E8',
+    color: '#C9AE78',
     letterSpacing: 1,
   },
   dreamQualityLabel: {
     fontSize: 12,
-    color: 'rgba(139,196,232,0.7)',
+    color: 'rgba(201,174,120,0.7)',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     fontWeight: '600',

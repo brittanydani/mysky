@@ -39,7 +39,7 @@ const BAR_GAP = 3;
 function barColors(quality: number): [string, string] {
   if (quality <= 2) return ['rgba(60, 50, 120, 0.6)', 'rgba(40, 35, 90, 0.15)'];
   if (quality <= 3) return ['rgba(120, 80, 180, 0.6)', 'rgba(80, 60, 140, 0.15)'];
-  return ['rgba(139, 196, 232, 0.7)', 'rgba(100, 160, 210, 0.15)'];
+  return ['rgba(201, 174, 120, 0.7)', 'rgba(100, 160, 210, 0.15)'];
 }
 
 function moodGlow(moodScore: number): number {
@@ -173,7 +173,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
       {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: 'rgba(139, 196, 232, 0.7)' }]} />
+          <View style={[styles.legendDot, { backgroundColor: 'rgba(201, 174, 120, 0.7)' }]} />
           <Text style={styles.legendText}>Restorative</Text>
         </View>
         <View style={styles.legendItem}>

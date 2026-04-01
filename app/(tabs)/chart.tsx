@@ -824,7 +824,7 @@ export default function ChartScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 32 }]}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 140 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* ── Header ── */}
@@ -1343,7 +1343,7 @@ export default function ChartScreen() {
                         </Text>
                         {retro && (
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                            <Ionicons name="arrow-undo-outline" size={10} color="#8BC4E8" />
+                            <Ionicons name="arrow-undo-outline" size={10} color="#C9AE78" />
                             <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
                           </View>
                         )}
@@ -1397,7 +1397,7 @@ export default function ChartScreen() {
                           <Text style={styles.planetName}>{pt.label}</Text>
                           {pt.retrograde && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-                              <Ionicons name="arrow-undo-outline" size={10} color="#8BC4E8" />
+                              <Ionicons name="arrow-undo-outline" size={10} color="#C9AE78" />
                               <MetallicText style={styles.retroLabel} color="#E8D6AE">Retrograde</MetallicText>
                             </View>
                           )}
@@ -1684,7 +1684,7 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.chartRuler && (
                 <LinearGradient colors={['rgba(232, 214, 174,0.15)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="ribbon-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="ribbon-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Chart Ruler</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1692,7 +1692,7 @@ export default function ChartScreen() {
                       <GradientSymbol symbol={chartPatterns.chartRuler.planetSymbol} fontSize={15} w={18} h={17} />
                       <MetallicText style={styles.patternHighlightText} color="#CFAE73"> {chartPatterns.chartRuler.planet} in </MetallicText>
                       <GradientSymbol symbol={chartPatterns.chartRuler.rulerSignSymbol} fontSize={15} w={18} h={17} />
-                      <MetallicText style={styles.patternHighlightText} color="#8BC4E8"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
+                      <MetallicText style={styles.patternHighlightText} color="#C9AE78"> {chartPatterns.chartRuler.rulerSign} · House {chartPatterns.chartRuler.rulerHouse}</MetallicText>
                     </View>
                   </View>
                   <Text style={styles.patternDesc}>{chartPatterns.chartRuler.description}</Text>
@@ -1734,7 +1734,7 @@ export default function ChartScreen() {
               {isPremium && dominantPlacement && chartPatterns && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="star-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="star-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Dominant Planet</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1784,7 +1784,7 @@ export default function ChartScreen() {
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
-                      <Ionicons name="flash-outline" size={16} color="#8BC4E8" style={styles.patternIcon} />
+                      <Ionicons name="flash-outline" size={16} color="#C9AE78" style={styles.patternIcon} />
                       <Text style={styles.patternTitle}>{stellium.cardTitle}</Text>
                     </View>
                     <View style={styles.patternHighlight}>
@@ -1826,7 +1826,7 @@ export default function ChartScreen() {
                     style={styles.patternCard}
                   >
                     <View style={styles.patternHeader}>
-                      <Ionicons name="link-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                      <Ionicons name="link-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                       <Text style={styles.patternTitle}>Conjunction Cluster</Text>
                     </View>
                     <View style={styles.patternHighlight}>
@@ -1844,7 +1844,7 @@ export default function ChartScreen() {
               {isPremium && chartPatterns.retrogradeEmphasis.count >= 3 && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="arrow-undo-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="arrow-undo-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Retrograde Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -1860,7 +1860,7 @@ export default function ChartScreen() {
               {chartPatterns.elementBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="flame-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="flame-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Element Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }]}>
@@ -1899,7 +1899,7 @@ export default function ChartScreen() {
               {chartPatterns.modalityBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="options-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="options-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Modality Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 16, justifyContent: 'center' }]}>
@@ -1931,7 +1931,7 @@ export default function ChartScreen() {
               {chartPatterns.polarityBalance && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="git-compare-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="git-compare-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Polarity Balance</Text>
                   </View>
                   <View style={[styles.patternHighlight, { flexDirection: 'row', gap: 24, justifyContent: 'center' }]}>
@@ -1990,7 +1990,7 @@ export default function ChartScreen() {
               {isPremium && extendedPatterns?.hemisphereEmphasis && extendedPatterns.hemisphereEmphasis.dominant !== 'Balanced' && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="contrast-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="contrast-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Hemisphere Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -2011,7 +2011,7 @@ export default function ChartScreen() {
               {isPremium && extendedPatterns?.houseEmphasis && (
                 <LinearGradient colors={['rgba(14, 24, 48,0.8)', 'rgba(10, 18, 36,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="home-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="home-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>House Emphasis</Text>
                   </View>
                   <View style={styles.patternHighlight}>
@@ -2202,7 +2202,7 @@ export default function ChartScreen() {
               >
                 <LinearGradient colors={['rgba(232, 214, 174,0.12)', 'rgba(14, 24, 48,0.7)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="ellipse-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="ellipse-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Chart Shape: {chartShape.shape}</Text>
                   </View>
                   {chartShape.handlePlanet && (
@@ -2345,7 +2345,7 @@ export default function ChartScreen() {
               >
                 <LinearGradient colors={['rgba(232, 214, 174,0.10)', 'rgba(14, 24, 48,0.6)']} style={styles.patternCard}>
                   <View style={styles.patternHeader}>
-                    <Ionicons name="git-network-outline" size={20} color="#8BC4E8" style={styles.patternIcon} />
+                    <Ionicons name="git-network-outline" size={20} color="#C9AE78" style={styles.patternIcon} />
                     <Text style={styles.patternTitle}>Rulership & Dispositors</Text>
                   </View>
                   {dispositorChain.finalDispositor && (
@@ -2770,13 +2770,13 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 10,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 28,
     backgroundColor: 'transparent',
   },
   goHomeText: { color: '#CFAE73', fontWeight: '700' },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: theme.spacing.lg, alignItems: 'center' },
+  scrollContent: { paddingHorizontal: 24, alignItems: 'center' },
 
   header: {
     alignItems: 'flex-start',
@@ -2933,7 +2933,7 @@ const styles = StyleSheet.create({
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: theme.borderRadius.md },
   tabBtnActive: { backgroundColor: 'transparent' },
   tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  tabTextActive: { color: '#8BC4E8' },
+  tabTextActive: { color: '#C9AE78' },
 
   tableHeader: {
     flexDirection: 'row',
@@ -2955,7 +2955,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 10,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 24,
     marginBottom: 8,
     width: '100%',
     borderWidth: 1,
@@ -3165,7 +3165,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: theme.spacing.xl,
   },
-  overlayUpsellText: { flex: 1, color: '#8BC4E8', fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  overlayUpsellText: { flex: 1, color: '#C9AE78', fontSize: 13, lineHeight: 18, textAlign: 'center' },
 
   // ── Chart Settings card ──
   chartSettingsCard: { borderRadius: theme.borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder, marginBottom: theme.spacing.md },

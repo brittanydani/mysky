@@ -14,7 +14,7 @@ export const METALLIC_GOLD = ['#FFF4D6', '#E9D9B8', '#C9AE78', '#E9D9B8', '#FFF4
 export const METALLIC_PURPLE = ['#E8D5F5', '#C9A8E0', '#9D76C1', '#C9A8E0', '#E8D5F5'] as const;
 
 /** Silver-blue metallic. */
-export const METALLIC_BLUE = ['#D6EEFF', '#B0D8F0', '#8BC4E8', '#B0D8F0', '#D6EEFF'] as const;
+export const METALLIC_BLUE = ['#D6EEFF', '#B0D8F0', '#C9AE78', '#B0D8F0', '#D6EEFF'] as const;
 
 /** Emerald-green metallic. */
 export const METALLIC_GREEN = ['#D6F5E3', '#A8E0BD', '#6EBF8B', '#A8E0BD', '#D6F5E3'] as const;
@@ -94,7 +94,7 @@ export type MetallicVariant =
 export const METALLIC_VARIANTS: Record<MetallicVariant, readonly string[]> = {
   gold: METALLIC_GOLD,
   purple: METALLIC_PURPLE,
-  blue: METALLIC_BLUE,
+  blue: METALLIC_GOLD,
   green: METALLIC_GREEN,
   copper: METALLIC_COPPER,
   rose: METALLIC_ROSE,
@@ -125,18 +125,17 @@ export const METALLIC_VARIANTS: Record<MetallicVariant, readonly string[]> = {
  */
 export function metallicForHex(hex: string): readonly string[] {
   const map: Record<string, readonly string[]> = {
-    '#C9AE78': METALLIC_BLUE,
-    '#DDBA6A': METALLIC_BLUE,
-    '#D4AF37': METALLIC_BLUE,
-    '#E8C97A': METALLIC_BLUE,
-    '#E3CFA4': METALLIC_BLUE,
-    '#D9BF8C': METALLIC_BLUE,
-    '#D4B872': METALLIC_BLUE,
-    '#E8D6AE': METALLIC_BLUE,
+    '#C9AE78': METALLIC_GOLD,
+    '#DDBA6A': METALLIC_GOLD,
+    '#D4AF37': METALLIC_GOLD,
+    '#E8C97A': METALLIC_GOLD,
+    '#E3CFA4': METALLIC_GOLD,
+    '#D9BF8C': METALLIC_GOLD,
+    '#D4B872': METALLIC_GOLD,
+    '#E8D6AE': METALLIC_GOLD,
     '#9D76C1': METALLIC_PURPLE,
     '#A89BC8': METALLIC_LAVENDER,
     '#4A3B6B': METALLIC_PURPLE,
-    '#8BC4E8': METALLIC_BLUE,
     '#6EBF8B': METALLIC_GREEN,
     '#CD7F5D': METALLIC_COPPER,
     '#D4A3B3': METALLIC_ROSE,
@@ -149,14 +148,14 @@ export function metallicForHex(hex: string): readonly string[] {
     '#9B7AE0': METALLIC_DEEP_PURPLE,
     '#D0C8E8': METALLIC_CROWN,
     '#D8C39A': METALLIC_TAN,
-    '#CFAE73': METALLIC_BLUE,
-    '#C3CAD6': METALLIC_BLUE,
-    '#F0C87E': METALLIC_BLUE,
-    '#E2C27A': METALLIC_BLUE,
-    '#6E8CB4': METALLIC_BLUE,
+    '#CFAE73': METALLIC_GOLD,
+    '#C3CAD6': METALLIC_GOLD,
+    '#F0C87E': METALLIC_GOLD,
+    '#E2C27A': METALLIC_GOLD,
+    '#6E8CB4': METALLIC_GOLD,
     '#8CBEAA': METALLIC_GREEN,
     '#D4826A': METALLIC_COPPER,
-    '#6BAED6': METALLIC_BLUE,
+    '#6BAED6': METALLIC_GOLD,
     '#C8A4A4': METALLIC_ROSE,
     '#FF7A5C': METALLIC_RED,
     '#9ACD32': METALLIC_GREEN,

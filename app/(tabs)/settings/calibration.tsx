@@ -58,7 +58,7 @@ const SPECTRUM_COLORS = [
   '#C97BBF', // Orchid
   '#4A3B6B', // Indigo
   '#5B8FD4', // Cobalt
-  '#8BC4E8', // Azure
+  '#C9AE78', // Azure
   '#6EBF8B', // Emerald
   '#A4C97B', // Sage
   '#E8D38B', // Champagne
@@ -160,7 +160,7 @@ function getCalibrationProfile(
     color = '#5B8FD4';
   } else if (hue < 0.70) {
     label = 'Azure';
-    color = '#8BC4E8';
+    color = '#C9AE78';
   } else if (hue < 0.80) {
     label = 'Emerald';
     color = '#6EBF8B';
@@ -588,7 +588,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 60,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 140,
   },
   backBtn: {
     marginBottom: 8,
@@ -747,7 +749,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 20,
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: 28,
     backgroundColor: '#FFFFFF',
   },
   saveButtonDisabled: {

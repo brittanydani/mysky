@@ -14,7 +14,7 @@ import { useDerivedValue, SharedValue } from 'react-native-reanimated';
 // ── Chakra jewel-tone palette (source of truth for the wheel) ──
 export const CHAKRA_COLORS: Record<string, { core: string; glow: string; deep: string }> = {
   Crown:          { core: '#9D76C1', glow: '#D4A3B3', deep: '#4A3559' }, // Amethyst
-  'Third Eye':    { core: '#6A7391', glow: '#8BC4E8', deep: '#2C365E' }, // Indigo/Silver
+  'Third Eye':    { core: '#6A7391', glow: '#C9AE78', deep: '#2C365E' }, // Indigo/Silver
   Throat:         { core: '#5C89A6', glow: '#BEE0F5', deep: '#26466D' }, // Sapphire
   Heart:          { core: '#6EBF8B', glow: '#A8E6B6', deep: '#2A5C3D' }, // Emerald
   'Solar Plexus': { core: '#C9AE78', glow: '#FFF4D6', deep: '#6B532E' }, // Champagne Gold

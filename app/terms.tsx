@@ -11,6 +11,7 @@ import { theme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -28,6 +29,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
   return (
     <View style={styles.container}>
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
         <View style={styles.headerBar}>
@@ -295,19 +297,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   glassCard: {
-    borderRadius: 20,
-    padding: 20,
-    backgroundColor: 'transparent',
+    borderRadius: 24,
+    padding: 28,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
+    borderColor: 'rgba(255,255,255,0.08)',
     marginVertical: 16,
   },
   disclaimerCard: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    padding: 28,
     borderWidth: 1,
     borderColor: 'rgba(205,127,93,0.20)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
     marginVertical: 16,
   },
   disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },

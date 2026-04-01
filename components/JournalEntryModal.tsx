@@ -57,7 +57,7 @@ import { MetallicIcon } from './ui/MetallicIcon';
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   amethyst: '#9D76C1',
   jade: '#6BBFA3',
   textMain: '#F0EAD6',
@@ -78,7 +78,7 @@ type EnergyKey = 'low' | 'steady' | 'high';
 
 const MOOD_OPTIONS: { key: MoodKey; label: string; color: string }[] = [
   { key: 'calm',   label: 'Calm',   color: '#6EBF8B' },
-  { key: 'soft',   label: 'Soft',   color: '#8BC4E8' },
+  { key: 'soft',   label: 'Soft',   color: '#C9AE78' },
   { key: 'okay',   label: 'Okay',   color: '#C9AE78' },
   { key: 'heavy',  label: 'Heavy',  color: '#A89BC8' },
   { key: 'stormy', label: 'Stormy', color: '#E07A7A' },
@@ -581,7 +581,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     {(
                       [
                         { key: 'calm',   label: '☽ Calm',   color: '#6EBF8B' },
-                        { key: 'soft',   label: '◌ Soft',   color: '#8BC4E8' },
+                        { key: 'soft',   label: '◌ Soft',   color: '#C9AE78' },
                         { key: 'okay',   label: '◈ Okay',   color: '#C9AE78' },
                         { key: 'heavy',  label: '◎ Heavy',  color: 'rgba(201,174,120,0.55)' },
                         { key: 'stormy', label: '◉ Stormy', color: '#E07A7A' },
@@ -613,7 +613,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Date Selection */}
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
                   <SectionHeader title="Timeline" icon="calendar-outline" />
-                  <LinearGradient colors={['rgba(139,196,232,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                  <LinearGradient colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
                     <Pressable style={styles.cardRow} onPress={() => setShowDatePicker(true)}>
                       <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                       <Text style={styles.cardRowText}>{formatDate(date)}</Text>
@@ -802,6 +802,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   themeVariant="dark"
+                  textColor="#FFFFFF"
                   onChange={(_e, d) => { setShowDatePicker(false); if(d) setDate(d); }}
                 />
               )}
@@ -1053,7 +1054,7 @@ const styles = StyleSheet.create({
   sectionHeaderTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
 
-  sectionCard: { borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)' },
+  sectionCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardRowText: { flex: 1, color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
   cardTextInput: { color: PALETTE.textMain, fontSize: 17, paddingVertical: 0, minHeight: 24 },

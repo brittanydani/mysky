@@ -45,7 +45,7 @@ const TONE_COLOR: Record<DreamTone, string> = {
   fear:       '#E07A7A',  // METALLIC_RED core
   longing:    '#9D76C1',  // METALLIC_PURPLE core
   adventure:  '#7AA8E0',  // METALLIC_DEEP_BLUE core
-  loss:       '#8BC4E8',  // METALLIC_BLUE core
+  loss:       '#C9AE78',  // METALLIC_GOLD core
   connection: '#6EBF8B',  // METALLIC_GREEN core
   mystery:    '#9B7AE0',  // METALLIC_DEEP_PURPLE core
   neutral:    '#A89BC8',  // METALLIC_LAVENDER core

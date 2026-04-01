@@ -88,7 +88,7 @@ export const MYSTIC = {
   success: '#6EBF8B',
   error: '#E07A7A',
   love: '#E07A98',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   amethyst: '#9D76C1',
   gold: '#D4AF37',
@@ -243,7 +243,7 @@ export const theme = {
   archetypes: {
     shadow: { main: MYSTIC.amethyst, glow: 'rgba(157, 118, 193, 0.15)' },
     self: { main: MYSTIC.subtitleGold, glow: 'rgba(232, 214, 174, 0.15)' },
-    threshold: { main: MYSTIC.silverBlue, glow: 'rgba(139, 196, 232, 0.15)' },
+    threshold: { main: MYSTIC.silverBlue, glow: 'rgba(201, 174, 120, 0.15)' },
     transform: { main: MYSTIC.copper, glow: 'rgba(205, 127, 93, 0.15)' },
   },
 

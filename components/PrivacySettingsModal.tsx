@@ -22,7 +22,7 @@ import { localDb } from '../services/storage/localDb';
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -223,7 +223,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                 {hasData ? (
                   <View style={styles.actionGrid}>
                     <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading}>
-                      <LinearGradient colors={['rgba(139, 196, 232, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
+                      <LinearGradient colors={['rgba(201, 174, 120, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
                         <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Export Archive</Text>
                         <Text style={styles.actionSub}>Create a readable backup of all entries.</Text>
@@ -279,30 +279,30 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 20, color: "#FFFFFF", fontWeight: '700' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
+  headerTitle: { fontSize: 34, color: "#FFFFFF", fontWeight: '800', letterSpacing: -0.5 },
   closeBtn: { padding: 4 },
   
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 60 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   content: { gap: 32 },
 
   section: { gap: 12 },
   sectionLabel: { fontSize: 11, fontWeight: '800', color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 2, paddingLeft: 4 },
   
-  glassCard: { borderRadius: 20, paddingHorizontal: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, borderTopColor: PALETTE.glassHighlight },
+  glassCard: { borderRadius: 24, paddingHorizontal: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
   rowLead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   statusLabel: { fontSize: 14, color: "#FFFFFF", fontWeight: '500' },
   statusVal: { fontSize: 14, fontWeight: '700' },
 
   actionGrid: { gap: 12 },
-  actionCard: { borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  actionGradient: { padding: 20, gap: 8 },
+  actionCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  actionGradient: { padding: 28, gap: 8 },
   actionTitle: { fontSize: 16, fontWeight: '700' },
   actionSub: { fontSize: 13, color: "#FFFFFF", lineHeight: 18 },
 
-  emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 20, backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
   emptyText: { color: "#FFFFFF", fontSize: 14,  },
 
   rightsContainer: { gap: 12, paddingLeft: 4 },

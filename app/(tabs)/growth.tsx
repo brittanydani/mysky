@@ -42,11 +42,11 @@ import { DailyAggregate, ChartProfile } from '../../services/insights/types';
 import { loadReflections } from '../../services/insights/dailyReflectionService';
 
 const SCREEN_W = Dimensions.get('window').width;
-const ORBIT_SIZE = Math.min(SCREEN_W - 24, 380);
+const ORBIT_SIZE = SCREEN_W - 48;
 
 const PALETTE = {
   gold: '#D4B872',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   connection: '#9D76C1',
@@ -354,20 +354,35 @@ export default function PatternsScreen() {
 
           {/* ── Visualization — Cosmic Pattern Orbit ── */}
           <View style={styles.visualSection}>
-            {loading ? (
-              <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center' }}>
-                <ActivityIndicator size="large" color={PALETTE.gold} />
+            <View style={styles.orbitCard}>
+              {/* Clipped background fills only the card bounds */}
+              <View style={[StyleSheet.absoluteFill, styles.orbitCardBg]} pointerEvents="none">
+                <LinearGradient
+                  colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.90)']}
+                  style={StyleSheet.absoluteFill}
+                />
               </View>
-            ) : trendCheckIns.length >= 2 ? (
-              <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />
-            ) : (
-              <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
-                <MetallicIcon name="planet-outline" size={36} variant="gold" />
-                <Text style={{ color: PALETTE.gold, fontSize: 14, textAlign: 'center', marginTop: 12 }}>
-                  Log a few check-ins to reveal your pattern orbit map.
-                </Text>
+              <View style={styles.orbitCardHeader}>
+                <MetallicIcon name="planet-outline" size={14} variant="gold" />
+                <MetallicText color={PALETTE.gold} style={styles.orbitCardEyebrow}>PATTERN ORBIT MAP</MetallicText>
               </View>
-            )}
+              {loading ? (
+                <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center' }}>
+                  <ActivityIndicator size="large" color={PALETTE.gold} />
+                </View>
+              ) : trendCheckIns.length >= 2 ? (
+                <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />
+              ) : (
+                <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+                  <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, textAlign: 'center', marginTop: 12 }}>
+                    Log a few check-ins to reveal your pattern orbit map.
+                  </Text>
+                </View>
+              )}
+              <View style={styles.orbitCardFooter}>
+                <Text style={styles.orbitCardFooterText}>7 life dimensions · Arc intensity reflects check-in data</Text>
+              </View>
+            </View>
           </View>
 
           {weeklyChangeCard && (
@@ -393,7 +408,7 @@ export default function PatternsScreen() {
               {enhanced.blended.map((card, i) => (
                 <LinearGradient
                   key={i}
-                  colors={['rgba(139, 196, 232, 0.1)', 'rgba(10,10,12,0.9)']}
+                  colors={['rgba(201, 174, 120, 0.1)', 'rgba(10,10,12,0.9)']}
                   style={styles.insightCard}
                 >
                   <Text style={styles.blendedTitle}>{card.title}</Text>
@@ -734,27 +749,33 @@ const styles = StyleSheet.create({
   metricValue: { color: PALETTE.textMain, fontSize: 26, fontWeight: '500', fontVariant: ['tabular-nums'] },
   metricSub: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '500' },
   visualSection: { alignItems: 'center', marginBottom: 40 },
-  section: { marginBottom: 32 },
+  orbitCard: { borderRadius: 24, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', width: '100%', overflow: 'visible' },
+  orbitCardBg: { borderRadius: 24, overflow: 'hidden' },
+  orbitCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 8, paddingHorizontal: 20 },
+  orbitCardEyebrow: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
+  orbitCardFooter: { marginTop: 8, alignSelf: 'center' },
+  orbitCardFooterText: { fontSize: 11, color: 'rgba(255,255,255,0.30)', textAlign: 'center' },
+  section: { marginBottom: 0 },
   sectionHeaderWrap: { marginBottom: 20, marginTop: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sectionHeaderLabel: { fontSize: 19, fontWeight: '700', color: '#FFFFFF' },
+  sectionHeaderLabel: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   sectionHeaderSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4 },
   insightCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 32 },
   insightLabel: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, marginBottom: 12, textTransform: 'uppercase' },
   insightBody: { color: 'rgba(255,255,255,0.7)', fontSize: 16, lineHeight: 24 },
   loopCard: { marginBottom: 32 },
-  loopTitle: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
+  loopTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
 
 
 
   // Blended
-  blendedTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 10 },
+  blendedTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.textMain, marginBottom: 10 },
   journalPromptBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: 'rgba(201,174,120,0.06)', borderWidth: 1, borderColor: 'rgba(201,174,120,0.15)' },
   journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 22 },
   statText: { fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 12, lineHeight: 16 },
 
   // Lift & Drain
-  liftIntro: { fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 22, marginBottom: 16 },
+  liftIntro: { fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 22, marginBottom: 16 },
   liftGroup: {},
   liftLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   liftGroupLabel: { fontSize: 13, fontWeight: '700' },
@@ -812,7 +833,7 @@ const styles = StyleSheet.create({
   crossRefHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   confirmedBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
   confirmedText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  patternTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 8 },
+  patternTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.textMain, marginBottom: 8 },
 
 
 });

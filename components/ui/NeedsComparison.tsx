@@ -17,7 +17,7 @@ interface NeedsComparisonProps {
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
@@ -81,7 +81,7 @@ export default function NeedsComparison({
             </Canvas>
           </View>
           <View style={styles.nameRow}>
-            <View style={[styles.avatar, { backgroundColor: 'rgba(139, 196, 232, 0.15)' }]}>
+            <View style={[styles.avatar, { backgroundColor: 'rgba(201, 174, 120, 0.15)' }]}>
               <MetallicIcon name="person-outline" size={12} color={PALETTE.silverBlue} />
             </View>
             <MetallicText style={styles.name} numberOfLines={1} color={PALETTE.silverBlue}>

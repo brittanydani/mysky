@@ -886,14 +886,14 @@ const styles = StyleSheet.create({
   dateArrow: { padding: 4 },
   dateNavLabel: { fontSize: 15, color: 'rgba(255,255,255,0.75)', fontWeight: '600', letterSpacing: 0.5, minWidth: 90, textAlign: 'center' },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   sectionLabel: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', marginTop: 8, marginBottom: 20 },
 
   trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   trendSectionLabel: { marginTop: 0, marginBottom: 0 },
-  trendValue: { fontSize: 13, color: '#8BC4E8', fontWeight: '700', letterSpacing: 0.3 },
+  trendValue: { fontSize: 13, color: '#C9AE78', fontWeight: '700', letterSpacing: 0.3 },
   trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
   trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' },
 
@@ -916,10 +916,10 @@ const styles = StyleSheet.create({
   customInfluenceInput: {
     marginTop: 14,
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     fontSize: 13,
     color: 'rgba(255,255,255,0.75)',
@@ -932,7 +932,7 @@ const styles = StyleSheet.create({
   tagsSection: { marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201, 174, 120, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
-  premiumBadgeText: { color: '#8BC4E8', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
+  premiumBadgeText: { color: '#C9AE78', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
   lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.5)', marginTop: 12 },
 
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(201,174,120,0.12)',
   },
   slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: '600', letterSpacing: 0.5 },
-  slotLabelDone: { color: '#8BC4E8' },
+  slotLabelDone: { color: '#C9AE78' },
 
   emotionDropdownHeader: {
     marginBottom: 14,

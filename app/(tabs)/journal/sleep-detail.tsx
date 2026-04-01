@@ -410,13 +410,13 @@ const styles = StyleSheet.create({
   },
   qualityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   qualityLabel: {
-    color: '#8BC4E8', fontSize: 12,
+    color: '#C9AE78', fontSize: 12,
     marginLeft: 6,
   },
 
   card: {
-    backgroundColor: 'rgba(139,196,232,0.03)', borderRadius: 24, padding: 28,
-    borderWidth: 1, borderColor: 'rgba(139,196,232,0.12)', marginBottom: 24,
+    backgroundColor: 'rgba(201,174,120,0.03)', borderRadius: 24, padding: 28,
+    borderWidth: 1, borderColor: 'rgba(201,174,120,0.12)', marginBottom: 24,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   label: { fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 2 },
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF', fontSize: 14,
     lineHeight: 22,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(139,196,232,0.2)',
+    borderTopColor: 'rgba(201,174,120,0.2)',
     paddingTop: 16, marginTop: 4,
   },
   rerunBtn: {

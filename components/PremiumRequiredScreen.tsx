@@ -17,7 +17,7 @@ interface PremiumRequiredScreenProps {
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
   glassHighlight: 'rgba(255,255,255,0.12)',
@@ -138,12 +138,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '800',
     color: PALETTE.textMain,
     marginBottom: 12,
     textAlign: 'center',
-    letterSpacing: 0.5,
+    letterSpacing: -0.5,
   },
   description: {
     fontSize: 15,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     borderTopColor: PALETTE.glassHighlight,
   },
   perksGradient: {
-    padding: 20,
+    padding: 28,
   },
   perkRow: {
     flexDirection: 'row',
@@ -174,11 +174,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: 'rgba(139, 196, 232, 0.1)',
+    backgroundColor: 'rgba(201, 174, 120, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(139, 196, 232, 0.15)',
+    borderColor: 'rgba(201, 174, 120, 0.15)',
   },
   perkText: {
     color: PALETTE.textMain,
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     width: '100%',
-    borderRadius: 16,
+    borderRadius: 28,
     overflow: 'hidden',
   },
   ctaGradient: {

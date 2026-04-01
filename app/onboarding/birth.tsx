@@ -116,13 +116,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 20,
   },
   headerText: { 
     color: PALETTE.textMain, 
-    fontSize: 22, 
-    fontWeight: '700', 
-    letterSpacing: 0.5,
+    fontSize: 34, 
+    fontWeight: '800', 
+    letterSpacing: -0.5,
   },
 });

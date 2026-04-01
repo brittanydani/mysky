@@ -47,11 +47,11 @@ interface SkiaSleepGraphProps {
 
 const COLORS = {
   /** High-quality deep rest — radiant silver-blue */
-  deepRest: '#8BC4E8',
+  deepRest: '#C9AE78',
   /** Low-quality / restless — dim indigo */
   restless: '#4A3B6B',
   /** Moonlight aura for background glow */
-  moonlightBright: 'rgba(139, 196, 232, 0.45)',
+  moonlightBright: 'rgba(201, 174, 120, 0.45)',
   moonlightDim: 'rgba(74, 59, 107, 0.20)',
   /** Terminal node inner color */
   moonCore: '#F0EAD6',

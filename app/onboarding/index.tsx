@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
+import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 
 export default function OnboardingIndex() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function OnboardingIndex() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Ethereal Background Glow */}
+      <SkiaDynamicCosmos />
       <LinearGradient
         colors={['rgba(217,191,140,0.1)', 'transparent']}
         style={styles.glow}
@@ -69,10 +71,10 @@ export default function OnboardingIndex() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
-  content: { flex: 1, justifyContent: 'center', paddingHorizontal: 32 },
+  content: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
   title: { fontSize: 34, fontWeight: '800', color: '#FFF', marginBottom: 40, letterSpacing: -0.5 },
-  input: { fontSize: 32, color: '#FFFFFF', borderBottomWidth: 1, borderColor: 'rgba(139,196,232,0.3)', paddingBottom: 16 },
-  footer: { paddingHorizontal: 32, paddingBottom: 60 },
+  input: { fontSize: 24, color: '#FFFFFF', borderBottomWidth: 1, borderColor: 'rgba(201,174,120,0.3)', paddingBottom: 16 },
+  footer: { paddingHorizontal: 24, paddingBottom: 60 },
 
 });
 

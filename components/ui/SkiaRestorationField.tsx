@@ -78,7 +78,7 @@ function paletteForQuality(q: number): RestorationPalette {
   }
   // Deep restoration — radiant silver-blue
   return {
-    core: 'rgba(139, 196, 232, 0.22)',
+    core: 'rgba(201, 174, 120, 0.22)',
     mid: 'rgba(100, 160, 210, 0.14)',
     outer: 'rgba(70, 120, 180, 0.06)',
     fog: 'rgba(120, 180, 220, 0.05)',

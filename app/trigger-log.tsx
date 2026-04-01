@@ -115,6 +115,12 @@ export default function TriggerLogScreen() {
     >
       <SkiaDynamicCosmos />
 
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
+
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <Pressable
@@ -127,6 +133,7 @@ export default function TriggerLogScreen() {
 
         <View style={styles.titleArea}>
           <Text style={styles.headerTitle}>Nervous System Log</Text>
+          <Text style={styles.headerSubtitle}>Polyvagal triggers · drains · glimmers</Text>
         </View>
 
         <ScrollView
@@ -306,14 +313,20 @@ export default function TriggerLogScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
   safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:   { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 32 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
@@ -321,6 +334,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginBottom: 4,
   },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
 
   toggleContainer: {
     flexDirection: 'row',
@@ -336,11 +350,13 @@ const styles = StyleSheet.create({
 
   section: { marginBottom: 32 },
   sectionLabel: {
-    fontSize: 16,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '700',
-    color: '#FFFFFF',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
     marginTop: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   inputSection: { marginBottom: 32 },

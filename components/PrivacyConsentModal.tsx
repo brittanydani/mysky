@@ -15,7 +15,7 @@ import { MetallicText } from './ui/MetallicText';
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   emerald: '#6EBF8B',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -121,7 +121,7 @@ export default function PrivacyConsentModal({
                   </View>
                 </View>
 
-                <View style={[styles.glassSection, { borderColor: 'rgba(139, 196, 232, 0.2)' }]}>
+                <View style={[styles.glassSection, { borderColor: 'rgba(201, 174, 120, 0.2)' }]}>
                   <Text style={styles.sectionLabel}>How We Protect It</Text>
                   <View style={styles.dataRow}>
                     <MetallicIcon name="lock-closed-outline" size={16} color={PALETTE.silverBlue} />
@@ -218,9 +218,9 @@ const styles = StyleSheet.create({
   
   contentContainer: { marginBottom: 28 },
   glassSection: {
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: 'transparent',
+    padding: 20,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     marginBottom: 12,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   dataText: { fontSize: 12, color: "#FFFFFF", flex: 1 },
   
   footerActions: { marginTop: 24, gap: 16 },
-  acceptBtn: { borderRadius: 16, overflow: 'hidden', },
+  acceptBtn: { borderRadius: 28, overflow: 'hidden', },
   btnGradient: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
   acceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },

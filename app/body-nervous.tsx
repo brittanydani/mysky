@@ -146,7 +146,8 @@ const styles = StyleSheet.create({
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,

@@ -29,6 +29,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../ui/MetallicIcon';
+import { GoldSubtitle } from '../ui/GoldSubtitle';
 import { MetallicText } from '../ui/MetallicText';
 import {
   EnergyEngine,
@@ -388,7 +389,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
                       </View>
                       <View style={styles.domainSuggestionRow}>
                         <MetallicIcon name="bulb-outline" size={14} variant="green" />
-                        <Text style={styles.domainSuggestionText}>{d.suggestion}</Text>
+                        <GoldSubtitle style={styles.domainSuggestionText}>{d.suggestion}</GoldSubtitle>
                       </View>
                     </Animated.View>
                   )}
@@ -816,7 +817,6 @@ const styles = StyleSheet.create({
   },
   domainSuggestionText: {
     flex: 1,
-    color: theme.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },

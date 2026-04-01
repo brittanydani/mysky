@@ -764,7 +764,7 @@ tr:last-child td { border-bottom: none; }
 }
 .aspect-group.harmonious { color: #6EBF8B; }
 .aspect-group.challenging { color: #E07A7A; }
-.aspect-group.neutral { color: #8BC4E8; }
+.aspect-group.neutral { color: #C9AE78; }
 .aspect-sym { font-size: 15px; }
 .aspect-name { font-size: 12px; color: rgba(255,255,255,0.5); }
 .empty-note { color: rgba(255,255,255,0.35); font-style: italic; font-size: 13px; }

@@ -18,7 +18,7 @@ import {
 const PALETTE = {
   gold: '#D8C39A',
   goldLight: '#F3E5AB',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',
@@ -31,7 +31,7 @@ const PALETTE = {
 
 const ATMOSPHERE_COLORS = [
   { name: 'Golden Dusk', colors: ['#FFF4D6', '#E9D9B8', '#C9AE78', '#9B7A46', '#6B532E'] },
-  { name: 'Ocean Calm', colors: ['#8BC4E8', '#243B6B', '#1B2A4A'] },
+  { name: 'Ocean Calm', colors: ['#C9AE78', '#243B6B', '#1B2A4A'] },
   { name: 'Forest Deep', colors: ['#6EBF8B', '#2E7A68', '#1A4A3A'] },
   { name: 'Amethyst', colors: ['#9D76C1', '#4A3B6B', '#3D2952'] },
   { name: 'Rose Quartz', colors: ['#D4A3B3', '#3D2940', '#2D1F30'] },

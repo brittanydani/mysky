@@ -33,7 +33,7 @@ const PALETTE = {
   gold: '#D9BF8C',      // Core Values
   lavender: '#A89BC8',  // Archetypes
   rose: '#D4A3B3',      // Relational
-  silverBlue: '#8BC4E8',// Cognitive
+  silverBlue: '#C9AE78',// Cognitive
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.6)',
   glassBorder: 'rgba(255,255,255,0.08)',
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   backText: { fontSize: 14, color: PALETTE.emerald, fontWeight: '600' },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   header: { marginBottom: 32 },
   headerTitle: {
     fontSize: 34,

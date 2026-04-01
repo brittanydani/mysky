@@ -42,17 +42,17 @@ import { DailyCheckIn } from '../../services/patterns/types';
 // ── Metallic core colors (from metallicPalettes.ts) ──────────────────────────
 // Each dimension uses the "core" stop of its metallic gradient.
 
-const CLR_EMOTIONAL  = '#E07A98';  // METALLIC_LOVE core
-const CLR_CREATIVITY = '#C9AE78';  // METALLIC_GOLD core
+const CLR_EMOTIONAL  = '#D4A3B3';  // METALLIC_ROSE core  — matches app-wide rose
+const CLR_CREATIVITY = '#D4B872';  // METALLIC_WARM_GOLD core — matches growth screen gold
 const CLR_CONNECTION = '#9D76C1';  // METALLIC_PURPLE core
 const CLR_STRESS     = '#CD7F5D';  // METALLIC_COPPER core
-const CLR_REST       = '#8BC4E8';  // METALLIC_BLUE core
+const CLR_REST       = '#C9AE78';  // METALLIC_GOLD core
 const CLR_TRUST      = '#6EBF8B';  // METALLIC_GREEN core
 const CLR_CLARITY    = '#A89BC8';  // METALLIC_LAVENDER core
 
 // Metallic "light" tints for glow halos (first stop of each gradient)
-const GLOW_EMOTIONAL  = '#F5D0DA';
-const GLOW_CREATIVITY = '#FFF4D6';
+const GLOW_EMOTIONAL  = '#F5D6E0';  // METALLIC_ROSE light
+const GLOW_CREATIVITY = '#FFF6DC';  // METALLIC_WARM_GOLD light
 const GLOW_CONNECTION = '#E8D5F5';
 const GLOW_STRESS     = '#F5E0D6';
 const GLOW_REST       = '#D6EEFF';
@@ -102,10 +102,11 @@ function withAlpha(hex: string, alpha: number): string {
 function computeDimensionScores(checkIns: DailyCheckIn[]): number[] {
   if (!checkIns.length) return DIMENSIONS.map(() => 0.1);
 
-  const moods = checkIns.map(c => c.moodScore);
+  const n = checkIns.length;
   const energies = checkIns.map(c => levelToNum(c.energyLevel));
   const stresses = checkIns.map(c => levelToNum(c.stressLevel));
-  const allTags = checkIns.flatMap(c => c.tags ?? []);
+  const moods    = checkIns.map(c => c.moodScore);
+  const allTags  = checkIns.flatMap(c => c.tags ?? []);
 
   const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
   const stdDev = (arr: number[]) => {
@@ -115,31 +116,91 @@ function computeDimensionScores(checkIns: DailyCheckIn[]): number[] {
 
   const avgEnergy = avg(energies);
   const avgStress = avg(stresses);
-  const moodStd = stdDev(moods);
-  const hasNotes = checkIns.filter(c => c.note && c.note.length > 10).length;
-  const noteRatio = hasNotes / checkIns.length;
-  const consistency = clamp01(checkIns.length / 20);
+  const moodStd   = stdDev(moods);
 
-  const tagCount = (keys: string[]) => allTags.filter(t => keys.includes(t)).length;
-  const totalTags = Math.max(1, allTags.length);
+  // Journaling signals — the richest self-reflection data
+  const noteRatio       = checkIns.filter(c => c.note       && c.note.length       > 10).length / n;
+  const winsRatio       = checkIns.filter(c => c.wins       && c.wins.length       > 5).length  / n;
+  const challengesRatio = checkIns.filter(c => c.challenges && c.challenges.length > 5).length  / n;
 
-  // Each dimension score: base 0.10 floor so empty dimensions still render faintly
-  return [
-    // Emotional Depth: mood range + journal depth (notes written)
-    clamp01(0.10 + (moodStd / 4) * 0.5 + noteRatio * 0.5),
-    // Creativity: creative/inspired tags + higher energy
-    clamp01(0.10 + (tagCount(['creativity', 'creative']) / totalTags) * 2.5 + (avgEnergy - 1) / 8 * 0.3),
-    // Connection: social/relationship tags
-    clamp01(0.10 + (tagCount(['relationships', 'social', 'intimacy', 'family']) / totalTags) * 2.5),
-    // Stress & Release: inverse of average stress (lower stress = higher score)
-    clamp01(0.10 + (10 - avgStress) / 8 * 0.8),
-    // Rest & Recovery: rest-related tags + low-stress proportion
-    clamp01(0.10 + (tagCount(['sleep', 'rest', 'alone_time', 'nature']) / totalTags) * 2.5 + (10 - avgStress) / 8 * 0.2),
-    // Self-Trust: check-in consistency + journaling regularity
-    clamp01(0.10 + consistency * 0.5 + noteRatio * 0.4),
-    // Clarity & Focus: focus/grounded tags + mood stability (low std dev = clarity)
-    clamp01(0.10 + (tagCount(['eq_focused', 'eq_grounded', 'clarity', 'productivity']) / totalTags) * 2.5 + clamp01(1 - moodStd / 3) * 0.3),
-  ];
+  // Consistency = signal of commitment / self-trust (saturates at 30 check-ins)
+  const consistency = clamp01(n / 30);
+
+  const tc = (keys: string[]) => allTags.filter(t => keys.includes(t)).length;
+  const T  = Math.max(1, allTags.length);
+
+  // ── Emotional Depth ────────────────────────────────────────────────────────
+  // Deep emotional engagement = journaling (notes + wins + challenges) AND
+  // presence of emotional-processing tags. NOT mood volatility.
+  const emotionTags = ['grief', 'anxiety', 'loneliness', 'boundaries', 'joy',
+                       'eq_open', 'eq_heavy', 'eq_anxious', 'eq_hopeful'];
+  const emotionalDepth =
+    clamp01(0.10
+      + noteRatio       * 0.35
+      + winsRatio       * 0.15
+      + challengesRatio * 0.15
+      + (tc(emotionTags) / T) * 3.0 * 0.35);
+
+  // ── Creativity ────────────────────────────────────────────────────────────
+  // Creative tags + open/inspired emotional quality + higher energy
+  const creativeTags = ['creativity', 'creative', 'eq_open'];
+  const creativityScore =
+    clamp01(0.10
+      + (tc(creativeTags) / T) * 3.5 * 0.70
+      + clamp01((avgEnergy - 2) / 7) * 0.30);
+
+  // ── Connection ────────────────────────────────────────────────────────────
+  // Relational tags — straightforward
+  const connectionTags = ['relationships', 'social', 'intimacy', 'family', 'kids'];
+  const connectionScore =
+    clamp01(0.10 + (tc(connectionTags) / T) * 3.0);
+
+  // ── Stress & Release ──────────────────────────────────────────────────────
+  // Measures active stress PROCESSING: stressed days where the user still
+  // journaled = healthy release. Bonus for days with genuinely low stress.
+  const stressedDays      = checkIns.filter(c => levelToNum(c.stressLevel) >= 5).length;
+  const stressWithNote    = checkIns.filter(c => levelToNum(c.stressLevel) >= 5
+                              && c.note && c.note.length > 10).length;
+  const stressProcessing  = stressedDays > 0 ? stressWithNote / stressedDays : 0;
+  const lowStressRatio    = checkIns.filter(c => levelToNum(c.stressLevel) === 2).length / n;
+  const stressReleaseScore =
+    clamp01(0.10
+      + stressProcessing * 0.50
+      + lowStressRatio   * 0.40);
+
+  // ── Rest & Recovery ───────────────────────────────────────────────────────
+  // Rest tags + low-energy days the user consciously honoured with rest tags
+  const restTags = ['sleep', 'rest', 'alone_time', 'nature', 'routine'];
+  const consciousRestDays = checkIns.filter(c =>
+    levelToNum(c.energyLevel) === 2 && (c.tags ?? []).some(t => restTags.includes(t))).length;
+  const restScore =
+    clamp01(0.10
+      + (tc(restTags) / T) * 3.0 * 0.60
+      + (consciousRestDays / n) * 0.40);
+
+  // ── Self-Trust ────────────────────────────────────────────────────────────
+  // Consistency of showing up + confidence/grounded tags + reflective writing
+  const selfTrustTags = ['confidence', 'boundaries', 'gratitude', 'eq_grounded', 'eq_hopeful'];
+  const selfTrustScore =
+    clamp01(0.10
+      + consistency              * 0.40
+      + noteRatio                * 0.25
+      + winsRatio                * 0.10
+      + (tc(selfTrustTags) / T) * 3.0 * 0.25);
+
+  // ── Clarity & Focus ───────────────────────────────────────────────────────
+  // Focus tags + calm high-mood days (clear mind) + mood stability
+  const clarityTags = ['eq_focused', 'eq_grounded', 'clarity', 'productivity'];
+  const calmClearDays = checkIns.filter(c =>
+    c.moodScore >= 7 && levelToNum(c.stressLevel) <= 5).length;
+  const clarityScore =
+    clamp01(0.10
+      + (tc(clarityTags) / T) * 3.0 * 0.50
+      + (calmClearDays / n)         * 0.35
+      + clamp01(1 - moodStd / 5)    * 0.15);
+
+  return [emotionalDepth, creativityScore, connectionScore,
+          stressReleaseScore, restScore, selfTrustScore, clarityScore];
 }
 
 /** Pick top 3 theme words ranked by score */
@@ -179,9 +240,9 @@ export interface PatternOrbitMapProps {
 export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }: PatternOrbitMapProps) {
   const cx = size / 2;
   const cy = size / 2;
-  const orbitR = size * 0.36;       // main orbit radius for dimension nodes
-  const innerR = size * 0.20;       // inner ring for flowing arcs
-  const outerR = size * 0.42;       // outer decorative ring
+  const orbitR = size * 0.34;       // main orbit radius for dimension nodes
+  const innerR = size * 0.18;       // inner ring for flowing arcs
+  const outerR = size * 0.40;       // outer decorative ring
 
   const scores = useMemo(() => computeDimensionScores(checkIns), [checkIns]);
   const themes = useMemo(() => deriveThemes(scores), [scores]);
@@ -289,7 +350,9 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   }
 
   return (
-    <View style={[styles.root, { width: size, height: size }]}>
+    <View style={[styles.root, { width: size }]}>
+      {/* ── Canvas + node symbols in a fixed-size container ── */}
+      <View style={{ width: size, height: size }}>
       {/* ── Skia Canvas ── */}
       <Canvas style={StyleSheet.absoluteFill}>
         {/* Background ambient glow */}
@@ -461,31 +524,31 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
         })()}
       </Canvas>
 
-      {/* ── Dimension icons ── */}
+      {/* ── Dimension symbols only ── */}
       {nodes.map((node, i) => {
-        const labelR = orbitR + 28;
+        const labelR = orbitR + 18;
         const lx = cx + labelR * Math.cos(node.angle);
         const ly = cy + labelR * Math.sin(node.angle);
-
         return (
           <View
             key={`label-${i}`}
-            style={[
-              styles.dimLabel,
-              {
-                left: lx - 20,
-                top: ly - 20,
-                width: 40,
-                height: 40,
-                justifyContent: 'center',
-                alignItems: 'center',
-              },
-            ]}
+            style={[styles.dimLabel, { left: lx - 12, top: ly - 12 }]}
           >
             <Text style={[styles.dimIcon, { color: node.color }]}>{node.icon}</Text>
           </View>
         );
       })}
+      </View>{/* end canvas container */}
+
+      {/* ── Legend ── */}
+      <View style={styles.legend}>
+        {DIMENSIONS.map((dim) => (
+          <View key={dim.key} style={styles.legendItem}>
+            <Text style={[styles.legendIcon, { color: dim.color }]}>{dim.icon}</Text>
+            <Text style={styles.legendLabel}>{dim.label.replace('\n', ' ')}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 });
@@ -510,14 +573,36 @@ const styles = StyleSheet.create({
   dimLabel: {
     position: 'absolute',
     alignItems: 'center',
-    gap: 2,
   },
   dimIcon: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '400',
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 2,
+    paddingBottom: 4,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendIcon: {
+    fontSize: 13,
+  },
+  legendLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 0.4,
   },
 });

@@ -182,7 +182,7 @@ export default function CognitiveStyleScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
       <LinearGradient
-        colors={['rgba(139,196,232,0.08)', 'transparent']}
+        colors={['rgba(201,174,120,0.08)', 'transparent']}
         style={styles.topGlow}
       />
 
@@ -317,13 +317,13 @@ const styles = StyleSheet.create({
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
   instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, marginBottom: 28 },
 
-  synthesisCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(139,196,232,0.25)', padding: 28, marginBottom: 32, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)' },
+  synthesisCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(201,174,120,0.25)', padding: 28, marginBottom: 32, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)' },
   synthesisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 16 },
   synthesisEyebrow: { fontSize: 11, color: PALETTE.silverBlue, fontWeight: '800', letterSpacing: 1.5 },
   synthesisTitle: { fontSize: 26, fontWeight: '700', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start' },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
 
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, gap: 8 },
   scaleBtn: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center', alignItems: 'center' },
-  scaleBtnSelected: { borderColor: 'rgba(139,196,232,0.6)', backgroundColor: 'rgba(139,196,232,0.15)' },
+  scaleBtnSelected: { borderColor: 'rgba(201,174,120,0.6)', backgroundColor: 'rgba(201,174,120,0.15)' },
   scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.3)', fontWeight: '700' },
   scaleBtnTextSelected: { color: PALETTE.silverBlue },
 

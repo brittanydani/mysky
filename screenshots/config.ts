@@ -15,7 +15,7 @@ export const NEBULA_COLORS = {
   gold: '#D8C39A',
   indigo: '#243B6B',
   emerald: '#2E7A68',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#A46B4C',
   rose: '#D4A3B3',
 } as const;

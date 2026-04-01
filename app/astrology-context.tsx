@@ -460,7 +460,7 @@ export default function CosmicContext() {
             </View>
             <Text style={styles.promptText}>{getDailyPrompt()}</Text>
             <View style={styles.actionRow}>
-              <ActionPill label="Log Mood" icon="happy-outline" color="#8BC4E8" onPress={() => router.push('/(tabs)/mood')} />
+              <ActionPill label="Log Mood" icon="happy-outline" color="#C9AE78" onPress={() => router.push('/(tabs)/mood')} />
               <ActionPill label="Journal" icon="create-outline" color="#D4B872" onPress={() => router.push('/(tabs)/journal')} />
             </View>
           </LinearGradient>
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
 
   // ── Hero Moon ─────────────────────────────────────────────────────────────
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   weekInfoPhase: { fontSize: 15, color: '#FFF', fontWeight: '700' },
-  weekInfoSign: { fontSize: 13, color: 'rgba(139,196,232,0.85)', fontWeight: '600' },
+  weekInfoSign: { fontSize: 13, color: 'rgba(201,174,120,0.85)', fontWeight: '600' },
   weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginTop: 2 },
 
   moonTitle: { fontSize: 22, color: '#FFF', fontWeight: '700', marginTop: 20, marginBottom: 4 },
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
 
   // VoC
   vocBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(212,184,114,0.08)', borderWidth: 1, borderColor: 'rgba(212,184,114,0.25)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  vocPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#8BC4E8', marginRight: 8 },
+  vocPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#C9AE78', marginRight: 8 },
   vocText: { fontSize: 10, fontWeight: '800', color: '#FFFFFF', letterSpacing: 1.2 },
 
   // ── Retrograde Alert ──────────────────────────────────────────────────────
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   affirmationCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#FFFFFF', letterSpacing: 1.5 },
-  premiumIcon: { color: '#8BC4E8', fontSize: 14 },
+  premiumIcon: { color: '#C9AE78', fontSize: 14 },
   affirmationText: { fontSize: 18, color: '#FFF', lineHeight: 28 },
 
   // ── Transits ──────────────────────────────────────────────────────────────

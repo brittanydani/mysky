@@ -51,8 +51,8 @@ const PRESETS: Record<ColorPreset, { ring: string; glow: string }> = {
     glow: 'rgba(110, 191, 139, 0.06)',
   },
   silverBlue: {
-    ring: 'rgba(139, 196, 232, 0.18)',
-    glow: 'rgba(139, 196, 232, 0.06)',
+    ring: 'rgba(201, 174, 120, 0.18)',
+    glow: 'rgba(201, 174, 120, 0.06)',
   },
 };
 

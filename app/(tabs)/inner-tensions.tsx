@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   titleArea:        { paddingHorizontal: 24, paddingBottom: 8 },
   closeButton:      { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:        { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  scrollContent:    { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 120 },
+  scrollContent:    { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   loader:           { marginTop: 80 },
   bottomSpacer:     { height: 40 },
 
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   // Dream patterns
   patternGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
   patternChip: {
-    width: '47%', borderRadius: 12, padding: 14,
+    width: '47%', borderRadius: 24, padding: 16,
     borderWidth: 1, borderColor: PALETTE.glassBorder,
     overflow: 'hidden', position: 'relative',
   },

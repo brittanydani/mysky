@@ -129,7 +129,7 @@ export default function SettingsScreen() {
   // ── Accent colors for settings sections ──
   const accentGold = '#C9AE78';
   const accentAmethyst = '#9B72CF';
-  const accentBlue = '#8BC4E8';
+  const accentBlue = '#C9AE78';
   const accentCopper = '#CD7F5D';
   const accentEmerald = '#6EBF8B';
 
@@ -1195,7 +1195,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14 },
 
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   section: { marginBottom: theme.spacing.xl },
   sectionTitle: {

@@ -320,9 +320,9 @@ const styles = StyleSheet.create({
 
   optionsList: { gap: 10 },
   houseCard: {
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: 'transparent',
+    padding: 28,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
   },
@@ -338,9 +338,9 @@ const styles = StyleSheet.create({
   orbGrid: { flexDirection: 'row', gap: 10 },
   orbCard: {
     flex: 1,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: 'transparent',
+    padding: 20,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     alignItems: 'center',
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   },
   orbLabel: { fontSize: 13, fontWeight: '700', color: theme.textSecondary },
 
-  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'transparent', padding: 12, borderRadius: 12 },
+  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
   infoNoteText: { flex: 1, fontSize: 12, color: theme.textMuted,  },
 
   footer: { padding: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },

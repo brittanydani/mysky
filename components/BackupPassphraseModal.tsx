@@ -35,7 +35,7 @@ interface BackupPassphraseModalProps {
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
@@ -205,7 +205,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 20,
+    paddingBottom: 60,
   },
   description: {
     fontSize: 15,
@@ -227,10 +228,10 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: 'transparent',
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 16,
     color: PALETTE.textMain,
     fontSize: 16,
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   ctaButton: {
-    borderRadius: 16,
+    borderRadius: 28,
     overflow: 'hidden',
     marginTop: 12,
   },
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
+    borderRadius: 28,
     borderWidth: 1,
     borderColor: 'rgba(232,214,174,0.25)',
   },
@@ -268,11 +269,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
     marginTop: 32,
-    backgroundColor: 'rgba(139, 196, 232, 0.05)',
+    backgroundColor: 'rgba(201, 174, 120, 0.05)',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(139, 196, 232, 0.1)',
+    borderColor: 'rgba(201, 174, 120, 0.1)',
   },
   helperText: {
     flex: 1,

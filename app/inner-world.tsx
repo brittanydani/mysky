@@ -49,7 +49,7 @@ import {
 const PALETTE = {
   gold: '#D9BF8C',
   lavender: '#A89BC8',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   emerald: '#6EBF8B',
   rose: '#C88BA8',
   textMain: '#FFFFFF',
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,

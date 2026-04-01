@@ -34,7 +34,7 @@ import { InputValidator } from '../services/astrology/inputValidator';
 
 const PALETTE = {
   gold: '#C5B5A1',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   surface: 'rgba(255,255,255,0.04)',
@@ -472,6 +472,7 @@ export default function BirthDataModal({
                 mode="date"
                 display="spinner"
                 themeVariant="dark"
+                textColor="#FFFFFF"
                 onChange={onDateChange}
                 maximumDate={new Date()}
               />
@@ -555,10 +556,10 @@ const styles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 14,
     color: '#FFFFFF',
     fontSize: 16,
@@ -568,10 +569,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 14,
   },
   selectButtonText: {
@@ -608,7 +609,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     paddingVertical: 10,
@@ -663,10 +664,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 14,
+    paddingHorizontal: 20,
   },
   inputIcon: {
     marginRight: 10,
@@ -683,7 +684,7 @@ const styles = StyleSheet.create({
   suggestions: {
     marginTop: 6,
     backgroundColor: 'rgba(12, 18, 32, 0.97)',
-    borderRadius: 12,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
@@ -769,7 +770,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0D1117',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 40,
     borderTopWidth: 1,

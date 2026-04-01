@@ -47,7 +47,7 @@ const EMOTIONS = [
 ];
 
 const EMOTION_COLORS: Record<string, string> = {
-  Anxiety:    '#D9BF8C', Sadness: '#8BC4E8', Anger:    '#D4A3B3', Joy:       '#8CBEAA',
+  Anxiety:    '#D9BF8C', Sadness: '#C9AE78', Anger:    '#D4A3B3', Joy:       '#8CBEAA',
   Fear:       '#A89BC8', Peace:   '#6EBF8B', Tension:  '#D98C8C', Numbness:  '#6E8CB4',
   Grief:      '#9E8FB8', Excitement: '#E8C97A', Shame: '#B87EA0', Love:      '#E8A3B3',
 };
@@ -201,6 +201,12 @@ export default function SomaticMapScreen() {
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
+
+      {/* Nebula depth — atmospheric glow orbs */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+      </View>
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header row — matches mood screen */}
@@ -409,13 +415,20 @@ export default function SomaticMapScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: PALETTE.bg },
   safeArea:   { flex: 1 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
 
   header:     { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea:  { paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:  { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 32 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:  { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
@@ -423,7 +436,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginBottom: 4,
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
 
   toggleRow: {
     flexDirection: 'row',
@@ -486,11 +499,13 @@ const styles = StyleSheet.create({
   tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.25)',  },
 
   sectionLabel: {
-    fontSize: 16,
-    color: '#FFFFFF',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '700',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
     marginTop: 8,
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

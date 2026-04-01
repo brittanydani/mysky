@@ -24,7 +24,7 @@ interface ShadowQuoteCardProps {
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: '#C9AE78',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',

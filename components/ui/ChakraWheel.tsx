@@ -52,7 +52,7 @@ export const GOLD = {
 
 const STATE_COLORS: Record<ChakraState, string> = {
   Flowing: '#C9AE78',             // Gold
-  Sensitive: '#8BC4E8',           // Silver/Blue
+  Sensitive: '#C9AE78',           // Silver/Blue
   'Grounding Needed': '#CD7F5D',  // Copper
   Quiet: 'rgba(255,255,255,0.3)', // Frosted Glass
 };
@@ -258,7 +258,7 @@ export function ChakraLegend() {
   const states: ChakraState[] = ['Flowing', 'Sensitive', 'Grounding Needed', 'Quiet'];
   const dotColors: Record<ChakraState, string> = {
     Flowing: '#C9AE78',             // Gold
-    Sensitive: '#8BC4E8',           // Silver/Blue
+    Sensitive: '#C9AE78',           // Silver/Blue
     'Grounding Needed': '#CD7F5D',  // Copper
     Quiet: 'rgba(255,255,255,0.3)', // Frosted
   };

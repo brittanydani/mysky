@@ -535,9 +535,9 @@ export default function RelationshipsScreen() {
                   <Text style={styles.insightCardText}>{synastryReport.primaryConnection}</Text>
                 </LinearGradient>
 
-                <LinearGradient colors={['rgba(139, 196, 232, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
+                <LinearGradient colors={['rgba(201, 174, 120, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <MetallicIcon name="trending-up-outline" size={20} color="#8BC4E8" />
+                    <MetallicIcon name="trending-up-outline" size={20} color="#C9AE78" />
                     <Text style={styles.insightCardTitle}>Your Growth Edge</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryChallenge}</Text>
@@ -699,7 +699,7 @@ export default function RelationshipsScreen() {
                         <View style={styles.previewSection}>
                           <View style={styles.previewDivider} />
                           {preview.aspects.map((aspect, i) => {
-                            const catColors: Record<string, string> = { connection: '#6EBF8B', chemistry: '#D4A3B3', growth: '#8BC4E8', challenge: '#CD7F5D' };
+                            const catColors: Record<string, string> = { connection: '#6EBF8B', chemistry: '#D4A3B3', growth: '#C9AE78', challenge: '#CD7F5D' };
                             const catColor = catColors[aspect.category] || theme.textMuted;
                             return (
                               <View key={i} style={styles.previewAspectRow}>
@@ -728,7 +728,7 @@ export default function RelationshipsScreen() {
               {(['partner', 'parent', 'child', 'friend', 'sibling', 'other'] as RelationshipType[]).map(type => (
                 <Pressable key={type} style={styles.typeButton} onPress={() => handleAddRelationship(type)}>
                   <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={styles.typeIconContainer}>
-                    <MetallicIcon name={RELATIONSHIP_ICONS[type]} size={24} color="#8BC4E8" />
+                    <MetallicIcon name={RELATIONSHIP_ICONS[type]} size={24} color="#C9AE78" />
                   </LinearGradient>
                   <Text style={styles.typeLabel}>{RELATIONSHIP_LABELS[type]}</Text>
                 </Pressable>
@@ -752,7 +752,7 @@ export default function RelationshipsScreen() {
               <Text style={styles.discoverTitle}>What You'll Discover</Text>
               
               <View style={styles.discoverItem}>
-                <MetallicIcon name="chatbubbles-outline" size={20} color="#8BC4E8" />
+                <MetallicIcon name="chatbubbles-outline" size={20} color="#C9AE78" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Communication Styles</Text>
                   <Text style={styles.discoverItemText}>How you each process and express</Text>
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
   discoverItemText: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
 
   // Detail view styles
-  detailHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
+  detailHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
   backButton: { padding: 8 },
   detailHeaderCenter: { flex: 1, alignItems: 'center' },
   detailTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary },
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
   exportButton: { padding: 8 },
   deleteButton: { padding: 8 },
   detailScroll: { flex: 1 },
-  detailScrollContent: { paddingHorizontal: 20, paddingTop: 16 },
+  detailScrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   personSelectorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   personPill: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: 'transparent' },
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   filterDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent' },
   filterPillText: { fontSize: 12, color: theme.textMuted, fontWeight: '600' },
 
-  summaryBar: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.glass.highlight, paddingVertical: 20, paddingHorizontal: 12, marginTop: 12, marginBottom: 24 },
+  summaryBar: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, paddingVertical: 20, paddingHorizontal: 12, marginTop: 12, marginBottom: 24 },
   summaryCol: { flex: 1, alignItems: 'center', gap: 4 },
   summarySep: { width: 1, height: 48, backgroundColor: 'transparent', alignSelf: 'center' },
   summaryIcon: { fontSize: 11, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },
   bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.textGold, marginTop: 8, marginRight: 12 },
   bulletText: { flex: 1, fontSize: 15, color: theme.textSecondary, lineHeight: 22 },
-  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'transparent', borderRadius: 16, padding: 20, marginBottom: 16 },
+  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 24, padding: 24, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   tipText: { flex: 1, fontSize: 15, color: theme.textPrimary, marginLeft: 16, lineHeight: 22 },
 
   previewSection: { marginTop: 6 },

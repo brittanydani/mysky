@@ -264,7 +264,7 @@ function buildInsightsPdfHtml(input: InsightsPdfInput): string {
 
   const moodSparkline = sparklineSvg(moodValues, '#C9AE78');
   const stressSparkline = sparklineSvg(stressValues, '#CD7F5D');
-  const energySparkline = sparklineSvg(energyValues, '#8BC4E8');
+  const energySparkline = sparklineSvg(energyValues, '#C9AE78');
 
   // ── Trends section ──
   let trendsHtml = '';
@@ -629,7 +629,7 @@ body {
 }
 .sparkline-label.mood { color: rgba(201,174,120,0.7); }
 .sparkline-label.stress { color: rgba(205,127,93,0.7); }
-.sparkline-label.energy { color: rgba(139,196,232,0.7); }
+.sparkline-label.energy { color: rgba(201,174,120,0.7); }
 
 /* ── Sections ── */
 .section {
@@ -774,8 +774,8 @@ body {
 .blended-card {
   padding: 20px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(139,196,232,0.08), rgba(20,30,50,0.6));
-  border: 1px solid rgba(139,196,232,0.1);
+  background: linear-gradient(135deg, rgba(201,174,120,0.08), rgba(20,30,50,0.6));
+  border: 1px solid rgba(201,174,120,0.1);
   margin-bottom: 10px;
 }
 .blended-title { font-size: 16px; color: #FFFFFF; margin-bottom: 8px; }

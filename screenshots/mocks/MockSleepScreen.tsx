@@ -16,8 +16,8 @@ import {
 } from '@shopify/react-native-skia';
 
 const PALETTE = {
-  silverBlue: '#8BC4E8',
-  silverBlueDim: 'rgba(139,196,232,0.2)',
+  silverBlue: '#C9AE78',
+  silverBlueDim: 'rgba(201,174,120,0.2)',
   amethyst: '#9D76C1',
   gold: '#D8C39A',
   emerald: '#6EBF8B',
@@ -298,9 +298,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
   feelingActive: {
-    backgroundColor: 'rgba(139,196,232,0.15)',
+    backgroundColor: 'rgba(201,174,120,0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(139,196,232,0.3)',
+    borderColor: 'rgba(201,174,120,0.3)',
   },
   feelingText: {
     color: 'rgba(255,255,255,0.4)',

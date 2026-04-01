@@ -1168,7 +1168,7 @@ const st = StyleSheet.create({
   // ── Progress Capsules (Editorial) ──
   progressRow: {
     flexDirection: 'row',
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     paddingTop: 20,
     gap: 6,
   },
@@ -1191,7 +1191,7 @@ const st = StyleSheet.create({
   // ── Content Layout ──
   contentArea: {
     flex: 1,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
   },
   centeredFlex: {
     flex: 1,
@@ -1273,13 +1273,13 @@ const st = StyleSheet.create({
     letterSpacing: 0.5,
     color: PREMIUM.titanium,
     textAlign: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     lineHeight: 20,
   },
   termsContent: { width: '100%', marginBottom: 28 },
   termsGlassSection: {
-    padding: 16,
-    borderRadius: 20,
+    padding: 20,
+    borderRadius: 24,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
@@ -1309,7 +1309,7 @@ const st = StyleSheet.create({
   termsLinkIcon: {
     width: 38,
     height: 38,
-    borderRadius: 12,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.04)',
@@ -1321,7 +1321,7 @@ const st = StyleSheet.create({
   termsLinkSubtitle: { fontSize: 13, color: PREMIUM.textMuted, marginTop: 2 },
   termsFootnote: { fontSize: 12, color: PREMIUM.textMuted, textAlign: 'center', width: '100%' },
   termsFooterActions: { width: '100%', gap: 16 },
-  termsAcceptBtn: { borderRadius: 16, overflow: 'hidden' },
+  termsAcceptBtn: { borderRadius: 28, overflow: 'hidden' },
   termsBtnGradient: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
   termsAcceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
   
@@ -1403,7 +1403,7 @@ const st = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 0,
     paddingVertical: 8,
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '700',
     color: PREMIUM.textMain,
     textAlign: 'center',
@@ -1487,8 +1487,8 @@ const st = StyleSheet.create({
     backgroundColor: PREMIUM.glassFill,
   },
   timeDisplayText: {
-    fontSize: 38,
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '800',
     color: PREMIUM.textMain,
     letterSpacing: 1,
   },
@@ -1512,7 +1512,7 @@ const st = StyleSheet.create({
     padding: 8,
   },
   customTimeDigit: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: PREMIUM.textMain,
     letterSpacing: 1,
@@ -1520,7 +1520,7 @@ const st = StyleSheet.create({
     textAlign: 'center',
   },
   customTimeColon: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: PREMIUM.textMuted,
     marginBottom: 2,
@@ -1529,7 +1529,7 @@ const st = StyleSheet.create({
     marginLeft: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 14,
+    borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.06)',
@@ -1546,11 +1546,11 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    borderRadius: 18,
+    borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 12,
     overflow: 'hidden',
@@ -1564,7 +1564,7 @@ const st = StyleSheet.create({
   suggestionsContainer: {
     marginTop: 12,
     width: '100%',
-    borderRadius: 18,
+    borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,
@@ -1743,7 +1743,7 @@ const st = StyleSheet.create({
   },
   passphraseInputWrapper: {
     width: '100%',
-    borderRadius: 18,
+    borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: PREMIUM.glassBorder,
     backgroundColor: PREMIUM.glassFill,

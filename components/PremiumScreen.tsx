@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 24,
     paddingBottom: 24,
   },
   spacer: {
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: 'rgba(139, 196, 232, 0.06)',
+    backgroundColor: 'rgba(201, 174, 120, 0.06)',
   },
   atmosphereOrb2: {
     position: 'absolute',
@@ -555,13 +555,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   heroTitle: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontSize: 34,
+    fontWeight: '800',
     color: theme.textPrimary,
-    letterSpacing: 0.3,
+    letterSpacing: -0.5,
     marginBottom: 8,
     textAlign: 'center',
-    lineHeight: 34,
+    lineHeight: 40,
   },
   heroSubtitle: {
     fontSize: 14,
@@ -606,11 +606,11 @@ const styles = StyleSheet.create({
   },
   trustCard: {
     marginBottom: 16,
-    padding: 18,
-    borderRadius: 20,
+    padding: 28,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(197,181,161,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   trustLabel: {
     fontSize: 10,
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 20,
     paddingHorizontal: 8,
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     backgroundColor: 'rgba(255,255,255,0.02)',
@@ -710,12 +710,12 @@ const styles = StyleSheet.create({
   },
   lifetimeOfferCard: {
     marginBottom: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderRadius: 18,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    backgroundColor: 'rgba(255,255,255,0.015)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
     flexDirection: 'row',
     alignItems: 'center',
     opacity: 0.86,
@@ -758,12 +758,11 @@ const styles = StyleSheet.create({
   lifetimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 16,
+    padding: 28,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    backgroundColor: 'rgba(255,255,255,0.01)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   lifetimeRowSelected: {
     borderColor: 'rgba(212, 184, 114, 0.3)',
@@ -792,7 +791,7 @@ const styles = StyleSheet.create({
   // ── Sticky Bottom ──
   stickyBottom: {
     paddingTop: 16,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 24,
     backgroundColor: 'rgba(2, 8, 23, 0.95)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
@@ -811,7 +810,7 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     width: '100%',
-    borderRadius: 16,
+    borderRadius: 28,
     overflow: 'hidden',
     shadowColor: '#C9AE78',
     shadowOffset: { width: 0, height: 4 },

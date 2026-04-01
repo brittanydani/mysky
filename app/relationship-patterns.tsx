@@ -34,7 +34,7 @@ const STORAGE_KEY = '@mysky:relationship_patterns';
 
 const PALETTE = {
   anxious: '#D4A3B3',   // Rose — Moving Toward
-  avoidant: '#8BC4E8',  // Silver Blue — Moving Away
+  avoidant: '#C9AE78',  // Silver Blue — Moving Away
   control: '#A89BC8',   // Lavender — Rigidity
   gold: '#D9BF8C',
   textMain: '#FFFFFF',
@@ -78,6 +78,15 @@ interface PatternEntry {
   date: string;
   note: string;
   tags: string[]; // Stores tag IDs for data integrity
+}
+
+function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <MetallicIcon name={icon as any} size={18} color={PALETTE.gold} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
 }
 
 export default function RelationshipPatternsScreen() {
@@ -156,7 +165,12 @@ export default function RelationshipPatternsScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.container}>
         <SkiaDynamicCosmos />
-        <LinearGradient colors={['rgba(212,163,179,0.08)', 'transparent']} style={styles.topGlow} />
+
+        {/* Nebula depth — atmospheric glow orbs */}
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
+          <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
+        </View>
 
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.header}>
@@ -177,6 +191,8 @@ export default function RelationshipPatternsScreen() {
 
             {/* Relational Gravity Visualization */}
             {gravityStats.total > 0 && (
+              <>
+              <SectionHeader title="Relational Gravity" icon="planet-outline" />
               <Animated.View entering={FadeIn.duration(600)} style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
                   <MetallicIcon name="planet-outline" size={16} color={PALETTE.gold} />
@@ -223,11 +239,12 @@ export default function RelationshipPatternsScreen() {
                   </View>
                 </View>
               </Animated.View>
+              </>
             )}
 
             {/* Log Entry Form */}
+            <SectionHeader title="Log a Pattern" icon="pencil-outline" />
             <Animated.View entering={FadeInDown.delay(220).duration(500)} style={styles.formCard}>
-              <Text style={styles.formTitle}>LOG A PATTERN</Text>
 
               <TextInput
                 style={styles.noteInput}
@@ -281,7 +298,7 @@ export default function RelationshipPatternsScreen() {
             {/* History */}
             {entries.length > 0 && (
               <Animated.View entering={FadeInDown.duration(400)} style={styles.historySection}>
-                <Text style={styles.historyTitle}>PREVIOUS REFLECTIONS</Text>
+                <SectionHeader title="Previous Reflections" icon="journal-outline" />
                 <View style={styles.entryList}>
                   {entries.slice(0, 15).map((entry) => (
                     <View key={entry.id} style={styles.entryCard}>
@@ -312,7 +329,7 @@ export default function RelationshipPatternsScreen() {
               </Animated.View>
             )}
 
-            <View style={{ height: 120 }} />
+            <View style={{ height: 140 }} />
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -323,18 +340,24 @@ export default function RelationshipPatternsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
   safeArea: { flex: 1 },
-  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  glowOrb: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    opacity: 0.6,
+  },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea:   { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 32 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 16 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
 
-  summaryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(212,163,179,0.15)', padding: 28, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
+  summaryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   summaryTitle: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
   summaryDescription: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 32, fontWeight: '400' },
@@ -347,8 +370,10 @@ const styles = StyleSheet.create({
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '500' },
 
-  formCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 40, backgroundColor: 'rgba(255,255,255,0.02)' },
+  formCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20, marginTop: 8 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 19, fontWeight: '700' },
   noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
   tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 16, textTransform: 'uppercase' },
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
@@ -359,8 +384,7 @@ const styles = StyleSheet.create({
   submitBtn: { height: 56, borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.4)', justifyContent: 'center', alignItems: 'center' },
   submitBtnText: { fontSize: 15, color: PALETTE.anxious, fontWeight: '700', letterSpacing: 0.5 },
 
-  historySection: { marginTop: 16 },
-  historyTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  historySection: { marginTop: 0 },
   entryList: { gap: 16 },
   entryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, backgroundColor: 'rgba(255,255,255,0.02)' },
   entryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },

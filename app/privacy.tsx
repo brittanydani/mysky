@@ -9,11 +9,12 @@ import { useRouter, Href } from 'expo-router';
 import { theme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: theme.textGold,
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   emerald: '#6EBF8B',
   copper: '#CD7F5D',
   textMain: theme.textPrimary,
@@ -27,6 +28,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 
   return (
     <View style={styles.container}>
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
         <View style={styles.headerBar}>
@@ -390,11 +392,11 @@ const styles = StyleSheet.create({
   
   section: { marginBottom: 32 },
   glassSection: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    padding: 28,
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
     marginBottom: 24,
   },
   sectionTitle: {
@@ -433,10 +435,11 @@ const styles = StyleSheet.create({
   boldText: { color: "#FFFFFF", fontWeight: '600' },
   
   securityCard: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 24,
+    padding: 28,
     borderWidth: 1,
     borderColor: 'rgba(110,191,139,0.20)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   securityHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   securityTitle: { fontSize: 15, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -445,12 +448,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: 'transparent',
+    padding: 28,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   contactInfo: { fontSize: 16, color: "#FFFFFF", fontWeight: '600' },
   

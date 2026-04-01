@@ -115,7 +115,7 @@ export const luxuryTheme = {
   accents: {
     amethyst: '#9D76C1',
     emerald: '#6EBF8B',
-    silverBlue: '#8BC4E8',
+    silverBlue: '#C9AE78',
     copper: '#CD7F5D',
     rose: '#D4A3B3',
     sapphire: '#4A6FA5',
@@ -128,7 +128,7 @@ export const luxuryTheme = {
     gold: 'rgba(247,231,194,0.22)',
     emerald: 'rgba(110,191,139,0.18)',
     sapphire: 'rgba(74,111,165,0.18)',
-    silverBlue: 'rgba(139,196,232,0.20)',
+    silverBlue: 'rgba(201,174,120,0.20)',
   },
 
   shadow: {

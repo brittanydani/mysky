@@ -44,9 +44,17 @@ function toneFromMood(mood?: string): ArchetoneTone {
   return map[mood] ?? 'neutral';
 }
 
+const MOOD_DISPLAY_LABELS: Record<string, string> = {
+  calm: 'Calm',
+  soft: 'Soft',
+  okay: 'Okay',
+  heavy: 'Heavy',
+  stormy: 'Stormy',
+};
+
 function toneColor(tone: ArchetoneTone): string {
   const map: Record<ArchetoneTone, string> = {
-    reflective: '#8BC4E8',
+    reflective: '#C9AE78',
     energised: '#D4B872',
     heavy: '#CD7F5D',
     calm: '#6EBF8B',
@@ -156,7 +164,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
           </View>
           <View style={[styles.toneBadge, { backgroundColor: accent + '20' }]}>
             <MetallicText style={styles.toneBadgeText} color={accent}>
-              {tone}
+              {mood ? (MOOD_DISPLAY_LABELS[mood] ?? mood) : tone}
             </MetallicText>
           </View>
         </View>

@@ -988,12 +988,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   header: { marginTop: 10, marginBottom: 32, paddingHorizontal: 4 },
   backButton: { padding: 8, paddingHorizontal: 16, alignSelf: 'flex-start' },
   headerEyebrow: { fontSize: 11, fontWeight: '700', color: PALETTE.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 },
-  title: { fontSize: 38, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -1, lineHeight: 44, marginBottom: 6 },
+  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 6 },
   subtitle: { fontSize: 14 },
   headerDesc: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 22, marginTop: 2 },
 
@@ -1088,11 +1088,11 @@ const styles = StyleSheet.create({
   intensityDotTextActive: { color: PALETTE.amethyst },
 
   // Dream metadata
-  metadataSection: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, padding: 16 },
+  metadataSection: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, marginBottom: 12, padding: 20 },
   metadataRow: { marginBottom: 20 },
   metadataLabel: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '600', marginBottom: 12 },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  awakenDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  awakenDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, paddingVertical: 12, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'transparent', justifyContent: 'center', paddingHorizontal: 3, borderWidth: 1, borderColor: PALETTE.glassBorder },
@@ -1123,7 +1123,7 @@ const styles = StyleSheet.create({
   statSub: { fontSize: 11, color: PALETTE.textMuted, marginTop: 4, textAlign: 'center',  },
 
   // Obsidian graph / cluster cards
-  obsidianCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(139, 196, 232, 0.15)', overflow: 'hidden', alignItems: 'center' },
+  obsidianCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.15)', overflow: 'hidden', alignItems: 'center' },
   obsidianCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 12 },
   obsidianCardEyebrow: { fontSize: 11, fontWeight: '800', color: PALETTE.silverBlue, letterSpacing: 1.5 },
   obsidianCardFooter: { marginTop: 10, alignSelf: 'center' },

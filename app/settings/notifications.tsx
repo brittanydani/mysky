@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
-  content: { paddingHorizontal: 24, paddingTop: 20 },
+  content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   sectionLabel: {
     fontSize: 11,
     fontWeight: 'bold',
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     borderColor: '#D9BF8C',
     backgroundColor: 'rgba(217,191,140,0.15)',
   },
-  checkmark: { fontSize: 12, color: '#8BC4E8', lineHeight: 14 },
+  checkmark: { fontSize: 12, color: '#C9AE78', lineHeight: 14 },
   unknownLabel: { fontSize: 13, color: 'rgba(255,255,255,0.45)', flex: 1 },
 
   privacyNote: {

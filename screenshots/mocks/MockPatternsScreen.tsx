@@ -16,7 +16,7 @@ import {
 const PALETTE = {
   gold: '#D8C39A',
   goldLight: '#F3E5AB',
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   amethyst: '#9D76C1',
@@ -110,7 +110,7 @@ export default function MockPatternsScreen({ width, height }: Props) {
           What patterns have you noticed between your energy levels and how you spend your mornings?
         </Text>
         <View style={styles.promptActions}>
-          <View style={[styles.promptBtn, { backgroundColor: 'rgba(139,196,232,0.15)' }]}>
+          <View style={[styles.promptBtn, { backgroundColor: 'rgba(201,174,120,0.15)' }]}>
             <Text style={[styles.promptBtnText, { color: PALETTE.silverBlue }]}>Log Mood</Text>
           </View>
           <View style={[styles.promptBtn, { backgroundColor: 'rgba(212, 175, 55,0.15)' }]}>
@@ -260,10 +260,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   promptCard: {
-    backgroundColor: 'rgba(139,196,232,0.08)',
+    backgroundColor: 'rgba(201,174,120,0.08)',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(139,196,232,0.15)',
+    borderColor: 'rgba(201,174,120,0.15)',
     padding: 16,
     marginBottom: 12,
   },

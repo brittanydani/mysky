@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
@@ -168,14 +168,14 @@ const styles = StyleSheet.create({
   },
   
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 24 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
   
   card: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
-    padding: 24,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 28,
   },
   
   title: { 

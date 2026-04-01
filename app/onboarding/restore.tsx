@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
@@ -197,14 +197,14 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain, 
   },
   
-  content: { paddingHorizontal: 20, paddingTop: 32 },
+  content: { paddingHorizontal: 24, paddingTop: 20 },
   
   glassCard: {
     borderRadius: 24,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    borderTopColor: PALETTE.glassHighlight,
-    padding: 24,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: 28,
   },
   cardHeader: {
     alignItems: 'center',

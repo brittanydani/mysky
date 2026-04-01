@@ -8,11 +8,12 @@ import { useRouter, Href } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
+import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 
 // ── Cinematic Palette ──
 const PALETTE = {
   gold: theme.textGold,
-  silverBlue: '#8BC4E8',
+  silverBlue: '#C9AE78',
   textMain: theme.textPrimary,
   glassBorder: theme.cardBorder,
 };
@@ -23,6 +24,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
   return (
     <View style={styles.container}>
+      <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
         <View style={styles.headerBar}>
@@ -309,12 +311,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   faqCard: {
-    borderRadius: 20,
-    padding: 20,
-    backgroundColor: 'transparent',
+    borderRadius: 24,
+    padding: 28,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    borderTopColor: theme.glass.highlight,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   question: {
     fontSize: 19,

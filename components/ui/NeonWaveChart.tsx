@@ -197,8 +197,8 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
                     start={vec(day.px, bottom)}
                     end={vec(day.px, bottom - day.energyH)}
                     colors={day.isToday
-                      ? ['rgba(139,196,232,0.30)', 'rgba(176,216,240,0.88)', 'rgba(214,238,255,0.96)']
-                      : ['rgba(139,196,232,0.12)', 'rgba(139,196,232,0.56)', 'rgba(214,238,255,0.72)']
+                      ? ['rgba(201,174,120,0.30)', 'rgba(176,216,240,0.88)', 'rgba(214,238,255,0.96)']
+                      : ['rgba(201,174,120,0.12)', 'rgba(201,174,120,0.56)', 'rgba(214,238,255,0.72)']
                     }
                   />
                 </Rect>
