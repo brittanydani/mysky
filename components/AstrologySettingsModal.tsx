@@ -227,7 +227,7 @@ export default function AstrologySettingsModal({
             {/* House Systems */}
             <View style={styles.section}>
               <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>House System</MetallicText>
-              <Text style={styles.sectionSub}>Changing the house system can change house placements.</Text>
+              <Text style={styles.sectionSub}>Changing the house system recalculates house placements — planet signs are not affected.</Text>
               
               <View style={styles.optionsList}>
                 {HOUSE_SYSTEM_OPTIONS.map((option) => (
@@ -292,10 +292,18 @@ export default function AstrologySettingsModal({
               <Text style={styles.infoNoteText}>Changes will recalculate your chart and relationship profiles.</Text>
             </View>
 
+            {/* Orientation vs House System note */}
+            <View style={styles.infoNote}>
+              <Ionicons name="information-circle-outline" size={16} color={theme.textMuted} />
+              <Text style={styles.infoNoteText}>
+                {'Changing chart orientation affects display only. Changing the house system can change house placements.'}
+              </Text>
+            </View>
+
             {/* Chart Orientation */}
             <View style={styles.section}>
               <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Chart Orientation</MetallicText>
-              <Text style={styles.sectionSub}>Affects display only — your birth chart data does not change.</Text>
+              <Text style={styles.sectionSub}>Display only — no planet or house data changes.</Text>
 
               <View style={styles.optionsList}>
                 {CHART_ORIENTATION_OPTIONS.map((option) => (

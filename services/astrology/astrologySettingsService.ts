@@ -20,7 +20,7 @@ import { logger } from '../../utils/logger';
 
 export type OrbPreset = 'tight' | 'normal' | 'wide';
 
-export type ChartOrientation = 'standard-natal' | 'left-aligned' | 'natural-zodiac';
+export type ChartOrientation = 'standard-natal' | 'midheaven-top' | 'aries-rising';
 
 export { ZodiacSystem, Ayanamsa } from './types';
 
@@ -101,9 +101,9 @@ export const AYANAMSA_OPTIONS: { value: Ayanamsa; label: string; description: st
 ];
 
 export const CHART_ORIENTATION_OPTIONS: { value: ChartOrientation; label: string; description: string }[] = [
-  { value: 'standard-natal', label: 'Ascendant on 1st house cusp', description: 'Ascendant placed at 9 o\u2019clock (default)' },
-  { value: 'natural-zodiac', label: 'Aries on 1st house cusp', description: 'Aries \u2648 anchors House 1 at 9 o\u2019clock' },
-  { value: 'left-aligned', label: 'House 1 cusp left-aligned', description: 'House 1 cusp fixed at the 9 o\u2019clock position' },
+  { value: 'standard-natal', label: 'Standard Natal', description: 'Places the Ascendant on the left side of the wheel and the Midheaven near the top. This is the most common natal chart view and matches the way charts are typically displayed in mainstream astrology software.' },
+  { value: 'midheaven-top', label: 'Midheaven on Top', description: 'Midheaven at 12 o\u2019clock \u2014 emphasizes the career and public-life axis. A recognizable alternative that highlights the four chart angles.' },
+  { value: 'aries-rising', label: 'Aries First', description: '0\u00b0 Aries at 9 o\u2019clock \u2014 a teaching or reference layout. Typical when not anchoring to a personal Ascendant, such as solar or whole-sign schematic wheels.' },
 ];
 
 export const ORB_PRESET_OPTIONS: { value: OrbPreset; label: string; description: string }[] = [

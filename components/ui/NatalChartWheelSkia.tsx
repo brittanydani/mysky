@@ -116,23 +116,21 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ── Configuration ──
 const SIZE = Math.min(SCREEN_WIDTH - 90, 310);
-const SIZE_CANVAS = SIZE + 48; // small margin for outer glow/bezel
+const SIZE_CANVAS = SIZE + 100; // extra room for sign tiles outside the rim
 const CX = SIZE_CANVAS / 2;
 const CY = SIZE_CANVAS / 2;
 
-// Ring radii (from outside in) — traditional natal chart layout
+// Ring radii (from outside in)
 const R_OUTER = SIZE / 2 - 4;          // outermost edge (gold rim)
-const R_ZODIAC_OUTER = R_OUTER - 3;    // zodiac band outer edge (just inside rim)
-const R_ZODIAC_INNER = R_OUTER - 38;   // zodiac band inner edge
-const R_PLANET_RING = R_ZODIAC_INNER - 22; // planet glyphs orbit between zodiac and houses
-const R_HOUSE_OUTER = R_ZODIAC_INNER;  // house ring outer — zodiac band inner edge
-const R_HOUSE_INNER = R_INNER + 16;    // house number placement
-const R_ASPECT_RING = R_PLANET_RING - 22;  // aspect lines live inside this
-const R_INNER = 44;                    // inner circle hub
+const R_HOUSE_OUTER = R_OUTER;          // house ring outer — extends to the rim
+const R_HOUSE_INNER = R_OUTER - 28;     // house ring inner boundary
+const R_PLANET_RING = R_OUTER - 20;        // planet glyphs — just inside the zodiac bezel
+const R_ASPECT_RING = R_INNER + 22;        // aspect line endpoints — center area
+const R_INNER = 42;                     // inner circle — slightly larger for watch-face presence
 
 // Dotted astronomy diagram rings
-const R_DOT_RING_1 = R_PLANET_RING - 12;
-const R_DOT_RING_2 = R_ASPECT_RING + 8;
+const R_DOT_RING_1 = R_PLANET_RING - 18;
+const R_DOT_RING_2 = R_ASPECT_RING + 10;
 
 const PLANET_R = 13.5;
 
@@ -497,19 +495,20 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
     // astroToAngle places the offset longitude at angle=0 (3 o'clock / right).
     // To place something at 9 o'clock (left / angle=π), add 180° to the offset.
 
-    if (orientation === 'natural-zodiac') {
-      // 0° Aries at 3 o'clock — the zodiac's natural starting point anchors House 1.
-      return 0;
+    if (orientation === 'midheaven-top') {
+      // MC at 12 o'clock (top / angle = π/2).
+      // offset = MC_longitude + 90 places MC_longitude at angle π/2 (top).
+      const mc = getLongitude(getChartPlanet(chart, 'Midheaven'));
+      const mcLon = mc ?? rawAscLongitude;
+      return normalize360(mcLon + 90);
     }
-    if (orientation === 'left-aligned') {
-      // House 1 cusp at 9 o'clock (traditional Western left-side layout).
-      // offset = house1Lon + 180 places house1Lon at angle π (left side).
-      const house1 = (chart as any).houseCusps?.find((h: HouseCusp) => h.house === 1);
-      const house1Lon = getLongitude(house1) ?? rawAscLongitude;
-      return normalize360(house1Lon + 180);
+    if (orientation === 'aries-rising') {
+      // 0° Aries at 9 o'clock (left), mirroring the Ascendant position.
+      // offset = 0 + 180 = 180 places Aries at angle π (left side).
+      return 180;
     }
-    // 'standard-natal': Ascendant at 9 o'clock (left / traditional Western layout).
-    // Adding 180° shifts the AC from 3 o'clock to 9 o'clock.
+    // 'standard-natal' (default): Ascendant at 9 o'clock (left / angle = π).
+    // offset = rawAscLongitude + 180 places ASC at angle π.
     return normalize360(rawAscLongitude + 180);
   }, [orientation, rawAscLongitude, chart]);
 
@@ -843,77 +842,46 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         })}
 
 
-        {/* ── House cusps — lines from zodiac inner edge to center hub ── */}
+        {/* ── House cusps ── */}
         {(chart.houseCusps ?? []).map((cusp: HouseCusp) => {
           const angle = astroToAngle((cusp as any).longitude, ascLongitude);
-          // Angular houses (1,4,7,10) are the AC/IC/DC/MC axes — skip here, drawn separately
-          const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
-          const outer = polarToXY(angle, R_HOUSE_OUTER);
+          const outer = polarToXY(angle, R_OUTER);
           const inner = polarToXY(angle, R_INNER);
 
-          const strokeW = isAngular ? 0 : 0.7; // angular axes drawn as full-diameter lines below
-          const strokeColor = 'rgba(232, 214, 174,0.35)';
+          const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
+          const strokeW = isAngular ? 1.0 : 0.8;
+          const strokeColor = isAngular ? 'rgba(232, 214, 174,0.7)' : 'rgba(232, 214, 174,0.45)';
 
           const cusps = chart.houseCusps ?? [];
           const nextHouse = cusps.find((c: HouseCusp) => (c as any).house === (((cusp as any).house % 12) + 1));
-          let midLon = (cusp as any).longitude + 15;
+          let midLon = (cusp as any).longitude + 15; // default fallback
           if (nextHouse) {
             let diff = (nextHouse as any).longitude - (cusp as any).longitude;
-            if (diff < 0) diff += 360;
+            if (diff < 0) diff += 360; // handle wrap around 360 to 0 (Aries point)
             midLon = (cusp as any).longitude + diff / 2;
-            if (midLon >= 360) midLon -= 360;
+            if (midLon >= 360) midLon -= 360; // Normalize back to 0-359
           }
           const midAngle = astroToAngle(midLon, ascLongitude);
-          const numRadius = R_INNER + (R_HOUSE_OUTER - R_INNER) * 0.32;
-          const numPos = polarToXY(midAngle, numRadius);
+          // Place house number near the middle of each wedge, inward of planets
+          const numPos = polarToXY(midAngle, R_INNER + 24);
           const houseText = String((cusp as any).house);
           const tw = sans9 ? sans9.getTextWidth(houseText) : 7;
 
           return (
             <Group key={`house-${(cusp as any).house}`}>
-              {!isAngular && <Line p1={vec(outer.x, outer.y)} p2={vec(inner.x, inner.y)} color={strokeColor} strokeWidth={strokeW} />}
+              <Line p1={vec(outer.x, outer.y)} p2={vec(inner.x, inner.y)} color={strokeColor} strokeWidth={strokeW} />
               {sans9 && (
                 <SkiaText
                   x={numPos.x - tw / 2}
                   y={numPos.y + 3.5}
                   text={houseText}
                   font={sans9}
-                  color="rgba(240, 234, 214,0.55)"
+                  color="rgba(240, 234, 214,0.7)"
                 />
               )}
             </Group>
           );
         })}
-
-        {/* ── AC/DC axis (full diameter horizontal line) ── */}
-        {(() => {
-          const ascLon = getLongitude((chart as any).ascendant);
-          if (ascLon === null) return null;
-          const angAC = astroToAngle(ascLon, ascLongitude);
-          const angDC = angAC + Math.PI; // opposite
-          const pAC = polarToXY(angAC, R_HOUSE_OUTER);
-          const pDC = polarToXY(angDC, R_HOUSE_OUTER);
-          return (
-            <Group key="ac-dc-axis">
-              <Line p1={vec(pAC.x, pAC.y)} p2={vec(pDC.x, pDC.y)} color="rgba(232,214,174,0.75)" strokeWidth={1.0} />
-            </Group>
-          );
-        })()}
-
-        {/* ── MC/IC axis (full diameter line) ── */}
-        {(() => {
-          const mcLon = getLongitude((chart as any).midheaven);
-          if (mcLon === null) return null;
-          const angMC = astroToAngle(mcLon, ascLongitude);
-          const angIC = angMC + Math.PI;
-          const pMC = polarToXY(angMC, R_HOUSE_OUTER);
-          const pIC = polarToXY(angIC, R_HOUSE_OUTER);
-          return (
-            <Group key="mc-ic-axis">
-              <Line p1={vec(pMC.x, pMC.y)} p2={vec(pIC.x, pIC.y)} color="rgba(232,214,174,0.75)" strokeWidth={1.0} />
-            </Group>
-          );
-        })()}
 
         {/* ── House ring border ── */}
         <Group>
@@ -1376,35 +1344,95 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           );
         })}
 
-        {/* ── AC / DC / MC / IC labels — outside zodiac band ── */}
-        {(() => {
-          const ascLon = getLongitude((chart as any).ascendant);
-          const mcLon  = getLongitude((chart as any).midheaven);
-          const labelRadius = R_ZODIAC_OUTER + 14;
-          const labels: { text: string; angle: number }[] = [];
-          if (ascLon !== null) {
-            labels.push({ text: 'AC', angle: astroToAngle(ascLon, ascLongitude) });
-            labels.push({ text: 'DC', angle: astroToAngle(ascLon, ascLongitude) + Math.PI });
-          }
-          if (mcLon !== null) {
-            labels.push({ text: 'MC', angle: astroToAngle(mcLon, ascLongitude) });
-            labels.push({ text: 'IC', angle: astroToAngle(mcLon, ascLongitude) + Math.PI });
-          }
-          return labels.map(({ text, angle }) => {
-            const pos = polarToXY(angle, labelRadius);
-            const tw = sans9 ? sans9.getTextWidth(text) : 10;
-            return sans9 ? (
-              <SkiaText
-                key={`axis-label-${text}`}
-                x={pos.x - tw / 2}
-                y={pos.y + 4}
-                text={text}
-                font={sans9}
-                color="rgba(255,240,200,0.95)"
-              />
-            ) : null;
-          });
-        })()}
+        {/* ── ASC / MC axis labels (Strictly Inside text) ── */}
+        {/* ── AC / DC / MC / IC axis labels ──
+             Placed just inside the house ring at the angular cusp lines.
+             R_HOUSE_INNER - 8 sits within the house band, clearly visible
+             at each of the four chart angles. */}
+        {(chart as any).ascendant &&
+          (() => {
+            const lon = getLongitude((chart as any).ascendant);
+            if (lon === null) return null;
+            const ascAng = astroToAngle(lon, ascLongitude);
+            const dcAng  = astroToAngle(lon + 180, ascLongitude); // opposite axis
+
+            // Label radius: inside the house band, close to the rim
+            const R_ANGLE_LABEL = R_HOUSE_INNER - 8;
+
+            const acPos = polarToXY(ascAng, R_ANGLE_LABEL);
+            const dcPos = polarToXY(dcAng,  R_ANGLE_LABEL);
+
+            // Offset text to visually center each 2-char label
+            const acText = 'AC';
+            const dcText = 'DC';
+            const labelW = sans8 ? sans8.getTextWidth('AC') : 12;
+
+            return (
+              <Group key="asc-dc-labels">
+                {sans8 && (
+                  <>
+                    {/* AC — left / 9 o'clock */}
+                    <SkiaText
+                      x={acPos.x - labelW / 2}
+                      y={acPos.y + 4}
+                      text={acText}
+                      font={sans8}
+                      color="rgba(255,240,200,0.90)"
+                    />
+                    {/* DC — right / 3 o'clock */}
+                    <SkiaText
+                      x={dcPos.x - labelW / 2}
+                      y={dcPos.y + 4}
+                      text={dcText}
+                      font={sans8}
+                      color="rgba(255,240,200,0.90)"
+                    />
+                  </>
+                )}
+              </Group>
+            );
+          })()}
+
+        {(chart as any).midheaven &&
+          (() => {
+            const lon = getLongitude((chart as any).midheaven);
+            if (lon === null) return null;
+            const mcAng = astroToAngle(lon,       ascLongitude);
+            const icAng = astroToAngle(lon + 180, ascLongitude); // opposite axis
+
+            const R_ANGLE_LABEL = R_HOUSE_INNER - 8;
+
+            const mcPos = polarToXY(mcAng, R_ANGLE_LABEL);
+            const icPos = polarToXY(icAng, R_ANGLE_LABEL);
+
+            const mcW = sans8 ? sans8.getTextWidth('MC') : 12;
+            const icW = sans8 ? sans8.getTextWidth('IC') : 10;
+
+            return (
+              <Group key="mc-ic-labels">
+                {sans8 && (
+                  <>
+                    {/* MC — top / 12 o'clock */}
+                    <SkiaText
+                      x={mcPos.x - mcW / 2}
+                      y={mcPos.y + 4}
+                      text="MC"
+                      font={sans8}
+                      color="rgba(255,240,200,0.90)"
+                    />
+                    {/* IC — bottom / 6 o'clock */}
+                    <SkiaText
+                      x={icPos.x - icW / 2}
+                      y={icPos.y + 4}
+                      text="IC"
+                      font={sans8}
+                      color="rgba(255,240,200,0.90)"
+                    />
+                  </>
+                )}
+              </Group>
+            );
+          })()}
 
         {/* ── Center hub — deep navy core ── */}
         <Circle cx={CX} cy={CY} r={R_INNER + 24} opacity={1}>

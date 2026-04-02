@@ -1023,6 +1023,7 @@ export default function ChartScreen() {
             </View>
 
             <Text style={styles.wheelHint}>Tap a person to overlay · Long-press to remove</Text>
+            <Text style={styles.wheelHint}>The outer ring shows zodiac signs. The inner wheel shows houses 1–12. Planet symbols mark their sign and degree. The chart begins at the Ascendant on the left and moves counterclockwise through the houses.</Text>
           </Animated.View>
 
           {/* ── Big Three Summary ── */}
