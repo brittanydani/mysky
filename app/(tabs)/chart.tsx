@@ -279,6 +279,7 @@ export default function ChartScreen() {
   const [showAstrologyModal, setShowAstrologyModal] = useState(false);
   const [houseSystemLabel, setHouseSystemLabel] = useState<string>('Whole Sign');
   const [orbPresetLabel, setOrbPresetLabel] = useState<string>('Normal');
+  const [chartOrientation, setChartOrientation] = useState<import('../../services/astrology/astrologySettingsService').ChartOrientation>('standard-natal');
 
   // Reload chart every time this screen is focused (fixes "No chart found" after creating from Home)
   useFocusEffect(
@@ -294,6 +295,7 @@ export default function ChartScreen() {
       setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(astroSettings.houseSystem));
       setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(astroSettings.orbPreset));
       setZodiacSystemLabel(astroSettings.zodiacSystem === 'sidereal' ? 'Sidereal' : 'Tropical');
+      setChartOrientation(astroSettings.chartOrientation ?? 'standard-natal');
 
       const charts = await localDb.getCharts();
       if (charts.length > 0) {
@@ -1015,6 +1017,7 @@ export default function ChartScreen() {
                   showAspects={true}
                   overlayChart={activeOverlays.length > 0 ? activeOverlays[0].chart : undefined}
                   overlayName={activeOverlays.length > 0 ? activeOverlays[0].person.name : undefined}
+                  orientation={chartOrientation}
                 />
               </View>
             </View>
@@ -2749,6 +2752,7 @@ export default function ChartScreen() {
           setHouseSystemLabel(AstrologySettingsService.getHouseSystemLabel(updated.houseSystem));
           setOrbPresetLabel(AstrologySettingsService.getOrbPresetLabel(updated.orbPreset));
           setZodiacSystemLabel(updated.zodiacSystem === 'sidereal' ? 'Sidereal' : 'Tropical');
+          setChartOrientation(updated.chartOrientation ?? 'standard-natal');
           // Clear natal chart cache so changes take effect
           AstrologyCalculator.clearNatalChartCache();
           // Clear overlays so they regenerate with new settings

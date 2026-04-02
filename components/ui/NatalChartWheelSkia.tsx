@@ -9,7 +9,7 @@
 //   If your font paths differ, update FONT_* requires below.
 // - Film grain uses RuntimeEffect; if unsupported on a device/build, it silently disables.
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState, useEffect } from 'react';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import {
   Canvas,
@@ -28,6 +28,7 @@ import {
 } from '@shopify/react-native-skia';
 
 import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
+import { AstrologySettingsService, ChartOrientation } from '../../services/astrology/astrologySettingsService';
 import { theme } from '../../constants/theme';
 // Remove SVG icon imports; will use Skia-native drawing below
 // Skia-native Pholus icon
@@ -477,10 +478,37 @@ interface Props {
   overlayChart?: NatalChart;
   overlayName?: string;
   filterMode?: { person1: boolean; person2: boolean; cross: boolean };
+  orientation?: ChartOrientation;
 }
 
-function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName, filterMode }: Props) {
-  const ascLongitude = getLongitude((chart as any).ascendant) ?? 0;
+function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName, filterMode, orientation: orientationProp }: Props) {
+  const rawAscLongitude = getLongitude((chart as any).ascendant) ?? 0;
+
+  const [settingsOrientation, setSettingsOrientation] = useState<ChartOrientation>('standard-natal');
+  useEffect(() => {
+    AstrologySettingsService.getSettings().then((s) => setSettingsOrientation(s.chartOrientation)).catch(() => {});
+  }, []);
+
+  const orientation = orientationProp ?? settingsOrientation;
+
+  const ascLongitude = useMemo(() => {
+    // astroToAngle places the offset longitude at angle=0 (3 o'clock / right).
+    // To place something at 9 o'clock (left / angle=π), add 180° to the offset.
+
+    if (orientation === 'natural-zodiac') {
+      // 0° Aries at 3 o'clock — the zodiac's natural starting point anchors House 1.
+      return 0;
+    }
+    if (orientation === 'left-aligned') {
+      // House 1 cusp at 9 o'clock (traditional Western left-side layout).
+      // offset = house1Lon + 180 places house1Lon at angle π (left side).
+      const house1 = (chart as any).houseCusps?.find((h: HouseCusp) => h.house === 1);
+      const house1Lon = getLongitude(house1) ?? rawAscLongitude;
+      return normalize360(house1Lon + 180);
+    }
+    // 'standard-natal': Ascendant at 3 o'clock (current default behaviour).
+    return rawAscLongitude;
+  }, [orientation, rawAscLongitude, chart]);
 
   const showPerson1 = !filterMode || filterMode.person1;
   const showPerson2 = !filterMode || filterMode.person2;

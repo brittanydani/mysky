@@ -31,7 +31,9 @@ import {
   ZODIAC_SYSTEM_OPTIONS,
   AYANAMSA_OPTIONS,
   ORB_PRESET_OPTIONS,
+  CHART_ORIENTATION_OPTIONS,
   OrbPreset,
+  ChartOrientation,
 } from '../services/astrology/astrologySettingsService';
 import { HouseSystem, ZodiacSystem, Ayanamsa } from '../services/astrology/types';
 import { localDb } from '../services/storage/localDb';
@@ -63,6 +65,7 @@ export default function AstrologySettingsModal({
   const [selectedAyanamsa, setSelectedAyanamsa] = useState<Ayanamsa>('lahiri');
   const [selectedHouseSystem, setSelectedHouseSystem] = useState<HouseSystem>('placidus');
   const [selectedOrbPreset, setSelectedOrbPreset] = useState<OrbPreset>('normal');
+  const [selectedOrientation, setSelectedOrientation] = useState<ChartOrientation>('standard-natal');
 
   useEffect(() => {
     if (visible) {
@@ -79,6 +82,7 @@ export default function AstrologySettingsModal({
       setSelectedAyanamsa(current.ayanamsa);
       setSelectedHouseSystem(current.houseSystem);
       setSelectedOrbPreset(current.orbPreset);
+      setSelectedOrientation(current.chartOrientation ?? 'standard-natal');
     } catch (error) {
       logger.error('[AstrologySettingsModal] Failed to load settings:', error);
     } finally {
@@ -96,6 +100,7 @@ export default function AstrologySettingsModal({
         ayanamsa: selectedAyanamsa,
         houseSystem: selectedHouseSystem,
         orbPreset: selectedOrbPreset,
+        chartOrientation: selectedOrientation,
       });
 
       try {
@@ -117,7 +122,7 @@ export default function AstrologySettingsModal({
     }
   };
 
-  const handleSelect = (type: 'zodiac' | 'ayanamsa' | 'house' | 'orb', value: string) => {
+  const handleSelect = (type: 'zodiac' | 'ayanamsa' | 'house' | 'orb' | 'orientation', value: string) => {
     Haptics.selectionAsync().catch(() => {});
     if (type === 'zodiac') {
       setSelectedZodiacSystem(value as ZodiacSystem);
@@ -125,6 +130,8 @@ export default function AstrologySettingsModal({
       setSelectedAyanamsa(value as Ayanamsa);
     } else if (type === 'house') {
       setSelectedHouseSystem(value as HouseSystem);
+    } else if (type === 'orientation') {
+      setSelectedOrientation(value as ChartOrientation);
     } else {
       setSelectedOrbPreset(value as OrbPreset);
     }
@@ -135,7 +142,8 @@ export default function AstrologySettingsModal({
     (settings.zodiacSystem !== selectedZodiacSystem ||
       settings.ayanamsa !== selectedAyanamsa ||
       settings.houseSystem !== selectedHouseSystem ||
-      settings.orbPreset !== selectedOrbPreset);
+      settings.orbPreset !== selectedOrbPreset ||
+      (settings.chartOrientation ?? 'standard-natal') !== selectedOrientation);
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -282,6 +290,34 @@ export default function AstrologySettingsModal({
             <View style={styles.infoNote}>
               <Ionicons name="information-circle-outline" size={16} color={theme.textMuted} />
               <Text style={styles.infoNoteText}>Changes will recalculate your chart and relationship profiles.</Text>
+            </View>
+
+            {/* Chart Orientation */}
+            <View style={styles.section}>
+              <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Chart Orientation</MetallicText>
+              <Text style={styles.sectionSub}>This only changes the chart’s visual orientation, not your birth chart data.</Text>
+
+              <View style={styles.optionsList}>
+                {CHART_ORIENTATION_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.value}
+                    style={[styles.houseCard, selectedOrientation === option.value && styles.cardSelected]}
+                    onPress={() => handleSelect('orientation', option.value)}
+                  >
+                    <View style={styles.cardHeader}>
+                      {selectedOrientation === option.value ? (
+                        <MetallicText style={styles.optionTitle} color={PALETTE.gold}>{option.label}</MetallicText>
+                      ) : (
+                        <Text style={styles.optionTitle}>{option.label}</Text>
+                      )}
+                      <View style={[styles.radio, selectedOrientation === option.value && styles.radioActive]}>
+                        {selectedOrientation === option.value && <View style={styles.radioInner} />}
+                      </View>
+                    </View>
+                    <Text style={styles.optionSub}>{option.description}</Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
 
           </ScrollView>

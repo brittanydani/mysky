@@ -20,6 +20,8 @@ import { logger } from '../../utils/logger';
 
 export type OrbPreset = 'tight' | 'normal' | 'wide';
 
+export type ChartOrientation = 'standard-natal' | 'left-aligned' | 'natural-zodiac';
+
 export { ZodiacSystem, Ayanamsa } from './types';
 
 export interface OrbConfiguration {
@@ -63,6 +65,9 @@ export interface AstrologySettings {
   // Both appear as a single "Lilith" placement; only the calculation differs.
   lilitMethod: 'mean' | 'true';
 
+  // Chart wheel visual orientation (display only — does not affect calculations)
+  chartOrientation: ChartOrientation;
+
   // Last updated
   updatedAt: string;
 }
@@ -93,6 +98,12 @@ export const AYANAMSA_OPTIONS: { value: Ayanamsa; label: string; description: st
   { value: 'raman', label: 'B.V. Raman', description: 'Popular alternative in South Indian tradition' },
   { value: 'krishnamurti', label: 'Krishnamurti (KP)', description: 'Used in Krishnamurti Paddhati system' },
   { value: 'fagan-bradley', label: 'Fagan-Bradley', description: 'Common in Western sidereal astrology' },
+];
+
+export const CHART_ORIENTATION_OPTIONS: { value: ChartOrientation; label: string; description: string }[] = [
+  { value: 'standard-natal', label: 'Standard Natal', description: 'Ascendant starts House 1' },
+  { value: 'left-aligned', label: 'Left-Aligned House 1', description: 'House 1 begins at the 9 o\u2019clock position' },
+  { value: 'natural-zodiac', label: 'Natural Zodiac', description: 'Aries starts House 1' },
 ];
 
 export const ORB_PRESET_OPTIONS: { value: OrbPreset; label: string; description: string }[] = [
@@ -152,6 +163,7 @@ const DEFAULT_SETTINGS: AstrologySettings = {
   showMinorAspects: false,
   showAsteroid: true,
   lilitMethod: 'mean',
+  chartOrientation: 'standard-natal',
   updatedAt: new Date().toISOString(),
 };
 
