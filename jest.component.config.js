@@ -1,6 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'react-native',
+  watchman: false,
   roots: ['<rootDir>/components', '<rootDir>/app', '<rootDir>/context'],
   testMatch: ['**/__tests__/**/*.test.tsx'],
   setupFiles: ['<rootDir>/jest.component.setup.js'],
