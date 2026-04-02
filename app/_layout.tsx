@@ -1,8 +1,8 @@
 import 'expo-standard-web-crypto';
-import { initSentry } from '../utils/sentry';
+// import { initSentry } from '../utils/sentry';
 
-// Initialize Sentry before any other code runs
-initSentry();
+// Sentry disabled temporarily to diagnose startup crash
+// initSentry();
 
 // eslint-disable-next-line import/first
 import { GoldIcon } from '../components/ui/GoldIcon';
