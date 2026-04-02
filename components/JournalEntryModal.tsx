@@ -381,17 +381,17 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   useEffect(() => {
     if (isPremium && userChart) {
       try {
-        const engineSet = generateJournalPrompt(userChart, new Date());
+        const engineSet = generateJournalPrompt(userChart, date);
         setEnginePromptSet(engineSet);
       } catch {}
     }
-  }, [isPremium, userChart, mood]);
+  }, [isPremium, userChart, mood, date]);
 
   useEffect(() => {
     if (!isPremium && visible) {
-      try { setFreePrompt(getFreePrompt(new Date())); } catch {}
+      try { setFreePrompt(getFreePrompt(date)); } catch {}
     }
-  }, [isPremium, visible]);
+  }, [isPremium, visible, date]);
 
   const loadCustomTags = useCallback(async () => {
     try {
@@ -557,7 +557,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   <View>
                     <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
                     <GoldSubtitle style={styles.headerDateLabel}>
-                      {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                      {date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                     </GoldSubtitle>
                   </View>
                   <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
@@ -808,6 +808,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   themeVariant="dark"
                   textColor="#FFFFFF"
+                  maximumDate={new Date()}
                   onChange={(_e, d) => { setShowDatePicker(false); if(d) setDate(d); }}
                 />
               )}
@@ -1124,15 +1125,15 @@ const styles = StyleSheet.create({
   tagChipText: { fontSize: 13, fontWeight: '600', letterSpacing: -0.2 },
 
   // ── Tag Picker Modal ──
-  tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(2,8,23,0.72)', justifyContent: 'flex-end' },
-  tagPickerSheet: { backgroundColor: '#0D1628', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '82%' },
-  tagPickerHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'center', marginTop: 10, marginBottom: 4 },
-  tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  tagPickerTitle: { fontSize: 16, color: PALETTE.textMain, fontWeight: '700' },
-  tagPickerDone: { fontSize: 14, color: PALETTE.jade, fontWeight: '700' },
+  tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.60)', justifyContent: 'flex-end' },
+  tagPickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '82%' },
+  tagPickerHandle: { width: 44, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.18)', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
+  tagPickerTitle: { fontSize: 16, color: '#FFFFFF', fontWeight: '600' },
+  tagPickerDone: { fontSize: 16, color: PALETTE.gold, fontWeight: '700' },
   tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: 8 },
   tagSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 14, padding: 0 },
-  tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 40 },
+  tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 40, flexGrow: 0 },
   tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(201,174,120,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
   tagPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },

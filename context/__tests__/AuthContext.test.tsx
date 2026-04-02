@@ -1,0 +1,267 @@
+/**
+ * Auth Workflow — integration tests
+ *
+ * Tests the full auth lifecycle: session restoration with retries,
+ * sign-in/sign-out flows, RevenueCat sync, store clearing, and
+ * demo seed triggering.
+ */
+
+// ── Mocks ────────────────────────────────────────────────────────────────────
+
+const mockGetSession = jest.fn();
+const mockSignOut = jest.fn();
+const mockOnAuthStateChange = jest.fn();
+const mockStartAutoRefresh = jest.fn();
+const mockStopAutoRefresh = jest.fn();
+
+jest.mock('../../lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: () => mockGetSession(),
+      signOut: () => mockSignOut(),
+      onAuthStateChange: (cb: Function) => mockOnAuthStateChange(cb),
+      startAutoRefresh: mockStartAutoRefresh,
+      stopAutoRefresh: mockStopAutoRefresh,
+    },
+  },
+}));
+
+const mockRevenueCatLogIn = jest.fn();
+const mockRevenueCatLogOut = jest.fn();
+
+jest.mock('../../services/premium/revenuecat', () => ({
+  revenueCatService: {
+    logIn: (...args: unknown[]) => mockRevenueCatLogIn(...args),
+    logOut: () => mockRevenueCatLogOut(),
+  },
+}));
+
+const mockSeedIfNeeded = jest.fn().mockResolvedValue(undefined);
+
+jest.mock('../../services/storage/demoSeedService', () => ({
+  DemoSeedService: {
+    seedIfNeeded: (...args: unknown[]) => mockSeedIfNeeded(...args),
+  },
+}));
+
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn().mockResolvedValue(undefined),
+  notificationAsync: jest.fn().mockResolvedValue(undefined),
+  ImpactFeedbackStyle: { Medium: 'medium' },
+  NotificationFeedbackType: { Error: 'error' },
+}));
+
+jest.mock('../../utils/logger', () => ({
+  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+}));
+
+// Mock all Zustand stores referenced in signOut
+const mockClearCache = jest.fn();
+const mockClearScene = jest.fn();
+const mockResetStatus = jest.fn();
+
+jest.mock('../../store/dreamMapStore', () => ({
+  useDreamMapStore: { getState: () => ({ clearCache: mockClearCache }) },
+}));
+jest.mock('../../store/resonanceStore', () => ({
+  useResonanceStore: { getState: () => ({ clearCache: mockClearCache }) },
+}));
+jest.mock('../../store/sceneStore', () => ({
+  useSceneStore: { getState: () => ({ clearScene: mockClearScene }) },
+}));
+jest.mock('../../store/circadianStore', () => ({
+  useCircadianStore: { getState: () => ({ clearCache: mockClearCache }) },
+}));
+jest.mock('../../store/correlationStore', () => ({
+  useCorrelationStore: { getState: () => ({ clearCache: mockClearCache }) },
+}));
+jest.mock('../../store/checkInStore', () => ({
+  useCheckInStore: { getState: () => ({ resetStatus: mockResetStatus }) },
+}));
+
+import React from 'react';
+import { render, waitFor, act } from '@testing-library/react-native';
+import { Text } from 'react-native';
+import { AuthProvider, useAuth } from '../../context/AuthContext';
+
+// Simple consumer that renders auth state
+function AuthConsumer() {
+  const { session, loading, signOut, user } = useAuth();
+  return (
+    <>
+      <Text testID="loading">{String(loading)}</Text>
+      <Text testID="session">{session ? 'active' : 'none'}</Text>
+      <Text testID="user-id">{user?.id ?? 'no-user'}</Text>
+      <Text testID="signout" onPress={signOut}>Sign Out</Text>
+    </>
+  );
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Default: return a subscriber with no-op unsubscribe
+  mockOnAuthStateChange.mockReturnValue({
+    data: { subscription: { unsubscribe: jest.fn() } },
+  });
+});
+
+describe('Auth Workflow', () => {
+  describe('session restoration', () => {
+    it('restores an existing session on mount', async () => {
+      const mockSession = { user: { id: 'user-123', email: 'test@test.com' } };
+      mockGetSession.mockResolvedValue({ data: { session: mockSession }, error: null });
+
+      const { getByTestId } = render(
+        <AuthProvider><AuthConsumer /></AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('loading').children[0]).toBe('false');
+      });
+
+      expect(getByTestId('session').children[0]).toBe('active');
+      expect(getByTestId('user-id').children[0]).toBe('user-123');
+      expect(mockRevenueCatLogIn).toHaveBeenCalledWith('user-123');
+    });
+
+    it('retries session restoration on transient failure', async () => {
+      mockGetSession
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValue({ data: { session: null }, error: null });
+
+      const { getByTestId } = render(
+        <AuthProvider><AuthConsumer /></AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('loading').children[0]).toBe('false');
+      }, { timeout: 5000 });
+
+      expect(mockGetSession).toHaveBeenCalledTimes(2);
+      expect(getByTestId('session').children[0]).toBe('none');
+    });
+
+    it('sets loading false after max retries exhausted', async () => {
+      mockGetSession
+        .mockRejectedValue(new Error('Persistent failure'));
+
+      const { getByTestId } = render(
+        <AuthProvider><AuthConsumer /></AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('loading').children[0]).toBe('false');
+      }, { timeout: 15000 });
+
+      expect(getByTestId('session').children[0]).toBe('none');
+    });
+  });
+
+  describe('auth state change listener', () => {
+    it('registers onAuthStateChange on mount', async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+
+      render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+      await waitFor(() => {
+        expect(mockOnAuthStateChange).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('triggers RevenueCat logIn on SIGNED_IN event', async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+
+      let authCallback: Function;
+      mockOnAuthStateChange.mockImplementation((cb: Function) => {
+        authCallback = cb;
+        return { data: { subscription: { unsubscribe: jest.fn() } } };
+      });
+
+      render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+      await waitFor(() => {
+        expect(mockOnAuthStateChange).toHaveBeenCalled();
+      });
+
+      // Simulate SIGNED_IN event
+      act(() => {
+        authCallback('SIGNED_IN', { user: { id: 'new-user', email: 'demo@test.com' } });
+      });
+
+      expect(mockRevenueCatLogIn).toHaveBeenCalledWith('new-user');
+      expect(mockSeedIfNeeded).toHaveBeenCalledWith('demo@test.com');
+    });
+
+    it('triggers RevenueCat logOut on SIGNED_OUT event', async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+
+      let authCallback: Function;
+      mockOnAuthStateChange.mockImplementation((cb: Function) => {
+        authCallback = cb;
+        return { data: { subscription: { unsubscribe: jest.fn() } } };
+      });
+
+      render(<AuthProvider><AuthConsumer /></AuthProvider>);
+
+      await waitFor(() => {
+        expect(mockOnAuthStateChange).toHaveBeenCalled();
+      });
+
+      act(() => {
+        authCallback('SIGNED_OUT', null);
+      });
+
+      expect(mockRevenueCatLogOut).toHaveBeenCalled();
+    });
+  });
+
+  describe('signOut', () => {
+    it('clears session and all Zustand stores', async () => {
+      const mockSession = { user: { id: 'user-123' } };
+      mockGetSession.mockResolvedValue({ data: { session: mockSession }, error: null });
+      mockSignOut.mockResolvedValue({ error: null });
+
+      const { getByTestId } = render(
+        <AuthProvider><AuthConsumer /></AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('session').children[0]).toBe('active');
+      });
+
+      await act(async () => {
+        getByTestId('signout').props.onPress();
+      });
+
+      expect(mockSignOut).toHaveBeenCalled();
+      expect(mockClearCache).toHaveBeenCalled();
+      expect(mockClearScene).toHaveBeenCalled();
+      expect(mockResetStatus).toHaveBeenCalled();
+    });
+
+    it('handles signOut failure gracefully', async () => {
+      const mockSession = { user: { id: 'user-123' } };
+      mockGetSession.mockResolvedValue({ data: { session: mockSession }, error: null });
+      mockSignOut.mockResolvedValue({ error: new Error('Sign out failed') });
+
+      const { getByTestId } = render(
+        <AuthProvider><AuthConsumer /></AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('session').children[0]).toBe('active');
+      });
+
+      await act(async () => {
+        getByTestId('signout').props.onPress();
+      });
+
+      // Should not crash — error is caught and logged
+      const { logger } = require('../../utils/logger');
+      expect(logger.error).toHaveBeenCalledWith(
+        '[AuthContext] Sign-out failed:',
+        expect.any(Error),
+      );
+    });
+  });
+});

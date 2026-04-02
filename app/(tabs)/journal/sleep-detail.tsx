@@ -31,6 +31,7 @@ import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
 import { localDb } from '../../../services/storage/localDb';
 import { SleepEntry, generateId } from '../../../services/storage/models';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremium } from '../../../context/PremiumContext';
 import { logger } from '../../../utils/logger';
 import { parseLocalDate } from '../../../utils/dateUtils';
@@ -72,6 +73,7 @@ export default function SleepDetailScreen() {
   const [interpretation, setInterpretation] = useState<DreamInterpretation | null>(null);
   const [interpreting, setInterpreting] = useState(false);
   const [reinterpretCount, setReinterpretCount] = useState(0);
+  const [hasReinterpreted, setHasReinterpreted] = useState(false);
 
   // Gemini AI state
   const [aiResult, setAiResult] = useState<GeminiDreamResult | null>(null);
@@ -104,6 +106,9 @@ export default function SleepDetailScreen() {
       if (found) {
         setEntry(found);
         setDreamText(found.dreamText ?? '');
+        // Restore persisted reinterpret flag
+        const used = await AsyncStorage.getItem(`msky_reinterpreted_${entryId}`);
+        if (used === '1') setHasReinterpreted(true);
         // Auto-generate interpretation if entry already has dream text
         if (isPremium && found.dreamText) {
           void runInterpretation(found, found.dreamText, entries);
@@ -341,11 +346,14 @@ export default function SleepDetailScreen() {
                   </>
                 )}
                 <Pressable
-                  style={styles.rerunBtn}
+                  style={[styles.rerunBtn, hasReinterpreted && { opacity: 0.4 }]}
                   onPress={() => {
+                    if (hasReinterpreted) return;
                     if (entry && dreamText.trim()) {
                       setAiResult(null);
                       setAiError(null);
+                      setHasReinterpreted(true);
+                      void AsyncStorage.setItem(`msky_reinterpreted_${entry.id}`, '1');
                       setReinterpretCount(c => c + 1);
                     }
                   }}
