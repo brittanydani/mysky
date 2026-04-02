@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { toLocalDateString } from '../utils/dateUtils';
+import { toLocalDateString, getCheckInDateString } from '../utils/dateUtils';
 
 export type CheckInSaveStatus = 'idle' | 'success' | 'error';
 
@@ -53,7 +53,7 @@ export const useCheckInStore = create<CheckInStore>((set) => ({
           {
             user_id:    user.id,
             mood_value: safeMood,
-            log_date:   toLocalDateString(),
+            log_date:   getCheckInDateString(),
           },
           { onConflict: 'user_id,log_date' }
         );

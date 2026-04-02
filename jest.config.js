@@ -22,4 +22,18 @@ module.exports = {
     '^@noble/hashes/pbkdf2$': '<rootDir>/__mocks__/noble-hashes-pbkdf2.js',
     '^@/(.*)$': '<rootDir>/$1',
   },
+  collectCoverageFrom: [
+    'services/**/*.ts',
+    'utils/**/*.ts',
+    'lib/**/*.ts',
+    '!**/__tests__/**',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 75,
+      lines: 75,
+      statements: 75,
+    },
+  },
 };

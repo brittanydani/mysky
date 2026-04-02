@@ -11,7 +11,7 @@ import { NatalChart } from '../astrology/types';
 import { getTransitInfo, getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
 import { generateId } from '../storage/models';
 import { logger } from '../../utils/logger';
-import { toLocalDateString } from '../../utils/dateUtils';
+import { toLocalDateString, getCheckInDateString } from '../../utils/dateUtils';
 import type { MoonPhaseKeyTag } from '../../utils/moonPhase';
 import { getMoonPhaseKey } from '../../utils/moonPhase';
 import {
@@ -202,7 +202,7 @@ export class CheckInService {
    * Get today's check-in for a specific time slot (if it exists)
    */
   static async getTodayCheckInForSlot(chartId: string, timeOfDay: TimeOfDay): Promise<DailyCheckIn | null> {
-    const today = toLocalDateString(new Date());
+    const today = getCheckInDateString();
     return localDb.getCheckInByDateAndTime(today, chartId, timeOfDay);
   }
 
@@ -225,7 +225,7 @@ export class CheckInService {
    * Get today's most recent check-in (backward compat)
    */
   static async getTodayCheckIn(chartId: string): Promise<DailyCheckIn | null> {
-    const today = toLocalDateString(new Date());
+    const today = getCheckInDateString();
     return localDb.getCheckInByDate(today, chartId);
   }
 
@@ -233,7 +233,7 @@ export class CheckInService {
    * Get all of today's check-ins (up to 4)
    */
   static async getTodayCheckIns(chartId: string): Promise<DailyCheckIn[]> {
-    const today = toLocalDateString(new Date());
+    const today = getCheckInDateString();
     return localDb.getCheckInsByDate(today, chartId);
   }
 

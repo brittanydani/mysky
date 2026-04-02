@@ -68,8 +68,10 @@ const TICK_PATHS = Array.from({ length: 48 }, (_, i) => {
 
 export default function SkiaPulseMonitor({
   onSyncComplete,
+  isSaving = false,
 }: {
   onSyncComplete: () => void;
+  isSaving?: boolean;
 }) {
   const [complete, setComplete] = useState(false);
 
@@ -77,6 +79,19 @@ export default function SkiaPulseMonitor({
   const progress     = useSharedValue(0);
   const breathe      = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
+
+  // After saving finishes (isSaving true→false), reset so user can re-seal.
+  const prevSaving = useRef(isSaving);
+  useEffect(() => {
+    if (prevSaving.current && !isSaving) {
+      const timer = setTimeout(() => {
+        setComplete(false);
+        progress.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
+      }, 1400);
+      return () => clearTimeout(timer);
+    }
+    prevSaving.current = isSaving;
+  }, [isSaving, progress]);
 
   // ── Idle breathing animation ──────────────────────────────────────────────
   useEffect(() => {

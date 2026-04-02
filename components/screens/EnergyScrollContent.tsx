@@ -38,7 +38,7 @@ import {
   BehaviorContext,
 } from '../../services/energy/energyEngine';
 import { logger } from '../../utils/logger';
-import { toLocalDateString } from '../../utils/dateUtils';
+import { getCheckInDateString } from '../../utils/dateUtils';
 import ChakraWheelComponent from '../ui/ChakraWheel';
 import { SkiaChakraGlyph } from '../ui/SkiaChakraNode';
 import { useCorrelationStore } from '../../store/correlationStore';
@@ -125,7 +125,7 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
 
           let behavior: BehaviorContext | undefined;
           try {
-            const today = toLocalDateString(new Date());
+            const today = getCheckInDateString();
             const checkIn = await localDb.getCheckInByDate(today, saved.id);
             const recentCheckIns = await localDb.getCheckIns(saved.id, 7);
 

@@ -1,9 +1,9 @@
 // app/trigger-log.tsx
 // MySky — Polyvagal Trigger Log
-// Log individual nervous system events (Drains & Glimmers), mapped to
+// Log and review nervous system events (Drains & Glimmers), mapped to
 // Polyvagal Theory states. All data stored locally. Nothing transmitted.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,20 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeIn, FadeOut } from 'react-native-reanimated';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { formatTime, formatDate, timeOfDayLabel } from '../utils/triggerLogHelpers';
+import type { TriggerEvent, LogMode, NSState } from '../utils/triggerEventTypes';
+export type { TriggerEvent } from '../utils/triggerEventTypes';
 
 const STORAGE_KEY = '@mysky:trigger_events';
 
@@ -36,30 +40,164 @@ const PALETTE = {
   glassBorder: 'rgba(255,255,255,0.08)',
 };
 
-type LogMode = 'drain' | 'nourish';
-type NSState = 'sympathetic' | 'dorsal' | 'ventral';
-
-interface TriggerEvent {
-  id: string;
-  timestamp: number;
-  mode: LogMode;
-  event: string;
-  nsState: NSState;
-  sensations: string[];
-}
+type ViewMode = 'log' | 'history';
 
 const SENSATIONS: Record<LogMode, string[]> = {
-  drain: ['Tight Chest', 'Racing Heart', 'Shallow Breath', 'Jaw Tension', 'Brain Fog', 'Numbness', 'Heavy Limbs', 'Nausea'],
-  nourish: ['Deep Breath', 'Warmth', 'Shoulders Dropped', 'Clear Mind', 'Soft Eyes', 'Grounded Feet', 'Spaciousness'],
+  drain: [
+    'Tight Chest', 'Racing Heart', 'Shallow Breath', 'Jaw Tension', 'Brain Fog',
+    'Numbness', 'Heavy Limbs', 'Nausea', 'Shaky Hands', 'Hot Face',
+    'Held Breath', 'Stomach Drop', 'Eye Strain', 'Shoulder Lift', 'Clenched Fists',
+  ],
+  nourish: [
+    'Deep Breath', 'Warmth', 'Shoulders Dropped', 'Clear Mind', 'Soft Eyes',
+    'Grounded Feet', 'Spaciousness', 'Open Chest', 'Slow Heartbeat', 'Relaxed Jaw',
+    'Tingles', 'Tears of Relief', 'Yawning', 'Gentle Smile', 'Light Body',
+  ],
 };
+
+const CONTEXT_AREAS = ['Work', 'Home', 'Body', 'Family', 'Social', 'Solitude', 'Transit', 'Money', 'Sleep', 'Health', 'Creativity', 'Nature', 'Screens', 'Intimacy'];
+
+const NS_STATE_CARDS: Record<string, { label: string; sub: string; color: string }> = {
+  sympathetic: { label: 'Fight or Flight', sub: 'Anxious, frantic, mobilized, angry.', color: PALETTE.copper },
+  dorsal:      { label: 'Freeze or Fawn',  sub: 'Shut down, numb, disconnected, pleasing.', color: PALETTE.lavender },
+  ventral:     { label: 'Safe & Social',   sub: 'Grounded, connected, open, breathing freely.', color: PALETTE.sage },
+  still:       { label: 'Safe & Still',    sub: 'Quiet, calm, peacefully alone, restored.', color: PALETTE.rose },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// History Entry Component
+// ─────────────────────────────────────────────────────────────────────────────
+
+function HistoryEntry({ entry }: { entry: TriggerEvent }) {
+  const isDrain = entry.mode === 'drain';
+  const accentColor = isDrain ? PALETTE.copper : PALETTE.sage;
+  const stateCard = NS_STATE_CARDS[entry.nsState];
+
+  return (
+    <View style={[histStyles.card, { borderColor: `${accentColor}30` }]}>
+      <View style={histStyles.cardHeader}>
+        <View style={[histStyles.modeBadge, { backgroundColor: `${accentColor}18`, borderColor: `${accentColor}40` }]}>
+          <Text style={[histStyles.modeBadgeText, { color: accentColor }]}>
+            {isDrain ? 'DRAIN' : 'GLIMMER'}
+          </Text>
+        </View>
+        <Text style={histStyles.timeText}>{formatDate(entry.timestamp)} · {formatTime(entry.timestamp)}</Text>
+      </View>
+
+      <Text style={histStyles.eventText}>{entry.event}</Text>
+
+      <View style={histStyles.metaRow}>
+        <View style={[histStyles.statePill, { borderColor: `${stateCard.color}40`, backgroundColor: `${stateCard.color}10` }]}>
+          <Text style={[histStyles.statePillText, { color: stateCard.color }]}>{stateCard.label}</Text>
+        </View>
+        {entry.contextArea && (
+          <View style={histStyles.areaPill}>
+            <Text style={histStyles.areaPillText}>{entry.contextArea}</Text>
+          </View>
+        )}
+        {entry.intensity && (
+          <View style={histStyles.intensityWrap}>
+            {[1, 2, 3, 4, 5].map(i => (
+              <View
+                key={i}
+                style={[
+                  histStyles.intensityDot,
+                  { backgroundColor: i <= entry.intensity! ? accentColor : 'rgba(255,255,255,0.1)' },
+                ]}
+              />
+            ))}
+          </View>
+        )}
+        <Text style={histStyles.todLabel}>{timeOfDayLabel(entry.timestamp)}</Text>
+      </View>
+
+      {entry.sensations.length > 0 && (
+        <View style={histStyles.sensationRow}>
+          {entry.sensations.map(s => (
+            <Text key={s} style={histStyles.sensationChip}>{s}</Text>
+          ))}
+        </View>
+      )}
+
+      {entry.resolution ? (
+        <View style={histStyles.resolutionBox}>
+          <Text style={histStyles.resolutionLabel}>WHAT HELPED</Text>
+          <Text style={histStyles.resolutionText}>{entry.resolution}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+const histStyles = StyleSheet.create({
+  card: {
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.025)',
+    padding: 16,
+    marginBottom: 14,
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  modeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  modeBadgeText: { fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  timeText: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
+  eventText: { fontSize: 15, color: PALETTE.textMain, lineHeight: 22, marginBottom: 12 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 8 },
+  statePill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
+  statePillText: { fontSize: 11, fontWeight: '600' },
+  areaPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  areaPillText: { fontSize: 11, color: 'rgba(255,255,255,0.5)' },
+  intensityWrap: { flexDirection: 'row', gap: 4, alignItems: 'center' },
+  intensityDot: { width: 7, height: 7, borderRadius: 4 },
+  todLabel: { fontSize: 11, color: 'rgba(255,255,255,0.3)' },
+  sensationRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 },
+  sensationChip: { fontSize: 10, color: 'rgba(255,255,255,0.35)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  resolutionBox: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
+  resolutionLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1.2, color: 'rgba(255,255,255,0.3)', marginBottom: 4 },
+  resolutionText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 19 },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Screen
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function TriggerLogScreen() {
   const router = useRouter();
+  const [viewMode, setViewMode] = useState<ViewMode>('log');
   const [mode, setMode] = useState<LogMode>('drain');
   const [eventText, setEventText] = useState('');
   const [selectedState, setSelectedState] = useState<NSState | null>(null);
   const [selectedSensations, setSelectedSensations] = useState<string[]>([]);
+  const [customSensation, setCustomSensation] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [intensity, setIntensity] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
+  const [resolution, setResolution] = useState('');
+  const [contextArea, setContextArea] = useState<string | null>(null);
+  const [beforeState, setBeforeState] = useState<NSState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [history, setHistory] = useState<TriggerEvent[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
+      setHistory(raw ? JSON.parse(raw) : []);
+    } catch {
+      setHistory([]);
+    } finally {
+      setHistoryLoaded(true);
+    }
+  };
 
   const toggleMode = (newMode: LogMode) => {
     if (mode === newMode) return;
@@ -67,6 +205,8 @@ export default function TriggerLogScreen() {
     setMode(newMode);
     setSelectedState(null);
     setSelectedSensations([]);
+    setIntensity(null);
+    setBeforeState(null);
   };
 
   const toggleSensation = (sensation: string) => {
@@ -74,6 +214,14 @@ export default function TriggerLogScreen() {
     setSelectedSensations(prev =>
       prev.includes(sensation) ? prev.filter(s => s !== sensation) : [...prev, sensation]
     );
+  };
+
+  const addCustomSensation = () => {
+    const trimmed = customSensation.trim();
+    if (!trimmed || selectedSensations.includes(trimmed)) return;
+    setSelectedSensations(prev => [...prev, trimmed]);
+    setCustomSensation('');
+    setShowCustomInput(false);
   };
 
   const handleSeal = async () => {
@@ -88,52 +236,125 @@ export default function TriggerLogScreen() {
       event: eventText.trim(),
       nsState: selectedState,
       sensations: selectedSensations,
+      ...(intensity !== null ? { intensity } : {}),
+      ...(resolution.trim() ? { resolution: resolution.trim() } : {}),
+      ...(contextArea ? { contextArea } : {}),
+      ...(mode === 'nourish' && beforeState ? { beforeState } : {}),
     };
 
     try {
       const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
       const existing: TriggerEvent[] = raw ? JSON.parse(raw) : [];
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify([entry, ...existing]));
+      const updated = [entry, ...existing];
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      setHistory(updated);
     } catch {
       // silent fail — entry lost on storage error, no UX disruption
     }
 
+    setSaving(false);
+    setSaved(true);
+
     setTimeout(() => {
-      setSaving(false);
+      setSaved(false);
       router.back();
-    }, 600);
+    }, 2200);
   };
 
-  const activeColor = mode === 'drain' ? PALETTE.rose : PALETTE.sage;
+  const activeColor = mode === 'drain' ? PALETTE.copper : PALETTE.sage;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      {/* Nebula depth — atmospheric glow orbs */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
-      </View>
+      <LinearGradient
+        colors={['rgba(140, 190, 170, 0.08)', 'transparent']}
+        style={styles.topGlow}
+      />
+
+      {/* ── Post-save Confirmation Overlay ── */}
+      {saved && (
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          exiting={FadeOut.duration(400)}
+          style={styles.confirmOverlay}
+          pointerEvents="none"
+        >
+          <View style={styles.confirmCard}>
+            <Text style={styles.confirmEmoji}>{mode === 'drain' ? '🌊' : '✨'}</Text>
+            <Text style={styles.confirmTitle}>Logged.</Text>
+            <Text style={styles.confirmBody}>
+              {mode === 'drain'
+                ? 'You noticed. That awareness is the first shift.'
+                : 'A glimmer recognized becomes a resource carried forward.'}
+            </Text>
+          </View>
+        </Animated.View>
+      )}
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <Pressable
             style={styles.closeButton}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
-            <Text style={styles.closeIcon}>×</Text>
+            <MetallicIcon name="close-outline" size={22} color={PALETTE.textMuted} />
           </Pressable>
+
+          {/* ── View mode toggle: Log / History ── */}
+          <View style={styles.viewToggle}>
+            <Pressable
+              style={[styles.viewToggleBtn, viewMode === 'log' && styles.viewToggleBtnActive]}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); setViewMode('log'); }}
+            >
+              <Text style={[styles.viewToggleText, viewMode === 'log' && styles.viewToggleTextActive]}>Log</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.viewToggleBtn, viewMode === 'history' && styles.viewToggleBtnActive]}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); setViewMode('history'); }}
+            >
+              <Text style={[styles.viewToggleText, viewMode === 'history' && styles.viewToggleTextActive]}>
+                History{history.length > 0 ? ` (${history.length})` : ''}
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.titleArea}>
           <Text style={styles.headerTitle}>Nervous System Log</Text>
-          <Text style={styles.headerSubtitle}>Polyvagal triggers · drains · glimmers</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Polyvagal triggers · drains · glimmers</GoldSubtitle>
         </View>
 
+        {/* ════════════════════════ HISTORY VIEW ════════════════════════ */}
+        {viewMode === 'history' ? (
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {!historyLoaded ? (
+              <Text style={styles.emptyText}>Loading…</Text>
+            ) : history.length === 0 ? (
+              <Animated.View entering={FadeInDown.duration(400)} style={styles.emptyState}>
+                <Text style={styles.emptyEmoji}>🌿</Text>
+                <Text style={styles.emptyTitle}>No entries yet</Text>
+                <Text style={styles.emptyText}>Switch to Log to record your first event.</Text>
+              </Animated.View>
+            ) : (
+              <>
+                {history.map((entry, i) => (
+                  <Animated.View key={entry.id} entering={FadeInDown.delay(i * 40).duration(400)}>
+                    <HistoryEntry entry={entry} />
+                  </Animated.View>
+                ))}
+              </>
+            )}
+            <View style={{ height: 48 }} />
+          </ScrollView>
+        ) : (
+
+        /* ════════════════════════ LOG VIEW ════════════════════════ */
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -179,8 +400,66 @@ export default function TriggerLogScreen() {
                 value={eventText}
                 onChangeText={setEventText}
                 multiline
-                maxLength={120}
+                maxLength={1000}
               />
+            </View>
+          </Animated.View>
+
+          {/* ── Intensity ── */}
+          <Animated.View entering={FadeInDown.delay(180).duration(500)} style={styles.section}>
+            <Text style={styles.sectionLabel}>
+              {mode === 'drain' ? 'INTENSITY' : 'DEPTH OF SHIFT'}
+            </Text>
+            <View style={styles.intensityRow}>
+              {([1, 2, 3, 4, 5] as const).map(n => (
+                <Pressable
+                  key={n}
+                  style={[
+                    styles.intensityBtn,
+                    intensity === n && { backgroundColor: `${activeColor}25`, borderColor: activeColor },
+                  ]}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setIntensity(prev => (prev === n ? null : n));
+                  }}
+                >
+                  <Text style={[styles.intensityNum, intensity !== null && n <= intensity && { color: activeColor }]}>
+                    {n}
+                  </Text>
+                </Pressable>
+              ))}
+              <Text style={styles.intensityHint}>
+                {intensity === null ? 'optional' : intensity <= 2 ? 'mild' : intensity <= 3 ? 'moderate' : intensity === 4 ? 'strong' : 'overwhelming'}
+              </Text>
+            </View>
+          </Animated.View>
+
+          {/* ── Context Area ── */}
+          <Animated.View entering={FadeInDown.delay(190).duration(500)} style={styles.section}>
+            <Text style={styles.sectionLabel}>LIFE AREA</Text>
+            <View style={styles.tagCloud}>
+              {CONTEXT_AREAS.map(area => {
+                const isSelected = contextArea === area;
+                return (
+                  <Pressable
+                    key={area}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setContextArea(prev => (prev === area ? null : area));
+                    }}
+                    style={[
+                      styles.tagChip,
+                      isSelected && { backgroundColor: `${activeColor}18`, borderColor: activeColor },
+                    ]}
+                  >
+                    {isSelected ? (
+                      <MetallicText style={styles.tagText} color={activeColor}>{area}</MetallicText>
+                    ) : (
+                      <Text style={styles.tagText}>{area}</Text>
+                    )}
+                  </Pressable>
+                );
+              })}
             </View>
           </Animated.View>
 
@@ -190,63 +469,88 @@ export default function TriggerLogScreen() {
             <View style={styles.stateGrid}>
               {mode === 'drain' ? (
                 <>
-                  <Pressable
-                    style={[
-                      styles.stateCard,
-                      selectedState === 'sympathetic' && {
-                        borderColor: PALETTE.copper,
-                        backgroundColor: `${PALETTE.copper}15`,
-                      },
-                    ]}
-                    onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState('sympathetic'); }}
-                  >
-                    {selectedState === 'sympathetic' ? (
-                      <MetallicText style={styles.stateTitle} color={PALETTE.copper}>Fight or Flight</MetallicText>
-                    ) : (
-                      <Text style={styles.stateTitle}>Fight or Flight</Text>
-                    )}
-                    <Text style={styles.stateSub}>Anxious, frantic, mobilized, angry.</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[
-                      styles.stateCard,
-                      selectedState === 'dorsal' && {
-                        borderColor: PALETTE.lavender,
-                        backgroundColor: `${PALETTE.lavender}15`,
-                      },
-                    ]}
-                    onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState('dorsal'); }}
-                  >
-                    {selectedState === 'dorsal' ? (
-                      <MetallicText style={styles.stateTitle} color={PALETTE.lavender}>Freeze or Fawn</MetallicText>
-                    ) : (
-                      <Text style={styles.stateTitle}>Freeze or Fawn</Text>
-                    )}
-                    <Text style={styles.stateSub}>Shut down, numb, disconnected, pleasing.</Text>
-                  </Pressable>
+                  {(['sympathetic', 'dorsal'] as NSState[]).map(state => {
+                    const card = NS_STATE_CARDS[state];
+                    const isSelected = selectedState === state;
+                    return (
+                      <Pressable
+                        key={state}
+                        style={[
+                          styles.stateCard,
+                          isSelected && { borderColor: card.color, backgroundColor: `${card.color}15` },
+                        ]}
+                        onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState(state); }}
+                      >
+                        {isSelected ? (
+                          <MetallicText style={styles.stateTitle} color={card.color}>{card.label}</MetallicText>
+                        ) : (
+                          <Text style={styles.stateTitle}>{card.label}</Text>
+                        )}
+                        <Text style={styles.stateSub}>{card.sub}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </>
               ) : (
-                <Pressable
-                  style={[
-                    styles.stateCard,
-                    selectedState === 'ventral' && {
-                      borderColor: PALETTE.emerald,
-                      backgroundColor: `${PALETTE.emerald}15`,
-                    },
-                  ]}
-                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState('ventral'); }}
-                >
-                  {selectedState === 'ventral' ? (
-                    <MetallicText style={styles.stateTitle} color={PALETTE.emerald}>Safe & Social</MetallicText>
-                  ) : (
-                    <Text style={styles.stateTitle}>Safe & Social</Text>
-                  )}
-                  <Text style={styles.stateSub}>Grounded, connected, open, breathing freely.</Text>
-                </Pressable>
+                <>
+                  {(['ventral', 'still'] as NSState[]).map(state => {
+                    const card = NS_STATE_CARDS[state];
+                    const isSelected = selectedState === state;
+                    return (
+                      <Pressable
+                        key={state}
+                        style={[
+                          styles.stateCard,
+                          isSelected && { borderColor: card.color, backgroundColor: `${card.color}15` },
+                        ]}
+                        onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState(state); }}
+                      >
+                        {isSelected ? (
+                          <MetallicText style={styles.stateTitle} color={card.color}>{card.label}</MetallicText>
+                        ) : (
+                          <Text style={styles.stateTitle}>{card.label}</Text>
+                        )}
+                        <Text style={styles.stateSub}>{card.sub}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </>
               )}
             </View>
           </Animated.View>
+
+          {/* ── Before State (Glimmers only) ── */}
+          {mode === 'nourish' && (
+            <Animated.View entering={FadeInDown.delay(210).duration(500)} style={styles.section}>
+              <Text style={styles.sectionLabel}>WHERE WERE YOU BEFORE?</Text>
+              <View style={styles.stateGrid}>
+                {(['sympathetic', 'dorsal', 'ventral', 'still'] as NSState[]).map(state => {
+                  const card = NS_STATE_CARDS[state];
+                  const isSelected = beforeState === state;
+                  return (
+                    <Pressable
+                      key={state}
+                      style={[
+                        styles.stateCard,
+                        isSelected && { borderColor: card.color, backgroundColor: `${card.color}15` },
+                      ]}
+                      onPress={() => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setBeforeState(prev => (prev === state ? null : state));
+                      }}
+                    >
+                      {isSelected ? (
+                        <MetallicText style={styles.stateTitle} color={card.color}>{card.label}</MetallicText>
+                      ) : (
+                        <Text style={styles.stateTitle}>{card.label}</Text>
+                      )}
+                      <Text style={styles.stateSub}>{card.sub}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </Animated.View>
+          )}
 
           {/* ── Somatic Tags ── */}
           <Animated.View entering={FadeInDown.delay(240).duration(500)} style={styles.section}>
@@ -260,10 +564,7 @@ export default function TriggerLogScreen() {
                     onPress={() => toggleSensation(sensation)}
                     style={[
                       styles.tagChip,
-                      isSelected && {
-                        backgroundColor: `${activeColor}20`,
-                        borderColor: activeColor,
-                      },
+                      isSelected && { backgroundColor: `${activeColor}20`, borderColor: activeColor },
                     ]}
                   >
                     {isSelected ? (
@@ -274,6 +575,66 @@ export default function TriggerLogScreen() {
                   </Pressable>
                 );
               })}
+              {/* Custom cues already added */}
+              {selectedSensations
+                .filter(s => !SENSATIONS[mode].includes(s))
+                .map(s => (
+                  <Pressable
+                    key={s}
+                    onPress={() => toggleSensation(s)}
+                    style={[styles.tagChip, { backgroundColor: `${activeColor}20`, borderColor: activeColor }]}
+                  >
+                    <MetallicText style={styles.tagText} color={activeColor}>{s}</MetallicText>
+                  </Pressable>
+                ))}
+              {/* Add custom cue */}
+              {showCustomInput ? (
+                <View style={styles.customCueRow}>
+                  <TextInput
+                    style={styles.customCueInput}
+                    placeholder="Custom cue…"
+                    placeholderTextColor={PALETTE.textMuted}
+                    value={customSensation}
+                    onChangeText={setCustomSensation}
+                    autoFocus
+                    maxLength={40}
+                    onSubmitEditing={addCustomSensation}
+                    returnKeyType="done"
+                  />
+                  <Pressable style={styles.customCueAdd} onPress={addCustomSensation}>
+                    <Text style={[styles.customCueAddText, { color: activeColor }]}>Add</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable
+                  style={[styles.tagChip, styles.addCueChip]}
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowCustomInput(true); }}
+                >
+                  <Text style={[styles.tagText, { color: PALETTE.textMuted }]}>+ custom</Text>
+                </Pressable>
+              )}
+            </View>
+          </Animated.View>
+
+          {/* ── What Helped / Resolution ── */}
+          <Animated.View entering={FadeInDown.delay(260).duration(500)} style={styles.inputSection}>
+            <Text style={styles.sectionLabel}>
+              {mode === 'drain' ? 'WHAT HELPED? (optional)' : 'WHAT CREATED THIS? (optional)'}
+            </Text>
+            <View style={[styles.inputGlass, { borderColor: `${activeColor}25` }]}>
+              <TextInput
+                style={[styles.textInput, { fontSize: 14 }]}
+                placeholder={
+                  mode === 'drain'
+                    ? 'Walked, breathed, called someone, sat outside…'
+                    : 'Music, sunlight, a kind word, stillness…'
+                }
+                placeholderTextColor={PALETTE.textMuted}
+                value={resolution}
+                onChangeText={setResolution}
+                multiline
+                maxLength={500}
+              />
             </View>
           </Animated.View>
 
@@ -287,42 +648,43 @@ export default function TriggerLogScreen() {
             <Pressable
               style={[
                 styles.sealBtn,
-                { backgroundColor: (!eventText.trim() || !selectedState || saving) ? 'rgba(255,255,255,0.08)' : activeColor },
+                { backgroundColor: (!eventText.trim() || !selectedState || saving || saved) ? 'rgba(255,255,255,0.08)' : activeColor },
               ]}
               onPress={handleSeal}
-              disabled={!eventText.trim() || !selectedState || saving}
+              disabled={!eventText.trim() || !selectedState || saving || saved}
             >
               <Text style={[
                 styles.sealBtnText,
-                { color: (!eventText.trim() || !selectedState || saving) ? PALETTE.textMuted : '#0A0A0C' },
+                { color: (!eventText.trim() || !selectedState || saving || saved) ? PALETTE.textMuted : '#0A0A0C' },
               ]}>
-                {saving ? 'SAVING...' : 'SAVE ENTRY'}
+                {saving ? 'SAVING…' : 'SAVE ENTRY'}
               </Text>
             </Pressable>
           </Animated.View>
 
           <View style={{ height: 48 }} />
         </ScrollView>
+        )}
       </SafeAreaView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: PALETTE.bg },
   safeArea: { flex: 1 },
-  glowOrb: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    opacity: 0.6,
-  },
 
-  header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea:   { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 32 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
+
+  viewToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 3 },
+  viewToggleBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 },
+  viewToggleBtnActive: { backgroundColor: 'rgba(255,255,255,0.1)' },
+  viewToggleText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '600' },
+  viewToggleTextActive: { color: PALETTE.textMain },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
@@ -332,7 +694,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginBottom: 4,
   },
-  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
+  headerSubtitle: { fontSize: 14 },
 
   toggleContainer: {
     flexDirection: 'row',
@@ -342,7 +704,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   toggleBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12 },
-  toggleBtnActiveDrain: { backgroundColor: 'rgba(212, 163, 179, 0.15)' },
+  toggleBtnActiveDrain: { backgroundColor: 'rgba(205, 127, 93, 0.15)' },
   toggleBtnActiveNourish: { backgroundColor: 'rgba(140, 190, 170, 0.15)' },
   toggleText: { fontSize: 13, fontWeight: '700', color: PALETTE.textMuted, letterSpacing: 0.5 },
 
@@ -356,6 +718,20 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
+
+  intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  intensityBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  intensityNum: { fontSize: 16, fontWeight: '700', color: PALETTE.textMuted },
+  intensityHint: { fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 4 },
 
   inputSection: { marginBottom: 32 },
   inputGlass: {
@@ -391,7 +767,23 @@ const styles = StyleSheet.create({
     borderColor: PALETTE.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
+  addCueChip: { borderStyle: 'dashed' },
   tagText: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '500' },
+
+  customCueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  customCueInput: {
+    flex: 1,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingHorizontal: 14,
+    color: PALETTE.textMain,
+    fontSize: 12,
+  },
+  customCueAdd: { paddingHorizontal: 12, paddingVertical: 7 },
+  customCueAddText: { fontSize: 12, fontWeight: '700' },
 
   submitSection: { paddingHorizontal: 0, marginBottom: 8 },
   submitHint: {
@@ -411,4 +803,31 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
   },
   sealBtnText: { color: '#0A0A0C', fontSize: 13, fontWeight: '800', letterSpacing: 1.5 },
+
+  // Empty state
+  emptyState: { alignItems: 'center', paddingTop: 80 },
+  emptyEmoji: { fontSize: 48, marginBottom: 16 },
+  emptyTitle: { fontSize: 20, color: PALETTE.textMain, fontWeight: '700', marginBottom: 8 },
+  emptyText: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 21 },
+
+  // Post-save overlay
+  confirmOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    backgroundColor: 'rgba(2, 8, 23, 0.85)',
+  },
+  confirmCard: {
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    padding: 40,
+    alignItems: 'center',
+    maxWidth: 300,
+  },
+  confirmEmoji: { fontSize: 48, marginBottom: 16 },
+  confirmTitle: { fontSize: 28, color: PALETTE.textMain, fontWeight: '800', marginBottom: 10 },
+  confirmBody: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 21 },
 });

@@ -328,49 +328,8 @@ export default function InnerWorldScreen() {
               </Animated.View>
             )}
 
-            {/* Tool Cards */}
-            <View style={styles.grid}>
-              {TOOLS.map((tool, i) => {
-                const isDone = completion[tool.id];
-
-                return (
-                  <Animated.View
-                    key={tool.id}
-                    entering={FadeInDown.delay(160 + i * 80).duration(600)}
-                    layout={Layout.springify()}
-                  >
-                    <Pressable
-                      style={({ pressed }) => [pressed && styles.cardPressed]}
-                      onPress={() => nav(tool.route)}
-                    >
-                      <LinearGradient
-                        colors={[`rgba(${tool.accentRgb}, 0.1)`, 'rgba(10,10,15,0.85)']}
-                        style={styles.card}
-                      >
-                        <View style={styles.cardHeader}>
-                          <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
-
-                          <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.emerald}20`, borderColor: `${PALETTE.emerald}40` } : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
-                            {isDone ? (
-                              <MetallicText style={styles.badgeText} color={PALETTE.emerald}>SEALED</MetallicText>
-                            ) : (
-                              <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>EXPLORE</Text>
-                            )}
-                            {isDone && <MetallicIcon name="checkmark-outline" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
-                          </View>
-                        </View>
-
-                        <Text style={styles.cardTitle}>{tool.title}</Text>
-                        <Text style={styles.cardSubtitle}>{tool.description}</Text>
-                      </LinearGradient>
-                    </Pressable>
-                  </Animated.View>
-                );
-              })}
-            </View>
-
             {/* Daily Questions — per category */}
-            <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.dailyHeader}>
+            <Animated.View entering={FadeInDown.delay(160).duration(600)} style={styles.dailyHeader}>
               <MetallicText style={styles.dailyHeaderTitle} color={PALETTE.gold}>Today's Questions</MetallicText>
               <GoldSubtitle style={styles.dailyHeaderSub}>Seal each category to complete the day</GoldSubtitle>
             </Animated.View>
@@ -385,7 +344,7 @@ export default function InnerWorldScreen() {
               return (
                 <Animated.View
                   key={category}
-                  entering={FadeInDown.delay(560 + catIdx * 100).duration(600)}
+                  entering={FadeInDown.delay(220 + catIdx * 100).duration(600)}
                   layout={Layout.springify()}
                   style={styles.categorySection}
                 >
@@ -417,7 +376,7 @@ export default function InnerWorldScreen() {
                     return (
                       <Animated.View
                         key={q.id}
-                        entering={FadeInDown.delay(620 + catIdx * 100 + qIdx * 60).duration(500)}
+                        entering={FadeInDown.delay(280 + catIdx * 100 + qIdx * 60).duration(500)}
                       >
                         <LinearGradient
                           colors={[`rgba(${rgb}, 0.06)`, 'rgba(10,10,15,0.85)']}
@@ -492,9 +451,70 @@ export default function InnerWorldScreen() {
                       </Text>
                     </Pressable>
                   )}
+                  {isSealed && (
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.sealCategoryButton,
+                        { borderColor: 'rgba(110,191,139,0.3)', backgroundColor: 'rgba(110,191,139,0.08)' },
+                        pressed && styles.sealButtonPressed,
+                      ]}
+                      onPress={() => { setCategorySealed(prev => ({ ...prev, [category]: false })); }}
+                    >
+                      <MetallicIcon name="lock-open-outline" size={16} color={PALETTE.emerald} />
+                      <Text style={[styles.sealCategoryText, { color: PALETTE.emerald }]}>
+                        Unseal to Edit
+                      </Text>
+                    </Pressable>
+                  )}
                 </Animated.View>
               );
             })}
+
+            {/* Tool Cards */}
+            <Animated.View entering={FadeInDown.delay(560).duration(600)} style={styles.dailyHeader}>
+              <MetallicText style={styles.dailyHeaderTitle} color={PALETTE.lavender}>Explore & Log</MetallicText>
+              <GoldSubtitle style={styles.dailyHeaderSub}>Build your inner world profile</GoldSubtitle>
+            </Animated.View>
+
+            <View style={styles.grid}>
+              {TOOLS.map((tool, i) => {
+                const isDone = completion[tool.id];
+
+                return (
+                  <Animated.View
+                    key={tool.id}
+                    entering={FadeInDown.delay(620 + i * 80).duration(600)}
+                    layout={Layout.springify()}
+                  >
+                    <Pressable
+                      style={({ pressed }) => [pressed && styles.cardPressed]}
+                      onPress={() => nav(tool.route)}
+                    >
+                      <LinearGradient
+                        colors={[`rgba(${tool.accentRgb}, 0.1)`, 'rgba(10,10,15,0.85)']}
+                        style={styles.card}
+                      >
+                        <View style={styles.cardHeader}>
+                          <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
+
+                          <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.emerald}20`, borderColor: `${PALETTE.emerald}40` } : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+                            {isDone ? (
+                              <MetallicText style={styles.badgeText} color={PALETTE.emerald}>SEALED</MetallicText>
+                            ) : (
+                              <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>EXPLORE</Text>
+                            )}
+                            {isDone && <MetallicIcon name="checkmark-outline" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
+                          </View>
+                        </View>
+
+                        <Text style={styles.cardTitle}>{tool.title}</Text>
+                        <Text style={styles.cardSubtitle}>{tool.description}</Text>
+                      </LinearGradient>
+                    </Pressable>
+                  </Animated.View>
+                );
+              })}
+            </View>
 
             {/* Journey Progress */}
             {totalDays > 0 && (

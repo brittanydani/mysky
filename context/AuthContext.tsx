@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' && newSession?.user) {
         revenueCatService.logIn(newSession.user.id);
         // Auto-seed demo data for the App Store reviewer account only
-        DemoSeedService.seedIfNeeded(newSession.user.email).catch(() => {});
+        DemoSeedService.seedIfNeeded(newSession.user.email).catch((e) => logger.warn('[AuthContext] Demo seed failed:', e));
       } else if (event === 'SIGNED_OUT') {
         revenueCatService.logOut();
       }
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.auth.startAutoRefresh();
         // Top-up demo data for any days missed while app was closed
         supabase.auth.getSession().then(({ data: { session: s } }) => {
-          if (s?.user?.email) DemoSeedService.seedIfNeeded(s.user.email).catch(() => {});
+          if (s?.user?.email) DemoSeedService.seedIfNeeded(s.user.email).catch((e) => logger.warn('[AuthContext] Demo seed failed:', e));
         });
       } else {
         // Halt refresh to save energy for the user
@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       // Tactile confirmation of closing the session
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => { /* haptic not critical */ });
       
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.info('[AuthContext] User successfully signed out');
     } catch (err) {
       logger.error('[AuthContext] Sign-out failed:', err);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => { /* haptic not critical */ });
     }
   }, []);
 

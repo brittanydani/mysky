@@ -25,6 +25,7 @@ import Body, { ExtendedBodyPart, Slug } from 'react-native-body-highlighter';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
+import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
@@ -212,20 +213,20 @@ export default function SomaticMapScreen() {
     <View style={styles.container}>
       <SkiaDynamicCosmos />
 
-      {/* Nebula depth — atmospheric glow orbs */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={[styles.glowOrb, { top: -60, right: -60, backgroundColor: 'rgba(110, 140, 180, 0.12)' }]} />
-        <View style={[styles.glowOrb, { bottom: 160, left: -120, backgroundColor: 'rgba(217, 191, 140, 0.06)' }]} />
-      </View>
+      <LinearGradient
+        colors={['rgba(140, 190, 170, 0.08)', 'transparent']}
+        style={styles.topGlow}
+      />
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        {/* Header row — matches mood screen */}
         <View style={styles.header}>
           <Pressable
             style={styles.closeButton}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); if (router.canGoBack()) router.back(); }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
-            <Text style={styles.closeIcon}>×</Text>
+            <MetallicIcon name="close-outline" size={22} color={PALETTE.textMuted} />
           </Pressable>
         </View>
 
@@ -436,18 +437,11 @@ export default function SomaticMapScreen() {
 const styles = StyleSheet.create({
   container:  { flex: 1, backgroundColor: PALETTE.bg },
   safeArea:   { flex: 1 },
-  glowOrb: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    opacity: 0.6,
-  },
+  topGlow:    { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header:     { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:  { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 32 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:  { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {

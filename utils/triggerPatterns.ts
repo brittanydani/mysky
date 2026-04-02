@@ -6,7 +6,7 @@
  * independently of the React rendering layer.
  */
 
-import { TriggerEvent } from '../app/trigger-log';
+import { TriggerEvent } from './triggerEventTypes';
 
 export interface TriggerPatternSummary {
   drainCount: number;

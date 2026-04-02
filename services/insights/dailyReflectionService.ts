@@ -51,11 +51,6 @@ export interface DayQuestions {
 const STORAGE_KEY = '@mysky:daily_reflections';
 const QUESTIONS_PER_CATEGORY = 365;
 
-/**
- * Seconds after midnight to wait before switching to the new day's questions.
- * This prevents questions changing at exactly midnight — they change at 00:00:05.
- */
-const MIDNIGHT_OFFSET_SECONDS = 5;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Question selection — deterministic by day
@@ -63,15 +58,14 @@ const MIDNIGHT_OFFSET_SECONDS = 5;
 
 /**
  * Get the effective date for question selection.
- * During the first MIDNIGHT_OFFSET_SECONDS after midnight, the previous day
- * is still active so that questions don't change at exactly 00:00:00.
+ * The reflection day runs from 6:00 AM to 5:59 AM the following morning.
+ * Any time before 6:00 AM belongs to the previous calendar day's reflection.
  */
 export function getReflectionDate(now: Date = new Date()): Date {
-  const h = now.getHours();
-  const m = now.getMinutes();
-  const s = now.getSeconds();
-  if (h === 0 && m === 0 && s < MIDNIGHT_OFFSET_SECONDS) {
-    return new Date(now.getTime() - MIDNIGHT_OFFSET_SECONDS * 1000);
+  if (now.getHours() < 6) {
+    const prev = new Date(now);
+    prev.setDate(prev.getDate() - 1);
+    return prev;
   }
   return now;
 }
@@ -104,13 +98,33 @@ function hashString(str: string): number {
 }
 
 /**
+ * Deterministic Fisher-Yates shuffle of an array of indices.
+ * Uses a simple LCG seeded by `seed` so the result is reproducible.
+ * The shuffle resets each calendar year, ensuring questions cycle annually.
+ */
+function seededShuffle(length: number, seed: number): number[] {
+  const arr = Array.from({ length }, (_, i) => i);
+  let s = seed >>> 0; // treat as unsigned 32-bit
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+    const j = s % (i + 1);
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
+
+/**
  * Select today's questions for a given category.
  * Returns 3 questions on every 3rd day, 2 otherwise.
- * Uses a staggered offset per category so questions don't repeat across categories.
+ *
+ * Questions are drawn sequentially from a deterministic yearly shuffle of the
+ * full question bank (seeded by year + category + optional userSeed). Because
+ * each day advances the cursor by 2–3 positions through a 365-item permutation,
+ * the same question cannot appear twice within ~156 days — well beyond the
+ * 90-day no-repeat window.
  *
  * Pass `userSeed` (e.g. chartId or profile hash) to personalise which
- * questions each user receives on a given day. Without it the rotation is
- * the same for all users (deterministic by date only).
+ * questions each user receives on a given day.
  */
 export function getTodayQuestions(
   category: ReflectionCategory,
@@ -121,22 +135,29 @@ export function getTodayQuestions(
   const bank = QUESTION_BANKS[category];
   const count = dayOfYear % 3 === 0 ? 3 : 2;
 
-  // Offset per category so questions don't overlap in index space
+  // Unique per-category prime offset so each category gets its own shuffled deck
   const categoryOffset: Record<ReflectionCategory, number> = {
-    values: 0,
-    archetypes: 7,
-    cognitive: 13,
+    values:     0,
+    archetypes: 31337,
+    cognitive:  98765,
   };
-  const offset = categoryOffset[category];
 
-  // Per-user offset so different users see different questions on the same day
+  // Seed encodes year + category + user so the deck reshuffles each year
+  // and differs per user while remaining fully deterministic
   const userOffset = userSeed ? hashString(userSeed) : 0;
+  const seed = (date.getFullYear() * 7919 + categoryOffset[category] + userOffset) >>> 0;
+
+  const shuffled = seededShuffle(QUESTIONS_PER_CATEGORY, seed);
+
+  // Calculate how many questions have been asked in days 1..(dayOfYear-1).
+  // Each day d contributes 3 questions if d%3===0, otherwise 2.
+  // Total through day d = 2d + floor(d/3).
+  const d = dayOfYear - 1;
+  const startIndex = (2 * d + Math.floor(d / 3)) % QUESTIONS_PER_CATEGORY;
 
   const questions: ReflectionQuestion[] = [];
   for (let i = 0; i < count; i++) {
-    // Spread picks across the bank using golden-ratio-like spacing + user offset
-    const idx = (dayOfYear * 3 + i * 127 + offset + userOffset) % QUESTIONS_PER_CATEGORY;
-    questions.push(bank[idx]);
+    questions.push(bank[shuffled[(startIndex + i) % QUESTIONS_PER_CATEGORY]]);
   }
 
   return questions;
@@ -220,7 +241,7 @@ export async function sealTodayAnswers(
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Check whether today's reflections have already been sealed. */
-export async function isTodaySealed(date: Date = new Date()): Promise<boolean> {
+export async function isTodaySealed(date: Date = getReflectionDate()): Promise<boolean> {
   const data = await loadReflections();
   const today = getTodayKey(date);
   return data.answers.some(a => a.date === today);
@@ -314,14 +335,15 @@ function computeStreakFromAnswers(answers: ReflectionAnswer[]): number {
   if (answers.length === 0) return 0;
 
   const daySet = new Set(answers.map(a => a.date));
-  const today = getTodayKey();
+  const effectiveNow = getReflectionDate();
+  const today = getTodayKey(effectiveNow);
 
   let streak = 0;
-  let checkDate = new Date();
+  let checkDate = effectiveNow;
 
   // Allow streak to start from today or yesterday
   if (!daySet.has(today)) {
-    const yesterday = new Date();
+    const yesterday = new Date(effectiveNow);
     yesterday.setDate(yesterday.getDate() - 1);
     if (!daySet.has(getTodayKey(yesterday))) return 0;
     checkDate = yesterday;

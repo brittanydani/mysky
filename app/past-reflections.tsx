@@ -152,8 +152,10 @@ export default function PastReflectionsScreen() {
           <Pressable
             style={styles.closeButton}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
-            <Text style={styles.closeIcon}>×</Text>
+            <MetallicIcon name="close-outline" size={22} color={PALETTE.textMuted} />
           </Pressable>
         </View>
 
@@ -270,8 +272,7 @@ const styles = StyleSheet.create({
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
   filterLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: PALETTE.textMuted,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -343,7 +344,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(217, 191, 140, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 191, 140, 0.15)',
   },
   dayBadgeText: {
     fontSize: 11,

@@ -918,7 +918,7 @@ export default function SleepScreen() {
                   ) : (
                     <View style={styles.pulseSection}>
                       <Text style={styles.pulseLabel}>Hold to Seal Nightly Log</Text>
-                      <SkiaPulseMonitor key={`seal-${editingEntryId ?? 'new'}-${String(isEditingUnlocked)}`} onSyncComplete={handleSave} />
+                      <SkiaPulseMonitor key={`seal-${editingEntryId ?? 'new'}-${String(isEditingUnlocked)}`} onSyncComplete={handleSave} isSaving={saving} />
                     </View>
                   )}
                 </View>

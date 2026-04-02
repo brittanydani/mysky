@@ -3,7 +3,7 @@ import {
   computeTriggerPatternSummary,
   buildTriggerPatternNarrative,
 } from '../triggerPatterns';
-import type { TriggerEvent } from '../../app/trigger-log';
+import type { TriggerEvent } from '../triggerEventTypes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers

@@ -34,9 +34,9 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 const STORAGE_KEY = '@mysky:relationship_patterns';
 
 const PALETTE = {
-  anxious: '#D9BF8C',   // Gold — Moving Toward
-  avoidant: '#8CBEAA',  // Sage — Moving Away
-  control: '#CD7F5D',   // Copper — Rigidity
+  anxious: '#7A9EBD',   // Steel blue — Moving Toward
+  avoidant: '#C4877F',  // Dusty rose — Moving Away
+  control: '#9088A8',   // Lavender grey — Rigidity
   gold: '#D9BF8C',
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
@@ -386,8 +386,8 @@ const styles = StyleSheet.create({
   gravityBarContainer: { height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 24, gap: 3 },
   gravitySegment: { height: '100%', borderRadius: 4 },
 
-  legendRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendRow: { flexDirection: 'row', marginTop: 8 },
+  legendItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
 
   formCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },

@@ -16,7 +16,7 @@
  */
 
 import { localDb } from '../storage/localDb';
-import { toLocalDateString } from '../../utils/dateUtils';
+import { toLocalDateString, getCheckInDateString } from '../../utils/dateUtils';
 import { mean } from '../../utils/stats';
 import { logger } from '../../utils/logger';
 import type { SelfKnowledgeContext } from '../insights/selfKnowledgeContext';
@@ -122,7 +122,7 @@ export async function getStreakStatus(chartId: string): Promise<StreakStatus> {
       };
     }
 
-    const today = toLocalDateString(new Date());
+    const today = getCheckInDateString();
     const dateSet = new Set(checkIns.map(c => c.date));
     const checkedInToday = dateSet.has(today);
 

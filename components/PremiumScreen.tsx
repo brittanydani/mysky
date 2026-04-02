@@ -12,7 +12,6 @@ import * as Haptics from 'expo-haptics';
 
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
-import MySkyDiamondSkia from './skia/MySkyDiamondSkia';
 import { usePremium } from '../context/PremiumContext';
 import { config, LEGAL_URL } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';

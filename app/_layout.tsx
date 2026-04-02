@@ -11,6 +11,7 @@ import { GoldIcon } from '../components/ui/GoldIcon';
 import React, { Component, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
@@ -24,6 +25,9 @@ import CosmicBackground from '../components/ui/CosmicBackground';
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
+
+// Keep splash visible until the app finishes initializing
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
@@ -170,6 +174,7 @@ function AppShell() {
   // Prevent double-running the heavy init in edge cases
   const didRunPostConsentInitRef = useRef(false);
   const initTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didHideSplash = useRef(false);
   // Prevent double-navigation after onboarding completes
   const didNavigatePostOnboarding = useRef(false);
 
@@ -424,6 +429,14 @@ function AppShell() {
     }
     // Navigation is handled by the useEffect above once session confirms.
   };
+
+  // Hide splash screen once all init gates have passed
+  useEffect(() => {
+    if (!checkingConsent && dbReady && !authLoading && !didHideSplash.current) {
+      didHideSplash.current = true;
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [checkingConsent, dbReady, authLoading]);
 
   if (checkingConsent || !dbReady) {
     if (initTimedOut) {

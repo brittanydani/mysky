@@ -9,7 +9,7 @@
 //   If your font paths differ, update FONT_* requires below.
 // - Film grain uses RuntimeEffect; if unsupported on a device/build, it silently disables.
 
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import {
   Canvas,
@@ -479,7 +479,7 @@ interface Props {
   filterMode?: { person1: boolean; person2: boolean; cross: boolean };
 }
 
-export default function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName, filterMode }: Props) {
+function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName, filterMode }: Props) {
   const ascLongitude = getLongitude((chart as any).ascendant) ?? 0;
 
   const showPerson1 = !filterMode || filterMode.person1;
@@ -1501,6 +1501,8 @@ export default function NatalChartWheel({ chart, showAspects = true, overlayChar
     </View>
   );
 }
+
+export default memo(NatalChartWheel);
 
 const styles = StyleSheet.create({
   container: {

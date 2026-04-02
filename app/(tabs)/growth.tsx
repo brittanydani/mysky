@@ -24,7 +24,7 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
-import { computeNarrativeInsights, NarrativeInsightBundle, NarrativeInsight } from '../../utils/narrativeInsights';
+import { computeNarrativeInsights, NarrativeInsightBundle, NarrativeInsight, NarrativeCategory } from '../../utils/narrativeInsights';
 import { buildPersonalProfile } from '../../utils/personalProfile';
 import { computeDeepInsights, DeepInsightBundle, DeepInsight } from '../../utils/deepInsights';
 import { PatternOrbitMap } from '../../components/ui/PatternOrbitMap';
@@ -42,7 +42,7 @@ import { useCircadianStore } from '../../store/circadianStore';
 import { useCorrelationStore } from '../../store/correlationStore';
 import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/insightsPdfExport';
 import { DailyAggregate, ChartProfile } from '../../services/insights/types';
-import { TriggerEvent } from '../trigger-log';
+import { TriggerEvent } from '../../utils/triggerEventTypes';
 
 const SCREEN_W = Dimensions.get('window').width;
 const ORBIT_SIZE = SCREEN_W - 48;
@@ -699,7 +699,7 @@ export default function PatternsScreen() {
             const narrativeCategories = new Set(
               narrative?.insights.map((i) => i.category) ?? []
             );
-            const NARRATIVE_OVERLAP: Record<string, string> = {
+            const NARRATIVE_OVERLAP: Record<string, NarrativeCategory> = {
               'pattern-sleep':        'sleep_connection',
               'pattern-best-day':     'best_day',
               'pattern-connection':   'connection_pattern',
