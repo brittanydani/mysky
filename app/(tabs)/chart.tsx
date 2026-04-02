@@ -817,6 +817,25 @@ export default function ChartScreen() {
     }
   })();
 
+  const birthTimeStr = (() => {
+    try {
+      const chart = activeChart ?? userChart;
+      const bd = (chart as any)?.birthData;
+      if (bd?.hasUnknownTime) return '';
+      const t = bd?.time as string | undefined;
+      if (!t) return '';
+      // t is 'HH:MM' — format as 12-hour
+      const [hStr, mStr] = t.split(':');
+      const h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+    } catch {
+      return '';
+    }
+  })();
+
   const houseCusps = activeChart?.houseCusps ?? [];
 
   return (
@@ -1010,6 +1029,12 @@ export default function ChartScreen() {
 
           {/* ── Chart Wheel ── */}
           <Animated.View entering={FadeInDown.delay(150).duration(600)} style={{ alignItems: 'center', width: '100%' }}>
+            {/* Birth date/time line above wheel */}
+            {activeOverlays.length === 0 && (birthDateStr || birthTimeStr) && (
+              <Text style={[styles.wheelHint, { marginBottom: 8, opacity: 0.7 }]}>
+                {[birthDateStr, birthTimeStr].filter(Boolean).join(' · ')}
+              </Text>
+            )}
             <View style={styles.wheelFrame}>
               <View style={styles.wheelInner}>
                 <NatalChartWheel

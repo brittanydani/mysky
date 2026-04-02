@@ -42,7 +42,7 @@ function SkiaPholusIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: 
   const dotCx = x + 6.5 * s, dotCy = y + 17.5 * s, dotR = 2.2 * s;
   return (
     <>
-      <Path path={path} style="stroke" strokeWidth={2 * s} color={color} strokeCap="round" />
+      <Path path={path} style="stroke" strokeWidth={1.2 * s} color={color} strokeCap="round" />
       <Circle cx={dotCx} cy={dotCy} r={dotR} color={color} />
     </>
   );
@@ -67,8 +67,8 @@ function SkiaLilithIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: 
   stemPath.lineTo(cx + 4 * s, stemBot);
   return (
     <>
-      <Path path={cresPath} style="stroke" strokeWidth={1.5 * s} color={color} strokeCap="round" />
-      <Path path={stemPath} style="stroke" strokeWidth={1.5 * s} color={color} strokeCap="round" />
+      <Path path={cresPath} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />
+      <Path path={stemPath} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />
     </>
   );
 }
@@ -85,7 +85,7 @@ function SkiaPartOfFortuneIcon({ x, y, size = 24, color = '#C9AE78' }: { x: numb
   path.lineTo(cx + d, cy + d);
   path.moveTo(cx + d, cy - d);
   path.lineTo(cx - d, cy + d);
-  return <Path path={path} style="stroke" strokeWidth={1.3 * s} color={color} strokeCap="round" />;
+  return <Path path={path} style="stroke" strokeWidth={0.9 * s} color={color} strokeCap="round" />;
 }
 
 // Skia-native Vertex icon
@@ -105,9 +105,9 @@ function SkiaVertexIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: 
   x2.lineTo(x + 19 * s, y + 12 * s);
   return (
     <>
-      <Path path={vPath} style="stroke" strokeWidth={1.8 * s} color={color} strokeCap="round" />
-      <Path path={x1} style="stroke" strokeWidth={1.8 * s} color={color} strokeCap="round" />
-      <Path path={x2} style="stroke" strokeWidth={1.8 * s} color={color} strokeCap="round" />
+      <Path path={vPath} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
+      <Path path={x1} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
+      <Path path={x2} style="stroke" strokeWidth={1.1 * s} color={color} strokeCap="round" />
     </>
   );
 }
@@ -264,13 +264,14 @@ const CROSS_ASPECT_COLORS: Record<string, { tight: string; loose: string }> = {
 
 /**
  * Convert ecliptic longitude (0° Aries = 0) to canvas angle.
- * We rotate the wheel so the Ascendant sits at 9 o'clock (left).
+ * Increasing longitude maps counterclockwise, which is the standard
+ * astrological convention: signs progress Aries→Pisces counterclockwise,
+ * houses go 1→12 clockwise (i.e. ASC left → IC bottom → DC right → MC top).
  */
 function astroToAngle(longitude: number, ascLongitude: number): number {
   const offset = ascLongitude;
   const adjusted = longitude - offset;
-  const angleDeg = -adjusted;
-  return (angleDeg * Math.PI) / 180;
+  return (adjusted * Math.PI) / 180;
 }
 
 function polarToXY(angle: number, radius: number): { x: number; y: number } {
@@ -497,10 +498,11 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
     if (orientation === 'midheaven-top') {
       // MC at 12 o'clock (top / angle = π/2).
-      // offset = MC_longitude + 90 places MC_longitude at angle π/2 (top).
+      // With angle = (lon - offset) × π/180, we need (mcLon - offset) = 90
+      // so offset = mcLon - 90.
       const mc = getLongitude(getChartPlanet(chart, 'Midheaven'));
       const mcLon = mc ?? rawAscLongitude;
-      return normalize360(mcLon + 90);
+      return normalize360(mcLon - 90);
     }
     if (orientation === 'aries-rising') {
       // 0° Aries at 9 o'clock (left), mirroring the Ascendant position.
@@ -1186,7 +1188,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   // K lower arm: from mid-stem going lower-right
                   path.moveTo(cx, cy + 1);
                   path.lineTo(cx + 4.5, cy + 5);
-                  return <Path path={path} style="stroke" strokeWidth={1.3} color="#FFFFFF" strokeCap="round" />;
+                  return <Path path={path} style="stroke" strokeWidth={0.8} color="#FFFFFF" strokeCap="round" />;
                 })()
               ) : symbolFont ? (
                 <SkiaText
@@ -1330,7 +1332,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   // K lower arm
                   path.moveTo(cx, cy + 0.8);
                   path.lineTo(cx + 3.6, cy + 4);
-                  return <Path path={path} style="stroke" strokeWidth={1.1} color="#FFFFFF" strokeCap="round" />;
+                  return <Path path={path} style="stroke" strokeWidth={0.7} color="#FFFFFF" strokeCap="round" />;
                 })()
               ) : glyphFont && (
                 <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color="#000000" style="stroke" strokeWidth={1.2} />

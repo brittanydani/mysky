@@ -156,7 +156,7 @@ export const ORB_CONFIGURATIONS: Record<OrbPreset, OrbConfiguration> = {
 };
 
 const DEFAULT_SETTINGS: AstrologySettings = {
-  houseSystem: 'whole-sign',
+  houseSystem: 'placidus',
   zodiacSystem: 'tropical',
   ayanamsa: 'lahiri',
   orbPreset: 'normal',
