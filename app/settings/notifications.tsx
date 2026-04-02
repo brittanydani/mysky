@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Switch, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';

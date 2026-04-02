@@ -9,7 +9,7 @@ import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../../constants/theme';

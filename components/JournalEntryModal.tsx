@@ -33,7 +33,8 @@ import Animated, {
   withSequence,
   withTiming,
   cancelAnimation,
-} from 'react-native-reanimated';import * as Haptics from 'expo-haptics';
+} from 'react-native-reanimated';
+import * as Haptics from '../utils/haptics';
 
 import { theme } from '../constants/theme';
 import { logger } from '../utils/logger';

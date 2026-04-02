@@ -39,7 +39,7 @@ import {
   Easing,
   interpolateColor,
 } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import { selection as hapticSelection } from '../../utils/haptics';
 import { theme } from '../../constants/theme';
 
 // ── Dimensions ──────────────────────────────────────────────────────────────
@@ -55,16 +55,16 @@ const THUMB_CY = TRACK_H / 2;
 // ── Palette ─────────────────────────────────────────────────────────────────
 
 const PAL = {
-  active: '#6EBF8B',                    // Emerald Ignite
-  dormant: '#2A3B52',                   // Deep Space Indigo (Singularity)
-  trackOff: 'rgba(20, 25, 40, 0.92)',
-  trackOn: 'rgba(30, 60, 50, 0.98)',
-  starCore: '#F0EAD6',                  // Core Light
-  starGlow: 'rgba(110, 191, 139, 0.6)', // Emerald glow
-  starFlare: 'rgba(110, 191, 139, 0.3)',
-  voidColor: 'rgba(42, 59, 82, 0.4)',
-  specular: 'rgba(255, 255, 255, 0.08)',
-  border: 'rgba(255,255,255,0.10)',
+  active: '#C9AE78',                    // Champagne Gold — matches GoldSubtitle mid tone
+  dormant: '#3A3020',                   // Dark Antique Bronze
+  trackOff: 'rgba(25, 20, 12, 0.92)',
+  trackOn: 'rgba(55, 44, 18, 0.98)',
+  starCore: '#FFF4D6',                  // GoldSubtitle highlight tone
+  starGlow: 'rgba(233, 217, 184, 0.6)', // GoldSubtitle #E9D9B8 glow
+  starFlare: 'rgba(201, 174, 120, 0.35)',
+  voidColor: 'rgba(58, 48, 32, 0.4)',
+  specular: 'rgba(255, 244, 214, 0.14)', // #FFF4D6 specular
+  border: 'rgba(201,174,120,0.22)',
 };
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -150,7 +150,7 @@ const SkiaCelestialToggle = memo(function SkiaCelestialToggle({
   // ── Handle press ──
   const handlePress = useCallback(() => {
     if (disabled) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    hapticSelection();
     onToggle(!value);
   }, [value, onToggle, disabled]);
 
@@ -173,7 +173,7 @@ const SkiaCelestialToggle = memo(function SkiaCelestialToggle({
 
       {/* Skia Toggle */}
       <View style={styles.toggleWrap}>
-        <Canvas style={styles.toggleCanvas}>
+        <Canvas style={styles.toggleCanvas} pointerEvents="none">
           {/* Track — obsidian surface, tints green when on */}
           <RoundedRect
             x={0}

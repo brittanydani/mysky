@@ -75,8 +75,10 @@ type BackupEnvelope = {
  * ============================================================================
  */
 
-// OWASP PBKDF2-SHA256 minimum (2023): 310,000 iterations
-const KDF_ITERATIONS = 310_000;
+// 100,000 iterations meets OWASP 2021 guidance and is practical on mobile JS
+// (310,000 caused multi-second stalls in pure-JS environments with no WebCrypto acceleration).
+// The envelope stores the actual iteration count so existing backups restore correctly.
+const KDF_ITERATIONS = 100_000;
 const KEY_LEN = 32; // bytes (AES-256)
 const SALT_LEN = 16;
 const IV_LEN = 12;

@@ -49,5 +49,26 @@ export function notification(type: Haptics.NotificationFeedbackType = Haptics.No
   Haptics.notificationAsync(type).catch(() => {});
 }
 
+/**
+ * Drop-in async replacements that match the expo-haptics API.
+ * Existing files can swap `import * as Haptics from 'expo-haptics'`
+ * to `import * as Haptics from '../../utils/haptics'` and all calls
+ * will automatically respect the user's haptic preference.
+ */
+export function selectionAsync(): Promise<void> {
+  if (!_hapticsEnabled) return Promise.resolve();
+  return Haptics.selectionAsync().catch(() => {});
+}
+
+export function impactAsync(style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Medium): Promise<void> {
+  if (!_hapticsEnabled) return Promise.resolve();
+  return Haptics.impactAsync(style).catch(() => {});
+}
+
+export function notificationAsync(type: Haptics.NotificationFeedbackType = Haptics.NotificationFeedbackType.Success): Promise<void> {
+  if (!_hapticsEnabled) return Promise.resolve();
+  return Haptics.notificationAsync(type).catch(() => {});
+}
+
 // Re-export enums for convenience
 export { ImpactFeedbackStyle, NotificationFeedbackType } from 'expo-haptics';

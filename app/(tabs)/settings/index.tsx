@@ -1,6 +1,7 @@
 // app/(tabs)/settings/index.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
@@ -231,9 +232,11 @@ export default function SettingsScreen() {
     }
   }, [ensureSettings]);
 
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+  useFocusEffect(
+    useCallback(() => {
+      loadSettings();
+    }, [loadSettings])
+  );
 
   // ── Calibration toggle helpers ──
   const togglePref = useCallback(async (key: string, value: boolean, setter: (v: boolean) => void) => {

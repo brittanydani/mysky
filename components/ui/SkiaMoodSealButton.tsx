@@ -35,7 +35,7 @@ import {
   Gesture,
   GestureDetector,
 } from 'react-native-gesture-handler';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 

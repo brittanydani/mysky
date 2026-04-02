@@ -20,7 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { useRouter, Href } from 'expo-router';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 // BlurView reserved for future dream UI
 import Svg, { Circle, Defs, RadialGradient, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 
