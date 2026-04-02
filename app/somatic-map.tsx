@@ -40,16 +40,25 @@ const PALETTE = {
   bg:          '#020817',
 };
 
-const EMOTIONS = [
+const EMOTIONS_CORE = [
   'Anxiety', 'Sadness', 'Anger',     'Joy',
   'Fear',    'Peace',   'Tension',   'Numbness',
   'Grief',   'Excitement', 'Shame',  'Love',
 ];
 
+const EMOTIONS_EXTENDED = [
+  'Stress', 'Overwhelm', 'Frustration', 'Loneliness',
+  'Contentment', 'Burnout', 'Safety', 'Relief',
+  'Grounded', 'Disconnection', 'Irritability', 'Restlessness',
+];
+
 const EMOTION_COLORS: Record<string, string> = {
-  Anxiety:    '#D9BF8C', Sadness: '#C9AE78', Anger:    '#D4A3B3', Joy:       '#8CBEAA',
-  Fear:       '#A89BC8', Peace:   '#6EBF8B', Tension:  '#D98C8C', Numbness:  '#6E8CB4',
-  Grief:      '#9E8FB8', Excitement: '#E8C97A', Shame: '#B87EA0', Love:      '#E8A3B3',
+  Anxiety:       '#D9BF8C', Sadness:      '#C9AE78', Anger:         '#D4A3B3', Joy:           '#8CBEAA',
+  Fear:          '#A89BC8', Peace:        '#6EBF8B', Tension:       '#D98C8C', Numbness:      '#6E8CB4',
+  Grief:         '#9E8FB8', Excitement:   '#E8C97A', Shame:         '#B87EA0', Love:          '#E8A3B3',
+  Stress:        '#D9A07A', Overwhelm:    '#C47A7A', Frustration:   '#D4956E', Loneliness:    '#7A9EC4',
+  Contentment:   '#7ABEA0', Burnout:      '#8C8C9E', Safety:        '#7ACC9A', Relief:        '#90CEB4',
+  Grounded:      '#A0B87A', Disconnection:'#7A8CA0', Irritability:  '#CC8A7A', Restlessness: '#C4A07A',
 };
 
 // Sage heat steps: low → high
@@ -101,6 +110,7 @@ export default function SomaticMapScreen() {
   const [intensity,       setIntensity]       = useState<number>(3);
   const [side,            setSide]            = useState<'front' | 'back'>('front');
   const [gender,          setGender]          = useState<'female' | 'male'>('female');
+  const [showMoreEmotions, setShowMoreEmotions] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -302,7 +312,7 @@ export default function SomaticMapScreen() {
           <Animated.View entering={FadeInDown.delay(220).duration(500)}>
             <Text style={[styles.sectionLabel, { marginTop: 24 }]}>EMOTION PRESENT</Text>
             <View style={styles.emotionWrap}>
-              {EMOTIONS.map((em) => {
+              {(showMoreEmotions ? [...EMOTIONS_CORE, ...EMOTIONS_EXTENDED] : EMOTIONS_CORE).map((em) => {
                 const isSelected = selectedEmotion === em;
                 const color = EMOTION_COLORS[em] ?? PALETTE.sage;
                 return (
@@ -324,6 +334,17 @@ export default function SomaticMapScreen() {
                   </Pressable>
                 );
               })}
+              <Pressable
+                style={styles.emotionMoreBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                  setShowMoreEmotions((p) => !p);
+                }}
+              >
+                <Text style={styles.emotionMoreText}>
+                  {showMoreEmotions ? '− Less' : '+ More'}
+                </Text>
+              </Pressable>
             </View>
           </Animated.View>
 
@@ -509,6 +530,8 @@ const styles = StyleSheet.create({
   },
 
   emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  emotionMoreBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', backgroundColor: 'rgba(255,255,255,0.04)', justifyContent: 'center', alignItems: 'center' },
+  emotionMoreText: { fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 0.5 },
   emotionChip: {
     paddingHorizontal: 14,
     paddingVertical: 9,

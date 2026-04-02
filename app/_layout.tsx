@@ -28,6 +28,7 @@ import { StarNotificationProvider } from '../context/StarNotificationContext';
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
+import { initHapticPreference } from '../utils/haptics';
 import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
@@ -194,6 +195,7 @@ function AppShell() {
       // DB migration + settings should only happen once consent is granted
       await MigrationService.performMigrationIfNeeded();
       await AstrologySettingsService.getSettings();
+      await initHapticPreference();
 
       // Boot the subscription store so isPro is known before any screen renders
       useSubscriptionStore.getState().initialize().catch((e) =>

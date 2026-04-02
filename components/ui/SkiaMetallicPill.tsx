@@ -67,7 +67,7 @@ function SkiaMetallicPill({
       ]}
     >
       {w > 0 && (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
           <Canvas style={{ flex: 1 }}>
             <Group>
               <RoundedRect x={0} y={0} width={w} height={height} r={r}>

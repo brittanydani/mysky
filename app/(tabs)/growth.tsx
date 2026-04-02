@@ -16,6 +16,8 @@ import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { localDb } from '../../services/storage/localDb';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
+import { computeTriggerPatternSummary, buildTriggerPatternNarrative } from '../../utils/triggerPatterns';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
@@ -40,6 +42,7 @@ import { useCircadianStore } from '../../store/circadianStore';
 import { useCorrelationStore } from '../../store/correlationStore';
 import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/insightsPdfExport';
 import { DailyAggregate, ChartProfile } from '../../services/insights/types';
+import { TriggerEvent } from '../trigger-log';
 
 const SCREEN_W = Dimensions.get('window').width;
 const ORBIT_SIZE = SCREEN_W - 48;
@@ -139,6 +142,7 @@ export default function PatternsScreen() {
   const correlations = useCorrelationStore((s) => s.correlations);
   const syncCorrelations = useCorrelationStore((s) => s.syncCorrelations);
   const [isExporting, setIsExporting] = useState(false);
+  const [triggerEvents, setTriggerEvents] = useState<TriggerEvent[]>([]);
   const pipelineRef = useRef<{ aggregates: DailyAggregate[]; profile: ChartProfile | null; windowDays: number; totalCheckIns: number; totalJournalEntries: number } | null>(null);
   const chartNameRef = useRef<string | undefined>(undefined);
   const weeklyChangeCard = buildWeeklyChangeCard(null, snapshot);
@@ -150,6 +154,10 @@ export default function PatternsScreen() {
       setTrendCheckIns([]);
       syncRhythm().catch(() => {});
       syncCorrelations().catch(() => {});
+      // Load trigger events for nervous system patterns
+      EncryptedAsyncStorage.getItem('@mysky:trigger_events')
+        .then(raw => { if (raw) setTriggerEvents(JSON.parse(raw)); })
+        .catch(() => {});
       (async () => {
         try {
           const charts = await localDb.getCharts();
@@ -755,6 +763,34 @@ export default function PatternsScreen() {
             );
           })()}
 
+          {/* ── Nervous System Patterns ── */}
+          {triggerEvents.length >= 3 && (() => {
+            const last30 = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            const recent = triggerEvents.filter(e => e.timestamp > last30);
+            if (recent.length < 3) return null;
+            const summary = computeTriggerPatternSummary(recent);
+            const { drainCount, glimmerCount } = summary;
+            const narrative = buildTriggerPatternNarrative(summary);
+
+            return (
+              <Animated.View entering={FadeInDown.delay(450)} style={styles.section}>
+                <SectionHeader label="NERVOUS SYSTEM LOG" icon="pulse-outline" subtitle="From your polyvagal trigger entries" />
+                <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
+                    <View style={{ flex: 1, backgroundColor: 'rgba(205,127,93,0.1)', borderRadius: 16, padding: 14, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 24, fontWeight: '800', color: PALETTE.copper }}>{drainCount}</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: 0.8 }}>DRAINS</Text>
+                    </View>
+                    <View style={{ flex: 1, backgroundColor: 'rgba(140,190,170,0.1)', borderRadius: 16, padding: 14, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 24, fontWeight: '800', color: '#8CBEAA' }}>{glimmerCount}</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: 0.8 }}>GLIMMERS</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.insightBody}>{narrative}</Text>
+                </LinearGradient>
+              </Animated.View>
+            );
+          })()}
 
         </ScrollView>
       </SafeAreaView>

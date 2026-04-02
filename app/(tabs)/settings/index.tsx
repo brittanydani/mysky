@@ -35,6 +35,7 @@ import { IdentityVault } from '../../../utils/IdentityVault';
 import { logger } from '../../../utils/logger';
 import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';
+import { setHapticsEnabled } from '../../../utils/haptics';
 import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
@@ -237,7 +238,10 @@ export default function SettingsScreen() {
   // ── Calibration toggle helpers ──
   const togglePref = useCallback(async (key: string, value: boolean, setter: (v: boolean) => void) => {
     setter(value);
-    try { await AsyncStorage.setItem(key, value ? '1' : '0'); } catch {}
+    try {
+      await AsyncStorage.setItem(key, value ? '1' : '0');
+      if (key === 'pref_haptic') setHapticsEnabled(value);
+    } catch {}
   }, []);
 
   const toggleDailyReminder = useCallback(async (value: boolean) => {

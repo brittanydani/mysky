@@ -75,7 +75,7 @@ export default function CoreValuesScreen() {
           try {
             const parsed = JSON.parse(raw);
             setState(parsed);
-            if (parsed.topFive?.length > 0) setSaved(true);
+            // Do NOT auto-seal on load — seal state only set by explicit user action
           } catch {}
         }
       });
@@ -243,13 +243,22 @@ export default function CoreValuesScreen() {
           {/* Save Button */}
           {state.topFive.length > 0 && (
             <Animated.View layout={Layout.springify()} entering={FadeInDown.delay(200).duration(600)} style={styles.saveRow}>
-              <Pressable style={[styles.saveBtn, saved && styles.saveBtnDone]} onPress={handleSave}>
+              <Pressable
+                style={[styles.saveBtn, saved && styles.saveBtnDone]}
+                onPress={handleSave}
+                onLongPress={() => {
+                  if (saved) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                    setSaved(false);
+                  }
+                }}
+              >
                 <LinearGradient
                   colors={saved ? ['rgba(140,190,170,0.3)', 'rgba(140,190,170,0.1)'] : ['rgba(217,191,140,0.3)', 'rgba(217,191,140,0.1)']}
                   style={StyleSheet.absoluteFill}
                 />
                 <MetallicText style={styles.saveBtnText} color={saved ? '#8CBEAA' : PALETTE.gold}>
-                  {saved ? '✓ Values Sealed' : 'Seal My Values'}
+                  {saved ? '✓ Values Sealed · Hold to Edit' : 'Seal My Values'}
                 </MetallicText>
               </Pressable>
             </Animated.View>

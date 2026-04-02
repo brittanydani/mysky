@@ -29,6 +29,7 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaRestorationField from '../../components/ui/SkiaRestorationField';
 import SkiaRestorationInsight from '../../components/ui/SkiaRestorationInsight';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { localDb } from '../../services/storage/localDb';
 import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
@@ -309,6 +310,7 @@ export default function SleepScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isEditingUnlocked, setIsEditingUnlocked] = useState(false);
+  const [dreamLoggingEnabled, setDreamLoggingEnabled] = useState(true);
 
   const today = useMemo(() => {
     const now = new Date();
@@ -387,6 +389,8 @@ export default function SleepScreen() {
       (async () => {
         try {
           setLoading(true);
+          const dreamPref = await AsyncStorage.getItem('pref_dream_logging');
+          setDreamLoggingEnabled(dreamPref === null || dreamPref === '1');
           const charts = await localDb.getCharts();
           if (charts.length === 0) return;
           const savedChart = charts[0];
@@ -474,6 +478,7 @@ export default function SleepScreen() {
         if (expandedEntryId === savedId) setExpandedEntryId(null);
       }
       applyEntryToForm(savedEntry);
+      if (savedEntry) setIsEditingUnlocked(true);
       setSaving(false);
     } catch (e) {
       logger.error('Sleep save failed:', e);
@@ -688,6 +693,8 @@ export default function SleepScreen() {
                   </View>
 
                   {/* ── Dream Journal Section ── */}
+                  {dreamLoggingEnabled ? (
+                  <>
                   <Text style={[styles.fieldLabel, { marginTop: 32 }]}>Dream Memory</Text>
                   <View style={[styles.dreamGlassCard, dreamText.length > 0 && styles.dreamGlassCardActive]}>
                     <TextInput
@@ -887,6 +894,15 @@ export default function SleepScreen() {
                       />
                     </>
                   )}
+                  </>
+                ) : (
+                  <View style={{ marginTop: 32 }}>
+                    <Text style={[styles.fieldLabel]}>Dream Memory</Text>
+                    <Text style={{ color: theme.textMuted, fontSize: 14, marginTop: 8 }}>
+                      Dream logging is turned off. Enable it in Settings → Personalization.
+                    </Text>
+                  </View>
+                )}
 
                 </View>
 
@@ -1022,7 +1038,7 @@ const styles = StyleSheet.create({
   headerDesc: { fontSize: 15, color: PALETTE.textMuted, lineHeight: 22, marginTop: 2 },
 
   section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 19, fontWeight: '700', color: PALETTE.textMain, marginBottom: 16, paddingLeft: 4 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 16, paddingLeft: 4 },
   editorialSectionLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.textMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16, paddingLeft: 2 },
 
   // Featured editorial entry card (first/most recent)
@@ -1053,11 +1069,11 @@ const styles = StyleSheet.create({
   // ── Form Card (deep glassmorphic volume) ──
   formCard: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
   formInner: { padding: 28 },
-  formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
+  formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
   formTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
   cancelEditBtn: { padding: 8 },
 
-  fieldLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.textMain, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16 },
+  fieldLabel: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 },
 
   // Volumetric moon rating
   qualityRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 8 },
@@ -1079,15 +1095,15 @@ const styles = StyleSheet.create({
   premiumLockCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217, 191, 140, 0.2)', padding: 28 },
   premiumLockTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.gold, marginBottom: 4 },
   premiumLockSub: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },
-  deeperSkyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(157, 118, 193, 0.15)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.3)' },
+  deeperSkyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(157, 118, 193, 0.15)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(157, 118, 193, 0.3)' },
   deeperSkyBadgeText: { color: PALETTE.amethyst, fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 
   // Feeling picker
-  dreamMoodDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  dreamMoodDropdown: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   dreamMoodDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500', flex: 1, marginRight: 8 },
   dreamMoodDropdownPlaceholder: { color: PALETTE.textMuted, fontSize: 15 },
-  dreamMoodOptions: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 16, marginBottom: 12, overflow: 'hidden' },
-  dreamMoodOption: { paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  dreamMoodOptions: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 20, marginBottom: 12, overflow: 'hidden' },
+  dreamMoodOption: { paddingVertical: 15, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
   dreamMoodOptionSelected: { backgroundColor: 'rgba(157, 118, 193, 0.15)' },
   dreamMoodOptionText: { color: PALETTE.textMain, fontSize: 15 },
   dreamMoodOptionTextSelected: { color: PALETTE.amethyst, fontWeight: '600' },
@@ -1096,9 +1112,9 @@ const styles = StyleSheet.create({
   feelingSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, height: 40 },
 
   tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
-  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'transparent' },
+  tierPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'transparent' },
   tierDot: { width: 8, height: 8, borderRadius: 4 },
-  tierPillText: { color: PALETTE.textMuted, fontSize: 12, fontWeight: '600' },
+  tierPillText: { color: PALETTE.textMuted, fontSize: 13, fontWeight: '600' },
   tierBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
   tierBadgeText: { color: '#020817', fontSize: 11, fontWeight: '700' },
   tierHint: { color: PALETTE.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 24, paddingHorizontal: 16,  },
@@ -1112,11 +1128,11 @@ const styles = StyleSheet.create({
   intensityDotTextActive: { color: PALETTE.amethyst },
 
   // Dream metadata
-  metadataSection: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, marginBottom: 12, padding: 20 },
-  metadataRow: { marginBottom: 20 },
+  metadataSection: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, marginBottom: 12, padding: 24 },
+  metadataRow: { marginBottom: 22 },
   metadataLabel: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '600', marginBottom: 12 },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  awakenDropdown: { backgroundColor: 'transparent', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, paddingVertical: 12, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  awakenDropdown: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'transparent', justifyContent: 'center', paddingHorizontal: 3, borderWidth: 1, borderColor: PALETTE.glassBorder },
@@ -1128,7 +1144,7 @@ const styles = StyleSheet.create({
   sealSection: { alignItems: 'center', marginTop: 48, paddingTop: 32, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
   pulseSection: { alignItems: 'center', position: 'relative' },
   pulseLabel: { color: PALETTE.textMain, fontSize: 13, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 24 },
-  unlockBtn: { marginTop: 12, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder },
+  unlockBtn: { marginTop: 12, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
   unlockText: { color: PALETTE.textMuted, fontWeight: '700', fontSize: 12, letterSpacing: 1 },
 
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(205, 127, 93, 0.15)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 14, marginTop: 16 },
@@ -1141,13 +1157,13 @@ const styles = StyleSheet.create({
 
   // Stats
   statsRow: { flexDirection: 'row', gap: 12 },
-  statCard: { flex: 1, borderRadius: 24, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
-  statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 8 },
-  statValue: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain },
-  statSub: { fontSize: 11, color: PALETTE.textMuted, marginTop: 4, textAlign: 'center',  },
+  statCard: { flex: 1, borderRadius: 20, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
+  statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, marginBottom: 10 },
+  statValue: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
+  statSub: { fontSize: 11, color: PALETTE.textMuted, marginTop: 4, textAlign: 'center' },
 
   // Obsidian graph / cluster cards
-  obsidianCard: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.15)', overflow: 'hidden', alignItems: 'center' },
+  obsidianCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.15)', overflow: 'hidden', alignItems: 'center' },
   obsidianCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 12 },
   obsidianCardEyebrow: { fontSize: 11, fontWeight: '800', color: PALETTE.silverBlue, letterSpacing: 1.5 },
   obsidianCardFooter: { marginTop: 10, alignSelf: 'center' },

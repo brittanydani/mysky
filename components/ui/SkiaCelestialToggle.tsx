@@ -44,10 +44,10 @@ import { theme } from '../../constants/theme';
 
 // ── Dimensions ──────────────────────────────────────────────────────────────
 
-const TRACK_W = 52;
-const TRACK_H = 28;
-const TRACK_R = 14;
-const THUMB_R = 10;
+const TRACK_W = 56;
+const TRACK_H = 32;
+const TRACK_R = 16;
+const THUMB_R = 12;
 const THUMB_OFF_X = TRACK_R;
 const THUMB_ON_X = TRACK_W - TRACK_R;
 const THUMB_CY = TRACK_H / 2;
@@ -58,13 +58,13 @@ const PAL = {
   active: '#6EBF8B',                    // Emerald Ignite
   dormant: '#2A3B52',                   // Deep Space Indigo (Singularity)
   trackOff: 'rgba(20, 25, 40, 0.92)',
-  trackOn: 'rgba(30, 50, 45, 0.95)',
+  trackOn: 'rgba(30, 60, 50, 0.98)',
   starCore: '#F0EAD6',                  // Core Light
-  starGlow: 'rgba(110, 191, 139, 0.5)', // Emerald glow
-  starFlare: 'rgba(110, 191, 139, 0.25)',
+  starGlow: 'rgba(110, 191, 139, 0.6)', // Emerald glow
+  starFlare: 'rgba(110, 191, 139, 0.3)',
   voidColor: 'rgba(42, 59, 82, 0.4)',
   specular: 'rgba(255, 255, 255, 0.08)',
-  border: 'rgba(255,255,255,0.06)',
+  border: 'rgba(255,255,255,0.10)',
 };
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -161,6 +161,7 @@ const SkiaCelestialToggle = memo(function SkiaCelestialToggle({
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={label}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
     >
       {/* Text content */}
       {(label || description) && (
@@ -173,14 +174,21 @@ const SkiaCelestialToggle = memo(function SkiaCelestialToggle({
       {/* Skia Toggle */}
       <View style={styles.toggleWrap}>
         <Canvas style={styles.toggleCanvas}>
-          {/* Track — obsidian surface */}
+          {/* Track — obsidian surface, tints green when on */}
           <RoundedRect
             x={0}
             y={0}
             width={TRACK_W}
             height={TRACK_H}
             r={TRACK_R}
-            color={PAL.trackOff}
+            color={useDerivedValue(() => {
+              'worklet';
+              return interpolateColor(
+                toggleProgress.value,
+                [0, 1],
+                [PAL.trackOff, PAL.trackOn],
+              );
+            })}
           />
 
           {/* Track specular top-edge */}

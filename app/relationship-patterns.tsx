@@ -34,9 +34,9 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 const STORAGE_KEY = '@mysky:relationship_patterns';
 
 const PALETTE = {
-  anxious: '#D4A3B3',   // Rose — Moving Toward
-  avoidant: '#C9AE78',  // Silver Blue — Moving Away
-  control: '#A89BC8',   // Lavender — Rigidity
+  anxious: '#D9BF8C',   // Gold — Moving Toward
+  avoidant: '#8CBEAA',  // Sage — Moving Away
+  control: '#CD7F5D',   // Copper — Rigidity
   gold: '#D9BF8C',
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
@@ -59,6 +59,8 @@ const PATTERN_TAGS: PatternTag[] = [
   { id: 't3', label: 'Rushing intimacy', category: 'anxious' },
   { id: 't4', label: 'Caretaking others', category: 'anxious' },
   { id: 't5', label: 'Over-explaining', category: 'anxious' },
+  { id: 't15', label: 'Seeking reassurance', category: 'anxious' },
+  { id: 't16', label: 'Self-silencing', category: 'anxious' },
 
   // Moving Away (Avoidant / Under-functioning)
   { id: 't6', label: 'Avoidant when close', category: 'avoidant' },
@@ -66,12 +68,14 @@ const PATTERN_TAGS: PatternTag[] = [
   { id: 't8', label: 'Hyper-independence', category: 'avoidant' },
   { id: 't9', label: 'Shutting down', category: 'avoidant' },
   { id: 't10', label: 'Fear of enmeshment', category: 'avoidant' },
+  { id: 't17', label: 'Difficulty trusting', category: 'avoidant' },
 
   // Rigidity / Protection (Control)
   { id: 't11', label: 'Need for control', category: 'control' },
   { id: 't12', label: 'Difficulty with boundaries', category: 'control' },
   { id: 't13', label: 'Testing the relationship', category: 'control' },
   { id: 't14', label: 'Perfectionism in love', category: 'control' },
+  { id: 't18', label: 'Defensiveness', category: 'control' },
 ];
 
 interface PatternEntry {
@@ -229,16 +233,16 @@ export default function RelationshipPatternsScreen() {
 
                 <View style={styles.legendRow}>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: PALETTE.anxious }]} />
-                    <Text style={styles.legendText}>Moving Toward</Text>
+                    <MetallicText style={styles.legendDot} color={PALETTE.anxious}>◆</MetallicText>
+                    <MetallicText style={styles.legendText} color={PALETTE.anxious}>Moving Toward</MetallicText>
                   </View>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: PALETTE.avoidant }]} />
-                    <Text style={styles.legendText}>Moving Away</Text>
+                    <MetallicText style={styles.legendDot} color={PALETTE.avoidant}>◆</MetallicText>
+                    <MetallicText style={styles.legendText} color={PALETTE.avoidant}>Moving Away</MetallicText>
                   </View>
                   <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: PALETTE.control }]} />
-                    <Text style={styles.legendText}>Rigidity</Text>
+                    <MetallicText style={styles.legendDot} color={PALETTE.control}>◆</MetallicText>
+                    <MetallicText style={styles.legendText} color={PALETTE.control}>Rigidity</MetallicText>
                   </View>
                 </View>
               </Animated.View>
@@ -254,6 +258,7 @@ export default function RelationshipPatternsScreen() {
                 placeholder="What dynamic played out today? Write freely..."
                 placeholderTextColor="rgba(255,255,255,0.25)"
                 multiline
+                maxLength={1000}
                 value={note}
                 onChangeText={setNote}
                 textAlignVertical="top"
@@ -261,38 +266,51 @@ export default function RelationshipPatternsScreen() {
               />
 
               <Text style={styles.tagSectionLabel}>SELECT ACTIVE PATTERNS</Text>
-              <View style={styles.tagGrid}>
-                {PATTERN_TAGS.map((tag) => {
-                  const isSelected = selectedTags.includes(tag.id);
-                  const activeColor = PALETTE[tag.category];
-                  return (
-                    <Pressable
-                      key={tag.id}
-                      style={[
-                        styles.patternTag,
-                        isSelected && { borderColor: activeColor, backgroundColor: `${activeColor}15` },
-                      ]}
-                      onPress={() => toggleTag(tag.id)}
-                    >
-                      {isSelected ? (
-                        <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={activeColor}>
-                          {tag.label}
-                        </MetallicText>
-                      ) : (
-                        <Text style={styles.patternTagText}>
-                          {tag.label}
-                        </Text>
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
+
+              {(['anxious', 'avoidant', 'control'] as PatternCategory[]).map((category) => {
+                const categoryColor = PALETTE[category];
+                const categoryLabel = category === 'anxious' ? 'Moving Toward' : category === 'avoidant' ? 'Moving Away' : 'Rigidity';
+                const categoryTags = PATTERN_TAGS.filter((t) => t.category === category);
+                return (
+                  <View key={category} style={styles.tagCategoryGroup}>
+                    <View style={styles.tagCategoryHeader}>
+                      <MetallicText style={styles.tagCategoryDot} color={categoryColor}>◆</MetallicText>
+                      <MetallicText style={styles.tagCategoryLabel} color={categoryColor}>{categoryLabel}</MetallicText>
+                    </View>
+                    <View style={styles.tagGrid}>
+                      {categoryTags.map((tag) => {
+                        const isSelected = selectedTags.includes(tag.id);
+                        return (
+                          <Pressable
+                            key={tag.id}
+                            style={[
+                              styles.patternTag,
+                              isSelected && { borderColor: categoryColor, backgroundColor: `${categoryColor}18` },
+                            ]}
+                            onPress={() => toggleTag(tag.id)}
+                          >
+                            {isSelected ? (
+                              <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={categoryColor}>
+                                {tag.label}
+                              </MetallicText>
+                            ) : (
+                              <Text style={styles.patternTagText}>
+                                {tag.label}
+                              </Text>
+                            )}
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+                );
+              })}
 
               {(note.trim().length > 0 || selectedTags.length > 0) && (
                 <Animated.View entering={FadeIn.duration(300)}>
                   <Pressable style={styles.submitBtn} onPress={addEntry}>
-                    <LinearGradient colors={['rgba(212,163,179,0.3)', 'rgba(212,163,179,0.1)']} style={StyleSheet.absoluteFill} />
-                    <MetallicText style={styles.submitBtnText} color={PALETTE.anxious}>Seal Reflection</MetallicText>
+                    <LinearGradient colors={['rgba(217,191,140,0.3)', 'rgba(217,191,140,0.1)']} style={StyleSheet.absoluteFill} />
+                    <MetallicText style={styles.submitBtnText} color={PALETTE.gold}>Seal Reflection</MetallicText>
                   </Pressable>
                 </Animated.View>
               )}
@@ -369,23 +387,29 @@ const styles = StyleSheet.create({
   gravitySegment: { height: '100%', borderRadius: 4 },
 
   legendRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '500' },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 
   formCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20, marginTop: 8 },
   sectionTitle: { color: '#FFFFFF', fontSize: 19, fontWeight: '700' },
   noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
-  tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 16, textTransform: 'uppercase' },
-  tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
+  tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
 
   patternTag: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)' },
   patternTagText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
 
-  submitBtn: { height: 56, borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(212,163,179,0.4)', justifyContent: 'center', alignItems: 'center' },
-  submitBtnText: { fontSize: 15, color: PALETTE.anxious, fontWeight: '700', letterSpacing: 0.5 },
+  submitBtn: { height: 56, borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.4)', justifyContent: 'center', alignItems: 'center' },
+  submitBtnText: { fontSize: 15, color: PALETTE.gold, fontWeight: '700', letterSpacing: 0.5 },
+
+  tagCategoryGroup: { marginBottom: 24 },
+  tagCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  tagCategoryDot: { fontSize: 8, marginTop: 1 },
+  tagCategoryLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2 },
+  tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+
+  legendDot: { fontSize: 8 },
+  legendText: { fontSize: 12, fontWeight: '600' },
 
   historySection: { marginTop: 0 },
   entryList: { gap: 16 },

@@ -231,9 +231,15 @@ export default function CognitiveStyleScreen() {
               <Pressable
                 style={[styles.saveBtn, saved && styles.saveBtnDone]}
                 onPress={handleSave}
+                onLongPress={() => {
+                  if (saved) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                    setSaved(false);
+                  }
+                }}
               >
                 <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.silverBlue}>
-                  {saved ? '✓ Blueprint Sealed' : 'Seal Blueprint'}
+                  {saved ? '✓ Blueprint Sealed · Hold to Edit' : 'Seal Blueprint'}
                 </MetallicText>
               </Pressable>
             </Animated.View>
@@ -266,11 +272,18 @@ export default function CognitiveStyleScreen() {
                         return (
                           <Pressable
                             key={v}
-                            style={[styles.scaleBtn, isSelected && styles.scaleBtnSelected]}
+                            style={[
+                              styles.scaleBtn,
+                              isSelected && styles.scaleBtnSelected,
+                              isSelected && saved && styles.scaleBtnSealed,
+                            ]}
                             onPress={() => setScore(dim.id, v)}
                           >
                             {isSelected ? (
-                              <MetallicText style={styles.scaleBtnText} color={PALETTE.silverBlue}>
+                              <MetallicText
+                                style={[styles.scaleBtnText, styles.scaleBtnTextSelected]}
+                                color={saved ? PALETTE.gold : PALETTE.silverBlue}
+                              >
                                 {v}
                               </MetallicText>
                             ) : (
@@ -344,8 +357,9 @@ const styles = StyleSheet.create({
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, gap: 8 },
   scaleBtn: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center', alignItems: 'center' },
   scaleBtnSelected: { borderColor: 'rgba(201,174,120,0.6)', backgroundColor: 'rgba(201,174,120,0.15)' },
+  scaleBtnSealed: { borderColor: 'rgba(217,191,140,0.85)', backgroundColor: 'rgba(217,191,140,0.22)' },
   scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.3)', fontWeight: '700' },
-  scaleBtnTextSelected: { color: PALETTE.silverBlue },
+  scaleBtnTextSelected: { fontSize: 15, fontWeight: '800' },
 
   dimLabels: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   dimLabelBlock: { flex: 1 },

@@ -219,7 +219,6 @@ export default function BlueprintScreen() {
 const PremiumBadge = () => (
   <View style={styles.badgeContainer}>
     <MetallicText style={styles.badgeIcon} variant="gold">✦</MetallicText>
-    <MetallicText style={styles.badgeText} variant="gold">DEEPER SKY</MetallicText>
   </View>
 );
 

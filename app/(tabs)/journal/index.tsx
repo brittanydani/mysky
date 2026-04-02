@@ -10,6 +10,7 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../../constants/theme';
 
@@ -159,6 +160,7 @@ export default function JournalScreen() {
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
+  const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
   const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
@@ -206,6 +208,9 @@ export default function JournalScreen() {
     useCallback(() => {
       void loadEntries(true);
       void loadSleepEntries();
+      AsyncStorage.getItem('pref_mood_insights').then(v => {
+        setMoodInsightsEnabled(v === null || v === '1');
+      }).catch(() => {});
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
@@ -478,7 +483,7 @@ export default function JournalScreen() {
 
 
 
-      {activeTab === 'reflections' && isPremium && patternInsights.length > 0 && (
+      {activeTab === 'reflections' && isPremium && moodInsightsEnabled && patternInsights.length > 0 && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
           <SectionHeader title="Pattern Insights" icon="analytics-outline" />
           <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
@@ -645,29 +650,7 @@ export default function JournalScreen() {
     }
     return (
       <View style={styles.emptyContainer}>
-        <LinearGradient colors={['rgba(212,184,114,0.07)', 'transparent']} style={[styles.emptyCard, { position: 'relative' }]}>
-          <View style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
-            <Pressable 
-              onPress={() => void handleAddEntry()} 
-              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-              style={({ pressed }) => [{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                overflow: 'hidden',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: 'rgba(201, 174, 120, 0.4)',
-                backgroundColor: 'rgba(20, 30, 50, 0.5)',
-              }, pressed && { opacity: 0.8 }]}
-            >
-              <View 
-                style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(201, 174, 120, 0.1)' }]}
-              />
-              <GoldIcon name="add-outline" size={28}  style={{ fontWeight: '900' }}  />
-            </Pressable>
-          </View>
+        <LinearGradient colors={['rgba(212,184,114,0.07)', 'transparent']} style={styles.emptyCard}>
           <Ionicons name="book-outline" size={48} color={theme.textMuted} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyTitle}>Start Your Journey</Text>
           <Text style={styles.emptyDescription}>Begin tracking your emotional patterns and personal insights</Text>
