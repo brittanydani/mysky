@@ -227,7 +227,7 @@ export default function AstrologySettingsModal({
             {/* House Systems */}
             <View style={styles.section}>
               <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>House System</MetallicText>
-              <Text style={styles.sectionSub}>Determines how the 12 houses are mapped to your location.</Text>
+              <Text style={styles.sectionSub}>Changing the house system can change house placements.</Text>
               
               <View style={styles.optionsList}>
                 {HOUSE_SYSTEM_OPTIONS.map((option) => (
@@ -295,7 +295,7 @@ export default function AstrologySettingsModal({
             {/* Chart Orientation */}
             <View style={styles.section}>
               <MetallicText style={styles.sectionLabel} color={PALETTE.gold}>Chart Orientation</MetallicText>
-              <Text style={styles.sectionSub}>This only changes the chart’s visual orientation, not your birth chart data.</Text>
+              <Text style={styles.sectionSub}>Affects display only — your birth chart data does not change.</Text>
 
               <View style={styles.optionsList}>
                 {CHART_ORIENTATION_OPTIONS.map((option) => (

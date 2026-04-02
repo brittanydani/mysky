@@ -116,21 +116,23 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ── Configuration ──
 const SIZE = Math.min(SCREEN_WIDTH - 90, 310);
-const SIZE_CANVAS = SIZE + 100; // extra room for sign tiles outside the rim
+const SIZE_CANVAS = SIZE + 48; // small margin for outer glow/bezel
 const CX = SIZE_CANVAS / 2;
 const CY = SIZE_CANVAS / 2;
 
-// Ring radii (from outside in)
+// Ring radii (from outside in) — traditional natal chart layout
 const R_OUTER = SIZE / 2 - 4;          // outermost edge (gold rim)
-const R_HOUSE_OUTER = R_OUTER;          // house ring outer — extends to the rim
-const R_HOUSE_INNER = R_OUTER - 28;     // house numbers
-const R_PLANET_RING = R_HOUSE_INNER - 16;  // planet glyphs orbit
-const R_ASPECT_RING = R_PLANET_RING - 24;  // aspect lines live inside this
-const R_INNER = 42;                     // inner circle — slightly larger for watch-face presence
+const R_ZODIAC_OUTER = R_OUTER - 3;    // zodiac band outer edge (just inside rim)
+const R_ZODIAC_INNER = R_OUTER - 38;   // zodiac band inner edge
+const R_PLANET_RING = R_ZODIAC_INNER - 22; // planet glyphs orbit between zodiac and houses
+const R_HOUSE_OUTER = R_ZODIAC_INNER;  // house ring outer — zodiac band inner edge
+const R_HOUSE_INNER = R_INNER + 16;    // house number placement
+const R_ASPECT_RING = R_PLANET_RING - 22;  // aspect lines live inside this
+const R_INNER = 44;                    // inner circle hub
 
 // Dotted astronomy diagram rings
-const R_DOT_RING_1 = R_PLANET_RING - 18;
-const R_DOT_RING_2 = R_ASPECT_RING + 10;
+const R_DOT_RING_1 = R_PLANET_RING - 12;
+const R_DOT_RING_2 = R_ASPECT_RING + 8;
 
 const PLANET_R = 13.5;
 
@@ -841,45 +843,77 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         })}
 
 
-        {/* ── House cusps ── */}
+        {/* ── House cusps — lines from zodiac inner edge to center hub ── */}
         {(chart.houseCusps ?? []).map((cusp: HouseCusp) => {
           const angle = astroToAngle((cusp as any).longitude, ascLongitude);
-          const outer = polarToXY(angle, R_OUTER);
+          // Angular houses (1,4,7,10) are the AC/IC/DC/MC axes — skip here, drawn separately
+          const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
+          const outer = polarToXY(angle, R_HOUSE_OUTER);
           const inner = polarToXY(angle, R_INNER);
 
-          const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
-          const strokeW = isAngular ? 1.0 : 0.8;
-          const strokeColor = isAngular ? 'rgba(232, 214, 174,0.7)' : 'rgba(232, 214, 174,0.45)';
+          const strokeW = isAngular ? 0 : 0.7; // angular axes drawn as full-diameter lines below
+          const strokeColor = 'rgba(232, 214, 174,0.35)';
 
           const cusps = chart.houseCusps ?? [];
           const nextHouse = cusps.find((c: HouseCusp) => (c as any).house === (((cusp as any).house % 12) + 1));
-          let midLon = (cusp as any).longitude + 15; // default fallback
+          let midLon = (cusp as any).longitude + 15;
           if (nextHouse) {
             let diff = (nextHouse as any).longitude - (cusp as any).longitude;
-            if (diff < 0) diff += 360; // handle wrap around 360 to 0 (Aries point)
+            if (diff < 0) diff += 360;
             midLon = (cusp as any).longitude + diff / 2;
-            if (midLon >= 360) midLon -= 360; // Normalize back to 0-359
+            if (midLon >= 360) midLon -= 360;
           }
           const midAngle = astroToAngle(midLon, ascLongitude);
-          const numPos = polarToXY(midAngle, R_HOUSE_INNER);
+          const numRadius = R_INNER + (R_HOUSE_OUTER - R_INNER) * 0.32;
+          const numPos = polarToXY(midAngle, numRadius);
           const houseText = String((cusp as any).house);
           const tw = sans9 ? sans9.getTextWidth(houseText) : 7;
 
           return (
             <Group key={`house-${(cusp as any).house}`}>
-              <Line p1={vec(outer.x, outer.y)} p2={vec(inner.x, inner.y)} color={strokeColor} strokeWidth={strokeW} />
+              {!isAngular && <Line p1={vec(outer.x, outer.y)} p2={vec(inner.x, inner.y)} color={strokeColor} strokeWidth={strokeW} />}
               {sans9 && (
                 <SkiaText
                   x={numPos.x - tw / 2}
                   y={numPos.y + 3.5}
                   text={houseText}
                   font={sans9}
-                  color="rgba(240, 234, 214,0.7)"
+                  color="rgba(240, 234, 214,0.55)"
                 />
               )}
             </Group>
           );
         })}
+
+        {/* ── AC/DC axis (full diameter horizontal line) ── */}
+        {(() => {
+          const ascLon = getLongitude((chart as any).ascendant);
+          if (ascLon === null) return null;
+          const angAC = astroToAngle(ascLon, ascLongitude);
+          const angDC = angAC + Math.PI; // opposite
+          const pAC = polarToXY(angAC, R_HOUSE_OUTER);
+          const pDC = polarToXY(angDC, R_HOUSE_OUTER);
+          return (
+            <Group key="ac-dc-axis">
+              <Line p1={vec(pAC.x, pAC.y)} p2={vec(pDC.x, pDC.y)} color="rgba(232,214,174,0.75)" strokeWidth={1.0} />
+            </Group>
+          );
+        })()}
+
+        {/* ── MC/IC axis (full diameter line) ── */}
+        {(() => {
+          const mcLon = getLongitude((chart as any).midheaven);
+          if (mcLon === null) return null;
+          const angMC = astroToAngle(mcLon, ascLongitude);
+          const angIC = angMC + Math.PI;
+          const pMC = polarToXY(angMC, R_HOUSE_OUTER);
+          const pIC = polarToXY(angIC, R_HOUSE_OUTER);
+          return (
+            <Group key="mc-ic-axis">
+              <Line p1={vec(pMC.x, pMC.y)} p2={vec(pIC.x, pIC.y)} color="rgba(232,214,174,0.75)" strokeWidth={1.0} />
+            </Group>
+          );
+        })()}
 
         {/* ── House ring border ── */}
         <Group>
@@ -1342,53 +1376,35 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           );
         })}
 
-        {/* ── ASC / MC axis labels (Strictly Inside text) ── */}
-        {(chart as any).ascendant &&
-          (() => {
-            const lon = getLongitude((chart as any).ascendant);
-            if (lon === null) return null;
-            const ang = astroToAngle(lon, ascLongitude);
-            
-            // Inner text position (just inside the inner rim where house numbers are)
-            const textPosInner = polarToXY(ang, R_INNER + 20); 
-            
-            return (
-              <Group key="asc-label">
-                {sans8 && (
-                   <SkiaText 
-                     x={textPosInner.x - 8} 
-                     y={textPosInner.y + 3} 
-                     text="ASC" 
-                     font={sans8} 
-                     color="#FFFFFF"
-                   />
-                )}
-              </Group>
-            );
-          })()}
-
-        {(chart as any).midheaven &&
-          (() => {
-            const lon = getLongitude((chart as any).midheaven);
-            if (lon === null) return null;
-            const ang = astroToAngle(lon, ascLongitude);
-            
-            const textPosInner = polarToXY(ang, R_INNER + 20);
-
-            return (
-              <Group key="mc-label">
-                {sans8 && (
-                   <SkiaText 
-                     x={textPosInner.x - 6} 
-                     y={textPosInner.y + 3} 
-                     text="MC" 
-                     font={sans8} 
-                     color="#FFFFFF"
-                   />
-                )}
-              </Group>
-            );
-          })()}
+        {/* ── AC / DC / MC / IC labels — outside zodiac band ── */}
+        {(() => {
+          const ascLon = getLongitude((chart as any).ascendant);
+          const mcLon  = getLongitude((chart as any).midheaven);
+          const labelRadius = R_ZODIAC_OUTER + 14;
+          const labels: { text: string; angle: number }[] = [];
+          if (ascLon !== null) {
+            labels.push({ text: 'AC', angle: astroToAngle(ascLon, ascLongitude) });
+            labels.push({ text: 'DC', angle: astroToAngle(ascLon, ascLongitude) + Math.PI });
+          }
+          if (mcLon !== null) {
+            labels.push({ text: 'MC', angle: astroToAngle(mcLon, ascLongitude) });
+            labels.push({ text: 'IC', angle: astroToAngle(mcLon, ascLongitude) + Math.PI });
+          }
+          return labels.map(({ text, angle }) => {
+            const pos = polarToXY(angle, labelRadius);
+            const tw = sans9 ? sans9.getTextWidth(text) : 10;
+            return sans9 ? (
+              <SkiaText
+                key={`axis-label-${text}`}
+                x={pos.x - tw / 2}
+                y={pos.y + 4}
+                text={text}
+                font={sans9}
+                color="rgba(255,240,200,0.95)"
+              />
+            ) : null;
+          });
+        })()}
 
         {/* ── Center hub — deep navy core ── */}
         <Circle cx={CX} cy={CY} r={R_INNER + 24} opacity={1}>
