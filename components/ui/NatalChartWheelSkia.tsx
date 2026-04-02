@@ -506,8 +506,9 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       const house1Lon = getLongitude(house1) ?? rawAscLongitude;
       return normalize360(house1Lon + 180);
     }
-    // 'standard-natal': Ascendant at 3 o'clock (current default behaviour).
-    return rawAscLongitude;
+    // 'standard-natal': Ascendant at 9 o'clock (left / traditional Western layout).
+    // Adding 180° shifts the AC from 3 o'clock to 9 o'clock.
+    return normalize360(rawAscLongitude + 180);
   }, [orientation, rawAscLongitude, chart]);
 
   const showPerson1 = !filterMode || filterMode.person1;

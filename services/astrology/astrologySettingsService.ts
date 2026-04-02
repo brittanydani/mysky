@@ -101,9 +101,9 @@ export const AYANAMSA_OPTIONS: { value: Ayanamsa; label: string; description: st
 ];
 
 export const CHART_ORIENTATION_OPTIONS: { value: ChartOrientation; label: string; description: string }[] = [
-  { value: 'standard-natal', label: 'Standard Natal', description: 'Ascendant starts House 1' },
-  { value: 'left-aligned', label: 'Left-Aligned House 1', description: 'House 1 begins at the 9 o\u2019clock position' },
-  { value: 'natural-zodiac', label: 'Natural Zodiac', description: 'Aries starts House 1' },
+  { value: 'standard-natal', label: 'Ascendant on 1st house cusp', description: 'Ascendant placed at 9 o\u2019clock (default)' },
+  { value: 'natural-zodiac', label: 'Aries on 1st house cusp', description: 'Aries \u2648 anchors House 1 at 9 o\u2019clock' },
+  { value: 'left-aligned', label: 'House 1 cusp left-aligned', description: 'House 1 cusp fixed at the 9 o\u2019clock position' },
 ];
 
 export const ORB_PRESET_OPTIONS: { value: OrbPreset; label: string; description: string }[] = [
