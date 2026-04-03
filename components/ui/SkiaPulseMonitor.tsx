@@ -27,6 +27,7 @@ import {
   withTiming,
   withRepeat,
   withSequence,
+  cancelAnimation,
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
@@ -153,7 +154,8 @@ export default function SkiaPulseMonitor({
     .onFinalize((_e, success) => {
       'worklet';
       if (!success) {
-        progress.value = withTiming(0, { duration: 380, easing: Easing.out(Easing.quad) });
+        cancelAnimation(progress);
+        progress.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) });
         runOnJS(stopHaptics)();
       }
     });

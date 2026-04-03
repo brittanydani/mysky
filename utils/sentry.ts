@@ -8,7 +8,7 @@
 
 import * as Sentry from '@sentry/react-native';
 
-const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
+const DSN = 'https://1f281c7a5f0446fde743f72be52cb913@o4510932447461376.ingest.us.sentry.io/4511156754513920';
 
 /**
  * Call once at app startup (before any other code runs).
@@ -28,6 +28,12 @@ export function initSentry() {
       sendDefaultPii: false,
       // Attach breadcrumbs for navigation, console, and network (no bodies).
       enableAutoPerformanceTracing: true,
+      // Enable Logs
+      enableLogs: true,
+      // Session Replay
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1,
+      integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
       beforeSend(event) {
         // Extra safety: strip any user context that might slip through.
         delete event.user;

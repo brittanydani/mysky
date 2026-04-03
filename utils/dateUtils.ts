@@ -40,17 +40,17 @@ export function parseLocalDate(dateStr: string): Date {
 /**
  * Returns the "check-in day" as a YYYY-MM-DD string.
  *
- * A check-in day runs from 6:00 AM to 5:59 AM the following morning.
- * If the current time is before 6:00 AM, the check-in still belongs to the
+ * A check-in day runs from 2:00 AM to 1:59 AM the following morning.
+ * If the current time is before 2:00 AM, the check-in still belongs to the
  * previous calendar day.
  *
  * @example
- * // At 3:00 AM on Apr 3 → "2026-04-02" (still the Apr 2 check-in day)
- * // At 6:00 AM on Apr 3 → "2026-04-03" (new check-in day starts)
+ * // At 1:00 AM on Apr 3 → "2026-04-02" (still the Apr 2 check-in day)
+ * // At 2:00 AM on Apr 3 → "2026-04-03" (new check-in day starts)
  */
 export function getCheckInDateString(date: Date = new Date()): string {
   const adjusted = new Date(date);
-  if (adjusted.getHours() < 6) {
+  if (adjusted.getHours() < 2) {
     adjusted.setDate(adjusted.getDate() - 1);
   }
   return toLocalDateString(adjusted);

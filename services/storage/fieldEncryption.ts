@@ -46,8 +46,21 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
-import * as Crypto from 'expo-crypto';
+// expo-crypto is NOT imported at the top level.
+// expo-crypto → requireNativeModule('ExpoCrypto') at module eval time crashes
+// on iOS 26 New Architecture before the JS engine is bootstrapped.
+// All access goes through getCrypto() which lazy-loads the module on first use.
+import type * as CryptoType from 'expo-crypto';
 import { gcm } from '@noble/ciphers/aes.js';
+
+let _crypto: typeof CryptoType | null = null;
+function getCrypto(): typeof CryptoType {
+  if (!_crypto) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _crypto = require('expo-crypto') as typeof CryptoType;
+  }
+  return _crypto;
+}
 
 import { logger } from '../../utils/logger';
 
@@ -111,7 +124,7 @@ function base64ToUint8Array(base64: string): Uint8Array {
  * Generate cryptographically secure random bytes via expo-crypto (native).
  */
 function generateRandomBytes(size: number): Uint8Array {
-  return Crypto.getRandomBytes(size);
+  return getCrypto().getRandomBytes(size);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -145,6 +158,7 @@ async function legacyExpandKey(key: Uint8Array, iv: Uint8Array, length: number):
   const blocks: Uint8Array[] = [];
   let totalLength = 0;
   let counter = 0;
+  const Crypto = getCrypto();
   
   const keyBase64 = uint8ArrayToBase64(key);
   const ivBase64 = uint8ArrayToBase64(iv);
@@ -181,6 +195,7 @@ async function legacyExpandKey(key: Uint8Array, iv: Uint8Array, length: number):
 async function legacyXorDecrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uint8Array, expectedTag: Uint8Array): Promise<string> {
   // Verify tag
   const tagInput = new Uint8Array([...iv, ...ciphertext]);
+  const Crypto = getCrypto();
   const tagHash = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
     uint8ArrayToBase64(tagInput) + uint8ArrayToBase64(key)

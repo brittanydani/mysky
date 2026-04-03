@@ -1,6 +1,7 @@
 import Expo
 import React
 import ReactAppDependencyProvider
+import Sentry
 
 @UIApplicationMain
 public class AppDelegate: ExpoAppDelegate {
@@ -13,6 +14,14 @@ public class AppDelegate: ExpoAppDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // Initialize Sentry native crash handler as early as possible so crashes
+    // before JS bootstraps are captured (e.g. TurboModule eval-time crashes).
+    SentrySDK.start { options in
+      options.dsn = "https://1f281c7a5f0446fde743f72be52cb913@o4510932447461376.ingest.us.sentry.io/4511156754513920"
+      options.debug = false
+      options.enableCrashHandler = true
+    }
+
     let delegate = ReactNativeDelegate()
     let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()

@@ -28,6 +28,7 @@ import {
   withTiming,
   withRepeat,
   withSequence,
+  cancelAnimation,
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
@@ -96,6 +97,9 @@ export default function SkiaMoodSealButton({
   isEditing = false,
 }: Props) {
   const [complete, setComplete] = useState(false);
+  // Incrementing this key forces GestureDetector to remount so the LongPress
+  // gesture is guaranteed to re-activate after completion resets on iOS.
+  const [gestureKey, setGestureKey] = useState(0);
 
   // After saving finishes (isSaving true→false), auto-reset the complete
   // state so the user can hold-to-seal again (edit flow).
@@ -105,6 +109,7 @@ export default function SkiaMoodSealButton({
       // Saving finished — show success briefly, then reset
       const timer = setTimeout(() => {
         setComplete(false);
+        setGestureKey(k => k + 1);
       }, 1400);
       return () => clearTimeout(timer);
     }
@@ -189,8 +194,9 @@ export default function SkiaMoodSealButton({
     .onFinalize((_e, success) => {
       'worklet';
       if (!success) {
+        cancelAnimation(progress);
         progress.value = withTiming(0, {
-          duration: 400,
+          duration: 200,
           easing: Easing.out(Easing.cubic),
         });
         runOnJS(stopHaptics)();
@@ -275,7 +281,7 @@ export default function SkiaMoodSealButton({
 
   return (
     <View style={[styles.wrapper, { opacity: dimOpacity }]}>
-      <GestureDetector gesture={longPress}>
+      <GestureDetector key={gestureKey} gesture={longPress}>
         <View style={styles.container} collapsable={false}>
           <Canvas style={{ width: SIZE, height: SIZE }}>
             <Group>

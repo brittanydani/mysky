@@ -33,6 +33,7 @@ import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../../services/storage/fieldEncryption';
 import { IdentityVault } from '../../../utils/IdentityVault';
+import { PrivacyComplianceManager } from '../../../services/privacy/privacyComplianceManager';
 import { logger } from '../../../utils/logger';
 import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';

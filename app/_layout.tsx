@@ -47,6 +47,7 @@ import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 
+
 // Allowlist of routes that notification deep links can navigate to.
 // Prevents injection of arbitrary or external URLs via push notifications.
 const ALLOWED_NOTIFICATION_ROUTES = new Set([
@@ -141,7 +142,7 @@ async function setTermsConsent(granted: boolean) {
   }
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -152,6 +153,11 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+// Wrap with Sentry profiling only after Sentry is initialized (lazy).
+// Sentry.wrap at module eval time throws ReferenceError on iOS 26 New
+// Architecture because the native Sentry TurboModule isn't available yet.
+export default RootLayout;
 
 function AppShell() {
   const router = useRouter();
@@ -192,8 +198,13 @@ function AppShell() {
       await localDb.initialize();
       const charts = await localDb.getCharts();
       const hasExistingChart = charts.length > 0;
-      setOnboardingComplete(hasExistingChart);
-      return hasExistingChart;
+      // Also skip onboarding if the user already has an active session —
+      // e.g. after a fresh install where local SQLite is empty but the
+      // user is already authenticated via Supabase (Keychain session restored).
+      const hasSession = !!session;
+      const canSkip = hasExistingChart || hasSession;
+      setOnboardingComplete(canSkip);
+      return canSkip;
     } catch (e) {
       logger.error('Failed to check existing charts:', e);
       setOnboardingComplete(false);
@@ -207,11 +218,15 @@ function AppShell() {
 
     try {
       // DB migration + settings should only happen once consent is granted
+      logger.info('[post-consent] step: migration');
       await MigrationService.performMigrationIfNeeded();
+      logger.info('[post-consent] step: astrology settings');
       await AstrologySettingsService.getSettings();
+      logger.info('[post-consent] step: haptic preference');
       await initHapticPreference();
 
       // Boot the subscription store so isPro is known before any screen renders
+      logger.info('[post-consent] step: subscription store');
       useSubscriptionStore.getState().initialize().catch((e) =>
         logger.error('Subscription store init failed:', e)
       );
@@ -242,14 +257,20 @@ function AppShell() {
         // Install the Web Crypto polyfill now that the JS engine is bootstrapped.
         // expo-standard-web-crypto → expo-crypto → requireNativeModule('ExpoCrypto')
         // must not run at module eval time (iOS 26 New Architecture crash vector).
-        await import('expo-standard-web-crypto').then((m) => {
-          if (typeof m.polyfillWebCrypto === 'function') m.polyfillWebCrypto();
-        }).catch(() => {});
+        logger.info('[init] step: webCrypto polyfill');
+        try {
+          await import('expo-standard-web-crypto').then((m) => {
+            if (typeof m.polyfillWebCrypto === 'function') m.polyfillWebCrypto();
+          });
+        } catch (e) {
+          logger.error('[init] webCrypto polyfill failed:', e);
+        }
 
         // Wait for AuthContext to finish its own SecureStore/Keychain reads
         // (session restore) before we start our own. Concurrent Keychain
         // access on iOS 26 was causing TurboModule queue crashes at launch.
         // authLoadingRef is a ref so the closure always reads the latest value.
+        logger.info('[init] step: waiting for auth context');
         await new Promise<void>((resolve) => {
           if (!authLoadingRef.current) { resolve(); return; }
           const check = setInterval(() => {
@@ -257,21 +278,33 @@ function AppShell() {
           }, 20);
         });
 
+        logger.info('[init] step: privacy consent');
         const privacyManager = new PrivacyComplianceManager();
         const consentStatus = await privacyManager.requestConsent();
         setNeedsPrivacyConsent(consentStatus.required);
 
-        const termsAccepted = await getTermsConsent();
+        logger.info('[init] step: terms consent');
+        let termsAccepted = await getTermsConsent();
+        // If the user already has a valid session they previously accepted the
+        // terms — re-hydrate the SecureStore key so future cold starts skip the
+        // consent prompt (fresh installs wipe Keychain, but session survives).
+        if (!termsAccepted && session) {
+          logger.info('[init] session present — auto-restoring terms consent');
+          await setTermsConsent(true);
+          termsAccepted = true;
+        }
         setNeedsTermsConsent(!termsAccepted);
 
         // Only initialize DB / settings after privacy consent is granted
         if (!consentStatus.required) {
+          logger.info('[init] step: post-privacy-consent init');
           await runPostPrivacyConsentInit(termsAccepted);
         } else {
           // We still consider the "app ready" enough to render UI (Stack + consent modal),
           // but we intentionally do NOT run migrations/settings until consent is granted.
           setDbReady(true);
         }
+        logger.info('[init] complete');
       } catch (error) {
         logger.error('Failed to initialize app:', error);
         setDbReady(true);
@@ -464,10 +497,9 @@ function AppShell() {
     if (!checkingConsent && dbReady && !authLoading && !didHideSplash.current) {
       didHideSplash.current = true;
       SplashScreen.hideAsync().catch(() => {});
-      // Sentry startup init disabled for diagnostic build — re-enable after crash isolation.
-      // import('../utils/sentry').then(({ initSentry }) => {
-      //   try { initSentry(); } catch { /* native module unavailable */ }
-      // }).catch(() => {});
+      import('../utils/sentry').then(({ initSentry }) => {
+        try { initSentry(); } catch { /* native module unavailable */ }
+      }).catch(() => {});
     }
   }, [checkingConsent, dbReady, authLoading]);
 

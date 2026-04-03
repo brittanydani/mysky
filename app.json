@@ -118,7 +118,15 @@
           "imageWidth": 300
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "mysky",
+          "organization": "brittany-hornick"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

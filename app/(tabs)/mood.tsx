@@ -307,7 +307,9 @@ export default function MoodCheckIn() {
           };
           const astroSettings = await AstrologySettingsService.getSettings();
           const natal = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
-          const recent = await localDb.getCheckIns(saved.id, 7);
+          const today = getLogicalToday();
+          const sevenDaysAgo = toLocalDateString(new Date(new Date(today + 'T12:00:00').getTime() - 6 * 86_400_000));
+          const recent = await localDb.getCheckInsInRange(saved.id, sevenDaysAgo, today);
 
           if (!cancelled) {
             setChartId(saved.id);
@@ -370,8 +372,19 @@ export default function MoodCheckIn() {
               existing.tags.map(t => REV_EMOTION_TAG[t]).filter(Boolean)
             ));
             const [noteInfluence = '', noteEmotion = ''] = (existing.note ?? '').split('||EMOTION||');
-            setCustomInfluence(noteInfluence);
-            setCustomEmotion(noteEmotion);
+            // Extract exact slider values if present (stored as ||SLIDERS||m,e,s)
+            const slidersMatch = (existing.note ?? '').match(/\|\|SLIDERS\|\|(\d+),(\d+),(\d+)/);
+            if (slidersMatch) {
+              setMood(Number(slidersMatch[1]));
+              setEnergy(Number(slidersMatch[2]));
+              setStress(Number(slidersMatch[3]));
+            } else {
+              setMood(existing.moodScore);
+              setEnergy(energyLevelToNum(existing.energyLevel));
+              setStress(stressLevelToNum(existing.stressLevel));
+            }
+            setCustomInfluence(noteInfluence.replace(/\|\|SLIDERS\|\|.*$/, ''));
+            setCustomEmotion(noteEmotion.replace(/\|\|SLIDERS\|\|.*$/, ''));
           } else {
             setIsEditingExisting(false);
             setMood(5);
@@ -443,18 +456,23 @@ export default function MoodCheckIn() {
         tags: [...influenceTags, ...emotionTags],
         timeOfDay: selectedSlot,
         date: selectedDate,
-        // note stores the original display text for restore on edit
+        // note stores the original display text for restore on edit.
+        // ||SLIDERS|| encodes the exact numeric slider values so they
+        // round-trip perfectly when the user taps back to this check-in.
         note: (() => {
-          if (inf && emo) return `${inf}||EMOTION||${emo}`;
-          if (emo) return `||EMOTION||${emo}`;
-          return inf || undefined;
+          const sliders = `||SLIDERS||${mood},${energy},${stress}`;
+          if (inf && emo) return `${inf}||EMOTION||${emo}${sliders}`;
+          if (emo) return `||EMOTION||${emo}${sliders}`;
+          return `${inf}${sliders}`;
         })(),
       };
       await CheckInService.saveCheckIn(input, natalChart, chartId);
 
       // Refresh completed slots + recent data so the UI reflects the save
       const slots = await CheckInService.getCompletedTimeSlotsForDate(chartId, selectedDate);
-      const recent = await localDb.getCheckIns(chartId, 7);
+      const today = getLogicalToday();
+      const sevenDaysAgo = toLocalDateString(new Date(new Date(today + 'T12:00:00').getTime() - 6 * 86_400_000));
+      const recent = await localDb.getCheckInsInRange(chartId, sevenDaysAgo, today);
       setCompletedSlots(slots);
       setRecentCheckIns(recent);
       setIsEditingExisting(true);
