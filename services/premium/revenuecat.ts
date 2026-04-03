@@ -1,11 +1,30 @@
-import Purchases, { 
-  PurchasesOffering, 
-  PurchasesPackage, 
+// NOTE: react-native-purchases is NOT imported at the top level.
+// On iOS 26 (RN New Architecture / TurboModules), the library accesses
+// NativeModules.RNPurchases and creates a NativeEventEmitter at module eval
+// time. Doing this before the JS engine is fully bootstrapped causes a
+// use-after-free crash in convertNSExceptionToJSError / backtrace_symbols.
+// All Purchases access goes through getPurchases() which lazy-loads the module
+// the first time any RC method is actually called (well after bootstrap).
+import type PurchasesType from 'react-native-purchases';
+import type {
+  PurchasesOffering,
+  PurchasesPackage,
   CustomerInfo,
   PurchasesEntitlementInfo,
 } from 'react-native-purchases';
 import { logger } from '../../utils/logger';
 import { Platform } from 'react-native';
+
+type PurchasesModule = typeof import('react-native-purchases');
+
+let _purchasesModule: PurchasesModule | null = null;
+
+async function getPurchases(): Promise<typeof PurchasesType> {
+  if (!_purchasesModule) {
+    _purchasesModule = await import('react-native-purchases');
+  }
+  return _purchasesModule.default;
+}
 
 class RevenueCatService {
   private initPromise: Promise<void> | null = null;
@@ -31,6 +50,7 @@ class RevenueCatService {
       }
 
       try {
+        const Purchases = await getPurchases();
         await Purchases.configure({ apiKey });
         // NOTE: Purchases.setLogLevel() is a void TurboModule method. On iOS 26
         // (RN New Architecture) it throws an NSException that crashes inside
@@ -59,6 +79,7 @@ class RevenueCatService {
     }
 
     try {
+      const Purchases = await getPurchases();
       const offerings = await Purchases.getOfferings();
       return offerings.current;
     } catch (error) {
@@ -78,6 +99,7 @@ class RevenueCatService {
     }
 
     try {
+      const Purchases = await getPurchases();
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       return { success: true, customerInfo };
     } catch (error: any) {
@@ -133,6 +155,7 @@ class RevenueCatService {
     }
 
     try {
+      const Purchases = await getPurchases();
       const customerInfo = await Purchases.restorePurchases();
       return { success: true, customerInfo };
     } catch (error: any) {
@@ -149,6 +172,7 @@ class RevenueCatService {
       await this.initialize();
     }
     try {
+      const Purchases = await getPurchases();
       await Purchases.logIn(userId);
       logger.info('[RevenueCat] User logged in successfully');
     } catch (error) {
@@ -159,6 +183,7 @@ class RevenueCatService {
   async logOut(): Promise<void> {
     if (!this.initialized) return;
     try {
+      const Purchases = await getPurchases();
       await Purchases.logOut();
       logger.info('[RevenueCat] Logged out');
     } catch (error) {
@@ -172,6 +197,7 @@ class RevenueCatService {
     }
 
     try {
+      const Purchases = await getPurchases();
       return await Purchases.getCustomerInfo();
     } catch (error) {
       logger.error('[RevenueCat] Failed to get customer info:', error);

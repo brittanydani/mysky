@@ -195,7 +195,7 @@ export default function InnerWorldScreen() {
         }
       };
 
-      checkProgress();
+      checkProgress().catch(() => {});
     }, [])
   );
 

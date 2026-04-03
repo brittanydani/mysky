@@ -13,7 +13,8 @@
  */
 
 import { create } from 'zustand';
-import Purchases from 'react-native-purchases';
+// react-native-purchases is lazy-imported to avoid NativeModules/NativeEventEmitter
+// access at module eval time (crashes on iOS 26 RN New Architecture).
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { revenueCatService } from '../services/premium/revenuecat';
@@ -69,6 +70,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         set({ isPro: revenueCatService.isPremium(updatedInfo) });
       };
       try {
+        const { default: Purchases } = await import('react-native-purchases');
         Purchases.addCustomerInfoUpdateListener(listener);
       } catch (e) {
         logger.error('[useSubscriptionStore] addCustomerInfoUpdateListener failed:', e);

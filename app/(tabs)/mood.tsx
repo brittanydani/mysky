@@ -321,7 +321,7 @@ export default function MoodCheckIn() {
         }
       };
 
-      load();
+      load().catch(() => {});
       return () => { cancelled = true; };
     }, [])
   );
@@ -388,7 +388,7 @@ export default function MoodCheckIn() {
       }
     };
 
-    loadSlot();
+    loadSlot().catch(() => {});
     return () => { cancelled = true; };
   }, [chartId, selectedDate, selectedSlot]);
 

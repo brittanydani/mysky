@@ -117,11 +117,13 @@ export default function PastReflectionsScreen() {
   useFocusEffect(
     useCallback(() => {
       const init = async () => {
-        const data = await loadReflections();
-        setAllAnswers(data.answers);
-        setGroups(groupByDate(data.answers, 'all'));
+        try {
+          const data = await loadReflections();
+          setAllAnswers(data.answers);
+          setGroups(groupByDate(data.answers, 'all'));
+        } catch { /* retain empty state on failure */ }
       };
-      init();
+      init().catch(() => {});
     }, []),
   );
 

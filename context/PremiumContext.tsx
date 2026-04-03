@@ -5,7 +5,8 @@
  */
 
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode, useRef } from 'react';
-import Purchases from 'react-native-purchases';
+// react-native-purchases is lazy-imported to avoid NativeModules/NativeEventEmitter
+// access at module eval time (crashes on iOS 26 RN New Architecture).
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 import * as Haptics from 'expo-haptics';
 
@@ -140,6 +141,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
             updatePremiumState(info);
           };
           try {
+            const { default: Purchases } = await import('react-native-purchases');
             Purchases.addCustomerInfoUpdateListener(customerInfoListener);
           } catch (e) {
             logger.error('[PremiumContext] addCustomerInfoUpdateListener failed:', e);
@@ -171,8 +173,10 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       isMounted.current = false;
       if (customerInfoListener) {
         try {
-          Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
-        } catch (e) {
+          import('react-native-purchases').then(({ default: Purchases }) => {
+            Purchases.removeCustomerInfoUpdateListener(customerInfoListener!);
+          }).catch(() => {});
+        } catch {
           // Ignore — component is unmounting
         }
       }

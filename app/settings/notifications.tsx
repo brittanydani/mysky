@@ -48,6 +48,7 @@ export default function NotificationSettings() {
   // ── Load persisted prefs on mount ──────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
+      try {
       const [en, mh, mm, eh, em, mu, eu] = await Promise.all([
         SecureStore.getItemAsync(KEYS.enabled),
         SecureStore.getItemAsync(KEYS.morningHour),
@@ -62,8 +63,9 @@ export default function NotificationSettings() {
       if (eh !== null && em !== null) setEveningTime(makeTime(Number(eh), Number(em)));
       if (mu !== null) setMorningUnknown(mu === 'true');
       if (eu !== null) setEveningUnknown(eu === 'true');
+      } catch { /* retain defaults on SecureStore failure */ }
     };
-    load();
+    load().catch(() => {});
   }, []);
 
   // ── Helpers ────────────────────────────────────────────────────────────────

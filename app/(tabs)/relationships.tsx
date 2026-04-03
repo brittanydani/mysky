@@ -103,9 +103,9 @@ export default function RelationshipsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadData();
+      loadData().catch(() => {});
       setActiveScene('RESONANCE_HELIX');
-      syncData();
+      syncData().catch(() => {});
       return () => clearScene();
     }, [setActiveScene, syncData, clearScene])
   );

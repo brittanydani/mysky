@@ -185,7 +185,7 @@ export default function TriggerLogScreen() {
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
   useEffect(() => {
-    loadHistory();
+    loadHistory().catch(() => {});
   }, []);
 
   const loadHistory = async () => {

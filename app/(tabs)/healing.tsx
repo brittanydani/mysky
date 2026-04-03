@@ -87,14 +87,18 @@ export default function HealingSpaceScreen() {
     useCallback(() => {
       let isActive = true;
       const fetchContext = async () => {
-        await refreshCustomerInfo().catch(() => {});
-        const data = await loadSelfKnowledgeContext();
-        if (isActive) {
-          setContext(data);
-          setLoading(false);
+        try {
+          await refreshCustomerInfo().catch(() => {});
+          const data = await loadSelfKnowledgeContext();
+          if (isActive) {
+            setContext(data);
+            setLoading(false);
+          }
+        } catch {
+          if (isActive) setLoading(false);
         }
       };
-      fetchContext();
+      fetchContext().catch(() => {});
       return () => { isActive = false; };
     }, [refreshCustomerInfo])
   );
