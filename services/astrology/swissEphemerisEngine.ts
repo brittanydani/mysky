@@ -259,6 +259,24 @@ export function calcPlanet(julianDay: number, planetId: number, sidereal: boolea
 }
 
 /**
+ * Compute the Midheaven (MC) from the Right Ascension of the Midheaven (RAMC).
+ * This is the astronomically correct formula: MC = atan(tan(RAMC) / cos(obliquity)).
+ * Used as a fallback when Swiss Ephemeris does not return ascmc[SE.MC] directly,
+ * ensuring MC is never snapped to a sign boundary.
+ */
+function calcMCFromRAMC(ramc: number, obliquityDeg = 23.4367): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const toDeg = (r: number) => (r * 180) / Math.PI;
+  const ramcRad = toRad(ramc);
+  let mc = toDeg(Math.atan(Math.tan(ramcRad) / Math.cos(toRad(obliquityDeg))));
+  if (mc < 0) mc += 360;
+  if (mc > ramc) mc -= 180;
+  if (mc < 0) mc += 180;
+  if (mc < 180 && ramc >= 180) mc += 180;
+  return normalize360(mc);
+}
+
+/**
  * Calculate house cusps and angles using Swiss Ephemeris.
  */
 export function calcHouses(
@@ -290,10 +308,26 @@ export function calcHouses(
   // ascmc array: [ASC, MC, ARMC, VERTEX, ...]
   const ascmc = result.ascmc || [];
 
+  // Derive MC from RAMC if ascmc[SE.MC] is missing.
+  // NEVER fall back to cusps[9]: for Whole Sign and Equal House, the 10th
+  // house cusp is a sign boundary, not the true Midheaven degree.
+  const rawMC = ascmc[SE.MC];
+  let mc: number;
+  if (typeof rawMC === 'number' && Number.isFinite(rawMC)) {
+    mc = normalize360(rawMC);
+  } else {
+    const ramc = ascmc[SE.ARMC];
+    if (typeof ramc === 'number' && Number.isFinite(ramc)) {
+      mc = calcMCFromRAMC(ramc);
+    } else {
+      throw new Error('Swiss Ephemeris did not return a valid MC or ARMC — cannot compute Midheaven.');
+    }
+  }
+
   return {
     cusps,
     ascendant: normalize360(ascmc[SE.ASC] ?? cusps[0]),
-    mc: normalize360(ascmc[SE.MC] ?? cusps[9]),
+    mc,
     armc: ascmc[SE.ARMC] ?? 0,
     vertex: ascmc[SE.VERTEX] ?? 0,
   };

@@ -9,7 +9,7 @@
     "backgroundColor": "#020817",
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
-      "buildNumber": "17",
+      "buildNumber": "19",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -118,8 +118,7 @@
           "imageWidth": 300
         }
       ],
-      "@react-native-community/datetimepicker",
-      "@sentry/react-native"
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
@@ -132,7 +131,6 @@
         "projectId": "c76e6f9f-d7eb-494b-90f5-e1b35d86152a"
       }
     },
-    "newArchEnabled": false,
     "owner": "brittanyhornick",
     "jsEngine": "hermes"
   }

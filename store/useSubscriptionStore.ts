@@ -63,7 +63,8 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       }
 
       // Keep isPro in sync whenever RevenueCat pushes an update.
-      // Store the reference so React Native Purchases can match and remove it if needed.
+      // NOTE: PremiumContext also registers a listener. Both are safe
+      // because they run AFTER awaiting initialize() above.
       const listener = (updatedInfo: import('react-native-purchases').CustomerInfo) => {
         set({ isPro: revenueCatService.isPremium(updatedInfo) });
       };

@@ -118,6 +118,8 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     isMounted.current = true;
 
+    let customerInfoListener: ((info: CustomerInfo) => void) | null = null;
+
     const init = async () => {
       try {
         // Check for demo-account premium override (set by demoSeedService)
@@ -127,6 +129,16 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         }
 
         await revenueCatService.initialize();
+
+        // Register listener only AFTER configure() succeeds — the native
+        // RevenueCat SDK throws an ObjC exception if a listener is added
+        // before the SDK is configured, crashing the TurboModule queue.
+        if (isMounted.current) {
+          customerInfoListener = (info: CustomerInfo) => {
+            updatePremiumState(info);
+          };
+          Purchases.addCustomerInfoUpdateListener(customerInfoListener);
+        }
         
         // Parallel fetch for speed, but atomic state update
         const [info, activeOfferings] = await Promise.all([
@@ -148,15 +160,11 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
     init();
 
-    // Entitlement Listener
-    const customerInfoListener = (info: CustomerInfo) => {
-      updatePremiumState(info);
-    };
-    Purchases.addCustomerInfoUpdateListener(customerInfoListener);
-
     return () => {
       isMounted.current = false;
-      Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+      if (customerInfoListener) {
+        Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+      }
     };
   }, [updatePremiumState]);
 

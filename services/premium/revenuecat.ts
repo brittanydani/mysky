@@ -18,9 +18,6 @@ class RevenueCatService {
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = (async () => {
-      // Enable verbose logging for debugging
-      if (__DEV__) { Purchases.setLogLevel(LOG_LEVEL.VERBOSE); } else { Purchases.setLogLevel(LOG_LEVEL.WARN); }
-
       const apiKey = Platform.select({
         ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
         android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
@@ -36,6 +33,9 @@ class RevenueCatService {
 
       try {
         await Purchases.configure({ apiKey });
+        // Set log level AFTER configure — calling any Purchases method
+        // before configure() throws an ObjC exception on the TurboModule queue.
+        if (__DEV__) { Purchases.setLogLevel(LOG_LEVEL.VERBOSE); } else { Purchases.setLogLevel(LOG_LEVEL.WARN); }
         this.initialized = true;
         logger.info('[RevenueCat] Initialized successfully');
       } catch (error) {
