@@ -4,7 +4,7 @@ import 'expo-standard-web-crypto';
 // were causing dladdr/backtrace_symbols crashes on iOS 26 New Architecture.
 
 // eslint-disable-next-line import/first
-import { GoldIcon } from '../components/ui/GoldIcon';
+import { Ionicons } from '@expo/vector-icons';
 // File: app/_layout.tsx
 
 import React, { Component, type ReactNode, useEffect, useRef, useState } from 'react';
@@ -14,12 +14,14 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
-import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
+// SkiaGradient removed — was triggering Skia barrel import at module eval time,
+// which creates a Reanimated worklet runtime before React mounts (crash vector).
+// ErrorBoundary and timeout UI now use plain Views instead.
 
 import OnboardingModal from '../components/OnboardingModal';
 import PrivacyConsentModal from '../components/PrivacyConsentModal';
 import AuthRequiredModal from '../components/AuthRequiredModal';
-import CosmicBackground from '../components/ui/CosmicBackground';
+const CosmicBackground = React.lazy(() => import('../components/ui/CosmicBackground'));
 
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -96,17 +98,14 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <View style={styles.errorContainer}>
-          <GoldIcon name="warning-outline" size={56}  style={{ marginBottom: 20 }}  />
+          <Ionicons name="warning-outline" size={56} color="#E8D6AE" style={{ marginBottom: 20 }} />
           <Text style={styles.errorTitle}>Something went wrong</Text>
           <Text style={styles.errorBody}>An unexpected error occurred. Please close the app and reopen it, or try reloading below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
-            <LinearGradient 
-              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']} 
-              style={styles.errorButtonGradient}
-            >
-              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
+            <View style={styles.errorButtonGradient}>
+              <Ionicons name="refresh-outline" size={16} color="#E8D6AE" style={{ marginRight: 8 }} />
               <Text style={styles.errorButtonText}>Reload Experience</Text>
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
         </View>
       );
@@ -461,17 +460,16 @@ function AppShell() {
     if (initTimedOut) {
       return (
         <View style={styles.errorContainer}>
-          <GoldIcon name="hourglass-outline" size={56}  style={{ marginBottom: 20 }}  />
+          <Ionicons name="hourglass-outline" size={56} color="#E8D6AE" style={{ marginBottom: 20 }} />
           <Text style={styles.errorTitle}>Taking longer than expected</Text>
           <Text style={styles.errorBody}>Initialization is still loading. This can happen if secure storage is temporarily unavailable. Please try again.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={retryInit}>
-            <LinearGradient
-              colors={['rgba(232, 214, 174, 0.15)', 'rgba(232,214,174,0.05)']}
+            <View
               style={styles.errorButtonGradient}
             >
-              <GoldIcon name="refresh-outline" size={16}  style={{ marginRight: 8 }}  />
+              <Ionicons name="refresh-outline" size={16} color="#E8D6AE" style={{ marginRight: 8 }} />
               <Text style={styles.errorButtonText}>Retry</Text>
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
         </View>
       );
@@ -483,7 +481,9 @@ function AppShell() {
     <PremiumProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, position: 'relative' }}>
-        <CosmicBackground />
+        <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: '#020817' }} />}>
+          <CosmicBackground />
+        </React.Suspense>
         <SafeAreaProvider>
           <StatusBar style="light" />
           <Stack
