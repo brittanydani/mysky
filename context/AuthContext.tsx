@@ -66,7 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted.current) {
             setSession(restored);
             if (restored?.user) {
-              revenueCatService.logIn(restored.user.id);
+              // Await so any RC initialization exception surfaces here rather
+              // than as an unhandled fire-and-forget rejection.
+              await revenueCatService.logIn(restored.user.id);
             }
           }
           break; // success

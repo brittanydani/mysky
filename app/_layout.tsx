@@ -1,9 +1,12 @@
 import 'expo-standard-web-crypto';
 import { initSentry } from '../utils/sentry';
+import { InteractionManager } from 'react-native';
 
-// Defer Sentry init to avoid crashing during bundle evaluation
-// if the native module throws an ObjC exception on the TurboModule queue.
-setTimeout(initSentry, 0);
+// Defer Sentry init until after the first frame is committed so the
+// native TurboModule bridge is fully up before Sentry touches it.
+// setTimeout(0) was too early — it fired before component tree mounted,
+// causing dladdr/backtrace_symbols to crash on the TurboModule queue.
+InteractionManager.runAfterInteractions(initSentry);
 
 // eslint-disable-next-line import/first
 import { GoldIcon } from '../components/ui/GoldIcon';
@@ -154,6 +157,11 @@ function AppShell() {
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
 
+  // Ref so the initializeApp closure always reads the current authLoading value
+  // without needing authLoading in the effect dependency array.
+  const authLoadingRef = useRef(authLoading);
+  useEffect(() => { authLoadingRef.current = authLoading; }, [authLoading]);
+
   // Flush any check-ins queued by the Home Screen widget's "Log Energy" button
   usePendingWidgetCheckIns();
 
@@ -231,6 +239,17 @@ function AppShell() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Wait for AuthContext to finish its own SecureStore/Keychain reads
+        // (session restore) before we start our own. Concurrent Keychain
+        // access on iOS 26 was causing TurboModule queue crashes at launch.
+        // authLoadingRef is a ref so the closure always reads the latest value.
+        await new Promise<void>((resolve) => {
+          if (!authLoadingRef.current) { resolve(); return; }
+          const check = setInterval(() => {
+            if (!authLoadingRef.current) { clearInterval(check); resolve(); }
+          }, 20);
+        });
+
         const privacyManager = new PrivacyComplianceManager();
         const consentStatus = await privacyManager.requestConsent();
         setNeedsPrivacyConsent(consentStatus.required);
