@@ -17,22 +17,27 @@ const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
 export function initSentry() {
   if (!DSN) return;
 
-  Sentry.init({
-    dsn: DSN,
-    // Only send errors/fatal in production; in dev, Sentry is disabled.
-    enabled: !__DEV__,
-    // Capture 100% of errors, sample 10% of performance transactions.
-    tracesSampleRate: 0.1,
-    // Strip PII from events automatically.
-    sendDefaultPii: false,
-    // Attach breadcrumbs for navigation, console, and network (no bodies).
-    enableAutoPerformanceTracing: true,
-    beforeSend(event) {
-      // Extra safety: strip any user context that might slip through.
-      delete event.user;
-      return event;
-    },
-  });
+  try {
+    Sentry.init({
+      dsn: DSN,
+      // Only send errors/fatal in production; in dev, Sentry is disabled.
+      enabled: !__DEV__,
+      // Capture 100% of errors, sample 10% of performance transactions.
+      tracesSampleRate: 0.1,
+      // Strip PII from events automatically.
+      sendDefaultPii: false,
+      // Attach breadcrumbs for navigation, console, and network (no bodies).
+      enableAutoPerformanceTracing: true,
+      beforeSend(event) {
+        // Extra safety: strip any user context that might slip through.
+        delete event.user;
+        return event;
+      },
+    });
+  } catch {
+    // Native Sentry module not available (e.g. plugin not linked).
+    console.warn('[Sentry] Native module unavailable, error reporting disabled.');
+  }
 }
 
 /**
@@ -41,13 +46,17 @@ export function initSentry() {
 export function captureError(error: unknown, context?: Record<string, string>) {
   if (!DSN || __DEV__) return;
 
-  if (error instanceof Error) {
-    Sentry.captureException(error, context ? { tags: context } : undefined);
-  } else {
-    Sentry.captureMessage(String(error), {
-      level: 'error',
-      ...(context ? { tags: context } : {}),
-    });
+  try {
+    if (error instanceof Error) {
+      Sentry.captureException(error, context ? { tags: context } : undefined);
+    } else {
+      Sentry.captureMessage(String(error), {
+        level: 'error',
+        ...(context ? { tags: context } : {}),
+      });
+    }
+  } catch {
+    // Native module unavailable — silently ignore.
   }
 }
 

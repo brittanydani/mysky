@@ -1,7 +1,9 @@
 import 'expo-standard-web-crypto';
 import { initSentry } from '../utils/sentry';
 
-initSentry();
+// Defer Sentry init to avoid crashing during bundle evaluation
+// if the native module throws an ObjC exception on the TurboModule queue.
+setTimeout(initSentry, 0);
 
 // eslint-disable-next-line import/first
 import { GoldIcon } from '../components/ui/GoldIcon';

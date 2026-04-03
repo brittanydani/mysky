@@ -871,7 +871,7 @@ export default function ChartScreen() {
             <GoldSubtitle style={styles.subtitle}>
               {activeOverlays.length > 0
                 ? `${(userChart as any).name || 'You'} + ${activeOverlays.length > 1 ? `${activeOverlays.length} Others` : activeOverlays[0].person.name}`
-                : `${(userChart as any).name || 'Your Chart'}${birthDateStr ? ` · Born ${birthDateStr}` : ''}`}
+                : `${birthDateStr ? `Born ${birthDateStr}` : ''}${birthTimeStr ? ` · ${birthTimeStr}` : ''}`}
             </GoldSubtitle>
             {activeOverlays.length === 0 && (
               <Text style={styles.headerFrame}>
