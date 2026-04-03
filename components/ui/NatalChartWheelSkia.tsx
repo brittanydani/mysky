@@ -125,8 +125,8 @@ const R_OUTER = SIZE / 2 - 4;          // outermost edge (gold rim)
 const R_HOUSE_OUTER = R_OUTER;          // house ring outer — extends to the rim
 const R_HOUSE_INNER = R_OUTER - 28;     // house ring inner boundary
 const R_PLANET_RING = R_OUTER - 20;        // planet glyphs — just inside the zodiac bezel
-const R_ASPECT_RING = R_INNER + 22;        // aspect line endpoints — center area
 const R_INNER = 42;                     // inner circle — slightly larger for watch-face presence
+const R_ASPECT_RING = R_INNER + 22;        // aspect line endpoints — center area
 
 // Dotted astronomy diagram rings
 const R_DOT_RING_1 = R_PLANET_RING - 18;

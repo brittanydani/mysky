@@ -1,12 +1,7 @@
 import 'expo-standard-web-crypto';
-import { initSentry } from '../utils/sentry';
-import { InteractionManager } from 'react-native';
-
-// Defer Sentry init until after the first frame is committed so the
-// native TurboModule bridge is fully up before Sentry touches it.
-// setTimeout(0) was too early — it fired before component tree mounted,
-// causing dladdr/backtrace_symbols to crash on the TurboModule queue.
-InteractionManager.runAfterInteractions(initSentry);
+// Sentry is initialized inside AppShell after bootstrap gating completes,
+// not at module load — top-level native TurboModule calls at eval time
+// were causing dladdr/backtrace_symbols crashes on iOS 26 New Architecture.
 
 // eslint-disable-next-line import/first
 import { GoldIcon } from '../components/ui/GoldIcon';
@@ -143,11 +138,9 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <PremiumProvider>
-          <StarNotificationProvider>
-            <AppShell />
-          </StarNotificationProvider>
-        </PremiumProvider>
+        <StarNotificationProvider>
+          <AppShell />
+        </StarNotificationProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
@@ -450,11 +443,17 @@ function AppShell() {
     // Navigation is handled by the useEffect above once session confirms.
   };
 
-  // Hide splash screen once all init gates have passed
+  // Hide splash screen once all init gates have passed, then init Sentry.
+  // Sentry must not run at module load or before bootstrap completes \u2014
+  // its native TurboModule call was crashing on iOS 26 New Architecture.
   useEffect(() => {
     if (!checkingConsent && dbReady && !authLoading && !didHideSplash.current) {
       didHideSplash.current = true;
       SplashScreen.hideAsync().catch(() => {});
+      // Sentry startup init disabled for diagnostic build — re-enable after crash isolation.
+      // import('../utils/sentry').then(({ initSentry }) => {
+      //   try { initSentry(); } catch { /* native module unavailable */ }
+      // }).catch(() => {});
     }
   }, [checkingConsent, dbReady, authLoading]);
 
@@ -481,6 +480,7 @@ function AppShell() {
   }
 
   return (
+    <PremiumProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, position: 'relative' }}>
         <CosmicBackground />
@@ -551,6 +551,7 @@ function AppShell() {
         </SafeAreaProvider>
       </View>
     </GestureHandlerRootView>
+    </PremiumProvider>
   );
 }
 

@@ -96,11 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(newSession);
       }
       if (event === 'SIGNED_IN' && newSession?.user) {
-        revenueCatService.logIn(newSession.user.id);
+        revenueCatService.logIn(newSession.user.id).catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
         // Auto-seed demo data for the App Store reviewer account only
         DemoSeedService.seedIfNeeded(newSession.user.email).catch((e) => logger.warn('[AuthContext] Demo seed failed:', e));
       } else if (event === 'SIGNED_OUT') {
-        revenueCatService.logOut();
+        revenueCatService.logOut().catch((e) => logger.error('[AuthContext] RC logOut failed:', e));
       }
     });
 

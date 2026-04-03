@@ -133,11 +133,18 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         // Register listener only AFTER configure() succeeds — the native
         // RevenueCat SDK throws an ObjC exception if a listener is added
         // before the SDK is configured, crashing the TurboModule queue.
+        // Wrapped in try/catch: void TurboModule calls on iOS 26 New Architecture
+        // can throw synchronous ObjC exceptions uncatchable from async context.
         if (isMounted.current) {
           customerInfoListener = (info: CustomerInfo) => {
             updatePremiumState(info);
           };
-          Purchases.addCustomerInfoUpdateListener(customerInfoListener);
+          try {
+            Purchases.addCustomerInfoUpdateListener(customerInfoListener);
+          } catch (e) {
+            logger.error('[PremiumContext] addCustomerInfoUpdateListener failed:', e);
+            customerInfoListener = null;
+          }
         }
         
         // Parallel fetch for speed, but atomic state update
@@ -163,7 +170,11 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted.current = false;
       if (customerInfoListener) {
-        Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+        try {
+          Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+        } catch (e) {
+          // Ignore — component is unmounting
+        }
       }
     };
   }, [updatePremiumState]);

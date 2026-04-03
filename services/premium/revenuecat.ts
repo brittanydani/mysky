@@ -3,7 +3,6 @@ import Purchases, {
   PurchasesPackage, 
   CustomerInfo,
   PurchasesEntitlementInfo,
-  LOG_LEVEL 
 } from 'react-native-purchases';
 import { logger } from '../../utils/logger';
 import { Platform } from 'react-native';
@@ -33,9 +32,10 @@ class RevenueCatService {
 
       try {
         await Purchases.configure({ apiKey });
-        // Set log level AFTER configure — calling any Purchases method
-        // before configure() throws an ObjC exception on the TurboModule queue.
-        if (__DEV__) { Purchases.setLogLevel(LOG_LEVEL.VERBOSE); } else { Purchases.setLogLevel(LOG_LEVEL.WARN); }
+        // NOTE: Purchases.setLogLevel() is a void TurboModule method. On iOS 26
+        // (RN New Architecture) it throws an NSException that crashes inside
+        // convertNSExceptionToJSError before we can catch it in JS. Removed
+        // entirely — RC logs are not needed in production.
         this.initialized = true;
         logger.info('[RevenueCat] Initialized successfully');
       } catch (error) {

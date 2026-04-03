@@ -68,7 +68,11 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       const listener = (updatedInfo: import('react-native-purchases').CustomerInfo) => {
         set({ isPro: revenueCatService.isPremium(updatedInfo) });
       };
-      Purchases.addCustomerInfoUpdateListener(listener);
+      try {
+        Purchases.addCustomerInfoUpdateListener(listener);
+      } catch (e) {
+        logger.error('[useSubscriptionStore] addCustomerInfoUpdateListener failed:', e);
+      }
 
       set({ isConfigured: true });
     } catch (e) {
