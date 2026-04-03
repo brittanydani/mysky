@@ -18,7 +18,8 @@
     "test:components": "jest --config jest.component.config.js",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -91,6 +92,7 @@
     "eslint-config-expo": "~10.0.0",
     "expo-module-scripts": "^5.0.8",
     "jest": "~29.7.0",
+    "patch-package": "^8.0.1",
     "react-dev-inspector": "^2.0.1",
     "react-native-svg-transformer": "^1.5.3",
     "react-test-renderer": "^19.1.0",

@@ -1,5 +1,11 @@
-import 'expo-standard-web-crypto';
-// Sentry is initialized inside AppShell after bootstrap gating completes,
+// expo-standard-web-crypto is NOT imported at the top level.
+// It chains: expo-standard-web-crypto → expo-crypto → requireNativeModule('ExpoCrypto')
+// which is a synchronous TurboModule call at module eval time.
+// On iOS 26 New Architecture this crashes before React mounts (same vector as
+// the Skia/Reanimated eval-time crashes). Polyfill is installed lazily inside
+// initializeApp() after the JS engine is fully bootstrapped.
+//
+// Sentry is also initialized inside AppShell after bootstrap gating completes,
 // not at module load — top-level native TurboModule calls at eval time
 // were causing dladdr/backtrace_symbols crashes on iOS 26 New Architecture.
 
@@ -18,9 +24,11 @@ import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 're
 // which creates a Reanimated worklet runtime before React mounts (crash vector).
 // ErrorBoundary and timeout UI now use plain Views instead.
 
-import OnboardingModal from '../components/OnboardingModal';
-import PrivacyConsentModal from '../components/PrivacyConsentModal';
-import AuthRequiredModal from '../components/AuthRequiredModal';
+// Modals lazy-loaded to avoid pulling @shopify/react-native-skia into eval-time
+// import graph (Skia barrel triggers Reanimated worklet runtime at module eval).
+const OnboardingModal = React.lazy(() => import('../components/OnboardingModal'));
+const PrivacyConsentModal = React.lazy(() => import('../components/PrivacyConsentModal'));
+const AuthRequiredModal = React.lazy(() => import('../components/AuthRequiredModal'));
 const CosmicBackground = React.lazy(() => import('../components/ui/CosmicBackground'));
 
 import { PremiumProvider } from '../context/PremiumContext';
@@ -231,6 +239,13 @@ function AppShell() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Install the Web Crypto polyfill now that the JS engine is bootstrapped.
+        // expo-standard-web-crypto → expo-crypto → requireNativeModule('ExpoCrypto')
+        // must not run at module eval time (iOS 26 New Architecture crash vector).
+        await import('expo-standard-web-crypto').then((m) => {
+          if (typeof m.polyfillWebCrypto === 'function') m.polyfillWebCrypto();
+        }).catch(() => {});
+
         // Wait for AuthContext to finish its own SecureStore/Keychain reads
         // (session restore) before we start our own. Concurrent Keychain
         // access on iOS 26 was causing TurboModule queue crashes at launch.
@@ -525,6 +540,7 @@ function AppShell() {
           </Stack>
 
           {/* Overlay gates (do NOT unmount navigation) */}
+          <React.Suspense fallback={null}>
           {/* Re-consent gate — only shown when consent is withdrawn after onboarding is complete */}
           {needsPrivacyConsent && onboardingComplete && (
             <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
@@ -548,6 +564,7 @@ function AppShell() {
               !session
             }
           />
+          </React.Suspense>
         </SafeAreaProvider>
       </View>
     </GestureHandlerRootView>

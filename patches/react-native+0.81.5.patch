@@ -1,0 +1,26 @@
+diff --git a/node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModule.mm b/node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModule.mm
+index 2a67797..7378cdb 100644
+--- a/node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModule.mm
++++ b/node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios/ReactCommon/RCTTurboModule.mm
+@@ -219,9 +219,18 @@ id convertJSIValueToObjCObject(
+   jsi::Object cause(runtime);
+   cause.setProperty(runtime, "name", [exception.name UTF8String]);
+   cause.setProperty(runtime, "message", reason);
+-  cause.setProperty(runtime, "stackSymbols", convertNSArrayToJSIArray(runtime, exception.callStackSymbols));
+-  cause.setProperty(
+-      runtime, "stackReturnAddresses", convertNSArrayToJSIArray(runtime, exception.callStackReturnAddresses));
++  // iOS 26 (New Architecture): NSException.callStackSymbols and callStackReturnAddresses
++  // use _NSCallStackArray which lazily calls backtrace_symbols/dladdr per element.
++  // On iOS 26 the call stack can contain null (0x0) addresses; dladdr(0x0) crashes
++  // with SIGSEGV inside ObjCTurboModule::performVoidMethodInvocation.
++  // Guard both accesses so the exception message is still surfaced even if symbolication fails.
++  @try {
++    cause.setProperty(runtime, "stackSymbols", convertNSArrayToJSIArray(runtime, exception.callStackSymbols));
++  } @catch (...) {}
++  @try {
++    cause.setProperty(
++        runtime, "stackReturnAddresses", convertNSArrayToJSIArray(runtime, exception.callStackReturnAddresses));
++  } @catch (...) {}
+ 
+   std::string message = moduleName + "." + methodName + " raised an exception: " + reason;
+   jsi::Value error = createJSRuntimeError(runtime, message);

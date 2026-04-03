@@ -45,13 +45,19 @@ const SecureStoreAdapter = {
 
 // ─── Client setup ─────────────────────────────────────────────────────────────
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  logger.warn(
-    '[supabase] EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY is not set. ' +
-      'Auth and Edge Functions will not work until these are configured in .env.',
+if (!supabaseUrl) {
+  throw new Error(
+    '[supabase] EXPO_PUBLIC_SUPABASE_URL is missing. ' +
+      'Ensure it is set in .env (local) or as an EAS secret (production builds).',
+  );
+}
+if (!supabaseAnonKey) {
+  throw new Error(
+    '[supabase] EXPO_PUBLIC_SUPABASE_ANON_KEY is missing. ' +
+      'Ensure it is set in .env (local) or as an EAS secret (production builds).',
   );
 }
 

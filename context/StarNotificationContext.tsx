@@ -9,10 +9,10 @@
  *   showStarNotification('A pattern of clarity is emerging');
  */
 
-import React, { createContext, useContext, useRef, useCallback, type ReactNode } from 'react';
-import SkiaFallingStarNotification, {
-  type StarNotificationRef,
-} from '../components/ui/SkiaFallingStarNotification';
+import React, { createContext, useContext, useRef, useCallback, Suspense, type ReactNode } from 'react';
+import type { StarNotificationRef } from '../components/ui/SkiaFallingStarNotification';
+
+const LazySkiaFallingStar = React.lazy(() => import('../components/ui/SkiaFallingStarNotification'));
 
 // ── Context shape ──────────────────────────────────────────────────────────────
 interface StarNotificationContextValue {
@@ -36,7 +36,9 @@ export function StarNotificationProvider({ children }: { children: ReactNode }) 
     <StarNotificationContext.Provider value={{ showStarNotification }}>
       {children}
       {/* Rendered above everything via absoluteFill + pointerEvents="none" */}
-      <SkiaFallingStarNotification ref={starRef} />
+      <Suspense fallback={null}>
+        <LazySkiaFallingStar ref={starRef} />
+      </Suspense>
     </StarNotificationContext.Provider>
   );
 }
