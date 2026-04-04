@@ -22,6 +22,7 @@ import MoonPhaseView from '../../components/ui/MoonPhaseView';
 import { ChironIcon, NorthNodeIcon, SouthNodeIcon, LilithIcon, PartOfFortuneIcon, VertexIcon, PholusIcon } from '../../components/ui/AstrologyIcons';
 import BirthDataModal from '../../components/BirthDataModal';
 import AstrologySettingsModal from '../../components/AstrologySettingsModal';
+import PremiumModal from '../../components/PremiumModal';
 import { localDb } from '../../services/storage/localDb';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { NatalChart, PlanetPlacement, Aspect, HouseCusp as HouseCuspType, BirthData } from '../../services/astrology/types';
@@ -651,6 +652,7 @@ export default function ChartScreen() {
 
   // ── View mode toggle: 'essentials' vs 'complete' ──
   const [viewMode, setViewMode] = useState<'essentials' | 'complete'>('essentials');
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // ── Core Identity Summary (blended Sun/Moon/Rising/chart ruler) ──
   const coreIdentity = useMemo<CoreIdentitySummary | null>(() => {
@@ -1202,7 +1204,13 @@ export default function ChartScreen() {
               </Pressable>
               <Pressable
                 style={[styles.tabBtn, viewMode === 'complete' && styles.tabBtnActive]}
-                onPress={() => setViewMode('complete')}
+                onPress={() => {
+                  if (!isPremium) {
+                    setShowPremiumModal(true);
+                  } else {
+                    setViewMode('complete');
+                  }
+                }}
                 accessibilityRole="tab"
                 accessibilityLabel="Complete view"
                 accessibilityState={{ selected: viewMode === 'complete' }}
@@ -2790,6 +2798,9 @@ export default function ChartScreen() {
 
       {/* ── Add Person Modal ── */}
       <BirthDataModal visible={showAddModal} onClose={() => setShowAddModal(false)} onSave={handleSaveNewPerson} />
+
+      {/* ── Premium upsell (for Complete Chart tab) ── */}
+      <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
     </View>
   );
 }
