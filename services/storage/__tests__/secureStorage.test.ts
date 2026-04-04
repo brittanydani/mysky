@@ -114,16 +114,16 @@ describe('SecureStorageService', () => {
   });
 
   // ── auditDataAccess rolling cap ──────────────────────────────────────────
-  describe('auditDataAccess() rolling cap at 20', () => {
-    it('keeps at most 20 most-recent entries', async () => {
-      // Write 25 explicit audit entries
-      for (let i = 0; i < 25; i++) {
+  describe('auditDataAccess() rolling cap at 10', () => {
+    it('keeps at most 10 most-recent entries', async () => {
+      // Write 15 explicit audit entries
+      for (let i = 0; i < 15; i++) {
         await secureStorage.auditDataAccess(`op_${i}`);
       }
       const events = await secureStorage.getRecentSecurityEvents();
-      // Rolling window caps at 20; size-trimming may reduce further — never exceeds 20
+      // Rolling window caps at 10; size-trimming may reduce further — never exceeds 10
       expect(events.length).toBeGreaterThan(0);
-      expect(events.length).toBeLessThanOrEqual(20);
+      expect(events.length).toBeLessThanOrEqual(10);
     });
   });
 

@@ -29,6 +29,7 @@ export interface ReflectionAnswer {
   scaleValue?: number;     // 0–3 numeric scale value
   date: string;            // YYYY-MM-DD
   sealedAt: string;        // ISO timestamp
+  notes?: string;          // Optional free-text reflection note for the category
 }
 
 export interface DailyReflectionData {
@@ -145,11 +146,16 @@ export function getReflectionDate(now: Date = new Date()): Date {
   return now;
 }
 
-/** Get 1-indexed day of year (1–366). */
+/** Get 1-indexed day of year (1–366). DST-immune: uses only calendar fields. */
 function getDayOfYear(date: Date = new Date()): number {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const year = date.getFullYear();
+  // Adjust Feb for leap years
+  const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  if (isLeap) MONTH_DAYS[1] = 29;
+  let day = date.getDate();
+  for (let m = 0; m < date.getMonth(); m++) day += MONTH_DAYS[m];
+  return day;
 }
 
 /** Get today as YYYY-MM-DD in local time. */
@@ -181,7 +187,7 @@ function seededShuffle(length: number, seed: number): number[] {
   const arr = Array.from({ length }, (_, i) => i);
   let s = seed >>> 0; // treat as unsigned 32-bit
   for (let i = arr.length - 1; i > 0; i--) {
-    s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
     const j = s % (i + 1);
     const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
   }
@@ -193,10 +199,9 @@ function seededShuffle(length: number, seed: number): number[] {
  * Returns 3 questions on every 3rd day, 2 otherwise.
  *
  * Questions are drawn sequentially from a deterministic yearly shuffle of the
- * full question bank (seeded by year + category + optional userSeed). Because
- * each day advances the cursor by 2–3 positions through a 365-item permutation,
- * the same question cannot appear twice within ~156 days — well beyond the
- * 90-day no-repeat window.
+ * full question bank (seeded by year + category + optional userSeed). The bank
+ * size drives the permutation length, so any questions added to a bank are
+ * automatically included in rotation without other changes.
  *
  * Pass `userSeed` (e.g. chartId or profile hash) to personalise which
  * questions each user receives on a given day.
@@ -222,17 +227,19 @@ export function getTodayQuestions(
   const userOffset = userSeed ? hashString(userSeed) : 0;
   const seed = (date.getFullYear() * 7919 + categoryOffset[category] + userOffset) >>> 0;
 
-  const shuffled = seededShuffle(QUESTIONS_PER_CATEGORY, seed);
+  // Use actual bank size so all questions (including new additions) are reachable
+  const bankSize = bank.length;
+  const shuffled = seededShuffle(bankSize, seed);
 
   // Calculate how many questions have been asked in days 1..(dayOfYear-1).
   // Each day d contributes 3 questions if d%3===0, otherwise 2.
   // Total through day d = 2d + floor(d/3).
   const d = dayOfYear - 1;
-  const startIndex = (2 * d + Math.floor(d / 3)) % QUESTIONS_PER_CATEGORY;
+  const startIndex = (2 * d + Math.floor(d / 3)) % bankSize;
 
   const questions: ReflectionQuestion[] = [];
   for (let i = 0; i < count; i++) {
-    questions.push(bank[shuffled[(startIndex + i) % QUESTIONS_PER_CATEGORY]]);
+    questions.push(bank[shuffled[(startIndex + i) % bankSize]]);
   }
 
   return questions;
@@ -308,6 +315,14 @@ export async function sealTodayAnswers(
   data.totalDaysCompleted = new Set(data.answers.map(a => a.date)).size;
 
   await saveReflections(data);
+
+  // Enqueue sealed answers for cloud sync (fire-and-forget)
+  import('../storage/syncService').then(({ enqueueReflectionBatch }) =>
+    enqueueReflectionBatch(newAnswers.map(a => data.answers.find(
+      s => s.date === a.date && s.questionId === a.questionId && s.category === a.category,
+    )!).filter(Boolean)),
+  ).catch(() => {});
+
   return data;
 }
 
@@ -356,6 +371,7 @@ export async function getCategorySealStatus(
 export async function sealCategoryAnswers(
   category: ReflectionCategory,
   newAnswers: Omit<ReflectionAnswer, 'sealedAt'>[],
+  notes?: string,
 ): Promise<DailyReflectionData> {
   const data = await loadReflections();
   const now = new Date().toISOString();
@@ -372,7 +388,12 @@ export async function sealCategoryAnswers(
       a => a.date === ans.date && a.questionId === ans.questionId && a.category === ans.category,
     );
 
-    const sealed: ReflectionAnswer = { ...ans, sealedAt: now };
+    const sealed: ReflectionAnswer = {
+      ...ans,
+      sealedAt: now,
+      // Attach notes to the first answer in the batch as the category note
+      ...(notes !== undefined ? { notes } : {}),
+    };
 
     if (existing >= 0) {
       data.answers[existing] = sealed;
@@ -384,6 +405,14 @@ export async function sealCategoryAnswers(
   data.totalDaysCompleted = new Set(data.answers.map(a => a.date)).size;
 
   await saveReflections(data);
+
+  // Enqueue sealed category answers for cloud sync (fire-and-forget)
+  import('../storage/syncService').then(({ enqueueReflectionBatch }) =>
+    enqueueReflectionBatch(newAnswers.map(a => data.answers.find(
+      s => s.date === a.date && s.questionId === a.questionId && s.category === a.category,
+    )!).filter(Boolean)),
+  ).catch(() => {});
+
   return data;
 }
 

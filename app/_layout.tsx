@@ -27,7 +27,10 @@ import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceM
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { initHapticPreference } from '../utils/haptics';
 import { localDb } from '../services/storage/localDb';
+import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
+import { supabase } from '../lib/supabase';
+import { IdentityVault } from '../utils/IdentityVault';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 
@@ -191,16 +194,59 @@ function AppShell() {
   // Prevent double-navigation after onboarding completes
   const didNavigatePostOnboarding = useRef(false);
 
+  const restoreChartFromIdentityVault = async () => {
+    try {
+      const sealedIdentity = await IdentityVault.openVault();
+      if (!sealedIdentity?.birthDate || !sealedIdentity.locationCity.trim()) {
+        return false;
+      }
+
+      const hasValidCoordinates =
+        Number.isFinite(sealedIdentity.locationLat) &&
+        Number.isFinite(sealedIdentity.locationLng);
+      if (!hasValidCoordinates) {
+        logger.warn('[onboarding] Sealed identity missing valid coordinates');
+        return false;
+      }
+
+      const now = new Date().toISOString();
+      await localDb.saveChart({
+        id: generateId(),
+        name: sealedIdentity.name.trim() || 'My Chart',
+        birthDate: sealedIdentity.birthDate,
+        birthTime: sealedIdentity.hasUnknownTime ? undefined : sealedIdentity.birthTime,
+        hasUnknownTime: sealedIdentity.hasUnknownTime,
+        birthPlace: sealedIdentity.locationCity.trim(),
+        latitude: sealedIdentity.locationLat,
+        longitude: sealedIdentity.locationLng,
+        timezone: sealedIdentity.timezone,
+        houseSystem: 'whole-sign',
+        createdAt: now,
+        updatedAt: now,
+        isDeleted: false,
+      });
+
+      logger.info('[onboarding] Restored chart from sealed identity');
+      return true;
+    } catch (error) {
+      logger.error('[onboarding] Failed to restore chart from sealed identity:', error);
+      return false;
+    }
+  };
+
   const checkIfOnboardingCanBeSkipped = async () => {
     try {
       await localDb.initialize();
       const charts = await localDb.getCharts();
-      const hasExistingChart = charts.length > 0;
-      // Also skip onboarding if the user already has an active session —
-      // e.g. after a fresh install where local SQLite is empty but the
-      // user is already authenticated via Supabase (Keychain session restored).
-      const hasSession = !!session;
-      const canSkip = hasExistingChart || hasSession;
+      if (charts.length > 0) {
+        setOnboardingComplete(true);
+        return true;
+      }
+
+      // If SQLite was cleared but the device keychain still has the sealed birth
+      // profile, restore the local chart and keep the user out of onboarding.
+      const restoredFromVault = await restoreChartFromIdentityVault();
+      const canSkip = restoredFromVault;
       setOnboardingComplete(canSkip);
       return canSkip;
     } catch (e) {
@@ -286,7 +332,10 @@ function AppShell() {
         // If the user already has a valid session they previously accepted the
         // terms — re-hydrate the SecureStore key so future cold starts skip the
         // consent prompt (fresh installs wipe Keychain, but session survives).
-        if (!termsAccepted && session) {
+        // Read the live session directly — `session` state is null at closure
+        // capture time since this effect runs once with [] deps.
+        const { data: { session: initLiveSession } } = await supabase.auth.getSession();
+        if (!termsAccepted && initLiveSession) {
           logger.info('[init] session present — auto-restoring terms consent');
           await setTermsConsent(true);
           termsAccepted = true;
@@ -459,6 +508,20 @@ function AppShell() {
     }
   }, [session]);
 
+  // Flush pending sync queue and trigger a pull whenever the user signs in.
+  // Pull is sequenced after flush so that last_sync_at reflects local writes first.
+  useEffect(() => {
+    if (!session) return;
+    import('../services/storage/syncService').then(({ flushQueue, pullFromSupabase, syncBirthProfileFromLocal }) => {
+      (async () => {
+        await syncBirthProfileFromLocal().catch(() => {});
+        await flushQueue().catch(() => {});
+        await pullFromSupabase().catch(() => {});
+      })();
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
+
   // Navigate to home once both onboarding is complete and session is confirmed.
   // Using an effect avoids a race where handleOnboardingComplete fires before
   // AuthContext has processed the SIGNED_IN event from the onboarding auth step.
@@ -475,7 +538,7 @@ function AppShell() {
     }
   }, [onboardingComplete, session, needsPrivacyConsent, router]);
 
-  const handleOnboardingComplete = async () => {
+  const handleOnboardingComplete = async (_chart?: import('../services/astrology/types').NatalChart) => {
     setCompletingOnboarding(true);
     setOnboardingComplete(true);
 
@@ -540,9 +603,6 @@ function AppShell() {
           >
             {/* Mount tabs only when privacy is satisfied and onboarding is complete with a valid session. */}
             {!needsPrivacyConsent && onboardingComplete && !!session && <Stack.Screen name="(tabs)" />}
-
-            {/* Onboarding & Auth */}
-            <Stack.Screen name="onboarding" />
 
             {/* --- HIDDEN SCREENS (MODALS) --- */}
             {/* Slide up over the tab bar — dedicated workspaces */}

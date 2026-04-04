@@ -214,23 +214,23 @@ class SecureStorageService {
   // Scope is intentionally limited for data-minimisation (SecureStore ≤ 2 KB).
   async auditDataAccess(operation: string, metadata?: Record<string, any>): Promise<void> {
     try {
+      // Omit id UUID to reduce per-entry byte cost; timestamp provides ordering.
       const entry = {
-        id: await this.newId(),
         operation,
-        metadata: metadata ?? {},
         timestamp: new Date().toISOString(),
+        ...(metadata && Object.keys(metadata).length > 0 ? { metadata } : {}),
       };
 
       const existing = (await this.getEncryptedItem<any[]>(SecureStorageService.KEYS.AUDIT_TRAIL)) ?? [];
-      // Keep only last 20 entries to stay well under 2KB limit
-      const updated = [entry, ...existing].slice(0, 20);
+      // Keep only last 10 entries to stay comfortably under 2KB limit
+      const updated = [entry, ...existing].slice(0, 10);
       await this.setEncryptedItem(SecureStorageService.KEYS.AUDIT_TRAIL, updated);
     } catch (error) {
       logger.error('[SecureStorage] Error recording recent security events:', error);
     }
   }
 
-  /** Returns the most recent security events (up to 20). */
+  /** Returns the most recent security events (up to 10). */
   async getRecentSecurityEvents(): Promise<any[]> {
     try {
       return (await this.getEncryptedItem<any[]>(SecureStorageService.KEYS.AUDIT_TRAIL)) ?? [];

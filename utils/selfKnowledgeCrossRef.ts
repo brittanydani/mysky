@@ -26,6 +26,8 @@ import {
   SelfKnowledgeContext,
   ArchetypeKey,
   DailyReflectionSummary,
+  JournalSummary,
+  DreamSummary,
 } from '../services/insights/selfKnowledgeContext';
 import { DailyCheckIn } from '../services/patterns/types';
 
@@ -498,14 +500,220 @@ function buildReflectionInsight(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 9. Dream × Somatic Cross-Reference
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Map dream feeling IDs to overlapping somatic emotions (case-insensitive match)
+const DREAM_TO_SOMATIC_EMOTION: Record<string, string[]> = {
+  anxious:    ['Anxiety', 'Fear', 'Tension'],
+  panicked:   ['Anxiety', 'Fear'],
+  terrified:  ['Fear', 'Anxiety'],
+  scared:     ['Fear', 'Anxiety'],
+  chased:     ['Fear', 'Anxiety', 'Stress'],
+  powerless:  ['Numbness', 'Overwhelm', 'Grief'],
+  numb:       ['Numbness'],
+  heavy:      ['Grief', 'Sadness', 'Numbness'],
+  betrayed:   ['Anger', 'Grief'],
+  angry:      ['Anger', 'Frustration'],
+  trapped:    ['Tension', 'Anxiety'],
+  grieving:   ['Grief', 'Sadness'],
+  isolated:   ['Numbness', 'Sadness'],
+  exhausted:  ['Numbness', 'Restlessness'],
+  restless:   ['Restlessness', 'Tension', 'Anxiety'],
+  conflicted: ['Tension', 'Anxiety'],
+};
+
+function buildDreamSomaticInsight(
+  dreamSummary: DreamSummary,
+  somaticEntries: SelfKnowledgeContext['somaticEntries'],
+): CrossRefInsight | null {
+  if (dreamSummary.totalWithDreams < 3 || somaticEntries.length < 3) return null;
+
+  // Find dream feelings that map to frequently logged somatic emotions
+  const somaticEmotionCounts: Record<string, number> = {};
+  for (const e of somaticEntries) {
+    somaticEmotionCounts[e.emotion] = (somaticEmotionCounts[e.emotion] ?? 0) + 1;
+  }
+
+  const matches: Array<{ dreamFeeling: string; somaticEmotion: string; count: number }> = [];
+  for (const feelingId of dreamSummary.topFeelingIds) {
+    const mapped = DREAM_TO_SOMATIC_EMOTION[feelingId] ?? [];
+    for (const somaticLabel of mapped) {
+      const count = somaticEmotionCounts[somaticLabel];
+      if (count && count >= 2) {
+        matches.push({ dreamFeeling: feelingId, somaticEmotion: somaticLabel, count });
+        break;
+      }
+    }
+    if (matches.length >= 2) break;
+  }
+
+  if (matches.length === 0) return null;
+
+  const primary = matches[0];
+  const secondary = matches[1];
+  const bodyLabel = secondary
+    ? ` "${secondary.dreamFeeling.replace(/_/g, ' ')}" also echoes your logged ${secondary.somaticEmotion.toLowerCase()} sensations.`
+    : '';
+
+  return {
+    id: 'dream-somatic-link',
+    title: 'Your Dreams Echo Your Body',
+    body: `You frequently dream with a feeling of "${primary.dreamFeeling.replace(/_/g, ' ')}" — and your body map shows ${primary.count} logged entries of ${primary.somaticEmotion.toLowerCase()}.${bodyLabel} Your dreams and your body may be processing the same material. What one holds, the other speaks.`,
+    accentColor: 'silverBlue',
+    source: 'somatic',
+    isConfirmed: true,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. Journal Mood × Body Pattern
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildJournalBodyInsight(
+  journal: JournalSummary,
+  somaticEntries: SelfKnowledgeContext['somaticEntries'],
+): CrossRefInsight | null {
+  if (journal.heavyDays.length < 2 || somaticEntries.length < 3) return null;
+
+  // Find somatic entries logged on the same days as heavy journal entries
+  const heavySet = new Set(journal.heavyDays);
+  const onHeavyDays = somaticEntries.filter(e => heavySet.has(e.date.slice(0, 10)));
+
+  if (onHeavyDays.length < 2) {
+    // No same-day overlap — still surface pattern if body logging and heavy days both exist
+    const bodyRegions: Record<string, number> = {};
+    for (const e of somaticEntries) {
+      bodyRegions[e.region] = (bodyRegions[e.region] ?? 0) + 1;
+    }
+    const topRegion = Object.entries(bodyRegions).sort((a, b) => b[1] - a[1])[0];
+    if (!topRegion) return null;
+
+    return {
+      id: 'journal-body-pattern',
+      title: 'Your Journal and Your Body',
+      body: `You've had ${journal.heavyDays.length} heavy or stormy journal days. Your body map most often signals in your ${topRegion[0]} (${topRegion[1]}×). Checking in with that region on difficult writing days may help name what the words haven't reached yet.`,
+      accentColor: 'copper',
+      source: 'somatic',
+      isConfirmed: false,
+    };
+  }
+
+  // Confirmed overlap
+  const overlapEmotions: Record<string, number> = {};
+  for (const e of onHeavyDays) {
+    overlapEmotions[e.emotion] = (overlapEmotions[e.emotion] ?? 0) + 1;
+  }
+  const topEmotion = Object.entries(overlapEmotions).sort((a, b) => b[1] - a[1])[0];
+
+  return {
+    id: 'journal-body-pattern',
+    title: 'Your Heaviest Days Have a Body Signature',
+    body: `On ${onHeavyDays.length} of your heavy journal days, you also logged somatic sensations — most often ${topEmotion[0].toLowerCase()} (${topEmotion[1]}×). Your body and your words are writing the same story from different angles. Both are worth listening to.`,
+    accentColor: 'copper',
+    source: 'somatic',
+    isConfirmed: true,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. Dream Themes × Archetype Pattern
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ARCHETYPE_DREAM_THEMES: Record<ArchetypeKey, string[]> = {
+  hero:      ['conflict', 'survival', 'adventure'],
+  caregiver: ['connection', 'loss'],
+  seeker:    ['adventure', 'discovery', 'transformation', 'mystery'],
+  sage:      ['mystery', 'transformation', 'discovery'],
+  rebel:     ['conflict', 'transformation', 'survival'],
+};
+
+function buildDreamArchetypeInsight(
+  dreamSummary: DreamSummary,
+  archetypeProfile: NonNullable<SelfKnowledgeContext['archetypeProfile']>,
+): CrossRefInsight | null {
+  if (dreamSummary.totalWithDreams < 3) return null;
+
+  const archetypeThemes = ARCHETYPE_DREAM_THEMES[archetypeProfile.dominant] ?? [];
+  const matchedThemes = dreamSummary.topThemes.filter(t => archetypeThemes.includes(t));
+  if (matchedThemes.length === 0) return null;
+
+  const themeLabel = matchedThemes.slice(0, 2).join(' and ');
+  const archetype = archetypeProfile.dominant.charAt(0).toUpperCase() + archetypeProfile.dominant.slice(1);
+
+  return {
+    id: 'dream-archetype-pattern',
+    title: `Your Dreams Reflect The ${archetype}`,
+    body: `Your dominant archetype is The ${archetype}, and your most recurring dream themes include ${themeLabel} — themes that mirror this pattern. Your unconscious mind may be actively working through the same psychological territory your archetype profile points to. Dreams are often where integration begins before the waking mind catches up.`,
+    accentColor: 'lavender',
+    source: 'archetype',
+    isConfirmed: true,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. Check-in × Dream Quality Correlation
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildSleepMoodInsight(
+  dreamSummary: DreamSummary,
+  checkIns: DailyCheckIn[],
+): CrossRefInsight | null {
+  if (dreamSummary.allDates.length < 5 || checkIns.length < 7) return null;
+
+  const sleepDateSet = new Set(dreamSummary.allDates);
+  const nightBeforeCheckIns = checkIns.filter(c => {
+    // Look for check-ins on the day AFTER a sleep entry (morning after).
+    // Use local date constructor to avoid UTC-parsing offset bugs.
+    const [y, m, d] = c.date.split('-').map(Number);
+    const prevDay = new Date(y, m - 1, d - 1);
+    const prevDayKey = `${prevDay.getFullYear()}-${String(prevDay.getMonth() + 1).padStart(2, '0')}-${String(prevDay.getDate()).padStart(2, '0')}`;
+    return sleepDateSet.has(prevDayKey);
+  });
+
+  if (nightBeforeCheckIns.length < 3) return null;
+
+  const trackedMoods = nightBeforeCheckIns
+    .map(c => c.moodScore)
+    .filter((m): m is number => m != null);
+  const allMoods = checkIns
+    .map(c => c.moodScore)
+    .filter((m): m is number => m != null);
+
+  if (!trackedMoods.length || !allMoods.length) return null;
+
+  const trackedAvg = trackedMoods.reduce((a, b) => a + b, 0) / trackedMoods.length;
+  const overallAvg = allMoods.reduce((a, b) => a + b, 0) / allMoods.length;
+  const diff = trackedAvg - overallAvg;
+
+  if (Math.abs(diff) < 0.35) return null;
+
+  const dir = diff > 0 ? 'higher' : 'lower';
+  const qualNote = dreamSummary.avgQuality != null
+    ? ` Your average sleep quality across those nights is ${dreamSummary.avgQuality.toFixed(1)}/5.`
+    : '';
+
+  return {
+    id: 'sleep-mood-link',
+    title: 'Sleep Shapes Your Days',
+    body: `On mornings after tracked sleep entries, your mood averages ${Math.abs(diff).toFixed(1)} points ${dir} than your overall baseline.${qualNote} The night before appears to meaningfully influence how you show up the next day.`,
+    accentColor: 'emerald',
+    source: 'reflection',
+    isConfirmed: true,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main entry point
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Generate all self-knowledge cross-reference insights.
  *
- * Returns up to 6 insights, sorted so data-confirmed ones lead.
+ * Returns up to 8 insights, sorted so data-confirmed ones lead.
  * Safe to call with empty checkIns — profile-based insights are always returned.
+ * Pass a context enriched with enrichSelfKnowledgeContext() to include
+ * journal mood × body and dream × archetype cross-references.
  */
 export function computeSelfKnowledgeCrossRef(
   context: SelfKnowledgeContext,
@@ -552,9 +760,35 @@ export function computeSelfKnowledgeCrossRef(
     if (refl) all.push(refl);
   }
 
-  // Confirmed insights lead; cap at 7 total
+  // ── SQLite-enriched cross-references (populated by enrichSelfKnowledgeContext) ──
+
+  // Dream feelings × somatic body map
+  if (context.dreamSummary && context.somaticEntries.length >= 3) {
+    const dreamSomatic = buildDreamSomaticInsight(context.dreamSummary, context.somaticEntries);
+    if (dreamSomatic) all.push(dreamSomatic);
+  }
+
+  // Journal heavy days × somatic body map
+  if (context.journalSummary && context.somaticEntries.length >= 3) {
+    const journalBody = buildJournalBodyInsight(context.journalSummary, context.somaticEntries);
+    if (journalBody) all.push(journalBody);
+  }
+
+  // Dream themes × archetype pattern
+  if (context.dreamSummary && context.archetypeProfile) {
+    const dreamArch = buildDreamArchetypeInsight(context.dreamSummary, context.archetypeProfile);
+    if (dreamArch) all.push(dreamArch);
+  }
+
+  // Sleep quality × next-day mood
+  if (context.dreamSummary) {
+    const sleepMood = buildSleepMoodInsight(context.dreamSummary, checkIns);
+    if (sleepMood) all.push(sleepMood);
+  }
+
+  // Confirmed insights lead; cap at 8 total
   return [
     ...all.filter(i => i.isConfirmed),
     ...all.filter(i => !i.isConfirmed),
-  ].slice(0, 7);
+  ].slice(0, 8);
 }

@@ -12,13 +12,15 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 
@@ -38,6 +40,13 @@ import {
   DayQuestions,
   ReflectionAnswer,
 } from '../services/insights/dailyReflectionService';
+import {
+  syncArchetypeProfileFromReflections,
+  syncCognitiveStyleFromReflections,
+  syncCoreValuesFromReflections,
+  getSomaticReflectionCorrelations,
+  SomaticCorrelation,
+} from '../services/insights/reflectionProfileSync';
 import {
   CATEGORY_LABELS,
   CATEGORY_ICONS,
@@ -137,8 +146,14 @@ export default function InnerWorldScreen() {
     archetypes: false,
     cognitive: false,
   });
+  const [categoryNotes, setCategoryNotes] = useState<Record<ReflectionCategory, string>>({
+    values: '',
+    archetypes: '',
+    cognitive: '',
+  });
   const [streak, setStreak] = useState(0);
   const [totalDays, setTotalDays] = useState(0);
+  const [somaticCorrelations, setSomaticCorrelations] = useState<SomaticCorrelation[]>([]);
   // Capture the date when questions loaded — prevents midnight edge case
   const loadedDateRef = useRef<string>(getTodayKey(getReflectionDate()));
 
@@ -153,7 +168,7 @@ export default function InnerWorldScreen() {
 
           const [valuesRaw, archetypesRaw, cognitiveRaw, sealStatus, reflData, currentStreak] =
             await Promise.all([
-              AsyncStorage.getItem('@mysky:core_values'),
+              EncryptedAsyncStorage.getItem('@mysky:core_values'),
               EncryptedAsyncStorage.getItem('@mysky:archetype_profile'),
               EncryptedAsyncStorage.getItem('@mysky:cognitive_style'),
               getCategorySealStatus(refDate),
@@ -203,6 +218,9 @@ export default function InnerWorldScreen() {
 
           setStreak(currentStreak);
           setTotalDays(new Set(reflData.answers.map(a => a.date)).size);
+
+          // Somatic cross-reference (non-blocking — runs after primary load)
+          getSomaticReflectionCorrelations().then(setSomaticCorrelations).catch(() => {});
         } catch (e) {
           logger.warn('[InnerWorld] Failed to load progress', e);
         }
@@ -253,13 +271,21 @@ export default function InnerWorldScreen() {
     });
 
     try {
-      const result = await sealCategoryAnswers(category, batch);
+      const result = await sealCategoryAnswers(category, batch, categoryNotes[category] || undefined);
       setCategorySealed(prev => ({ ...prev, [category]: true }));
       setTotalDays(result.totalDaysCompleted);
       const s = await getCurrentStreak();
       setStreak(s);
       // Clear pending questions if all categories are now sealed
       await clearPendingIfAllSealed();
+      // Sync sealed answers into the corresponding profile screen
+      if (category === 'archetypes') {
+        syncArchetypeProfileFromReflections().catch(() => {});
+      } else if (category === 'cognitive') {
+        syncCognitiveStyleFromReflections().catch(() => {});
+      } else if (category === 'values') {
+        syncCoreValuesFromReflections().catch(() => {});
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
       Alert.alert('Error', 'Failed to save reflections. Please try again.');
@@ -441,6 +467,24 @@ export default function InnerWorldScreen() {
                     );
                   })}
 
+                  {/* Notes prompt — shown when all questions answered, before sealing */}
+                  {!isSealed && allAnswered && dq.questions.length > 0 && (
+                    <View style={styles.notesContainer}>
+                      <Text style={styles.notesLabel}>What made you think of this today? <Text style={styles.notesOptional}>(optional)</Text></Text>
+                      <TextInput
+                        style={styles.notesInput}
+                        value={categoryNotes[category]}
+                        onChangeText={text => setCategoryNotes(prev => ({ ...prev, [category]: text }))}
+                        placeholder="A sentence or two about what surfaced…"
+                        placeholderTextColor={PALETTE.textMuted}
+                        multiline
+                        maxLength={300}
+                        returnKeyType="done"
+                        blurOnSubmit
+                      />
+                    </View>
+                  )}
+
                   {/* Seal Category Button */}
                   {!isSealed && dq.questions.length > 0 && (
                     <Pressable
@@ -560,6 +604,27 @@ export default function InnerWorldScreen() {
                   </MetallicText>
                   <MetallicIcon name="chevron-forward-outline" size={14} color={PALETTE.gold} />
                 </Pressable>
+              </Animated.View>
+            )}
+
+            {/* Body Intelligence */}
+            {somaticCorrelations.length > 0 && (
+              <Animated.View
+                entering={FadeInDown.delay(400).duration(500)}
+                style={styles.somaticCard}
+              >
+                <Text style={styles.somaticLabel}>BODY INTELLIGENCE</Text>
+                <Text style={styles.somaticDesc}>
+                  What your body tends to feel on days you reflect in each area:
+                </Text>
+                {somaticCorrelations.map(c => (
+                  <View key={c.category} style={styles.somaticRow}>
+                    <Text style={styles.somaticCat}>
+                      {CATEGORY_ICONS[c.category]} {CATEGORY_LABELS[c.category]}
+                    </Text>
+                    <Text style={styles.somaticEmotion}>{c.topEmotion}</Text>
+                  </View>
+                ))}
               </Animated.View>
             )}
 
@@ -779,6 +844,36 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
+  // Notes prompt
+  notesContainer: {
+    marginTop: 12,
+    marginBottom: 4,
+    gap: 8,
+  },
+  notesLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  notesOptional: {
+    color: 'rgba(255,255,255,0.35)',
+    fontWeight: '400',
+  },
+  notesInput: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#FFFFFF',
+    lineHeight: 20,
+    minHeight: 72,
+    textAlignVertical: 'top',
+  },
+
   // Progress
   progressSection: {
     marginTop: 8,
@@ -826,6 +921,46 @@ const styles = StyleSheet.create({
   pastLinkText: {
     flex: 1,
     fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Body Intelligence (somatic cross-reference)
+  somaticCard: {
+    marginTop: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(110,191,139,0.2)',
+    backgroundColor: 'rgba(110,191,139,0.04)',
+    padding: 20,
+    gap: 10,
+  },
+  somaticLabel: {
+    fontSize: 10,
+    color: PALETTE.emerald,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  somaticDesc: {
+    fontSize: 12,
+    color: PALETTE.textMuted,
+    lineHeight: 17,
+  },
+  somaticRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  somaticCat: {
+    fontSize: 13,
+    color: PALETTE.textMain,
+    fontWeight: '700',
+  },
+  somaticEmotion: {
+    fontSize: 13,
+    color: PALETTE.emerald,
     fontWeight: '600',
   },
 });

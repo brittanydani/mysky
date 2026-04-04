@@ -29,6 +29,7 @@ import { logger } from '../../utils/logger';
 const ENCRYPTED_ASYNC_KEYS = [
   '@mysky:archetype_profile',
   '@mysky:cognitive_style',
+  '@mysky:core_values',
   '@mysky:somatic_entries',
   '@mysky:trigger_events',
   '@mysky:relationship_patterns',
@@ -36,7 +37,6 @@ const ENCRYPTED_ASYNC_KEYS = [
 ] as const;
 
 const PLAIN_ASYNC_KEYS = [
-  '@mysky:core_values',
   'mysky_custom_journal_tags',
 ] as const;
 
@@ -118,12 +118,14 @@ const decodeUtf8 = (value: Uint8Array): string =>
 
 async function deriveAesKeyPBKDF2(
   passphrase: string,
-  salt: Uint8Array
+  salt: Uint8Array,
+  iterations: number = KDF_ITERATIONS,
+  keyLen: number = KEY_LEN
 ): Promise<Uint8Array> {
   const passBytes = encodeUtf8(passphrase);
   return pbkdf2Async(sha256, passBytes, salt, {
-    c: KDF_ITERATIONS,
-    dkLen: KEY_LEN,
+    c: iterations,
+    dkLen: keyLen,
   });
 }
 
@@ -344,7 +346,19 @@ export class BackupService {
     const iv = fromHex(envelope.cipher.ivHex);
     const ciphertext = fromHex(envelope.ciphertextHex);
 
-    const key = await deriveAesKeyPBKDF2(passphrase, salt);
+    // AES-256-GCM ciphertext must contain at least the 16-byte auth tag
+    if (ciphertext.length < 16) {
+      throw new Error(
+        'Backup file appears truncated or corrupted. Try re-exporting from the original device.'
+      );
+    }
+
+    const key = await deriveAesKeyPBKDF2(
+      passphrase,
+      salt,
+      envelope.kdf.iterations,
+      envelope.kdf.keyLen
+    );
 
     // Yield before synchronous AES-GCM so the UI remains responsive
     await new Promise<void>((r) => setTimeout(r, 0));
@@ -434,7 +448,11 @@ export class BackupService {
     await Sharing.shareAsync(uri);
 
     if (deleteAfter) {
-      // Clean up temporary backup file after sharing dialog closes
+      // Delay cleanup to allow iOS to finish copying the file to the
+      // share destination (iCloud, Mail, etc.). The share sheet resolves
+      // when dismissed, but the actual file transfer may still be in
+      // progress asynchronously.
+      await new Promise<void>((r) => setTimeout(r, 2000));
       try {
         const info = await FileSystem.getInfoAsync(uri);
         if (info.exists) {

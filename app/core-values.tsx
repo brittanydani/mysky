@@ -17,7 +17,7 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -25,6 +25,8 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { loadReflections } from '../services/insights/dailyReflectionService';
+import { VALUES_THEME_MAP, AGREEMENT_THRESHOLD } from '../services/insights/reflectionProfileSync';
 
 const STORAGE_KEY = '@mysky:core_values';
 const MAX_TOP = 5;
@@ -45,6 +47,10 @@ const ALL_VALUES = [
   'Achievement', 'Compassion',   'Solitude',    'Freedom',
   'Purpose',     'Play',         'Stability',   'Courage',
   'Integrity',   'Curiosity',    'Presence',    'Balance',
+  'Wisdom',      'Service',      'Family',      'Nature',
+  'Justice',     'Excellence',   'Belonging',   'Expression',
+  'Mastery',     'Health',       'Simplicity',  'Leadership',
+  'Humor',       'Abundance',    'Faith',
 ];
 
 // --- The Paradox Engine ---
@@ -56,6 +62,10 @@ const VALUE_PARADOXES = [
   { pair: ['Achievement', 'Play'], name: "The Presence Paradox", desc: "Striving tirelessly for future goals while trying to remain joyful in the current moment." },
   { pair: ['Honesty', 'Compassion'], name: "The Truth Paradox", desc: "Navigating the razor edge between radical candor and protecting the feelings of those you love." },
   { pair: ['Solitude', 'Connection'], name: "The Hermit's Paradox", desc: "Recharging in isolation while craving the warmth of being deeply seen by others." },
+  { pair: ['Excellence', 'Simplicity'], name: "The Perfection Paradox", desc: "The relentless drive to be exceptional while longing for an uncomplicated, unencumbered life." },
+  { pair: ['Leadership', 'Belonging'], name: "The Authority Paradox", desc: "Stepping into a role that sets you apart from the very community you want to belong to." },
+  { pair: ['Mastery', 'Humor'], name: "The Lightness Paradox", desc: "The pull between taking your craft with total seriousness and not taking life too seriously at all." },
+  { pair: ['Freedom', 'Family'], name: "The Roots Paradox", desc: "The longing for open horizons in tension with the pull of belonging to something rooted and permanent." },
 ];
 
 interface State {
@@ -67,18 +77,43 @@ export default function CoreValuesScreen() {
   const router = useRouter();
   const [state, setState] = useState<State>({ selected: [], topFive: [] });
   const [saved, setSaved] = useState(false);
+  const [unseenTensions, setUnseenTensions] = useState<typeof VALUE_PARADOXES>([]);
 
   useFocusEffect(
     useCallback(() => {
-      AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
             setState(parsed);
-            // Do NOT auto-seal on load — seal state only set by explicit user action
           } catch {}
         }
       });
+
+      // Detect hidden paradoxes from reflection data
+      loadReflections().then(reflData => {
+        const indicatedValues = new Set<string>();
+        for (const theme of VALUES_THEME_MAP) {
+          const themeAnswers = reflData.answers.filter(
+            a => a.category === 'values' && a.questionId >= theme.range[0] && a.questionId <= theme.range[1],
+          );
+          if (themeAnswers.length === 0) continue;
+          const avg = themeAnswers.reduce((s, a) => s + (a.scaleValue ?? 0), 0) / themeAnswers.length;
+          if (avg >= AGREEMENT_THRESHOLD) {
+            theme.values.forEach(v => indicatedValues.add(v));
+          }
+        }
+        EncryptedAsyncStorage.getItem(STORAGE_KEY).then(raw2 => {
+          const current: State = raw2 ? JSON.parse(raw2) : { selected: [], topFive: [] };
+          const tensions = VALUE_PARADOXES.filter(p => {
+            const [a, b] = p.pair;
+            // Both values indicated by reflections but not both in top 5 (unseen tension)
+            return indicatedValues.has(a) && indicatedValues.has(b)
+              && !(current.topFive.includes(a) && current.topFive.includes(b));
+          });
+          setUnseenTensions(tensions);
+        }).catch(() => {});
+      }).catch(() => {});
     }, []),
   );
 
@@ -116,7 +151,7 @@ export default function CoreValuesScreen() {
 
   const handleSave = async () => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch {
@@ -240,6 +275,27 @@ export default function CoreValuesScreen() {
             </Animated.View>
           )}
 
+          {/* Hidden tensions from reflection data */}
+          {unseenTensions.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.hiddenTensionsSection}>
+              <Text style={styles.hiddenTensionsHeader}>⟡ HIDDEN TENSIONS YOUR REFLECTIONS REVEAL</Text>
+              {unseenTensions.map(tension => (
+                <View key={tension.name} style={styles.hiddenTensionCard}>
+                  <View style={styles.hiddenTensionPair}>
+                    <Text style={styles.hiddenTensionValue}>{tension.pair[0]}</Text>
+                    <Text style={styles.hiddenTensionSep}>↔</Text>
+                    <Text style={styles.hiddenTensionValue}>{tension.pair[1]}</Text>
+                  </View>
+                  <Text style={styles.hiddenTensionName}>{tension.name}</Text>
+                  <Text style={styles.hiddenTensionDesc}>{tension.desc}</Text>
+                  <Text style={styles.hiddenTensionHint}>
+                    Your daily answers reflect both of these — consider adding them to your values.
+                  </Text>
+                </View>
+              ))}
+            </Animated.View>
+          )}
+
           {/* Save Button */}
           {state.topFive.length > 0 && (
             <Animated.View layout={Layout.springify()} entering={FadeInDown.delay(200).duration(600)} style={styles.saveRow}>
@@ -317,6 +373,58 @@ const styles = StyleSheet.create({
 
   promptCard: { borderRadius: 24, padding: 28, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
   promptText: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 20, textAlign: 'center' },
+
+  // Hidden tensions from reflections
+  hiddenTensionsSection: { marginTop: 4, marginBottom: 8, gap: 12 },
+  hiddenTensionsHeader: {
+    fontSize: 10,
+    color: PALETTE.copper,
+    fontWeight: '800',
+    letterSpacing: 1.4,
+    marginBottom: 4,
+  },
+  hiddenTensionCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(205,127,93,0.2)',
+    backgroundColor: 'rgba(205,127,93,0.04)',
+    padding: 20,
+    gap: 6,
+  },
+  hiddenTensionPair: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 4,
+  },
+  hiddenTensionValue: {
+    fontSize: 15,
+    color: PALETTE.textMain,
+    fontWeight: '700',
+  },
+  hiddenTensionSep: {
+    fontSize: 14,
+    color: PALETTE.copper,
+    fontWeight: '600',
+  },
+  hiddenTensionName: {
+    fontSize: 13,
+    color: PALETTE.copper,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  hiddenTensionDesc: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    lineHeight: 19,
+  },
+  hiddenTensionHint: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.3)',
+    lineHeight: 17,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
 
   saveRow: { alignItems: 'center', marginTop: 12 },
   saveBtn: { height: 52, paddingHorizontal: 44, borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.5)', justifyContent: 'center', alignItems: 'center' },

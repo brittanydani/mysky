@@ -109,7 +109,7 @@ export default function OnboardingRestoreScreen() {
           <View style={styles.headerBar}>
             <Pressable 
               style={styles.backButton} 
-              onPress={() => router.replace('/onboarding/birth' as Href)}
+              onPress={() => (router.canGoBack() ? router.back() : undefined)}
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >

@@ -170,6 +170,10 @@ export default function SomaticMapScreen() {
       setEntries(entries);
       return;
     }
+    // Cloud sync (fire-and-forget)
+    import('../services/storage/syncService').then(({ enqueueSomaticEntry }) =>
+      enqueueSomaticEntry(newEntry),
+    ).catch(() => {});
     setSelectedRegion(null);
     setSelectedEmotion(null);
     setIntensity(3);

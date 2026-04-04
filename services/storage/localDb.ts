@@ -6,11 +6,58 @@ import { SavedInsight } from './insightHistory';
 import { DailyCheckIn } from '../patterns/types';
 import { logger } from '../../utils/logger';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
+import { supabase } from '../../lib/supabase';
+import { IdentityVault } from '../../utils/IdentityVault';
 
-const CURRENT_DB_VERSION = 20;
+const CURRENT_DB_VERSION = 21;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
+
+  private async writeChart(chart: SavedChart): Promise<void> {
+    const db = await this.ensureReady();
+
+    const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
+    const encName = chart.name ? await FieldEncryptionService.encryptField(chart.name) : null;
+    const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
+    const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
+    const encLatitude = await FieldEncryptionService.encryptField(String(chart.latitude));
+    const encLongitude = await FieldEncryptionService.encryptField(String(chart.longitude));
+
+    await db.runAsync(
+      `INSERT OR REPLACE INTO saved_charts
+       (id, name, birth_date, birth_time, has_unknown_time, birth_place, latitude, longitude, timezone, house_system, created_at, updated_at, is_deleted)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        chart.id,
+        encName,
+        encBirthDate,
+        encBirthTime,
+        chart.hasUnknownTime ? 1 : 0,
+        encBirthPlace,
+        encLatitude,
+        encLongitude,
+        chart.timezone || null,
+        chart.houseSystem || null,
+        chart.createdAt,
+        chart.updatedAt,
+        chart.isDeleted ? 1 : 0,
+      ]
+    );
+  }
+
+  private async sealIdentityFromChart(chart: SavedChart): Promise<void> {
+    await IdentityVault.sealIdentity({
+      name: chart.name ?? 'My Chart',
+      birthDate: chart.birthDate,
+      birthTime: chart.birthTime,
+      hasUnknownTime: chart.hasUnknownTime,
+      locationCity: chart.birthPlace,
+      locationLat: chart.latitude,
+      locationLng: chart.longitude,
+      timezone: chart.timezone,
+    });
+  }
 
   // ✅ NEW: tracks in-flight init so multiple callers don't race
   private initPromise: Promise<void> | null = null;
@@ -152,6 +199,7 @@ class LocalDatabase {
       { version: 18, fn: () => this.migrateToVersion18() },
       { version: 19, fn: () => this.migrateToVersion19() },
       { version: 20, fn: () => this.migrateToVersion20() },
+      { version: 21, fn: () => this.migrateToVersion21() },
     ];
 
     for (const step of steps) {
@@ -1030,40 +1078,52 @@ class LocalDatabase {
     logger.info('[LocalDB] Version 20 migration complete');
   }
 
+  /**
+   * Version 21 — Add sync_queue table for offline-first cloud sync.
+   */
+  private async migrateToVersion21(): Promise<void> {
+    const db = await this.ensureReady();
+    logger.info('[LocalDB] Migrating to version 21 (sync_queue)...');
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS sync_queue (
+        id          TEXT PRIMARY KEY,
+        table_name  TEXT NOT NULL,
+        record_id   TEXT NOT NULL,
+        operation   TEXT NOT NULL DEFAULT 'upsert',
+        payload     TEXT NOT NULL,
+        created_at  TEXT NOT NULL,
+        attempts    INTEGER NOT NULL DEFAULT 0
+      );
+      CREATE INDEX IF NOT EXISTS idx_sync_queue_created ON sync_queue(created_at);
+    `);
+
+    logger.info('[LocalDB] Version 21 migration complete');
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Chart operations
   // ─────────────────────────────────────────────────────────────────────────────
 
   async upsertChart(chart: SavedChart): Promise<void> {
-    const db = await this.ensureReady();
+    await this.writeChart(chart);
+    this.sealIdentityFromChart(chart).catch((error) =>
+      logger.error('[LocalDB] Failed to seal identity from chart:', error)
+    );
 
-    // Encrypt sensitive fields before writing to SQLite
-    const encBirthPlace = await FieldEncryptionService.encryptField(chart.birthPlace);
-    const encName = chart.name ? await FieldEncryptionService.encryptField(chart.name) : null;
-    const encBirthDate = await FieldEncryptionService.encryptField(chart.birthDate);
-    const encBirthTime = chart.birthTime ? await FieldEncryptionService.encryptField(chart.birthTime) : null;
-    const encLatitude = await FieldEncryptionService.encryptField(String(chart.latitude));
-    const encLongitude = await FieldEncryptionService.encryptField(String(chart.longitude));
+    this.getSession().then((session) => {
+      if (session) {
+        import('../storage/syncService').then(({ enqueueBirthProfile }) =>
+          enqueueBirthProfile(chart),
+        ).catch(() => {});
+      }
+    }).catch(() => {});
+  }
 
-    await db.runAsync(
-      `INSERT OR REPLACE INTO saved_charts
-       (id, name, birth_date, birth_time, has_unknown_time, birth_place, latitude, longitude, timezone, house_system, created_at, updated_at, is_deleted)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        chart.id,
-        encName,
-        encBirthDate,
-        encBirthTime,
-        chart.hasUnknownTime ? 1 : 0,
-        encBirthPlace,
-        encLatitude,
-        encLongitude,
-        chart.timezone || null,
-        chart.houseSystem || null,
-        chart.createdAt,
-        chart.updatedAt,
-        chart.isDeleted ? 1 : 0,
-      ]
+  async upsertChartFromSync(chart: SavedChart): Promise<void> {
+    await this.writeChart(chart);
+    this.sealIdentityFromChart(chart).catch((error) =>
+      logger.error('[LocalDB] Failed to seal identity from synced chart:', error)
     );
   }
 
@@ -1126,11 +1186,48 @@ class LocalDatabase {
     const now = new Date().toISOString();
 
     await db.runAsync('UPDATE saved_charts SET is_deleted = 1, updated_at = ? WHERE id = ?', [now, id]);
+
+    const remainingCharts = await this.getCharts().catch(() => [] as SavedChart[]);
+    if (remainingCharts.length > 0) {
+      this.sealIdentityFromChart(remainingCharts[0]).catch(() => {});
+      this.getSession().then((session) => {
+        if (session) {
+          import('../storage/syncService').then(({ enqueueBirthProfile }) =>
+            enqueueBirthProfile(remainingCharts[0]),
+          ).catch(() => {});
+        }
+      }).catch(() => {});
+      return;
+    }
+
+    IdentityVault.destroyIdentity().catch(() => {});
+    this.getSession().then((session) => {
+      if (session) {
+        import('../storage/syncService').then(({ deleteBirthProfileForCurrentUser }) =>
+          deleteBirthProfileForCurrentUser(id),
+        ).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   async hardDeleteChart(id: string): Promise<void> {
     const db = await this.ensureReady();
     await db.runAsync('DELETE FROM saved_charts WHERE id = ?', [id]);
+
+    const remainingCharts = await this.getCharts().catch(() => [] as SavedChart[]);
+    if (remainingCharts.length > 0) {
+      this.sealIdentityFromChart(remainingCharts[0]).catch(() => {});
+      return;
+    }
+
+    IdentityVault.destroyIdentity().catch(() => {});
+    this.getSession().then((session) => {
+      if (session) {
+        import('../storage/syncService').then(({ deleteBirthProfileForCurrentUser }) =>
+          deleteBirthProfileForCurrentUser(id),
+        ).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1304,6 +1401,17 @@ class LocalDatabase {
       now,
       id,
     ]);
+
+    // Fire-and-forget cloud sync
+    this.getSession().then((session) => {
+      if (session) {
+        import('../storage/syncService').then(({ enqueueJournalEntry }) =>
+          this.getJournalEntryRaw(id).then((raw) => {
+            if (raw) enqueueJournalEntry(raw, 'delete');
+          }),
+        ).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   async hardDeleteJournalEntry(id: string): Promise<void> {
@@ -1407,6 +1515,7 @@ class LocalDatabase {
       DELETE FROM relationship_charts;
       DELETE FROM sleep_entries;
       DELETE FROM migration_markers;
+      DELETE FROM sync_queue;
       COMMIT;
     `);
     await db.execAsync('VACUUM;');
@@ -1427,6 +1536,17 @@ class LocalDatabase {
     } else {
       await this.addJournalEntry(entry);
     }
+
+    // Fire-and-forget cloud sync (reads back the already-encrypted row)
+    this.getSession().then((session) => {
+      if (session) {
+        import('../storage/syncService').then(({ enqueueJournalEntry }) =>
+          this.getJournalEntryRaw(entry.id).then((raw) => {
+            if (raw) enqueueJournalEntry(raw);
+          }),
+        ).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   async saveSettings(settings: AppSettings): Promise<void> {
@@ -1473,6 +1593,17 @@ class LocalDatabase {
         entry.isDeleted ? 1 : 0,
       ]
     );
+
+    // Fire-and-forget cloud sync
+    this.getSession().then((session) => {
+      if (session) {
+        import('../storage/syncService').then(({ enqueueSleepEntry }) =>
+          this.getSleepEntryRaw(entry.id).then((raw) => {
+            if (raw) enqueueSleepEntry(raw);
+          }),
+        ).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   async getSleepEntries(chartId: string, limit = 30): Promise<SleepEntry[]> {
@@ -1519,6 +1650,17 @@ class LocalDatabase {
       'UPDATE sleep_entries SET is_deleted = 1, updated_at = ? WHERE id = ?',
       [now, id]
     );
+
+    // Fire-and-forget cloud sync
+    this.getSession().then((session) => {
+      if (session) {
+        import('../storage/syncService').then(({ enqueueSleepEntry }) =>
+          this.getSleepEntryRaw(id).then((raw) => {
+            if (raw) enqueueSleepEntry(raw, 'delete');
+          }),
+        ).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1869,6 +2011,24 @@ class LocalDatabase {
         checkIn.updatedAt,
       ]
     );
+
+    // Fire-and-forget cloud sync — read back using the canonical (date, chartId, timeOfDay)
+    // key so we get the actual stored id even if ON CONFLICT kept the original id.
+    this.getSession().then((session) => {
+      if (session) {
+        this.getCheckInByDateAndTime(checkIn.date, checkIn.chartId, checkIn.timeOfDay)
+          .then((stored) => {
+            if (!stored) return;
+            return this.getCheckInRaw(stored.id).then((raw) => {
+              if (!raw) return;
+              import('../storage/syncService').then(({ enqueueCheckIn }) =>
+                enqueueCheckIn(raw),
+              ).catch(() => {});
+            });
+          })
+          .catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   async getCheckInByDate(date: string, chartId: string): Promise<DailyCheckIn | null> {
@@ -1994,6 +2154,252 @@ class LocalDatabase {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Cloud Sync helpers
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  async clearSyncQueue(): Promise<void> {
+    const db = await this.ensureReady();
+    await db.runAsync('DELETE FROM sync_queue');
+  }
+
+  /** Returns the current Supabase session without triggering a network call. */
+  private async getSession() {
+    const { data } = await supabase.auth.getSession();
+    return data.session;
+  }
+
+  /** Read a journal entry row with its raw encrypted blobs (no decryption). */
+  async getJournalEntryRaw(id: string): Promise<JournalEntry | null> {
+    const db = await this.ensureReady();
+    const row = await db.getFirstAsync('SELECT * FROM journal_entries WHERE id = ?', [id]) as any;
+    if (!row) return null;
+    return {
+      id: row.id,
+      date: row.date,
+      mood: row.mood,
+      moonPhase: row.moon_phase,
+      title: row.title ?? undefined,
+      content: row.content,
+      chartId: row.chart_id ?? undefined,
+      transitSnapshot: row.transit_snapshot ?? undefined,
+      contentKeywords: row.content_keywords_enc ?? undefined,
+      contentEmotions: row.content_emotions_enc ?? undefined,
+      contentSentiment: row.content_sentiment_enc ?? undefined,
+      contentWordCount: row.content_word_count ?? undefined,
+      contentReadingMinutes: row.content_reading_minutes ?? undefined,
+      tags: row.tags ? (() => { try { return JSON.parse(row.tags); } catch { return undefined; } })() : undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      isDeleted: row.is_deleted === 1,
+    };
+  }
+
+  /** Read a sleep entry row with its raw encrypted blobs (no decryption). */
+  async getSleepEntryRaw(id: string): Promise<SleepEntry | null> {
+    const db = await this.ensureReady();
+    const row = await db.getFirstAsync('SELECT * FROM sleep_entries WHERE id = ?', [id]) as any;
+    if (!row) return null;
+    return {
+      id: row.id,
+      chartId: row.chart_id,
+      date: row.date,
+      durationHours: row.duration_hours ?? undefined,
+      quality: row.quality ?? undefined,
+      dreamText: row.dream_text ?? undefined,
+      dreamMood: row.dream_mood ?? undefined,
+      dreamFeelings: row.dream_feelings ?? undefined,
+      dreamMetadata: row.dream_metadata ?? undefined,
+      notes: row.notes ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      isDeleted: row.is_deleted === 1,
+    };
+  }
+
+  /** Read a check-in row with its raw encrypted blobs (no decryption). */
+  async getCheckInRaw(id: string): Promise<(DailyCheckIn & { isDeleted: boolean }) | null> {
+    const db = await this.ensureReady();
+    const row = await db.getFirstAsync('SELECT * FROM daily_check_ins WHERE id = ?', [id]) as any;
+    if (!row) return null;
+    const result = {
+      id: row.id,
+      date: row.date,
+      chartId: row.chart_id,
+      timeOfDay: row.time_of_day,
+      moodScore: row.mood_score,   // raw encrypted blob
+      energyLevel: row.energy_level,
+      stressLevel: row.stress_level,
+      tags: row.tags,              // raw encrypted blob
+      note: row.note ?? undefined,
+      wins: row.wins ?? undefined,
+      challenges: row.challenges ?? undefined,
+      moonSign: row.moon_sign,
+      moonHouse: row.moon_house,
+      sunHouse: row.sun_house,
+      transitEvents: JSON.parse(row.transit_events || '[]'),
+      lunarPhase: row.lunar_phase,
+      retrogrades: JSON.parse(row.retrogrades || '[]'),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      isDeleted: row.is_deleted === 1,
+    };
+    return result as DailyCheckIn & { isDeleted: boolean };
+  }
+
+  /**
+   * Write a journal entry whose text fields are ALREADY encrypted blobs.
+   * Used by the sync pull path — avoids double-encrypting data from the server.
+   */
+  async upsertJournalEntryRaw(entry: JournalEntry): Promise<void> {
+    const db = await this.ensureReady();
+    await db.runAsync(
+      `INSERT INTO journal_entries
+         (id, date, mood, moon_phase, title, content, chart_id, transit_snapshot,
+          content_keywords_enc, content_emotions_enc, content_sentiment_enc,
+          content_word_count, content_reading_minutes, tags, created_at, updated_at, is_deleted)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         date = excluded.date, mood = excluded.mood, moon_phase = excluded.moon_phase,
+         title = excluded.title, content = excluded.content, chart_id = excluded.chart_id,
+         transit_snapshot = excluded.transit_snapshot,
+         content_keywords_enc = excluded.content_keywords_enc,
+         content_emotions_enc = excluded.content_emotions_enc,
+         content_sentiment_enc = excluded.content_sentiment_enc,
+         content_word_count = excluded.content_word_count,
+         content_reading_minutes = excluded.content_reading_minutes,
+         tags = excluded.tags, updated_at = excluded.updated_at,
+         is_deleted = excluded.is_deleted
+       WHERE excluded.updated_at >= journal_entries.updated_at`,
+      [
+        entry.id, entry.date, entry.mood, entry.moonPhase,
+        entry.title ?? null, entry.content,
+        entry.chartId ?? null, entry.transitSnapshot ?? null,
+        entry.contentKeywords ?? null, entry.contentEmotions ?? null, entry.contentSentiment ?? null,
+        entry.contentWordCount ?? null, entry.contentReadingMinutes ?? null,
+        entry.tags ? JSON.stringify(entry.tags) : null,
+        entry.createdAt, entry.updatedAt, entry.isDeleted ? 1 : 0,
+      ],
+    );
+  }
+
+  /**
+   * Write a sleep entry whose text fields are ALREADY encrypted blobs.
+   * Used by the sync pull path.
+   */
+  async upsertSleepEntryRaw(entry: SleepEntry): Promise<void> {
+    const db = await this.ensureReady();
+    await db.runAsync(
+      `INSERT INTO sleep_entries
+         (id, chart_id, date, duration_hours, quality, dream_text, dream_mood,
+          dream_feelings, dream_metadata, notes, created_at, updated_at, is_deleted)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         chart_id = excluded.chart_id, date = excluded.date,
+         duration_hours = excluded.duration_hours, quality = excluded.quality,
+         dream_text = excluded.dream_text, dream_mood = excluded.dream_mood,
+         dream_feelings = excluded.dream_feelings, dream_metadata = excluded.dream_metadata,
+         notes = excluded.notes, updated_at = excluded.updated_at,
+         is_deleted = excluded.is_deleted
+       WHERE excluded.updated_at >= sleep_entries.updated_at`,
+      [
+        entry.id, entry.chartId, entry.date,
+        entry.durationHours ?? null, entry.quality ?? null,
+        entry.dreamText ?? null, entry.dreamMood ?? null,
+        entry.dreamFeelings ?? null, entry.dreamMetadata ?? null, entry.notes ?? null,
+        entry.createdAt, entry.updatedAt, entry.isDeleted ? 1 : 0,
+      ],
+    );
+  }
+
+  /**
+   * Write a check-in whose sensitive fields are ALREADY encrypted blobs.
+   * Used by the sync pull path.
+   */
+  async upsertCheckInRaw(checkIn: DailyCheckIn): Promise<void> {
+    const db = await this.ensureReady();
+    await db.runAsync(
+      `INSERT INTO daily_check_ins
+         (id, date, chart_id, time_of_day, mood_score, energy_level, stress_level, tags,
+          note, wins, challenges, moon_sign, moon_house, sun_house,
+          transit_events, lunar_phase, retrogrades, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(date, chart_id, time_of_day) DO UPDATE SET
+         id = excluded.id, mood_score = excluded.mood_score,
+         energy_level = excluded.energy_level, stress_level = excluded.stress_level,
+         tags = excluded.tags, note = excluded.note, wins = excluded.wins,
+         challenges = excluded.challenges, moon_sign = excluded.moon_sign,
+         moon_house = excluded.moon_house, sun_house = excluded.sun_house,
+         transit_events = excluded.transit_events, lunar_phase = excluded.lunar_phase,
+         retrogrades = excluded.retrogrades, updated_at = excluded.updated_at
+       WHERE excluded.updated_at >= daily_check_ins.updated_at`,
+      [
+        checkIn.id, checkIn.date, checkIn.chartId, checkIn.timeOfDay,
+        checkIn.moodScore, checkIn.energyLevel, checkIn.stressLevel,
+        typeof checkIn.tags === 'string' ? checkIn.tags : JSON.stringify(checkIn.tags),
+        checkIn.note ?? null, checkIn.wins ?? null, checkIn.challenges ?? null,
+        checkIn.moonSign, checkIn.moonHouse, checkIn.sunHouse,
+        JSON.stringify(checkIn.transitEvents), checkIn.lunarPhase,
+        JSON.stringify(checkIn.retrogrades),
+        checkIn.createdAt, checkIn.updatedAt,
+      ],
+    );
+  }
+
+  async getCheckInsModifiedSince(timestamp: string): Promise<DailyCheckIn[]> {
+    const db = await this.ensureReady();
+    const rows = (await db.getAllAsync(
+      'SELECT * FROM daily_check_ins WHERE updated_at > ? ORDER BY updated_at ASC',
+      [timestamp],
+    )) as any[];
+    // Return raw rows so the SyncService can upload encrypted blobs directly
+    return rows.map((row) => ({
+      id: row.id,
+      date: row.date,
+      chartId: row.chart_id,
+      timeOfDay: row.time_of_day,
+      moodScore: row.mood_score,
+      energyLevel: row.energy_level,
+      stressLevel: row.stress_level,
+      tags: row.tags,
+      note: row.note ?? undefined,
+      wins: row.wins ?? undefined,
+      challenges: row.challenges ?? undefined,
+      moonSign: row.moon_sign,
+      moonHouse: row.moon_house,
+      sunHouse: row.sun_house,
+      transitEvents: JSON.parse(row.transit_events || '[]'),
+      lunarPhase: row.lunar_phase,
+      retrogrades: JSON.parse(row.retrogrades || '[]'),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      isDeleted: row.is_deleted === 1,
+    })) as (DailyCheckIn & { isDeleted: boolean })[];
+  }
+
+  async getSleepEntriesModifiedSince(timestamp: string): Promise<SleepEntry[]> {
+    const db = await this.ensureReady();
+    const rows = (await db.getAllAsync(
+      'SELECT * FROM sleep_entries WHERE updated_at > ? ORDER BY updated_at ASC',
+      [timestamp],
+    )) as any[];
+    return rows.map((row) => ({
+      id: row.id,
+      chartId: row.chart_id,
+      date: row.date,
+      durationHours: row.duration_hours ?? undefined,
+      quality: row.quality ?? undefined,
+      dreamText: row.dream_text ?? undefined,
+      dreamMood: row.dream_mood ?? undefined,
+      dreamFeelings: row.dream_feelings ?? undefined,
+      dreamMetadata: row.dream_metadata ?? undefined,
+      notes: row.notes ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      isDeleted: row.is_deleted === 1,
+    }));
   }
 }
 

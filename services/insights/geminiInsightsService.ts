@@ -18,7 +18,8 @@
  *     no natal chart coordinates, no user identifiers.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { supabase } from '../../lib/supabase';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
 import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
@@ -28,8 +29,6 @@ import type { DailyCheckIn } from '../patterns/types';
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
-const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const REQUEST_TIMEOUT_MS = 20_000;
 const MAX_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 800;
 const RETRY_MAX_DELAY_MS = 6_000;
@@ -100,14 +99,6 @@ interface CachedResult {
   result: GeminiPatternResult;
 }
 
-// ─── API Key ──────────────────────────────────────────────────────────────────
-
-function getApiKey(): string | null {
-  const key = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-  if (!key || key.trim().length === 0) return null;
-  return key.trim();
-}
-
 // ─── Cache ────────────────────────────────────────────────────────────────────
 
 function buildCacheKey(insights: CrossRefInsight[]): string {
@@ -132,7 +123,7 @@ function simpleHash(str: string): number {
 
 async function getCachedResult(cacheKey: string): Promise<GeminiPatternResult | null> {
   try {
-    const raw = await AsyncStorage.getItem(CACHE_KEY);
+    const raw = await EncryptedAsyncStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const cached: CachedResult = JSON.parse(raw);
     if (cached.cacheKey === cacheKey) return cached.result;
@@ -142,7 +133,7 @@ async function getCachedResult(cacheKey: string): Promise<GeminiPatternResult | 
 
 async function setCachedResult(cacheKey: string, result: GeminiPatternResult): Promise<void> {
   try {
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify({ cacheKey, result }));
+    await EncryptedAsyncStorage.setItem(CACHE_KEY, JSON.stringify({ cacheKey, result }));
   } catch { /* ignore */ }
 }
 
@@ -284,15 +275,10 @@ function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function computeRetryDelayMs(attempt: number, retryAfterMs?: number): number {
-  if (typeof retryAfterMs === 'number') return retryAfterMs;
+function computeRetryDelayMs(attempt: number): number {
   const expDelay = Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS);
   const jitter = Math.floor(Math.random() * 250);
   return expDelay + jitter;
-}
-
-function isRetriableStatus(status: number): boolean {
-  return status === 408 || status === 425 || status === 429 || status === 503 || status >= 500;
 }
 
 // ─── Client-side Rate Limiter ────────────────────────────────────────────────
@@ -315,9 +301,6 @@ export async function enhancePatternInsights(
 ): Promise<GeminiPatternResult | null> {
   if (!insights.length) return null;
 
-  const apiKey = getApiKey();
-  if (!apiKey) return null;
-
   // ── Check cache ──
   const cacheKey = buildCacheKey(insights);
   const cached = await getCachedResult(cacheKey);
@@ -328,47 +311,37 @@ export async function enhancePatternInsights(
   if (now - lastCallTimestamp < MIN_CALL_INTERVAL_MS) return null;
   lastCallTimestamp = now;
 
-  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent`;
-  const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-    contents: [{ parts: [{ text: buildUserPrompt(insights, context, checkIns) }] }],
-    generationConfig: {
-      temperature: 0.75,
-      maxOutputTokens: 2048,
-      responseMimeType: 'application/json',
-    },
-  };
-
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
+      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        body: {
+          model: GEMINI_MODEL,
+          systemPrompt: SYSTEM_PROMPT,
+          userPrompt: buildUserPrompt(insights, context, checkIns),
+          generationConfig: {
+            temperature: 0.75,
+            maxOutputTokens: 2048,
+            responseMimeType: 'application/json',
+          },
         },
-        body: JSON.stringify(body),
-        signal: controller.signal,
       });
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        logger.error('[GeminiPatterns] API error:', response.status, errorText);
+      if (error) {
+        const status = (error as any)?.context?.status ?? 0;
+        const message = (error as any)?.message ?? String(error);
+        logger.error('[GeminiPatterns] Edge function error:', status, message);
 
-        if (isRetriableStatus(response.status) && attempt < MAX_RETRIES) {
+        const retriable = status === 0 || status === 408 || status === 503 || status >= 500;
+        if (retriable && attempt < MAX_RETRIES) {
           await wait(computeRetryDelayMs(attempt));
           continue;
         }
         return null;
       }
 
-      const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const text: string = data?.text;
       if (!text) {
-        logger.error('[GeminiPatterns] No text in response — possible safety filter block');
+        logger.error('[GeminiPatterns] No text in edge function response');
         return null;
       }
 
@@ -385,7 +358,6 @@ export async function enhancePatternInsights(
         return null;
       }
 
-      // Filter out any entries with missing/empty body or id
       const validInsights = parsed.insights.filter(
         (i: any) => typeof i?.id === 'string' && typeof i?.body === 'string' && i.body.trim().length > 0,
       );
@@ -402,19 +374,13 @@ export async function enhancePatternInsights(
       await setCachedResult(cacheKey, result);
       return result;
     } catch (error: any) {
-      const isAbort = error?.name === 'AbortError';
       const isNetwork = error instanceof TypeError;
-      const retriable = isAbort || isNetwork;
-
-      if (retriable && attempt < MAX_RETRIES) {
+      if (isNetwork && attempt < MAX_RETRIES) {
         await wait(computeRetryDelayMs(attempt));
         continue;
       }
-
       logger.error('[GeminiPatterns] Request failed:', error?.message);
       return null;
-    } finally {
-      clearTimeout(timeout);
     }
   }
 

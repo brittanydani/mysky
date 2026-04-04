@@ -145,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       useCorrelationStore.getState().clearCache();
       useCheckInStore.getState().resetStatus();
 
+      // Clear unsynced queue so it isn't flushed under the next user's account
+      import('../services/storage/localDb').then(({ localDb }) =>
+        localDb.clearSyncQueue()
+      ).catch(() => {});
+
       if (isMounted.current) {
         setSession(null);
       }

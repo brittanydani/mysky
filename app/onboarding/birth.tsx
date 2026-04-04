@@ -91,8 +91,7 @@ export default function OnboardingBirthScreen() {
           visible={visible}
           hideClose={true}
           title="Birth Details"          initialData={savedName ? { chartName: savedName } : undefined}          onClose={() => {
-            // Don’t allow skipping this step if user chose onboarding
-            router.replace('/onboarding' as Href);
+            // No-op: user must complete birth data to proceed
           }}
           onRestore={() => {
             router.push('/onboarding/restore' as Href);

@@ -75,6 +75,40 @@ export interface DailyReflectionSummary {
   reflectionDates: string[];
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SQLite-derived summaries (optional — populated by enrichSelfKnowledgeContext)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Lightweight summary of journal entry history.
+ * Derived from SQLite journal_entries so screens that already load those
+ * can call enrichSelfKnowledgeContext() without a second DB round-trip.
+ */
+export interface JournalSummary {
+  totalEntries: number;
+  /** YYYY-MM-DD dates where mood was 'heavy' or 'stormy' */
+  heavyDays: string[];
+  /** All journal entry dates (YYYY-MM-DD) */
+  allDates: string[];
+}
+
+/**
+ * Lightweight summary of sleep/dream history.
+ * dreamFeelingIds are the raw feeling ID strings from dreamFeelings JSON.
+ * dreamThemes are DreamTheme values from dreamMetadata JSON.
+ */
+export interface DreamSummary {
+  totalWithDreams: number;
+  /** Top feeling IDs by frequency (e.g. 'anxious', 'chased', 'betrayed') */
+  topFeelingIds: string[];
+  /** Dream themes appearing 2+ times (e.g. 'conflict', 'transformation') */
+  topThemes: string[];
+  /** Average sleep quality 1–5, null if fewer than 3 entries with quality */
+  avgQuality: number | null;
+  /** All sleep entry dates (YYYY-MM-DD) */
+  allDates: string[];
+}
+
 export interface SelfKnowledgeContext {
   coreValues: CoreValuesData | null;
   archetypeProfile: ArchetypeProfile | null;
@@ -83,6 +117,10 @@ export interface SelfKnowledgeContext {
   triggers: TriggerData | null;
   relationshipPatterns: RelationshipPatternEntry[];
   dailyReflections: DailyReflectionSummary | null;
+  /** Set by enrichSelfKnowledgeContext() after SQLite data is loaded */
+  journalSummary?: JournalSummary | null;
+  /** Set by enrichSelfKnowledgeContext() after SQLite data is loaded */
+  dreamSummary?: DreamSummary | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -178,7 +216,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     relationshipPatterns,
     reflectionSummary,
   ] = await Promise.all([
-    readJson<CoreValuesData>(STORAGE_KEYS.coreValues),
+    readEncryptedJson<CoreValuesData>(STORAGE_KEYS.coreValues),
     readEncryptedJson<ArchetypeProfile>(STORAGE_KEYS.archetypeProfile),
     readEncryptedJson<CognitiveScores>(STORAGE_KEYS.cognitiveStyle),
     readEncryptedJson<SomaticEntry[]>(STORAGE_KEYS.somaticEntries),
@@ -196,4 +234,108 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     relationshipPatterns: relationshipPatterns ?? [],
     dailyReflections: reflectionSummary,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SQLite enrichment (call after loading journal + sleep entries from localDb)
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface RawJournalEntry {
+  date: string;          // YYYY-MM-DD
+  mood?: string;         // 'calm' | 'soft' | 'okay' | 'heavy' | 'stormy'
+  isDeleted?: boolean;
+}
+
+interface RawSleepEntry {
+  date: string;          // YYYY-MM-DD
+  quality?: number;      // 1–5
+  dreamFeelings?: string; // JSON array of { id: string } or string[]
+  dreamMetadata?: string; // JSON { theme?: DreamTheme, ... }
+  isDeleted?: boolean;
+}
+
+/**
+ * Derives JournalSummary and DreamSummary from pre-loaded SQLite rows and
+ * merges them into the context. Safe to call with empty arrays.
+ *
+ * Use this in screens that already load journal/sleep entries to avoid a
+ * second DB round-trip.
+ */
+export function enrichSelfKnowledgeContext(
+  ctx: SelfKnowledgeContext,
+  journalEntries: RawJournalEntry[],
+  sleepEntries: RawSleepEntry[],
+): SelfKnowledgeContext {
+  // ── Journal summary ──────────────────────────────────────────────────────
+  const liveJournal = journalEntries.filter(e => !e.isDeleted);
+  const HEAVY_MOODS = new Set(['heavy', 'stormy']);
+  const heavyDays = [
+    ...new Set(
+      liveJournal
+        .filter(e => e.mood && HEAVY_MOODS.has(e.mood))
+        .map(e => e.date.slice(0, 10)),
+    ),
+  ];
+
+  const journalSummary: JournalSummary = {
+    totalEntries: liveJournal.length,
+    heavyDays,
+    allDates: [...new Set(liveJournal.map(e => e.date.slice(0, 10)))],
+  };
+
+  // ── Dream summary ────────────────────────────────────────────────────────
+  const liveSleep = sleepEntries.filter(e => !e.isDeleted);
+  const withDreams = liveSleep.filter(e => e.dreamFeelings || e.dreamMetadata);
+
+  // Count feeling IDs
+  const feelingCount: Record<string, number> = {};
+  for (const entry of withDreams) {
+    if (!entry.dreamFeelings) continue;
+    try {
+      const feelings = JSON.parse(entry.dreamFeelings) as Array<{ id?: string } | string>;
+      for (const f of feelings) {
+        const id = typeof f === 'string' ? f : f.id;
+        if (id) feelingCount[id] = (feelingCount[id] ?? 0) + 1;
+      }
+    } catch { /* skip malformed */ }
+  }
+
+  // Count dream themes
+  const themeCount: Record<string, number> = {};
+  for (const entry of withDreams) {
+    if (!entry.dreamMetadata) continue;
+    try {
+      const meta = JSON.parse(entry.dreamMetadata) as { theme?: string };
+      if (meta.theme) themeCount[meta.theme] = (themeCount[meta.theme] ?? 0) + 1;
+    } catch { /* skip malformed */ }
+  }
+
+  const topFeelingIds = Object.entries(feelingCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([id]) => id);
+
+  const topThemes = Object.entries(themeCount)
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .map(([theme]) => theme);
+
+  const qualityEntries = liveSleep
+    .map(e => e.quality)
+    .filter((q): q is number => q != null && q >= 1 && q <= 5);
+
+  const avgQuality =
+    qualityEntries.length >= 3
+      ? qualityEntries.reduce((a, b) => a + b, 0) / qualityEntries.length
+      : null;
+
+  const dreamSummary: DreamSummary = {
+    totalWithDreams: withDreams.length,
+    topFeelingIds,
+    topThemes,
+    avgQuality,
+    allDates: [...new Set(liveSleep.map(e => e.date.slice(0, 10)))],
+  };
+
+  return { ...ctx, journalSummary, dreamSummary };
 }

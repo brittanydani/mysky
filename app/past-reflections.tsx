@@ -30,6 +30,7 @@ import {
   CATEGORY_ICONS,
   ReflectionCategory,
 } from '../constants/dailyReflectionQuestions';
+import { VALUES_THEME_MAP } from '../services/insights/reflectionProfileSync';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Palette (consistent with daily-reflection screen)
@@ -61,21 +62,63 @@ interface DayGroup {
   answers: ReflectionAnswer[];
 }
 
+interface ThemeTrend {
+  theme: string;
+  early: number;  // avg scaleValue, first half of sealed dates
+  recent: number; // avg scaleValue, second half
+  direction: 'rising' | 'falling' | 'steady';
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+function computeThemeTrends(answers: ReflectionAnswer[]): ThemeTrend[] {
+  const valuesAnswers = answers.filter(a => a.category === 'values' && a.scaleValue != null);
+  if (valuesAnswers.length < 6) return [];
+
+  // Sort by date ascending
+  const sorted = [...valuesAnswers].sort((a, b) => a.date.localeCompare(b.date));
+  const mid = Math.floor(sorted.length / 2);
+  const earlyAnswers = sorted.slice(0, mid);
+  const recentAnswers = sorted.slice(mid);
+
+  const results: ThemeTrend[] = [];
+
+  for (const entry of VALUES_THEME_MAP) {
+    const [lo, hi] = entry.range;
+    const themeName = entry.values[0]; // Use first value as label
+    const earlyTheme = earlyAnswers.filter(a => a.questionId >= lo && a.questionId <= hi);
+    const recentTheme = recentAnswers.filter(a => a.questionId >= lo && a.questionId <= hi);
+    if (earlyTheme.length < 2 || recentTheme.length < 2) continue;
+
+    const avgEarly = earlyTheme.reduce((s, a) => s + (a.scaleValue ?? 0), 0) / earlyTheme.length;
+    const avgRecent = recentTheme.reduce((s, a) => s + (a.scaleValue ?? 0), 0) / recentTheme.length;
+
+    const delta = avgRecent - avgEarly;
+    const direction: ThemeTrend['direction'] =
+      delta >= 0.4 ? 'rising' : delta <= -0.4 ? 'falling' : 'steady';
+
+    results.push({ theme: themeName, early: avgEarly, recent: avgRecent, direction });
+  }
+
+  return results.sort((a, b) => Math.abs(b.recent - b.early) - Math.abs(a.recent - a.early));
+}
+
 function formatDateLabel(dateStr: string): string {
-  const today = new Date();
-  const d = new Date(dateStr + 'T12:00:00'); // avoid timezone shift
-  const diffMs = today.getTime() - d.getTime();
-  const diffDays = Math.floor(diffMs / 86400000);
+  const [y, m, d] = dateStr.split('-').map(Number);
+  // Local midnight for the entry date — avoids UTC-parse timezone offset
+  const entryMidnight = new Date(y, m - 1, d);
+  const now = new Date();
+  // Compare against today's local midnight for calendar-day diff
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((todayMidnight.getTime() - entryMidnight.getTime()) / 86400000);
 
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
 
-  return d.toLocaleDateString('en-US', {
+  return entryMidnight.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -113,6 +156,8 @@ export default function PastReflectionsScreen() {
   const [groups, setGroups] = useState<DayGroup[]>([]);
   const [filter, setFilter] = useState<FilterOption>('all');
   const [allAnswers, setAllAnswers] = useState<ReflectionAnswer[]>([]);
+  const [showTrends, setShowTrends] = useState(false);
+  const [trends, setTrends] = useState<ThemeTrend[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -120,8 +165,7 @@ export default function PastReflectionsScreen() {
         try {
           const data = await loadReflections();
           setAllAnswers(data.answers);
-          setGroups(groupByDate(data.answers, 'all'));
-        } catch { /* retain empty state on failure */ }
+          setGroups(groupByDate(data.answers, 'all'));          setTrends(computeThemeTrends(data.answers));        } catch { /* retain empty state on failure */ }
       };
       init().catch(() => {});
     }, []),
@@ -195,7 +239,52 @@ export default function PastReflectionsScreen() {
                 </Pressable>
               );
             })}
+            {trends.length > 0 && (
+              <Pressable
+                style={[styles.filterChip, showTrends && { borderColor: PALETTE.lavender }]}
+                onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowTrends(v => !v); }}
+              >
+                <Text style={[styles.filterLabel, showTrends && { color: PALETTE.lavender }]}>
+                  Trends
+                </Text>
+              </Pressable>
+            )}
           </Animated.View>
+
+          {/* Trends View */}
+          {showTrends && trends.length > 0 && (
+            <Animated.View entering={FadeInDown.delay(60).duration(400)} style={styles.trendsSection}>
+              <Text style={styles.trendsSectionHeader}>HOW YOU'VE CHANGED</Text>
+              <Text style={styles.trendsSectionSub}>
+                Comparing your earliest vs. most recent values reflections
+              </Text>
+              {trends.map((t, i) => {
+                const arrow = t.direction === 'rising' ? '▲' : t.direction === 'falling' ? '▼' : '—';
+                const arrowColor = t.direction === 'rising'
+                  ? PALETTE.emerald
+                  : t.direction === 'falling'
+                    ? PALETTE.rose
+                    : PALETTE.textMuted;
+                return (
+                  <View key={t.theme} style={styles.trendRow}>
+                    <View style={styles.trendThemeBox}>
+                      <Text style={styles.trendTheme}>{t.theme}</Text>
+                    </View>
+                    <View style={styles.trendBar}>
+                      <View
+                        style={[
+                          styles.trendBarFill,
+                          { width: `${Math.min(100, (t.recent / 3) * 100)}%`, backgroundColor: arrowColor },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.trendArrow, { color: arrowColor }]}>{arrow}</Text>
+                    <Text style={styles.trendScore}>{t.recent.toFixed(1)}</Text>
+                  </View>
+                );
+              })}
+            </Animated.View>
+          )}
 
           {/* Empty State */}
           {groups.length === 0 && (
@@ -226,8 +315,15 @@ export default function PastReflectionsScreen() {
               </View>
 
               {/* Answers */}
-              {group.answers.map((a, aIdx) => {
+              {(() => {
+                // Track which category notes have already been displayed this day
+                const shownNoteCategories = new Set<string>();
+                return group.answers.map((a) => {
                   const catColor = CATEGORY_COLORS[a.category];
+                  // Show the note once per category per day (notes are spread on all answers in batch)
+                  const noteKey = `${a.date}-${a.category}`;
+                  const showNote = !!a.notes?.trim() && !shownNoteCategories.has(noteKey);
+                  if (showNote) shownNoteCategories.add(noteKey);
 
                   return (
                     <LinearGradient
@@ -250,9 +346,15 @@ export default function PastReflectionsScreen() {
 
                       {/* Answer */}
                       <Text style={styles.answerText}>{a.answer}</Text>
+
+                      {/* Note — shown once per category per day */}
+                      {showNote && (
+                        <Text style={styles.answerNote}>"{a.notes}"</Text>
+                      )}
                     </LinearGradient>
                   );
-                })}
+                });
+              })()}
             </Animated.View>
           ))}
 
@@ -389,5 +491,73 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: PALETTE.textMuted,
     lineHeight: 24,
+  },
+  answerNote: {
+    marginTop: 12,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.35)',
+    fontStyle: 'italic',
+    lineHeight: 19,
+  },
+
+  // Trends section
+  trendsSection: {
+    marginBottom: 32,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(168,155,200,0.2)',
+    backgroundColor: 'rgba(168,155,200,0.04)',
+    padding: 24,
+    gap: 14,
+  },
+  trendsSectionHeader: {
+    fontSize: 10,
+    color: PALETTE.lavender,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  trendsSectionSub: {
+    fontSize: 12,
+    color: PALETTE.textMuted,
+    lineHeight: 17,
+    marginBottom: 4,
+  },
+  trendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  trendThemeBox: {
+    width: 90,
+  },
+  trendTheme: {
+    fontSize: 12,
+    color: PALETTE.textMain,
+    fontWeight: '700',
+  },
+  trendBar: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    overflow: 'hidden',
+  },
+  trendBarFill: {
+    height: '100%',
+    borderRadius: 3,
+    opacity: 0.8,
+  },
+  trendArrow: {
+    fontSize: 12,
+    fontWeight: '800',
+    width: 16,
+    textAlign: 'center',
+  },
+  trendScore: {
+    fontSize: 12,
+    color: PALETTE.textMuted,
+    fontWeight: '700',
+    width: 28,
+    textAlign: 'right',
   },
 });

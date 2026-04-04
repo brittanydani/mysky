@@ -82,12 +82,20 @@ interface ReflectionPayload {
   };
 }
 
+const MAX_PAYLOAD_BYTES = 64_000; // generous for stats data, blocks oversized abuse
+
 function validatePayload(body: unknown): ReflectionPayload {
   if (!body || typeof body !== "object") {
     throw new Error("Missing request body");
   }
 
   const p = body as Record<string, unknown>;
+
+  // Guard against oversized payloads before any further processing
+  const payloadSize = new TextEncoder().encode(JSON.stringify(p)).length;
+  if (payloadSize > MAX_PAYLOAD_BYTES) {
+    throw new Error("Request payload too large");
+  }
 
   if (typeof p.timeWindowLabel !== "string") {
     throw new Error("Missing timeWindowLabel");

@@ -254,6 +254,10 @@ export default function TriggerLogScreen() {
       const updated = [entry, ...existing];
       await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       setHistory(updated);
+      // Cloud sync (fire-and-forget)
+      import('../services/storage/syncService').then(({ enqueueTriggerEvent }) =>
+        enqueueTriggerEvent(entry),
+      ).catch(() => {});
     } catch {
       // silent fail — entry lost on storage error, no UX disruption
     }

@@ -72,7 +72,7 @@ export default function OnboardingConsentScreen() {
         <View style={styles.headerBar}>
           <Pressable
             style={styles.backButton}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/onboarding' as Href))}
+            onPress={() => (router.canGoBack() ? router.back() : undefined)}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >

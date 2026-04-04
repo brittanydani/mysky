@@ -1,31 +1,30 @@
 /**
  * Gemini Dream Interpretation — AI-Enhanced Dream Insights
  *
- * Calls Google Gemini API (free tier) to generate a richer, narrative
- * dream interpretation. Designed to SUPPLEMENT — not replace — the
- * existing on-device dream engine.
+ * Calls the gemini-proxy Supabase Edge Function (which securely holds the
+ * GEMINI_API_KEY server-side) to generate a richer, narrative dream
+ * interpretation. Designed to SUPPLEMENT — not replace — the existing
+ * on-device dream engine.
  *
  * Privacy:
  *   - Only the dream text + selected feelings are sent to Gemini.
  *   - No PII, no natal chart, no user identifiers.
- *   - The API key is stored as an Expo env variable (EXPO_PUBLIC_GEMINI_API_KEY).
+ *   - The API key never leaves the server.
  *
  * Output: { paragraph, question } matching the shape consumed by the UI.
  */
 
 import { logger } from '../../utils/logger';
+import { supabase } from '../../lib/supabase';
 import type { SelectedFeeling } from './dreamTypes';
 import { FEELING_MAP } from './dreamTypes';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
-const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 800;
 const RETRY_MAX_DELAY_MS = 6_000;
-const RATE_LIMIT_TEXT_PATTERN = /rate\s*limit|quota|too\s*many\s*requests|resource\s*exhausted|exceeded/i;
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
 
@@ -145,23 +144,11 @@ export interface GeminiDreamInput {
   };
 }
 
-interface GeminiHttpError extends Error {
-  status: number;
-  errorText?: string;
-  retryAfterMs?: number;
-}
+// ─── Availability ─────────────────────────────────────────────────────────────
 
-// ─── API Key ──────────────────────────────────────────────────────────────────
-
-function getApiKey(): string | null {
-  const key = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-  if (!key || key.trim().length === 0) return null;
-  return key.trim();
-}
-
-/** Returns true when the Gemini API key is configured. */
+/** Returns true — Gemini is available whenever the user has a valid session. */
 export function isGeminiAvailable(): boolean {
-  return getApiKey() !== null;
+  return true;
 }
 
 // ─── Build User Prompt ────────────────────────────────────────────────────────
@@ -209,42 +196,10 @@ function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function parseRetryAfterMs(retryAfterHeader: string | null): number | undefined {
-  if (!retryAfterHeader) return undefined;
-
-  const asNumber = Number(retryAfterHeader);
-  if (!Number.isNaN(asNumber) && asNumber >= 0) {
-    return Math.min(Math.round(asNumber * 1000), RETRY_MAX_DELAY_MS);
-  }
-
-  const asDate = Date.parse(retryAfterHeader);
-  if (Number.isNaN(asDate)) return undefined;
-  const deltaMs = asDate - Date.now();
-  if (deltaMs <= 0) return 0;
-  return Math.min(deltaMs, RETRY_MAX_DELAY_MS);
-}
-
-function computeRetryDelayMs(attempt: number, retryAfterMs?: number): number {
-  if (typeof retryAfterMs === 'number') return retryAfterMs;
+function computeRetryDelayMs(attempt: number): number {
   const expDelay = Math.min(RETRY_BASE_DELAY_MS * 2 ** attempt, RETRY_MAX_DELAY_MS);
   const jitter = Math.floor(Math.random() * 250);
   return expDelay + jitter;
-}
-
-function isRetriableStatus(status: number): boolean {
-  return status === 408 || status === 425 || status === 429 || status === 503 || status >= 500;
-}
-
-function isRateLimited(status: number, errorText?: string): boolean {
-  return status === 429 || Boolean(errorText && RATE_LIMIT_TEXT_PATTERN.test(errorText));
-}
-
-function toHttpError(status: number, errorText?: string, retryAfterMs?: number): GeminiHttpError {
-  const err = new Error(`Gemini API returned ${status}`) as GeminiHttpError;
-  err.status = status;
-  err.errorText = errorText;
-  err.retryAfterMs = retryAfterMs;
-  return err;
 }
 
 function getFriendlyRateLimitMessage(): string {
@@ -267,83 +222,54 @@ export async function generateGeminiDreamInterpretation(
   }
   lastCallTimestamp = now;
 
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    throw new Error('Gemini API key not configured. Set EXPO_PUBLIC_GEMINI_API_KEY in your environment.');
-  }
-
   if (!input.dreamText || input.dreamText.trim().length === 0) {
     throw new Error('Dream text is required for interpretation.');
   }
 
-  const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent`;
-
-  const body = {
-    systemInstruction: {
-      parts: [{ text: SYSTEM_PROMPT }],
-    },
-    contents: [
-      {
-        parts: [{ text: buildUserPrompt(input) }],
-      },
-    ],
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 2048,
-      responseMimeType: 'application/json',
-    },
-  };
-
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
+      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        body: {
+          model: GEMINI_MODEL,
+          systemPrompt: SYSTEM_PROMPT,
+          userPrompt: buildUserPrompt(input),
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+            responseMimeType: 'application/json',
+          },
         },
-        body: JSON.stringify(body),
-        signal: controller.signal,
       });
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'));
-        logger.error('[GeminiDream] API error:', response.status, errorText);
+      if (error) {
+        const status = (error as any)?.context?.status ?? 0;
+        const message = (error as any)?.message ?? String(error);
+        logger.error('[GeminiDream] Edge function error:', status, message);
 
-        const statusRetriable = isRetriableStatus(response.status);
-        if (statusRetriable && attempt < MAX_RETRIES) {
-          await wait(computeRetryDelayMs(attempt, retryAfterMs));
+        if (status === 429) throw new Error(getFriendlyRateLimitMessage());
+
+        const retriable = status === 0 || status === 408 || status === 503 || status >= 500;
+        if (retriable && attempt < MAX_RETRIES) {
+          await wait(computeRetryDelayMs(attempt));
           continue;
         }
-
-        if (isRateLimited(response.status, errorText)) {
-          throw new Error(getFriendlyRateLimitMessage());
-        }
-
-        throw toHttpError(response.status, errorText, retryAfterMs);
+        throw new Error(message);
       }
 
-      const data = await response.json();
-
-      // Extract the text content from Gemini's response structure
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const text: string = data?.text;
       if (!text) {
-        logger.error('[GeminiDream] No text in response:', JSON.stringify(data));
+        logger.error('[GeminiDream] No text in edge function response');
         throw new Error('No content returned from Gemini');
       }
 
-      // Strip markdown fences / trailing junk and extract the JSON object
+      // Strip markdown fences and extract the JSON object
       let jsonText = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
-      // If the model emitted extra text around the JSON, extract the first { … } block
       const firstBrace = jsonText.indexOf('{');
       const lastBrace = jsonText.lastIndexOf('}');
       if (firstBrace !== -1 && lastBrace > firstBrace) {
         jsonText = jsonText.slice(firstBrace, lastBrace + 1);
       }
+
       let parsed: any;
       try {
         parsed = JSON.parse(jsonText);
@@ -362,34 +288,16 @@ export async function generateGeminiDreamInterpretation(
         generatedAt: new Date().toISOString(),
       };
     } catch (error: any) {
-      const isAbort = error?.name === 'AbortError';
+      // Don't retry user-facing errors or exhausted retries
       const isNetwork = error instanceof TypeError;
-      const isHttp = typeof error?.status === 'number';
-      const rateLimited = isHttp && isRateLimited(error.status, error.errorText);
-      const retriable = isAbort || isNetwork || (isHttp && isRetriableStatus(error.status));
-
-      if (retriable && attempt < MAX_RETRIES) {
-        const retryAfterMs = isHttp ? error.retryAfterMs : undefined;
-        await wait(computeRetryDelayMs(attempt, retryAfterMs));
+      if (isNetwork && attempt < MAX_RETRIES) {
+        await wait(computeRetryDelayMs(attempt));
         continue;
       }
-
-      if (rateLimited) {
-        throw new Error(getFriendlyRateLimitMessage());
-      }
-
-      if (isAbort) {
-        logger.error('[GeminiDream] Request timed out');
-        throw new Error('Dream interpretation request timed out. Please try again.');
-      }
-
       if (isNetwork) {
         throw new Error('Could not reach AI insights. Please check your connection and try again.');
       }
-
       throw error;
-    } finally {
-      clearTimeout(timeout);
     }
   }
 

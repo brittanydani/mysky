@@ -48,16 +48,17 @@ const SecureStoreAdapter = {
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl) {
+if (!supabaseUrl || !supabaseAnonKey) {
+  const missing = [
+    !supabaseUrl && 'EXPO_PUBLIC_SUPABASE_URL',
+    !supabaseAnonKey && 'EXPO_PUBLIC_SUPABASE_ANON_KEY',
+  ]
+    .filter(Boolean)
+    .join(', ');
   throw new Error(
-    '[supabase] EXPO_PUBLIC_SUPABASE_URL is missing. ' +
-      'Ensure it is set in .env (local) or as an EAS secret (production builds).',
-  );
-}
-if (!supabaseAnonKey) {
-  throw new Error(
-    '[supabase] EXPO_PUBLIC_SUPABASE_ANON_KEY is missing. ' +
-      'Ensure it is set in .env (local) or as an EAS secret (production builds).',
+    `[supabase] Missing required environment variable(s): ${missing}. ` +
+      'For local dev: copy .env.example to .env and fill in your Supabase credentials. ' +
+      'For EAS builds: run `eas secret:create` to add them as EAS secrets.',
   );
 }
 

@@ -224,12 +224,10 @@ export default function HomeScreen() {
           }
         } else {
           setUserChart(null);
-          router.replace('/onboarding' as Href);
         }
       } catch (error) {
         logger.error('Failed to load user chart:', error);
         setUserChart(null);
-        router.replace('/onboarding' as Href);
       } finally {
         if (!silent) setLoading(false);
       }
@@ -374,7 +372,18 @@ export default function HomeScreen() {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <SkiaDynamicCosmos />
-        <Text style={styles.loadingText}>Preparing onboarding…</Text>
+        <Text style={styles.loadingText}>Set up your birth profile to get started</Text>
+        <Pressable
+          onPress={() => setShowEditBirth(true)}
+          style={{ marginTop: 20, paddingHorizontal: 28, paddingVertical: 14, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(201,174,120,0.4)', backgroundColor: 'rgba(201,174,120,0.08)' }}
+        >
+          <Text style={{ color: '#C9AE78', fontWeight: '600', fontSize: 16 }}>Add Birth Data</Text>
+        </Pressable>
+        <BirthDataModal
+          visible={showEditBirth}
+          onClose={() => setShowEditBirth(false)}
+          onSave={handleEditBirthData}
+        />
       </View>
     );
   }

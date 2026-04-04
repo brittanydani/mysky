@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION public.delete_user_account()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   _uid uuid := auth.uid();
@@ -21,14 +21,17 @@ BEGIN
   END IF;
 
   -- Delete all user data rows across known tables (add any new tables here)
-  DELETE FROM public.daily_check_ins       WHERE user_id = _uid;
-  DELETE FROM public.daily_logs            WHERE user_id = _uid;
-  DELETE FROM public.dream_clusters        WHERE user_id = _uid;
-  DELETE FROM public.emotional_correlations WHERE user_id = _uid;
-  DELETE FROM public.circadian_rhythm      WHERE user_id = _uid;
+  DELETE FROM public.daily_check_ins         WHERE user_id = _uid;
+  DELETE FROM public.daily_logs              WHERE user_id = _uid;
+  DELETE FROM public.dream_clusters          WHERE user_id = _uid;
+  DELETE FROM public.emotional_correlations  WHERE user_id = _uid;
+  DELETE FROM public.circadian_rhythm        WHERE user_id = _uid;
   DELETE FROM public.relationship_daily_logs WHERE user_id = _uid;
-  DELETE FROM public.weekly_rhythm         WHERE user_id = _uid;
-  DELETE FROM public.reflection_rate_limit WHERE user_id = _uid;
+  DELETE FROM public.weekly_rhythm           WHERE user_id = _uid;
+  DELETE FROM public.reflection_rate_limit   WHERE user_id = _uid;
+  DELETE FROM public.gemini_rate_limit        WHERE user_id = _uid;
+  DELETE FROM public.journal_entries         WHERE user_id = _uid;
+  DELETE FROM public.sleep_entries           WHERE user_id = _uid;
 
   -- Delete the auth user last (cascades to auth.identities, auth.sessions, etc.)
   DELETE FROM auth.users WHERE id = _uid;

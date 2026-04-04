@@ -32,7 +32,7 @@ import { DailyCheckIn } from '../../services/patterns/types';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
-import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
+import { loadSelfKnowledgeContext, enrichSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import {
   computeSelfKnowledgeCrossRef,
   CrossRefInsight,
@@ -199,23 +199,13 @@ export default function PatternsScreen() {
           setSnapshot({ avgMood, avgStress, checkInCount: checkIns.length, stressTrend });
 
           // ── Self-knowledge cross-reference (all users) ──
+          // Initial pass with AsyncStorage-only data. A second enriched pass runs
+          // once SQLite journal/sleep data is loaded (see Enhanced insights block below).
+          let skContext;
           try {
-            const skContext = await loadSelfKnowledgeContext();
+            skContext = await loadSelfKnowledgeContext();
             const refs = computeSelfKnowledgeCrossRef(skContext, checkIns);
             setCrossRefs(refs);
-
-            if (refs.length > 0) {
-              enhancePatternInsights(refs, skContext, checkIns)
-                .then(result => {
-                  if (!active || !result?.insights.length) return;
-                  const aiEnhanced = refs.map(ref => {
-                    const match = result.insights.find(r => r.id === ref.id);
-                    return match ? { ...ref, body: match.body } : ref;
-                  });
-                  setCrossRefs(aiEnhanced);
-                })
-                .catch(e => logger.error('Gemini pattern enhancement failed:', e));
-            }
           } catch (e) {
             logger.error('Self-knowledge cross-ref failed:', e);
           }
@@ -226,6 +216,29 @@ export default function PatternsScreen() {
             const extCheckIns = await localDb.getCheckIns(chartId, 90);
             const journalEntries = await localDb.getJournalEntriesPaginated(90);
             const sleepEntries = await localDb.getSleepEntries(chartId, 90);
+
+            // ── Enrich cross-ref with journal + sleep data now that it's loaded ──
+            try {
+              const baseCtx = skContext ?? await loadSelfKnowledgeContext();
+              const enrichedCtx = enrichSelfKnowledgeContext(baseCtx, journalEntries, sleepEntries);
+              const enrichedRefs = computeSelfKnowledgeCrossRef(enrichedCtx, checkIns);
+              setCrossRefs(enrichedRefs);
+
+              if (enrichedRefs.length > 0) {
+                enhancePatternInsights(enrichedRefs, enrichedCtx, checkIns)
+                  .then(result => {
+                    if (!active || !result?.insights.length) return;
+                    const aiEnhanced = enrichedRefs.map(ref => {
+                      const match = result.insights.find(r => r.id === ref.id);
+                      return match ? { ...ref, body: match.body } : ref;
+                    });
+                    setCrossRefs(aiEnhanced);
+                  })
+                  .catch(e => logger.error('Gemini pattern enhancement failed:', e));
+              }
+            } catch (e) {
+              logger.error('Enriched cross-ref failed:', e);
+            }
 
             let natalChart = null;
             if (isPremium) {

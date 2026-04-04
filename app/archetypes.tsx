@@ -286,6 +286,33 @@ export default function ArchetypesScreen() {
                   })}
               </View>
 
+              {/* Reflection evolution nudge */}
+              {(() => {
+                const refScores = (savedProfile as any).reflectionScores as Record<ArchetypeKey, number> | undefined;
+                if (!refScores) return null;
+                const refDominant = (Object.entries(refScores) as [ArchetypeKey, number][])
+                  .reduce<[ArchetypeKey, number]>(
+                    (best, curr) => curr[1] > best[1] ? curr : best,
+                    ['hero', -1],
+                  )[0];
+                const totalRefVotes = Object.values(refScores).reduce((a, b) => a + b, 0);
+                if (totalRefVotes < 6 || refDominant === savedProfile.dominant) return null;
+                const arc = ARCHETYPES[refDominant];
+                return (
+                  <View style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]}>
+                    <MetallicText style={styles.evolutionIcon} color={arc.color}>{arc.icon}</MetallicText>
+                    <View style={styles.evolutionText}>
+                      <Text style={[styles.evolutionTitle, { color: arc.color }]}>
+                        Your reflections are trending {arc.name}
+                      </Text>
+                      <Text style={styles.evolutionBody}>
+                        Your daily answers are showing a growing pattern toward {arc.name.replace('The ', '')} energy. Retake the quiz when this feels true.
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })()}
+
               <Pressable style={styles.retakeBtn} onPress={retake}>
                 <Text style={styles.retakeBtnText}>Retake Reflection</Text>
               </Pressable>
@@ -484,4 +511,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   retakeBtnText: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
+
+  evolutionCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  evolutionIcon: { fontSize: 28, marginTop: 2 },
+  evolutionText: { flex: 1, gap: 4 },
+  evolutionTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
+  evolutionBody: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 19 },
 });

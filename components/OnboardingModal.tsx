@@ -229,7 +229,7 @@ function BottomNav({
 
 interface OnboardingModalProps {
   visible: boolean;
-  onComplete: (chart: NatalChart) => void;
+  onComplete: (chart?: NatalChart) => void;
   onPrivacyConsent?: () => void;
 }
 
@@ -561,24 +561,29 @@ export default function OnboardingModal({
         if (pendingChart) {
           onComplete(pendingChart);
         } else {
-          // Existing user sign-in: check for existing charts
+          // Check if this device already has chart data. If yes → go home.
+          // If no (new device / reinstall) → collect birth data before proceeding.
           const existingCharts = await localDb.getCharts();
           if (existingCharts.length > 0) {
-            const bd = existingCharts[0];
-            const chart = AstrologyCalculator.generateNatalChart({
-              date: bd.birthDate,
-              time: bd.birthTime,
-              hasUnknownTime: bd.hasUnknownTime,
-              place: bd.birthPlace,
-              latitude: bd.latitude,
-              longitude: bd.longitude,
-              houseSystem: bd.houseSystem,
-              timezone: bd.timezone,
-            });
-            onComplete(chart);
+            onComplete();
           } else {
-            // Signed in but no local data: continue onboarding to collect birth data
-            goToStep('privacy');
+            // New device / reinstall — try pulling cloud data before forcing birth re-entry
+            const PULL_TIMEOUT_MS = 15_000;
+            try {
+              const { pullFromSupabase } = await import('../services/storage/syncService');
+              await Promise.race([
+                pullFromSupabase(),
+                new Promise<void>((_, reject) =>
+                  setTimeout(() => reject(new Error('pull_timeout')), PULL_TIMEOUT_MS)
+                ),
+              ]);
+            } catch { /* network unavailable or timed out — continue to birth entry */ }
+            const refreshedCharts = await localDb.getCharts();
+            if (refreshedCharts.length > 0) {
+              onComplete();
+            } else {
+              goToStep('privacy');
+            }
           }
         }
       }

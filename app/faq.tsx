@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
@@ -30,7 +30,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
         <View style={styles.headerBar}>
           <Pressable
             style={styles.backButton}
-            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : router.replace('/onboarding/consent' as Href))}
+            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
             accessibilityRole="button"
             accessibilityLabel="Back"
           >

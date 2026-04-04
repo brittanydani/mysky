@@ -4,7 +4,7 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-na
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { theme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
@@ -34,7 +34,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
         <View style={styles.headerBar}>
           <Pressable
             style={styles.backButton}
-            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : router.replace('/onboarding/consent' as Href))}
+            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
             accessibilityRole="button"
             accessibilityLabel="Back"
           >

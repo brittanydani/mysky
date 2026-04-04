@@ -891,9 +891,9 @@ export const DemoSeedService = {
     await EncryptedAsyncStorage.setItem('msky_user_name', 'Brittany');
 
     // Grant premium for the reviewer account
-    await AsyncStorage.setItem('@mysky:demo_premium', 'true');
+    await EncryptedAsyncStorage.setItem('@mysky:demo_premium', 'true');
 
-    await AsyncStorage.setItem('@mysky:core_values', JSON.stringify({
+    await EncryptedAsyncStorage.setItem('@mysky:core_values', JSON.stringify({
       selected: ['authenticity','freedom','growth','connection','courage','creativity','peace','integrity'],
       topFive: ['authenticity','freedom','growth','connection','courage'],
     }));

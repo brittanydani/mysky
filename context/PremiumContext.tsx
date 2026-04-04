@@ -11,7 +11,7 @@ import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-na
 import * as Haptics from 'expo-haptics';
 
 import Constants from 'expo-constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { logger } from '../utils/logger';
 
@@ -124,7 +124,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     const init = async () => {
       try {
         // Check for demo-account premium override (set by demoSeedService)
-        const demoPremium = await AsyncStorage.getItem(DEMO_PREMIUM_KEY);
+        const demoPremium = await EncryptedAsyncStorage.getItem(DEMO_PREMIUM_KEY);
         if (demoPremium === 'true' && isMounted.current) {
           setIsPremium(true);
         }

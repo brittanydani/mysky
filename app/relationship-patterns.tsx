@@ -149,6 +149,10 @@ export default function RelationshipPatternsScreen() {
       setEntries(entries);
       return;
     }
+    // Cloud sync (fire-and-forget)
+    import('../services/storage/syncService').then(({ enqueueRelationshipPattern }) =>
+      enqueueRelationshipPattern(newEntry),
+    ).catch(() => {});
     setNote('');
     setSelectedTags([]);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
