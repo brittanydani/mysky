@@ -13,7 +13,7 @@ import {
   signNameFromLongitude as signFromLongitude,
   computeHouseForLongitude as houseForLongitude,
 } from '../astrology/sharedHelpers';
-import { dayOfYear } from '../../utils/dateUtils';
+import { dayOfYear, toLocalDateString } from '../../utils/dateUtils';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -703,7 +703,7 @@ export class EnergyEngine {
     const personalMeaning = MOON_PHASE_MEANINGS[phase] ?? 'Observe how this phase moves through you.';
 
     return {
-      date: date.toISOString().slice(0, 10),
+      date: toLocalDateString(date),
       tone: toneData.tone,
       intensity: adjustedIntensity,
       primaryDriver: driver,

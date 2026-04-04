@@ -25,7 +25,6 @@ import { JournalEntry, SavedChart, SleepEntry } from './models';
 import { DailyCheckIn } from '../patterns/types';
 import { ReflectionAnswer } from '../insights/dailyReflectionService';
 import type { TriggerEvent } from '../../utils/triggerEventTypes';
-import { IdentityVault } from '../../utils/IdentityVault';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -48,6 +47,9 @@ export interface PatternEntrySync {
 export interface BirthProfileSync {
   id: string;
   chartId: string;
+  createdAt?: string;
+  updatedAt: string;
+  isDeleted: boolean;
   name?: string;
   birthDate: string;
   birthTime?: string;
@@ -57,10 +59,11 @@ export interface BirthProfileSync {
   longitude: number;
   timezone?: string;
   houseSystem?: string;
-  createdAt: string;
-  updatedAt: string;
-  isDeleted: boolean;
   deletedAt?: string;
+}
+
+interface BirthProfileFunctionResponse {
+  profile: BirthProfileSync | null;
 }
 
 export type SyncTable =
@@ -93,6 +96,18 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 async function getSession() {
   const { data } = await supabase.auth.getSession();
   return data.session;
+}
+
+async function invokeBirthProfileSync(
+  action: 'getLatest' | 'upsert' | 'delete',
+  payload: Record<string, unknown> = {},
+): Promise<BirthProfileFunctionResponse> {
+  const { data, error } = await supabase.functions.invoke('birth-profile-sync', {
+    body: { action, ...payload },
+  });
+
+  if (error) throw error;
+  return (data ?? { profile: null }) as BirthProfileFunctionResponse;
 }
 
 // ─── Queue management (stored in local SQLite) ────────────────────────────────
@@ -148,12 +163,25 @@ export async function flushQueue(): Promise<void> {
         const payload = JSON.parse(item.payload);
         const userId = session.user.id;
 
+        if (item.table_name === 'birth_profiles') {
+          if (item.operation === 'upsert') {
+            await invokeBirthProfileSync('upsert', { profile: payload });
+          } else {
+            await invokeBirthProfileSync('delete', {
+              chartId: payload.chartId ?? payload.chart_id ?? null,
+              updatedAt: payload.updatedAt ?? payload.updated_at ?? new Date().toISOString(),
+              deletedAt: payload.deletedAt ?? payload.deleted_at ?? null,
+            });
+          }
+
+          await db.runAsync('DELETE FROM sync_queue WHERE id = ?', [item.id]);
+          continue;
+        }
+
         if (item.operation === 'upsert') {
           const onConflict = item.table_name === 'daily_check_ins'
             ? 'user_id,log_date,time_of_day'
-            : item.table_name === 'birth_profiles'
-              ? 'user_id'
-              : 'id';
+            : 'id';
           const { error } = await supabase
             .from(item.table_name)
             .upsert(
@@ -166,7 +194,8 @@ export async function flushQueue(): Promise<void> {
           // Soft-delete on server — only include deleted_at if the table has the column
           const now = new Date().toISOString();
           const deletePayload: Record<string, unknown> = { is_deleted: true, updated_at: now };
-          if (item.table_name !== 'sleep_entries') deletePayload.deleted_at = now;
+          const tablesWithDeletedAt = new Set<SyncTable>(['journal_entries', 'daily_check_ins', 'birth_profiles']);
+          if (tablesWithDeletedAt.has(item.table_name)) deletePayload.deleted_at = now;
           const { error } = await supabase
             .from(item.table_name)
             .update(deletePayload)
@@ -231,35 +260,26 @@ export async function pullFromSupabase(): Promise<{
 
   // ── Birth profile ──
   try {
-    const { data, error } = await supabase
-      .from('birth_profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .gt('updated_at', since)
-      .order('updated_at', { ascending: true })
-      .limit(10);
+    const { profile } = await invokeBirthProfileSync('getLatest', { since });
+    if (profile) {
+      trackMax([{ updated_at: profile.updatedAt }]);
 
-    if (error) throw error;
-    trackMax(data ?? []);
-
-    for (const row of data ?? []) {
-      if (row.is_deleted) {
-        await localDb.deleteChart(row.chart_id).catch(() => {});
-        await IdentityVault.destroyIdentity().catch(() => {});
+      if (profile.isDeleted) {
+        await localDb.deleteChart(profile.chartId).catch(() => {});
       } else {
         const chart: SavedChart = {
-          id: row.chart_id,
-          name: row.name ?? undefined,
-          birthDate: row.birth_date,
-          birthTime: row.birth_time ?? undefined,
-          hasUnknownTime: row.has_unknown_time,
-          birthPlace: row.birth_place,
-          latitude: row.latitude,
-          longitude: row.longitude,
-          timezone: row.timezone ?? undefined,
-          houseSystem: row.house_system ?? undefined,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
+          id: profile.chartId,
+          name: profile.name ?? undefined,
+          birthDate: profile.birthDate,
+          birthTime: profile.birthTime ?? undefined,
+          hasUnknownTime: profile.hasUnknownTime,
+          birthPlace: profile.birthPlace,
+          latitude: profile.latitude,
+          longitude: profile.longitude,
+          timezone: profile.timezone ?? undefined,
+          houseSystem: profile.houseSystem as SavedChart['houseSystem'],
+          createdAt: profile.createdAt ?? profile.updatedAt,
+          updatedAt: profile.updatedAt,
           isDeleted: false,
         };
 
@@ -422,15 +442,16 @@ export async function pullFromSupabase(): Promise<{
             a => !(a.date === row.date && a.questionId === row.question_id && a.category === row.category),
           );
         } else {
+          const decrypt = (v: string | null) => v ? FieldEncryptionService.decryptField(v).catch(() => v) : '';
           const answer: ReflectionAnswer = {
             questionId: row.question_id,
             category: row.category,
-            questionText: row.question_text_enc ?? '',  // encrypted blob stored verbatim
-            answer: row.answer_enc ?? '',
+            questionText: await decrypt(row.question_text_enc),
+            answer: await decrypt(row.answer_enc),
             scaleValue: row.scale_value ?? undefined,
             date: row.date,
             sealedAt: row.sealed_at,
-            notes: row.notes_enc ?? undefined,
+            notes: row.notes_enc ? await decrypt(row.notes_enc) : undefined,
           };
           const idx = local.answers.findIndex(
             a => a.date === answer.date && a.questionId === answer.questionId && a.category === answer.category,
@@ -478,7 +499,9 @@ export async function pullFromSupabase(): Promise<{
             date: row.date,
             region: row.region,
             side: row.side ?? undefined,
-            emotion: row.emotion_enc ?? '',
+            emotion: row.emotion_enc
+              ? await FieldEncryptionService.decryptField(row.emotion_enc).catch(() => row.emotion_enc)
+              : '',
             intensity: row.intensity,
           };
           const idx = local.findIndex(e => e.id === entry.id);
@@ -516,15 +539,19 @@ export async function pullFromSupabase(): Promise<{
         if (row.is_deleted) {
           local = local.filter(e => e.id !== row.id);
         } else {
+          const decryptOrFallback = (v: string) => FieldEncryptionService.decryptField(v).catch(() => v);
+          const eventText = row.event_enc ? await decryptOrFallback(row.event_enc) : '';
+          const sensationsRaw = row.sensations_enc ? await decryptOrFallback(row.sensations_enc) : '[]';
+          const resolutionText = row.resolution_enc ? await decryptOrFallback(row.resolution_enc) : undefined;
           const event: TriggerEvent = {
             id: row.id,
             timestamp: row.timestamp,
             mode: row.mode,
-            event: row.event_enc ?? '',
+            event: eventText,
             nsState: row.ns_state,
-            sensations: row.sensations_enc ? (() => { try { return JSON.parse(row.sensations_enc); } catch { return []; } })() : [],
+            sensations: (() => { try { return JSON.parse(sensationsRaw); } catch { return []; } })(),
             ...(row.intensity != null ? { intensity: row.intensity } : {}),
-            ...(row.resolution_enc ? { resolution: row.resolution_enc } : {}),
+            ...(resolutionText !== undefined ? { resolution: resolutionText } : {}),
             ...(row.context_area ? { contextArea: row.context_area } : {}),
             ...(row.before_state ? { beforeState: row.before_state } : {}),
           };
@@ -563,11 +590,14 @@ export async function pullFromSupabase(): Promise<{
         if (row.is_deleted) {
           local = local.filter(e => e.id !== row.id);
         } else {
+          const decryptPat = (v: string) => FieldEncryptionService.decryptField(v).catch(() => v);
+          const noteText = row.note_enc ? await decryptPat(row.note_enc) : '';
+          const tagsRaw = row.tags_enc ? await decryptPat(row.tags_enc) : '[]';
           const entry: PatternEntrySync = {
             id: row.id,
             date: row.date,
-            note: row.note_enc ?? '',
-            tags: row.tags_enc ? (() => { try { return JSON.parse(row.tags_enc); } catch { return []; } })() : [],
+            note: noteText,
+            tags: (() => { try { return JSON.parse(tagsRaw); } catch { return []; } })(),
           };
           const idx = local.findIndex(e => e.id === entry.id);
           if (idx >= 0) local[idx] = entry;
@@ -614,13 +644,13 @@ export async function enqueueBirthProfile(chart: SavedChart, operation: 'upsert'
 
   const payload = operation === 'delete'
     ? {
-        id: session.user.id,
-        chart_id: chart.id,
-        is_deleted: true,
-        deleted_at: chart.deletedAt ?? new Date().toISOString(),
-        updated_at: chart.updatedAt,
+        id: chart.id,
+        chartId: chart.id,
+        isDeleted: true,
+        deletedAt: chart.deletedAt ?? new Date().toISOString(),
+        updatedAt: chart.updatedAt,
       }
-    : birthProfileToSupabase(session.user.id, chart);
+    : birthProfileToSupabase(chart);
 
   await enqueue('birth_profiles', session.user.id, operation, payload);
 }
@@ -628,6 +658,13 @@ export async function enqueueBirthProfile(chart: SavedChart, operation: 'upsert'
 export async function syncBirthProfileFromLocal() {
   const charts = await localDb.getCharts().catch(() => [] as SavedChart[]);
   if (!charts.length) return;
+
+  const localProfile = birthProfileToSupabase(charts[0]);
+  const { profile: remoteProfile } = await invokeBirthProfileSync('getLatest');
+  if (remoteProfile && remoteProfile.updatedAt > localProfile.updatedAt) {
+    return;
+  }
+
   await enqueueBirthProfile(charts[0]);
 }
 
@@ -637,10 +674,10 @@ export async function deleteBirthProfileForCurrentUser(chartId?: string) {
 
   await enqueue('birth_profiles', session.user.id, 'delete', {
     id: session.user.id,
-    chart_id: chartId ?? session.user.id,
-    is_deleted: true,
-    deleted_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    chartId: chartId ?? session.user.id,
+    isDeleted: true,
+    deletedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 }
 
@@ -728,23 +765,23 @@ function checkInToSupabase(checkIn: DailyCheckIn) {
   };
 }
 
-function birthProfileToSupabase(userId: string, chart: SavedChart) {
+function birthProfileToSupabase(chart: SavedChart): BirthProfileSync {
   return {
-    id: userId,
-    chart_id: chart.id,
-    name: chart.name ?? null,
-    birth_date: chart.birthDate,
-    birth_time: chart.birthTime ?? null,
-    has_unknown_time: chart.hasUnknownTime,
-    birth_place: chart.birthPlace,
+    id: chart.id,
+    chartId: chart.id,
+    name: chart.name ?? undefined,
+    birthDate: chart.birthDate,
+    birthTime: chart.birthTime ?? undefined,
+    hasUnknownTime: chart.hasUnknownTime,
+    birthPlace: chart.birthPlace,
     latitude: chart.latitude,
     longitude: chart.longitude,
-    timezone: chart.timezone ?? null,
-    house_system: chart.houseSystem ?? null,
-    is_deleted: chart.isDeleted,
-    deleted_at: chart.deletedAt ?? null,
-    created_at: chart.createdAt,
-    updated_at: chart.updatedAt,
+    timezone: chart.timezone ?? undefined,
+    houseSystem: chart.houseSystem ?? undefined,
+    isDeleted: chart.isDeleted,
+    deletedAt: chart.deletedAt ?? undefined,
+    createdAt: chart.createdAt,
+    updatedAt: chart.updatedAt,
   };
 }
 

@@ -31,9 +31,16 @@ jest.mock('../../storage/localDb', () => ({
 
 jest.mock('../../storage/encryptedAsyncStorage', () => ({
   EncryptedAsyncStorage: {
+    getItem: jest.fn().mockResolvedValue(null),
     deleteAllUserData: jest.fn().mockResolvedValue(undefined),
     removeItem: jest.fn().mockResolvedValue(undefined),
   },
+}));
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn().mockResolvedValue(null),
+  setItem: jest.fn().mockResolvedValue(undefined),
+  removeItem: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../../storage/models', () => ({
@@ -129,7 +136,20 @@ describe('PrivacyComplianceManager', () => {
       const result = await manager.handleAccessRequest();
 
       expect(result).toBeDefined();
+      expect(result.dataInventory.asyncStorageKeysCount).toBe(0);
       expect(mockLocalDb.hardDeleteAllData).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handleExportRequest (GDPR Art. 20)', () => {
+    it('includes encrypted async storage user data in the export package', async () => {
+      const { EncryptedAsyncStorage } = require('../../storage/encryptedAsyncStorage');
+      EncryptedAsyncStorage.getItem.mockResolvedValueOnce('{"hero":"sage"}');
+
+      const result = await manager.handleExportRequest();
+
+      expect(result.success).toBe(true);
+      expect(result.package?.asyncStorageData).toBeDefined();
     });
   });
 

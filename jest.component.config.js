@@ -3,7 +3,7 @@ module.exports = {
   preset: 'react-native',
   watchman: false,
   roots: ['<rootDir>/components', '<rootDir>/app', '<rootDir>/context'],
-  testMatch: ['**/__tests__/**/*.test.tsx'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
   setupFiles: ['<rootDir>/jest.component.setup.js'],
   moduleNameMapper: {
     '^expo-crypto$': '<rootDir>/__mocks__/expo-crypto.js',

@@ -50,7 +50,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <Ionicons name="help-circle-outline" size={132} color={theme.textGold} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: April 1, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: April 4, 2026</Text>
 
           <View style={styles.faqSection}>
             <View style={styles.faqCard}>
@@ -62,12 +62,12 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
             <Text style={styles.answer}>
               <Text style={styles.highlight}>Free:</Text> Personal birth chart, Big Three, daily mood/energy/stress check-ins, basic journaling, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context with moon phase and transit awareness.{"\n\n"}
-              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
+              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
             </Text>
 
             <Text style={styles.question}>What data does MySky store and where?</Text>
             <Text style={styles.answer}>
-              All your data — birth data, journal entries, check-ins, sleep logs, dream content, relationship charts, energy readings, and settings — is stored locally on your device in a SQLite database. Sensitive fields (journal text, birth places, coordinates, dream content, mood/stress/energy scores, emotional tags, notes, wins, and challenges) are encrypted at rest using <Text style={styles.highlight}>AES-256-GCM</Text> with keys stored in your device's hardware-backed secure enclave (iOS Keychain / Android Keystore). Your authentication credentials (email and hashed password) are stored on Supabase. The only external network calls are authentication, geocoding lookups (city name only), and anonymous subscription verification.
+              Most of your data — birth data, journal entries, check-ins, sleep logs, dream content, relationship charts, energy readings, and settings — is stored locally on your device in a SQLite database. Sensitive fields (journal text, birth places, coordinates, dream content, mood/stress/energy scores, emotional tags, notes, wins, and challenges) are encrypted at rest using <Text style={styles.highlight}>AES-256-GCM</Text> with keys stored in your device's hardware-backed secure storage (iOS Keychain / Android Keystore). Your authentication credentials are stored on Supabase. External network calls are limited to authentication, geocoding lookups (city name only), subscription verification through RevenueCat, operational telemetry through Sentry, and optional AI features.
             </Text>
 
             <Text style={styles.question}>What are AI Reflection Insights and what data do they use?</Text>
@@ -77,7 +77,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>Are dream reflections powered by AI?</Text>
             <Text style={styles.answer}>
-              No. Dream reflections are generated <Text style={styles.highlight}>entirely on your device</Text> using symbolic pattern mapping with a Jungian archetype dictionary. Text signals, feelings, check-in context, and history are blended with weighted scoring. No data is sent to any AI service or external server for this feature.
+              Standard dream reflections are generated <Text style={styles.highlight}>entirely on your device</Text> using symbolic pattern mapping with a Jungian archetype dictionary. Text signals, feelings, check-in context, and history are blended with weighted scoring. Separately, MySky also offers an optional premium AI-Enhanced Dream Interpretation feature that can send dream text and selected dream feelings to Google Gemini for an additional narrative layer.
             </Text>
 
             <Text style={styles.question}>How does the journal NLP analysis work?</Text>
@@ -87,12 +87,12 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>Is my data ever sold or shared with third parties?</Text>
             <Text style={styles.answer}>
-              Never. Your data is never sold, shared for advertising, or used for AI/ML training. MySky uses zero analytics SDKs and collects zero advertising identifiers. External data flows are limited to authentication (Supabase), city name geocoding (OpenStreetMap), anonymous subscription verification (RevenueCat), and optional AI features (Supabase/Anthropic/Google Gemini — aggregated stats or dream text only).
+              Never. Your data is never sold, shared for advertising, or used for AI/ML training. MySky does not collect advertising identifiers or perform cross-app tracking. Limited disclosures to service providers include authentication (Supabase), city name geocoding (OpenStreetMap), subscription verification (RevenueCat), operational crash/error telemetry (Sentry), and optional AI features (Supabase/Anthropic/Google Gemini — aggregated stats or dream text only).
             </Text>
 
             <Text style={styles.question}>Can I export or delete my data?</Text>
             <Text style={styles.answer}>
-              Yes. All users can export a complete structured JSON archive of all personal data via Privacy Settings, and permanently delete all data using the "Hard Reset" option. Premium users can also export a PDF of their natal chart and full personal story, and create encrypted .msky backup files protected with a passphrase of your choice (AES-256-GCM with PBKDF2-SHA256, 310,000 iterations).
+              Yes. All users can export a complete structured JSON archive of all personal data via Privacy Settings, and permanently delete all data using the "Hard Reset" option. Premium users can also export a PDF of their natal chart and full personal story, and create encrypted .msky backup files protected with a passphrase of your choice (AES-256-GCM with PBKDF2-SHA256, 100,000 iterations).
             </Text>
 
             <Text style={styles.question}>How does backup and restore work?</Text>
@@ -107,7 +107,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>What happens if I uninstall the app?</Text>
             <Text style={styles.answer}>
-              Uninstalling the app permanently erases all locally stored data (SQLite database and SecureStore). If you created a backup (.msky file), your data can be restored on a new installation. You can request account deletion by contacting support.
+              Uninstalling the app removes the app sandbox, including the local SQLite database. On some platforms, small secure-storage items may persist until the OS clears them, so uninstalling alone should not be treated as a guaranteed secure wipe. If you want a guaranteed local wipe of protected data, use Hard Reset before uninstalling. If you created a backup (.msky file), your data can be restored on a new installation. You can request account deletion by contacting support.
             </Text>
 
             <Text style={styles.question}>Is MySky a mental health app or therapy substitute?</Text>
@@ -165,7 +165,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>How does the Energy Tracking system work?</Text>
             <Text style={styles.answer}>
-              MySky tracks your energy across five domains — Physical, Emotional, Mental, Social, and Spiritual. Free users see 2 rotating domains at a time; Deeper Sky unlocks all 5 simultaneously. Daily energy readings are paired with affirmation content and can be correlated with your check-in data over time to reveal energy patterns.
+              MySky maps your chart into a chakra-based energy system. Free users see an energy snapshot with select insights, while Deeper Sky unlocks the full seven-chakra reading with body cues, triggers, guidance, and daily pattern tracking.
             </Text>
 
             <Text style={styles.question}>What is the Balance Dashboard?</Text>
@@ -255,7 +255,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>What happens in a data breach?</Text>
             <Text style={styles.answer}>
-              In the unlikely event of a data breach affecting personal information held on our servers (limited to Supabase authentication data), we will notify affected users within 72 hours in accordance with GDPR and applicable law. Because nearly all your data is stored exclusively on your device and never transmitted, the risk of a server-side breach affecting personal content is extremely limited.
+              In the unlikely event of a data breach affecting personal information held by us or our service providers, we will assess it promptly and provide any legally required notices in accordance with applicable law. Because nearly all your data is stored exclusively on your device and never transmitted, the risk of a server-side breach affecting personal content is extremely limited.
             </Text>
               </View>
           </View>

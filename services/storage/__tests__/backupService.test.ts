@@ -49,6 +49,7 @@ jest.mock('../localDb', () => ({
     getInsightHistory: jest.fn(async () => []),
     getSleepEntries: jest.fn(async () => []),
     getCheckIns: jest.fn(async () => []),
+    clearAccountScopedData: jest.fn(async () => {}),
     saveChart: jest.fn(async () => {}),
     saveJournalEntry: jest.fn(async () => {}),
     saveRelationshipChart: jest.fn(async () => {}),
@@ -73,6 +74,7 @@ jest.mock('../encryptedAsyncStorage', () => ({
   EncryptedAsyncStorage: {
     getItem: jest.fn(async () => null),
     setItem: jest.fn(async () => {}),
+    removeItem: jest.fn(async () => {}),
   },
 }));
 
@@ -231,6 +233,22 @@ describe('BackupService', () => {
       await expect(BackupService.restoreFromBackupFile(uri, 'wrong-passphrase00')).rejects.toThrow(
         'Unable to decrypt backup'
       );
+    });
+
+    it('clears existing local personal data before restoring backup payload', async () => {
+      mockDb.getSettings.mockResolvedValue({ id: 'default' } as any);
+      const passphrase = 'correct-horse-battery';
+      const { uri } = await BackupService.createEncryptedBackupFile(passphrase);
+      const fs = require('expo-file-system/legacy');
+      (fs.getInfoAsync as jest.Mock).mockResolvedValueOnce({
+        exists: true,
+        size: Buffer.byteLength(mockFsStore[uri], 'utf8'),
+      });
+      (fs.readAsStringAsync as jest.Mock).mockResolvedValueOnce(mockFsStore[uri]);
+
+      await BackupService.restoreFromBackupFile(uri, passphrase);
+
+      expect(mockDb.clearAccountScopedData).toHaveBeenCalled();
     });
   });
 

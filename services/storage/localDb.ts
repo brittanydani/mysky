@@ -9,7 +9,7 @@ import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import { supabase } from '../../lib/supabase';
 import { IdentityVault } from '../../utils/IdentityVault';
 
-const CURRENT_DB_VERSION = 21;
+const CURRENT_DB_VERSION = 22;
 
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
@@ -1210,6 +1210,19 @@ class LocalDatabase {
     }).catch(() => {});
   }
 
+  async deleteChartFromSync(id: string, updatedAt: string): Promise<void> {
+    const db = await this.ensureReady();
+    await db.runAsync('UPDATE saved_charts SET is_deleted = 1, updated_at = ? WHERE id = ?', [updatedAt, id]);
+
+    const remainingCharts = await this.getCharts().catch(() => [] as SavedChart[]);
+    if (remainingCharts.length > 0) {
+      this.sealIdentityFromChart(remainingCharts[0]).catch(() => {});
+      return;
+    }
+
+    IdentityVault.destroyIdentity().catch(() => {});
+  }
+
   async hardDeleteChart(id: string): Promise<void> {
     const db = await this.ensureReady();
     await db.runAsync('DELETE FROM saved_charts WHERE id = ?', [id]);
@@ -1217,6 +1230,13 @@ class LocalDatabase {
     const remainingCharts = await this.getCharts().catch(() => [] as SavedChart[]);
     if (remainingCharts.length > 0) {
       this.sealIdentityFromChart(remainingCharts[0]).catch(() => {});
+      this.getSession().then((session) => {
+        if (session) {
+          import('../storage/syncService').then(({ enqueueBirthProfile }) =>
+            enqueueBirthProfile(remainingCharts[0]),
+          ).catch(() => {});
+        }
+      }).catch(() => {});
       return;
     }
 
@@ -1519,6 +1539,22 @@ class LocalDatabase {
       COMMIT;
     `);
     await db.execAsync('VACUUM;');
+  }
+
+  async clearAccountScopedData(): Promise<void> {
+    const db = await this.ensureReady();
+
+    await db.execAsync(`
+      BEGIN TRANSACTION;
+      DELETE FROM saved_charts;
+      DELETE FROM journal_entries;
+      DELETE FROM daily_check_ins;
+      DELETE FROM insight_history;
+      DELETE FROM relationship_charts;
+      DELETE FROM sleep_entries;
+      DELETE FROM sync_queue;
+      COMMIT;
+    `);
   }
 
   // Aliases
@@ -2401,6 +2437,11 @@ class LocalDatabase {
       isDeleted: row.is_deleted === 1,
     }));
   }
+}
+
+interface LocalDatabase {
+  deleteChartFromSync(id: string, updatedAt: string): Promise<void>;
+  clearAccountScopedData(): Promise<void>;
 }
 
 export const localDb = new LocalDatabase();

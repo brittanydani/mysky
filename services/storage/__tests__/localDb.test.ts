@@ -21,6 +21,14 @@ jest.mock('../fieldEncryption', () => ({
   isDecryptionFailure: jest.fn(() => false),
 }));
 
+jest.mock('../../../lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: jest.fn().mockResolvedValue({ data: { session: null } }),
+    },
+  },
+}));
+
 import { localDb } from '../localDb';
 
 describe('localDb', () => {
@@ -118,6 +126,14 @@ describe('localDb', () => {
         expect.arrayContaining(['chart-1'])
       );
     });
+
+    it('deleteChartFromSync performs a local-only soft delete', async () => {
+      await localDb.deleteChartFromSync('chart-1', '2026-04-04T00:00:00.000Z');
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        expect.stringContaining('is_deleted'),
+        ['2026-04-04T00:00:00.000Z', 'chart-1']
+      );
+    });
   });
 
   describe('journal operations', () => {
@@ -211,6 +227,13 @@ describe('localDb', () => {
       const calls = mockDb.execAsync.mock.calls.map((c: any[]) => c[0]);
       const hasTransaction = calls.some((sql: string) => sql.includes('DELETE FROM saved_charts'));
       expect(hasTransaction).toBe(true);
+    });
+
+    it('can clear account-scoped data without deleting app settings', async () => {
+      await localDb.clearAccountScopedData();
+      const calls = mockDb.execAsync.mock.calls.map((c: any[]) => c[0]);
+      const hasScopedDelete = calls.some((sql: string) => sql.includes('DELETE FROM sync_queue'));
+      expect(hasScopedDelete).toBe(true);
     });
   });
 });

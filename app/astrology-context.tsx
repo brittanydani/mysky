@@ -20,6 +20,12 @@ import { localDb } from '../services/storage/localDb';
 import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../services/premium/advancedJournal';
 import { usePremium } from '../context/PremiumContext';
 import { useFocusEffect } from '@react-navigation/core';
+import { dayOfYear, toLocalDateString } from '../utils/dateUtils';
+
+type TransitCoordinates = {
+  latitude: number;
+  longitude: number;
+};
 
 // ── Rotating daily reflection prompts ──
 const REFLECTION_PROMPTS = [
@@ -33,10 +39,8 @@ const REFLECTION_PROMPTS = [
 ];
 
 function getDailyPrompt(): string {
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000
-  );
-  return REFLECTION_PROMPTS[dayOfYear % REFLECTION_PROMPTS.length];
+  const currentDayOfYear = dayOfYear();
+  return REFLECTION_PROMPTS[currentDayOfYear % REFLECTION_PROMPTS.length];
 }
 
 // Mean lunar velocity ≈ 13.176°/day → hours per degree
@@ -239,6 +243,22 @@ export default function CosmicContext() {
   const router = useRouter();
   const { isPremium } = usePremium();
   const [transitInsights, setTransitInsights] = useState<PatternInsight[]>([]);
+  const [transitCoordinates, setTransitCoordinates] = useState<TransitCoordinates>({ latitude: 0, longitude: 0 });
+
+  const loadTransitCoordinates = useCallback(async () => {
+    try {
+      const charts = await localDb.getCharts();
+      const saved = charts[0];
+      if (!saved) return;
+      setTransitCoordinates(prev => (
+        prev.latitude === saved.latitude && prev.longitude === saved.longitude
+          ? prev
+          : { latitude: saved.latitude, longitude: saved.longitude }
+      ));
+    } catch {
+      // Keep fallback coordinates if the chart is unavailable.
+    }
+  }, []);
 
   const loadTransitInsights = useCallback(async () => {
     try {
@@ -255,13 +275,23 @@ export default function CosmicContext() {
     } catch {}
   }, [isPremium]);
 
-  useFocusEffect(useCallback(() => { void loadTransitInsights(); }, [loadTransitInsights]));
+  useFocusEffect(useCallback(() => {
+    void loadTransitInsights();
+    void loadTransitCoordinates();
+  }, [loadTransitCoordinates, loadTransitInsights]));
+
+  useEffect(() => {
+    void loadTransitCoordinates();
+  }, [loadTransitCoordinates]);
 
   // Live moon phase from the astronomy engine
   const moonInfo = useMemo(() => getMoonPhaseInfo(), []);
 
   // Live transiting longitudes and retrogrades
-  const transitInfo = useMemo(() => getTransitInfo(new Date(), 0, 0), []);
+  const transitInfo = useMemo(
+    () => getTransitInfo(new Date(), transitCoordinates.latitude, transitCoordinates.longitude),
+    [transitCoordinates.latitude, transitCoordinates.longitude]
+  );
 
   // Build the transit rows for the five personal planets
   const activeTransits = useMemo(() =>
@@ -391,7 +421,7 @@ export default function CosmicContext() {
                 const isActive = activeDayIdx === i;
                 return (
                   <Pressable
-                    key={date.toISOString()}
+                    key={toLocalDateString(date)}
                     style={[styles.weekDayCol, isActive && styles.weekDayColActive]}
                     onPress={() => {
                       Haptics.selectionAsync();
@@ -632,6 +662,35 @@ const styles = StyleSheet.create({
   transitImpact: { fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
   transitSource: { fontSize: 12, color: 'rgba(212,184,114,0.45)', lineHeight: 17, marginTop: 5, fontStyle: 'italic' },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 20, marginLeft: 44 },
+  insightCard: {
+    padding: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(168,155,200,0.14)',
+    marginBottom: 12,
+  },
+  confidenceBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(168,155,200,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(168,155,200,0.24)',
+  },
+  confidenceStrong: {
+    backgroundColor: 'rgba(110,183,155,0.14)',
+    borderColor: 'rgba(110,183,155,0.28)',
+  },
+  confidenceSuggested: {
+    backgroundColor: 'rgba(201,174,120,0.12)',
+    borderColor: 'rgba(201,174,120,0.24)',
+  },
+  confidenceText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    color: '#A89BC8',
+  },
 
   // Reflection prompt
   reflectionCard: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: 8 },

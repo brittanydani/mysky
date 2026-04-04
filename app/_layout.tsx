@@ -12,6 +12,7 @@
 import { Ionicons } from '@expo/vector-icons';
 // File: app/_layout.tsx
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { Component, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -27,6 +28,8 @@ import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceM
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { initHapticPreference } from '../utils/haptics';
 import { localDb } from '../services/storage/localDb';
+import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
+import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from '../services/storage/userDataKeys';
 import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
 import { supabase } from '../lib/supabase';
@@ -41,12 +44,30 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 // which creates a Reanimated worklet runtime before React mounts (crash vector).
 // ErrorBoundary and timeout UI now use plain Views instead.
 
+function lazyRequire<T extends React.ComponentType<any>>(
+  loader: () => { default: T }
+): React.LazyExoticComponent<T> {
+  return React.lazy(() => Promise.resolve().then(loader));
+}
+
 // Modals lazy-loaded to avoid pulling @shopify/react-native-skia into eval-time
 // import graph (Skia barrel triggers Reanimated worklet runtime at module eval).
-const OnboardingModal = React.lazy(() => import('../components/OnboardingModal'));
-const PrivacyConsentModal = React.lazy(() => import('../components/PrivacyConsentModal'));
-const AuthRequiredModal = React.lazy(() => import('../components/AuthRequiredModal'));
-const CosmicBackground = React.lazy(() => import('../components/ui/CosmicBackground'));
+const OnboardingModal = lazyRequire(
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  () => require('../components/OnboardingModal') as { default: React.ComponentType<any> }
+);
+const PrivacyConsentModal = lazyRequire(
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  () => require('../components/PrivacyConsentModal') as { default: React.ComponentType<any> }
+);
+const AuthRequiredModal = lazyRequire(
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  () => require('../components/AuthRequiredModal') as { default: React.ComponentType<any> }
+);
+const CosmicBackground = lazyRequire(
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  () => require('../components/ui/CosmicBackground') as { default: React.ComponentType<any> }
+);
 
 
 // Allowlist of routes that notification deep links can navigate to.
@@ -96,12 +117,11 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
     logger.error('Unhandled render error:', error, info.componentStack);
-    try {
-      const { Sentry } = require('../utils/sentry');
+    loadSentry().then(({ Sentry }) => {
       Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack } } });
-    } catch {
+    }).catch(() => {
       // Sentry not available
-    }
+    });
   }
 
   render() {
@@ -126,7 +146,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 async function getTermsConsent(): Promise<boolean> {
   try {
-    const SecureStore = await import('expo-secure-store');
+    const SecureStore = await loadSecureStore();
     const value = await SecureStore.getItemAsync('terms_consent');
     return value === 'true';
   } catch {
@@ -136,7 +156,7 @@ async function getTermsConsent(): Promise<boolean> {
 
 async function setTermsConsent(granted: boolean) {
   try {
-    const SecureStore = await import('expo-secure-store');
+    const SecureStore = await loadSecureStore();
     await SecureStore.setItemAsync('terms_consent', granted ? 'true' : 'false');
   } catch (e) {
     logger.error('[setTermsConsent] Failed to persist terms consent:', e);
@@ -159,6 +179,30 @@ function RootLayout() {
 // Sentry.wrap at module eval time throws ReferenceError on iOS 26 New
 // Architecture because the native Sentry TurboModule isn't available yet.
 export default RootLayout;
+
+function loadSyncService() {
+  return Promise.resolve().then(() => require('../services/storage/syncService'));
+}
+
+function loadSecureStore() {
+  return Promise.resolve().then(() => require('expo-secure-store'));
+}
+
+function loadWebCrypto() {
+  return Promise.resolve().then(() => require('expo-standard-web-crypto'));
+}
+
+function loadNotifications() {
+  return Promise.resolve().then(() => require('expo-notifications'));
+}
+
+function loadGrowthAnalytics() {
+  return Promise.resolve().then(() => require('../services/growth/localAnalytics'));
+}
+
+function loadSentry() {
+  return Promise.resolve().then(() => require('../utils/sentry'));
+}
 
 function AppShell() {
   const router = useRouter();
@@ -183,6 +227,7 @@ function AppShell() {
   const [needsTermsConsent, setNeedsTermsConsent] = useState(false);
 
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [sessionDataReady, setSessionDataReady] = useState(false);
   // Suppresses AuthRequiredModal during the window between onboardingComplete
   // becoming true and the Supabase SIGNED_IN event updating session in AuthContext.
   const [completingOnboarding, setCompletingOnboarding] = useState(false);
@@ -193,6 +238,44 @@ function AppShell() {
   const didHideSplash = useRef(false);
   // Prevent double-navigation after onboarding completes
   const didNavigatePostOnboarding = useRef(false);
+  const sessionBootstrapRef = useRef(0);
+
+  const bindLocalSettingsToUser = async (userId: string, resetSyncState = false) => {
+    const current = await localDb.getSettings();
+    const now = new Date().toISOString();
+    await localDb.updateSettings({
+      id: 'default',
+      cloudSyncEnabled: current?.cloudSyncEnabled ?? false,
+      lastSyncAt: resetSyncState ? undefined : current?.lastSyncAt,
+      lastBackupAt: current?.lastBackupAt,
+      userId,
+      createdAt: current?.createdAt ?? now,
+      updatedAt: now,
+    });
+  };
+
+  const clearLocalDataForUserSwitch = async () => {
+    await localDb.clearAccountScopedData();
+    await Promise.all([
+      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
+      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AsyncStorage.removeItem(key)),
+      IdentityVault.destroyIdentity().catch(() => {}),
+    ]);
+  };
+
+  const prepareLocalStateForSession = async (userId: string) => {
+    const settings = await localDb.getSettings();
+    const storedUserId = settings?.userId ?? null;
+
+    if (storedUserId && storedUserId !== userId) {
+      logger.info('[auth] New account detected on device — clearing previous local user data');
+      await clearLocalDataForUserSwitch();
+      await bindLocalSettingsToUser(userId, true);
+      return;
+    }
+
+    await bindLocalSettingsToUser(userId, false);
+  };
 
   const restoreChartFromIdentityVault = async () => {
     try {
@@ -303,7 +386,7 @@ function AppShell() {
         // must not run at module eval time (iOS 26 New Architecture crash vector).
         logger.info('[init] step: webCrypto polyfill');
         try {
-          await import('expo-standard-web-crypto').then((m) => {
+          await loadWebCrypto().then((m) => {
             if (typeof m.polyfillWebCrypto === 'function') m.polyfillWebCrypto();
           });
         } catch (e) {
@@ -451,8 +534,8 @@ function AppShell() {
   // Deep-link routing from local notification taps
   useEffect(() => {
     let sub: { remove: () => void } | undefined;
-    import('expo-notifications').then((Notifications) => {
-      sub = Notifications.addNotificationResponseReceivedListener(response => {
+    loadNotifications().then((Notifications) => {
+      sub = Notifications.addNotificationResponseReceivedListener((response: import('expo-notifications').NotificationResponse) => {
         const route = response.notification.request.content.data?.route as string | undefined;
         if (route && ALLOWED_NOTIFICATION_ROUTES.has(route)) {
           router.push(route as import('expo-router').Href);
@@ -504,7 +587,10 @@ function AppShell() {
   // signing back in via AuthRequiredModal correctly navigates to home.
   useEffect(() => {
     if (!session) {
+      sessionBootstrapRef.current += 1;
       didNavigatePostOnboarding.current = false;
+      setCompletingOnboarding(false);
+      setSessionDataReady(false);
     }
   }, [session]);
 
@@ -512,13 +598,37 @@ function AppShell() {
   // Pull is sequenced after flush so that last_sync_at reflects local writes first.
   useEffect(() => {
     if (!session) return;
-    import('../services/storage/syncService').then(({ flushQueue, pullFromSupabase, syncBirthProfileFromLocal }) => {
-      (async () => {
+    const bootstrapId = ++sessionBootstrapRef.current;
+    setSessionDataReady(false);
+
+    const isStale = () => bootstrapId !== sessionBootstrapRef.current;
+
+    (async () => {
+      if (isStale()) return;
+      await prepareLocalStateForSession(session.user.id).catch((e) =>
+        logger.error('[auth] Failed to prepare local state for session:', e),
+      );
+      if (isStale()) return;
+
+      try {
+        const { flushQueue, pullFromSupabase, syncBirthProfileFromLocal } = await loadSyncService();
+        if (isStale()) return;
         await syncBirthProfileFromLocal().catch(() => {});
+        if (isStale()) return;
         await flushQueue().catch(() => {});
+        if (isStale()) return;
         await pullFromSupabase().catch(() => {});
-      })();
-    }).catch(() => {});
+      } catch (e) {
+        logger.error('[auth] Failed to load sync service for session bootstrap:', e);
+      }
+
+      if (isStale()) return;
+      await bindLocalSettingsToUser(session.user.id, false).catch(() => {});
+      if (isStale()) return;
+      await checkIfOnboardingCanBeSkipped().catch(() => false);
+      if (isStale()) return;
+      setSessionDataReady(true);
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
 
@@ -529,6 +639,7 @@ function AppShell() {
     if (
       onboardingComplete &&
       !!session &&
+      sessionDataReady &&
       !needsPrivacyConsent &&
       !didNavigatePostOnboarding.current
     ) {
@@ -536,14 +647,14 @@ function AppShell() {
       setCompletingOnboarding(false);
       router.replace('/(tabs)/home');
     }
-  }, [onboardingComplete, session, needsPrivacyConsent, router]);
+  }, [onboardingComplete, session, sessionDataReady, needsPrivacyConsent, router]);
 
   const handleOnboardingComplete = async (_chart?: import('../services/astrology/types').NatalChart) => {
     setCompletingOnboarding(true);
     setOnboardingComplete(true);
 
     try {
-      const { trackGrowthEvent } = await import('../services/growth/localAnalytics');
+      const { trackGrowthEvent } = await loadGrowthAnalytics();
       await trackGrowthEvent('onboarding_completed');
     } catch (e) {
       logger.error('[RootLayout] Failed to track onboarding_completed:', e);
@@ -555,14 +666,14 @@ function AppShell() {
   // Sentry must not run at module load or before bootstrap completes \u2014
   // its native TurboModule call was crashing on iOS 26 New Architecture.
   useEffect(() => {
-    if (!checkingConsent && dbReady && !authLoading && !didHideSplash.current) {
+    if (!checkingConsent && dbReady && !authLoading && (!session || sessionDataReady) && !didHideSplash.current) {
       didHideSplash.current = true;
       SplashScreen.hideAsync().catch(() => {});
-      import('../utils/sentry').then(({ initSentry }) => {
+      loadSentry().then(({ initSentry }) => {
         try { initSentry(); } catch { /* native module unavailable */ }
       }).catch(() => {});
     }
-  }, [checkingConsent, dbReady, authLoading]);
+  }, [checkingConsent, dbReady, authLoading, session, sessionDataReady]);
 
   if (checkingConsent || !dbReady) {
     if (initTimedOut) {
@@ -602,7 +713,7 @@ function AppShell() {
             }}
           >
             {/* Mount tabs only when privacy is satisfied and onboarding is complete with a valid session. */}
-            {!needsPrivacyConsent && onboardingComplete && !!session && <Stack.Screen name="(tabs)" />}
+            {!needsPrivacyConsent && onboardingComplete && !!session && sessionDataReady && <Stack.Screen name="(tabs)" />}
 
             {/* --- HIDDEN SCREENS (MODALS) --- */}
             {/* Slide up over the tab bar — dedicated workspaces */}

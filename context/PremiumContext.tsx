@@ -14,9 +14,11 @@ import Constants from 'expo-constants';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { logger } from '../utils/logger';
+import { useAuth } from './AuthContext';
 
 // Key set by demoSeedService for the reviewer account only
 const DEMO_PREMIUM_KEY = '@mysky:demo_premium';
+const DEMO_REVIEWER_EMAIL = 'brittanyapps@outlook.com';
 
 type PurchaseResult = { success: boolean; error?: string; userCancelled?: boolean };
 type RestoreResult = { success: boolean; hasPremium?: boolean; error?: string };
@@ -41,6 +43,7 @@ const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 const DEBUG_FORCE_PREMIUM = __DEV__ && Constants.expoConfig?.extra?.betaPremium === true;
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
+  const { session, loading: authLoading } = useAuth();
   const [isPremium, setIsPremium] = useState<boolean>(DEBUG_FORCE_PREMIUM);
   const [isReady, setIsReady] = useState(false);
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -48,6 +51,8 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   
   const isMounted = useRef(true);
+  const activeUserId = session?.user?.id ?? null;
+  const activeUserEmail = session?.user?.email ?? null;
 
   // ─── Logic ──────────────────────────────────────────────────────────────────
 
@@ -122,14 +127,29 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     let customerInfoListener: ((info: CustomerInfo) => void) | null = null;
 
     const init = async () => {
-      try {
-        // Check for demo-account premium override (set by demoSeedService)
-        const demoPremium = await EncryptedAsyncStorage.getItem(DEMO_PREMIUM_KEY);
-        if (demoPremium === 'true' && isMounted.current) {
-          setIsPremium(true);
+      if (authLoading) return;
+
+      if (isMounted.current) {
+        setCustomerInfo(null);
+        setOfferings(null);
+        setIsReady(false);
+        setIsPremium(DEBUG_FORCE_PREMIUM);
+      }
+
+      if (!activeUserId) {
+        if (isMounted.current) {
+          setIsReady(true);
         }
+        return;
+      }
+
+      try {
+        const hasDemoPremiumOverride =
+          activeUserEmail === DEMO_REVIEWER_EMAIL &&
+          (await EncryptedAsyncStorage.getItem(DEMO_PREMIUM_KEY)) === 'true';
 
         await revenueCatService.initialize();
+        await revenueCatService.logIn(activeUserId);
 
         // Register listener only AFTER configure() succeeds — the native
         // RevenueCat SDK throws an ObjC exception if a listener is added
@@ -139,6 +159,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         if (isMounted.current) {
           customerInfoListener = (info: CustomerInfo) => {
             updatePremiumState(info);
+            if (hasDemoPremiumOverride) {
+              setIsPremium(true);
+            }
           };
           try {
             const { default: Purchases } = await import('react-native-purchases');
@@ -158,6 +181,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         if (isMounted.current) {
           setOfferings(activeOfferings);
           updatePremiumState(info);
+          if (hasDemoPremiumOverride) {
+            setIsPremium(true);
+          }
           setIsReady(true);
           logger.info('[PremiumContext] System Ready');
         }
@@ -181,7 +207,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         }
       }
     };
-  }, [updatePremiumState]);
+  }, [activeUserEmail, activeUserId, authLoading, updatePremiumState]);
 
   // ─── Value ──────────────────────────────────────────────────────────────────
 

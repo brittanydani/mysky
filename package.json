@@ -16,6 +16,7 @@
     "lint": "expo lint",
     "test": "jest",
     "test:components": "jest --config jest.component.config.js",
+    "test:all": "npm test && npm run test:components",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",

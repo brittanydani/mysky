@@ -7,6 +7,7 @@ import { localDb } from '../services/storage/localDb';
 import { generateId } from '../services/storage/models';
 import * as Haptics from 'expo-haptics';
 import { logger } from '../utils/logger';
+import { toLocalDateString } from '../utils/dateUtils';
 
 export default function SanctuaryWorkspace() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function SanctuaryWorkspace() {
       const now = new Date().toISOString();
       await localDb.saveJournalEntry({
         id: generateId(),
-        date: now.split('T')[0],
+        date: toLocalDateString(),
         mood: 'calm',
         moonPhase: 'waning',
         content: entryText.trim(),

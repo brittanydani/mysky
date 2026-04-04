@@ -17,6 +17,7 @@ import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
 import { type RelationshipChart } from './models';
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
+import { toLocalDateString } from '../../utils/dateUtils';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ function uid(): string {
 }
 
 function isoDate(d: Date): string {
-  return d.toISOString().split('T')[0];
+  return toLocalDateString(d);
 }
 
 function daysBefore(n: number): Date {

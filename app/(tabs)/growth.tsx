@@ -167,6 +167,10 @@ export default function PatternsScreen() {
           const checkIns = await localDb.getCheckIns(chartId, 30);
           if (!checkIns.length) return;
 
+          const chronologicallySorted = [...checkIns].sort((a, b) =>
+            a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt)
+          );
+
           const moods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
           const avgMood = moods.length
             ? Math.round((moods.reduce((a, b) => a + b, 0) / moods.length) * 10) / 10
@@ -180,11 +184,15 @@ export default function PatternsScreen() {
             return null;
           };
           let stressTrend: SnapshotData['stressTrend'] = null;
-          const stresses = checkIns.map(c => levelToScore(c.stressLevel)).filter((v): v is number => v != null);
+          const stresses = chronologicallySorted
+            .map(c => levelToScore(c.stressLevel))
+            .filter((v): v is number => v != null);
           if (stresses.length >= 4) {
             const half = Math.floor(stresses.length / 2);
-            const older = stresses.slice(half).reduce((a, b) => a + b, 0) / (stresses.length - half);
-            const newer = stresses.slice(0, half).reduce((a, b) => a + b, 0) / half;
+            const olderWindow = stresses.slice(0, half);
+            const newerWindow = stresses.slice(stresses.length - half);
+            const older = olderWindow.reduce((a, b) => a + b, 0) / olderWindow.length;
+            const newer = newerWindow.reduce((a, b) => a + b, 0) / newerWindow.length;
             if (newer < older - 0.5) stressTrend = 'improving';
             else if (newer > older + 0.5) stressTrend = 'worsening';
             else stressTrend = 'stable';
@@ -194,8 +202,7 @@ export default function PatternsScreen() {
             ? Math.round((stresses.reduce((a, b) => a + b, 0) / stresses.length) * 10) / 10
             : null;
 
-          const sorted = [...checkIns].sort((a, b) => a.date.localeCompare(b.date));
-          setTrendCheckIns(sorted);
+          setTrendCheckIns(chronologicallySorted);
           setSnapshot({ avgMood, avgStress, checkInCount: checkIns.length, stressTrend });
 
           // ── Self-knowledge cross-reference (all users) ──

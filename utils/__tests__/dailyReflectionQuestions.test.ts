@@ -8,8 +8,8 @@ describe('dailyReflectionQuestions', () => {
       expect(QUESTION_BANKS).toHaveProperty('cognitive');
     });
 
-    it('values bank has 365 questions', () => {
-      expect(QUESTION_BANKS.values).toHaveLength(365);
+    it('values bank has 465 questions', () => {
+      expect(QUESTION_BANKS.values).toHaveLength(465);
     });
 
     it('each question has id and text', () => {

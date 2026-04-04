@@ -8,7 +8,7 @@
 
 import * as Sentry from '@sentry/react-native';
 
-const DSN = 'https://1f281c7a5f0446fde743f72be52cb913@o4510932447461376.ingest.us.sentry.io/4511156754513920';
+const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim() ?? '';
 
 /**
  * Call once at app startup (before any other code runs).

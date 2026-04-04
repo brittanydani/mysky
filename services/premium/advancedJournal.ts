@@ -4,7 +4,7 @@
 
 import { NatalChart, SimpleAspect } from '../astrology/types';
 import { getTransitingLongitudes, computeTransitAspectsToNatal } from '../astrology/transits';
-import { toLocalDateString } from '../../utils/dateUtils';
+import { parseLocalDate, toLocalDateString } from '../../utils/dateUtils';
 import { getMoonPhaseName } from '../../utils/moonPhase';
 import { signNameFromLongitude } from '../astrology/sharedHelpers';
 
@@ -120,6 +120,12 @@ interface TransitMoodCorrelation {
   copingTip: string;
 }
 
+interface ParsedTransitDescriptor {
+  transitingPlanet: string;
+  aspectType: string;
+  natalPlanet: string;
+}
+
 const KNOWN_TRANSIT_CORRELATIONS: TransitMoodCorrelation[] = [
   {
     transit: 'Moon conjunct natal Moon',
@@ -182,6 +188,41 @@ const KNOWN_TRANSIT_CORRELATIONS: TransitMoodCorrelation[] = [
     copingTip: 'Notice the pull. What do you need vs. who are you trying to be?',
   },
 ];
+
+function normalizeTransitPart(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function parseTransitDescriptor(transit: string): ParsedTransitDescriptor | null {
+  const match = transit.match(/^(.+?)\s+(\S+)\s+natal\s+(.+)$/i);
+  if (!match) return null;
+
+  return {
+    transitingPlanet: normalizeTransitPart(match[1]),
+    aspectType: normalizeTransitPart(match[2]),
+    natalPlanet: normalizeTransitPart(match[3]),
+  };
+}
+
+function findKnownTransitCorrelation(
+  transitingPlanet: string,
+  aspectType: string,
+  natalPlanet: string,
+): TransitMoodCorrelation | undefined {
+  const target = {
+    transitingPlanet: normalizeTransitPart(transitingPlanet),
+    aspectType: normalizeTransitPart(aspectType),
+    natalPlanet: normalizeTransitPart(natalPlanet),
+  };
+
+  return KNOWN_TRANSIT_CORRELATIONS.find((correlation) => {
+    const parsed = parseTransitDescriptor(correlation.transit);
+    return !!parsed
+      && parsed.transitingPlanet === target.transitingPlanet
+      && parsed.aspectType === target.aspectType
+      && parsed.natalPlanet === target.natalPlanet;
+  });
+}
 
 // ============================================================================
 // PATTERN DETECTION LOGIC
@@ -266,6 +307,9 @@ export class AdvancedJournalAnalyzer {
   private static findTransitMoodCorrelations(entries: JournalEntryMeta[]): PatternInsight[] {
     const insights: PatternInsight[] = [];
     const transitMoodMap: Map<string, number[]> = new Map();
+    const overallAvg = this.calculateOverallAverageMood(entries);
+
+    if (overallAvg === null) return insights;
 
     // Group mood scores by transit type
     for (const entry of entries) {
@@ -284,14 +328,15 @@ export class AdvancedJournalAnalyzer {
       if (moods.length < 3) continue; // Need at least 3 data points
 
       const avgMood = moods.reduce((a, b) => a + b, 0) / moods.length;
-      const overallAvg = this.calculateOverallAverageMood(entries);
-      if (overallAvg === null) continue;
-
       const diff = avgMood - overallAvg;
-      const knownCorrelation = KNOWN_TRANSIT_CORRELATIONS.find(
-        c => transit.toLowerCase().includes(c.transit.toLowerCase().split(' ')[0]) &&
-             transit.toLowerCase().includes(c.transit.toLowerCase().split(' ')[1])
-      );
+      const descriptor = parseTransitDescriptor(transit);
+      const knownCorrelation = descriptor
+        ? findKnownTransitCorrelation(
+            descriptor.transitingPlanet,
+            descriptor.aspectType,
+            descriptor.natalPlanet,
+          )
+        : undefined;
 
       if (Math.abs(diff) > 0.5) {
         const effect = diff > 0 ? 'elevates' : 'challenges';
@@ -302,10 +347,10 @@ export class AdvancedJournalAnalyzer {
           icon: effect === 'elevates' ? 'sunny-outline' : 'rainy-outline',
           title: `${transit}`,
           description: diff > 0
-            ? `Your mood tends to be ${Math.abs(diff).toFixed(1)} points higher when this transit is active.`
-            : `Your mood tends to be ${Math.abs(diff).toFixed(1)} points lower when this transit is active.`,
+            ? `When this transit is one of the strongest active influences, your mood has tended to run about ${Math.abs(diff).toFixed(1)} points higher than your usual baseline.`
+            : `When this transit is one of the strongest active influences, your mood has tended to run about ${Math.abs(diff).toFixed(1)} points lower than your usual baseline.`,
           confidence,
-          evidence: `Based on ${moods.length} journal entries with this transit.`,
+          evidence: `Based on ${moods.length} journal entries where this was among the closest transit aspects.`,
           actionable: knownCorrelation?.copingTip || 
             (effect === 'challenges' 
               ? 'Be extra gentle with yourself during these times.'
@@ -347,9 +392,9 @@ export class AdvancedJournalAnalyzer {
           icon: 'moon-outline',
           title: `${phase} Pattern`,
           description: diff > 0
-            ? `You tend to feel better during the ${phase} (avg mood: ${avgMood.toFixed(1)}).`
-            : `The ${phase} can be more challenging for you (avg mood: ${avgMood.toFixed(1)}).`,
-          confidence: moods.length >= 4 ? 'suggested' : 'emerging',
+            ? `In your logged entries, the ${phase} tends to line up with somewhat better days (avg mood: ${avgMood.toFixed(1)}).`
+            : `In your logged entries, the ${phase} tends to line up with more tender days (avg mood: ${avgMood.toFixed(1)}).`,
+          confidence: moods.length >= 8 ? 'strong' : 'suggested',
           evidence: `Based on ${moods.length} entries during this phase.`,
           actionable: diff < 0
             ? `Plan extra self-care during ${phase} times.`
@@ -377,18 +422,25 @@ export class AdvancedJournalAnalyzer {
     }
 
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const maxDay = [...dayMap.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];
-    
-    if (maxDay && maxDay[1] >= 3) {
+    const sortedDays = [...dayMap.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+    const maxDay = sortedDays[0];
+    const nextDayCount = sortedDays[1]?.[1] ?? 0;
+
+    if (maxDay) {
+      const dominantShare = maxDay[1] / entries.length;
+      const lead = maxDay[1] - nextDayCount;
+
+      if (maxDay[1] >= 4 && dominantShare >= 0.3 && lead >= 1) {
       insights.push({
         type: 'timing_pattern',
         icon: 'calendar-outline',
         title: `${days[maxDay[0]]} Journaler`,
-        description: `You write most often on ${days[maxDay[0]]}s.`,
-        confidence: 'suggested',
-        evidence: `${maxDay[1]} entries on ${days[maxDay[0]]}s.`,
-        actionable: `Consider setting a gentle reminder for your other days too.`,
+        description: `You journal more often on ${days[maxDay[0]]}s than on other days.`,
+        confidence: maxDay[1] >= 6 && dominantShare >= 0.4 ? 'strong' : 'suggested',
+        evidence: `${maxDay[1]} of ${entries.length} entries landed on ${days[maxDay[0]]}s.`,
+        actionable: `Consider whether something about ${days[maxDay[0]]} makes reflection easier for you.`,
       });
+      }
     }
 
     return insights;
@@ -400,6 +452,9 @@ export class AdvancedJournalAnalyzer {
   private static findTagPatterns(entries: JournalEntryMeta[]): PatternInsight[] {
     const insights: PatternInsight[] = [];
     const tagMoodMap: Map<string, number[]> = new Map();
+    const overallAvg = this.calculateOverallAverageMood(entries);
+
+    if (overallAvg === null) return insights;
 
     for (const entry of entries) {
       if (!entry.mood || !entry.tags) continue;
@@ -415,24 +470,25 @@ export class AdvancedJournalAnalyzer {
       if (moods.length < 5) continue; // Need at least 5 entries for reliable tag patterns
 
       const avgMood = moods.reduce((a, b) => a + b, 0) / moods.length;
+      const diff = avgMood - overallAvg;
 
-      if (avgMood >= 4) {
+      if (diff >= 0.4) {
         insights.push({
           type: 'theme_pattern',
           icon: 'happy-outline',
           title: `"${tag}" — Good Days`,
-          description: `Entries tagged "${tag}" have an average mood of ${avgMood.toFixed(1)}.`,
-          confidence: moods.length >= 3 ? 'suggested' : 'emerging',
+          description: `When "${tag}" appears, your mood has tended to run about ${diff.toFixed(1)} points above your usual baseline.`,
+          confidence: moods.length >= 8 ? 'strong' : 'suggested',
           evidence: `Based on ${moods.length} entries with this tag.`,
           actionable: `"${tag}" seems to correlate with better days for you.`,
         });
-      } else if (avgMood <= 2.5) {
+      } else if (diff <= -0.4) {
         insights.push({
           type: 'theme_pattern',
           icon: 'heart-outline',
           title: `"${tag}" — Tender Days`,
-          description: `Entries tagged "${tag}" have an average mood of ${avgMood.toFixed(1)}.`,
-          confidence: moods.length >= 3 ? 'suggested' : 'emerging',
+          description: `When "${tag}" appears, your mood has tended to run about ${Math.abs(diff).toFixed(1)} points below your usual baseline.`,
+          confidence: moods.length >= 8 ? 'strong' : 'suggested',
           evidence: `Based on ${moods.length} entries with this tag.`,
           actionable: `When "${tag}" themes arise, extra self-compassion helps.`,
         });
@@ -478,46 +534,53 @@ export class AdvancedJournalAnalyzer {
     const entriesWithMood = entries.filter(e => e.mood);
     const avgMood = this.calculateOverallAverageMood(entries);
 
-    // Calculate streak
-    const sortedEntries = [...entries].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    // Calculate streaks from unique entry dates so same-day journaling does not inflate counts.
+    const sortedDates = [...new Set(entries.map(entry => entry.date))].sort(
+      (a, b) => parseLocalDate(b).getTime() - parseLocalDate(a).getTime()
     );
-    
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-    let lastDate: Date | null = null;
 
-    for (const entry of sortedEntries) {
-      const entryDate = new Date(entry.date);
-      if (lastDate) {
-        const dayDiff = Math.floor((lastDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (dayDiff === 1) {
-          tempStreak++;
-        } else {
-          longestStreak = Math.max(longestStreak, tempStreak);
-          tempStreak = 1;
-        }
+    let longestStreak = 0;
+    let runningStreak = 0;
+    for (let index = 0; index < sortedDates.length; index++) {
+      if (index === 0) {
+        runningStreak = 1;
       } else {
-        tempStreak = 1;
+        const previous = parseLocalDate(sortedDates[index - 1]);
+        const current = parseLocalDate(sortedDates[index]);
+        const dayDiff = Math.floor((previous.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
+        runningStreak = dayDiff === 1 ? runningStreak + 1 : 1;
       }
-      lastDate = entryDate;
+      longestStreak = Math.max(longestStreak, runningStreak);
     }
-    longestStreak = Math.max(longestStreak, tempStreak);
+
+    let currentStreak = 0;
+    if (sortedDates.length > 0) {
+      currentStreak = 1;
+      for (let index = 1; index < sortedDates.length; index++) {
+        const previous = parseLocalDate(sortedDates[index - 1]);
+        const current = parseLocalDate(sortedDates[index]);
+        const dayDiff = Math.floor((previous.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
+        if (dayDiff === 1) currentStreak += 1;
+        else break;
+      }
+    }
 
     // Check if streak is current
-    if (sortedEntries.length > 0) {
-      const today = new Date();
-      const lastEntry = new Date(sortedEntries[0].date);
+    if (sortedDates.length > 0) {
+      const today = parseLocalDate(toLocalDateString());
+      const lastEntry = parseLocalDate(sortedDates[0]);
       const daysSince = Math.floor((today.getTime() - lastEntry.getTime()) / (1000 * 60 * 60 * 24));
-      currentStreak = daysSince <= 1 ? tempStreak : 0;
+      currentStreak = daysSince <= 1 ? currentStreak : 0;
     }
 
     // Mood trend (last 7 entries vs previous 7)
     let moodTrend: 'improving' | 'stable' | 'declining' | 'variable' = 'stable';
     if (entriesWithMood.length >= 14) {
-      const recent = entriesWithMood.slice(0, 7);
-      const previous = entriesWithMood.slice(7, 14);
+      const sortedEntriesWithMood = [...entriesWithMood].sort(
+        (a, b) => parseLocalDate(b.date).getTime() - parseLocalDate(a.date).getTime()
+      );
+      const recent = sortedEntriesWithMood.slice(0, 7);
+      const previous = sortedEntriesWithMood.slice(7, 14);
       const recentAvg = recent.reduce((a, e) => a + (e.mood?.overall || 3), 0) / 7;
       const prevAvg = previous.reduce((a, e) => a + (e.mood?.overall || 3), 0) / 7;
       const diff = recentAvg - prevAvg;
@@ -568,23 +631,24 @@ export class AdvancedJournalAnalyzer {
     if (!strongestAspect) return null;
 
     const transitDesc = `${strongestAspect.transitingPlanet} ${strongestAspect.aspectType} your natal ${strongestAspect.natalPlanet}`;
-    
-    const knownCorrelation = KNOWN_TRANSIT_CORRELATIONS.find(c => 
-      c.transit.toLowerCase().includes(strongestAspect.natalPlanet.toLowerCase()) &&
-      c.transit.toLowerCase().includes(strongestAspect.aspectType.toLowerCase())
+
+    const knownCorrelation = findKnownTransitCorrelation(
+      strongestAspect.transitingPlanet,
+      strongestAspect.aspectType,
+      strongestAspect.natalPlanet,
     );
 
     if (knownCorrelation) {
-      return `You felt this way because ${transitDesc}. ${knownCorrelation.description}`;
+      return `This entry may have been colored by ${transitDesc}. ${knownCorrelation.description}`;
     }
 
     // Generic insight based on aspect type
     if (strongestAspect.aspectType === 'conjunction') {
-      return `The Moon was merging with your natal ${strongestAspect.natalPlanet}, intensifying ${strongestAspect.natalPlanet.toLowerCase()} themes in your emotional experience.`;
+      return `A conjunction with your natal ${strongestAspect.natalPlanet} may have intensified ${strongestAspect.natalPlanet.toLowerCase()} themes in your emotional experience.`;
     } else if (strongestAspect.aspectType === 'square' || strongestAspect.aspectType === 'opposition') {
-      return `There was tension between the transiting ${strongestAspect.transitingPlanet} and your natal ${strongestAspect.natalPlanet}. This friction often surfaces emotions that need attention.`;
+      return `There may have been friction between the transiting ${strongestAspect.transitingPlanet} and your natal ${strongestAspect.natalPlanet}. These aspects can surface emotions that need attention.`;
     } else {
-      return `The ${strongestAspect.transitingPlanet} was harmonizing with your natal ${strongestAspect.natalPlanet}, creating supportive energy for ${strongestAspect.natalPlanet.toLowerCase()}-related experiences.`;
+      return `The transiting ${strongestAspect.transitingPlanet} may have been supporting ${strongestAspect.natalPlanet.toLowerCase()} themes for you here.`;
     }
   }
 }

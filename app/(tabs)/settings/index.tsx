@@ -1109,7 +1109,7 @@ export default function SettingsScreen() {
                   onPress={() => {
                     Alert.alert(
                       'Delete Account',
-                      'This will permanently delete your account and all associated data. Your local app data (charts, journals, check-ins) will remain on this device. This cannot be undone.',
+                      'This will permanently delete your account and synced data. Local data already on this device is not erased immediately, but it will not be reused by a different signed-in account. This cannot be undone.',
                       [
                         { text: 'Cancel', style: 'cancel' },
                         {

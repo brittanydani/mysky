@@ -16,6 +16,7 @@ import {
   computeKeywordLift,
   computeEmotionBucketLift,
   computeJournalingImpact,
+  computeWeeklyConsistency,
   computeStreakImpact,
   computeEmotionalProcessing,
 } from '../journalInsights';
@@ -354,6 +355,18 @@ describe('computeJournalingImpact', () => {
     expect(result!.stat).toMatch(/effect/);
   });
 
+  it('uses associative rather than causal wording', () => {
+    const journalDays = makeAggregates(8, { journalCount: 1, journalWordCount: 200 });
+    journalDays.forEach((d, i) => { d.moodAvg = 7.5 + (i % 2 === 0 ? 0.5 : -0.5); });
+    const noJournalDays = makeAggregates(8, { journalCount: 0, journalWordCount: 0 }, '2026-02-01');
+    noJournalDays.forEach((d, i) => { d.moodAvg = 3.5 + (i % 2 === 0 ? 0.5 : -0.5); });
+
+    const result = computeJournalingImpact([...journalDays, ...noJournalDays]);
+    expect(result).not.toBeNull();
+    expect(result!.insight).toMatch(/tend to|often|suggest/i);
+    expect(result!.insight).not.toMatch(/lifts your mood|benefits from journaling/i);
+  });
+
   it('returns null when effect size is negligible', () => {
     // Mood difference exists (5.1 vs 5.0) but effect size is tiny
     const aggs = [
@@ -361,6 +374,39 @@ describe('computeJournalingImpact', () => {
       ...makeAggregates(6, { journalCount: 0, moodAvg: 5.0 }, '2026-02-01'),
     ];
     expect(computeJournalingImpact(aggs)).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeWeeklyConsistency
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeWeeklyConsistency', () => {
+  it('returns null when there are not at least two consistent and two inconsistent weeks', () => {
+    const aggs = [
+      ...makeAggregates(7, { journalCount: 1, moodAvg: 6 }, '2026-01-01'),
+      ...makeAggregates(7, { journalCount: 0, moodAvg: 4 }, '2026-01-08'),
+      ...makeAggregates(7, { journalCount: 1, moodAvg: 6.2 }, '2026-01-15'),
+    ];
+
+    expect(computeWeeklyConsistency(aggs)).toBeNull();
+  });
+
+  it('returns a card when there are enough week groups on both sides', () => {
+    const consistentWeek1 = makeAggregates(7, { journalCount: 1, moodAvg: 6.4 }, '2026-01-05');
+    const inconsistentWeek1 = makeAggregates(7, { journalCount: 0, moodAvg: 4.2 }, '2026-01-12');
+    const consistentWeek2 = makeAggregates(7, { journalCount: 1, moodAvg: 6.1 }, '2026-01-19');
+    const inconsistentWeek2 = makeAggregates(7, { journalCount: 0, moodAvg: 4.0 }, '2026-01-26');
+
+    const result = computeWeeklyConsistency([
+      ...consistentWeek1,
+      ...inconsistentWeek1,
+      ...consistentWeek2,
+      ...inconsistentWeek2,
+    ]);
+
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe('weekly_consistency');
   });
 });
 
@@ -408,6 +454,25 @@ describe('computeStreakImpact', () => {
       aggs[i].journalCount = 1;
     }
     expect(computeStreakImpact(aggs)).toBeNull();
+  });
+
+  it('uses comparative rather than causal wording', () => {
+    const aggs = makeAggregates(14);
+    for (let i = 0; i < 5; i++) {
+      aggs[i].journalCount = 1;
+      aggs[i].moodAvg = 8;
+    }
+    aggs[6].journalCount = 1;
+    aggs[6].moodAvg = 5;
+    aggs[8].journalCount = 1;
+    aggs[8].moodAvg = 5;
+    aggs[10].journalCount = 1;
+    aggs[10].moodAvg = 5;
+
+    const result = computeStreakImpact(aggs);
+    expect(result).not.toBeNull();
+    expect(result!.insight).toMatch(/tends to|looks fairly small/i);
+    expect(result!.insight).not.toMatch(/lifts your mood|benefits from journaling/i);
   });
 });
 

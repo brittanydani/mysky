@@ -53,6 +53,7 @@ export interface DailyInsight {
   mantra: string;
   moonSign: string;
   moonPhase: string;
+  intensity: 'calm' | 'moderate' | 'intense';
   // "Why this?" section for trust/transparency
   signals: {
     description: string;
@@ -908,6 +909,26 @@ function getAspectTone(aspect: AspectTypeName): { adjective: string; guidance: s
   }
 }
 
+function getHouseBoundaries(
+  natalChart: NatalChart
+): Array<{ house: number; absoluteDegree: number }> {
+  if (Array.isArray(natalChart.houses) && natalChart.houses.length > 0) {
+    return natalChart.houses
+      .filter(h => typeof h?.absoluteDegree === 'number' && Number.isFinite(h.absoluteDegree))
+      .map(h => ({ house: h.house, absoluteDegree: normalize360(h.absoluteDegree) }))
+      .sort((a, b) => a.absoluteDegree - b.absoluteDegree);
+  }
+
+  if (Array.isArray(natalChart.houseCusps) && natalChart.houseCusps.length > 0) {
+    return natalChart.houseCusps
+      .filter(c => typeof c?.longitude === 'number' && Number.isFinite(c.longitude))
+      .map(c => ({ house: c.house, absoluteDegree: normalize360(c.longitude) }))
+      .sort((a, b) => a.absoluteDegree - b.absoluteDegree);
+  }
+
+  return [];
+}
+
 /**
  * Tries to find the natal house of a target point/planet so domain can be more “life-area accurate”.
  * Returns undefined if not available (unknown time / no houses / no match).
@@ -921,28 +942,28 @@ function getNatalHouseForTarget(natalChart: NatalChart, target: string): number 
     }
   }
 
+  if (target === 'Ascendant') return 1;
+  if (target === 'Midheaven') return 10;
+
   // If target is an angle, map by name if you have houses + angles degrees
   if (target === 'Ascendant' || target === 'Midheaven') {
     const angle = Array.isArray(natalChart.angles)
       ? natalChart.angles.find(a => a?.name === target)
       : undefined;
 
-    if (angle && typeof angle.absoluteDegree === 'number' && Array.isArray(natalChart.houses)) {
+    const houses = getHouseBoundaries(natalChart);
+
+    if (angle && typeof angle.absoluteDegree === 'number' && houses.length === 12) {
       const deg = normalize360(angle.absoluteDegree);
-      const houses = natalChart.houses
-        .filter(h => typeof h.absoluteDegree === 'number' && Number.isFinite(h.absoluteDegree))
-        .sort((a, b) => normalize360(a.absoluteDegree) - normalize360(b.absoluteDegree));
 
-      if (houses.length === 12) {
-        for (let i = 0; i < 12; i++) {
-          const current = normalize360(houses[i].absoluteDegree);
-          const next = normalize360(houses[(i + 1) % 12].absoluteDegree);
+      for (let i = 0; i < 12; i++) {
+        const current = normalize360(houses[i].absoluteDegree);
+        const next = normalize360(houses[(i + 1) % 12].absoluteDegree);
 
-          const inHouse =
-            current < next ? deg >= current && deg < next : deg >= current || deg < next;
+        const inHouse =
+          current < next ? deg >= current && deg < next : deg >= current || deg < next;
 
-          if (inHouse) return houses[i].house;
-        }
+        if (inHouse) return houses[i].house;
       }
     }
   }
@@ -1022,6 +1043,7 @@ export class DailyInsightEngine {
 
     // 10. Calculate timeline info
     const timeline = this.calculateTimeline(topSignals, date);
+    const intensity = this.classifyIntensity(topSignals);
 
     return {
       date: toLocalDateString(date),
@@ -1031,9 +1053,27 @@ export class DailyInsightEngine {
       mantra,
       moonSign,
       moonPhase,
+      intensity,
       signals: signalDescriptions,
       timeline,
     };
+  }
+
+  private static classifyIntensity(
+    signals: TransitSignal[]
+  ): 'calm' | 'moderate' | 'intense' {
+    if (signals.length === 0) return 'calm';
+
+    const topScore = signals[0].score;
+    const exactSignals = signals.filter(s => s.orb <= 1).length;
+    const challengingSignals = signals.filter(
+      s => s.aspectType === 'conjunction' || s.aspectType === 'square' || s.aspectType === 'opposition'
+    ).length;
+    const intensityScore = topScore + exactSignals * 1.5 + Math.min(challengingSignals, 2) * 0.75;
+
+    if (intensityScore >= 18) return 'intense';
+    if (intensityScore >= 11) return 'moderate';
+    return 'calm';
   }
 
   /**
@@ -1205,6 +1245,14 @@ export class DailyInsightEngine {
           positions[a.name] = normalize360(a.absoluteDegree);
         }
       }
+    }
+
+    if (typeof natalChart.ascendant?.longitude === 'number' && positions.Ascendant == null) {
+      positions.Ascendant = normalize360(natalChart.ascendant.longitude);
+    }
+
+    if (typeof natalChart.midheaven?.longitude === 'number' && positions.Midheaven == null) {
+      positions.Midheaven = normalize360(natalChart.midheaven.longitude);
     }
 
     return positions;
@@ -1380,11 +1428,12 @@ export class DailyInsightEngine {
     const moonDeg = transits['Moon'];
     if (moonDeg == null) return 1;
 
-    // Check house cusps
-    if (natalChart.houses) {
-      for (let i = 0; i < natalChart.houses.length; i++) {
-        const currentCusp = natalChart.houses[i].absoluteDegree;
-        const nextCusp = natalChart.houses[(i + 1) % 12].absoluteDegree;
+    const houses = getHouseBoundaries(natalChart);
+
+    if (houses.length === 12) {
+      for (let i = 0; i < houses.length; i++) {
+        const currentCusp = houses[i].absoluteDegree;
+        const nextCusp = houses[(i + 1) % 12].absoluteDegree;
 
         // Handle wrap-around at 0°
         let inHouse = false;
@@ -1394,7 +1443,7 @@ export class DailyInsightEngine {
           inHouse = moonDeg >= currentCusp || moonDeg < nextCusp;
         }
 
-        if (inHouse) return natalChart.houses[i].house;
+        if (inHouse) return houses[i].house;
       }
     }
 

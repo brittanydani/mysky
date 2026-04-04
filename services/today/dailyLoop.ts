@@ -210,10 +210,12 @@ export async function getWeeklyReflection(chartId: string): Promise<WeeklyReflec
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const fourteenDaysAgo = new Date(now);
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const sevenDaysAgoKey = toLocalDateString(sevenDaysAgo);
+    const fourteenDaysAgoKey = toLocalDateString(fourteenDaysAgo);
 
-    const thisWeek = checkIns.filter(c => new Date(c.date) >= sevenDaysAgo);
+    const thisWeek = checkIns.filter(c => c.date >= sevenDaysAgoKey);
     const lastWeek = checkIns.filter(
-      c => new Date(c.date) >= fourteenDaysAgo && new Date(c.date) < sevenDaysAgo,
+      c => c.date >= fourteenDaysAgoKey && c.date < sevenDaysAgoKey,
     );
 
     const thisWeekMoods = thisWeek.map(c => c.moodScore).filter(Boolean) as number[];
@@ -237,7 +239,7 @@ export async function getWeeklyReflection(chartId: string): Promise<WeeklyReflec
     let journalCount = 0;
     try {
       const journals = await localDb.getJournalEntries();
-      journalCount = journals.filter(j => new Date(j.date) >= sevenDaysAgo).length;
+      journalCount = journals.filter(j => j.date >= sevenDaysAgoKey).length;
     } catch {
       // Journal lookup can fail if table doesn't exist yet
     }
@@ -466,12 +468,14 @@ async function getPatternInsight(chartId: string): Promise<DailyInsight | null> 
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const fourteenDaysAgo = new Date(now);
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const sevenDaysAgoKey = toLocalDateString(sevenDaysAgo);
+    const fourteenDaysAgoKey = toLocalDateString(fourteenDaysAgo);
 
     const thisWeekMoods = checkIns
-      .filter(c => c.moodScore != null && new Date(c.date) >= sevenDaysAgo)
+      .filter(c => c.moodScore != null && c.date >= sevenDaysAgoKey)
       .map(c => c.moodScore as number);
     const lastWeekMoods = checkIns
-      .filter(c => c.moodScore != null && new Date(c.date) >= fourteenDaysAgo && new Date(c.date) < sevenDaysAgo)
+      .filter(c => c.moodScore != null && c.date >= fourteenDaysAgoKey && c.date < sevenDaysAgoKey)
       .map(c => c.moodScore as number);
 
     if (thisWeekMoods.length < 3 || lastWeekMoods.length < 3) return null;

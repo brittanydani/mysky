@@ -6,8 +6,6 @@
  * demo seed triggering.
  */
 
-// ── Mocks ────────────────────────────────────────────────────────────────────
-
 const mockGetSession = jest.fn();
 const mockSignOut = jest.fn();
 const mockOnAuthStateChange = jest.fn();
@@ -31,8 +29,8 @@ const mockRevenueCatLogOut = jest.fn();
 
 jest.mock('../../services/premium/revenuecat', () => ({
   revenueCatService: {
-    logIn: (...args: unknown[]) => mockRevenueCatLogIn(...args),
-    logOut: () => mockRevenueCatLogOut(),
+    logIn: (...args: unknown[]) => Promise.resolve(mockRevenueCatLogIn(...args)),
+    logOut: () => Promise.resolve(mockRevenueCatLogOut()),
   },
 }));
 
@@ -41,6 +39,15 @@ const mockSeedIfNeeded = jest.fn().mockResolvedValue(undefined);
 jest.mock('../../services/storage/demoSeedService', () => ({
   DemoSeedService: {
     seedIfNeeded: (...args: unknown[]) => mockSeedIfNeeded(...args),
+  },
+}));
+
+const mockClearSyncQueue = jest.fn().mockResolvedValue(undefined);
+
+jest.mock('../../services/storage/localDb', () => ({
+  __esModule: true,
+  localDb: {
+    clearSyncQueue: () => mockClearSyncQueue(),
   },
 }));
 
@@ -55,7 +62,6 @@ jest.mock('../../utils/logger', () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-// Mock all Zustand stores referenced in signOut
 const mockClearCache = jest.fn();
 const mockClearScene = jest.fn();
 const mockResetStatus = jest.fn();
@@ -84,22 +90,20 @@ import { render, waitFor, act } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 
-// Simple consumer that renders auth state
 function AuthConsumer() {
   const { session, loading, signOut, user } = useAuth();
-  return (
-    <>
-      <Text testID="loading">{String(loading)}</Text>
-      <Text testID="session">{session ? 'active' : 'none'}</Text>
-      <Text testID="user-id">{user?.id ?? 'no-user'}</Text>
-      <Text testID="signout" onPress={signOut}>Sign Out</Text>
-    </>
+  return React.createElement(
+    React.Fragment,
+    null,
+    React.createElement(Text, { testID: 'loading' }, String(loading)),
+    React.createElement(Text, { testID: 'session' }, session ? 'active' : 'none'),
+    React.createElement(Text, { testID: 'user-id' }, user?.id ?? 'no-user'),
+    React.createElement(Text, { testID: 'signout', onPress: signOut }, 'Sign Out'),
   );
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // Default: return a subscriber with no-op unsubscribe
   mockOnAuthStateChange.mockReturnValue({
     data: { subscription: { unsubscribe: jest.fn() } },
   });
@@ -112,7 +116,7 @@ describe('Auth Workflow', () => {
       mockGetSession.mockResolvedValue({ data: { session: mockSession }, error: null });
 
       const { getByTestId } = render(
-        <AuthProvider><AuthConsumer /></AuthProvider>,
+        React.createElement(AuthProvider, null, React.createElement(AuthConsumer)),
       );
 
       await waitFor(() => {
@@ -130,7 +134,7 @@ describe('Auth Workflow', () => {
         .mockResolvedValue({ data: { session: null }, error: null });
 
       const { getByTestId } = render(
-        <AuthProvider><AuthConsumer /></AuthProvider>,
+        React.createElement(AuthProvider, null, React.createElement(AuthConsumer)),
       );
 
       await waitFor(() => {
@@ -142,11 +146,10 @@ describe('Auth Workflow', () => {
     });
 
     it('sets loading false after max retries exhausted', async () => {
-      mockGetSession
-        .mockRejectedValue(new Error('Persistent failure'));
+      mockGetSession.mockRejectedValue(new Error('Persistent failure'));
 
       const { getByTestId } = render(
-        <AuthProvider><AuthConsumer /></AuthProvider>,
+        React.createElement(AuthProvider, null, React.createElement(AuthConsumer)),
       );
 
       await waitFor(() => {
@@ -161,7 +164,7 @@ describe('Auth Workflow', () => {
     it('registers onAuthStateChange on mount', async () => {
       mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
 
-      render(<AuthProvider><AuthConsumer /></AuthProvider>);
+      render(React.createElement(AuthProvider, null, React.createElement(AuthConsumer)));
 
       await waitFor(() => {
         expect(mockOnAuthStateChange).toHaveBeenCalledTimes(1);
@@ -171,19 +174,18 @@ describe('Auth Workflow', () => {
     it('triggers RevenueCat logIn on SIGNED_IN event', async () => {
       mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
 
-      let authCallback: Function;
+      let authCallback: Function = () => {};
       mockOnAuthStateChange.mockImplementation((cb: Function) => {
         authCallback = cb;
         return { data: { subscription: { unsubscribe: jest.fn() } } };
       });
 
-      render(<AuthProvider><AuthConsumer /></AuthProvider>);
+      render(React.createElement(AuthProvider, null, React.createElement(AuthConsumer)));
 
       await waitFor(() => {
         expect(mockOnAuthStateChange).toHaveBeenCalled();
       });
 
-      // Simulate SIGNED_IN event
       act(() => {
         authCallback('SIGNED_IN', { user: { id: 'new-user', email: 'demo@test.com' } });
       });
@@ -195,13 +197,13 @@ describe('Auth Workflow', () => {
     it('triggers RevenueCat logOut on SIGNED_OUT event', async () => {
       mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
 
-      let authCallback: Function;
+      let authCallback: Function = () => {};
       mockOnAuthStateChange.mockImplementation((cb: Function) => {
         authCallback = cb;
         return { data: { subscription: { unsubscribe: jest.fn() } } };
       });
 
-      render(<AuthProvider><AuthConsumer /></AuthProvider>);
+      render(React.createElement(AuthProvider, null, React.createElement(AuthConsumer)));
 
       await waitFor(() => {
         expect(mockOnAuthStateChange).toHaveBeenCalled();
@@ -216,13 +218,13 @@ describe('Auth Workflow', () => {
   });
 
   describe('signOut', () => {
-    it('clears session and all Zustand stores', async () => {
+    it('clears session, sync queue, and all Zustand stores', async () => {
       const mockSession = { user: { id: 'user-123' } };
       mockGetSession.mockResolvedValue({ data: { session: mockSession }, error: null });
       mockSignOut.mockResolvedValue({ error: null });
 
       const { getByTestId } = render(
-        <AuthProvider><AuthConsumer /></AuthProvider>,
+        React.createElement(AuthProvider, null, React.createElement(AuthConsumer)),
       );
 
       await waitFor(() => {
@@ -230,10 +232,11 @@ describe('Auth Workflow', () => {
       });
 
       await act(async () => {
-        getByTestId('signout').props.onPress();
+        await getByTestId('signout').props.onPress();
       });
 
       expect(mockSignOut).toHaveBeenCalled();
+      expect(mockClearSyncQueue).toHaveBeenCalled();
       expect(mockClearCache).toHaveBeenCalled();
       expect(mockClearScene).toHaveBeenCalled();
       expect(mockResetStatus).toHaveBeenCalled();
@@ -245,7 +248,7 @@ describe('Auth Workflow', () => {
       mockSignOut.mockResolvedValue({ error: new Error('Sign out failed') });
 
       const { getByTestId } = render(
-        <AuthProvider><AuthConsumer /></AuthProvider>,
+        React.createElement(AuthProvider, null, React.createElement(AuthConsumer)),
       );
 
       await waitFor(() => {
@@ -253,10 +256,9 @@ describe('Auth Workflow', () => {
       });
 
       await act(async () => {
-        getByTestId('signout').props.onPress();
+        await getByTestId('signout').props.onPress();
       });
 
-      // Should not crash — error is caught and logged
       const { logger } = require('../../utils/logger');
       expect(logger.error).toHaveBeenCalledWith(
         '[AuthContext] Sign-out failed:',

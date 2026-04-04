@@ -30,7 +30,7 @@ jest.mock('../astrologySettingsService', () => ({
 }));
 
 import { DailyInsightEngine } from '../dailyInsightEngine';
-import { makeTestChart } from './fixtures';
+import { makeHouseCusps, makePlacement, makeTestChart } from './fixtures';
 
 describe('DailyInsightEngine', () => {
   const chart = makeTestChart();
@@ -47,6 +47,7 @@ describe('DailyInsightEngine', () => {
       expect(result).toHaveProperty('mantra');
       expect(result).toHaveProperty('moonSign');
       expect(result).toHaveProperty('moonPhase');
+      expect(result).toHaveProperty('intensity');
       expect(result).toHaveProperty('signals');
     });
 
@@ -120,6 +121,11 @@ describe('DailyInsightEngine', () => {
       }
     });
 
+    it('returns a valid intensity level', () => {
+      const result = DailyInsightEngine.generateDailyInsight(chart, date);
+      expect(['calm', 'moderate', 'intense']).toContain(result.intensity);
+    });
+
     it('timeline is defined when signals are present', () => {
       const result = DailyInsightEngine.generateDailyInsight(chart, date);
       if (result.signals.length > 0) {
@@ -147,6 +153,41 @@ describe('DailyInsightEngine', () => {
       // so we just verify both are valid strings
       expect(r1.mantra.length).toBeGreaterThan(0);
       expect(r2.mantra.length).toBeGreaterThan(0);
+    });
+
+    it('uses legacy houseCusps when falling back to Moon house', () => {
+      const fallbackChart = makeTestChart({
+        placements: [],
+        planets: [],
+        angles: [],
+        ascendant: undefined,
+        midheaven: undefined,
+        houses: undefined,
+        houseCusps: makeHouseCusps(),
+      });
+
+      const result = DailyInsightEngine.generateDailyInsight(fallbackChart, date);
+
+      expect(result.signals).toHaveLength(0);
+      expect(result.cards[0]?.title).toBe('Words carry feeling');
+      expect(result.cards[0]?.domain).toBe('focus');
+      expect(result.intensity).toBe('calm');
+    });
+
+    it('recognizes legacy ascendant and midheaven positions when angles array is absent', () => {
+      const legacyAngleChart = makeTestChart({
+        placements: [],
+        planets: [],
+        angles: [],
+        houses: undefined,
+        houseCusps: makeHouseCusps(),
+        ascendant: makePlacement('Ascendant', 100, 'Cancer', 'Water', 'Cardinal', 4, 1, false, 'Point'),
+        midheaven: makePlacement('Midheaven', 15, 'Aries', 'Fire', 'Cardinal', 1, 10, false, 'Point'),
+      });
+
+      const result = DailyInsightEngine.generateDailyInsight(legacyAngleChart, date);
+
+      expect(result.signals.some(signal => signal.description.includes('Ascendant'))).toBe(true);
     });
   });
 

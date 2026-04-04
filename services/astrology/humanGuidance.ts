@@ -1254,11 +1254,6 @@ export class HumanGuidanceGenerator {
     };
     const moonPhaseMessage = phaseMessageMap[insight.moonPhase] || '';
 
-    // Determine intensity from signal scores
-    const topScore = insight.signals.length > 0 ? parseFloat(insight.signals[0].orb) : 99;
-    const intensity: 'calm' | 'moderate' | 'intense' = 
-      topScore <= 1 ? 'intense' : topScore <= 2 ? 'moderate' : 'calm';
-
     // Determine dominant domain
     const dominantDomain = insight.cards[0]?.domain || 'mood';
 
@@ -1278,7 +1273,7 @@ export class HumanGuidanceGenerator {
       moonPhaseMessage,
       signals: insight.signals,
       dominantDomain: dominantDomain as LifeDomain,
-      intensity,
+      intensity: insight.intensity,
     };
   }
   

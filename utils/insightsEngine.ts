@@ -38,6 +38,7 @@ import {
   TagAnalyticsBundle,
   TAG_LABELS,
 } from './tagAnalytics';
+import { toLocalDateString } from './dateUtils';
 import {
   mean as _mean,
   stdDev as _stdDev,
@@ -351,7 +352,7 @@ const confidence = _confidence;
 function isoDateDaysAgo(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
+  return toLocalDateString(d);
 }
 
 function daysBetween(a: string, b: string): number {
@@ -1963,7 +1964,7 @@ export function computeInsightBundle(
   reflectionAnswers?: ReflectionAnswer[],
 ): InsightBundle {
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  const today = toLocalDateString(now);
 
   // Sort ascending by date (oldest first)
   const sorted = [...allCheckIns].sort((a, b) => a.date.localeCompare(b.date));

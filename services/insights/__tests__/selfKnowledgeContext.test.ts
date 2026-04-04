@@ -55,9 +55,9 @@ describe('selfKnowledgeContext – loadSelfKnowledgeContext()', () => {
     expect(ctx.dailyReflections).toBeNull();
   });
 
-  it('loads coreValues from plain AsyncStorage', async () => {
+  it('loads coreValues from encrypted AsyncStorage', async () => {
     const cv = { selected: ['courage', 'love'], topFive: ['courage'] };
-    plainStore.set(KEYS.coreValues, JSON.stringify(cv));
+    encryptedStore.set(KEYS.coreValues, JSON.stringify(cv));
     const ctx = await loadSelfKnowledgeContext();
     expect(ctx.coreValues).toEqual(cv);
   });

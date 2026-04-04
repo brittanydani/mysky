@@ -56,7 +56,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
               <Ionicons name="document-text-outline" size={132} color={theme.textGold} />
             </View>
 
-            <Text style={styles.lastUpdated}>Last updated: April 1, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: April 4, 2026</Text>
 
             <Text style={styles.sectionTitle}>Acceptance of Terms of Use</Text>
             <Text style={styles.paragraph}>
@@ -87,13 +87,13 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
                 <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full 5-domain energy reflection, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
               </Text>
             </View>
 
             <Text style={styles.sectionTitle}>Subscriptions & Payments</Text>
             <Text style={styles.paragraph}>
-              Premium access ("Deeper Sky") is available via auto-renewing subscriptions (monthly or yearly) or a one-time lifetime purchase. Payment is charged to your Apple ID at confirmation of purchase. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage or cancel subscriptions in your device settings (Settings → Apple ID → Subscriptions). Purchases can be restored at any time.
+              Premium access ("Deeper Sky") is available via auto-renewing subscriptions (monthly or yearly) or a one-time lifetime purchase. Payment is charged through your platform account at confirmation of purchase. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage or cancel subscriptions in your device's App Store or Google Play subscription settings. Purchases can be restored at any time.
             </Text>
 
             <Text style={styles.sectionTitle}>Accounts</Text>
@@ -151,7 +151,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Termination</Text>
             <Text style={styles.paragraph}>
-              You may stop using MySky at any time by uninstalling the app, which permanently erases all locally stored data. You may request deletion of your Supabase account by contacting support.
+              You may stop using MySky at any time by uninstalling the app. If you want a guaranteed local wipe of protected data, use the Hard Reset option in Privacy Settings before uninstalling. You may request deletion of your Supabase account by contacting support.
             </Text>
 
             <Text style={styles.sectionTitle}>Age Requirement</Text>
@@ -191,12 +191,12 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Third-Party Services</Text>
             <Text style={styles.paragraph}>
-              The App may integrate with or rely on third-party services, including but not limited to Apple App Store, RevenueCat, Supabase, OpenStreetMap Nominatim, Anthropic Claude, and Google Gemini. Your use of these third-party services is subject to their respective terms of service and privacy policies. We are not responsible for the practices or content of any third-party services.
+              The App may integrate with or rely on third-party services, including but not limited to Apple App Store, Google Play, RevenueCat, Supabase, OpenStreetMap Nominatim, Sentry, Anthropic Claude, and Google Gemini. Your use of these third-party services is subject to their respective terms of service and privacy policies. We are not responsible for the practices or content of any third-party services.
             </Text>
 
             <Text style={styles.sectionTitle}>Apple App Store Terms</Text>
             <Text style={styles.paragraph}>
-              These Terms are between you and Brittany Apps only, and not with Apple. Brittany Apps, not Apple, is solely responsible for the App and its content. Apple has no obligation to furnish any maintenance and support services with respect to the App. Apple is not responsible for addressing any claims relating to the App, including product liability claims, regulatory compliance claims, and intellectual property infringement claims. You acknowledge that Apple and its subsidiaries are third-party beneficiaries of these Terms.
+              If you downloaded the App through the Apple App Store, these Terms are between you and Brittany Apps only, and not with Apple. Brittany Apps, not Apple, is solely responsible for the App and its content. Apple has no obligation to furnish any maintenance and support services with respect to the App. Apple is not responsible for addressing any claims relating to the App, including product liability claims, regulatory compliance claims, and intellectual property infringement claims. You acknowledge that Apple and its subsidiaries are third-party beneficiaries of these Terms.
             </Text>
 
             <Text style={styles.sectionTitle}>Export Compliance</Text>

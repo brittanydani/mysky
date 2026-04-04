@@ -366,17 +366,17 @@ export function computeJournalingImpact(
   // Effect-size gate: require at least a small effect (|d| >= 0.2)
   const moodD = cohensD(moodsJournal, moodsNoJournal);
   const stressD = cohensD(stressNoJournal, stressJournal); // reversed: lower stress = positive
+  const combinedEffect = Math.max(Math.abs(moodD), Math.abs(stressD));
 
   if (Math.abs(moodD) < 0.2 && Math.abs(stressD) < 0.2) return null;
 
   // Next-day causal check: does journaling today predict better mood tomorrow?
   const sorted = [...aggregates].sort((a, b) => a.dayKey.localeCompare(b.dayKey));
-  const dayIndex = new Map(sorted.map((d, i) => [d.dayKey, i]));
   const nextDayAfterJournal: number[] = [];
   const nextDayAfterNoJournal: number[] = [];
 
-  for (const d of sorted) {
-    const idx = dayIndex.get(d.dayKey)!;
+  for (let idx = 0; idx < sorted.length; idx++) {
+    const d = sorted[idx];
     if (idx + 1 >= sorted.length) continue;
     const next = sorted[idx + 1];
     // Only count consecutive calendar days
@@ -397,20 +397,20 @@ export function computeJournalingImpact(
 
   let insight: string;
   if (diffMood >= 0.5 && nextDayDiff >= 0.3) {
-    insight = 'Journaling lifts your mood — and the effect carries into the next day.';
+    insight = 'Journaling days tend to line up with higher mood, and the following day often looks a little better too.';
   } else if (diffMood >= 0.5) {
-    insight = 'Days you journal tend to be calmer.';
+    insight = 'Days you journal tend to line up with a calmer mood.';
   } else if (diffMood <= -0.5 && nextDayDiff >= 0.3) {
-    insight = 'You journal on harder days, but your next day tends to be better for it.';
+    insight = 'You often journal on harder days, and the following day often looks a little steadier.';
   } else if (diffMood <= -0.5) {
-    insight = 'You tend to journal on harder days — that\'s the practice working.';
+    insight = 'You tend to journal on harder days, which suggests writing is part of how you process them.';
   } else if (diffStress <= -0.5) {
-    insight = 'Journaling days show lower stress on average.';
+    insight = 'Journaling days tend to show lower stress on average.';
   } else {
-    insight = 'Journaling days show higher stress — you process when it matters.';
+    insight = 'Journaling days tend to show higher stress, suggesting you reach for writing when more is happening.';
   }
 
-  const effectLabel = Math.abs(moodD) >= 0.8 ? 'strong' : Math.abs(moodD) >= 0.5 ? 'clear' : 'subtle';
+  const effectLabel = combinedEffect >= 0.8 ? 'strong' : combinedEffect >= 0.5 ? 'clear' : 'subtle';
 
   return {
     type: 'journaling_vs_not',
@@ -468,7 +468,7 @@ export function computeWritingIntensityEffect(
   } else if (moodLow - moodHigh >= 0.5 && Math.abs(intensityD) >= 0.2) {
     insight = 'Shorter entries tend to come on calmer days — longer ones signal deeper processing.';
   } else if (volLow - volHigh >= 0.3) {
-    insight = 'Writing more tends to stabilize your emotional range.';
+    insight = 'Longer entries tend to line up with a steadier emotional range.';
   } else {
     insight = 'Writing length varies, but its presence matters more than its depth.';
   }
@@ -503,7 +503,7 @@ export function computeWeeklyConsistency(
     weekMap.get(wk)!.push(d);
   }
 
-  if (weekMap.size < 3) return null;
+  if (weekMap.size < 4) return null;
 
   const consistentWeeks: { moods: number[]; vol: number }[] = [];
   const inconsistentWeeks: { moods: number[]; vol: number }[] = [];
@@ -520,7 +520,7 @@ export function computeWeeklyConsistency(
     }
   }
 
-  if (consistentWeeks.length < 1 || inconsistentWeeks.length < 1) return null;
+  if (consistentWeeks.length < 2 || inconsistentWeeks.length < 2) return null;
 
   const volConsistent = mean(consistentWeeks.map(w => w.vol));
   const volInconsistent = mean(inconsistentWeeks.map(w => w.vol));
@@ -533,7 +533,7 @@ export function computeWeeklyConsistency(
   if (volDiff > 0.3) {
     insight = 'Weeks you journal 3+ times tend to feel steadier.';
   } else if (moodConsistent - moodInconsistent > 0.4) {
-    insight = 'Consistent journaling weeks have a higher average mood.';
+    insight = 'Consistent journaling weeks tend to have a higher average mood.';
   } else {
     insight = 'Journaling consistency varies — more data will reveal clearer patterns.';
   }
@@ -614,11 +614,11 @@ export function computeStreakImpact(
 
   let insight: string;
   if (diff >= 0.4) {
-    insight = 'Journaling multiple days in a row lifts your mood over time.';
+    insight = 'Mood tends to be higher on journaling streak days than on isolated journaling days.';
   } else if (diff <= -0.4) {
-    insight = 'Your mood benefits from journaling even on single days — no streak needed.';
+    insight = 'Single journaling days tend to line up with higher mood than streak days, so longer runs are not always the key factor.';
   } else {
-    insight = 'Whether you journal one day or several in a row, the benefit is steady.';
+    insight = 'Whether you journal once or several days in a row, the mood difference looks fairly small.';
   }
 
   return {

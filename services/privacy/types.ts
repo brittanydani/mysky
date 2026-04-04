@@ -71,6 +71,7 @@ export interface ExportPackage {
   settings: any | null;
   consentRecord: any;
   lawfulBasisRecords: LawfulBasisRecord[];
+  asyncStorageData?: Record<string, string>;
   exportedAt: string;
 }
 
@@ -93,6 +94,7 @@ export interface AccessResult {
     settingsPresent: boolean;
     consentRecordPresent: boolean;
     lawfulBasisRecordsCount: number;
+    asyncStorageKeysCount: number;
   };
   completedAt: string;
 }

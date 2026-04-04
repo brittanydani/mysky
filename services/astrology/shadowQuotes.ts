@@ -26,7 +26,6 @@ import { getTransitingLongitudes, computeTransitAspectsToNatal } from './transit
 import { logger } from '../../utils/logger';
 import { toLocalDateString, dayOfYear } from '../../utils/dateUtils';
 import { getMoonPhaseName } from '../../utils/moonPhase';
-import { localDb } from '../storage/localDb';
 
 // ════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -622,6 +621,8 @@ async function markQuoteShown(quoteId: string): Promise<void> {
 let _quotesTableEnsured = false;
 
 async function getDb() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { localDb } = require('../storage/localDb') as typeof import('../storage/localDb');
   const db = await localDb.getDb();
   if (!_quotesTableEnsured) {
     await db.execAsync(`

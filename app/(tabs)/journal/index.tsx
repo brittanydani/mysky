@@ -21,7 +21,7 @@ import JournalEntryModal from '../../../components/JournalEntryModal';
 import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../../../services/premium/advancedJournal';
 import { usePremium } from '../../../context/PremiumContext';
 import { logger } from '../../../utils/logger';
-import { parseLocalDate } from '../../../utils/dateUtils';
+import { parseLocalDate, toLocalDateString } from '../../../utils/dateUtils';
 import ObsidianJournalEntry from '../../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../../services/journal/nlp';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
@@ -690,7 +690,7 @@ export default function JournalScreen() {
           content: data.content ?? '',
           mood: (data.mood ?? 'okay') as any,
           moonPhase: (data.moonPhase ?? 'new') as any,
-          date: (data.date ?? parseLocalDate(nowIso).toISOString().slice(0, 10)) as any,
+          date: (data.date ?? toLocalDateString()) as any,
           createdAt: nowIso,
           updatedAt: nowIso,
           isDeleted: false,

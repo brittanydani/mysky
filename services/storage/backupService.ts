@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { localDb } from './localDb';
 import { FieldEncryptionService, isDecryptionFailure } from './fieldEncryption';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
+import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from './userDataKeys';
 import type { AppSettings, SavedChart, JournalEntry, RelationshipChart, SleepEntry } from './models';
 import type { SavedInsight } from './insightHistory';
 import { logger } from '../../utils/logger';
@@ -26,20 +27,6 @@ import { logger } from '../../utils/logger';
  * Encrypted keys use EncryptedAsyncStorage (DEK-based AES-256-GCM).
  * Plain keys use raw AsyncStorage.
  */
-const ENCRYPTED_ASYNC_KEYS = [
-  '@mysky:archetype_profile',
-  '@mysky:cognitive_style',
-  '@mysky:core_values',
-  '@mysky:somatic_entries',
-  '@mysky:trigger_events',
-  '@mysky:relationship_patterns',
-  '@mysky:daily_reflections',
-] as const;
-
-const PLAIN_ASYNC_KEYS = [
-  'mysky_custom_journal_tags',
-] as const;
-
 type BackupPayload = {
   schemaVersion: 1;
   exportedAt: string;
@@ -214,7 +201,7 @@ export class BackupService {
     // Gather user profile data from AsyncStorage (decrypted for backup)
     const asyncStorageData: Record<string, string> = {};
     await Promise.all([
-      ...ENCRYPTED_ASYNC_KEYS.map(async (key) => {
+      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map(async (key) => {
         try {
           const val = await EncryptedAsyncStorage.getItem(key);
           if (val) asyncStorageData[key] = val;
@@ -222,7 +209,7 @@ export class BackupService {
           logger.error(`[Backup] Failed to read encrypted key ${key}:`, e);
         }
       }),
-      ...PLAIN_ASYNC_KEYS.map(async (key) => {
+      ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
         try {
           const val = await AsyncStorage.getItem(key);
           if (val) asyncStorageData[key] = val;
@@ -379,7 +366,7 @@ export class BackupService {
       throw new Error('Invalid backup contents');
     }
 
-    // Validate backup has actual data before clearing existing data
+    // Validate backup has actual data before replacing existing local data.
     const hasData = (payload.charts?.length ?? 0) > 0 ||
                     (payload.journalEntries?.length ?? 0) > 0 ||
                     (payload.checkIns?.length ?? 0) > 0 ||
@@ -387,6 +374,12 @@ export class BackupService {
     if (!hasData) {
       throw new Error('Backup file contains no data to restore.');
     }
+
+    await localDb.clearAccountScopedData();
+    await Promise.all([
+      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
+      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AsyncStorage.removeItem(key)),
+    ]);
 
     // Restore data into localDb (writes are INSERT OR REPLACE, so safe)
     for (const chart of payload.charts ?? []) {
@@ -420,13 +413,13 @@ export class BackupService {
     // Restore AsyncStorage user profile data (re-encrypts with new device DEK)
     if (payload.asyncStorageData) {
       const ALLOWED_ASYNC_KEYS = new Set<string>([
-        ...(ENCRYPTED_ASYNC_KEYS as readonly string[]),
-        ...(PLAIN_ASYNC_KEYS as readonly string[]),
+        ...(ENCRYPTED_ASYNC_USER_DATA_KEYS as readonly string[]),
+        ...(PLAIN_ASYNC_USER_DATA_KEYS as readonly string[]),
       ]);
       for (const [key, value] of Object.entries(payload.asyncStorageData)) {
         if (!ALLOWED_ASYNC_KEYS.has(key)) continue;
         try {
-          if ((ENCRYPTED_ASYNC_KEYS as readonly string[]).includes(key)) {
+          if ((ENCRYPTED_ASYNC_USER_DATA_KEYS as readonly string[]).includes(key)) {
             await EncryptedAsyncStorage.setItem(key, value);
           } else {
             await AsyncStorage.setItem(key, value);

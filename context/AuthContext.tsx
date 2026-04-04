@@ -22,6 +22,7 @@ import { supabase } from '../lib/supabase';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { DemoSeedService } from '../services/storage/demoSeedService';
+import { localDb } from '../services/storage/localDb';
 import { useDreamMapStore } from '../store/dreamMapStore';
 import { useResonanceStore } from '../store/resonanceStore';
 import { useSceneStore } from '../store/sceneStore';
@@ -145,10 +146,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       useCorrelationStore.getState().clearCache();
       useCheckInStore.getState().resetStatus();
 
-      // Clear unsynced queue so it isn't flushed under the next user's account
-      import('../services/storage/localDb').then(({ localDb }) =>
-        localDb.clearSyncQueue()
-      ).catch(() => {});
+      // Clear unsynced queue before another account can sign in on this device.
+      try {
+        await localDb.clearSyncQueue();
+      } catch (e) {
+        logger.error('[AuthContext] Failed to clear sync queue during sign-out:', e);
+      }
 
       if (isMounted.current) {
         setSession(null);

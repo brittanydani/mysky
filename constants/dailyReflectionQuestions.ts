@@ -1,7 +1,8 @@
 /**
  * Daily Reflection Statement Banks
  *
- * 365 unique statements per category (values, archetypes, cognitive).
+ * Expanded statement banks for daily rotation.
+ * Values currently contains 465 statements; archetypes and cognitive contain 365 each.
  * Each day the user rates 2–3 statements from each category on a scale.
  * Over 12 months the system builds a deep psychological profile.
  *
@@ -19,7 +20,7 @@ export interface ReflectionQuestion {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CORE VALUES — 365 statements
+// CORE VALUES — 465 statements
 // Themes: purpose, priorities, authenticity, boundaries, relationships,
 //         growth, resilience, legacy, creativity, community, freedom,
 //         security, justice, compassion, courage, spirituality

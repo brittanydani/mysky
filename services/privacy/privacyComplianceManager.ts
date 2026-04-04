@@ -1,6 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from '../storage/secureStorage';
 import { localDb } from '../storage/localDb';
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
+import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from '../storage/userDataKeys';
 import { generateId } from '../storage/models';
 import { LawfulBasisAuditService } from './lawfulBasisAudit';
 import { FieldEncryptionService } from '../storage/fieldEncryption';
@@ -141,13 +143,14 @@ export class PrivacyComplianceManager {
    */
   async handleAccessRequest(): Promise<AccessResult> {
     await localDb.initialize();
-    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords] =
+    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData] =
       await Promise.all([
         localDb.getCharts(),
         localDb.getJournalEntries(),
         localDb.getSettings(),
         secureStorage.getConsentRecord(),
         secureStorage.getLawfulBasisRecords(),
+        this.readAsyncStorageUserData(),
       ]);
 
     await secureStorage.auditDataAccess('gdpr_access_request', {
@@ -163,6 +166,7 @@ export class PrivacyComplianceManager {
         settingsPresent: settings !== null,
         consentRecordPresent: consentRecord !== null,
         lawfulBasisRecordsCount: lawfulBasisRecords.length,
+        asyncStorageKeysCount: Object.keys(asyncStorageData).length,
       },
       completedAt: new Date().toISOString(),
     };
@@ -174,13 +178,14 @@ export class PrivacyComplianceManager {
    */
   async handleExportRequest(): Promise<ExportResult> {
     await localDb.initialize();
-    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords] =
+    const [charts, journalEntries, settings, consentRecord, lawfulBasisRecords, asyncStorageData] =
       await Promise.all([
         localDb.getCharts(),
         localDb.getJournalEntries(),
         localDb.getSettings(),
         secureStorage.getConsentRecord(),
         secureStorage.getLawfulBasisRecords(),
+        this.readAsyncStorageUserData(),
       ]);
 
     // Calculate full natal chart data for each chart
@@ -228,6 +233,7 @@ export class PrivacyComplianceManager {
         settings,
         consentRecord,
         lawfulBasisRecords,
+        asyncStorageData: Object.keys(asyncStorageData).length > 0 ? asyncStorageData : undefined,
         exportedAt: new Date().toISOString(),
       },
       completedAt: new Date().toISOString(),
@@ -247,16 +253,8 @@ export class PrivacyComplianceManager {
     await Promise.all([
       secureStorage.deleteAllUserData(),
       localDb.hardDeleteAllData(),
-      // Clear sensitive personal data from encrypted AsyncStorage
-      EncryptedAsyncStorage.removeItem('msky_user_name'),
-      EncryptedAsyncStorage.removeItem('@mysky:archetype_profile'),
-      EncryptedAsyncStorage.removeItem('@mysky:cognitive_style'),
-      EncryptedAsyncStorage.removeItem('@mysky:somatic_entries'),
-      EncryptedAsyncStorage.removeItem('@mysky:trigger_events'),
-      EncryptedAsyncStorage.removeItem('@mysky:relationship_patterns'),
-      EncryptedAsyncStorage.removeItem('@mysky:daily_reflections'),
-      // Core values contains psychological profiling data — delete via EncryptedAsyncStorage.
-      EncryptedAsyncStorage.removeItem('@mysky:core_values'),
+      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map((key) => EncryptedAsyncStorage.removeItem(key)),
+      ...PLAIN_ASYNC_USER_DATA_KEYS.map((key) => AsyncStorage.removeItem(key)),
     ]);
 
     // Destroy the data encryption key and identity vault so no plaintext can be recovered
@@ -309,5 +307,22 @@ export class PrivacyComplianceManager {
     const maxAgeMs = PrivacyComplianceManager.CONSENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
     const expiryTime = new Date(timestamp).getTime() + maxAgeMs;
     return Date.now() > expiryTime;
+  }
+
+  private async readAsyncStorageUserData(): Promise<Record<string, string>> {
+    const data: Record<string, string> = {};
+
+    await Promise.all([
+      ...ENCRYPTED_ASYNC_USER_DATA_KEYS.map(async (key) => {
+        const value = await EncryptedAsyncStorage.getItem(key);
+        if (value != null) data[key] = value;
+      }),
+      ...PLAIN_ASYNC_USER_DATA_KEYS.map(async (key) => {
+        const value = await AsyncStorage.getItem(key);
+        if (value != null) data[key] = value;
+      }),
+    ]);
+
+    return data;
   }
 }
