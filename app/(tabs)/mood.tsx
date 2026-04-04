@@ -160,12 +160,18 @@ const REV_EMOTION_TAG: Record<string, string> = Object.fromEntries(
 );
 
 function computeTrendLabel(checkIns: DailyCheckIn[]): string {
-  const scores = checkIns
-    .slice()
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map(c => c.moodScore)
-    .filter((s): s is number => s != null);
-  if (scores.length < 3) return 'Early days';
+  // Average per day first so days with multiple check-ins aren't over-weighted
+  const byDate = new Map<string, number[]>();
+  for (const c of checkIns) {
+    if (c.moodScore == null) continue;
+    if (!byDate.has(c.date)) byDate.set(c.date, []);
+    byDate.get(c.date)!.push(c.moodScore);
+  }
+  const scores = Array.from(byDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, vals]) => vals.reduce((a, b) => a + b, 0) / vals.length);
+
+  if (scores.length < 5) return 'Early days';
   const half = Math.floor(scores.length / 2);
   const early = scores.slice(0, half).reduce((a, b) => a + b, 0) / half;
   const recent = scores.slice(-half).reduce((a, b) => a + b, 0) / half;

@@ -48,6 +48,8 @@ import { DailyCheckIn } from '../../services/patterns/types';
 import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
+import { getLogicalToday } from '../../services/patterns/checkInService';
+import { toLocalDateString } from '../../utils/dateUtils';
 import { getDailyAffirmation } from '../../services/today/todayContentLibrary';
 import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
@@ -146,7 +148,7 @@ export default function HomeScreen() {
 
   // True only when a check-in exists for today's date
   const hasDataToday = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLogicalToday();
     return weeklyCheckIns.some(c => c.date === today);
   }, [weeklyCheckIns]);
 
@@ -345,7 +347,7 @@ export default function HomeScreen() {
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() - (6 - i));
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(d);
       const ci = weeklyCheckIns.find(c => c.date === dateStr);
       return ci ? Math.round((ci.moodScore / 10) * 108) + 12 : 12;
     });

@@ -412,8 +412,8 @@ const styles = StyleSheet.create({
   gravityBarContainer: { height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 24, gap: 3 },
   gravitySegment: { height: '100%', borderRadius: 4 },
 
-  legendRow: { flexDirection: 'row', marginTop: 8 },
-  legendItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  legendRow: { flexDirection: 'row', marginTop: 8, justifyContent: 'space-evenly', flexWrap: 'wrap' },
+  legendItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 4, paddingVertical: 2 },
 
   formCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
   formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },

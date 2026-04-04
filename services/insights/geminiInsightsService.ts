@@ -19,6 +19,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { toLocalDateString } from '../../utils/dateUtils';
 import { logger } from '../../utils/logger';
 import type { CrossRefInsight } from '../../utils/selfKnowledgeCrossRef';
 import type { SelfKnowledgeContext } from './selfKnowledgeContext';
@@ -110,7 +111,7 @@ function getApiKey(): string | null {
 // ─── Cache ────────────────────────────────────────────────────────────────────
 
 function buildCacheKey(insights: CrossRefInsight[]): string {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalDateString();
   // Use a simple hash of each body so cache invalidates when numbers change
   const contentHash = insights
     .map(i => `${i.id}:${simpleHash(i.body)}:${i.isConfirmed}`)

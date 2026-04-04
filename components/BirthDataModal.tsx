@@ -113,15 +113,20 @@ export default function BirthDataModal({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (visible && initialData) {
-      setChartName(initialData.chartName || '');
-      setDate(parseISODateToDate(initialData.date));
-      setTime(parseHHMMToDate(initialData.time));
-      setHasUnknownTime(initialData.hasUnknownTime ?? false);
-      setPlace(initialData.place || '');
-      setLatitude(initialData.latitude ?? 0);
-      setLongitude(initialData.longitude ?? 0);
-      setLocationSelected(!!(initialData.place && initialData.latitude != null));
+    if (visible) {
+      setChartName(initialData?.chartName || '');
+      setDate(parseISODateToDate(initialData?.date));
+      setTime(parseHHMMToDate(initialData?.time));
+      setHasUnknownTime(initialData?.hasUnknownTime ?? false);
+      setPlace(initialData?.place || '');
+      setLatitude(initialData?.latitude ?? 0);
+      setLongitude(initialData?.longitude ?? 0);
+      setLocationSelected(!!(initialData?.place && initialData?.latitude != null));
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+      setShowDatePicker(false);
+      setSaveError(null);
+      setIsSaving(false);
     }
   }, [visible, initialData]);
 
@@ -237,16 +242,15 @@ export default function BirthDataModal({
             showsVerticalScrollIndicator={false}
           >
             {/* Header */}
-            {!hideClose && (
-              <View style={styles.header}>
-                <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
-                  <Ionicons name="close-outline" size={26} color={theme.textPrimary} />
-                </Pressable>
-              </View>
-            )}
-
             <Animated.View entering={FadeInDown.delay(80)} style={styles.titleSection}>
-              <Text style={styles.mainTitle}>{title || 'Birth Details'}</Text>
+              <View style={styles.titleRow}>
+                <Text style={styles.mainTitle}>{title || 'Birth Details'}</Text>
+                {!hideClose && (
+                  <Pressable onPress={onClose} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Close">
+                    <Ionicons name="close-outline" size={26} color={theme.textPrimary} />
+                  </Pressable>
+                )}
+              </View>
               <Text style={styles.subtitle}>Your data stays private and encrypted on your device.</Text>
             </Animated.View>
 
@@ -501,18 +505,12 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 8,
-    paddingTop: 4,
-    marginBottom: 8,
-  },
   closeBtn: {
     width: 44,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: -8,
   },
   scrollView: { flex: 1 },
   scrollContent: {
@@ -525,12 +523,17 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     marginTop: 8,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
   mainTitle: {
     fontSize: 30,
     fontWeight: '700',
     color: '#F8F6F2',
     letterSpacing: -0.5,
-    marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,

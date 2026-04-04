@@ -425,7 +425,7 @@ export default function ChartScreen() {
           isDeleted: false,
         };
         await localDb.saveRelationshipChart(newRel);
-        setPeople((prev) => [newRel, ...prev]);
+        setPeople((prev) => [...prev, newRel]);
         setShowAddModal(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 

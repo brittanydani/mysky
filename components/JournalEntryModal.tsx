@@ -290,8 +290,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
   const [customTags, setCustomTags] = useState<CustomTag[]>([]);
-  const [newTagInput, setNewTagInput] = useState('');
-  const [categoryNewTagInputs, setCategoryNewTagInputs] = useState<Record<string, string>>({});
+  const [showNewTagModal, setShowNewTagModal] = useState(false);
+  const [newTagModalCategory, setNewTagModalCategory] = useState<string | undefined>(undefined);
+  const [newTagModalInput, setNewTagModalInput] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
   
@@ -843,7 +844,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           visible={showTagPicker}
           animationType="slide"
           transparent
-          onRequestClose={() => { setShowTagPicker(false); setTagSearch(''); setNewTagInput(''); setCategoryNewTagInputs({}); }}
+          onRequestClose={() => { setShowTagPicker(false); setTagSearch(''); }}
           onShow={loadCustomTags}
         >
           <Pressable style={styles.tagPickerOverlay} onPress={() => { setShowTagPicker(false); setTagSearch(''); setNewTagInput(''); setCategoryNewTagInputs({}); }}>
@@ -851,7 +852,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
               <View style={styles.tagPickerHandle} />
               <View style={styles.tagPickerHeader}>
                 <Text style={styles.tagPickerTitle}>Add Tags</Text>
-                <Pressable hitSlop={16} onPress={() => { setShowTagPicker(false); setTagSearch(''); setNewTagInput(''); setCategoryNewTagInputs({}); }}>
+                <Pressable hitSlop={16} onPress={() => { setShowTagPicker(false); setTagSearch(''); }}>
                   <Text style={styles.tagPickerDone}>Done</Text>
                 </Pressable>
               </View>
@@ -970,25 +971,14 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         {customTags.filter((t) => !t.categoryId).map((tag) => (
                           <TagChip key={tag.id} tag={tag} isCustom />
                         ))}
-                        {/* Inline create input */}
-                        <View style={styles.newTagInputWrap}>
-                          <TextInput
-                            style={styles.newTagInput}
-                            value={newTagInput}
-                            onChangeText={setNewTagInput}
-                            placeholder="+ New tag"
-                            placeholderTextColor="rgba(255,255,255,0.25)"
-                            returnKeyType="done"
-                            maxLength={30}
-                            onSubmitEditing={() => { if (newTagInput.trim()) saveCustomTag(newTagInput); }}
-                            blurOnSubmit={false}
-                          />
-                          {newTagInput.trim().length > 0 && (
-                            <Pressable hitSlop={10} onPress={() => saveCustomTag(newTagInput)}>
-                              <Ionicons name="checkmark-circle-outline" size={18} color={PALETTE.jade} />
-                            </Pressable>
-                          )}
-                        </View>
+                        {/* Create tag button */}
+                        <Pressable
+                          style={styles.newTagBtn}
+                          onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory(undefined); setNewTagModalInput(''); setShowNewTagModal(true); }}
+                        >
+                          <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
+                          <Text style={styles.newTagBtnText}>New tag</Text>
+                        </Pressable>
                       </View>
                       {customTags.length > 0 && (
                         <Text style={styles.tagPickerHint}>Hold to delete a custom tag</Text>
@@ -1002,27 +992,13 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                             <View style={styles.tagPickerRow}>
                               {cat.tags.map((tag) => <TagChip key={tag.id} tag={tag} />)}
                               {catCustomTags.map((tag) => <TagChip key={tag.id} tag={tag} isCustom />)}
-                              <View style={styles.newTagInputWrap}>
-                                <TextInput
-                                  style={styles.newTagInput}
-                                  value={categoryNewTagInputs[cat.id] || ''}
-                                  onChangeText={(v) => setCategoryNewTagInputs((prev) => ({ ...prev, [cat.id]: v }))}
-                                  placeholder="+ New"
-                                  placeholderTextColor="rgba(255,255,255,0.25)"
-                                  returnKeyType="done"
-                                  maxLength={30}
-                                  onSubmitEditing={() => {
-                                    const v = (categoryNewTagInputs[cat.id] || '').trim();
-                                    if (v) saveCustomTag(v, cat.id);
-                                  }}
-                                  blurOnSubmit={false}
-                                />
-                                {(categoryNewTagInputs[cat.id] || '').trim().length > 0 && (
-                                  <Pressable hitSlop={10} onPress={() => saveCustomTag((categoryNewTagInputs[cat.id] || '').trim(), cat.id)}>
-                                    <Ionicons name="checkmark-circle-outline" size={18} color={PALETTE.jade} />
-                                  </Pressable>
-                                )}
-                              </View>
+                              <Pressable
+                                style={styles.newTagBtn}
+                                onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory(cat.id); setNewTagModalInput(''); setShowNewTagModal(true); }}
+                              >
+                                <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
+                                <Text style={styles.newTagBtnText}>New</Text>
+                              </Pressable>
                             </View>
                           </React.Fragment>
                         );
@@ -1031,6 +1007,53 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   );
                 })()}
               </ScrollView>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        {/* ── New Tag Popup ── */}
+        <Modal
+          visible={showNewTagModal}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setShowNewTagModal(false)}
+        >
+          <Pressable style={styles.newTagOverlay} onPress={() => setShowNewTagModal(false)}>
+            <Pressable style={styles.newTagPopup} onPress={(e) => e.stopPropagation()}>
+              <Text style={styles.newTagPopupTitle}>
+                {newTagModalCategory
+                  ? `New tag in ${TAG_CATEGORIES.find((c) => c.id === newTagModalCategory)?.label ?? 'category'}`
+                  : 'Create New Tag'}
+              </Text>
+              <TextInput
+                style={styles.newTagPopupInput}
+                value={newTagModalInput}
+                onChangeText={setNewTagModalInput}
+                placeholder="Tag name…"
+                placeholderTextColor="rgba(255,255,255,0.28)"
+                autoFocus
+                maxLength={30}
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  const v = newTagModalInput.trim();
+                  if (v) { saveCustomTag(v, newTagModalCategory); setShowNewTagModal(false); }
+                }}
+              />
+              <View style={styles.newTagPopupActions}>
+                <Pressable style={styles.newTagPopupCancel} onPress={() => setShowNewTagModal(false)}>
+                  <Text style={styles.newTagPopupCancelText}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.newTagPopupCreate, !newTagModalInput.trim() && { opacity: 0.4 }]}
+                  onPress={() => {
+                    const v = newTagModalInput.trim();
+                    if (v) { saveCustomTag(v, newTagModalCategory); setShowNewTagModal(false); }
+                  }}
+                  disabled={!newTagModalInput.trim()}
+                >
+                  <Text style={styles.newTagPopupCreateText}>Create</Text>
+                </Pressable>
+              </View>
             </Pressable>
           </Pressable>
         </Modal>
@@ -1171,6 +1194,17 @@ const styles = StyleSheet.create({
   tagPickerChipTextSelectedCustom: { color: PALETTE.jade, fontWeight: '700' },
   createTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.35)', backgroundColor: 'rgba(107,191,163,0.10)' },
   createTagBtnText: { fontSize: 13, color: PALETTE.jade, fontWeight: '600' },
+  newTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.08)' },
+  newTagBtnText: { fontSize: 12, color: PALETTE.jade, fontWeight: '600' },
+  newTagOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.70)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
+  newTagPopup: { width: '100%', backgroundColor: '#0F1729', borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(107,191,163,0.20)' },
+  newTagPopupTitle: { fontSize: 17, fontWeight: '700', color: '#FFFFFF', marginBottom: 16, textAlign: 'center' },
+  newTagPopupInput: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#FFFFFF', marginBottom: 20 },
+  newTagPopupActions: { flexDirection: 'row', gap: 12 },
+  newTagPopupCancel: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center' },
+  newTagPopupCancelText: { fontSize: 15, fontWeight: '600', color: 'rgba(255,255,255,0.60)' },
+  newTagPopupCreate: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(107,191,163,0.22)', borderWidth: 1, borderColor: 'rgba(107,191,163,0.45)', alignItems: 'center' },
+  newTagPopupCreateText: { fontSize: 15, fontWeight: '700', color: PALETTE.jade },
   newTagInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.05)', minWidth: 90 },
   newTagInput: { flex: 1, color: PALETTE.textMain, fontSize: 13, padding: 0, minWidth: 60 },
   tagPickerHint: { fontSize: 10, color: 'rgba(255,255,255,0.20)', textAlign: 'center', marginTop: 6, marginBottom: 2,  },

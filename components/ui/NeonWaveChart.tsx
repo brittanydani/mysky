@@ -10,6 +10,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
+import { toLocalDateString } from '../../utils/dateUtils';
 import { StyleSheet, Text, View, Pressable, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import {
@@ -57,7 +58,7 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() - (6 - i));
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toLocalDateString(d);
       const ci = checkIns.find(c => c.date === dateStr) ?? null;
       return {
         dateStr,
