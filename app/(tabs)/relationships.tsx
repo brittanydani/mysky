@@ -187,8 +187,9 @@ export default function RelationshipsScreen() {
   const handleAddRelationship = (type: RelationshipType) => {
     if (!canAddMore()) {
       Alert.alert(
-        'One more connection',
-        'Your free chart includes one relationship. Deeper Sky lets you explore unlimited connections.',
+        'Upgrade to Deeper Sky',
+        'Your free chart includes one relationship. Upgrade to explore unlimited connections.',
+
         [
           { text: 'Not now', style: 'cancel' },
           { text: 'Learn more', onPress: () => router.push('/(tabs)/premium' as Href) },
@@ -230,7 +231,8 @@ export default function RelationshipsScreen() {
 
       if (userChart) {
         try {
-          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: savedUserChart?.houseSystem, zodiacSystem: (await AstrologySettingsService.getSettings()).zodiacSystem, orbPreset: (await AstrologySettingsService.getSettings()).orbPreset });
+          const saveAstroSettings = await AstrologySettingsService.getSettings();
+          const otherChart = AstrologyCalculator.generateNatalChart({ ...birthData, houseSystem: savedUserChart?.houseSystem, zodiacSystem: saveAstroSettings.zodiacSystem, orbPreset: saveAstroSettings.orbPreset });
           otherChart.name = extra?.chartName || 'Someone Special';
           const report = SynastryEngine.calculateSynastry(userChart, otherChart);
           const topAspects = report.aspects.filter(a => a.strength === 'strong').slice(0, 3);
@@ -255,16 +257,24 @@ export default function RelationshipsScreen() {
 
   const handleSelectRelationship = async (rel: RelationshipChart) => {
     if (!userChart) return;
+
+    // Reset detail UI state before loading new relationship
+    setActiveTab('overview');
+    setChartViewMode('synastry');
+    setSummaryPerson('them');
+    setFilterMode({ person1: true, person2: true, cross: true });
+    setComparison(null);
     
     try {
       Haptics.selectionAsync().catch(() => {});
     
+      const astroSettings = await AstrologySettingsService.getSettings();
       const birthData: BirthData = {
         date: rel.birthDate, time: rel.birthTime, hasUnknownTime: rel.hasUnknownTime,
         place: rel.birthPlace, latitude: rel.latitude, longitude: rel.longitude, timezone: rel.timezone,
         houseSystem: savedUserChart?.houseSystem,
-        zodiacSystem: (await AstrologySettingsService.getSettings()).zodiacSystem,
-        orbPreset: (await AstrologySettingsService.getSettings()).orbPreset,
+        zodiacSystem: astroSettings.zodiacSystem,
+        orbPreset: astroSettings.orbPreset,
       };
     
       const otherChart = AstrologyCalculator.generateNatalChart(birthData);
@@ -469,7 +479,7 @@ export default function RelationshipsScreen() {
                 <Text style={styles.personPillType}>{RELATIONSHIP_LABELS[selectedRelationship.relationship]}</Text>
               </Pressable>
 
-              <Pressable style={styles.personPillAdd} onPress={() => handleBack()}>
+              <Pressable style={styles.personPillAdd} onPress={() => { setAddingRelationType('partner'); setShowAddModal(true); Haptics.selectionAsync().catch(() => {}); }}>
                 <Text style={styles.personPillAddText}>+ Add</Text>
               </Pressable>
             </View>}
@@ -511,6 +521,10 @@ export default function RelationshipsScreen() {
 
             {/* Summary Bar */}
             {summaryChart && (
+              <>
+              <Text style={styles.summaryOwnerLabel}>
+                {chartViewMode === 'mine' ? userName : chartViewMode === 'theirs' ? selectedRelationship.name : summaryPerson === 'you' ? userName : selectedRelationship.name}
+              </Text>
               <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.summaryBar}>
                 <View style={styles.summaryCol}>
                   <Text style={styles.summaryIcon}>☉ Sun</Text>
@@ -536,6 +550,7 @@ export default function RelationshipsScreen() {
                   </Text>
                 </View>
               </LinearGradient>
+              </>
             )}
 
             {/* Tabs */}
@@ -614,10 +629,10 @@ export default function RelationshipsScreen() {
                 {synastryReport.chemistryAspects.slice(0, isPremium ? 10 : 2).map((a, i) => <AspectRow key={`chem-${i}`} description={`Your ${a.person1Planet.planet.name} ${a.aspectType.symbol} their ${a.person2Planet.planet.name}`} title={a.title} category={a.category} strength={a.strength} detail={a.description} />)}
                 {synastryReport.challengeAspects.slice(0, isPremium ? 10 : 2).map((a, i) => <AspectRow key={`grow-${i}`} description={`Your ${a.person1Planet.planet.name} ${a.aspectType.symbol} their ${a.person2Planet.planet.name}`} title={a.title} category={a.category} strength={a.strength} detail={a.description} />)}
 
-                {!isPremium && synastryReport.aspects.length > 4 && (
+                {!isPremium && synastryReport.aspects.length > 6 && (
                   <Pressable onPress={() => router.push('/(tabs)/premium' as Href)}>
                     <LinearGradient colors={['rgba(232, 214, 174, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.upsellGradient}>
-                      <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 4} more planetary connections</Text>
+                      <Text style={styles.upsellTitle}>+{synastryReport.aspects.length - 6} more planetary connections</Text>
                       <Text style={styles.upsellText}>Deeper aspects reveal hidden dynamics — the subtle threads that make this relationship unique.</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}>
                         <MetallicText style={{ fontSize: 14, fontWeight: '600' }} variant="gold">Unlock all aspects</MetallicText>
@@ -760,7 +775,7 @@ export default function RelationshipsScreen() {
             <Text style={styles.listSectionSubtitle}>Compare charts to understand your dynamics</Text>
 
             <View style={styles.typeGrid}>
-              {(['partner', 'parent', 'child', 'friend', 'sibling', 'other'] as RelationshipType[]).map(type => (
+              {(['partner', 'ex', 'parent', 'child', 'friend', 'sibling', 'other'] as RelationshipType[]).map(type => (
                 <Pressable key={type} style={styles.typeButton} onPress={() => handleAddRelationship(type)}>
                   <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']} style={styles.typeIconContainer}>
                     <MetallicIcon name={RELATIONSHIP_ICONS[type]} size={24} color="#C9AE78" />
@@ -911,7 +926,8 @@ const styles = StyleSheet.create({
   filterDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent' },
   filterPillText: { fontSize: 12, color: theme.textMuted, fontWeight: '600' },
 
-  summaryBar: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, paddingVertical: 20, paddingHorizontal: 12, marginTop: 12, marginBottom: 24 },
+  summaryOwnerLabel: { fontSize: 12, fontWeight: '700', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center', marginTop: 12, marginBottom: 6 },
+  summaryBar: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, paddingVertical: 20, paddingHorizontal: 12, marginBottom: 24 },
   summaryCol: { flex: 1, alignItems: 'center', gap: 4 },
   summarySep: { width: 1, height: 48, backgroundColor: 'transparent', alignSelf: 'center' },
   summaryIcon: { fontSize: 11, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
