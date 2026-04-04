@@ -23,6 +23,7 @@ import { CheckInService, getLogicalToday } from '../../services/patterns/checkIn
 import type { DailyCheckIn, EnergyLevel, StressLevel, ThemeTag, CheckInInput } from '../../services/patterns/types';
 import type { NatalChart } from '../../services/astrology/types';
 import { usePremium } from '../../context/PremiumContext';
+import PremiumModal from '../../components/PremiumModal';
 import { NeonWaveChart } from '../../components/ui/NeonWaveChart';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
@@ -228,6 +229,7 @@ function formatDisplayDate(dateStr: string): string {
 export default function MoodCheckIn() {
   const router = useRouter();
   const { isPremium } = usePremium();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const [mood, setMood] = useState(5);
   const [energy, setEnergy] = useState(5);
@@ -678,7 +680,7 @@ export default function MoodCheckIn() {
                     icon={EMOTION_ICONS[tag]}
                     isSelected={selectedEmotions.has(tag)}
                     onPress={() => {
-                      if (!isPremium) return;
+                      if (!isPremium) { setShowPremiumModal(true); return; }
                       toggleTag(tag, selectedEmotions, setSelectedEmotions);
                     }}
                     isPremiumVariant
@@ -781,6 +783,7 @@ export default function MoodCheckIn() {
         <View style={{ height: 60 }} />
       </ScrollView>
       </SafeAreaView>
+      <PremiumModal visible={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
     </View>
   );
 }

@@ -288,6 +288,7 @@ export default function PatternsScreen() {
   };
 
   const handleExportPdf = async () => {
+    if (!isPremium) return;
     if (isExporting) return;
     setIsExporting(true);
     try {

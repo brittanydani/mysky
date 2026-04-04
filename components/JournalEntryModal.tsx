@@ -22,7 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
-import { toLocalDateString } from '../utils/dateUtils';
+import { toLocalDateString, parseLocalDate } from '../utils/dateUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, {
   FadeInDown,
@@ -41,14 +41,12 @@ import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from './ui/GoldSubtitle';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
-import ShadowQuoteCard, { ShadowQuoteInline } from './ui/ShadowQuoteCard';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
 import { localDb } from '../services/storage/localDb';
 import { AstrologyCalculator } from '../services/astrology/calculator';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
 import { NatalChart } from '../services/astrology/types';
-import { ShadowQuoteEngine, ShadowQuoteResult, ShadowQuote } from '../services/astrology/shadowQuotes';
 import { generateJournalPrompt, getFreePrompt, GeneratedPrompt, PromptSet } from '../services/journal/promptEngine';
 import { getArchetypeProfile, getArchetypePrompt, ArchetypeProfile, ArchetypeJournalPrompt } from '../services/journal/archetypeIntegration';
 
@@ -290,7 +288,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
   const [customTags, setCustomTags] = useState<CustomTag[]>([]);
-  const [showNewTagModal, setShowNewTagModal] = useState(false);
   const [newTagModalCategory, setNewTagModalCategory] = useState<string | undefined>(undefined);
   const [newTagModalInput, setNewTagModalInput] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -303,17 +300,11 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [enginePromptSet, setEnginePromptSet] = useState<PromptSet | null>(null);
   const [freePrompt, setFreePrompt] = useState<GeneratedPrompt | null>(null);
 
-  const [shadowResult, setShadowResult] = useState<ShadowQuoteResult | null>(null);
-  const [closeQuote, setCloseQuote] = useState<ShadowQuote | null>(null);
-  const [showCloseQuote, setShowCloseQuote] = useState(false);
-  const closeQuoteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const [archetypeProfile, setArchetypeProfile] = useState<ArchetypeProfile | null>(null);
   const [archetypePrompt, setArchetypePrompt] = useState<ArchetypeJournalPrompt | null>(null);
 
   useEffect(() => {
     return () => {
-      if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     };
   }, []);
@@ -416,11 +407,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       return next;
     });
     setTags((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    if (categoryId) {
-      setCategoryNewTagInputs((prev) => ({ ...prev, [categoryId]: '' }));
-    } else {
-      setNewTagInput('');
-    }
+    setNewTagModalInput('');
+    setNewTagModalCategory(undefined);
   }, []);
 
   const deleteCustomTag = useCallback((id: string) => {
@@ -454,10 +442,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           orbPreset: astroSettings.orbPreset,
         });
         setUserChart(chart);
-        try {
-          const shadow = await ShadowQuoteEngine.getJournalPromptQuote(chart);
-          setShadowResult(shadow);
-        } catch {}
       }
     } catch {}
   };
@@ -477,7 +461,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   useEffect(() => {
     if (!visible) return;
     if (initialData) {
-      setDate(new Date(initialData.date));
+      setDate(parseLocalDate(initialData.date));
       setMood(initialData.mood);
       const moonPhaseToEnergy: Record<string, EnergyKey> = {
         low: 'low', steady: 'steady', high: 'high',
@@ -489,7 +473,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       setTags(initialData.tags ?? []);
     } else {
       setDate(new Date()); setMood('okay'); setEnergyLevel('steady');
-      setTitle(''); setContent(''); setTags([]); setShowCloseQuote(false); setCloseQuote(null);
+      setTitle(''); setContent(''); setTags([]);
     }
   }, [initialData, visible]);
 
@@ -516,12 +500,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         chartId: chartId || undefined,
         transitSnapshot: transitSnapshotJson,
       });
-      if (shadowResult?.closeQuote) {
-        setCloseQuote(shadowResult.closeQuote);
-        setShowCloseQuote(true);
-        if (closeQuoteTimeoutRef.current) clearTimeout(closeQuoteTimeoutRef.current);
-        closeQuoteTimeoutRef.current = setTimeout(() => setShowCloseQuote(false), 4000);
-      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
       Alert.alert('Save Error', 'Could not secure your entry. Please try again.');
@@ -684,8 +662,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     )}
                   </View>
 
-                  {shadowResult && <ShadowQuoteInline text={shadowResult.quote.text} delay={100} />}
-
                   {/* Archetype Lens — only visible when user opens Guided Prompts */}
                   {showPrompts && archetypePrompt && (
                     <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.archetypePromptCard}>
@@ -792,8 +768,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
                 {/* Footer / Save */}
                 <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
-                  {showCloseQuote && closeQuote && <ShadowQuoteCard quote={closeQuote} variant="footer" isCloseQuote />}
-                  <SkiaMetallicPill
+                    <SkiaMetallicPill
                     label={initialData ? 'Secure Changes' : 'Secure Entry'}
                     onPress={handleSave}
                     borderRadius={16}
@@ -847,8 +822,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           onRequestClose={() => { setShowTagPicker(false); setTagSearch(''); }}
           onShow={loadCustomTags}
         >
-          <Pressable style={styles.tagPickerOverlay} onPress={() => { setShowTagPicker(false); setTagSearch(''); setNewTagInput(''); setCategoryNewTagInputs({}); }}>
-            <Pressable style={styles.tagPickerSheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.tagPickerOverlay} pointerEvents="box-none">
+            <Pressable onPress={() => { setShowTagPicker(false); setTagSearch(''); setNewTagModalInput(''); setNewTagModalCategory(undefined); }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+            <View style={styles.tagPickerSheet}>
               <View style={styles.tagPickerHandle} />
               <View style={styles.tagPickerHeader}>
                 <Text style={styles.tagPickerTitle}>Add Tags</Text>
@@ -971,14 +947,32 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         {customTags.filter((t) => !t.categoryId).map((tag) => (
                           <TagChip key={tag.id} tag={tag} isCustom />
                         ))}
-                        {/* Create tag button */}
-                        <Pressable
-                          style={styles.newTagBtn}
-                          onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory(undefined); setNewTagModalInput(''); setShowNewTagModal(true); }}
-                        >
-                          <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
-                          <Text style={styles.newTagBtnText}>New tag</Text>
-                        </Pressable>
+                        {newTagModalCategory === 'uncategorized' ? (
+                          <View style={styles.inlineTagInputWrap}>
+                            <TextInput
+                              style={styles.inlineTagInput}
+                              value={newTagModalInput}
+                              onChangeText={setNewTagModalInput}
+                              placeholder="Tag name…"
+                              placeholderTextColor="rgba(255,255,255,0.28)"
+                              autoFocus
+                              maxLength={30}
+                              returnKeyType="done"
+                              onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); setNewTagModalCategory(null as any); setNewTagModalInput(''); } }}
+                            />
+                            <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); } setNewTagModalCategory(null as any); setNewTagModalInput(''); }}>
+                              <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
+                            </Pressable>
+                          </View>
+                        ) : (
+                          <Pressable
+                            style={styles.newTagBtn}
+                            onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory('uncategorized'); setNewTagModalInput(''); }}
+                          >
+                            <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
+                            <Text style={styles.newTagBtnText}>New tag</Text>
+                          </Pressable>
+                        )}
                       </View>
                       {customTags.length > 0 && (
                         <Text style={styles.tagPickerHint}>Hold to delete a custom tag</Text>
@@ -992,13 +986,32 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                             <View style={styles.tagPickerRow}>
                               {cat.tags.map((tag) => <TagChip key={tag.id} tag={tag} />)}
                               {catCustomTags.map((tag) => <TagChip key={tag.id} tag={tag} isCustom />)}
-                              <Pressable
-                                style={styles.newTagBtn}
-                                onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory(cat.id); setNewTagModalInput(''); setShowNewTagModal(true); }}
-                              >
-                                <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
-                                <Text style={styles.newTagBtnText}>New</Text>
-                              </Pressable>
+                              {newTagModalCategory === cat.id ? (
+                                <View style={styles.inlineTagInputWrap}>
+                                  <TextInput
+                                    style={styles.inlineTagInput}
+                                    value={newTagModalInput}
+                                    onChangeText={setNewTagModalInput}
+                                    placeholder="Tag name…"
+                                    placeholderTextColor="rgba(255,255,255,0.28)"
+                                    autoFocus
+                                    maxLength={30}
+                                    returnKeyType="done"
+                                    onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); setNewTagModalCategory(null as any); setNewTagModalInput(''); } }}
+                                  />
+                                  <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); } setNewTagModalCategory(null as any); setNewTagModalInput(''); }}>
+                                    <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
+                                  </Pressable>
+                                </View>
+                              ) : (
+                                <Pressable
+                                  style={styles.newTagBtn}
+                                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory(cat.id); setNewTagModalInput(''); }}
+                                >
+                                  <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
+                                  <Text style={styles.newTagBtnText}>New</Text>
+                                </Pressable>
+                              )}
                             </View>
                           </React.Fragment>
                         );
@@ -1007,56 +1020,10 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   );
                 })()}
               </ScrollView>
-            </Pressable>
-          </Pressable>
+            </View>
+          </View>
         </Modal>
 
-        {/* ── New Tag Popup ── */}
-        <Modal
-          visible={showNewTagModal}
-          animationType="fade"
-          transparent
-          onRequestClose={() => setShowNewTagModal(false)}
-        >
-          <Pressable style={styles.newTagOverlay} onPress={() => setShowNewTagModal(false)}>
-            <Pressable style={styles.newTagPopup} onPress={(e) => e.stopPropagation()}>
-              <Text style={styles.newTagPopupTitle}>
-                {newTagModalCategory
-                  ? `New tag in ${TAG_CATEGORIES.find((c) => c.id === newTagModalCategory)?.label ?? 'category'}`
-                  : 'Create New Tag'}
-              </Text>
-              <TextInput
-                style={styles.newTagPopupInput}
-                value={newTagModalInput}
-                onChangeText={setNewTagModalInput}
-                placeholder="Tag name…"
-                placeholderTextColor="rgba(255,255,255,0.28)"
-                autoFocus
-                maxLength={30}
-                returnKeyType="done"
-                onSubmitEditing={() => {
-                  const v = newTagModalInput.trim();
-                  if (v) { saveCustomTag(v, newTagModalCategory); setShowNewTagModal(false); }
-                }}
-              />
-              <View style={styles.newTagPopupActions}>
-                <Pressable style={styles.newTagPopupCancel} onPress={() => setShowNewTagModal(false)}>
-                  <Text style={styles.newTagPopupCancelText}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.newTagPopupCreate, !newTagModalInput.trim() && { opacity: 0.4 }]}
-                  onPress={() => {
-                    const v = newTagModalInput.trim();
-                    if (v) { saveCustomTag(v, newTagModalCategory); setShowNewTagModal(false); }
-                  }}
-                  disabled={!newTagModalInput.trim()}
-                >
-                  <Text style={styles.newTagPopupCreateText}>Create</Text>
-                </Pressable>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
     </Modal>
   );
 }
@@ -1176,14 +1143,14 @@ const styles = StyleSheet.create({
 
   // ── Tag Picker Modal ──
   tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.60)', justifyContent: 'flex-end' },
-  tagPickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '82%', flexShrink: 1 },
+  tagPickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '92%', minHeight: '70%', flexShrink: 1, marginBottom: 64 },
   tagPickerHandle: { width: 44, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.18)', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
   tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   tagPickerTitle: { fontSize: 16, color: '#FFFFFF', fontWeight: '600' },
   tagPickerDone: { fontSize: 16, color: PALETTE.gold, fontWeight: '700' },
   tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: 8 },
   tagSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 14, padding: 0 },
-  tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 40, flex: 1 },
+  tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 72, flex: 1 },
   tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(201,174,120,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
   tagPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },
@@ -1195,6 +1162,8 @@ const styles = StyleSheet.create({
   createTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.35)', backgroundColor: 'rgba(107,191,163,0.10)' },
   createTagBtnText: { fontSize: 13, color: PALETTE.jade, fontWeight: '600' },
   newTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.08)' },
+  inlineTagInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.10)', minWidth: 120 },
+  inlineTagInput: { flex: 1, color: '#FFFFFF', fontSize: 13, padding: 0, minWidth: 70 },
   newTagBtnText: { fontSize: 12, color: PALETTE.jade, fontWeight: '600' },
   newTagOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.70)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
   newTagPopup: { width: '100%', backgroundColor: '#0F1729', borderRadius: 20, padding: 24, borderWidth: 1, borderColor: 'rgba(107,191,163,0.20)' },

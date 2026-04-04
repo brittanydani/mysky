@@ -85,6 +85,7 @@ const CARDS: BlueprintCard[] = [
     iconStyle: { color: PALETTE.emerald },
     gradientColors: ['rgba(110, 191, 139, 0.1)', 'transparent'],
     route: '/(tabs)/healing' as Href,
+    premium: true,
   },
   {
     title: 'Inner Tensions',

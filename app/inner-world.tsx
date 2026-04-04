@@ -29,9 +29,10 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import {
   getReflectionDate,
   getTodayKey,
-  getTodayQuestions,
+  getOrCreateTodayQuestions,
   getCategorySealStatus,
   sealCategoryAnswers,
+  clearPendingIfAllSealed,
   loadReflections,
   getCurrentStreak,
   DayQuestions,
@@ -167,11 +168,17 @@ export default function InnerWorldScreen() {
           });
 
           // Load today's questions per category — use startedAt as per-user seed
+          // Questions persist until all categories are sealed
           const userSeed = reflData.startedAt ?? undefined;
+          const [valuesQs, archetypesQs, cognitiveQs] = await Promise.all([
+            getOrCreateTodayQuestions('values', refDate, userSeed),
+            getOrCreateTodayQuestions('archetypes', refDate, userSeed),
+            getOrCreateTodayQuestions('cognitive', refDate, userSeed),
+          ]);
           const qs: Record<ReflectionCategory, DayQuestions> = {
-            values: { category: 'values', questions: getTodayQuestions('values', refDate, userSeed) },
-            archetypes: { category: 'archetypes', questions: getTodayQuestions('archetypes', refDate, userSeed) },
-            cognitive: { category: 'cognitive', questions: getTodayQuestions('cognitive', refDate, userSeed) },
+            values: { category: 'values', questions: valuesQs },
+            archetypes: { category: 'archetypes', questions: archetypesQs },
+            cognitive: { category: 'cognitive', questions: cognitiveQs },
           };
           setCategoryQuestions(qs);
           setCategorySealed(sealStatus);
@@ -245,6 +252,8 @@ export default function InnerWorldScreen() {
       setTotalDays(result.totalDaysCompleted);
       const s = await getCurrentStreak();
       setStreak(s);
+      // Clear pending questions if all categories are now sealed
+      await clearPendingIfAllSealed();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
       Alert.alert('Error', 'Failed to save reflections. Please try again.');

@@ -53,6 +53,74 @@ const QUESTIONS_PER_CATEGORY = 365;
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Pending question persistence — questions stay until all categories are sealed
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PENDING_QUESTIONS_KEY = '@mysky:pending_reflection_questions';
+
+interface PendingQuestionSet {
+  date: string; // YYYY-MM-DD when these questions were generated
+  questions: Record<ReflectionCategory, number[]>; // question IDs per category
+}
+
+async function loadPendingQuestions(): Promise<PendingQuestionSet | null> {
+  try {
+    const raw = await EncryptedAsyncStorage.getItem(PENDING_QUESTIONS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+async function savePendingQuestions(pending: PendingQuestionSet): Promise<void> {
+  try {
+    await EncryptedAsyncStorage.setItem(PENDING_QUESTIONS_KEY, JSON.stringify(pending));
+  } catch {}
+}
+
+async function clearPendingQuestions(): Promise<void> {
+  try {
+    await EncryptedAsyncStorage.removeItem(PENDING_QUESTIONS_KEY);
+  } catch {}
+}
+
+/**
+ * Get questions for a category, persisting them until all categories are sealed.
+ * If pending questions exist (from a previous unseal day), return those.
+ * Otherwise generate fresh ones and store them.
+ */
+export async function getOrCreateTodayQuestions(
+  category: ReflectionCategory,
+  date: Date = getReflectionDate(),
+  userSeed?: string,
+): Promise<ReflectionQuestion[]> {
+  const pending = await loadPendingQuestions();
+  const bank = QUESTION_BANKS[category];
+
+  if (pending && pending.questions[category]) {
+    // Return the persisted questions
+    return pending.questions[category].map(id => bank.find(q => q.id === id)!).filter(Boolean);
+  }
+
+  // Generate fresh and store
+  const fresh = getTodayQuestions(category, date, userSeed);
+  const existingPending = pending ?? { date: getTodayKey(date), questions: {} as Record<ReflectionCategory, number[]> };
+  existingPending.questions[category] = fresh.map(q => q.id);
+  await savePendingQuestions(existingPending as PendingQuestionSet);
+  return fresh;
+}
+
+/**
+ * Clear pending questions when all categories have been sealed.
+ * Call this after sealing — if all 3 are sealed, pending is wiped
+ * so the next session generates fresh questions.
+ */
+export async function clearPendingIfAllSealed(): Promise<void> {
+  const sealStatus = await getCategorySealStatus();
+  if (sealStatus.values && sealStatus.archetypes && sealStatus.cognitive) {
+    await clearPendingQuestions();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Question selection — deterministic by day
 // ─────────────────────────────────────────────────────────────────────────────
 

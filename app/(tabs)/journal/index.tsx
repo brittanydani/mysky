@@ -482,23 +482,20 @@ export default function JournalScreen() {
 
 
 
-      {activeTab === 'reflections' && isPremium && moodInsightsEnabled && patternInsights.length > 0 && (
+      {activeTab === 'reflections' && isPremium && moodInsightsEnabled && patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').length > 0 && (
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.insightsSection}>
           <SectionHeader title="Pattern Insights" icon="analytics-outline" />
           <Text style={styles.insightsSubtitle}>What your journal reveals over time</Text>
 
-          {patternInsights.map((insight, idx) => {
-            const isTransit = insight.type === 'transit_correlation';
-            const accentColor = isTransit ? '#A89BC8' : '#C9AE78';
-            const gradientColors: [string, string] = isTransit
-              ? ['rgba(168,155,200,0.18)', 'rgba(10,10,12,0.9)']
-              : ['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)'];
+          {patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').map((insight, idx) => {
+            const accentColor = '#C9AE78';
+            const gradientColors: [string, string] = ['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)'];
 
             return (
               <LinearGradient key={`${insight.title}-${idx}`} colors={gradientColors} style={styles.insightCard}>
                 <View style={styles.insightHeader}>
                   <MetallicIcon
-                    name={(insight.icon ?? (isTransit ? 'planet-outline' : 'analytics-outline')) as any}
+                    name={(insight.icon ?? 'analytics-outline') as any}
                     size={16}
                     color={accentColor}
                     style={{ marginRight: 8 }}

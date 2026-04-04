@@ -355,13 +355,8 @@ export default function ChartScreen() {
       
       if (isActive) {
         // Toggle off
-        setActiveOverlays((prev) => prev.filter((o) => o.person.id !== person.id));
+        setActiveOverlays([]);
         Haptics.selectionAsync().catch(() => {});
-        return;
-      }
-
-      if (activeOverlays.length >= 2) {
-        Alert.alert('Too many overlays', 'You can only overlay up to 2 charts.');
         return;
       }
 
@@ -383,12 +378,7 @@ export default function ChartScreen() {
         const chart = AstrologyCalculator.generateNatalChart(birthData);
         (chart as any).name = person.name;
         
-        // Pick a theme based on existing
-        const usedThemes = activeOverlays.map(o => o.theme);
-        const availableThemes: ('silver'|'roseGold'|'iceBlue')[] = ['silver', 'roseGold', 'iceBlue'];
-        const chosenTheme = availableThemes.find(t => !usedThemes.includes(t)) || 'silver';
-
-        setActiveOverlays((prev) => [...prev, { person, chart, theme: chosenTheme }]);
+        setActiveOverlays([{ person, chart, theme: 'silver' }]);
         Haptics.selectionAsync().catch(() => {});
       } catch (e) {
         logger.error('Failed to generate overlay chart:', e);
@@ -867,12 +857,12 @@ export default function ChartScreen() {
             </View>
             <Text style={styles.title}>
               {activeOverlays.length > 0 
-                ? (activeOverlays.length > 1 ? 'Group Dynamic' : 'Relationship Chart') 
+                ? 'Relationship Chart'
                 : 'Your Chart'}
             </Text>
             <GoldSubtitle style={styles.subtitle}>
               {activeOverlays.length > 0
-                ? `${(userChart as any).name || 'You'} + ${activeOverlays.length > 1 ? `${activeOverlays.length} Others` : activeOverlays[0].person.name}`
+                ? `${(userChart as any).name || 'You'} + ${activeOverlays[0].person.name}`
                 : `${birthDateStr ? `Born ${birthDateStr}` : ''}${birthTimeStr ? ` · ${birthTimeStr}` : ''}`}
             </GoldSubtitle>
             {activeOverlays.length === 0 && (
@@ -1191,7 +1181,10 @@ export default function ChartScreen() {
             <View style={[styles.tabRow, { marginBottom: theme.spacing.md }]}>
               <Pressable
                 style={[styles.tabBtn, viewMode === 'essentials' && styles.tabBtnActive]}
-                onPress={() => setViewMode('essentials')}
+                onPress={() => {
+                  setViewMode('essentials');
+                  if (activeTab !== 'planets') setActiveTab('planets');
+                }}
                 accessibilityRole="tab"
                 accessibilityLabel="Essentials view"
                 accessibilityState={{ selected: viewMode === 'essentials' }}
@@ -1263,8 +1256,8 @@ export default function ChartScreen() {
             </SectionAccordion>
           </Animated.View>
 
-          {/* ── Sensitive Points (Premium) ── */}
-          {isPremium && sensitivePoints.length > 0 && (
+          {/* ── Sensitive Points (Premium, Complete only) ── */}
+          {viewMode === 'complete' && isPremium && sensitivePoints.length > 0 && (
             <Animated.View entering={FadeInDown.delay(250).duration(600)} style={{ width: '100%' }}>
               <SectionAccordion
                 title="Sensitive Points"
@@ -1313,7 +1306,7 @@ export default function ChartScreen() {
 
           {/* ── Tab Switcher ── */}
           <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.tabRow}>
-            {(['planets', 'houses', 'aspects', 'patterns'] as TabKey[]).map((tab) => (
+            {(viewMode === 'complete' ? ['planets', 'houses', 'aspects', 'patterns'] as TabKey[] : ['planets'] as TabKey[]).map((tab) => (
               <Pressable
                 key={tab}
                 style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
@@ -1325,7 +1318,7 @@ export default function ChartScreen() {
                 {activeTab === tab ? (
                   <MetallicText style={[styles.tabText, styles.tabTextActive]} color="#CFAE73">
                     {tab === 'planets'
-                      ? `Planets (${planetRows.length})`
+                      ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})`
                       : tab === 'houses'
                         ? `Houses (${houseCusps.length})`
                         : tab === 'aspects'
@@ -1335,7 +1328,7 @@ export default function ChartScreen() {
                 ) : (
                   <Text style={styles.tabText}>
                     {tab === 'planets'
-                      ? `Planets (${planetRows.length})`
+                      ? `Planets (${viewMode === 'essentials' ? 7 : planetRows.length})`
                       : tab === 'houses'
                         ? `Houses (${houseCusps.length})`
                         : tab === 'aspects'
@@ -1357,7 +1350,7 @@ export default function ChartScreen() {
                 <Text style={[styles.th, { flex: 1 }]}>House</Text>
               </View>
 
-              {planetRows.map((row, idx) => {
+              {(viewMode === 'essentials' ? planetRows.slice(0, 7) : planetRows).map((row, idx) => {
                 const elColor = ELEMENT_COLORS[row.p.sign.element] || theme.textSecondary;
                 const retro = getRetrogradeFlag(row.p as any);
                 const planetSymbol = (row.p as any)?.planet?.symbol ?? '•';
@@ -1397,9 +1390,11 @@ export default function ChartScreen() {
                       <GradientSymbol symbol={row.p.sign.symbol} fontSize={18} w={24} h={24} style={{ marginRight: 6 }} />
                       <View style={{ flex: 1 }}>
                         <MetallicText color={elColor} style={styles.signName}>{row.p.sign.name}</MetallicText>
-                        <Text style={styles.elementLabel}>
-                          {row.p.sign.element} · {row.p.sign.modality}
-                        </Text>
+                        {viewMode === 'complete' && (
+                          <Text style={styles.elementLabel}>
+                            {row.p.sign.element} · {row.p.sign.modality}
+                          </Text>
+                        )}
                       </View>
                     </View>
 
@@ -1415,8 +1410,8 @@ export default function ChartScreen() {
                 );
               })}
 
-              {/* Sensitive Points (table section — premium only) */}
-              {isPremium && sensitivePoints.length > 0 && (
+              {/* Sensitive Points (table section — premium, complete only) */}
+              {viewMode === 'complete' && isPremium && sensitivePoints.length > 0 && (
                 <>
                   <View style={styles.pointsDivider}>
                     <Text style={styles.pointsLabel}>Sensitive Points</Text>
@@ -2087,8 +2082,8 @@ export default function ChartScreen() {
             </Animated.View>
           )}
 
-          {/* ── Themed Interpretation Sections (premium) ── */}
-          {isPremium && themedSections.length > 0 && (
+          {/* ── Themed Interpretation Sections (premium, Complete only) ── */}
+          {viewMode === 'complete' && isPremium && themedSections.length > 0 && (
             <Animated.View entering={FadeInDown.delay(350).duration(600)} style={{ width: '100%' }}>
               <SectionAccordion
                 title="Your Chart Story"
@@ -2143,8 +2138,8 @@ export default function ChartScreen() {
               COMPLETE VIEW — Advanced sections shown when toggled
               ══════════════════════════════════════════════════════ */}
 
-          {/* ── Key Aspects Summary ── */}
-          {keyAspects.length > 0 && (
+          {/* ── Key Aspects Summary (Complete only) ── */}
+          {viewMode === 'complete' && keyAspects.length > 0 && (
             <Animated.View entering={FadeInDown.delay(360).duration(600)} style={{ width: '100%' }}>
               <SectionAccordion
                 title="Strongest Aspects"
@@ -2153,7 +2148,7 @@ export default function ChartScreen() {
                 openSections={openSections}
                 setOpenSections={setOpenSections}
               >
-                {keyAspects.slice(0, viewMode === 'complete' ? 10 : 5).map((ka, idx) => (
+                {keyAspects.slice(0, 10).map((ka, idx) => (
                   <LinearGradient
                     key={`ka-${idx}`}
                     colors={idx % 2 === 0 ? ['rgba(14, 24, 48,0.5)', 'rgba(10, 18, 36,0.3)'] : ['rgba(10, 18, 36,0.4)', 'rgba(10, 18, 36,0.3)']}
@@ -2533,8 +2528,8 @@ export default function ChartScreen() {
             </Animated.View>
           )}
 
-          {/* ── Life Themes (grouped) ── */}
-          {isPremium && (relationshipProfile || careerProfile || emotionalProfile || shadowGrowth) && (
+          {/* ── Life Themes (grouped, Complete only) ── */}
+          {viewMode === 'complete' && isPremium && (relationshipProfile || careerProfile || emotionalProfile || shadowGrowth) && (
             <Animated.View entering={FadeInDown.delay(420).duration(600)} style={{ width: '100%' }}>
               <SectionAccordion
                 title="Life Themes"

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +16,10 @@ import MoonPhaseView from '../components/ui/MoonPhaseView';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { localDb } from '../services/storage/localDb';
+import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../services/premium/advancedJournal';
+import { usePremium } from '../context/PremiumContext';
+import { useFocusEffect } from '@react-navigation/core';
 
 // ── Rotating daily reflection prompts ──
 const REFLECTION_PROMPTS = [
@@ -233,6 +237,25 @@ const ActionPill = ({ label, icon, color, onPress }: { label: string; icon: keyo
 
 export default function CosmicContext() {
   const router = useRouter();
+  const { isPremium } = usePremium();
+  const [transitInsights, setTransitInsights] = useState<PatternInsight[]>([]);
+
+  const loadTransitInsights = useCallback(async () => {
+    try {
+      const entries = await localDb.getJournalEntriesPaginated(90);
+      if (entries.length < 3) return;
+      const moodMap: Record<string, MoodLevel> = { calm: 5, soft: 4, okay: 3, heavy: 2, stormy: 1 };
+      const metas: JournalEntryMeta[] = entries.map((e) => {
+        let transitSnapshot: TransitSnapshot | undefined;
+        if (e.transitSnapshot) { try { transitSnapshot = JSON.parse(e.transitSnapshot); } catch {} }
+        return { id: e.id, date: e.date, mood: { overall: moodMap[e.mood] ?? 3 }, tags: [], wordCount: e.contentWordCount ?? (e.content || '').trim().split(/\s+/).filter(Boolean).length, transitSnapshot };
+      });
+      const all = AdvancedJournalAnalyzer.analyzePatterns(metas, isPremium);
+      setTransitInsights(all.filter(i => i.type === 'transit_correlation' || i.icon === 'moon-outline' || i.icon === 'planet-outline'));
+    } catch {}
+  }, [isPremium]);
+
+  useFocusEffect(useCallback(() => { void loadTransitInsights(); }, [loadTransitInsights]));
 
   // Live moon phase from the astronomy engine
   const moonInfo = useMemo(() => getMoonPhaseInfo(), []);
@@ -483,6 +506,28 @@ export default function CosmicContext() {
             ))}
           </View>
         </View>
+
+        {/* ── Astrology Insights from Journal ── */}
+        {isPremium && transitInsights.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(200)} style={{ marginBottom: 24 }}>
+            <Text style={styles.sectionLabel}>YOUR COSMIC PATTERNS</Text>
+            <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 14, marginTop: -10 }}>How planetary transits correlate with your journal entries</Text>
+            {transitInsights.map((insight, idx) => (
+              <LinearGradient key={`${insight.title}-${idx}`} colors={['rgba(168,155,200,0.18)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 }}>
+                  <MetallicIcon name={(insight.icon ?? 'planet-outline') as any} size={16} color="#A89BC8" />
+                  <MetallicText color="#A89BC8" style={{ fontSize: 14, fontWeight: '600', flex: 1 }}>{insight.title}</MetallicText>
+                  <View style={[styles.confidenceBadge, insight.confidence === 'strong' && styles.confidenceStrong, insight.confidence === 'suggested' && styles.confidenceSuggested]}>
+                    <Text style={[styles.confidenceText, insight.confidence === 'suggested' && { color: '#C9AE78' }]}>{insight.confidence.toUpperCase()}</Text>
+                  </View>
+                </View>
+                <Text style={styles.transitImpact}>{insight.description}</Text>
+                {!!insight.evidence && <Text style={[styles.transitSource, { marginTop: 4 }]}>{insight.evidence}</Text>}
+                {!!insight.actionable && <Text style={[styles.transitImpact, { color: 'rgba(255,255,255,0.85)', marginTop: 6 }]}>{insight.actionable}</Text>}
+              </LinearGradient>
+            ))}
+          </Animated.View>
+        )}
 
         {/* ── Reflection Prompt ── */}
         <Animated.View entering={FadeInDown.delay(300)} style={{ marginBottom: 24 }}>
