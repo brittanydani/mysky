@@ -127,8 +127,11 @@ export async function getStreakStatus(chartId: string): Promise<StreakStatus> {
     const checkedInToday = dateSet.has(today);
 
     // Calculate consecutive streak
+    // Use the same 2AM-adjusted base date as getCheckInDateString so all date
+    // arithmetic is consistent (before 2 AM, check-in day is still "yesterday").
     let streak = 0;
     const now = new Date();
+    if (now.getHours() < 2) now.setDate(now.getDate() - 1);
     for (let i = 0; i < 90; i++) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);

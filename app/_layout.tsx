@@ -19,17 +19,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
-// SkiaGradient removed — was triggering Skia barrel import at module eval time,
-// which creates a Reanimated worklet runtime before React mounts (crash vector).
-// ErrorBoundary and timeout UI now use plain Views instead.
-
-// Modals lazy-loaded to avoid pulling @shopify/react-native-skia into eval-time
-// import graph (Skia barrel triggers Reanimated worklet runtime at module eval).
-const OnboardingModal = React.lazy(() => import('../components/OnboardingModal'));
-const PrivacyConsentModal = React.lazy(() => import('../components/PrivacyConsentModal'));
-const AuthRequiredModal = React.lazy(() => import('../components/AuthRequiredModal'));
-const CosmicBackground = React.lazy(() => import('../components/ui/CosmicBackground'));
-
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
@@ -44,6 +33,17 @@ import { useSubscriptionStore } from '../store/useSubscriptionStore';
 
 // Keep splash visible until the app finishes initializing
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// SkiaGradient removed — was triggering Skia barrel import at module eval time,
+// which creates a Reanimated worklet runtime before React mounts (crash vector).
+// ErrorBoundary and timeout UI now use plain Views instead.
+
+// Modals lazy-loaded to avoid pulling @shopify/react-native-skia into eval-time
+// import graph (Skia barrel triggers Reanimated worklet runtime at module eval).
+const OnboardingModal = React.lazy(() => import('../components/OnboardingModal'));
+const PrivacyConsentModal = React.lazy(() => import('../components/PrivacyConsentModal'));
+const AuthRequiredModal = React.lazy(() => import('../components/AuthRequiredModal'));
+const CosmicBackground = React.lazy(() => import('../components/ui/CosmicBackground'));
 
 
 // Allowlist of routes that notification deep links can navigate to.

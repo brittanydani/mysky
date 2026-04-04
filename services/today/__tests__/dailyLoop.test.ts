@@ -26,8 +26,11 @@ import { toLocalDateString } from '../../../utils/dateUtils';
 type MockCheckIn = { date: string; moodScore: number; energyLevel: string; stressLevel: string; tags: string[]; timeOfDay: string; createdAt: string };
 
 function makeCheckIns(daysBack: number[], moodScore = 7): MockCheckIn[] {
+  // Base date mirrors getCheckInDateString's 2AM cutoff: before 2 AM still belongs to yesterday.
+  const base = new Date();
+  if (base.getHours() < 2) base.setDate(base.getDate() - 1);
   return daysBack.map(d => {
-    const dt = new Date();
+    const dt = new Date(base);
     dt.setDate(dt.getDate() - d);
     const date = toLocalDateString(dt);
     return { date, moodScore, energyLevel: 'medium', stressLevel: 'low', tags: [], timeOfDay: 'morning', createdAt: `${date}T12:00:00Z` };
@@ -35,8 +38,10 @@ function makeCheckIns(daysBack: number[], moodScore = 7): MockCheckIn[] {
 }
 
 function makeSleepEntries(daysBack: number[], hours = 8) {
+  const base = new Date();
+  if (base.getHours() < 2) base.setDate(base.getDate() - 1);
   return daysBack.map(d => {
-    const dt = new Date();
+    const dt = new Date(base);
     dt.setDate(dt.getDate() - d);
     const date = toLocalDateString(dt);
     return { date, durationHours: hours, chartId: 'test', createdAt: `${date}T07:00:00Z` };
