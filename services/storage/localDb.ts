@@ -1271,12 +1271,13 @@ class LocalDatabase {
 
     await db.runAsync(
       `UPDATE journal_entries
-       SET mood = ?, moon_phase = ?, title = ?, content = ?, chart_id = ?, transit_snapshot = ?,
+       SET date = ?, mood = ?, moon_phase = ?, title = ?, content = ?, chart_id = ?, transit_snapshot = ?,
            content_keywords_enc = ?, content_emotions_enc = ?, content_sentiment_enc = ?,
            content_word_count = ?, content_reading_minutes = ?, tags = ?,
            updated_at = ?
        WHERE id = ?`,
       [
+        entry.date,
         entry.mood,
         entry.moonPhase,
         encTitle,

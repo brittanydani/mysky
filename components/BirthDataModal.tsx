@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingBottom: 48,
-    paddingTop: 8,
+    paddingTop: 24,
   },
   titleSection: {
     marginBottom: 32,

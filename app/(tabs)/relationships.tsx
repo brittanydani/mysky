@@ -86,6 +86,7 @@ export default function RelationshipsScreen() {
   const [activeTab, setActiveTab] = useState<'overview' | 'aspects' | 'dynamics'>('overview');
   const [filterMode, setFilterMode] = useState({ person1: true, person2: true, cross: true });
   const [summaryPerson, setSummaryPerson] = useState<'you' | 'them'>('them');
+  const [chartViewMode, setChartViewMode] = useState<'mine' | 'synastry' | 'theirs'>('synastry');
   
   // Synastry preview for list cards
   const [synastryPreviews, setSynastryPreviews] = useState<Record<string, { aspects: SynastryAspect[]; connection: string }>>({});
@@ -303,6 +304,7 @@ export default function RelationshipsScreen() {
     setActiveTab('overview');
     setFilterMode({ person1: true, person2: true, cross: true });
     setSummaryPerson('them');
+    setChartViewMode('synastry');
   };
 
   const handleExportPdf = useCallback(async () => {
@@ -394,7 +396,7 @@ export default function RelationshipsScreen() {
   // ── DETAIL VIEW ──
   if (viewMode === 'detail' && selectedRelationship && selectedChart && synastryReport) {
     const userName = userChart?.name || 'You';
-    const summaryChart = summaryPerson === 'you' ? userChart : selectedChart;
+    const summaryChart = chartViewMode === 'mine' ? userChart : chartViewMode === 'theirs' ? selectedChart : summaryPerson === 'you' ? userChart : selectedChart;
 
     return (
       <View style={styles.container}>
@@ -421,8 +423,35 @@ export default function RelationshipsScreen() {
 
           <ScrollView style={styles.detailScroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.detailScrollContent}>
 
-            {/* Person selector */}
-            <View style={styles.personSelectorRow}>
+            {/* Chart view mode toggle */}
+            <View style={styles.chartViewToggle}>
+              {([
+                { key: 'mine' as const, label: userName },
+                { key: 'synastry' as const, label: 'Synastry' },
+                { key: 'theirs' as const, label: selectedRelationship.name },
+              ]).map((seg, idx) => {
+                const isActive = chartViewMode === seg.key;
+                const isFirst = idx === 0;
+                const isLast = idx === 2;
+                return (
+                  <Pressable
+                    key={seg.key}
+                    style={[
+                      styles.chartViewSegment,
+                      isFirst && styles.chartViewSegmentFirst,
+                      isLast && styles.chartViewSegmentLast,
+                      isActive && styles.chartViewSegmentActive,
+                    ]}
+                    onPress={() => { setChartViewMode(seg.key); Haptics.selectionAsync().catch(() => {}); }}
+                  >
+                    <Text style={[styles.chartViewSegmentText, isActive && styles.chartViewSegmentTextActive]} numberOfLines={1}>{seg.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* Person selector — only shown in synastry mode */}
+            {chartViewMode === 'synastry' && <View style={styles.personSelectorRow}>
               <Pressable
                 style={[styles.personPill, summaryPerson === 'you' && { borderColor: `${theme.textGold}60`, backgroundColor: `${theme.textGold}15` }]}
                 onPress={() => { setSummaryPerson('you'); Haptics.selectionAsync().catch(() => {}); }}
@@ -443,10 +472,10 @@ export default function RelationshipsScreen() {
               <Pressable style={styles.personPillAdd} onPress={() => handleBack()}>
                 <Text style={styles.personPillAddText}>+ Add</Text>
               </Pressable>
-            </View>
+            </View>}
 
-            {/* Filter pills */}
-            <View style={styles.filterRow}>
+            {/* Filter pills — only in synastry mode */}
+            {chartViewMode === 'synastry' && <View style={styles.filterRow}>
               {([
                 { key: 'person1' as const, label: 'Your planets', activeColor: theme.textGold },
                 { key: 'person2' as const, label: `${selectedRelationship.name}'s`, activeColor: '#C9AE78' },
@@ -467,16 +496,16 @@ export default function RelationshipsScreen() {
                   </Pressable>
                 );
               })}
-            </View>
+            </View>}
 
-            {/* Synastry chart wheel */}
+            {/* Chart wheel */}
             <View style={{ marginVertical: 12 }}>
               <NatalChartWheel
-                chart={userChart!}
-                overlayChart={selectedChart && selectedRelationship ? selectedChart : undefined}
-                overlayName={selectedRelationship?.name}
-                filterMode={filterMode}
-                showAspects
+                chart={chartViewMode === 'theirs' ? selectedChart! : userChart!}
+                overlayChart={chartViewMode === 'synastry' ? selectedChart : undefined}
+                overlayName={chartViewMode === 'synastry' ? selectedRelationship?.name : undefined}
+                filterMode={chartViewMode === 'synastry' ? filterMode : { person1: true, person2: false, cross: false }}
+                showAspects={chartViewMode === 'synastry'}
               />
             </View>
 
@@ -848,6 +877,14 @@ const styles = StyleSheet.create({
   discoverContent: { flex: 1, marginLeft: 16 },
   discoverItemTitle: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, marginBottom: 4 },
   discoverItemText: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
+
+  chartViewToggle: { flexDirection: 'row', borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, overflow: 'hidden', marginBottom: 16 },
+  chartViewSegment: { flex: 1, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', borderRightWidth: 1, borderRightColor: theme.cardBorder },
+  chartViewSegmentFirst: { borderRightWidth: 1, borderRightColor: theme.cardBorder },
+  chartViewSegmentLast: { borderRightWidth: 0 },
+  chartViewSegmentActive: { backgroundColor: `${theme.textGold}18` },
+  chartViewSegmentText: { fontSize: 13, fontWeight: '600', color: theme.textMuted },
+  chartViewSegmentTextActive: { color: theme.textGold },
 
   // Detail view styles
   detailHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },

@@ -293,6 +293,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [newTagInput, setNewTagInput] = useState('');
   const [categoryNewTagInputs, setCategoryNewTagInputs] = useState<Record<string, string>>({});
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [pendingDate, setPendingDate] = useState<Date | null>(null);
   
   const [userChart, setUserChart] = useState<NatalChart | null>(null);
   const [chartId, setChartId] = useState<string>('');
@@ -802,15 +803,35 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
               )}
               {/* end writingMode ternary */}
 
-              {showDatePicker && (
+              {showDatePicker && Platform.OS === 'ios' && (
+                <View style={styles.datePickerSheet}>
+                  <View style={styles.datePickerHeader}>
+                    <Pressable onPress={() => { setShowDatePicker(false); setPendingDate(null); }} hitSlop={12}>
+                      <Text style={styles.datePickerBtn}>Cancel</Text>
+                    </Pressable>
+                    <Pressable onPress={() => { if (pendingDate) setDate(pendingDate); setShowDatePicker(false); setPendingDate(null); }} hitSlop={12}>
+                      <Text style={[styles.datePickerBtn, { color: PALETTE.gold }]}>Done</Text>
+                    </Pressable>
+                  </View>
+                  <DateTimePicker
+                    value={pendingDate ?? date}
+                    mode="date"
+                    display="spinner"
+                    themeVariant="dark"
+                    textColor="#FFFFFF"
+                    maximumDate={new Date()}
+                    onChange={(_e, d) => { if (d) setPendingDate(d); }}
+                  />
+                </View>
+              )}
+              {showDatePicker && Platform.OS !== 'ios' && (
                 <DateTimePicker
                   value={date}
                   mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  display="default"
                   themeVariant="dark"
-                  textColor="#FFFFFF"
                   maximumDate={new Date()}
-                  onChange={(_e, d) => { setShowDatePicker(false); if(d) setDate(d); }}
+                  onChange={(_e, d) => { setShowDatePicker(false); if (d) setDate(d); }}
                 />
               )}
             </KeyboardAvoidingView>
@@ -1127,14 +1148,14 @@ const styles = StyleSheet.create({
 
   // ── Tag Picker Modal ──
   tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.60)', justifyContent: 'flex-end' },
-  tagPickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '82%' },
+  tagPickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '82%', flexShrink: 1 },
   tagPickerHandle: { width: 44, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.18)', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
   tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   tagPickerTitle: { fontSize: 16, color: '#FFFFFF', fontWeight: '600' },
   tagPickerDone: { fontSize: 16, color: PALETTE.gold, fontWeight: '700' },
   tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: 8 },
   tagSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 14, padding: 0 },
-  tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 40, flexGrow: 0 },
+  tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 40, flex: 1 },
   tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(201,174,120,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
   tagPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },

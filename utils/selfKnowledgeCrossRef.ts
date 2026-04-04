@@ -286,6 +286,16 @@ const PATTERN_TAG_LABELS: Record<string, string> = {
   t12: 'Difficulty with boundaries',
   t13: 'Testing the relationship',
   t14: 'Perfectionism in love',
+  s1: 'Asking for reassurance directly',
+  s2: 'Expressing needs clearly',
+  s3: 'Letting myself be seen',
+  s4: 'Staying present in connection',
+  s5: 'Receiving care without deflecting',
+  s6: 'Holding boundaries calmly',
+  s7: 'Repairing after disconnection',
+  s8: 'Self-soothing instead of spiraling',
+  s9: 'Tolerating uncertainty',
+  s10: 'Staying open instead of shutting down',
 };
 
 function resolveTagLabel(tag: string): string {
@@ -300,17 +310,23 @@ function buildRelationshipInsight(
 ): CrossRefInsight | null {
   if (entries.length < 2) return null;
 
-  // Frequency of each pattern tag
+  // Frequency of each pattern tag — separate secure (s*) from struggle (t*)
   const tagCounts: Record<string, number> = {};
+  const secureTagCounts: Record<string, number> = {};
+  const SECURE_IDS = new Set(['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10']);
   for (const e of entries) {
     for (const t of e.tags) {
-      tagCounts[t] = (tagCounts[t] ?? 0) + 1;
+      if (SECURE_IDS.has(t)) secureTagCounts[t] = (secureTagCounts[t] ?? 0) + 1;
+      else tagCounts[t] = (tagCounts[t] ?? 0) + 1;
     }
   }
 
   const topTags = Object.entries(tagCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2);
+  const topSecureTags = Object.entries(secureTagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 1);
 
   // Cross-ref: mood on days with relational check-in tags vs overall
   let checkInNote = '';
@@ -336,11 +352,14 @@ function buildRelationshipInsight(
   const topLabel = topTags.length > 0
     ? ` Your most recurring ${topTags.length > 1 ? 'patterns are' : 'pattern is'} ${topTags.map(([t]) => `"${resolveTagLabel(t)}"`).join(' and ')}.`
     : '';
+  const secureLabel = topSecureTags.length > 0
+    ? ` You are also logging secure behavior — "${resolveTagLabel(topSecureTags[0][0])}" — evidence of real integration.`
+    : '';
 
   return {
     id: 'relationship-pattern',
     title: 'Your Relational Mirror',
-    body: `You've logged ${entries.length} reflections on how you show up in connection.${topLabel}${checkInNote} Recognizing your own patterns is what makes conscious choice possible.`,
+    body: `You've logged ${entries.length} reflections on how you show up in connection.${topLabel}${secureLabel}${checkInNote} Recognizing your own patterns is what makes conscious choice possible.`,
     accentColor: 'rose',
     source: 'relationship',
     isConfirmed,

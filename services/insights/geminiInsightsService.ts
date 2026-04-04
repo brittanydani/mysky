@@ -154,6 +154,11 @@ const PATTERN_TAG_LABELS: Record<string, string> = {
   t7: 'Emotional withdrawal', t8: 'Hyper-independence', t9: 'Shutting down',
   t10: 'Fear of enmeshment', t11: 'Need for control', t12: 'Difficulty with boundaries',
   t13: 'Testing the relationship', t14: 'Perfectionism in love',
+  s1: 'Asking for reassurance directly', s2: 'Expressing needs clearly',
+  s3: 'Letting myself be seen', s4: 'Staying present in connection',
+  s5: 'Receiving care without deflecting', s6: 'Holding boundaries calmly',
+  s7: 'Repairing after disconnection', s8: 'Self-soothing instead of spiraling',
+  s9: 'Tolerating uncertainty', s10: 'Staying open instead of shutting down',
 };
 function resolvePatternTag(tag: string): string {
   return PATTERN_TAG_LABELS[tag] ?? tag;
@@ -205,12 +210,21 @@ function buildUserPrompt(
   }
   if (context.relationshipPatterns.length > 0) {
     const tagCounts: Record<string, number> = {};
+    const secureTagCounts: Record<string, number> = {};
+    const SECURE_IDS = new Set(['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10']);
     for (const e of context.relationshipPatterns) {
-      for (const t of e.tags) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
+      for (const t of e.tags) {
+        if (SECURE_IDS.has(t)) secureTagCounts[t] = (secureTagCounts[t] ?? 0) + 1;
+        else tagCounts[t] = (tagCounts[t] ?? 0) + 1;
+      }
     }
     const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
     if (topTags.length) {
       profile.push(`Top relationship patterns: ${topTags.map(([t, c]) => `${resolvePatternTag(t)} (${c}×)`).join(', ')}`);
+    }
+    const topSecure = Object.entries(secureTagCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    if (topSecure.length) {
+      profile.push(`Secure growth patterns (integration evidence): ${topSecure.map(([t, c]) => `${resolvePatternTag(t)} (${c}×)`).join(', ')}`);
     }
   }
   if (context.dailyReflections) {

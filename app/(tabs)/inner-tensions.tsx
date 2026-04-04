@@ -34,8 +34,10 @@ import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForce
 import { MetallicText } from '../../components/ui/MetallicText';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { localDb } from '../../services/storage/localDb';
+import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
+import type { TriggerEvent } from '../../utils/triggerEventTypes';
 import {
   computeInnerTensions,
   type InnerTensionsData,
@@ -132,10 +134,10 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
       <GlassCard>
         <Text style={styles.cardTitle}>Nervous System Tension</Text>
         <Text style={styles.emptyStateText}>
-          Your tension map grows as you log dreams. Add feelings when you record a sleep entry to activate this view.
+          Your tension map grows as you log dreams and journal entries. Add feelings to a sleep entry or write a journal reflection to activate this view.
         </Text>
         <View style={styles.seedChip}>
-          <MetallicText style={styles.seedChipText} color={PALETTE.gold}>Log a dream to begin</MetallicText>
+          <MetallicText style={styles.seedChipText} color={PALETTE.gold}>Log a dream or journal entry to begin</MetallicText>
         </View>
       </GlassCard>
     );
@@ -160,7 +162,7 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
               : 'Low Tension'}
           </MetallicText>
           <Text style={styles.conflictScoreHint}>
-            based on {dataQuality.entriesWithFeelings} dream{dataQuality.entriesWithFeelings !== 1 ? 's' : ''} logged
+            based on {dataQuality.totalEntries} entr{dataQuality.totalEntries !== 1 ? 'ies' : 'y'} (dreams + journals)
           </Text>
         </View>
       </View>
@@ -413,10 +415,26 @@ export default function InnerTensionsScreen() {
       (async () => {
         try {
           setLoading(true);
-          const charts = await localDb.getCharts();
-          if (!charts.length) { setLoading(false); return; }
-          const entries = await localDb.getSleepEntries(charts[0].id, 90);
-          if (!cancelled) setData(computeInnerTensions(entries));
+          const [charts, journalEntries, triggerRaw] = await Promise.all([
+            localDb.getCharts(),
+            localDb.getJournalEntries(),
+            EncryptedAsyncStorage.getItem('@mysky:trigger_events').catch(() => null),
+          ]);
+          const triggerEvents: TriggerEvent[] = (() => {
+            try { return triggerRaw ? JSON.parse(triggerRaw) : []; } catch { return []; }
+          })();
+          const sleepEntries = charts.length
+            ? await localDb.getSleepEntries(charts[0].id, 90)
+            : [];
+          const checkIns = charts.length
+            ? await localDb.getCheckIns(charts[0].id, 120)
+            : [];
+          if (!cancelled) setData(computeInnerTensions(
+            sleepEntries,
+            journalEntries.slice(0, 90),
+            checkIns,
+            triggerEvents.slice(0, 120),
+          ));
         } catch (err) {
           logger.error('InnerTensions: failed to load', err);
         } finally {

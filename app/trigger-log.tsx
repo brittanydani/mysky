@@ -11,6 +11,8 @@ import {
   Pressable,
   ScrollView,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
@@ -55,7 +57,8 @@ const SENSATIONS: Record<LogMode, string[]> = {
   ],
 };
 
-const CONTEXT_AREAS = ['Work', 'Home', 'Body', 'Family', 'Social', 'Solitude', 'Transit', 'Money', 'Sleep', 'Health', 'Creativity', 'Nature', 'Screens', 'Intimacy'];
+const PRIMARY_AREAS = ['Work', 'Home', 'Body', 'Family', 'Parenting', 'Social', 'Solitude', 'Transit', 'Money', 'Sleep', 'Health', 'Creativity'];
+const EXTENDED_AREAS = ['Nature', 'Screens', 'Intimacy', 'Food', 'Movement', 'Grief', 'Learning', 'Spirituality', 'Identity'];
 
 const NS_STATE_CARDS: Record<string, { label: string; sub: string; color: string }> = {
   sympathetic: { label: 'Fight or Flight', sub: 'Anxious, frantic, mobilized, angry.', color: PALETTE.copper },
@@ -178,6 +181,9 @@ export default function TriggerLogScreen() {
   const [intensity, setIntensity] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
   const [resolution, setResolution] = useState('');
   const [contextArea, setContextArea] = useState<string | null>(null);
+  const [showMoreAreas, setShowMoreAreas] = useState(false);
+  const [customAreaInput, setCustomAreaInput] = useState('');
+  const [showCustomAreaInput, setShowCustomAreaInput] = useState(false);
   const [beforeState, setBeforeState] = useState<NSState | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -281,7 +287,11 @@ export default function TriggerLogScreen() {
           pointerEvents="none"
         >
           <View style={styles.confirmCard}>
-            <Text style={styles.confirmEmoji}>{mode === 'drain' ? '🌊' : '✨'}</Text>
+            <MetallicIcon
+              name={mode === 'drain' ? 'pulse-outline' : 'sunny-outline'}
+              size={44}
+              style={{ marginBottom: 14 }}
+            />
             <Text style={styles.confirmTitle}>Logged.</Text>
             <Text style={styles.confirmBody}>
               {mode === 'drain'
@@ -355,6 +365,11 @@ export default function TriggerLogScreen() {
         ) : (
 
         /* ════════════════════════ LOG VIEW ════════════════════════ */
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={0}
+        >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -438,7 +453,7 @@ export default function TriggerLogScreen() {
           <Animated.View entering={FadeInDown.delay(190).duration(500)} style={styles.section}>
             <Text style={styles.sectionLabel}>LIFE AREA</Text>
             <View style={styles.tagCloud}>
-              {CONTEXT_AREAS.map(area => {
+              {(showMoreAreas ? [...PRIMARY_AREAS, ...EXTENDED_AREAS] : PRIMARY_AREAS).map(area => {
                 const isSelected = contextArea === area;
                 return (
                   <Pressable
@@ -460,7 +475,69 @@ export default function TriggerLogScreen() {
                   </Pressable>
                 );
               })}
+              {/* More toggle */}
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setShowMoreAreas(prev => !prev);
+                }}
+                style={[styles.tagChip, { borderStyle: 'dashed' }]}
+              >
+                <Text style={styles.tagText}>{showMoreAreas ? 'Less ↑' : 'More ↓'}</Text>
+              </Pressable>
+              {/* Custom area */}
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setShowCustomAreaInput(prev => !prev);
+                }}
+                style={[
+                  styles.tagChip,
+                  showCustomAreaInput && { backgroundColor: `${activeColor}18`, borderColor: activeColor },
+                ]}
+              >
+                <Text style={styles.tagText}>+ Custom</Text>
+              </Pressable>
             </View>
+            {showCustomAreaInput && (
+              <View style={styles.customAreaRow}>
+                <TextInput
+                  value={customAreaInput}
+                  onChangeText={setCustomAreaInput}
+                  placeholder="e.g. School, Caregiving…"
+                  placeholderTextColor={PALETTE.textMuted}
+                  style={styles.customAreaInput}
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    const val = customAreaInput.trim();
+                    if (val) {
+                      setContextArea(val);
+                      setShowCustomAreaInput(false);
+                    }
+                  }}
+                />
+                <Pressable
+                  onPress={() => {
+                    const val = customAreaInput.trim();
+                    if (val) {
+                      setContextArea(val);
+                      setShowCustomAreaInput(false);
+                    }
+                  }}
+                  style={[styles.customAreaConfirm, { borderColor: activeColor }]}
+                >
+                  <MetallicText style={styles.tagText} color={activeColor}>Set</MetallicText>
+                </Pressable>
+              </View>
+            )}
+            {contextArea && !PRIMARY_AREAS.includes(contextArea) && !EXTENDED_AREAS.includes(contextArea) && (
+              <Pressable
+                onPress={() => setContextArea(null)}
+                style={[styles.tagChip, { alignSelf: 'flex-start', marginTop: 6 }]}
+              >
+                <Text style={styles.tagText}>{contextArea} ✕</Text>
+              </Pressable>
+            )}
           </Animated.View>
 
           {/* ── Polyvagal State ── */}
@@ -664,6 +741,7 @@ export default function TriggerLogScreen() {
 
           <View style={{ height: 48 }} />
         </ScrollView>
+        </KeyboardAvoidingView>
         )}
       </SafeAreaView>
     </View>
@@ -770,6 +848,25 @@ const styles = StyleSheet.create({
   addCueChip: { borderStyle: 'dashed' },
   tagText: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '500' },
 
+  customAreaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
+  customAreaInput: {
+    flex: 1,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: PALETTE.glassBorder,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    paddingHorizontal: 12,
+    fontSize: 12,
+    color: PALETTE.textMain,
+  },
+  customAreaConfirm: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
   customCueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   customCueInput: {
     flex: 1,
@@ -827,7 +924,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     maxWidth: 300,
   },
-  confirmEmoji: { fontSize: 48, marginBottom: 16 },
+
   confirmTitle: { fontSize: 28, color: PALETTE.textMain, fontWeight: '800', marginBottom: 10 },
   confirmBody: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 21 },
 });

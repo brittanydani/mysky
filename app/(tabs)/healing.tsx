@@ -118,6 +118,21 @@ export default function HealingSpaceScreen() {
   const hasRelational = (context?.relationshipPatterns?.length ?? 0) > 0;
   const hasHealingInputs = hasArchetype || hasSomatic || hasRelational;
 
+  // Determine which pattern categories the user has logged
+  const SECURE_TAG_IDS = new Set(['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10']);
+  const relationalCategories = (() => {
+    if (!context?.relationshipPatterns?.length) return { hasSecure: false, hasStruggle: false };
+    let hasSecure = false;
+    let hasStruggle = false;
+    for (const entry of context.relationshipPatterns) {
+      for (const tagId of entry.tags) {
+        if (SECURE_TAG_IDS.has(tagId)) hasSecure = true;
+        else if (tagId.startsWith('t')) hasStruggle = true;
+      }
+    }
+    return { hasSecure, hasStruggle };
+  })();
+
   if (!isPremium) {
     return (
       <View style={styles.container}>
@@ -223,7 +238,7 @@ export default function HealingSpaceScreen() {
           )}
 
           {/* 3. RELATIONAL PATTERN INTERVENTION */}
-          {hasRelational && (
+          {hasRelational && relationalCategories.hasStruggle && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)}>
               <LinearGradient colors={['rgba(212, 163, 179, 0.1)', 'rgba(10,10,12,0.85)']} style={styles.card}>
 
@@ -238,6 +253,27 @@ export default function HealingSpaceScreen() {
               </Text>
               <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} variant="rose">
                 Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
+              </MetallicText>
+              </LinearGradient>
+            </Animated.View>
+          )}
+
+          {/* 3b. SECURE GROWTH ACKNOWLEDGEMENT */}
+          {hasRelational && relationalCategories.hasSecure && (
+            <Animated.View entering={FadeInDown.delay(relationalCategories.hasStruggle ? 380 : 300).duration(600)}>
+              <LinearGradient colors={['rgba(123, 174, 143, 0.12)', 'rgba(10,10,12,0.85)']} style={styles.card}>
+
+              <View style={styles.cardHeader}>
+                <MetallicIcon name="leaf-outline" size={16} color="#7BAE8F" />
+                <MetallicText style={[styles.cardEyebrow, { color: '#7BAE8F' }]}>SECURE GROWTH</MetallicText>
+              </View>
+
+              <Text style={styles.cardTitle}>You Are Already Changing</Text>
+              <Text style={styles.bodyText}>
+                You have logged moments of regulated, grounded connection. This is not small — it is evidence of real integration.
+              </Text>
+              <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700', color: '#7BAE8F' }]}>
+                Notice what was true in those moments. That version of you is not an accident — it is who you are becoming.
               </MetallicText>
               </LinearGradient>
             </Animated.View>

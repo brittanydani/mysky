@@ -9,7 +9,9 @@
  * All computation is local and deterministic. No network calls.
  */
 
-import type { SleepEntry } from '../storage/models';
+import type { SleepEntry, JournalEntry } from '../storage/models';
+import type { DailyCheckIn } from '../patterns/types';
+import type { TriggerEvent } from '../../utils/triggerEventTypes';
 import {
   FEELING_MAP,
   type DreamMetadata,
@@ -104,6 +106,109 @@ const NS_BRANCH_KEYS: NervousSystemBranch[] = [
   'collapse', 'fight', 'flight', 'freeze', 'ventral_safety', 'mixed',
 ];
 
+// ─── Journal mood → NS branch signal ─────────────────────────────────────────
+// Weight is lower (0.6) than dream feelings (1.0) since mood is a single
+// coarse-grained signal rather than a curated multi-feeling selection.
+const JOURNAL_MOOD_NS: Record<
+  JournalEntry['mood'],
+  { branch: NervousSystemBranch; triggers: ShadowTrigger[]; weight: number }
+> = {
+  calm:   { branch: 'ventral_safety', triggers: ['belonging', 'identity'],                  weight: 0.6 },
+  soft:   { branch: 'ventral_safety', triggers: ['transformation', 'worthiness'],            weight: 0.5 },
+  okay:   { branch: 'mixed',          triggers: [],                                          weight: 0.3 },
+  heavy:  { branch: 'collapse',       triggers: ['grief', 'worthiness', 'helplessness'],     weight: 0.7 },
+  stormy: { branch: 'fight',          triggers: ['control', 'unpredictability', 'power'],    weight: 0.8 },
+};
+
+// ─── Daily check-in eq_* tag → NS branch ────────────────────────────────────
+// Base weight 0.45 — check-ins are frequent but mood is a single point-in-time
+// coarse signal, lighter than a full dream feeling set.
+const CHECKIN_EQ_TAG_NS: Record<string, { branch: NervousSystemBranch; weight: number }> = {
+  eq_calm:         { branch: 'ventral_safety', weight: 0.5 },
+  eq_grounded:     { branch: 'ventral_safety', weight: 0.55 },
+  eq_hopeful:      { branch: 'ventral_safety', weight: 0.45 },
+  eq_focused:      { branch: 'ventral_safety', weight: 0.4 },
+  eq_open:         { branch: 'ventral_safety', weight: 0.45 },
+  eq_anxious:      { branch: 'flight',         weight: 0.6 },
+  eq_scattered:    { branch: 'flight',         weight: 0.5 },
+  eq_irritable:    { branch: 'fight',          weight: 0.6 },
+  eq_disconnected: { branch: 'freeze',         weight: 0.55 },
+  eq_heavy:        { branch: 'collapse',       weight: 0.65 },
+};
+
+// ─── Daily check-in moodScore (1-10) → NS branch ─────────────────────────────
+function moodScoreToNS(score: number): { branch: NervousSystemBranch; weight: number } {
+  if (score <= 2) return { branch: 'collapse',       weight: 0.5 };
+  if (score <= 4) return { branch: 'freeze',         weight: 0.45 };
+  if (score <= 6) return { branch: 'mixed',          weight: 0.35 };
+  if (score <= 8) return { branch: 'ventral_safety', weight: 0.45 };
+  return               { branch: 'ventral_safety', weight: 0.55 };
+}
+
+// ─── Daily check-in stressLevel → NS branch ──────────────────────────────────
+const CHECKIN_STRESS_NS: Record<string, { branch: NervousSystemBranch; weight: number }> = {
+  low:    { branch: 'ventral_safety', weight: 0.4 },
+  medium: { branch: 'mixed',          weight: 0.3 },
+  high:   { branch: 'fight',          weight: 0.55 },
+};
+
+// ─── Daily check-in theme tag → shadow triggers ───────────────────────────────
+const CHECKIN_TAG_TRIGGERS: Record<string, ShadowTrigger[]> = {
+  anxiety:      ['danger', 'unpredictability'],
+  grief:        ['grief', 'abandonment'],
+  conflict:     ['control', 'power'],
+  loneliness:   ['isolation', 'abandonment'],
+  overwhelm:    ['helplessness', 'responsibility'],
+  boundaries:   ['control', 'rejection'],
+  relationships:['intimacy', 'belonging'],
+  family:       ['belonging', 'abandonment'],
+  intimacy:     ['intimacy'],
+  career:       ['failure', 'responsibility'],
+  health:       ['helplessness', 'identity'],
+  money:        ['failure', 'helplessness'],
+  confidence:   ['worthiness', 'exposure'],
+};
+
+// ─── Trigger log NSState → NS branch ─────────────────────────────────────────
+// drain = activating/distressing event → stressed branch
+// nourish (glimmer) = regulating/positive → ventral_safety
+function triggerEventToNS(
+  nsState: TriggerEvent['nsState'],
+  mode: TriggerEvent['mode'],
+  intensity: TriggerEvent['intensity'],
+): { branch: NervousSystemBranch; weight: number } | null {
+  const baseWeight = 0.5 + ((intensity ?? 3) - 1) * 0.1; // 0.5–0.9
+  if (mode === 'nourish') {
+    return { branch: 'ventral_safety', weight: baseWeight * 0.7 };
+  }
+  switch (nsState) {
+    case 'sympathetic': return { branch: 'fight',          weight: baseWeight };
+    case 'dorsal':      return { branch: 'collapse',       weight: baseWeight };
+    case 'ventral':     return { branch: 'ventral_safety', weight: baseWeight * 0.6 };
+    case 'still':       return { branch: 'ventral_safety', weight: baseWeight * 0.5 };
+    default:            return null;
+  }
+}
+
+// ─── Journal tag id → extra trigger hints ────────────────────────────────────
+const TAG_TRIGGER_MAP: Record<string, ShadowTrigger[]> = {
+  anxiety:      ['danger', 'unpredictability'],
+  anger:        ['control', 'power'],
+  grief:        ['grief', 'abandonment'],
+  shame:        ['shame', 'worthiness'],
+  fear:         ['danger', 'helplessness'],
+  betrayal:     ['betrayal', 'rejection'],
+  loneliness:   ['isolation', 'abandonment'],
+  identity:     ['identity', 'belonging'],
+  boundaries:   ['control', 'rejection'],
+  growth:       ['transformation'],
+  healing:      ['transformation', 'worthiness'],
+  relationships:['intimacy', 'belonging'],
+  family:       ['belonging', 'abandonment'],
+  work:         ['failure', 'responsibility'],
+  body:         ['shame', 'identity'],
+};
+
 const FALLBACK_METADATA: DreamMetadata = {
   vividness: 3,
   lucidity: 1,
@@ -139,10 +244,16 @@ export type InnerTensionsData = {
 // ─── Engine ───────────────────────────────────────────────────────────────────
 
 /**
- * Aggregate psychological signals from sleep entries.
- * Pass up to 90 recent entries for a meaningful tension map.
+ * Aggregate psychological signals from sleep entries, journal entries,
+ * daily check-ins, and trigger log events.
+ * Pass up to 90 recent entries of each type for a meaningful tension map.
  */
-export function computeInnerTensions(sleepEntries: SleepEntry[]): InnerTensionsData {
+export function computeInnerTensions(
+  sleepEntries: SleepEntry[],
+  journalEntries: JournalEntry[] = [],
+  checkIns: DailyCheckIn[] = [],
+  triggerEvents: TriggerEvent[] = [],
+): InnerTensionsData {
   const totalEntries = sleepEntries.length;
 
   const aggNS: Record<NervousSystemBranch, number> = {
@@ -207,6 +318,66 @@ export function computeInnerTensions(sleepEntries: SleepEntry[]): InnerTensionsD
     }
   }
 
+  // ── Process journal entries ───────────────────────────────────────────────
+  for (const entry of journalEntries) {
+    const moodSignal = JOURNAL_MOOD_NS[entry.mood];
+    if (!moodSignal) continue;
+
+    const w = moodSignal.weight;
+    totalWeight += w;
+    aggNS[moodSignal.branch] += w;
+    for (const t of moodSignal.triggers) {
+      aggTriggers[t] += w;
+    }
+
+    // Tag-based trigger hints (smaller weight)
+    for (const tag of entry.tags ?? []) {
+      const tagTriggers = TAG_TRIGGER_MAP[tag];
+      if (!tagTriggers) continue;
+      for (const t of tagTriggers) {
+        aggTriggers[t] += w * 0.4;
+      }
+    }
+  }
+
+  // ── Process daily check-ins ─────────────────────────────────────────────────
+  for (const ci of checkIns) {
+    // moodScore signal
+    const moodSig = moodScoreToNS(ci.moodScore);
+    totalWeight += moodSig.weight;
+    aggNS[moodSig.branch] += moodSig.weight;
+
+    // stressLevel signal
+    const stressSig = CHECKIN_STRESS_NS[ci.stressLevel];
+    if (stressSig) {
+      totalWeight += stressSig.weight;
+      aggNS[stressSig.branch] += stressSig.weight;
+    }
+
+    // eq_* tags → direct NS branch signals
+    for (const tag of ci.tags) {
+      const eqSig = CHECKIN_EQ_TAG_NS[tag as string];
+      if (eqSig) {
+        totalWeight += eqSig.weight;
+        aggNS[eqSig.branch] += eqSig.weight;
+      }
+      // theme tags → trigger hints
+      const trigHints = CHECKIN_TAG_TRIGGERS[tag as string];
+      if (trigHints) {
+        const w = moodSig.weight * 0.4;
+        for (const t of trigHints) aggTriggers[t] += w;
+      }
+    }
+  }
+
+  // ── Process trigger log events ─────────────────────────────────────────────
+  for (const ev of triggerEvents) {
+    const sig = triggerEventToNS(ev.nsState, ev.mode, ev.intensity);
+    if (!sig) continue;
+    totalWeight += sig.weight;
+    aggNS[sig.branch] += sig.weight;
+  }
+
   // ── Normalize NS profile ──────────────────────────────────────────────────
   const nsProfile: Partial<Record<NervousSystemBranch, number>> = {};
   if (totalWeight > 0) {
@@ -256,7 +427,7 @@ export function computeInnerTensions(sleepEntries: SleepEntry[]): InnerTensionsD
     }));
 
   return {
-    dataQuality: { totalEntries, entriesWithFeelings, entriesWithText },
+    dataQuality: { totalEntries: totalEntries + journalEntries.length + checkIns.length + triggerEvents.length, entriesWithFeelings, entriesWithText },
     nsConflict,
     nsProfile,
     nsBranchForces,

@@ -37,6 +37,7 @@ const PALETTE = {
   anxious: '#7A9EBD',   // Steel blue — Moving Toward
   avoidant: '#C4877F',  // Dusty rose — Moving Away
   control: '#9088A8',   // Lavender grey — Rigidity
+  secure: '#7BAE8F',    // Sage green — Secure
   gold: '#D9BF8C',
   textMain: '#FFFFFF',
   textMuted: 'rgba(255,255,255,0.55)',
@@ -44,7 +45,7 @@ const PALETTE = {
   bg: '#020817',
 };
 
-type PatternCategory = 'anxious' | 'avoidant' | 'control';
+type PatternCategory = 'anxious' | 'avoidant' | 'control' | 'secure';
 
 interface PatternTag {
   id: string;
@@ -76,6 +77,18 @@ const PATTERN_TAGS: PatternTag[] = [
   { id: 't13', label: 'Testing the relationship', category: 'control' },
   { id: 't14', label: 'Perfectionism in love', category: 'control' },
   { id: 't18', label: 'Defensiveness', category: 'control' },
+
+  // Secure (Regulated, Grounded Response)
+  { id: 's1', label: 'Asking for reassurance directly', category: 'secure' },
+  { id: 's2', label: 'Expressing needs clearly', category: 'secure' },
+  { id: 's3', label: 'Letting myself be seen', category: 'secure' },
+  { id: 's4', label: 'Staying present in connection', category: 'secure' },
+  { id: 's5', label: 'Receiving care without deflecting', category: 'secure' },
+  { id: 's6', label: 'Holding boundaries calmly', category: 'secure' },
+  { id: 's7', label: 'Repairing after disconnection', category: 'secure' },
+  { id: 's8', label: 'Self-soothing instead of spiraling', category: 'secure' },
+  { id: 's9', label: 'Tolerating uncertainty', category: 'secure' },
+  { id: 's10', label: 'Staying open instead of shutting down', category: 'secure' },
 ];
 
 interface PatternEntry {
@@ -146,6 +159,7 @@ export default function RelationshipPatternsScreen() {
     let anxiousCount = 0;
     let avoidantCount = 0;
     let controlCount = 0;
+    let secureCount = 0;
 
     entries.forEach((entry) => {
       entry.tags.forEach((tagId) => {
@@ -153,15 +167,17 @@ export default function RelationshipPatternsScreen() {
         if (tag?.category === 'anxious') anxiousCount++;
         if (tag?.category === 'avoidant') avoidantCount++;
         if (tag?.category === 'control') controlCount++;
+        if (tag?.category === 'secure') secureCount++;
       });
     });
 
-    const total = anxiousCount + avoidantCount + controlCount;
+    const total = anxiousCount + avoidantCount + controlCount + secureCount;
     return {
       total,
       anxious: total > 0 ? (anxiousCount / total) * 100 : 0,
       avoidant: total > 0 ? (avoidantCount / total) * 100 : 0,
       control: total > 0 ? (controlCount / total) * 100 : 0,
+      secure: total > 0 ? (secureCount / total) * 100 : 0,
     };
   }, [entries]);
 
@@ -229,6 +245,12 @@ export default function RelationshipPatternsScreen() {
                       style={[styles.gravitySegment, { flex: gravityStats.control, backgroundColor: PALETTE.control }]}
                     />
                   )}
+                  {gravityStats.secure > 0 && (
+                    <Animated.View
+                      layout={Layout.springify()}
+                      style={[styles.gravitySegment, { flex: gravityStats.secure, backgroundColor: PALETTE.secure }]}
+                    />
+                  )}
                 </View>
 
                 <View style={styles.legendRow}>
@@ -243,6 +265,10 @@ export default function RelationshipPatternsScreen() {
                   <View style={styles.legendItem}>
                     <MetallicText style={styles.legendDot} color={PALETTE.control}>◆</MetallicText>
                     <MetallicText style={styles.legendText} color={PALETTE.control}>Rigidity</MetallicText>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <MetallicText style={styles.legendDot} color={PALETTE.secure}>◆</MetallicText>
+                    <MetallicText style={styles.legendText} color={PALETTE.secure}>Secure</MetallicText>
                   </View>
                 </View>
               </Animated.View>
@@ -267,9 +293,9 @@ export default function RelationshipPatternsScreen() {
 
               <Text style={styles.tagSectionLabel}>SELECT ACTIVE PATTERNS</Text>
 
-              {(['anxious', 'avoidant', 'control'] as PatternCategory[]).map((category) => {
+              {(['anxious', 'avoidant', 'control', 'secure'] as PatternCategory[]).map((category) => {
                 const categoryColor = PALETTE[category];
-                const categoryLabel = category === 'anxious' ? 'Moving Toward' : category === 'avoidant' ? 'Moving Away' : 'Rigidity';
+                const categoryLabel = category === 'anxious' ? 'Moving Toward' : category === 'avoidant' ? 'Moving Away' : category === 'control' ? 'Rigidity' : 'Secure';
                 const categoryTags = PATTERN_TAGS.filter((t) => t.category === category);
                 return (
                   <View key={category} style={styles.tagCategoryGroup}>
