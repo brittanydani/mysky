@@ -92,8 +92,15 @@ export async function getOrCreateTodayQuestions(
   date: Date = getReflectionDate(),
   userSeed?: string,
 ): Promise<ReflectionQuestion[]> {
-  const pending = await loadPendingQuestions();
+  const todayKey = getTodayKey(date);
+  let pending = await loadPendingQuestions();
   const bank = QUESTION_BANKS[category];
+
+  // Discard stale pending questions from a previous day
+  if (pending && pending.date !== todayKey) {
+    await clearPendingQuestions();
+    pending = null;
+  }
 
   if (pending && pending.questions[category]) {
     // Return the persisted questions
@@ -102,7 +109,7 @@ export async function getOrCreateTodayQuestions(
 
   // Generate fresh and store
   const fresh = getTodayQuestions(category, date, userSeed);
-  const existingPending = pending ?? { date: getTodayKey(date), questions: {} as Record<ReflectionCategory, number[]> };
+  const existingPending = pending ?? { date: todayKey, questions: {} as Record<ReflectionCategory, number[]> };
   existingPending.questions[category] = fresh.map(q => q.id);
   await savePendingQuestions(existingPending as PendingQuestionSet);
   return fresh;

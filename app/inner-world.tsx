@@ -181,10 +181,16 @@ export default function InnerWorldScreen() {
             cognitive: { category: 'cognitive', questions: cognitiveQs },
           };
           setCategoryQuestions(qs);
-          setCategorySealed(sealStatus);
-
           // Pre-fill any already-sealed answers
           const todayAnswers = reflData.answers.filter(a => a.date === today);
+
+          // Defensive: if no answers exist for today, force unsealed
+          // regardless of what getCategorySealStatus returned
+          if (todayAnswers.length === 0) {
+            setCategorySealed({ values: false, archetypes: false, cognitive: false });
+          } else {
+            setCategorySealed(sealStatus);
+          }
           if (todayAnswers.length > 0) {
             const filled: Record<string, number> = {};
             for (const a of todayAnswers) {
