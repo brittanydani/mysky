@@ -1146,6 +1146,11 @@ const styles = StyleSheet.create({
   },
   tagChipText: { fontSize: 13, fontWeight: '600', letterSpacing: -0.2 },
 
+  // ── Date Picker Sheet ──
+  datePickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', paddingBottom: 24 },
+  datePickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
+  datePickerBtn: { fontSize: 16, color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+
   // ── Tag Picker Modal ──
   tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.60)', justifyContent: 'flex-end' },
   tagPickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '82%', flexShrink: 1 },

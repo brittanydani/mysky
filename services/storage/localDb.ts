@@ -1732,7 +1732,7 @@ class LocalDatabase {
       params.push(userChartId);
     }
 
-    query += ' ORDER BY updated_at DESC';
+    query += ' ORDER BY created_at ASC';
 
     const result = await db.getAllAsync(query, params);
     return Promise.all((result as any[]).map((row: any) => this.mapRelationshipRow(row)));

@@ -141,6 +141,31 @@ const TRANSIT_IMPACT: Record<string, Record<string, string>> = {
 // Five personal planets shown in the Cosmic Context panel (ordered by speed).
 const PERSONAL_PLANETS = ['Moon', 'Sun', 'Mercury', 'Venus', 'Mars'] as const;
 
+// ── Beginner-friendly planet descriptions ─────────────────────────────────────
+const PLANET_GOVERNS: Record<string, string> = {
+  Sun:     'your identity, confidence, and life direction',
+  Moon:    'your emotions, moods, and inner needs',
+  Mercury: 'how you think, communicate, and process information',
+  Venus:   'how you love, connect, and find beauty',
+  Mars:    'your drive, energy, and what you pursue',
+};
+
+// ── Short sign energy descriptors (plain English) ─────────────────────────────
+const SIGN_ESSENCE: Record<string, string> = {
+  Aries:       'bold, fast-moving Aries brings urgency and a push toward action',
+  Taurus:      'grounded Taurus slows things down and craves comfort and stability',
+  Gemini:      'curious Gemini adds variety, chatter, and a need for mental stimulation',
+  Cancer:      'sensitive Cancer turns attention toward home, safety, and emotional care',
+  Leo:         'warm Leo amplifies the need for creative expression and being truly seen',
+  Virgo:       'detail-oriented Virgo directs energy toward order, health, and refinement',
+  Libra:       'harmonious Libra seeks balance, fairness, and peaceful connection',
+  Scorpio:     'deep Scorpio pulls everything beneath the surface — intensity and truth rule',
+  Sagittarius: 'freedom-loving Sagittarius expands horizons and sparks the search for meaning',
+  Capricorn:   'disciplined Capricorn focuses energy on patience, structure, and long-term goals',
+  Aquarius:    'unconventional Aquarius brings detachment, originality, and idealistic thinking',
+  Pisces:      'dreamy Pisces softens boundaries and heightens intuition and sensitivity',
+};
+
 // ── Sign glyphs ──────────────────────────────────────────────────────────────
 const SIGN_SYMBOL: Record<string, string> = {
   Aries: '♈︎', Taurus: '♉︎', Gemini: '♊︎', Cancer: '♋︎',
@@ -224,7 +249,12 @@ export default function CosmicContext() {
       const isRx = transitInfo.retrogrades.includes(planet);
       const meta = PLANET_META[planet];
       const impact = TRANSIT_IMPACT[planet]?.[sign] ?? '';
-      return [{ planet, sign, isRx, symbol: meta.symbol, color: meta.color, impact }];
+      const governs = PLANET_GOVERNS[planet] ?? '';
+      const essence = SIGN_ESSENCE[sign] ?? '';
+      const source = governs && essence
+        ? `The ${planet} shapes ${governs}. Right now it's moving through ${sign} — ${essence}.`
+        : '';
+      return [{ planet, sign, isRx, symbol: meta.symbol, color: meta.color, impact, source }];
     }),
   [transitInfo]);
 
@@ -443,6 +473,9 @@ export default function CosmicContext() {
                       {transit.isRx && <Text style={styles.rxBadge}>Rx</Text>}
                     </View>
                     <Text style={styles.transitImpact}>{transit.impact}</Text>
+                    {transit.source ? (
+                      <Text style={styles.transitSource}>{transit.source}</Text>
+                    ) : null}
                   </View>
                 </View>
                 {index < activeTransits.length - 1 && <View style={styles.divider} />}
@@ -552,6 +585,7 @@ const styles = StyleSheet.create({
   transitIn: { fontSize: 16, color: 'rgba(255,255,255,0.45)', fontWeight: '400' },
   rxBadge: { backgroundColor: 'rgba(217,140,140,0.2)', color: '#D98C8C', fontSize: 9, fontWeight: 'bold', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
   transitImpact: { fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
+  transitSource: { fontSize: 12, color: 'rgba(212,184,114,0.45)', lineHeight: 17, marginTop: 5, fontStyle: 'italic' },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 20, marginLeft: 44 },
 
   // Reflection prompt

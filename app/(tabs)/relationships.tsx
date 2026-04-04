@@ -225,7 +225,7 @@ export default function RelationshipsScreen() {
       };
       
       await localDb.saveRelationshipChart(newRelationship);
-      setRelationships(prev => [newRelationship, ...prev]);
+      setRelationships(prev => [...prev, newRelationship]);
       setShowAddModal(false);
 
       if (userChart) {
