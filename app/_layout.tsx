@@ -9,7 +9,6 @@
 // not at module load — top-level native TurboModule calls at eval time
 // were causing dladdr/backtrace_symbols crashes on iOS 26 New Architecture.
 
-// eslint-disable-next-line import/first
 import { Ionicons } from '@expo/vector-icons';
 // File: app/_layout.tsx
 
@@ -34,10 +33,6 @@ const CosmicBackground = React.lazy(() => import('../components/ui/CosmicBackgro
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { StarNotificationProvider } from '../context/StarNotificationContext';
-
-// Keep splash visible until the app finishes initializing
-SplashScreen.preventAutoHideAsync().catch(() => {});
-
 import { MigrationService } from '../services/storage/migrationService';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { AstrologySettingsService } from '../services/astrology/astrologySettingsService';
@@ -46,6 +41,9 @@ import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
+
+// Keep splash visible until the app finishes initializing
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 
 // Allowlist of routes that notification deep links can navigate to.

@@ -5,4 +5,6 @@ module.exports = {
   getItemAsync: async (key) => store.get(key) ?? null,
   setItemAsync: async (key, value) => { store.set(key, value); },
   deleteItemAsync: async (key) => { store.delete(key); },
+  // Utility for tests to wipe the entire store and prevent cross-suite pollution.
+  __clearAll: () => { store.clear(); },
 };

@@ -11,11 +11,18 @@ import {
   ORB_PRESET_OPTIONS,
 } from '../astrologySettingsService';
 
-// Reset the singleton's in-memory cache and SecureStore between tests
+// Reset the singleton's in-memory cache and the entire mock SecureStore between tests.
+// Deleting only the settings key is insufficient when other test suites write to the
+// same mock store (module-level Map) and Jest runs suites in the same worker process.
 async function resetService() {
   AstrologySettingsService.clearCache();
   const SecureStore = require('expo-secure-store');
-  await SecureStore.deleteItemAsync('astrology_settings');
+  // Clear all keys in the mock store to prevent cross-suite pollution.
+  if (typeof SecureStore.__clearAll === 'function') {
+    SecureStore.__clearAll();
+  } else {
+    await SecureStore.deleteItemAsync('astrology_settings');
+  }
 }
 
 describe('AstrologySettingsService', () => {

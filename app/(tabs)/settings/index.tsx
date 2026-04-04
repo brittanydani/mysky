@@ -1,14 +1,13 @@
 // app/(tabs)/settings/index.tsx
 
 import React, { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicIcon } from '../../../components/ui/MetallicIcon';
-import { useRouter, Href } from 'expo-router';
+import { useRouter, useFocusEffect, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
@@ -33,7 +32,6 @@ import { AstrologyCalculator } from '../../../services/astrology/calculator';
 import Constants from 'expo-constants';
 import { FieldEncryptionService } from '../../../services/storage/fieldEncryption';
 import { IdentityVault } from '../../../utils/IdentityVault';
-import { PrivacyComplianceManager } from '../../../services/privacy/privacyComplianceManager';
 import { logger } from '../../../utils/logger';
 import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';

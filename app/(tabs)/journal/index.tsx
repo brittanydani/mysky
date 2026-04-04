@@ -14,7 +14,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { theme } from '../../../constants/theme';
 
-import { GoldIcon } from '../../../components/ui/GoldIcon';
 import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
 import { localDb } from '../../../services/storage/localDb';
 import { JournalEntry, SleepEntry, generateId } from '../../../services/storage/models';
@@ -578,7 +577,7 @@ export default function JournalScreen() {
         </View>
       </View>
     </>
-  ), [isPremium, patternInsights, totalCount, sleepEntries, router, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, showSearch, toggleBrowseSearch, setActiveTab]);
+  ), [isPremium, patternInsights, totalCount, sleepEntries, router, searchQuery, filteredEntries.length, filteredSleepEntries.length, activeTab, showSearch, toggleBrowseSearch, setActiveTab, moodInsightsEnabled]);
 
   // ── List footer ────────────────────────────────────────────────────────────
 
