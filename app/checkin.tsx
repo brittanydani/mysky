@@ -74,6 +74,28 @@ export default function CheckInHub() {
             </View>
           </Animated.View>
 
+          <Animated.View entering={FadeInDown.delay(160)} style={styles.section}>
+            <SectionHeader label="INNER WORLD" icon="sparkles" />
+            <Pressable
+              onPress={() => nav('/daily-reflection' as Href)}
+              style={({ pressed }) => [pressed && styles.pressableActive]}
+            >
+              <LinearGradient
+                colors={['rgba(201, 174, 120, 0.12)', 'rgba(10, 10, 12, 0.8)']}
+                style={styles.entryCard}
+              >
+                <View style={[styles.iconRing, { borderColor: PALETTE.silverBlue + '40', backgroundColor: PALETTE.silverBlue + '10' }]}>
+                  <MetallicIcon name="sparkles" size={24} color={PALETTE.silverBlue} />
+                </View>
+                <View style={styles.cardText}>
+                  <Text style={styles.cardTitle}>Today&apos;s Questions</Text>
+                  <Text style={styles.cardDescription}>Open your daily guided reflection prompts and seal each category.</Text>
+                </View>
+                <Ionicons name="chevron-forward-outline" size={18} color={PALETTE.textMuted} />
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+
           {/* ── Mood & Energy ── */}
           <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
             <SectionHeader label="DAILY RESONANCE" icon="sparkles-outline" />

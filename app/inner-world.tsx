@@ -11,10 +11,6 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Alert,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -29,32 +25,18 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import {
-  getReflectionDate,
-  getTodayKey,
-  getOrCreateTodayQuestions,
   getCategorySealStatus,
-  sealCategoryAnswers,
-  clearPendingIfAllSealed,
+  getReflectionDate,
   loadReflections,
-  loadReflectionDrafts,
-  upsertDraftAnswer,
   getCurrentStreak,
-  DayQuestions,
-  ReflectionAnswer,
 } from '../services/insights/dailyReflectionService';
 import {
-  syncArchetypeProfileFromReflections,
-  syncCognitiveStyleFromReflections,
-  syncCoreValuesFromReflections,
-  syncIntelligenceFromReflections,
   getSomaticReflectionCorrelations,
   SomaticCorrelation,
 } from '../services/insights/reflectionProfileSync';
 import {
   CATEGORY_LABELS,
   CATEGORY_ICONS,
-  ANSWER_SCALES,
-  CATEGORY_SCALE,
   ReflectionCategory,
 } from '../constants/dailyReflectionQuestions';
 
@@ -68,20 +50,6 @@ const PALETTE = {
   textMuted: 'rgba(255,255,255,0.55)',
   glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#020817',
-};
-
-const CATEGORY_COLORS: Record<ReflectionCategory, string> = {
-  values: PALETTE.gold,
-  archetypes: PALETTE.lavender,
-  cognitive: PALETTE.silverBlue,
-  intelligence: PALETTE.rose,
-};
-
-const CATEGORY_RGB: Record<ReflectionCategory, string> = {
-  values: '217, 191, 140',
-  archetypes: '168, 155, 200',
-  cognitive: '139, 196, 232',
-  intelligence: '200, 139, 168',
 };
 
 const SOMATIC_FALLBACK_LABELS = {
@@ -143,8 +111,6 @@ const TOOLS: ToolCard[] = [
   },
 ];
 
-const CATEGORIES: ReflectionCategory[] = ['values', 'archetypes', 'cognitive', 'intelligence'];
-
 export default function InnerWorldScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
@@ -155,33 +121,15 @@ export default function InnerWorldScreen() {
     cognitive: false,
     intelligence: false,
   });
-  // Daily questions state
-  const [categoryQuestions, setCategoryQuestions] = useState<
-    Record<ReflectionCategory, DayQuestions>
-  >({
-    values: { category: 'values', questions: [] },
-    archetypes: { category: 'archetypes', questions: [] },
-    cognitive: { category: 'cognitive', questions: [] },
-    intelligence: { category: 'intelligence', questions: [] },
-  });
-  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [categorySealed, setCategorySealed] = useState<Record<ReflectionCategory, boolean>>({
     values: false,
     archetypes: false,
     cognitive: false,
     intelligence: false,
   });
-  const [categoryNotes, setCategoryNotes] = useState<Record<ReflectionCategory, string>>({
-    values: '',
-    archetypes: '',
-    cognitive: '',
-    intelligence: '',
-  });
   const [streak, setStreak] = useState(0);
   const [totalDays, setTotalDays] = useState(0);
   const [somaticCorrelations, setSomaticCorrelations] = useState<SomaticCorrelation[]>([]);
-  // Capture the date when questions loaded — prevents midnight edge case
-  const loadedDateRef = useRef<string>(getTodayKey(getReflectionDate()));
 
   const hasCompleteCognitiveProfile = (raw: string | null): boolean => {
     if (!raw) return false;
@@ -199,10 +147,8 @@ export default function InnerWorldScreen() {
       const checkProgress = async () => {
         try {
           const refDate = getReflectionDate();
-          const today = getTodayKey(refDate);
-          loadedDateRef.current = today;
 
-          const [valuesRaw, archetypesRaw, cognitiveRaw, intelligenceRaw, sealStatus, reflData, draftAnswers, currentStreak] =
+          const [valuesRaw, archetypesRaw, cognitiveRaw, intelligenceRaw, sealStatus, reflData, currentStreak] =
             await Promise.all([
               EncryptedAsyncStorage.getItem('@mysky:core_values'),
               EncryptedAsyncStorage.getItem('@mysky:archetype_profile'),
@@ -210,7 +156,6 @@ export default function InnerWorldScreen() {
               EncryptedAsyncStorage.getItem('@mysky:intelligence_profile'),
               getCategorySealStatus(refDate),
               loadReflections(),
-              loadReflectionDrafts(),
               getCurrentStreak(),
             ]);
 
@@ -221,45 +166,7 @@ export default function InnerWorldScreen() {
             intelligence: !!intelligenceRaw,
           });
 
-          // Load today's questions per category — use startedAt as per-user seed
-          // Questions persist until all categories are sealed
-          const userSeed = reflData.startedAt ?? undefined;
-          const [valuesQs, archetypesQs, cognitiveQs, intelligenceQs] = await Promise.all([
-            getOrCreateTodayQuestions('values', refDate, userSeed),
-            getOrCreateTodayQuestions('archetypes', refDate, userSeed),
-            getOrCreateTodayQuestions('cognitive', refDate, userSeed),
-            getOrCreateTodayQuestions('intelligence', refDate, userSeed),
-          ]);
-          const qs: Record<ReflectionCategory, DayQuestions> = {
-            values: { category: 'values', questions: valuesQs },
-            archetypes: { category: 'archetypes', questions: archetypesQs },
-            cognitive: { category: 'cognitive', questions: cognitiveQs },
-            intelligence: { category: 'intelligence', questions: intelligenceQs },
-          };
-          setCategoryQuestions(qs);
-          // Pre-fill any already-sealed answers
-          const todayAnswers = reflData.answers.filter(a => a.date === today);
-          const todayDraftAnswers = draftAnswers.filter(a => a.date === today);
-
-          // Defensive: if no answers exist for today, force unsealed
-          // regardless of what getCategorySealStatus returned
-          if (todayAnswers.length === 0) {
-            setCategorySealed({ values: false, archetypes: false, cognitive: false, intelligence: false });
-          } else {
-            setCategorySealed(sealStatus);
-          }
-          if (todayAnswers.length > 0 || todayDraftAnswers.length > 0) {
-            const filled: Record<string, number> = {};
-            for (const a of todayAnswers) {
-              filled[`${a.category}-${a.questionId}`] = a.scaleValue ?? 0;
-            }
-            for (const a of todayDraftAnswers) {
-              filled[`${a.category}-${a.questionId}`] = a.scaleValue ?? 0;
-            }
-            setAnswers(filled);
-          } else {
-            setAnswers({});
-          }
+          setCategorySealed(sealStatus);
 
           setStreak(currentStreak);
           setTotalDays(new Set(reflData.answers.map(a => a.date)).size);
@@ -278,88 +185,6 @@ export default function InnerWorldScreen() {
   const nav = (route: Href) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     router.push(route);
-  };
-
-  const answerKey = (category: ReflectionCategory, questionId: number) =>
-    `${category}-${questionId}`;
-
-  const setAnswer = (category: ReflectionCategory, questionId: number, scaleValue: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    setAnswers(prev => ({ ...prev, [answerKey(category, questionId)]: scaleValue }));
-
-    const questionText = categoryQuestions[category].questions.find((question) => question.id === questionId)?.text;
-    const scale = ANSWER_SCALES[CATEGORY_SCALE[category]];
-    if (!questionText || !scale[scaleValue]) return;
-
-    upsertDraftAnswer({
-      questionId,
-      category,
-      questionText,
-      answer: scale[scaleValue].label,
-      scaleValue,
-      date: loadedDateRef.current,
-    }).then(() => {
-      if (category === 'archetypes') {
-        syncArchetypeProfileFromReflections({ includeDrafts: true }).catch(() => {});
-      } else if (category === 'cognitive') {
-        syncCognitiveStyleFromReflections({ includeDrafts: true }).catch(() => {});
-      } else if (category === 'values') {
-        syncCoreValuesFromReflections({ includeDrafts: true }).catch(() => {});
-      } else if (category === 'intelligence') {
-        syncIntelligenceFromReflections({ includeDrafts: true }).catch(() => {});
-      }
-    }).catch(() => {});
-  };
-
-  const isCategoryAllAnswered = (category: ReflectionCategory): boolean => {
-    const qs = categoryQuestions[category].questions;
-    if (qs.length === 0) return false;
-    return qs.every(q => answers[answerKey(category, q.id)] !== undefined);
-  };
-
-  const handleSealCategory = async (category: ReflectionCategory) => {
-    if (!isCategoryAllAnswered(category)) {
-      Alert.alert('Incomplete', `Answer all ${CATEGORY_LABELS[category]} questions before sealing.`);
-      return;
-    }
-
-    const sealDate = loadedDateRef.current;
-    const qs = categoryQuestions[category].questions;
-    const scale = ANSWER_SCALES[CATEGORY_SCALE[category]];
-    const batch: Omit<ReflectionAnswer, 'sealedAt'>[] = qs.map(q => {
-      const sv = answers[answerKey(category, q.id)] ?? 0;
-      return {
-        questionId: q.id,
-        category,
-        questionText: q.text,
-        answer: scale[sv].label,
-        scaleValue: sv,
-        date: sealDate,
-      };
-    });
-
-    try {
-      const result = await sealCategoryAnswers(category, batch, categoryNotes[category] || undefined);
-      setCategorySealed(prev => ({ ...prev, [category]: true }));
-      setTotalDays(result.totalDaysCompleted);
-      const s = await getCurrentStreak();
-      setStreak(s);
-      // Clear pending questions if all categories are now sealed
-      await clearPendingIfAllSealed();
-      // Sync sealed answers into the corresponding profile screen
-      if (category === 'archetypes') {
-        syncArchetypeProfileFromReflections().catch(() => {});
-      } else if (category === 'cognitive') {
-        syncCognitiveStyleFromReflections().catch(() => {});
-      } else if (category === 'values') {
-        syncCoreValuesFromReflections().catch(() => {});
-      } else if (category === 'intelligence') {
-        syncIntelligenceFromReflections().catch(() => {});
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    } catch {
-      Alert.alert('Error', 'Failed to save reflections. Please try again.');
-    }
   };
 
   const allToolsCompleted = completion.values && completion.archetypes && completion.cognitive && completion.intelligence;
@@ -422,7 +247,7 @@ export default function InnerWorldScreen() {
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <MetallicText style={styles.statValue} color={PALETTE.silverBlue}>
-                    {CATEGORIES.filter(c => categorySealed[c]).length}/4
+                    {Object.values(categorySealed).filter(Boolean).length}/4
                   </MetallicText>
                   <Text style={styles.statLabel}>sealed</Text>
                 </View>
@@ -438,166 +263,6 @@ export default function InnerWorldScreen() {
                 </MetallicText>
               </Animated.View>
             )}
-
-            {/* Daily Questions — per category */}
-            <Animated.View entering={FadeInDown.delay(160).duration(600)} style={styles.dailyHeader}>
-              <MetallicText style={styles.dailyHeaderTitle} color={PALETTE.gold}>Today's Questions</MetallicText>
-              <GoldSubtitle style={styles.dailyHeaderSub}>Seal each category to complete the day</GoldSubtitle>
-            </Animated.View>
-
-            {CATEGORIES.map((category, catIdx) => {
-              const dq = categoryQuestions[category];
-              const color = CATEGORY_COLORS[category];
-              const rgb = CATEGORY_RGB[category];
-              const isSealed = categorySealed[category];
-              const allAnswered = isCategoryAllAnswered(category);
-
-              return (
-                <Animated.View
-                  key={category}
-                  entering={FadeInDown.delay(220 + catIdx * 100).duration(600)}
-                  layout={Layout.springify()}
-                  style={styles.categorySection}
-                >
-                  {/* Category Header */}
-                  <View style={styles.categoryHeader}>
-                    <View style={styles.categoryHeaderLeft}>
-                      <MetallicText style={styles.categoryIcon} color={color}>
-                        {CATEGORY_ICONS[category]}
-                      </MetallicText>
-                      <MetallicText style={styles.categoryTitle} color={color}>
-                        {CATEGORY_LABELS[category]}
-                      </MetallicText>
-                    </View>
-                    {isSealed && (
-                      <View style={styles.categorySealedBadge}>
-                        <MetallicIcon name="lock-closed-outline" size={10} color={PALETTE.emerald} />
-                        <MetallicText style={styles.categorySealedText} color={PALETTE.emerald}>SEALED</MetallicText>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Questions */}
-                  {dq.questions.map((q, qIdx) => {
-                    const key = answerKey(category, q.id);
-                    const selectedValue = answers[key];
-                    const hasAnswer = selectedValue !== undefined;
-                    const scale = ANSWER_SCALES[CATEGORY_SCALE[category]];
-
-                    return (
-                      <Animated.View
-                        key={q.id}
-                        entering={FadeInDown.delay(280 + catIdx * 100 + qIdx * 60).duration(500)}
-                      >
-                        <LinearGradient
-                          colors={[`rgba(${rgb}, 0.06)`, 'rgba(10,10,15,0.85)']}
-                          style={styles.questionCard}
-                        >
-                          <Text style={styles.questionText}>{q.text}</Text>
-
-                          <View style={styles.scaleRow}>
-                            {scale.map(opt => {
-                              const isSelected = selectedValue === opt.value;
-                              return (
-                                <Pressable
-                                  key={opt.value}
-                                  style={[
-                                    styles.scalePill,
-                                    isSelected && {
-                                      backgroundColor: `rgba(${rgb}, 0.25)`,
-                                      borderColor: color,
-                                    },
-                                    isSealed && styles.scalePillSealed,
-                                  ]}
-                                  onPress={() => setAnswer(category, q.id, opt.value)}
-                                  disabled={isSealed}
-                                >
-                                  <Text style={[
-                                    styles.scalePillText,
-                                    isSelected && { color },
-                                    isSealed && isSelected && { color: PALETTE.emerald },
-                                  ]}>
-                                    {opt.label}
-                                  </Text>
-                                </Pressable>
-                              );
-                            })}
-                          </View>
-
-                          {hasAnswer && isSealed && (
-                            <View style={styles.answerMeta}>
-                              <MetallicIcon name="lock-closed-outline" size={11} color={PALETTE.emerald} />
-                              <Text style={[styles.answerMetaText, { color: PALETTE.emerald }]}>
-                                Sealed
-                              </Text>
-                            </View>
-                          )}
-                        </LinearGradient>
-                      </Animated.View>
-                    );
-                  })}
-
-                  {/* Notes prompt — shown when all questions answered, before sealing */}
-                  {!isSealed && allAnswered && dq.questions.length > 0 && (
-                    <View style={styles.notesContainer}>
-                      <Text style={styles.notesLabel}>What made you think of this today? <Text style={styles.notesOptional}>(optional)</Text></Text>
-                      <TextInput
-                        style={styles.notesInput}
-                        value={categoryNotes[category]}
-                        onChangeText={text => setCategoryNotes(prev => ({ ...prev, [category]: text }))}
-                        placeholder="A sentence or two about what surfaced…"
-                        placeholderTextColor={PALETTE.textMuted}
-                        multiline
-                        maxLength={300}
-                        returnKeyType="done"
-                        blurOnSubmit
-                      />
-                    </View>
-                  )}
-
-                  {/* Seal Category Button */}
-                  {!isSealed && dq.questions.length > 0 && (
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.sealCategoryButton,
-                        { borderColor: `rgba(${rgb}, ${allAnswered ? '0.5' : '0.15'})` },
-                        allAnswered && { backgroundColor: `rgba(${rgb}, 0.15)` },
-                        pressed && allAnswered && styles.sealButtonPressed,
-                      ]}
-                      onPress={() => handleSealCategory(category)}
-                      disabled={!allAnswered}
-                    >
-                      <MetallicIcon
-                        name="shield-checkmark-outline"
-                        size={16}
-                        color={allAnswered ? color : PALETTE.textMuted}
-                      />
-                      <Text style={[
-                        styles.sealCategoryText,
-                        allAnswered ? { color } : { color: PALETTE.textMuted },
-                      ]}>
-                        Seal {CATEGORY_LABELS[category]}
-                      </Text>
-                    </Pressable>
-                  )}
-                  {isSealed && (
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.sealCategoryButton,
-                        { borderColor: 'rgba(110,191,139,0.3)', backgroundColor: 'rgba(110,191,139,0.08)' },
-                        pressed && styles.sealButtonPressed,
-                      ]}
-                      onPress={() => { setCategorySealed(prev => ({ ...prev, [category]: false })); }}
-                    >
-                      <MetallicIcon name="lock-open-outline" size={16} color={PALETTE.emerald} />
-                      <Text style={[styles.sealCategoryText, { color: PALETTE.emerald }]}>
-                        Unseal to Edit
-                      </Text>
-                    </Pressable>
-                  )}
-                </Animated.View>
-              );
-            })}
 
             {/* Tool Cards */}
             <Animated.View entering={FadeInDown.delay(560).duration(600)} style={styles.dailyHeader}>
@@ -822,134 +487,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   dailyHeaderSub: { fontSize: 13 },
-
-  // Category sections
-  categorySection: { marginBottom: 28 },
-  categoryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
-  categoryHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  categoryIcon: { fontSize: 20 },
-  categoryTitle: { fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
-  categorySealedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(110, 191, 139, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(110, 191, 139, 0.3)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  categorySealedText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-
-  // Question cards
-  questionCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    marginBottom: 14,
-    padding: 20,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  questionText: {
-    fontSize: 15,
-    color: PALETTE.textMain,
-    fontWeight: '400',
-    lineHeight: 22,
-    marginBottom: 14,
-  },
-
-  // Scale pills
-  scaleRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  scalePill: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  scalePillSealed: {
-    opacity: 0.7,
-  },
-  scalePillText: {
-    fontSize: 13,
-    color: PALETTE.textMuted,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-
-  // Answer meta
-  answerMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 10,
-    alignSelf: 'flex-end',
-  },
-  answerMetaText: {
-    fontSize: 10,
-    color: PALETTE.textMuted,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-
-  // Seal category button
-  sealCategoryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 18,
-    borderWidth: 1,
-    marginTop: 4,
-  },
-  sealButtonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  sealCategoryText: {
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-
-  // Notes prompt
-  notesContainer: {
-    marginTop: 12,
-    marginBottom: 4,
-    gap: 8,
-  },
-  notesLabel: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  notesOptional: {
-    color: 'rgba(255,255,255,0.35)',
-    fontWeight: '400',
-  },
-  notesInput: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: '#FFFFFF',
-    lineHeight: 20,
-    minHeight: 72,
-    textAlignVertical: 'top',
-  },
 
   // Progress
   progressSection: {

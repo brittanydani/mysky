@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { useFocusEffect } from '@react-navigation/core';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
@@ -165,8 +165,15 @@ export default function PastReflectionsScreen() {
       const init = async () => {
         try {
           const data = await loadReflections();
-          setAllAnswers(data.answers);
-          setGroups(groupByDate(data.answers, 'all'));          setTrends(computeThemeTrends(data.answers));        } catch { /* retain empty state on failure */ }
+          const safeAnswers = Array.isArray(data?.answers) ? data.answers : [];
+          setAllAnswers(safeAnswers);
+          setGroups(groupByDate(safeAnswers, 'all'));
+          setTrends(computeThemeTrends(safeAnswers));
+        } catch {
+          setAllAnswers([]);
+          setGroups([]);
+          setTrends([]);
+        }
       };
       init().catch(() => {});
     }, []),
@@ -183,6 +190,7 @@ export default function PastReflectionsScreen() {
     { key: 'values', label: 'Values' },
     { key: 'archetypes', label: 'Archetypes' },
     { key: 'cognitive', label: 'Cognitive' },
+    { key: 'intelligence', label: 'Intelligence' },
   ];
 
   const handleClose = () => {

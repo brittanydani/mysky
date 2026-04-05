@@ -57,7 +57,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'linguistic',
     name: 'Linguistic',
-    icon: '✎',
+    icon: 'chatbubble-outline',
     prompt: 'How naturally do words, writing, and language come to you?',
     lowLabel: 'Not my strength',
     highLabel: 'Words flow easily',
@@ -66,7 +66,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'logical',
     name: 'Logical-Mathematical',
-    icon: '∿',
+    icon: 'git-network-outline',
     prompt: 'How drawn are you to patterns, systems, and logical reasoning?',
     lowLabel: 'Rarely drawn to it',
     highLabel: 'Deeply drawn to it',
@@ -75,7 +75,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'musical',
     name: 'Musical',
-    icon: '♫',
+    icon: 'musical-notes-outline',
     prompt: 'How deeply do you connect with rhythm, melody, and sound?',
     lowLabel: 'Music is background',
     highLabel: 'Music moves me deeply',
@@ -84,7 +84,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'spatial',
     name: 'Visual-Spatial',
-    icon: '◇',
+    icon: 'compass-outline',
     prompt: 'How easily do you think in images, maps, and spatial relationships?',
     lowLabel: 'I think in words',
     highLabel: 'I think in pictures',
@@ -93,7 +93,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'kinesthetic',
     name: 'Bodily-Kinesthetic',
-    icon: '⚡',
+    icon: 'body-outline',
     prompt: 'How much do you learn and express through movement and physical skill?',
     lowLabel: 'More cerebral',
     highLabel: 'Very physical',
@@ -102,7 +102,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'interpersonal',
     name: 'Interpersonal',
-    icon: '⚯',
+    icon: 'people-outline',
     prompt: 'How easily do you read, understand, and connect with other people?',
     lowLabel: 'I need space',
     highLabel: 'I read people easily',
@@ -111,7 +111,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'intrapersonal',
     name: 'Intrapersonal',
-    icon: '◈',
+    icon: 'person-outline',
     prompt: 'How deeply do you understand your own emotions, motives, and inner world?',
     lowLabel: 'Still exploring',
     highLabel: 'Deep self-knowledge',
@@ -120,7 +120,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'naturalistic',
     name: 'Naturalistic',
-    icon: '❋',
+    icon: 'leaf-outline',
     prompt: 'How attuned are you to the natural world — plants, animals, weather, ecosystems?',
     lowLabel: 'City-minded',
     highLabel: 'Nature is home',
@@ -129,7 +129,7 @@ const DIMENSIONS: IntelligenceDimension[] = [
   {
     id: 'existential',
     name: 'Existential',
-    icon: '∞',
+    icon: 'infinite-outline',
     prompt: 'How often do you contemplate life\'s big questions — meaning, mortality, purpose?',
     lowLabel: 'Rarely ponder it',
     highLabel: 'Always seeking meaning',
@@ -304,6 +304,11 @@ export default function IntelligenceProfileScreen() {
   };
 
   const allSet = DIMENSIONS.every((d) => scores[d.id] !== undefined);
+  const anySet = DIMENSIONS.some((d) => scores[d.id] !== undefined);
+  const displayScores: Scores = DIMENSIONS.reduce((acc, dim) => {
+    acc[dim.id] = scores[dim.id] ?? 3;
+    return acc;
+  }, {} as Scores);
 
   const handleSave = async () => {
     try {
@@ -356,7 +361,7 @@ export default function IntelligenceProfileScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Profile Synthesis */}
-          {allSet && (
+          {anySet && (
             <Animated.View
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
@@ -367,32 +372,17 @@ export default function IntelligenceProfileScreen() {
                 <MetallicText style={styles.synthesisEyebrow} color={PALETTE.lavender}>INTELLIGENCE FINGERPRINT</MetallicText>
               </View>
 
-              <Text style={styles.synthesisTitle}>{getProfileTitle(scores)}</Text>
+              <Text style={styles.synthesisTitle}>{getProfileTitle(displayScores)}</Text>
 
-              <IntelligenceRadar scores={scores} />
+              <IntelligenceRadar scores={displayScores} />
 
               <Text style={styles.synthesisBody}>
-                {getProfileSummary(scores)}
+                {getProfileSummary(displayScores)}
               </Text>
-
-              <Pressable
-                style={[styles.saveBtn, saved && styles.saveBtnDone]}
-                onPress={handleSave}
-                onLongPress={() => {
-                  if (saved) {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                    setSaved(false);
-                  }
-                }}
-              >
-                <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.lavender}>
-                  {saved ? '✓ Profile Sealed · Hold to Edit' : 'Seal Profile'}
-                </MetallicText>
-              </Pressable>
             </Animated.View>
           )}
 
-          {!allSet && (
+          {!anySet && (
             <Animated.View entering={FadeInDown.delay(140).duration(500)}>
               <Text style={styles.instruction}>
                 Rate yourself honestly on each intelligence — there are no wrong answers.
@@ -413,7 +403,7 @@ export default function IntelligenceProfileScreen() {
                 >
                   <View style={styles.dimInner}>
                     <View style={styles.dimHeader}>
-                      <Text style={styles.dimIcon}>{dim.icon}</Text>
+                      <MetallicIcon name={dim.icon as any} size={20} color={PALETTE.lavender} />
                       <MetallicText style={styles.dimName} color={PALETTE.lavender}>{dim.name}</MetallicText>
                     </View>
 
@@ -465,6 +455,26 @@ export default function IntelligenceProfileScreen() {
 
           <View style={{ height: 120 }} />
         </ScrollView>
+
+        {/* Sticky bottom seal button */}
+        {anySet && (
+          <Animated.View entering={FadeInDown.duration(400)} style={styles.sealBar}>
+            <Pressable
+              style={[styles.saveBtn, styles.saveBtnFull, saved && styles.saveBtnDone]}
+              onPress={handleSave}
+              onLongPress={() => {
+                if (saved) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                  setSaved(false);
+                }
+              }}
+            >
+              <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.lavender}>
+                {saved ? '✓ Profile Sealed · Hold to Edit' : 'Seal Profile'}
+              </MetallicText>
+            </Pressable>
+          </Animated.View>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -495,15 +505,17 @@ const styles = StyleSheet.create({
 
   synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22, textAlign: 'center', marginBottom: 24 },
 
+  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.95)' },
   saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.lavender, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(168,155,200,0.1)' },
+  saveBtnFull: { width: '100%' },
   saveBtnDone: { borderColor: PALETTE.sage, backgroundColor: 'rgba(140,190,170,0.1)' },
-  saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
+  saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center' },
 
   dimensionsContainer: { gap: 16 },
   dimensionBlock: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' },
   dimInner: { padding: 20 },
   dimHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  dimIcon: { fontSize: 20, color: PALETTE.lavender },
+  dimIcon: { width: 20, alignItems: 'center' },
   dimName: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
   dimQuestion: { fontSize: 15, fontWeight: '400', color: PALETTE.textMain, lineHeight: 22, marginBottom: 20 },
 

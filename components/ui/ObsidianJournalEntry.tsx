@@ -23,7 +23,7 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native';
-import { SkiaGradient as LinearGradient } from './SkiaGradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { MetallicText } from './MetallicText';
@@ -79,10 +79,10 @@ interface Props {
   mood?: string;
   /** Whether the card is expanded (shows full text) */
   isExpanded?: boolean;
-  /** Tap handler (open / edit) */
-  onPress?: () => void;
-  /** Long press handler (delete) */
-  onLongPress?: () => void;
+  /** Expand/collapse handler */
+  onToggleExpand?: () => void;
+  /** Open entry actions */
+  onOpenActions?: () => void;
   /** Word count to display */
   wordCount?: number;
   /** numeric Stability Delta (+/-) */
@@ -97,26 +97,18 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   title,
   content,
   dateLabel,
-  timeLabel,
   mood,
   isExpanded = false,
-  onPress,
-  onLongPress,
+  onToggleExpand,
+  onOpenActions,
   wordCount,
   stabilityDelta,
-  somaticSnapshotColor,
 }: Props) {
   const tone = toneFromMood(mood);
   const accent = toneColor(tone);
 
   return (
-    <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
-      style={({ pressed }) => [styles.wrapper, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
-      accessibilityRole="button"
-      accessibilityLabel={`Journal entry: ${title || dateLabel}`}
-    >
+    <View style={styles.wrapper}>
       <LinearGradient
         colors={[accent + '14', 'rgba(10,10,12,0.9)']}
         style={[styles.card, { borderColor: 'rgba(255,255,255,0.08)' }]}
@@ -126,11 +118,15 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
           <View style={styles.headerText}>
             <Text style={styles.dateText}>{dateLabel}</Text>
           </View>
-          <Ionicons
-            name={isExpanded ? 'chevron-up' : 'chevron-down'}
-            size={16}
-            color={theme.textMuted}
-          />
+          <Pressable
+            onPress={onOpenActions}
+            hitSlop={10}
+            style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={`Actions for journal entry: ${title || dateLabel}`}
+          >
+            <Ionicons name="ellipsis-horizontal" size={16} color={theme.textMuted} />
+          </Pressable>
         </View>
 
         {/* Title */}
@@ -150,7 +146,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
 
         {/* Footer */}
         <View style={styles.footer}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View style={styles.footerLeft}>
             {wordCount != null && (
               <Text style={styles.footerMeta}>{wordCount} words</Text>
             )}
@@ -161,6 +157,21 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
                 </MetallicText>
               </View>
             )}
+            <Pressable
+              onPress={onToggleExpand}
+              hitSlop={8}
+              pressRetentionOffset={12}
+              style={({ pressed }) => [styles.expandButton, pressed && styles.expandButtonPressed]}
+              accessibilityRole="button"
+              accessibilityLabel={isExpanded ? 'Collapse journal entry' : 'Expand journal entry'}
+            >
+              <Text style={styles.expandHint}>{isExpanded ? 'Read less' : 'Read more'}</Text>
+              <Ionicons
+                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                size={14}
+                color="rgba(255,255,255,0.58)"
+              />
+            </Pressable>
           </View>
           <View style={[styles.toneBadge, { backgroundColor: accent + '20' }]}>
             <MetallicText style={styles.toneBadgeText} color={accent}>
@@ -169,7 +180,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
           </View>
         </View>
       </LinearGradient>
-    </Pressable>
+    </View>
   );
 });
 
@@ -195,6 +206,16 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
+  },
+  iconButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconButtonPressed: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   dateText: {
     color: 'rgba(255,255,255,0.45)',
@@ -224,10 +245,32 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.06)',
   },
+  footerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+    flex: 1,
+    paddingRight: 12,
+  },
   footerMeta: {
     color: theme.textMuted,
     fontSize: 12,
     fontWeight: '500',
+  },
+  expandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 2,
+  },
+  expandButtonPressed: {
+    opacity: 0.72,
+  },
+  expandHint: {
+    color: 'rgba(255,255,255,0.58)',
+    fontSize: 12,
+    fontWeight: '600',
   },
   toneBadge: {
     paddingHorizontal: 10,

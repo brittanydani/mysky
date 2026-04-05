@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, TextInput, Modal, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, ActionSheetIOS, ListRenderItemInfo, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { useRouter, Href } from 'expo-router';
-import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { useFocusEffect } from '@react-navigation/core';
+import Animated, { FadeInDown, Layout, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from '../../../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -25,9 +26,39 @@ import { parseLocalDate, toLocalDateString } from '../../../utils/dateUtils';
 import ObsidianJournalEntry from '../../../components/ui/ObsidianJournalEntry';
 import { analyzeJournalContent } from '../../../services/journal/nlp';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
-import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
+
+const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
+
+function isValidDateValue(date: Date): boolean {
+  return !Number.isNaN(date.getTime());
+}
+
+function sanitizeJournalEntryForEdit(entry: JournalEntry): JournalEntry {
+  const parsedEntryDate = parseLocalDate(String(entry.date ?? ''));
+  const safeEntryDate = isValidDateValue(parsedEntryDate)
+    ? String(entry.date)
+    : toLocalDateString();
+  const parsedCreatedAt = new Date(String(entry.createdAt ?? ''));
+  const safeCreatedAt = isValidDateValue(parsedCreatedAt)
+    ? String(entry.createdAt)
+    : new Date().toISOString();
+
+  return {
+    ...entry,
+    date: safeEntryDate,
+    createdAt: safeCreatedAt,
+    title: typeof entry.title === 'string' ? entry.title : '',
+    content: typeof entry.content === 'string' ? entry.content : '',
+    mood: (VALID_MOODS as readonly string[]).includes(entry.mood as string)
+      ? entry.mood
+      : ('okay' as any),
+    tags: Array.isArray(entry.tags)
+      ? entry.tags.filter((t): t is string => typeof t === 'string')
+      : undefined,
+  };
+}
 
 const PAGE_SIZE = 30;
 
@@ -108,36 +139,38 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamC
 interface EntryCardProps {
   entry: JournalEntry;
   isExpanded: boolean;
-  onRead: (entry: JournalEntry) => void;
-  onLongPress: (entry: JournalEntry) => void;
+  onToggleExpand: (entryId: string) => void;
+  onOpenActions: (entry: JournalEntry) => void;
   formatDate: (s: string) => string;
   formatTime: (s: string) => string;
 }
 
 const EntryCard = memo(function EntryCard({
-  entry, isExpanded, onRead, onLongPress, formatDate, formatTime,
+  entry, isExpanded, onToggleExpand, onOpenActions, formatDate, formatTime,
 }: EntryCardProps) {
   const wordCount = entry.contentWordCount ?? (entry.content || '').trim().split(/\s+/).filter(Boolean).length;
-  const handleRead = useCallback(() => {
+  const handleToggleExpand = useCallback(() => {
     Haptics.selectionAsync().catch(() => {});
-    onRead(entry);
-  }, [entry, onRead]);
-  const handleLongPress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    onLongPress(entry);
-  }, [entry, onLongPress]);
+    onToggleExpand(entry.id);
+  }, [entry.id, onToggleExpand]);
+  const handleOpenActions = useCallback(() => {
+    Haptics.selectionAsync().catch(() => {});
+    onOpenActions(entry);
+  }, [entry, onOpenActions]);
   return (
-    <ObsidianJournalEntry
-      title={entry.title}
-      content={entry.content}
-      dateLabel={formatDate(entry.date)}
-      timeLabel={formatTime(entry.createdAt)}
-      mood={entry.mood}
-      isExpanded={isExpanded}
-      onPress={handleRead}
-      onLongPress={handleLongPress}
-      wordCount={wordCount}
-    />
+    <Animated.View layout={Layout.duration(180)}>
+      <ObsidianJournalEntry
+        title={entry.title}
+        content={entry.content}
+        dateLabel={formatDate(entry.date)}
+        timeLabel={formatTime(entry.createdAt)}
+        mood={entry.mood}
+        isExpanded={isExpanded}
+        onToggleExpand={handleToggleExpand}
+        onOpenActions={handleOpenActions}
+        wordCount={wordCount}
+      />
+    </Animated.View>
   );
 });
 
@@ -146,6 +179,7 @@ const EntryCard = memo(function EntryCard({
 export default function JournalScreen() {
   const router = useRouter();
   const { isPremium } = usePremium();
+  const reflectionsListRef = useRef<FlatList<JournalEntry> | null>(null);
 
   const [showPremiumRequired] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -156,12 +190,10 @@ export default function JournalScreen() {
 
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
-  const [readingEntry, setReadingEntry] = useState<JournalEntry | null>(null);
-  const [actionSheetEntry, setActionSheetEntry] = useState<JournalEntry | null>(null);
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
-  const [expandedEntryIds, setExpandedEntryIds] = useState<Set<string>>(new Set());
+  const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'reflections' | 'dreams'>('reflections');
   const [sleepEntries, setSleepEntries] = useState<SleepEntry[]>([]);
 
@@ -196,13 +228,22 @@ export default function JournalScreen() {
   }, []);
 
   const toggleExpanded = useCallback((id: string) => {
-    setExpandedEntryIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+    setExpandedEntryId((currentId) => {
+      if (currentId === id) {
+        const index = filteredEntries.findIndex((entry) => entry.id === id);
+        if (index >= 0) {
+          reflectionsListRef.current?.scrollToIndex({
+            index,
+            animated: false,
+            viewPosition: 0,
+            viewOffset: 12,
+          });
+        }
+        return null;
+      }
+      return id;
     });
-  }, []);
+  }, [filteredEntries]);
 
   useFocusEffect(
     useCallback(() => {
@@ -314,20 +355,11 @@ export default function JournalScreen() {
   };
 
   const handleEditEntry = useCallback((entry: JournalEntry) => {
-    setActionSheetEntry(null);
-    setEditingEntry(entry);
+    setEditingEntry(sanitizeJournalEntryForEdit(entry));
     setShowEntryModal(true);
   }, []);
 
-  const handleReadEntry = useCallback(async (entry: JournalEntry) => {
-    try {
-      Haptics.selectionAsync().catch(() => {});
-    } catch {}
-    setReadingEntry(entry);
-  }, []);
-
   const handleDeleteEntry = useCallback(async (entry: JournalEntry) => {
-    setActionSheetEntry(null);
     try {
       await localDb.deleteJournalEntry(entry.id);
       await loadEntries(true);
@@ -340,6 +372,9 @@ export default function JournalScreen() {
 
   const stableFormatDate = useCallback((dateString: string) => {
     const date = parseLocalDate(dateString);
+    if (!isValidDateValue(date)) {
+      return 'Unknown date';
+    }
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
@@ -349,6 +384,9 @@ export default function JournalScreen() {
 
   const stableFormatTime = useCallback((dateString: string) => {
     const date = new Date(dateString);
+    if (!isValidDateValue(date)) {
+      return 'Unknown time';
+    }
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -358,22 +396,52 @@ export default function JournalScreen() {
 
   const keyExtractor = useCallback((item: JournalEntry | SleepEntry) => item.id, []);
 
-  const handleLongPressEntry = useCallback((entry: JournalEntry) => {
-    setActionSheetEntry(entry);
-  }, []);
+  const presentEntryActions = useCallback((entry: JournalEntry) => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Edit', 'Delete'],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 2,
+          title: entry.title?.trim() || 'Journal Entry',
+          message: 'Choose an action for this reflection.',
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleEditEntry(entry);
+            return;
+          }
+          if (buttonIndex === 2) {
+            void handleDeleteEntry(entry);
+          }
+        },
+      );
+      return;
+    }
+
+    Alert.alert(
+      entry.title?.trim() || 'Journal Entry',
+      'Choose an action for this reflection.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Edit', onPress: () => handleEditEntry(entry) },
+        { text: 'Delete', style: 'destructive', onPress: () => void handleDeleteEntry(entry) },
+      ],
+    );
+  }, [handleDeleteEntry, handleEditEntry]);
 
   const renderEntry = useCallback(({ item }: ListRenderItemInfo<JournalEntry>) => {
     return (
       <EntryCard
         entry={item}
-        isExpanded={false}
-        onRead={handleReadEntry}
-        onLongPress={handleLongPressEntry}
+        isExpanded={expandedEntryId === item.id}
+        onToggleExpand={toggleExpanded}
+        onOpenActions={presentEntryActions}
         formatDate={stableFormatDate}
         formatTime={stableFormatTime}
       />
     );
-  }, [handleReadEntry, handleLongPressEntry, stableFormatDate, stableFormatTime]);
+  }, [expandedEntryId, presentEntryActions, stableFormatDate, stableFormatTime, toggleExpanded]);
 
   const renderDreamEntry = useCallback(({ item }: ListRenderItemInfo<SleepEntry>) => (
     <DreamCard
@@ -738,6 +806,7 @@ export default function JournalScreen() {
           />
         ) : activeTab === 'reflections' ? (
           <FlatList<JournalEntry>
+            ref={reflectionsListRef}
             data={filteredEntries}
             renderItem={renderEntry}
             keyExtractor={keyExtractor}
@@ -745,6 +814,7 @@ export default function JournalScreen() {
             ListFooterComponent={ListFooter}
             ListEmptyComponent={ListEmpty}
             contentContainerStyle={{ paddingBottom: 140, paddingHorizontal: 24 }}
+            onScrollToIndexFailed={() => {}}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.5}
             initialNumToRender={15}
@@ -783,64 +853,8 @@ export default function JournalScreen() {
           initialData={editingEntry}
         />
 
-        <Modal
-          visible={readingEntry !== null}
-          animationType="slide"
-          presentationStyle="fullScreen"
-          onRequestClose={() => setReadingEntry(null)}
-        >
-          <View style={styles.readModalContainer}>
-            <SkiaDynamicCosmos />
-            <SafeAreaView edges={['top']} style={styles.safeArea}>
-              <View style={styles.readModalBackRow}>
-                <Pressable style={styles.backBtn} onPress={() => setReadingEntry(null)} hitSlop={15}>
-                  <Ionicons name="chevron-back" size={22} color="rgba(255,255,255,0.85)" />
-                  <Text style={styles.backBtnLabel}>Archive</Text>
-                </Pressable>
-              </View>
-              <View style={styles.readModalHeader}>
-                <View style={styles.readModalHeaderText}>
-                  <Text style={styles.readModalDate}>{readingEntry ? stableFormatDate(readingEntry.date) : ''}</Text>
-                  {!!readingEntry && (
-                    <Text style={styles.readModalMeta}>{stableFormatTime(readingEntry.createdAt)}{readingEntry.contentWordCount ? ` · ${readingEntry.contentWordCount} words` : ''}</Text>
-                  )}
-                </View>
-              </View>
-
-              <ScrollView
-                style={styles.readModalScroll}
-                contentContainerStyle={styles.readModalContent}
-                showsVerticalScrollIndicator={false}
-              >
-                {!!readingEntry?.title && <Text style={styles.readModalTitle}>{readingEntry.title}</Text>}
-                <Text style={styles.readModalBody}>{readingEntry?.content ?? ''}</Text>
-              </ScrollView>
-            </SafeAreaView>
-          </View>
-        </Modal>
-
-        {/* ── In-app action sheet — pure JS overlay, no native Modal to conflict with entry modal ── */}
-        {actionSheetEntry !== null && (
-          <Pressable style={styles.actionSheetOverlay} onPress={() => setActionSheetEntry(null)}>
-            <View style={styles.actionSheetSheet}>
-              <Pressable style={styles.actionSheetBtn} onPress={() => handleEditEntry(actionSheetEntry)}>
-                <Ionicons name="create-outline" size={20} color="#FFFFFF" />
-                <Text style={styles.actionSheetBtnText}>Edit</Text>
-              </Pressable>
-              <View style={styles.actionSheetDivider} />
-              <Pressable style={styles.actionSheetBtn} onPress={() => handleDeleteEntry(actionSheetEntry)}>
-                <Ionicons name="trash-outline" size={20} color="#E07A7A" />
-                <Text style={[styles.actionSheetBtnText, { color: '#E07A7A' }]}>Delete</Text>
-              </Pressable>
-              <View style={styles.actionSheetDivider} />
-              <Pressable style={styles.actionSheetBtn} onPress={() => setActionSheetEntry(null)}>
-                <Text style={[styles.actionSheetBtnText, { color: 'rgba(255,255,255,0.45)' }]}>Cancel</Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        )}
-
       </SafeAreaView>
+
     </View>
   );
 }
@@ -932,95 +946,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-
-  readModalContainer: { flex: 1, backgroundColor: '#020817' },
-  readModalBackRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 28,
-    paddingBottom: 8,
-  },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  backBtnLabel: {
-    fontSize: 17,
-    color: 'rgba(255,255,255,0.85)',
-    fontWeight: '500',
-  },
-  readModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 20,
-  },
-  readModalHeaderText: { flex: 1, paddingRight: 16 },
-  readModalDate: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
-  readModalMeta: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.45)',
-    fontWeight: '600',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginTop: 6,
-  },
-  readModalScroll: { flex: 1 },
-  readModalContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 60 },
-  readModalTitle: {
-    fontSize: 22,
-    color: '#FFFFFF',
-    fontWeight: '700',
-    lineHeight: 30,
-    marginBottom: 14,
-  },
-  readModalBody: {
-    fontSize: 17,
-    lineHeight: 30,
-    color: 'rgba(255,255,255,0.84)',
-  },
-
-  // Action sheet
-  actionSheetOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'flex-end',
-    paddingBottom: 40,
-    paddingHorizontal: 16,
-  },
-  actionSheetSheet: {
-    backgroundColor: '#111827',
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  },
-  actionSheetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-  },
-  actionSheetBtnText: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  actionSheetDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    marginHorizontal: 16,
-  },
 
   // Header — matches Today screen
   header: {

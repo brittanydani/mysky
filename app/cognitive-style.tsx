@@ -167,6 +167,12 @@ export default function CognitiveStyleScreen() {
   };
 
   const allSet = DIMENSIONS.every((d) => scores[d.id] !== undefined);
+  const anySet = DIMENSIONS.some((d) => scores[d.id] !== undefined);
+  const displayScores: Scores = {
+    scope: scores.scope ?? 3,
+    processing: scores.processing ?? 3,
+    decisions: scores.decisions ?? 3,
+  };
 
   const handleSave = async () => {
     try {
@@ -185,8 +191,7 @@ export default function CognitiveStyleScreen() {
   };
 
   const getProfileTitle = () => {
-    if (!allSet) return 'Synthesizing...';
-    const s = scores as Scores;
+    const s = displayScores;
     const isVisionary = s.scope <= 2 && s.decisions <= 2;
     const isArchitect = s.scope >= 4 && s.processing >= 4;
     const isTactician = s.scope >= 4 && s.decisions >= 4;
@@ -235,8 +240,8 @@ export default function CognitiveStyleScreen() {
           keyboardShouldPersistTaps="handled"
         >
 
-          {/* Profile Synthesis — appears at top once all dimensions are set */}
-          {allSet && (
+          {/* Profile Synthesis — appears once any live score exists */}
+          {anySet && (
             <Animated.View
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
@@ -249,32 +254,17 @@ export default function CognitiveStyleScreen() {
 
               <Text style={styles.synthesisTitle}>{getProfileTitle()}</Text>
 
-              <CognitiveSynthesisMap scores={scores as Scores} />
+              <CognitiveSynthesisMap scores={displayScores} />
 
               <Text style={styles.synthesisBody}>
-                You tend to approach challenges from a {scores.scope! <= 2 ? 'big-picture' : scores.scope! >= 4 ? 'detail-oriented' : 'balanced'} lens,{' '}
-                process information most naturally through {scores.processing! <= 2 ? 'visual' : scores.processing! >= 4 ? 'analytical' : 'multimodal'} means,{' '}
-                and make decisions in a {scores.decisions! <= 2 ? 'quick, intuitive' : scores.decisions! >= 4 ? 'careful, deliberate' : 'adaptive'} way.
+                You tend to approach challenges from a {displayScores.scope <= 2 ? 'big-picture' : displayScores.scope >= 4 ? 'detail-oriented' : 'balanced'} lens,{' '}
+                process information most naturally through {displayScores.processing <= 2 ? 'visual' : displayScores.processing >= 4 ? 'analytical' : 'multimodal'} means,{' '}
+                and make decisions in a {displayScores.decisions <= 2 ? 'quick, intuitive' : displayScores.decisions >= 4 ? 'careful, deliberate' : 'adaptive'} way.
               </Text>
-
-              <Pressable
-                style={[styles.saveBtn, saved && styles.saveBtnDone]}
-                onPress={handleSave}
-                onLongPress={() => {
-                  if (saved) {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                    setSaved(false);
-                  }
-                }}
-              >
-                <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.silverBlue}>
-                  {saved ? '✓ Blueprint Sealed · Hold to Edit' : 'Seal Blueprint'}
-                </MetallicText>
-              </Pressable>
             </Animated.View>
           )}
 
-          {!allSet && (
+          {!anySet && (
             <Animated.View entering={FadeInDown.delay(140).duration(500)}>
               <Text style={styles.instruction}>
                 Choose where you genuinely land on each spectrum — not where you wish you were.
@@ -343,6 +333,26 @@ export default function CognitiveStyleScreen() {
 
           <View style={{ height: 120 }} />
         </ScrollView>
+
+        {/* Sticky bottom seal button */}
+        {anySet && (
+          <Animated.View entering={FadeInDown.duration(400)} style={styles.sealBar}>
+            <Pressable
+              style={[styles.saveBtn, styles.saveBtnFull, saved && styles.saveBtnDone]}
+              onPress={handleSave}
+              onLongPress={() => {
+                if (saved) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                  setSaved(false);
+                }
+              }}
+            >
+              <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.silverBlue}>
+                {saved ? '✓ Blueprint Sealed · Hold to Edit' : 'Seal Blueprint'}
+              </MetallicText>
+            </Pressable>
+          </Animated.View>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -372,11 +382,13 @@ const styles = StyleSheet.create({
   radarContainer: { position: 'relative', width: 220, height: 220, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   radarLabel: { position: 'absolute', fontSize: 9, fontWeight: '800', color: PALETTE.textMuted, letterSpacing: 1 },
 
-  synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22, textAlign: 'center', marginBottom: 24 },
+  synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22, textAlign: 'center', marginBottom: 8 },
 
+  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.95)' },
   saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.silverBlue, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(201,174,120,0.1)' },
+  saveBtnFull: { width: '100%' },
   saveBtnDone: { borderColor: PALETTE.sage, backgroundColor: 'rgba(140,190,170,0.1)' },
-  saveBtnText: { fontSize: 13, color: PALETTE.silverBlue, fontWeight: '700', letterSpacing: 0.5 },
+  saveBtnText: { fontSize: 13, color: PALETTE.silverBlue, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center' },
 
   dimensionsContainer: { gap: 16 },
   dimensionBlock: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' },

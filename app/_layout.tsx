@@ -725,6 +725,13 @@ function AppShell() {
               }}
             />
             <Stack.Screen
+              name="daily-reflection"
+              options={{
+                presentation: 'modal',
+                contentStyle: { backgroundColor: '#0A0A0C' },
+              }}
+            />
+            <Stack.Screen
               name="sanctuary"
               options={{
                 presentation: 'fullScreenModal',

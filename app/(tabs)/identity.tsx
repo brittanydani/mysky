@@ -56,7 +56,7 @@ interface BlueprintCard {
 const CARDS: BlueprintCard[] = [
   {
     title: 'Inner World',
-    description: 'Core Values, Jungian Archetypes, and Cognitive Style — your mind\'s blueprint.',
+    description: 'Core Values, Jungian Archetypes, Cognitive Style, and Intelligence — your mind\'s blueprint.',
     icon: '◈',
     iconStyle: { color: PALETTE.lavender },
     gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
@@ -94,14 +94,6 @@ const CARDS: BlueprintCard[] = [
     iconStyle: { color: PALETTE.lavender },
     gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
     route: '/(tabs)/inner-tensions' as Href,
-  },
-  {
-    title: 'Intelligence Profile',
-    description: 'Discover your unique mix of intelligences — how your mind is brilliant.',
-    icon: '✧',
-    iconStyle: { color: PALETTE.lavender },
-    gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
-    route: '/intelligence-profile' as Href,
   },
   {
     title: 'Cosmic Blueprint',

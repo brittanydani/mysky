@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS daily_reflections (
   id            TEXT        PRIMARY KEY,
   user_id       UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   question_id   INTEGER     NOT NULL,
-  category      TEXT        NOT NULL,          -- 'values' | 'archetypes' | 'cognitive'
+  category      TEXT        NOT NULL,          -- 'values' | 'archetypes' | 'cognitive' | 'intelligence'
   question_text_enc TEXT,                       -- encrypted
   answer_enc    TEXT,                           -- encrypted
   scale_value   SMALLINT,                      -- 0–3 (plain metadata)

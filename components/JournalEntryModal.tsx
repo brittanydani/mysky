@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { toLocalDateString, parseLocalDate } from '../utils/dateUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -41,7 +41,6 @@ import { theme } from '../constants/theme';
 import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from './ui/GoldSubtitle';
-import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import { JournalEntry } from '../services/storage/models';
 import { usePremium } from '../context/PremiumContext';
 import { localDb } from '../services/storage/localDb';
@@ -292,7 +291,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
   const [customTags, setCustomTags] = useState<CustomTag[]>([]);
-  const [newTagModalCategory, setNewTagModalCategory] = useState<string | undefined>(undefined);
+  const [newTagModalCategory, setNewTagModalCategory] = useState<string | null>(null);
   const [newTagModalInput, setNewTagModalInput] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
@@ -413,7 +412,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     });
     setTags((prev) => (prev.includes(id) ? prev : [...prev, id]));
     setNewTagModalInput('');
-    setNewTagModalCategory(undefined);
+    setNewTagModalCategory(null);
   }, []);
 
   const deleteCustomTag = useCallback((id: string) => {
@@ -478,7 +477,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     setShowTagPicker(false);
     setTagSearch('');
     setNewTagModalInput('');
-    setNewTagModalCategory(undefined);
+    setNewTagModalCategory(null);
     setShowPrompts(false);
     setWritingMode(false);
 
@@ -515,27 +514,36 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     setPendingDate(null);
     setTagSearch('');
     setNewTagModalInput('');
-    setNewTagModalCategory(undefined);
+    setNewTagModalCategory(null);
     setShowPrompts(false);
   }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
     if (initialData) {
-      try {
-        setDate(parseLocalDate(initialData.date));
-      } catch {
+      const parsedDate = parseLocalDate(String(initialData.date ?? ''));
+      if (Number.isNaN(parsedDate.getTime())) {
         setDate(new Date());
+      } else {
+        setDate(parsedDate);
       }
-      setMood(initialData.mood ?? 'okay');
+      const VALID_MOODS: MoodKey[] = ['calm', 'soft', 'okay', 'heavy', 'stormy'];
+      const safeMood: MoodKey =
+        initialData.mood && VALID_MOODS.includes(initialData.mood as MoodKey)
+          ? (initialData.mood as MoodKey)
+          : 'okay';
       const moonPhaseToEnergy: Record<string, EnergyKey> = {
         low: 'low', steady: 'steady', high: 'high',
         waning: 'low', full: 'steady', waxing: 'high', new: 'steady',
       };
-      setEnergyLevel(moonPhaseToEnergy[initialData.moonPhase as string] ?? 'steady');
-      setTitle(initialData.title || '');
-      setContent(initialData.content ?? '');
-      setTags(initialData.tags ?? []);
+      const safeTags = Array.isArray(initialData.tags)
+        ? initialData.tags.filter((t): t is string => typeof t === 'string')
+        : [];
+      setMood(safeMood);
+      setEnergyLevel(moonPhaseToEnergy[String(initialData.moonPhase)] ?? 'steady');
+      setTitle(typeof initialData.title === 'string' ? initialData.title : '');
+      setContent(typeof initialData.content === 'string' ? initialData.content : '');
+      setTags(safeTags);
     } else {
       setDate(new Date()); setMood('okay'); setEnergyLevel('steady');
       setTitle(''); setContent(''); setTags([]);
@@ -571,7 +579,12 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     }
   };
 
-  const formatDate = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const formatDate = (d: Date) => {
+    if (Number.isNaN(d.getTime())) {
+      return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  };
 
   return (
     <Modal
@@ -580,6 +593,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       presentationStyle="fullScreen"
       onRequestClose={handleRequestClose}
     >
+      {visible ? (
+        <>
         <View style={styles.container}>
           <SkiaDynamicCosmos />
           <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -852,11 +867,16 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
                 {/* Footer / Save */}
                 <Animated.View entering={FadeInUp.delay(500)} style={styles.footer}>
-                    <SkiaMetallicPill
-                    label={initialData ? 'Secure Changes' : 'Secure Entry'}
-                    onPress={handleSave}
-                    borderRadius={16}
-                  />
+                  <Pressable style={styles.saveBtn} onPress={handleSave}>
+                    <LinearGradient
+                      colors={['#F4E6B8', '#D4B872', '#8C5A12']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.saveGradient}
+                    >
+                      <Text style={styles.saveBtnText}>{initialData ? 'Secure Changes' : 'Secure Entry'}</Text>
+                    </LinearGradient>
+                  </Pressable>
                 </Animated.View>
 
               </ScrollView>
@@ -907,7 +927,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           onShow={loadCustomTags}
         >
           <View style={styles.tagPickerOverlay} pointerEvents="box-none">
-            <Pressable onPress={() => { setShowTagPicker(false); setTagSearch(''); setNewTagModalInput(''); setNewTagModalCategory(undefined); }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+            <Pressable onPress={() => { setShowTagPicker(false); setTagSearch(''); setNewTagModalInput(''); setNewTagModalCategory(null); }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
             <View style={styles.tagPickerSheet}>
               <View style={styles.tagPickerHandle} />
               <View style={styles.tagPickerHeader}>
@@ -1042,9 +1062,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                               autoFocus
                               maxLength={30}
                               returnKeyType="done"
-                              onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); setNewTagModalCategory(null as any); setNewTagModalInput(''); } }}
+                              onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); setNewTagModalCategory(null); setNewTagModalInput(''); } }}
                             />
-                            <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); } setNewTagModalCategory(null as any); setNewTagModalInput(''); }}>
+                            <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); } setNewTagModalCategory(null); setNewTagModalInput(''); }}>
                               <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
                             </Pressable>
                           </View>
@@ -1081,9 +1101,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                     autoFocus
                                     maxLength={30}
                                     returnKeyType="done"
-                                    onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); setNewTagModalCategory(null as any); setNewTagModalInput(''); } }}
+                                    onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); setNewTagModalCategory(null); setNewTagModalInput(''); } }}
                                   />
-                                  <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); } setNewTagModalCategory(null as any); setNewTagModalInput(''); }}>
+                                  <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); } setNewTagModalCategory(null); setNewTagModalInput(''); }}>
                                     <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
                                   </Pressable>
                                 </View>
@@ -1107,7 +1127,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             </View>
           </View>
         </Modal>
-
+        </>
+      ) : null}
     </Modal>
   );
 }
