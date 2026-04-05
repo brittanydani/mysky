@@ -69,7 +69,7 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#8CBEAA',
   rose: '#D4A3B3',
-  bg: '#0A0A0C',
+  bg: '#020817',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.12)',

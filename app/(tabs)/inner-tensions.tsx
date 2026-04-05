@@ -58,7 +58,7 @@ const PALETTE = {
   lavender:    '#A89BC8',
   coral:       '#D4826A',
   textMain:    '#FFFFFF',
-  textMuted:   'rgba(255,255,255,0.55)',
+  textMuted:   'rgba(226,232,240,0.45)',
   textDim:     'rgba(255,255,255,0.35)',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassBg:     'rgba(255,255,255,0.04)',

@@ -43,7 +43,7 @@ const PALETTE = {
   emerald: '#6EBF8B',
   rose: '#C88BA8',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.55)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#020817',
 };

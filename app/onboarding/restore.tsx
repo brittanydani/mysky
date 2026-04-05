@@ -178,7 +178,7 @@ export default function OnboardingRestoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   
   headerBar: {

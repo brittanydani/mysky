@@ -129,7 +129,7 @@ export default function SettingsScreen() {
 
   // ── Accent colors for settings sections ──
   const accentGold = '#C9AE78';
-  const accentAmethyst = '#9B72CF';
+  const accentAmethyst = '#9D76C1';
   const accentBlue = '#C9AE78';
   const accentCopper = '#CD7F5D';
   const accentEmerald = '#6EBF8B';

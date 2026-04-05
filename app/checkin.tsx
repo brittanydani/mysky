@@ -28,7 +28,7 @@ const PALETTE = {
   amethyst: '#9D76C1',
   bg: '#020817',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.45)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.06)',
 };
 

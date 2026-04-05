@@ -721,14 +721,14 @@ function AppShell() {
               name="checkin"
               options={{
                 presentation: 'modal',
-                contentStyle: { backgroundColor: '#0A0A0C' },
+                contentStyle: { backgroundColor: '#020817' },
               }}
             />
             <Stack.Screen
               name="daily-reflection"
               options={{
                 presentation: 'modal',
-                contentStyle: { backgroundColor: '#0A0A0C' },
+                contentStyle: { backgroundColor: '#020817' },
               }}
             />
             <Stack.Screen

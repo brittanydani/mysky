@@ -1,15 +1,13 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import { Canvas, Fill } from "@shopify/react-native-skia";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
 export const SkiaDynamicCosmos = ({ fill }: { fill?: string }) => {
+  if (!fill) return null;
+
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {fill ? (
-        <Canvas style={StyleSheet.absoluteFill}>
-          <Fill color={fill} />
-        </Canvas>
-      ) : null}
-    </View>
+    <View
+      style={[StyleSheet.absoluteFill, { backgroundColor: fill }]}
+      pointerEvents="none"
+    />
   );
 };

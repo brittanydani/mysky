@@ -79,10 +79,10 @@ const PALETTE = {
   goldGlow: 'rgba(201, 174, 120, 0.15)',
   silverBlue: '#C9AE78',
   copper: '#CD7F5D',
-  emerald: '#C9AE78',
-  amethyst: '#C9AE78',
+  emerald: '#6EBF8B',
+  amethyst: '#9D76C1',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255, 255, 255, 0.45)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.15)',
 };

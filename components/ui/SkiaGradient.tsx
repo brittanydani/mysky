@@ -1,15 +1,6 @@
-// NOTE: @shopify/react-native-skia is NOT imported at the top level.
-// The Skia barrel initializes a Reanimated worklet runtime at module eval time,
-// which crashes on iOS 26 New Architecture before React mounts.
-// The canvas inner component is lazy-loaded so the Skia import only runs
-// after the JS engine is fully bootstrapped and React is rendering.
-import React, { useState } from 'react';
+import React from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { View, StyleSheet, ViewProps } from 'react-native';
-
-// Lazy inner component — only imports Skia when actually rendered.
-const SkiaGradientCanvas = React.lazy(() =>
-  import('./SkiaGradientCanvas')
-);
 
 export interface LinearGradientProps extends ViewProps {
   colors: string[];
@@ -17,6 +8,15 @@ export interface LinearGradientProps extends ViewProps {
   start?: { x: number; y: number } | [number, number];
   end?: { x: number; y: number } | [number, number];
   children?: React.ReactNode;
+}
+
+function normalizePoint(
+  point: { x: number; y: number } | [number, number],
+): { x: number; y: number } {
+  if (Array.isArray(point)) {
+    return { x: point[0], y: point[1] };
+  }
+  return point;
 }
 
 export const SkiaGradient: React.FC<LinearGradientProps> = ({
@@ -28,33 +28,16 @@ export const SkiaGradient: React.FC<LinearGradientProps> = ({
   children,
   ...rest
 }) => {
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
   return (
-    <View
-      style={[style, { overflow: 'hidden' }]}
-      onLayout={(e) => {
-        setDimensions({
-          width: e.nativeEvent.layout.width,
-          height: e.nativeEvent.layout.height,
-        });
-      }}
-      {...rest}
-    >
-      {dimensions.width > 0 && dimensions.height > 0 && (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          <React.Suspense fallback={null}>
-            <SkiaGradientCanvas
-              width={dimensions.width}
-              height={dimensions.height}
-              colors={colors}
-              locations={locations}
-              start={start}
-              end={end}
-            />
-          </React.Suspense>
-        </View>
-      )}
+    <View style={[style, { overflow: 'hidden' }]} {...rest}>
+      <LinearGradient
+        colors={colors}
+        locations={locations ?? undefined}
+        start={normalizePoint(start)}
+        end={normalizePoint(end)}
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="none"
+      />
       {children}
     </View>
   );

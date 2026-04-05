@@ -40,7 +40,7 @@ const PALETTE = {
   secure: '#7BAE8F',    // Sage green — Secure
   gold: '#D9BF8C',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.55)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
   bg: '#020817',
 };

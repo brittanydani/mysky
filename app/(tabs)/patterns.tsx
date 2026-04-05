@@ -55,7 +55,7 @@ const PALETTE = {
   connection: '#9D76C1',
   lavender: '#A89BC8',
   rose: '#D4A3B3',
-  bg: '#0A0A0C',
+  bg: '#020817',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
 };

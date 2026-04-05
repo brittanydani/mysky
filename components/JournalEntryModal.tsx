@@ -625,9 +625,12 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <View style={styles.headerTopRow}>
                   <View>
                     <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
-                    <GoldSubtitle style={styles.headerDateLabel}>
-                      {date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                    </GoldSubtitle>
+                    <Pressable onPress={() => setShowDatePicker(true)} hitSlop={12} style={styles.headerDateRow}>
+                      <GoldSubtitle style={styles.headerDateLabel}>
+                        {date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                      </GoldSubtitle>
+                      <Ionicons name="calendar-outline" size={13} color="rgba(201,174,120,0.6)" style={{ marginLeft: 5, marginTop: 1 }} />
+                    </Pressable>
                   </View>
                   <Pressable style={styles.iconBtn} onPress={handleRequestClose} hitSlop={15}>
                     <Ionicons name="close-outline" size={18} color="rgba(255,255,255,0.55)" />
@@ -693,12 +696,14 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 {/* Date Selection */}
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
                   <SectionHeader title="Timeline" icon="calendar-outline" />
-                  <LinearGradient colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
-                    <View style={styles.cardRow}>
-                      <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
-                      <Text style={styles.cardRowText}>{formatDate(date)}</Text>
-                    </View>
-                  </LinearGradient>
+                  <Pressable onPress={() => setShowDatePicker(true)}>
+                    <LinearGradient colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
+                      <View style={styles.cardRow}>
+                        <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
+                        <Text style={styles.cardRowText}>{formatDate(date)}</Text>
+                      </View>
+                    </LinearGradient>
+                  </Pressable>
                 </Animated.View>
 
                 {/* Title Input */}
@@ -1147,10 +1152,12 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 28 },
+  header: { paddingHorizontal: 24, paddingTop: 36, paddingBottom: 28 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerDateLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 4 },
+  headerDateLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase' },
+  headerDateLabelTappable: { textDecorationLine: 'underline', textDecorationColor: 'rgba(201,174,120,0.4)' },
+  headerDateRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
 
   // ── Writing mode header ──

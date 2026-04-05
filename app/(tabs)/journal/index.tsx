@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, Alert, ActionSheetIOS, ListRenderItemInfo, Platform, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, Alert, ListRenderItemInfo, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 
 import { Ionicons } from '@expo/vector-icons';
 import { MetallicText } from '../../../components/ui/MetallicText';
@@ -66,9 +66,9 @@ const PALETTE = {
   gold: '#C9AE78',
   silverBlue: '#C9AE78',
   copper: '#CD7F5D',
-  emerald: '#C9AE78',
+  emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  bg: '#0A0A0C',
+  bg: '#020817',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.12)',
@@ -190,6 +190,7 @@ export default function JournalScreen() {
 
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | undefined>(undefined);
+  const [actionEntry, setActionEntry] = useState<JournalEntry | null>(null);
 
   const [patternInsights, setPatternInsights] = useState<PatternInsight[]>([]);
   const [moodInsightsEnabled, setMoodInsightsEnabled] = useState(true);
@@ -361,7 +362,9 @@ export default function JournalScreen() {
 
   const handleDeleteEntry = useCallback(async (entry: JournalEntry) => {
     try {
+      setActionEntry((current) => (current?.id === entry.id ? null : current));
       await localDb.deleteJournalEntry(entry.id);
+      setExpandedEntryId((current) => (current === entry.id ? null : current));
       await loadEntries(true);
     } catch (error) {
       logger.error('Failed to delete journal entry:', error);
@@ -369,6 +372,22 @@ export default function JournalScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const closeEntryActions = useCallback(() => {
+    setActionEntry(null);
+  }, []);
+
+  const handleEditAction = useCallback(() => {
+    if (!actionEntry) return;
+    closeEntryActions();
+    handleEditEntry(actionEntry);
+  }, [actionEntry, closeEntryActions, handleEditEntry]);
+
+  const handleDeleteAction = useCallback(() => {
+    if (!actionEntry) return;
+    closeEntryActions();
+    void handleDeleteEntry(actionEntry);
+  }, [actionEntry, closeEntryActions, handleDeleteEntry]);
 
   const stableFormatDate = useCallback((dateString: string) => {
     const date = parseLocalDate(dateString);
@@ -397,38 +416,8 @@ export default function JournalScreen() {
   const keyExtractor = useCallback((item: JournalEntry | SleepEntry) => item.id, []);
 
   const presentEntryActions = useCallback((entry: JournalEntry) => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Edit', 'Delete'],
-          cancelButtonIndex: 0,
-          destructiveButtonIndex: 2,
-          title: entry.title?.trim() || 'Journal Entry',
-          message: 'Choose an action for this reflection.',
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) {
-            handleEditEntry(entry);
-            return;
-          }
-          if (buttonIndex === 2) {
-            void handleDeleteEntry(entry);
-          }
-        },
-      );
-      return;
-    }
-
-    Alert.alert(
-      entry.title?.trim() || 'Journal Entry',
-      'Choose an action for this reflection.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Edit', onPress: () => handleEditEntry(entry) },
-        { text: 'Delete', style: 'destructive', onPress: () => void handleDeleteEntry(entry) },
-      ],
-    );
-  }, [handleDeleteEntry, handleEditEntry]);
+    setActionEntry(entry);
+  }, []);
 
   const renderEntry = useCallback(({ item }: ListRenderItemInfo<JournalEntry>) => {
     return (
@@ -853,6 +842,64 @@ export default function JournalScreen() {
           initialData={editingEntry}
         />
 
+        <Modal
+          visible={!!actionEntry}
+          transparent
+          animationType="fade"
+          onRequestClose={closeEntryActions}
+        >
+          <View style={styles.entryActionOverlay}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={closeEntryActions} />
+            <View style={styles.entryActionSheetWrap}>
+              <LinearGradient
+                colors={['rgba(28,36,52,0.96)', 'rgba(8,12,22,0.98)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.entryActionSheet}
+              >
+                <View style={styles.entryActionHandle} />
+                <View style={styles.entryActionHeader}>
+                  <MetallicText variant="gold" style={styles.entryActionEyebrow}>Reflection Options</MetallicText>
+                  <Text style={styles.entryActionTitle} numberOfLines={2}>
+                    {actionEntry?.title?.trim() || 'Untitled Reflection'}
+                  </Text>
+                  <Text style={styles.entryActionSubtitle}>
+                    {actionEntry ? stableFormatDate(actionEntry.date) : ''}
+                  </Text>
+                </View>
+
+                <View style={styles.entryActionList}>
+                  <Pressable style={styles.entryActionButton} onPress={handleEditAction}>
+                    <View style={styles.entryActionIconWrap}>
+                      <MetallicIcon name="create-outline" size={18} variant="gold" />
+                    </View>
+                    <View style={styles.entryActionTextWrap}>
+                      <Text style={styles.entryActionLabel}>Edit Entry</Text>
+                      <Text style={styles.entryActionHint}>Open this reflection in the journal editor.</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.32)" />
+                  </Pressable>
+
+                  <Pressable style={[styles.entryActionButton, styles.entryActionButtonDanger]} onPress={handleDeleteAction}>
+                    <View style={[styles.entryActionIconWrap, styles.entryActionIconWrapDanger]}>
+                      <Ionicons name="trash-outline" size={18} color="#F3A3A3" />
+                    </View>
+                    <View style={styles.entryActionTextWrap}>
+                      <Text style={[styles.entryActionLabel, styles.entryActionLabelDanger]}>Delete Entry</Text>
+                      <Text style={styles.entryActionHint}>Remove this reflection from your archive.</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="rgba(243,163,163,0.5)" />
+                  </Pressable>
+                </View>
+
+                <Pressable style={styles.entryActionCancel} onPress={closeEntryActions}>
+                  <Text style={styles.entryActionCancelText}>Cancel</Text>
+                </Pressable>
+              </LinearGradient>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
 
     </View>
@@ -1077,6 +1124,124 @@ const styles = StyleSheet.create({
   emptyCard: { borderRadius: 24, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder },
   emptyTitle: { fontSize: 22, color: PALETTE.textMain, marginBottom: 8, fontWeight: '700' },
   emptyDescription: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 26 },
+
+  entryActionOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(2,8,23,0.72)',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+  },
+  entryActionSheetWrap: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.4,
+    shadowRadius: 32,
+    elevation: 24,
+  },
+  entryActionSheet: {
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 20,
+    overflow: 'hidden',
+  },
+  entryActionHandle: {
+    alignSelf: 'center',
+    width: 44,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    marginBottom: 16,
+  },
+  entryActionHeader: {
+    marginBottom: 18,
+    gap: 6,
+  },
+  entryActionEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+  },
+  entryActionTitle: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+  },
+  entryActionSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.3,
+  },
+  entryActionList: {
+    gap: 12,
+  },
+  entryActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+  },
+  entryActionButtonDanger: {
+    backgroundColor: 'rgba(243,163,163,0.06)',
+    borderColor: 'rgba(243,163,163,0.16)',
+  },
+  entryActionIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(201,174,120,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(201,174,120,0.18)',
+  },
+  entryActionIconWrapDanger: {
+    backgroundColor: 'rgba(243,163,163,0.10)',
+    borderColor: 'rgba(243,163,163,0.16)',
+  },
+  entryActionTextWrap: {
+    flex: 1,
+    gap: 3,
+  },
+  entryActionLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  entryActionLabelDanger: {
+    color: '#FFD4D4',
+  },
+  entryActionHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: 'rgba(255,255,255,0.52)',
+  },
+  entryActionCancel: {
+    marginTop: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  entryActionCancelText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.82)',
+    letterSpacing: 0.2,
+  },
 
   entryCard: { borderRadius: 24, backgroundColor: 'rgba(212,184,114,0.10)', borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 16 },
   entryGradient: { padding: 28 },

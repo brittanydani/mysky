@@ -37,9 +37,9 @@ const PALETTE = {
   rose: '#D4A3B3',
   sage: '#8CBEAA',
   lavender: '#A89BC8',
-  emerald: '#C9AE78',
+  emerald: '#6EBF8B',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
 };
 

@@ -34,9 +34,9 @@ const PALETTE = {
   rose: '#D4A3B3',      // Relational
   silverBlue: '#C9AE78',// Cognitive
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#0A0A0C',
+  bg: '#020817',
 };
 
 // ── Synthesis Logic ──

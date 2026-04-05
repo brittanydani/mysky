@@ -22,10 +22,10 @@ import { MetallicText } from '../components/ui/MetallicText';
 
 const PALETTE = {
   sage: '#8CBEAA',
-  emerald: '#C9AE78',
+  emerald: '#6EBF8B',
   rose: '#D4A3B3',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
 };
 

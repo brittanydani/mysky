@@ -1,12 +1,6 @@
-import React, { memo, useState, useCallback } from 'react';
-import { Pressable, StyleSheet, Text, View, LayoutChangeEvent } from 'react-native';
-import {
-  Canvas,
-  RoundedRect,
-  LinearGradient,
-  Group,
-  vec,
-} from '@shopify/react-native-skia';
+import React, { memo } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 
 const PILL_HEIGHT = 56;
@@ -46,11 +40,6 @@ function SkiaMetallicPill({
   style,
 }: Props) {
   const r = Math.min(borderRadius, height / 2);
-  const [w, setW] = useState(0);
-
-  const onLayout = useCallback((e: LayoutChangeEvent) => {
-    setW(e.nativeEvent.layout.width);
-  }, []);
 
   return (
     <Pressable
@@ -58,7 +47,6 @@ function SkiaMetallicPill({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={label}
-      onLayout={onLayout}
       style={({ pressed }) => [
         styles.outer,
         { height, borderRadius: r, opacity: disabled ? 0.5 : 1 },
@@ -66,22 +54,14 @@ function SkiaMetallicPill({
         style,
       ]}
     >
-      {w > 0 && (
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-          <Canvas style={{ flex: 1 }}>
-            <Group>
-              <RoundedRect x={0} y={0} width={w} height={height} r={r}>
-                <LinearGradient
-                  start={vec(0, 0)}
-                  end={vec(w, height)}
-                  positions={pillGradientPositions}
-                  colors={pillGradientColors}
-                />
-              </RoundedRect>
-            </Group>
-          </Canvas>
-        </View>
-      )}
+      <LinearGradient
+        colors={pillGradientColors}
+        locations={pillGradientPositions}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[StyleSheet.absoluteFillObject, { borderRadius: r }]}
+        pointerEvents="none"
+      />
 
       {/* Inner highlight for polished metal effect */}
       <View style={[styles.innerHighlight, { borderRadius: r }]} />

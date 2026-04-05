@@ -33,12 +33,12 @@ const STORAGE_KEY = '@mysky:trigger_events';
 const PALETTE = {
   bg: '#020817',
   sage: '#8CBEAA',
-  emerald: '#C9AE78',
+  emerald: '#6EBF8B',
   rose: '#D4A3B3',
   copper: '#CD7F5D',
   lavender: '#A89BC8',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(255,255,255,0.5)',
+  textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
 };
 
