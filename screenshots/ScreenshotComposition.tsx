@@ -89,7 +89,6 @@ export default function ScreenshotComposition({
               letterSpacing,
               fontFamily: Platform.select({
                 ios: 'Georgia',
-                android: 'serif',
                 default: 'serif',
               }),
             },
@@ -115,7 +114,6 @@ export default function ScreenshotComposition({
               fontSize: subtextSize,
               fontFamily: Platform.select({
                 ios: 'System',
-                android: 'sans-serif-medium',
                 default: 'sans-serif',
               }),
             },
@@ -134,7 +132,6 @@ export default function ScreenshotComposition({
                 marginTop: h * 0.02,
                 fontFamily: Platform.select({
                   ios: 'Georgia',
-                  android: 'serif',
                   default: 'serif',
                 }),
               },

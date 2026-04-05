@@ -168,21 +168,21 @@ export const theme = {
     headerLarge: {
       fontSize: 34,
       fontWeight: '300' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Thin', android: 'sans-serif-light', default: 'System' }),
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Thin', default: 'System' }),
       letterSpacing: 2.5,
       textTransform: 'uppercase' as const,
     },
     headerMedium: {
       fontSize: 24,
       fontWeight: '300' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Light', android: 'sans-serif-light', default: 'System' }),
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Light', default: 'System' }),
       letterSpacing: 2.0,
       textTransform: 'uppercase' as const,
     },
     headerSmall: {
       fontSize: 18,
       fontWeight: '400' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Regular', android: 'sans-serif', default: 'System' }),
+      fontFamily: Platform.select({ ios: 'SFProDisplay-Regular', default: 'System' }),
       letterSpacing: 1.5,
     },
 

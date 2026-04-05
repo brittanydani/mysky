@@ -4,13 +4,24 @@
  * Single shared Supabase client for the MySky Expo app.
  *
  * Uses expo-secure-store for session persistence so auth tokens are stored
- * in the iOS Keychain / Android Keystore instead of plaintext AsyncStorage.
+ * in the iOS Keychain instead of plaintext AsyncStorage.
  * Reads project URL + anon key from EXPO_PUBLIC_ env vars.
  */
 
-import * as SecureStore from 'expo-secure-store';
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
+
+type SecureStoreModule = typeof import('expo-secure-store');
+
+let secureStoreModule: SecureStoreModule | null = null;
+
+function getSecureStore(): SecureStoreModule {
+  if (!secureStoreModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    secureStoreModule = require('expo-secure-store') as SecureStoreModule;
+  }
+  return secureStoreModule;
+}
 
 // ─── Secure session storage adapter ───────────────────────────────────────────
 // Implements the Supabase `SupportedStorage` interface backed by SecureStore
@@ -19,7 +30,7 @@ import { logger } from '../utils/logger';
 const SecureStoreAdapter = {
   async getItem(key: string): Promise<string | null> {
     try {
-      return await SecureStore.getItemAsync(key);
+      return await getSecureStore().getItemAsync(key);
     } catch {
       // SecureStore can fail (e.g. simulator keychain reset). Fall back to
       // returning null so auth degrades to logged-out rather than crashing.
@@ -29,14 +40,14 @@ const SecureStoreAdapter = {
   },
   async setItem(key: string, value: string): Promise<void> {
     try {
-      await SecureStore.setItemAsync(key, value);
+      await getSecureStore().setItemAsync(key, value);
     } catch {
       logger.warn(`[supabase] SecureStore write failed for key "${key}"`);
     }
   },
   async removeItem(key: string): Promise<void> {
     try {
-      await SecureStore.deleteItemAsync(key);
+      await getSecureStore().deleteItemAsync(key);
     } catch {
       logger.warn(`[supabase] SecureStore delete failed for key "${key}"`);
     }

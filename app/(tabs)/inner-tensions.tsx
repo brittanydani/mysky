@@ -447,7 +447,7 @@ export default function InnerTensionsScreen() {
 
   const goBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    router.replace('/(tabs)/blueprint' as Href);
+    router.replace('/(tabs)/identity' as Href);
   };
 
   const goPremium = () => {

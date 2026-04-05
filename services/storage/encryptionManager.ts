@@ -1,8 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import { hmac } from '@noble/hashes/hmac';
-import { sha256 } from '@noble/hashes/sha2';
-import { bytesToHex } from '@noble/hashes/utils';
+import { hmac } from '@noble/hashes/hmac.js';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 
 export interface EncryptedPayload {
   version: 1;
@@ -19,7 +19,7 @@ export interface EncryptedEnvelope {
 /**
  * NOTE ON SECURITY MODEL:
  * Data is stored inside Expo SecureStore which uses the iOS Keychain (hardware-backed 
- * encryption at rest) and Android Keystore. The payload.data field is serialized JSON.
+ * encryption at rest). The payload.data field is serialized JSON.
  * The digest is an HMAC-SHA256 using a device-unique key stored in SecureStore, providing
  * tamper detection. True AES field-level encryption is handled by fieldEncryption.ts for 
  * SQLite data; SecureStore data relies on the OS keychain for confidentiality.

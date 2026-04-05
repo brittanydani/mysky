@@ -4,7 +4,6 @@
 const mockSetNotificationHandler = jest.fn();
 const mockGetPermissionsAsync = jest.fn();
 const mockRequestPermissionsAsync = jest.fn();
-const mockSetNotificationChannelAsync = jest.fn();
 const mockCancelAllScheduledNotificationsAsync = jest.fn();
 const mockScheduleNotificationAsync = jest.fn();
 const mockCancelScheduledNotificationAsync = jest.fn();
@@ -13,11 +12,9 @@ jest.mock('expo-notifications', () => ({
   setNotificationHandler: mockSetNotificationHandler,
   getPermissionsAsync: mockGetPermissionsAsync,
   requestPermissionsAsync: mockRequestPermissionsAsync,
-  setNotificationChannelAsync: mockSetNotificationChannelAsync,
   cancelAllScheduledNotificationsAsync: mockCancelAllScheduledNotificationsAsync,
   scheduleNotificationAsync: mockScheduleNotificationAsync,
   cancelScheduledNotificationAsync: mockCancelScheduledNotificationAsync,
-  AndroidImportance: { DEFAULT: 3 },
   SchedulableTriggerInputTypes: { DAILY: 'daily' },
 }));
 
@@ -59,19 +56,6 @@ describe('NotificationEngine', () => {
       mockRequestPermissionsAsync.mockResolvedValue({ status: 'denied' });
       const result = await NotificationEngine.requestPermissions();
       expect(result).toBe(false);
-    });
-
-    it('creates an Android notification channel on Android', async () => {
-      const RN = require('react-native');
-      RN.Platform.OS = 'android';
-      mockGetPermissionsAsync.mockResolvedValue({ status: 'granted' });
-
-      await NotificationEngine.requestPermissions();
-      expect(mockSetNotificationChannelAsync).toHaveBeenCalledWith(
-        'deeper-sky-rhythm',
-        expect.objectContaining({ name: 'Daily Rhythm' }),
-      );
-      RN.Platform.OS = 'ios';
     });
 
     it('returns false and does not throw when expo-notifications is unavailable', async () => {

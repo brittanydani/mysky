@@ -128,11 +128,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
 
   const openSubscriptions = useCallback(async () => {
     try {
-      const url = Platform.select({
-        ios: 'https://apps.apple.com/account/subscriptions',
-        android: 'https://play.google.com/store/account/subscriptions',
-        default: 'https://apps.apple.com/account/subscriptions',
-      });
+      const url = 'https://apps.apple.com/account/subscriptions';
       if (url) await Linking.openURL(url);
     } catch {
       // Fall through silently if linking fails
@@ -185,11 +181,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
               accessibilityLabel="Manage your subscription"
             >
               <Text style={[styles.manageText, { textDecorationLine: 'underline' }]}>
-                {Platform.select({
-                  ios: 'Manage your subscription in Settings → Apple ID → Subscriptions',
-                  android: 'Manage your subscription in Google Play → Subscriptions',
-                  default: 'Manage your subscription in your app store settings',
-                })}
+                Manage your subscription in Settings → Apple ID → Subscriptions
               </Text>
             </Pressable>
           </ScrollView>
@@ -418,16 +410,8 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
 
           <Text style={styles.legalMicro}>
             {selectedPlan === 'lifetime'
-              ? Platform.select({
-                  ios: 'This is a one-time purchase. Payment will be charged to your Apple ID account at confirmation of purchase. No recurring charges.',
-                  android: 'This is a one-time purchase. Payment will be charged to your Google Account at confirmation of purchase. No recurring charges.',
-                  default: 'This is a one-time purchase. No recurring charges.',
-                })
-              : Platform.select({
-                  ios: 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel subscriptions in Settings → Apple ID → Subscriptions.',
-                  android: 'Payment will be charged to your Google Account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel subscriptions in Google Play → Subscriptions.',
-                  default: 'Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your app store account settings.',
-                })}
+              ? 'This is a one-time purchase. Payment will be charged to your Apple ID account at confirmation of purchase. No recurring charges.'
+              : 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel subscriptions in Settings → Apple ID → Subscriptions.'}
           </Text>
         </View>
       </SafeAreaView>

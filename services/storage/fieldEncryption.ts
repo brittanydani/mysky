@@ -45,7 +45,6 @@
  * ───────────────────────────────────────────────────────────────────────────
  */
 
-import * as SecureStore from 'expo-secure-store';
 // expo-crypto is NOT imported at the top level.
 // expo-crypto → requireNativeModule('ExpoCrypto') at module eval time crashes
 // on iOS 26 New Architecture before the JS engine is bootstrapped.
@@ -60,6 +59,18 @@ function getCrypto(): typeof CryptoType {
     _crypto = require('expo-crypto') as typeof CryptoType;
   }
   return _crypto;
+}
+
+type SecureStoreModule = typeof import('expo-secure-store');
+
+let _secureStore: SecureStoreModule | null = null;
+
+function getSecureStore(): SecureStoreModule {
+  if (!_secureStore) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _secureStore = require('expo-secure-store') as SecureStoreModule;
+  }
+  return _secureStore;
 }
 
 import { logger } from '../../utils/logger';
@@ -239,7 +250,7 @@ class FieldEncryptionServiceClass {
   async initialize(): Promise<void> {
     let existingDek: string | null = null;
     try {
-      existingDek = await SecureStore.getItemAsync(DEK_KEY);
+      existingDek = await getSecureStore().getItemAsync(DEK_KEY);
     } catch {
       // SecureStore is unavailable (keychain locked, device migration, etc.)
       // Do NOT generate a new key — that would silently orphan all encrypted data.
@@ -253,7 +264,7 @@ class FieldEncryptionServiceClass {
     if (!existingDek) {
       // Genuine first run — no key exists yet
       const newDek = generateRandomBytes(DEK_SIZE);
-      await SecureStore.setItemAsync(DEK_KEY, uint8ArrayToBase64(newDek));
+      await getSecureStore().setItemAsync(DEK_KEY, uint8ArrayToBase64(newDek));
       this.dekCache = newDek;
       logger.info('[FieldEncryption] Generated new DEK (first run)');
     } else {
@@ -274,7 +285,7 @@ class FieldEncryptionServiceClass {
 
     let stored: string | null = null;
     try {
-      stored = await SecureStore.getItemAsync(DEK_KEY);
+      stored = await getSecureStore().getItemAsync(DEK_KEY);
     } catch {
       logger.error('[FieldEncryption] SecureStore unavailable during getDek()');
       throw new Error('Secure storage unavailable — cannot access encryption key');
@@ -511,7 +522,7 @@ class FieldEncryptionServiceClass {
    * @returns Encrypted DEK in format "iv:ciphertext" (both base64), or null if no DEK exists.
    */
   async exportDek(wrappingKeyBase64: string): Promise<string | null> {
-    const raw = await SecureStore.getItemAsync(DEK_KEY);
+    const raw = await getSecureStore().getItemAsync(DEK_KEY);
     if (!raw) return null;
 
     const wrappingKey = base64ToUint8Array(wrappingKeyBase64);
@@ -534,7 +545,7 @@ class FieldEncryptionServiceClass {
       throw new Error(`Invalid DEK size: expected ${DEK_SIZE}, got ${dekBytes.length}`);
     }
     
-    await SecureStore.setItemAsync(DEK_KEY, dekBase64);
+    await getSecureStore().setItemAsync(DEK_KEY, dekBase64);
     this.dekCache = dekBytes;
     logger.info('[FieldEncryption] DEK imported');
   }
@@ -547,7 +558,7 @@ class FieldEncryptionServiceClass {
   async isKeyAvailable(): Promise<boolean> {
     try {
       if (this.dekCache) return true;
-      const stored = await SecureStore.getItemAsync(DEK_KEY);
+      const stored = await getSecureStore().getItemAsync(DEK_KEY);
       return stored !== null;
     } catch {
       return false;
@@ -572,7 +583,7 @@ class FieldEncryptionServiceClass {
    */
   async destroyDek(): Promise<void> {
     this.dekCache = null;
-    await SecureStore.deleteItemAsync(DEK_KEY);
+    await getSecureStore().deleteItemAsync(DEK_KEY);
     logger.info('[FieldEncryption] DEK permanently destroyed');
   }
 }

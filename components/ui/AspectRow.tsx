@@ -33,7 +33,7 @@ const CATEGORY_CONFIG: Record<AspectCategory, { color: string; gradient: readonl
 
 
 const renderZodiacText = (text: string) => {
-  const ZODIAC_FAMILY = Platform.select({ ios: 'Apple Symbols', android: 'Noto Sans Symbols 2', default: 'Zodiac' });
+  const ZODIAC_FAMILY = Platform.select({ ios: 'Apple Symbols', default: 'Zodiac' });
   if (typeof text !== 'string') return text;
   const RE_ZODIAC = /([☉☽☿♀♂♃♄♅♆♇☊☋⚷☌☍△▢⚹⚸]+)/g;
   return text.split(RE_ZODIAC).map((part, i) => {
@@ -155,8 +155,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    // iOS Shadow
-    // Android Shadow
   },
   nodeCore: {
     width: 8,
@@ -204,7 +202,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   detail: {
-    fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif' }),
+    fontFamily: Platform.select({ ios: 'Helvetica Neue', default: 'System' }),
     fontSize: 14,
     color: 'rgba(255,255,255,0.65)',
     lineHeight: 20,

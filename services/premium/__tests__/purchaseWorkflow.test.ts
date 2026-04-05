@@ -49,7 +49,6 @@ jest.mock('../../../utils/logger', () => ({
 
 // Set required env vars
 process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY = 'appl_test_key';
-process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY = 'goog_test_key';
 
 // Must import after mocks
 import { revenueCatService } from '../revenuecat';

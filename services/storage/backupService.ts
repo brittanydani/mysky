@@ -5,8 +5,8 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Crypto from 'expo-crypto';
 import { gcm } from '@noble/ciphers/aes.js';
-import { pbkdf2Async } from '@noble/hashes/pbkdf2';
-import { sha256 } from '@noble/hashes/sha2';
+import { pbkdf2Async } from '@noble/hashes/pbkdf2.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { localDb } from './localDb';

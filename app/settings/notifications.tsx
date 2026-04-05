@@ -1,7 +1,7 @@
 // File: app/settings/notifications.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Switch, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import * as Haptics from '../../utils/haptics';
@@ -131,17 +131,10 @@ export default function NotificationSettings() {
 
   const handlePickerChange = (
     slot: 'morning' | 'evening',
-    event: DateTimePickerEvent,
+    _event: DateTimePickerEvent,
     selected?: Date,
   ) => {
-    if (Platform.OS === 'android') {
-      setActivePicker(null);
-      if (event.type === 'dismissed' || !selected) return;
-      applyTime(slot, selected);
-    } else {
-      // iOS: accumulate changes; confirm on "Done"
-      if (selected) setPendingTime(selected);
-    }
+    if (selected) setPendingTime(selected);
   };
 
   const confirmIOSTime = async () => {
@@ -217,17 +210,15 @@ export default function NotificationSettings() {
             <DateTimePicker
               value={pending}
               mode="time"
-              display={Platform.OS === 'android' ? 'default' : 'spinner'}
+              display="spinner"
               onChange={(e, d) => handlePickerChange(slot, e, d)}
               textColor="#FFFFFF"
               themeVariant="dark"
-              style={Platform.OS === 'ios' ? styles.picker : undefined}
+              style={styles.picker}
             />
-            {Platform.OS === 'ios' && (
-              <Pressable style={styles.doneButton} onPress={confirmIOSTime}>
-                <MetallicText color="#D9BF8C" style={styles.doneText}>Done</MetallicText>
-              </Pressable>
-            )}
+            <Pressable style={styles.doneButton} onPress={confirmIOSTime}>
+              <MetallicText color="#D9BF8C" style={styles.doneText}>Done</MetallicText>
+            </Pressable>
           </View>
         )}
 

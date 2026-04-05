@@ -24,7 +24,8 @@ import { useRouter, useLocalSearchParams, Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
-import { Sparkles, ChevronLeft, Moon, BookOpen } from 'lucide-react-native';
+import { Sparkles, ChevronLeft, Moon } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MetallicText } from '../../../components/ui/MetallicText';
 import { MetallicLucideIcon } from '../../../components/ui/MetallicLucideIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
@@ -33,6 +34,7 @@ import { localDb } from '../../../services/storage/localDb';
 import { SleepEntry, generateId } from '../../../services/storage/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremium } from '../../../context/PremiumContext';
+import { useAuth } from '../../../context/AuthContext';
 import { logger } from '../../../utils/logger';
 import { parseLocalDate } from '../../../utils/dateUtils';
 import { generateDreamInterpretation } from '../../../services/premium/dreamInterpretation';
@@ -50,6 +52,7 @@ import {
 } from '../../../services/premium/dreamTypes';
 
 const QUALITY_LABELS = ['Exhausted', 'Restless', 'Neutral', 'Restored', 'Deeply Vibrant'];
+const DREAM_TEXT_MAX_LENGTH = 10000;
 
 const DEFAULT_METADATA: DreamMetadata = {
   vividness: 3,
@@ -64,6 +67,8 @@ export default function SleepDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { isPremium } = usePremium();
+  const { session } = useAuth();
+  const canUseGemini = isGeminiAvailable(Boolean(session?.access_token));
 
   const [entry, setEntry] = useState<SleepEntry | null>(null);
   const [allEntries, setAllEntries] = useState<SleepEntry[]>([]);
@@ -150,7 +155,7 @@ export default function SleepDetailScreen() {
       });
       setInterpretation(result);
       // Auto-trigger Gemini AI interpretation for premium users
-      if (isPremium && isGeminiAvailable()) {
+      if (isPremium && canUseGemini) {
         setAiLoading(true);
         setAiError(null);
         generateGeminiDreamInterpretation({
@@ -167,8 +172,14 @@ export default function SleepDetailScreen() {
         }).then(aiRes => {
           setAiResult(aiRes);
         }).catch(e => {
-          logger.error('[SleepDetail] Auto AI interpretation failed:', e);
-          setAiError(e.message ?? 'AI interpretation failed');
+          const msg = e.message ?? 'AI interpretation failed';
+          const isAuthError = msg.includes('sign-in') || msg.includes('Sign in');
+          if (isAuthError) {
+            logger.warn('[SleepDetail] AI interpretation skipped (no active session)');
+          } else {
+            logger.error('[SleepDetail] Auto AI interpretation failed:', e);
+          }
+          setAiError(msg);
         }).finally(() => setAiLoading(false));
       }
     } catch (e) {
@@ -198,15 +209,21 @@ export default function SleepDetailScreen() {
         }
         const now = new Date();
         const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        saved = {
-          id: generateId(),
-          chartId: charts[0].id,
-          date: dateStr,
-          dreamText,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-          isDeleted: false,
-        };
+        // Check for existing entry on this date to avoid duplicates
+        const existing = await localDb.getSleepEntryByDate(charts[0].id, dateStr);
+        if (existing) {
+          saved = { ...existing, dreamText, updatedAt: now.toISOString() };
+        } else {
+          saved = {
+            id: generateId(),
+            chartId: charts[0].id,
+            date: dateStr,
+            dreamText,
+            createdAt: now.toISOString(),
+            updatedAt: now.toISOString(),
+            isDeleted: false,
+          };
+        }
         await localDb.saveSleepEntry(saved);
         setEntry(saved);
       }
@@ -231,7 +248,7 @@ export default function SleepDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#D9BF8C" />
+        <ActivityIndicator color="#C9AE78" />
       </View>
     );
   }
@@ -248,18 +265,7 @@ export default function SleepDetailScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <ChevronLeft color="#FFF" size={26} />
         </Pressable>
-        <Pressable
-          onPress={handleSave}
-          style={[styles.saveBtn, saving && { opacity: 0.5 }]}
-          disabled={saving}
-          hitSlop={8}
-        >
-          {saving ? (
-            <ActivityIndicator color="#D9BF8C" size="small" />
-          ) : (
-            <MetallicText color="#D9BF8C" style={styles.saveText}>Save</MetallicText>
-          )}
-        </Pressable>
+        <View style={styles.saveBtn} />
       </View>
 
       <ScrollView
@@ -267,79 +273,80 @@ export default function SleepDetailScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.headerTitle}>Subconscious Depth</Text>
+        <Text style={styles.headerTitle}>Dream Record</Text>
 
-        {/* Meta row — date + quality */}
-        {entry && (
-          <View style={styles.metaRow}>
-            <Text style={styles.metaDate}>
-              {parseLocalDate(entry.date).toLocaleDateString('en-US', {
-                weekday: 'long', month: 'long', day: 'numeric',
-              })}
-            </Text>
-            {!!entry.quality && (
-              <View style={styles.qualityRow}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Moon
-                    key={i}
-                    size={16}
-                    fill={i <= (entry.quality ?? 0) ? '#6E8CB4' : 'transparent'}
-                    color={i <= (entry.quality ?? 0) ? '#6E8CB4' : 'rgba(255,255,255,0.15)'}
-                  />
-                ))}
-                <MetallicText color="#6E8CB4" style={styles.qualityLabel}>
-                  {QUALITY_LABELS[(entry.quality ?? 1) - 1]}
-                </MetallicText>
+        {/* Dream card — matching Archive DreamCard layout exactly */}
+        <LinearGradient
+          colors={['rgba(201,174,120,0.18)', 'transparent']}
+          style={styles.card}
+        >
+          {entry && (
+            <View style={styles.dreamCardHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.dreamCardDate}>
+                  {parseLocalDate(entry.date).toLocaleDateString('en-US', {
+                    weekday: 'long', month: 'long', day: 'numeric',
+                  }).toUpperCase()}
+                </Text>
+                {(!!entry.quality || !!entry.durationHours) && (
+                  <View style={styles.dreamMeta}>
+                    {!!entry.quality && (
+                      <MetallicText color="#C9AE78" style={styles.dreamMoons}>
+                        {'☽'.repeat(entry.quality)}
+                      </MetallicText>
+                    )}
+                    {!!entry.quality && (
+                      <MetallicText color="#C9AE78" style={styles.dreamQualityLabel}>
+                        {QUALITY_LABELS[(entry.quality ?? 1) - 1]}
+                      </MetallicText>
+                    )}
+                    {!!entry.durationHours && (
+                      <Text style={styles.dreamDuration}> · {entry.durationHours}h</Text>
+                    )}
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-        )}
-
-        {/* Dream narrative input */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <BookOpen size={14} color="rgba(255,255,255,0.4)" />
-            <Text style={styles.label}>DREAM NARRATIVE</Text>
-          </View>
-          <TextInput
-            style={styles.fullInput}
-            placeholder="Describe your journey through the subconscious..."
-            placeholderTextColor="rgba(255,255,255,0.2)"
-            multiline
-            selectionColor="#D9BF8C"
-            value={dreamText}
-            onChangeText={setDreamText}
-          />
-        </View>
+              <MetallicLucideIcon icon={Moon} color="#C9AE78" size={16} />
+            </View>
+          )}
+          {dreamText.trim() ? (
+            <Text style={styles.dreamExcerpt}>{dreamText}</Text>
+          ) : (
+            <Text style={styles.dreamNone}>No dream recalled</Text>
+          )}
+        </LinearGradient>
 
         {/* Premium AI section */}
-        <View style={[styles.premiumSection, !isPremium && styles.lockedSection]}>
-          <MetallicLucideIcon icon={Sparkles} color="#D9BF8C" size={20} />
-          <MetallicText color="#D9BF8C" style={styles.premiumTitle}>Symbolic Interpretation</MetallicText>
+        <LinearGradient
+          colors={['rgba(201,174,120,0.18)', 'transparent']}
+          style={[styles.premiumSection, !isPremium && styles.lockedSection]}
+        >
+          <MetallicLucideIcon icon={Sparkles} color="#C9AE78" size={20} />
+          <MetallicText color="#C9AE78" style={styles.premiumTitle}>Symbolic Interpretation</MetallicText>
           {isPremium ? (
             interpreting ? (
-              <ActivityIndicator color="#D9BF8C" style={{ marginTop: 8 }} />
+              <ActivityIndicator color="#C9AE78" style={{ marginTop: 8 }} />
             ) : interpretation ? (
               <View style={{ gap: 16, width: '100%' }}>
                 {/* Show AI result as primary when available, on-device as fallback */}
                 {aiResult ? (
                   <>
                     <Text style={styles.interpretationParagraph}>{aiResult.paragraph}</Text>
-                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
+                    <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
                   </>
                 ) : aiLoading ? (
                   <>
                     <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                    <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                     <View style={styles.aiLoadingRow}>
-                      <ActivityIndicator color="#D9BF8C" size="small" />
+                      <ActivityIndicator color="#C9AE78" size="small" />
                       <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
                     </View>
                   </>
                 ) : (
                   <>
                     <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                    <MetallicText color="#D9BF8C" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                    <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
                     {aiError && (
                       <Text style={styles.aiErrorText}>{aiError}</Text>
                     )}
@@ -358,7 +365,7 @@ export default function SleepDetailScreen() {
                     }
                   }}
                 >
-                  <MetallicText color="#D9BF8C" style={styles.rerunBtnText}>RE-INTERPRET</MetallicText>
+                  <MetallicText color="#C9AE78" style={styles.rerunBtnText}>RE-INTERPRET</MetallicText>
                 </Pressable>
               </View>
             ) : (
@@ -383,8 +390,7 @@ export default function SleepDetailScreen() {
               />
             </>
           )}
-        </View>
-
+        </LinearGradient>
         <View style={{ height: 40 }} />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -410,32 +416,44 @@ const styles = StyleSheet.create({
   saveText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
   scrollPadding: { padding: 24, paddingTop: 8 },
 
-  metaRow: { marginBottom: 24 },
-  metaDate: {
-    color: 'rgba(255,255,255,0.6)', fontSize: 13,
-    marginBottom: 8,
-  },
-  qualityRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  qualityLabel: {
-    color: '#C9AE78', fontSize: 12,
-    marginLeft: 6,
-  },
-
   card: {
-    backgroundColor: 'rgba(201,174,120,0.03)', borderRadius: 24, padding: 28,
-    borderWidth: 1, borderColor: 'rgba(201,174,120,0.12)', marginBottom: 24,
+    borderRadius: 24, padding: 28,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 24,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  label: { fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '800', letterSpacing: 2 },
+  dreamCardHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12,
+  },
+  dreamCardDate: {
+    fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.45)',
+    letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 4,
+  },
+  dreamMeta: { flexDirection: 'row', alignItems: 'center' },
+  dreamMoons: { fontSize: 14, color: '#C9AE78', letterSpacing: 1 },
+  dreamQualityLabel: {
+    fontSize: 12, color: 'rgba(201,174,120,0.7)', textTransform: 'uppercase',
+    letterSpacing: 0.8, fontWeight: '600', marginLeft: 6,
+  },
+  dreamDuration: { fontSize: 12, color: 'rgba(226,232,240,0.45)' },
+  dreamExcerpt: {
+    fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26,
+  },
+  dreamNone: { fontSize: 16, color: 'rgba(226,232,240,0.45)' },
   fullInput: {
     color: '#FFF', fontSize: 16,
     lineHeight: 26, textAlignVertical: 'top', minHeight: 250,
   },
+  fullInputReadOnly: {
+    color: 'rgba(255,255,255,0.85)', fontSize: 16,
+    lineHeight: 26, minHeight: 80,
+  },
+  fullInputPlaceholder: {
+    color: 'rgba(255,255,255,0.25)', fontSize: 15,
+    lineHeight: 24, fontStyle: 'italic',
+  },
 
   premiumSection: {
     alignItems: 'center', padding: 32, borderRadius: 24,
-    borderWidth: 1, borderColor: '#D9BF8C',
-    backgroundColor: 'rgba(217,191,140,0.04)', gap: 12,
+    borderWidth: 1, borderColor: '#C9AE78', gap: 12,
   },
   lockedSection: { borderStyle: 'dashed' },
   premiumTitle: {

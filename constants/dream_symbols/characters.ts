@@ -216,7 +216,7 @@ export const characters_symbols: SingleWordSymbol[] = [
   { symbol: "zombie", category: "characters" },
   { symbol: "alien", category: "characters" },
   { symbol: "robot", category: "characters" },
-  { symbol: "android", category: "characters" },
+  { symbol: "automaton", category: "characters" },
   { symbol: "clone", category: "characters" },
   { symbol: "twin", category: "characters" },
   { symbol: "double", category: "characters" },

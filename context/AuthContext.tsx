@@ -116,10 +116,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleAppState = (state: AppStateStatus) => {
       if (state === 'active') {
         supabase.auth.startAutoRefresh();
-        // Top-up demo data for any days missed while app was closed
-        supabase.auth.getSession().then(({ data: { session: s } }) => {
-          if (s?.user?.email) DemoSeedService.seedIfNeeded(s.user.email).catch((e) => logger.warn('[AuthContext] Demo seed failed:', e));
-        });
+        void (async () => {
+          try {
+            const { data: { session: hydratedSession }, error } = await supabase.auth.getSession();
+            if (error) throw error;
+
+            let nextSession = hydratedSession;
+            const expiresAtMs = hydratedSession?.expires_at ? hydratedSession.expires_at * 1000 : null;
+            const shouldRefresh = Boolean(hydratedSession?.refresh_token)
+              && expiresAtMs !== null
+              && expiresAtMs <= Date.now() + 60_000;
+
+            if (shouldRefresh) {
+              const { data, error: refreshError } = await supabase.auth.refreshSession();
+              if (refreshError) throw refreshError;
+              nextSession = data.session ?? hydratedSession;
+            }
+
+            if (isMounted.current) {
+              setSession(nextSession ?? null);
+            }
+
+            // Top-up demo data for any days missed while app was closed.
+            if (nextSession?.user?.email) {
+              DemoSeedService.seedIfNeeded(nextSession.user.email).catch((e) => logger.warn('[AuthContext] Demo seed failed:', e));
+            }
+          } catch (e) {
+            logger.warn('[AuthContext] Failed to sync session on foreground:', e);
+          }
+        })();
       } else {
         // Halt refresh to save energy for the user
         supabase.auth.stopAutoRefresh();

@@ -79,10 +79,10 @@ const ALLOWED_NOTIFICATION_ROUTES = new Set([
   '/(tabs)/chart',
   '/(tabs)/sleep',
 
-  '/(tabs)/mood',
-  '/(tabs)/growth',
+  '/(tabs)/internal-weather',
+  '/(tabs)/patterns',
 
-  '/(tabs)/blueprint',
+  '/(tabs)/identity',
   '/(tabs)/healing',
   '/(tabs)/sanctuary',
   '/(tabs)/premium',
@@ -712,8 +712,8 @@ function AppShell() {
               animation: 'fade',
             }}
           >
-            {/* Mount tabs only when privacy is satisfied and onboarding is complete with a valid session. */}
-            {!needsPrivacyConsent && onboardingComplete && !!session && sessionDataReady && <Stack.Screen name="(tabs)" />}
+            {/* Keep the screen list static for Expo Router; access is gated by overlays and redirects. */}
+            <Stack.Screen name="(tabs)" />
 
             {/* --- HIDDEN SCREENS (MODALS) --- */}
             {/* Slide up over the tab bar — dedicated workspaces */}

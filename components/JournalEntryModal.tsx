@@ -8,6 +8,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Alert,
+  InteractionManager,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -263,6 +264,9 @@ const TAG_CATEGORIES: { id: string; label: string; tags: { id: string; label: st
 const ALL_TAGS = TAG_CATEGORIES.flatMap((c) => c.tags);
 
 const CUSTOM_TAGS_KEY = 'mysky_custom_journal_tags';
+const TITLE_MAX_LENGTH = 120;
+const BODY_MAX_LENGTH = 15000;
+const BODY_COUNTER_THRESHOLD = 9000;
 
 interface CustomTag {
   id: string;
@@ -302,6 +306,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
   const [archetypeProfile, setArchetypeProfile] = useState<ArchetypeProfile | null>(null);
   const [archetypePrompt, setArchetypePrompt] = useState<ArchetypeJournalPrompt | null>(null);
+  const showBodyCounter = content.length >= BODY_COUNTER_THRESHOLD;
 
   useEffect(() => {
     return () => {
@@ -453,23 +458,83 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   }, []);
 
-  const exitWritingMode = useCallback(() => {
-    setWritingMode(false);
+  const dismissWritingKeyboard = useCallback(() => {
     Keyboard.dismiss();
+    Haptics.selectionAsync().catch(() => {});
   }, []);
+
+  const exitWritingMode = useCallback(() => {
+    Keyboard.dismiss();
+
+    InteractionManager.runAfterInteractions(() => {
+      setWritingMode(false);
+    });
+  }, []);
+
+  const finalizeClose = useCallback(() => {
+    Keyboard.dismiss();
+    setShowDatePicker(false);
+    setPendingDate(null);
+    setShowTagPicker(false);
+    setTagSearch('');
+    setNewTagModalInput('');
+    setNewTagModalCategory(undefined);
+    setShowPrompts(false);
+    setWritingMode(false);
+
+    InteractionManager.runAfterInteractions(() => {
+      onClose();
+    });
+  }, [onClose]);
+
+  const handleRequestClose = useCallback(() => {
+    if (showTagPicker) {
+      setShowTagPicker(false);
+      setTagSearch('');
+      return;
+    }
+
+    if (showDatePicker) {
+      setShowDatePicker(false);
+      setPendingDate(null);
+      return;
+    }
+
+    if (writingMode) {
+      exitWritingMode();
+      return;
+    }
+
+    finalizeClose();
+  }, [exitWritingMode, finalizeClose, showDatePicker, showTagPicker, writingMode]);
+
+  useEffect(() => {
+    if (visible) return;
+    setShowTagPicker(false);
+    setShowDatePicker(false);
+    setPendingDate(null);
+    setTagSearch('');
+    setNewTagModalInput('');
+    setNewTagModalCategory(undefined);
+    setShowPrompts(false);
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
     if (initialData) {
-      setDate(parseLocalDate(initialData.date));
-      setMood(initialData.mood);
+      try {
+        setDate(parseLocalDate(initialData.date));
+      } catch {
+        setDate(new Date());
+      }
+      setMood(initialData.mood ?? 'okay');
       const moonPhaseToEnergy: Record<string, EnergyKey> = {
         low: 'low', steady: 'steady', high: 'high',
         waning: 'low', full: 'steady', waxing: 'high', new: 'steady',
       };
       setEnergyLevel(moonPhaseToEnergy[initialData.moonPhase as string] ?? 'steady');
       setTitle(initialData.title || '');
-      setContent(initialData.content);
+      setContent(initialData.content ?? '');
       setTags(initialData.tags ?? []);
     } else {
       setDate(new Date()); setMood('okay'); setEnergyLevel('steady');
@@ -509,7 +574,12 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const formatDate = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={handleRequestClose}
+    >
         <View style={styles.container}>
           <SkiaDynamicCosmos />
           <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -517,7 +587,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
             {/* Header — collapses to minimal bar in writing mode */}
             {writingMode ? (
               <View style={styles.writingHeader}>
-                <Pressable style={styles.iconBtn} onPress={exitWritingMode} hitSlop={15}>
+                <Pressable style={styles.iconBtn} onPress={dismissWritingKeyboard} hitSlop={15}>
                   <Ionicons name="chevron-down-outline" size={22} color={PALETTE.textMain} />
                 </Pressable>
                 <Text style={styles.writingDateLabel} numberOfLines={1}>
@@ -530,6 +600,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <MetallicText style={styles.saveIndicatorText} color="#6EBF8B">Secured</MetallicText>
                     </Animated.View>
                   )}
+                  <Pressable style={styles.writingSaveBtn} onPress={handleSave} hitSlop={12}>
+                    <Text style={styles.writingSaveBtnText}>{initialData ? 'Save' : 'Secure'}</Text>
+                  </Pressable>
                 </View>
               </View>
             ) : (
@@ -541,7 +614,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       {date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                     </GoldSubtitle>
                   </View>
-                  <Pressable style={styles.iconBtn} onPress={onClose} hitSlop={15}>
+                  <Pressable style={styles.iconBtn} onPress={handleRequestClose} hitSlop={15}>
                     <Ionicons name="close-outline" size={18} color="rgba(255,255,255,0.55)" />
                   </Pressable>
                 </View>
@@ -558,10 +631,16 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     onChangeText={setContent}
                     placeholder="What is surfacing for you right now?"
                     placeholderTextColor="rgba(255,255,255,0.35)"
+                    maxLength={BODY_MAX_LENGTH}
                     multiline
                     textAlignVertical="top"
                     autoFocus
                   />
+                  {showBodyCounter && (
+                    <View style={styles.bodyCounterWrap}>
+                      <Text style={styles.bodyCounterText}>{content.length}/{BODY_MAX_LENGTH}</Text>
+                    </View>
+                  )}
                   {/* Mood quick-pick — floats above the keyboard */}
                   <View style={styles.moodToolbar}>
                     {(
@@ -600,11 +679,10 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
                   <SectionHeader title="Timeline" icon="calendar-outline" />
                   <LinearGradient colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={styles.sectionCard}>
-                    <Pressable style={styles.cardRow} onPress={() => setShowDatePicker(true)}>
+                    <View style={styles.cardRow}>
                       <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                       <Text style={styles.cardRowText}>{formatDate(date)}</Text>
-                      <MetallicIcon name="chevron-forward-outline" size={14} color="rgba(255,255,255,0.25)" />
-                    </Pressable>
+                    </View>
                   </LinearGradient>
                 </Animated.View>
 
@@ -618,6 +696,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       onChangeText={setTitle}
                       placeholder="Title this moment..."
                       placeholderTextColor="rgba(255,255,255,0.22)"
+                      maxLength={TITLE_MAX_LENGTH}
                     />
                   </LinearGradient>
                 </Animated.View>
@@ -712,12 +791,17 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       style={styles.contentInput}
                       value={content}
                       onChangeText={setContent}
-                      onFocus={enterWritingMode}
                       placeholder="What is surfacing for you right now?"
                       placeholderTextColor="rgba(255,255,255,0.22)"
+                      maxLength={BODY_MAX_LENGTH}
                       multiline
                       textAlignVertical="top"
                     />
+                    {showBodyCounter && (
+                      <View style={styles.bodyCounterWrapInline}>
+                        <Text style={styles.bodyCounterText}>{content.length}/{BODY_MAX_LENGTH}</Text>
+                      </View>
+                    )}
                   </LinearGradient>
                 </Animated.View>
 
@@ -1055,9 +1139,14 @@ const styles = StyleSheet.create({
   saveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: 'rgba(110,191,139,0.12)', borderWidth: 1, borderColor: 'rgba(110,191,139,0.25)' },
   saveIndicatorDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#6EBF8B' },
   saveIndicatorText: { fontSize: 11, color: '#6EBF8B', fontWeight: '600', letterSpacing: 0.5 },
+  writingSaveBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(201,174,120,0.32)', backgroundColor: 'rgba(201,174,120,0.12)' },
+  writingSaveBtnText: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 0.3 },
 
   // ── Distraction-free writing surface ──
   focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 20, paddingBottom: 12, color: PALETTE.textMain, fontSize: 17, lineHeight: 28, textAlignVertical: 'top' },
+  bodyCounterWrap: { paddingHorizontal: 22, paddingBottom: 8, alignItems: 'flex-end' },
+  bodyCounterWrapInline: { marginTop: 12, alignItems: 'flex-end' },
+  bodyCounterText: { fontSize: 12, color: 'rgba(255,255,255,0.38)', fontWeight: '500' },
 
   // ── Mood quick-pick toolbar (sits above keyboard in writing mode) ──
   moodToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.75)' },

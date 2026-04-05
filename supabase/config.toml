@@ -1,0 +1,2 @@
+[functions.birth-profile-sync]
+verify_jwt = false

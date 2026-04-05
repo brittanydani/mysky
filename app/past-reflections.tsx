@@ -52,6 +52,7 @@ const CATEGORY_COLORS: Record<ReflectionCategory, string> = {
   values: PALETTE.gold,
   archetypes: PALETTE.lavender,
   cognitive: PALETTE.silverBlue,
+  intelligence: PALETTE.rose,
 };
 
 type FilterOption = 'all' | ReflectionCategory;
@@ -184,6 +185,15 @@ export default function PastReflectionsScreen() {
     { key: 'cognitive', label: 'Cognitive' },
   ];
 
+  const handleClose = () => {
+    Haptics.selectionAsync().catch(() => {});
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/inner-world');
+  };
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -197,7 +207,7 @@ export default function PastReflectionsScreen() {
         <View style={styles.header}>
           <Pressable
             style={styles.closeButton}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            onPress={handleClose}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >

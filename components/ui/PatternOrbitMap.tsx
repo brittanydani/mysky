@@ -81,8 +81,8 @@ const DIMENSIONS: Dimension[] = [
 
 const NUM_DIM = DIMENSIONS.length;
 
-const SERIF_FAMILY = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' })!;
-const SANS_FAMILY = Platform.select({ ios: 'System', android: 'sans-serif-medium', default: 'sans-serif' })!;
+const SERIF_FAMILY = Platform.select({ ios: 'Georgia', default: 'serif' })!;
+const SANS_FAMILY = Platform.select({ ios: 'System', default: 'sans-serif' })!;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

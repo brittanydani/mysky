@@ -146,9 +146,9 @@ export interface GeminiDreamInput {
 
 // ─── Availability ─────────────────────────────────────────────────────────────
 
-/** Returns true — Gemini is available whenever the user has a valid session. */
-export function isGeminiAvailable(): boolean {
-  return true;
+/** Gemini is available only when the user has a valid Supabase session. */
+export function isGeminiAvailable(hasAuthenticatedSession: boolean): boolean {
+  return hasAuthenticatedSession;
 }
 
 // ─── Build User Prompt ────────────────────────────────────────────────────────
@@ -206,6 +206,36 @@ function getFriendlyRateLimitMessage(): string {
   return 'AI insights are at capacity right now. Please wait a minute and try again.';
 }
 
+function getFriendlyAuthMessage(): string {
+  return 'Sign in to use AI dream insights.';
+}
+
+async function ensureGeminiDreamSession(): Promise<void> {
+  try {
+    const { data: current } = await supabase.auth.getSession();
+    const token = current.session?.access_token;
+    if (!token) {
+      throw new Error(getFriendlyAuthMessage());
+    }
+    // Proactively refresh if the token is expired or expires within 60 seconds
+    const expiresAt = current.session?.expires_at;
+    if (expiresAt && expiresAt - Math.floor(Date.now() / 1000) < 60) {
+      logger.info('[GeminiDream] Token expired or near-expiry, refreshing session...');
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !refreshed.session?.access_token) {
+        logger.warn('[GeminiDream] Session refresh failed; AI dream insights unavailable.', refreshError);
+        throw new Error(getFriendlyAuthMessage());
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === getFriendlyAuthMessage()) {
+      throw error;
+    }
+    logger.warn('[GeminiDream] Failed to read Supabase session; AI dream insights unavailable.', error);
+    throw new Error(getFriendlyAuthMessage());
+  }
+}
+
 // ─── Client-side Rate Limiter ────────────────────────────────────────────────
 
 const MIN_CALL_INTERVAL_MS = 10_000; // 10 seconds between calls
@@ -216,15 +246,17 @@ let lastCallTimestamp = 0;
 export async function generateGeminiDreamInterpretation(
   input: GeminiDreamInput,
 ): Promise<GeminiDreamResult> {
+  if (!input.dreamText || input.dreamText.trim().length === 0) {
+    throw new Error('Dream text is required for interpretation.');
+  }
+
+  await ensureGeminiDreamSession();
+
   const now = Date.now();
   if (now - lastCallTimestamp < MIN_CALL_INTERVAL_MS) {
     throw new Error(getFriendlyRateLimitMessage());
   }
   lastCallTimestamp = now;
-
-  if (!input.dreamText || input.dreamText.trim().length === 0) {
-    throw new Error('Dream text is required for interpretation.');
-  }
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     try {
@@ -244,6 +276,12 @@ export async function generateGeminiDreamInterpretation(
       if (error) {
         const status = (error as any)?.context?.status ?? 0;
         const message = (error as any)?.message ?? String(error);
+
+        if (status === 401 || status === 403) {
+          logger.warn('[GeminiDream] Edge function unauthorized; AI dream insights require sign-in.');
+          throw new Error(getFriendlyAuthMessage());
+        }
+
         logger.error('[GeminiDream] Edge function error:', status, message);
 
         if (status === 429) throw new Error(getFriendlyRateLimitMessage());

@@ -203,7 +203,7 @@ export default function RelationshipPatternsScreen() {
           <View style={styles.header}>
             <Pressable
               style={styles.closeButton}
-              onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}
             >
               <Text style={styles.closeIcon}>×</Text>
             </Pressable>

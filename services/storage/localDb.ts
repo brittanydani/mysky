@@ -2234,6 +2234,31 @@ class LocalDatabase {
   }
 
   /** Read a sleep entry row with its raw encrypted blobs (no decryption). */
+  async getSleepEntryByDate(chartId: string, date: string): Promise<SleepEntry | null> {
+    const db = await this.ensureReady();
+    const rows = await db.getAllAsync(
+      'SELECT * FROM sleep_entries WHERE chart_id = ? AND date = ? AND is_deleted = 0 ORDER BY created_at ASC LIMIT 1',
+      [chartId, date]
+    );
+    if (!rows || rows.length === 0) return null;
+    const row = rows[0] as any;
+    return {
+      id: row.id,
+      chartId: row.chart_id,
+      date: row.date,
+      durationHours: row.duration_hours ?? undefined,
+      quality: row.quality ?? undefined,
+      dreamText: row.dream_text ?? undefined,
+      dreamMood: row.dream_mood ?? undefined,
+      dreamFeelings: row.dream_feelings ?? undefined,
+      dreamMetadata: row.dream_metadata ?? undefined,
+      notes: row.notes ?? undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      isDeleted: row.is_deleted === 1,
+    };
+  }
+
   async getSleepEntryRaw(id: string): Promise<SleepEntry | null> {
     const db = await this.ensureReady();
     const row = await db.getFirstAsync('SELECT * FROM sleep_entries WHERE id = ?', [id]) as any;

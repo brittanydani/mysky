@@ -651,7 +651,7 @@ function buildReturnNudge(streak: StreakStatus): ReturnNudge | null {
     return {
       text: `Your ${streak.current}-day streak is waiting for today's entry.`,
       ctaLabel: 'Quick Check-In',
-      ctaRoute: '/(tabs)/mood',
+      ctaRoute: '/(tabs)/internal-weather',
       urgency: 'motivating',
     };
   }
@@ -660,7 +660,7 @@ function buildReturnNudge(streak: StreakStatus): ReturnNudge | null {
     return {
       text: 'Pick up where you left off — a quick check-in keeps your rhythm going.',
       ctaLabel: 'Check In Now',
-      ctaRoute: '/(tabs)/mood',
+      ctaRoute: '/(tabs)/internal-weather',
       urgency: 'warm',
     };
   }
@@ -670,7 +670,7 @@ function buildReturnNudge(streak: StreakStatus): ReturnNudge | null {
     return {
       text: 'A few seconds to check in can shape how you understand your day.',
       ctaLabel: 'Log Your Mood',
-      ctaRoute: '/(tabs)/mood',
+      ctaRoute: '/(tabs)/internal-weather',
       urgency: 'gentle',
     };
   }
@@ -680,7 +680,7 @@ function buildReturnNudge(streak: StreakStatus): ReturnNudge | null {
     return {
       text: 'Welcome back. Your reflection space is ready whenever you are.',
       ctaLabel: 'Start Again',
-      ctaRoute: '/(tabs)/mood',
+      ctaRoute: '/(tabs)/internal-weather',
       urgency: 'gentle',
     };
   }

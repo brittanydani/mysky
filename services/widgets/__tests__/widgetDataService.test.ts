@@ -40,9 +40,9 @@ describe('widgetDataService', () => {
       expect(mockUpdateWidgetData).toHaveBeenCalledWith(sampleData);
     });
 
-    it('is a no-op on Android', () => {
+    it('is a no-op when not running on iOS', () => {
       const RN = require('react-native');
-      RN.Platform.OS = 'android';
+      RN.Platform.OS = 'web';
       updateWidgetData(sampleData);
       expect(mockUpdateWidgetData).not.toHaveBeenCalled();
       RN.Platform.OS = 'ios';
@@ -70,9 +70,9 @@ describe('widgetDataService', () => {
       expect(callback).toHaveBeenCalledWith([]);
     });
 
-    it('calls callback with empty array on Android (no-op path)', () => {
+    it('calls callback with empty array when not running on iOS', () => {
       const RN = require('react-native');
-      RN.Platform.OS = 'android';
+      RN.Platform.OS = 'web';
 
       const callback = jest.fn();
       consumePendingCheckIns(callback);

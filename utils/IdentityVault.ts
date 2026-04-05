@@ -4,7 +4,7 @@ import { logger } from './logger';
 
 /**
  * The user's core astrological identity — the most sensitive data in the app.
- * Encrypted at rest in the OS-level keychain (iOS) or keystore (Android).
+ * Encrypted at rest in the OS-level keychain on iOS.
  * Also mirrored to Supabase for signed-in users so the app can restore birth
  * data across devices without syncing chart render state.
  */

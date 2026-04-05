@@ -36,6 +36,8 @@ import {
   sealCategoryAnswers,
   clearPendingIfAllSealed,
   loadReflections,
+  loadReflectionDrafts,
+  upsertDraftAnswer,
   getCurrentStreak,
   DayQuestions,
   ReflectionAnswer,
@@ -44,6 +46,7 @@ import {
   syncArchetypeProfileFromReflections,
   syncCognitiveStyleFromReflections,
   syncCoreValuesFromReflections,
+  syncIntelligenceFromReflections,
   getSomaticReflectionCorrelations,
   SomaticCorrelation,
 } from '../services/insights/reflectionProfileSync';
@@ -71,15 +74,25 @@ const CATEGORY_COLORS: Record<ReflectionCategory, string> = {
   values: PALETTE.gold,
   archetypes: PALETTE.lavender,
   cognitive: PALETTE.silverBlue,
+  intelligence: PALETTE.rose,
 };
 
 const CATEGORY_RGB: Record<ReflectionCategory, string> = {
   values: '217, 191, 140',
   archetypes: '168, 155, 200',
   cognitive: '139, 196, 232',
+  intelligence: '200, 139, 168',
 };
 
-type ToolId = 'values' | 'archetypes' | 'cognitive';
+const SOMATIC_FALLBACK_LABELS = {
+  overall: 'Across Reflections',
+} as const;
+
+const SOMATIC_FALLBACK_ICONS = {
+  overall: '◌',
+} as const;
+
+type ToolId = 'values' | 'archetypes' | 'cognitive' | 'intelligence';
 
 interface ToolCard {
   id: ToolId;
@@ -119,9 +132,18 @@ const TOOLS: ToolCard[] = [
     accentRgb: '139, 196, 232',
     route: '/cognitive-style' as Href,
   },
+  {
+    id: 'intelligence',
+    title: 'Intelligence Profile',
+    description: 'Discover your unique mix of intelligences — how your mind is brilliant.',
+    icon: '✧',
+    iconColor: PALETTE.rose,
+    accentRgb: '200, 139, 168',
+    route: '/intelligence-profile' as Href,
+  },
 ];
 
-const CATEGORIES: ReflectionCategory[] = ['values', 'archetypes', 'cognitive'];
+const CATEGORIES: ReflectionCategory[] = ['values', 'archetypes', 'cognitive', 'intelligence'];
 
 export default function InnerWorldScreen() {
   const router = useRouter();
@@ -131,6 +153,7 @@ export default function InnerWorldScreen() {
     values: false,
     archetypes: false,
     cognitive: false,
+    intelligence: false,
   });
   // Daily questions state
   const [categoryQuestions, setCategoryQuestions] = useState<
@@ -139,23 +162,36 @@ export default function InnerWorldScreen() {
     values: { category: 'values', questions: [] },
     archetypes: { category: 'archetypes', questions: [] },
     cognitive: { category: 'cognitive', questions: [] },
+    intelligence: { category: 'intelligence', questions: [] },
   });
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [categorySealed, setCategorySealed] = useState<Record<ReflectionCategory, boolean>>({
     values: false,
     archetypes: false,
     cognitive: false,
+    intelligence: false,
   });
   const [categoryNotes, setCategoryNotes] = useState<Record<ReflectionCategory, string>>({
     values: '',
     archetypes: '',
     cognitive: '',
+    intelligence: '',
   });
   const [streak, setStreak] = useState(0);
   const [totalDays, setTotalDays] = useState(0);
   const [somaticCorrelations, setSomaticCorrelations] = useState<SomaticCorrelation[]>([]);
   // Capture the date when questions loaded — prevents midnight edge case
   const loadedDateRef = useRef<string>(getTodayKey(getReflectionDate()));
+
+  const hasCompleteCognitiveProfile = (raw: string | null): boolean => {
+    if (!raw) return false;
+    try {
+      const parsed = JSON.parse(raw) as Partial<Record<'scope' | 'processing' | 'decisions', number>>;
+      return ['scope', 'processing', 'decisions'].every((key) => parsed[key as 'scope' | 'processing' | 'decisions'] !== undefined);
+    } catch {
+      return false;
+    }
+  };
 
   // Check storage on focus to dynamically update completion badges + load questions
   useFocusEffect(
@@ -166,49 +202,58 @@ export default function InnerWorldScreen() {
           const today = getTodayKey(refDate);
           loadedDateRef.current = today;
 
-          const [valuesRaw, archetypesRaw, cognitiveRaw, sealStatus, reflData, currentStreak] =
+          const [valuesRaw, archetypesRaw, cognitiveRaw, intelligenceRaw, sealStatus, reflData, draftAnswers, currentStreak] =
             await Promise.all([
               EncryptedAsyncStorage.getItem('@mysky:core_values'),
               EncryptedAsyncStorage.getItem('@mysky:archetype_profile'),
               EncryptedAsyncStorage.getItem('@mysky:cognitive_style'),
+              EncryptedAsyncStorage.getItem('@mysky:intelligence_profile'),
               getCategorySealStatus(refDate),
               loadReflections(),
+              loadReflectionDrafts(),
               getCurrentStreak(),
             ]);
 
           setCompletion({
             values: !!valuesRaw && JSON.parse(valuesRaw).topFive?.length > 0,
             archetypes: !!archetypesRaw,
-            cognitive: !!cognitiveRaw && Object.keys(JSON.parse(cognitiveRaw)).length === 3,
+            cognitive: hasCompleteCognitiveProfile(cognitiveRaw),
+            intelligence: !!intelligenceRaw,
           });
 
           // Load today's questions per category — use startedAt as per-user seed
           // Questions persist until all categories are sealed
           const userSeed = reflData.startedAt ?? undefined;
-          const [valuesQs, archetypesQs, cognitiveQs] = await Promise.all([
+          const [valuesQs, archetypesQs, cognitiveQs, intelligenceQs] = await Promise.all([
             getOrCreateTodayQuestions('values', refDate, userSeed),
             getOrCreateTodayQuestions('archetypes', refDate, userSeed),
             getOrCreateTodayQuestions('cognitive', refDate, userSeed),
+            getOrCreateTodayQuestions('intelligence', refDate, userSeed),
           ]);
           const qs: Record<ReflectionCategory, DayQuestions> = {
             values: { category: 'values', questions: valuesQs },
             archetypes: { category: 'archetypes', questions: archetypesQs },
             cognitive: { category: 'cognitive', questions: cognitiveQs },
+            intelligence: { category: 'intelligence', questions: intelligenceQs },
           };
           setCategoryQuestions(qs);
           // Pre-fill any already-sealed answers
           const todayAnswers = reflData.answers.filter(a => a.date === today);
+          const todayDraftAnswers = draftAnswers.filter(a => a.date === today);
 
           // Defensive: if no answers exist for today, force unsealed
           // regardless of what getCategorySealStatus returned
           if (todayAnswers.length === 0) {
-            setCategorySealed({ values: false, archetypes: false, cognitive: false });
+            setCategorySealed({ values: false, archetypes: false, cognitive: false, intelligence: false });
           } else {
             setCategorySealed(sealStatus);
           }
-          if (todayAnswers.length > 0) {
+          if (todayAnswers.length > 0 || todayDraftAnswers.length > 0) {
             const filled: Record<string, number> = {};
             for (const a of todayAnswers) {
+              filled[`${a.category}-${a.questionId}`] = a.scaleValue ?? 0;
+            }
+            for (const a of todayDraftAnswers) {
               filled[`${a.category}-${a.questionId}`] = a.scaleValue ?? 0;
             }
             setAnswers(filled);
@@ -241,6 +286,29 @@ export default function InnerWorldScreen() {
   const setAnswer = (category: ReflectionCategory, questionId: number, scaleValue: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setAnswers(prev => ({ ...prev, [answerKey(category, questionId)]: scaleValue }));
+
+    const questionText = categoryQuestions[category].questions.find((question) => question.id === questionId)?.text;
+    const scale = ANSWER_SCALES[CATEGORY_SCALE[category]];
+    if (!questionText || !scale[scaleValue]) return;
+
+    upsertDraftAnswer({
+      questionId,
+      category,
+      questionText,
+      answer: scale[scaleValue].label,
+      scaleValue,
+      date: loadedDateRef.current,
+    }).then(() => {
+      if (category === 'archetypes') {
+        syncArchetypeProfileFromReflections({ includeDrafts: true }).catch(() => {});
+      } else if (category === 'cognitive') {
+        syncCognitiveStyleFromReflections({ includeDrafts: true }).catch(() => {});
+      } else if (category === 'values') {
+        syncCoreValuesFromReflections({ includeDrafts: true }).catch(() => {});
+      } else if (category === 'intelligence') {
+        syncIntelligenceFromReflections({ includeDrafts: true }).catch(() => {});
+      }
+    }).catch(() => {});
   };
 
   const isCategoryAllAnswered = (category: ReflectionCategory): boolean => {
@@ -285,6 +353,8 @@ export default function InnerWorldScreen() {
         syncCognitiveStyleFromReflections().catch(() => {});
       } else if (category === 'values') {
         syncCoreValuesFromReflections().catch(() => {});
+      } else if (category === 'intelligence') {
+        syncIntelligenceFromReflections().catch(() => {});
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
@@ -292,8 +362,8 @@ export default function InnerWorldScreen() {
     }
   };
 
-  const allToolsCompleted = completion.values && completion.archetypes && completion.cognitive;
-  const allCategoriesSealed = categorySealed.values && categorySealed.archetypes && categorySealed.cognitive;
+  const allToolsCompleted = completion.values && completion.archetypes && completion.cognitive && completion.intelligence;
+  const allCategoriesSealed = categorySealed.values && categorySealed.archetypes && categorySealed.cognitive && categorySealed.intelligence;
 
   return (
     <View style={styles.container}>
@@ -308,7 +378,7 @@ export default function InnerWorldScreen() {
         <View style={styles.header}>
           <Pressable
             style={styles.closeButton}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/blueprint'); }}
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}
           >
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>
@@ -352,7 +422,7 @@ export default function InnerWorldScreen() {
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <MetallicText style={styles.statValue} color={PALETTE.silverBlue}>
-                    {CATEGORIES.filter(c => categorySealed[c]).length}/3
+                    {CATEGORIES.filter(c => categorySealed[c]).length}/4
                   </MetallicText>
                   <Text style={styles.statLabel}>sealed</Text>
                 </View>
@@ -615,14 +685,21 @@ export default function InnerWorldScreen() {
               >
                 <Text style={styles.somaticLabel}>BODY INTELLIGENCE</Text>
                 <Text style={styles.somaticDesc}>
-                  What your body tends to feel on days you reflect in each area:
+                  The body states that show up most often on your reflection days:
                 </Text>
                 {somaticCorrelations.map(c => (
                   <View key={c.category} style={styles.somaticRow}>
                     <Text style={styles.somaticCat}>
-                      {CATEGORY_ICONS[c.category]} {CATEGORY_LABELS[c.category]}
+                      {c.category === 'overall'
+                        ? `${SOMATIC_FALLBACK_ICONS.overall} ${SOMATIC_FALLBACK_LABELS.overall}`
+                        : `${CATEGORY_ICONS[c.category]} ${CATEGORY_LABELS[c.category]}`}
                     </Text>
-                    <Text style={styles.somaticEmotion}>{c.topEmotion}</Text>
+                    <View style={styles.somaticValueGroup}>
+                      <Text style={styles.somaticEmotion}>{c.topEmotion}</Text>
+                      <Text style={styles.somaticCount}>
+                        {c.count} {c.count === 1 ? 'day' : 'days'}
+                      </Text>
+                    </View>
                   </View>
                 ))}
               </Animated.View>
@@ -958,9 +1035,18 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontWeight: '700',
   },
+  somaticValueGroup: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
   somaticEmotion: {
     fontSize: 13,
     color: PALETTE.emerald,
     fontWeight: '600',
+  },
+  somaticCount: {
+    fontSize: 11,
+    color: PALETTE.textMuted,
+    fontWeight: '500',
   },
 });

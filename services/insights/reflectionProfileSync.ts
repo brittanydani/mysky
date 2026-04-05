@@ -11,7 +11,13 @@
  */
 
 import { EncryptedAsyncStorage } from '../storage/encryptedAsyncStorage';
-import { getAnswersByCategory } from './dailyReflectionService';
+import {
+  getAnswersByCategory,
+  getDraftAnswersByCategory,
+  ReflectionAnswer,
+  ReflectionDraftAnswer,
+} from './dailyReflectionService';
+import { ReflectionCategory } from '../../constants/dailyReflectionQuestions';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Archetypes sync
@@ -19,10 +25,65 @@ import { getAnswersByCategory } from './dailyReflectionService';
 
 type ArchetypeKey = 'hero' | 'caregiver' | 'seeker' | 'sage' | 'rebel';
 
+interface ArchetypeSyncOptions {
+  includeDrafts?: boolean;
+}
+
+type CombinedReflectionAnswer = ReflectionAnswer | ReflectionDraftAnswer;
+
+async function getCombinedReflectionAnswers(
+  category: ReflectionCategory,
+  includeDrafts = false,
+): Promise<CombinedReflectionAnswer[]> {
+  const [sealedAnswers, draftAnswers] = await Promise.all([
+    getAnswersByCategory(category),
+    includeDrafts ? getDraftAnswersByCategory(category) : Promise.resolve([] as ReflectionDraftAnswer[]),
+  ]);
+
+  const answerMap = new Map<string, CombinedReflectionAnswer>();
+  for (const answer of sealedAnswers) {
+    answerMap.set(`${answer.date}:${answer.category}:${answer.questionId}`, answer);
+  }
+  for (const answer of draftAnswers) {
+    answerMap.set(`${answer.date}:${answer.category}:${answer.questionId}`, answer);
+  }
+
+  return [...answerMap.values()];
+}
+
+function getEmptyArchetypeScores(): Record<ArchetypeKey, number> {
+  return {
+    hero: 0,
+    caregiver: 0,
+    seeker: 0,
+    sage: 0,
+    rebel: 0,
+  };
+}
+
+function extractQuizScores(existing: unknown): Record<ArchetypeKey, number> {
+  const parsed = existing as {
+    quizScores?: Partial<Record<ArchetypeKey, number>>;
+    scores?: Partial<Record<ArchetypeKey, number>>;
+  } | null;
+
+  if (parsed?.quizScores) {
+    return { ...getEmptyArchetypeScores(), ...parsed.quizScores };
+  }
+
+  if (parsed?.scores) {
+    const merged = { ...getEmptyArchetypeScores(), ...parsed.scores };
+    const total = Object.values(merged).reduce((sum, value) => sum + value, 0);
+    if (total === 5) return merged;
+  }
+
+  return getEmptyArchetypeScores();
+}
+
 /**
- * Maps archetype question IDs to their archetype.
- * Questions beyond id 149 cover shadow/integration themes and don't map to a
- * single archetype, so they are ignored for scoring purposes.
+ * Maps the explicitly archetype-coded question IDs to their archetype.
+ * Broader Jungian prompts beyond id 149 are handled separately and routed
+ * toward the user's current dominant pattern so every answered prompt counts.
  */
 function archetypeForQuestionId(id: number): ArchetypeKey | null {
   if (id >= 0 && id <= 29) return 'hero';
@@ -33,6 +94,14 @@ function archetypeForQuestionId(id: number): ArchetypeKey | null {
   return null;
 }
 
+function getDominantArchetype(scores: Record<ArchetypeKey, number>): ArchetypeKey {
+  return (Object.entries(scores) as [ArchetypeKey, number][])
+    .reduce<[ArchetypeKey, number]>(
+      (best, current) => (current[1] > best[1] ? current : best),
+      ['hero', -1],
+    )[0];
+}
+
 /**
  * Recomputes the dominant archetype from all-time reflection answers and
  * saves the result back to the archetype profile store.
@@ -41,78 +110,57 @@ function archetypeForQuestionId(id: number): ArchetypeKey | null {
  * reflection scaleValues so explicit quiz answers remain the primary signal.
  * If no quiz has been taken, reflection data alone drives the dominant.
  */
-export async function syncArchetypeProfileFromReflections(): Promise<void> {
+export async function syncArchetypeProfileFromReflections(
+  options: ArchetypeSyncOptions = {},
+): Promise<void> {
   try {
-    const answers = await getAnswersByCategory('archetypes');
+    const answers = await getCombinedReflectionAnswers('archetypes', options.includeDrafts);
     if (answers.length === 0) return;
 
-    // Accumulate reflection scores per archetype
-    const sumByArchetype: Record<ArchetypeKey, number> = {
-      hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0,
-    };
-    const countByArchetype: Record<ArchetypeKey, number> = {
-      hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0,
-    };
+    const raw = await EncryptedAsyncStorage.getItem('@mysky:archetype_profile');
+    const existing = raw ? JSON.parse(raw) : null;
+    const quizScores = extractQuizScores(existing);
+    const totalQuizVotes = Object.values(quizScores).reduce((a, b) => a + b, 0);
+    const fallbackArchetype: ArchetypeKey = existing?.dominant ?? (totalQuizVotes > 0 ? getDominantArchetype(quizScores) : 'hero');
+
+    // Accumulate reflection scores per archetype.
+    // `countByArchetype` drives the visible score breakdown so each answered
+    // daily prompt adds exactly one vote. `weightedByArchetype` preserves the
+    // user's response intensity for dominant/trend calculations.
+    const sumByArchetype = getEmptyArchetypeScores();
+    const countByArchetype = getEmptyArchetypeScores();
 
     for (const ans of answers) {
-      const archetype = archetypeForQuestionId(ans.questionId);
-      if (!archetype) continue;
+      const archetype = archetypeForQuestionId(ans.questionId) ?? fallbackArchetype;
       sumByArchetype[archetype] += ans.scaleValue ?? 0;
       countByArchetype[archetype]++;
     }
 
-    // Normalize each archetype to 0–1 based on average agreement
-    const reflectionNorm: Record<ArchetypeKey, number> = {
-      hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0,
-    };
-    for (const key of Object.keys(reflectionNorm) as ArchetypeKey[]) {
-      const count = countByArchetype[key];
-      if (count > 0) {
-        reflectionNorm[key] = sumByArchetype[key] / (count * 3); // scaleValue max is 3
-      }
-    }
-
-    // Load existing profile
-    const raw = await EncryptedAsyncStorage.getItem('@mysky:archetype_profile');
-    const existing = raw ? JSON.parse(raw) : null;
-
-    // Load quiz scores if the user has completed the quiz
-    const quizScores: Record<ArchetypeKey, number> = existing?.scores ?? {
-      hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0,
-    };
-    const totalQuizVotes = Object.values(quizScores).reduce((a, b) => a + b, 0);
-
-    // Combine: quiz get 2× weight vs reflection
-    const combined: Record<ArchetypeKey, number> = {
-      hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0,
-    };
+    // Combine: quiz gets 2x weight vs reflection vote share.
+    const totalReflectionVotes = Object.values(countByArchetype).reduce((a, b) => a + b, 0);
+    const combined = getEmptyArchetypeScores();
     for (const key of Object.keys(combined) as ArchetypeKey[]) {
       const quizNorm = totalQuizVotes > 0 ? quizScores[key] / totalQuizVotes : 0;
+      const reflectionNorm = totalReflectionVotes > 0 ? countByArchetype[key] / totalReflectionVotes : 0;
       combined[key] = totalQuizVotes > 0
-        ? quizNorm * 2 + reflectionNorm[key] * 1
-        : reflectionNorm[key];
+        ? quizNorm * 2 + reflectionNorm
+        : reflectionNorm;
     }
 
-    const dominant = (Object.entries(combined) as [ArchetypeKey, number][])
-      .reduce<[ArchetypeKey, number]>(
-        (best, curr) => curr[1] > best[1] ? curr : best,
-        ['hero', -1],
-      )[0];
+    const dominant = getDominantArchetype(combined);
 
-    // When the user has never taken the quiz, populate scores from reflection norms
-    // scaled to the 0–5 quiz range so the bar chart is meaningful.
-    const displayScores: Record<ArchetypeKey, number> = totalQuizVotes > 0
-      ? quizScores
-      : (Object.keys(reflectionNorm) as ArchetypeKey[]).reduce((acc, key) => {
-          acc[key] = Math.round(reflectionNorm[key] * 5);
-          return acc;
-        }, { hero: 0, caregiver: 0, seeker: 0, sage: 0, rebel: 0 });
+    const displayScores = getEmptyArchetypeScores();
+    for (const key of Object.keys(displayScores) as ArchetypeKey[]) {
+      displayScores[key] = quizScores[key] + countByArchetype[key];
+    }
 
     const updated = {
       ...(existing ?? {}),
       dominant,
       scores: displayScores,
-      reflectionScores: sumByArchetype,
+      quizScores,
+      reflectionScores: countByArchetype,
+      reflectionWeightedScores: sumByArchetype,
       completedAt: existing?.completedAt ?? new Date().toISOString(),
     };
 
@@ -141,6 +189,35 @@ interface DimensionSignal {
    *   decisions  → Quick & Intuitive
    */
   dir: 1 | -1;
+}
+
+const COGNITIVE_RANGE_FALLBACKS: Array<{ range: [number, number]; dim: DimensionKey }> = [
+  { range: [0, 29], dim: 'decisions' },
+  { range: [30, 59], dim: 'processing' },
+  { range: [60, 89], dim: 'scope' },
+  { range: [90, 119], dim: 'processing' },
+  { range: [120, 149], dim: 'decisions' },
+  { range: [150, 179], dim: 'scope' },
+  { range: [180, 209], dim: 'processing' },
+  { range: [210, 239], dim: 'processing' },
+  { range: [240, 269], dim: 'decisions' },
+  { range: [270, 299], dim: 'processing' },
+  { range: [300, 329], dim: 'scope' },
+  { range: [330, 364], dim: 'processing' },
+];
+
+function fallbackDimensionForQuestionId(id: number): DimensionKey | null {
+  const match = COGNITIVE_RANGE_FALLBACKS.find(({ range }) => id >= range[0] && id <= range[1]);
+  return match?.dim ?? null;
+}
+
+function fallbackDirectionForDimension(
+  dim: DimensionKey,
+  manualScores: Partial<Record<DimensionKey, number>>,
+  existingScores: Partial<Record<DimensionKey, number>>,
+): 1 | -1 {
+  const baseline = manualScores[dim] ?? existingScores[dim] ?? 3;
+  return baseline >= 3 ? 1 : -1;
 }
 
 /**
@@ -183,10 +260,24 @@ const COGNITIVE_SIGNAL_MAP: Record<number, DimensionSignal> = {
  * Dimensions that have never been manually set are populated from reflection
  * data alone, letting users see a live profile even before completing the quiz.
  */
-export async function syncCognitiveStyleFromReflections(): Promise<void> {
+export async function syncCognitiveStyleFromReflections(
+  options: ArchetypeSyncOptions = {},
+): Promise<void> {
   try {
-    const answers = await getAnswersByCategory('cognitive');
+    const answers = await getCombinedReflectionAnswers('cognitive', options.includeDrafts);
     if (answers.length === 0) return;
+
+    const raw = await EncryptedAsyncStorage.getItem('@mysky:cognitive_style');
+    const existing: Partial<Record<DimensionKey, number>> & {
+      manualScores?: Partial<Record<DimensionKey, number>>;
+      reflectionScores?: Partial<Record<DimensionKey, number>>;
+    } = raw ? JSON.parse(raw) : {};
+
+    const manualScores: Partial<Record<DimensionKey, number>> = existing.manualScores ?? {
+      scope: existing.scope,
+      processing: existing.processing,
+      decisions: existing.decisions,
+    };
 
     // Accumulate directional signal per dimension
     const dimSums: Record<DimensionKey, number> = { scope: 0, processing: 0, decisions: 0 };
@@ -194,10 +285,14 @@ export async function syncCognitiveStyleFromReflections(): Promise<void> {
 
     for (const ans of answers) {
       const signal = COGNITIVE_SIGNAL_MAP[ans.questionId];
-      if (!signal) continue;
+      const fallbackDim = fallbackDimensionForQuestionId(ans.questionId);
+      if (!signal && !fallbackDim) continue;
+
+      const dim = signal?.dim ?? fallbackDim!;
+      const dir = signal?.dir ?? fallbackDirectionForDimension(dim, manualScores, existing);
       const sv = ans.scaleValue ?? 0; // 0–3
-      dimSums[signal.dim] += signal.dir * sv;
-      dimCounts[signal.dim]++;
+      dimSums[dim] += dir * sv;
+      dimCounts[dim]++;
     }
 
     // Convert to suggested 1–5 scores (center=3, range driven by avg signal)
@@ -210,21 +305,26 @@ export async function syncCognitiveStyleFromReflections(): Promise<void> {
 
     if (Object.keys(suggested).length === 0) return;
 
-    // Load existing manual scores
-    const raw = await EncryptedAsyncStorage.getItem('@mysky:cognitive_style');
-    const existing: Partial<Record<DimensionKey, number>> = raw ? JSON.parse(raw) : {};
-
-    const merged: Partial<Record<DimensionKey, number>> = { ...existing };
+    const merged: Partial<Record<DimensionKey, number>> = {
+      scope: existing.scope,
+      processing: existing.processing,
+      decisions: existing.decisions,
+    };
     for (const dim of Object.keys(suggested) as DimensionKey[]) {
-      if (existing[dim] !== undefined) {
+      if (manualScores[dim] !== undefined) {
         // Blend: manual stays dominant but nudges gradually
-        merged[dim] = Math.round(existing[dim]! * 0.6 + suggested[dim]! * 0.4);
+        merged[dim] = Math.round(manualScores[dim]! * 0.6 + suggested[dim]! * 0.4);
       } else {
         merged[dim] = suggested[dim];
       }
     }
 
-    await EncryptedAsyncStorage.setItem('@mysky:cognitive_style', JSON.stringify(merged));
+    await EncryptedAsyncStorage.setItem('@mysky:cognitive_style', JSON.stringify({
+      ...existing,
+      ...merged,
+      manualScores,
+      reflectionScores: suggested,
+    }));
   } catch {
     // Graceful fallback
   }
@@ -295,9 +395,11 @@ export const AGREEMENT_THRESHOLD = 2;
  * A value is added when the user's average agreement with questions in the
  * corresponding theme is ≥ 2 ("True" on the agreement scale).
  */
-export async function syncCoreValuesFromReflections(): Promise<void> {
+export async function syncCoreValuesFromReflections(
+  options: ArchetypeSyncOptions = {},
+): Promise<void> {
   try {
-    const answers = await getAnswersByCategory('values');
+    const answers = await getCombinedReflectionAnswers('values', options.includeDrafts);
     if (answers.length === 0) return;
 
     // Collect values indicated by strong agreement with theme questions
@@ -346,7 +448,7 @@ export async function syncCoreValuesFromReflections(): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface SomaticCorrelation {
-  category: 'values' | 'archetypes' | 'cognitive';
+  category: 'values' | 'archetypes' | 'cognitive' | 'overall';
   topEmotion: string;
   count: number;
 }
@@ -357,10 +459,192 @@ interface RawSomaticEntry {
   intensity: number;
 }
 
+const SOMATIC_MIN_SUPPORT_DAYS = 2;
+const SOMATIC_MIN_LIFT = 0.15;
+
+function getOverallSomaticCorrelation(
+  reflectionDates: string[],
+  somaticByDate: Map<string, Set<string>>,
+): SomaticCorrelation | null {
+  const overallCounts = new Map<string, number>();
+
+  for (const date of reflectionDates) {
+    const sameDayEmotions = somaticByDate.get(date) ?? new Set<string>();
+    for (const emotion of sameDayEmotions) {
+      overallCounts.set(emotion, (overallCounts.get(emotion) ?? 0) + 1);
+    }
+  }
+
+  const ranked = [...overallCounts.entries()]
+    .filter(([, count]) => count >= SOMATIC_MIN_SUPPORT_DAYS)
+    .sort((a, b) => b[1] - a[1]);
+
+  if (ranked.length === 0) return null;
+
+  const [topEmotion, count] = ranked[0];
+  return { category: 'overall', topEmotion, count };
+}
+
+function normalizeEmotionLabel(emotion: string): string | null {
+  const normalized = emotion.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function getDominantEmotionLabelsByDate(entries: RawSomaticEntry[]): Map<string, Set<string>> {
+  const dailyEmotionIntensity = new Map<string, Map<string, number>>();
+
+  for (const entry of entries) {
+    const emotion = normalizeEmotionLabel(entry.emotion);
+    if (!emotion) continue;
+
+    const day = entry.date.slice(0, 10);
+    const dayEmotions = dailyEmotionIntensity.get(day) ?? new Map<string, number>();
+    const nextIntensity = Math.max(dayEmotions.get(emotion) ?? 0, entry.intensity ?? 0);
+    dayEmotions.set(emotion, nextIntensity);
+    dailyEmotionIntensity.set(day, dayEmotions);
+  }
+
+  const dominantByDate = new Map<string, Set<string>>();
+  for (const [day, emotions] of dailyEmotionIntensity.entries()) {
+    let maxIntensity = -1;
+    for (const intensity of emotions.values()) {
+      if (intensity > maxIntensity) maxIntensity = intensity;
+    }
+
+    const dominant = new Set<string>();
+    for (const [emotion, intensity] of emotions.entries()) {
+      if (intensity === maxIntensity) dominant.add(emotion);
+    }
+
+    if (dominant.size > 0) {
+      dominantByDate.set(day, dominant);
+    }
+  }
+
+  return dominantByDate;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Intelligence Profile sync
+// ─────────────────────────────────────────────────────────────────────────────
+
+type IntelligenceDimension =
+  | 'linguistic' | 'logical' | 'musical' | 'spatial'
+  | 'kinesthetic' | 'interpersonal' | 'intrapersonal'
+  | 'naturalistic' | 'existential';
+
+const INTELLIGENCE_DIMENSIONS: IntelligenceDimension[] = [
+  'linguistic', 'logical', 'musical', 'spatial', 'kinesthetic',
+  'interpersonal', 'intrapersonal', 'naturalistic', 'existential',
+];
+
 /**
- * Finds which body emotions most frequently appear on the same calendar days
- * that a user sealed each reflection category. Returns one correlation per
- * category, only when there is at least two co-occurring somatic entries.
+ * Maps intelligence question ID ranges to their dimension.
+ * Each block of 40 questions (45 for existential) targets one intelligence.
+ */
+function intelligenceDimensionForQuestionId(id: number): IntelligenceDimension | null {
+  if (id >= 0 && id <= 39) return 'linguistic';
+  if (id >= 40 && id <= 79) return 'logical';
+  if (id >= 80 && id <= 119) return 'musical';
+  if (id >= 120 && id <= 159) return 'spatial';
+  if (id >= 160 && id <= 199) return 'kinesthetic';
+  if (id >= 200 && id <= 239) return 'interpersonal';
+  if (id >= 240 && id <= 279) return 'intrapersonal';
+  if (id >= 280 && id <= 319) return 'naturalistic';
+  if (id >= 320 && id <= 364) return 'existential';
+  return null;
+}
+
+interface IntelligenceProfile {
+  [key: string]: unknown;
+  manualScores?: Partial<Record<IntelligenceDimension, number>>;
+  reflectionScores?: Partial<Record<IntelligenceDimension, number>>;
+}
+
+/**
+ * Derives 1–5 scores for each intelligence dimension from all-time
+ * intelligence reflection answers. Blends with manually-set scores
+ * (manual 60%, reflection 40%) so user-set values stay sticky but
+ * drift over time as daily reflections accumulate.
+ *
+ * Dimensions that have never been manually set are populated from reflection
+ * data alone, letting users see a live profile even before completing the quiz.
+ */
+export async function syncIntelligenceFromReflections(
+  options: ArchetypeSyncOptions = {},
+): Promise<void> {
+  try {
+    const answers = await getCombinedReflectionAnswers('intelligence', options.includeDrafts);
+    if (answers.length === 0) return;
+
+    const raw = await EncryptedAsyncStorage.getItem('@mysky:intelligence_profile');
+    const existing: IntelligenceProfile = raw ? JSON.parse(raw) : {};
+
+    const manualScores: Partial<Record<IntelligenceDimension, number>> =
+      existing.manualScores ?? {};
+
+    // Accumulate average scaleValue per dimension
+    const dimSums: Record<IntelligenceDimension, number> = {} as Record<IntelligenceDimension, number>;
+    const dimCounts: Record<IntelligenceDimension, number> = {} as Record<IntelligenceDimension, number>;
+    for (const dim of INTELLIGENCE_DIMENSIONS) {
+      dimSums[dim] = 0;
+      dimCounts[dim] = 0;
+    }
+
+    for (const ans of answers) {
+      const dim = intelligenceDimensionForQuestionId(ans.questionId);
+      if (!dim) continue;
+      const sv = ans.scaleValue ?? 0; // 0–3
+      dimSums[dim] += sv;
+      dimCounts[dim]++;
+    }
+
+    // Convert to suggested 1–5 scores (avg 0–3 mapped to 1–5)
+    const suggested: Partial<Record<IntelligenceDimension, number>> = {};
+    for (const dim of INTELLIGENCE_DIMENSIONS) {
+      if (dimCounts[dim] === 0) continue;
+      const avg = dimSums[dim] / dimCounts[dim]; // 0–3
+      suggested[dim] = Math.min(5, Math.max(1, Math.round(1 + (avg / 3) * 4)));
+    }
+
+    if (Object.keys(suggested).length === 0) return;
+
+    const merged: Partial<Record<IntelligenceDimension, number>> = {};
+    for (const dim of INTELLIGENCE_DIMENSIONS) {
+      const existingScore = existing[dim] as number | undefined;
+      if (suggested[dim] === undefined) {
+        if (existingScore !== undefined) merged[dim] = existingScore;
+        continue;
+      }
+      if (manualScores[dim] !== undefined) {
+        merged[dim] = Math.round(manualScores[dim]! * 0.6 + suggested[dim]! * 0.4);
+      } else {
+        merged[dim] = suggested[dim];
+      }
+    }
+
+    await EncryptedAsyncStorage.setItem('@mysky:intelligence_profile', JSON.stringify({
+      ...existing,
+      ...merged,
+      manualScores,
+      reflectionScores: suggested,
+    }));
+  } catch {
+    // Graceful fallback
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Somatic cross-reference
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Finds body emotions that are specifically overrepresented on the days a user
+ * sealed each reflection category, compared with reflection days overall.
+ *
+ * This uses day-level presence rather than raw entry counts so a single noisy
+ * day cannot dominate the result, and it suppresses category rows when the
+ * signal is too generic across all reflection activity.
  */
 export async function getSomaticReflectionCorrelations(): Promise<SomaticCorrelation[]> {
   try {
@@ -374,17 +658,22 @@ export async function getSomaticReflectionCorrelations(): Promise<SomaticCorrela
     const answers = (reflData as { answers?: Array<{ category: string; date: string; scaleValue?: number }> }).answers ?? [];
     const somaticEntries: RawSomaticEntry[] = JSON.parse(somaticRaw);
 
-    // Index somatic entries by calendar date (YYYY-MM-DD)
-    const somaticByDate = new Map<string, RawSomaticEntry[]>();
-    for (const e of somaticEntries) {
-      const day = e.date.slice(0, 10);
-      const list = somaticByDate.get(day) ?? [];
-      list.push(e);
-      somaticByDate.set(day, list);
-    }
+    // Index the dominant somatic emotions by calendar date (YYYY-MM-DD)
+    const somaticByDate = getDominantEmotionLabelsByDate(somaticEntries);
 
     const CATEGORIES = ['values', 'archetypes', 'cognitive'] as const;
     const results: SomaticCorrelation[] = [];
+    const reflectionDates = [...new Set(answers.map((a) => a.date))];
+
+    if (reflectionDates.length === 0) return [];
+
+    const baselineEmotionDays = new Map<string, number>();
+    for (const date of reflectionDates) {
+      const sameDayEmotions = somaticByDate.get(date) ?? new Set<string>();
+      for (const emotion of sameDayEmotions) {
+        baselineEmotionDays.set(emotion, (baselineEmotionDays.get(emotion) ?? 0) + 1);
+      }
+    }
 
     for (const cat of CATEGORIES) {
       // Unique sealed dates for this category
@@ -394,23 +683,47 @@ export async function getSomaticReflectionCorrelations(): Promise<SomaticCorrela
           .map((a) => a.date),
       )];
 
+      if (catDates.length < SOMATIC_MIN_SUPPORT_DAYS) continue;
+
       const emotionCount = new Map<string, number>();
       for (const date of catDates) {
-        const same = somaticByDate.get(date) ?? [];
-        for (const entry of same) {
-          emotionCount.set(entry.emotion, (emotionCount.get(entry.emotion) ?? 0) + 1);
+        const sameDayEmotions = somaticByDate.get(date) ?? new Set<string>();
+        for (const emotion of sameDayEmotions) {
+          emotionCount.set(emotion, (emotionCount.get(emotion) ?? 0) + 1);
         }
       }
 
       if (emotionCount.size === 0) continue;
 
-      const [topEmotion, count] = [...emotionCount.entries()].sort((a, b) => b[1] - a[1])[0];
-      if (count < 2) continue;
+      const ranked = [...emotionCount.entries()]
+        .map(([emotion, count]) => {
+          const categoryRate = count / catDates.length;
+          const baselineRate = (baselineEmotionDays.get(emotion) ?? 0) / reflectionDates.length;
+          return {
+            emotion,
+            count,
+            lift: categoryRate - baselineRate,
+            categoryRate,
+          };
+        })
+        .filter(({ count, lift }) => count >= SOMATIC_MIN_SUPPORT_DAYS && lift >= SOMATIC_MIN_LIFT)
+        .sort((a, b) => {
+          if (b.lift !== a.lift) return b.lift - a.lift;
+          if (b.count !== a.count) return b.count - a.count;
+          return b.categoryRate - a.categoryRate;
+        });
+
+      if (ranked.length === 0) continue;
+
+      const { emotion: topEmotion, count } = ranked[0];
 
       results.push({ category: cat, topEmotion, count });
     }
 
-    return results;
+    if (results.length > 0) return results;
+
+    const overall = getOverallSomaticCorrelation(reflectionDates, somaticByDate);
+    return overall ? [overall] : [];
   } catch {
     return [];
   }

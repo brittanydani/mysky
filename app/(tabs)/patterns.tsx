@@ -1,5 +1,5 @@
 /**
- * Patterns Screen — accessed from (tabs)/growth route.
+ * Patterns Screen — accessed from (tabs)/patterns route.
  *
  * Unified hub: quantitative snapshot, data visualization,
  * and full insight sections (trends, correlations, personal patterns, etc.).

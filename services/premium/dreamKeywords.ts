@@ -1311,7 +1311,7 @@ export const DREAM_KEYWORDS: DreamKeywordEntry[] = [
   },
   {
     id: 'robot',
-    keywords: ['robot', 'ai', 'android', 'machine', 'cyborg'],
+    keywords: ['robot', 'ai', 'automaton', 'machine', 'cyborg'],
     meaning: 'Robots or machines may reflect automation, loss of humanity, doing things mechanically, or the fear of being replaced.',
     category: 'technology',
   },

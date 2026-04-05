@@ -10,9 +10,20 @@
  * Persists to SecureStore for privacy compliance.
  */
 
-import * as SecureStore from 'expo-secure-store';
 import { HouseSystem, ZodiacSystem, Ayanamsa } from './types';
 import { logger } from '../../utils/logger';
+
+type SecureStoreModule = typeof import('expo-secure-store');
+
+let secureStoreModule: SecureStoreModule | null = null;
+
+function getSecureStore(): SecureStoreModule {
+  if (!secureStoreModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    secureStoreModule = require('expo-secure-store') as SecureStoreModule;
+  }
+  return secureStoreModule;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -184,7 +195,7 @@ class AstrologySettingsServiceClass {
     }
 
     try {
-      const stored = await SecureStore.getItemAsync(SETTINGS_KEY);
+      const stored = await getSecureStore().getItemAsync(SETTINGS_KEY);
       
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<AstrologySettings>;
@@ -213,7 +224,7 @@ class AstrologySettingsServiceClass {
         updatedAt: new Date().toISOString(),
       };
 
-      await SecureStore.setItemAsync(SETTINGS_KEY, JSON.stringify(updated));
+      await getSecureStore().setItemAsync(SETTINGS_KEY, JSON.stringify(updated));
       this.cachedSettings = updated;
       
       logger.info('[AstrologySettings] Settings saved:', {
@@ -314,7 +325,7 @@ class AstrologySettingsServiceClass {
    * Reset to default settings
    */
   async resetToDefaults(): Promise<AstrologySettings> {
-    await SecureStore.deleteItemAsync(SETTINGS_KEY);
+    await getSecureStore().deleteItemAsync(SETTINGS_KEY);
     this.cachedSettings = null;
     return this.getSettings();
   }

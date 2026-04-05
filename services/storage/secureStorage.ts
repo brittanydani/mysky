@@ -1,8 +1,19 @@
-import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import { EncryptionManager, EncryptedEnvelope } from './encryptionManager';
 import { SavedChart, JournalEntry, AppSettings } from './models';
 import { logger } from '../../utils/logger';
+
+type SecureStoreModule = typeof import('expo-secure-store');
+
+let secureStoreModule: SecureStoreModule | null = null;
+
+function getSecureStore(): SecureStoreModule {
+  if (!secureStoreModule) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    secureStoreModule = require('expo-secure-store') as SecureStoreModule;
+  }
+  return secureStoreModule;
+}
 
 /**
  * NOTE:
@@ -202,7 +213,7 @@ class SecureStorageService {
 
     // Also delete terms consent (stored outside the KEYS map, in plaintext SecureStore)
     try {
-      await SecureStore.deleteItemAsync('terms_consent');
+      await getSecureStore().deleteItemAsync('terms_consent');
     } catch {
       // best-effort
     }
@@ -378,11 +389,11 @@ class SecureStorageService {
       );
     }
 
-    await SecureStore.setItemAsync(key, serialised);
+    await getSecureStore().setItemAsync(key, serialised);
   }
 
   private async getEncryptedItem<T>(key: string): Promise<T | null> {
-    const stored = await SecureStore.getItemAsync(key);
+    const stored = await getSecureStore().getItemAsync(key);
     if (!stored) return null;
 
     const parsed = this.safeJsonParse(stored);
@@ -424,15 +435,15 @@ class SecureStorageService {
    */
   private async bestEffortDeleteKey(key: string): Promise<void> {
     try {
-      const existing = await SecureStore.getItemAsync(key);
+      const existing = await getSecureStore().getItemAsync(key);
       if (existing) {
         const junk = Crypto.getRandomBytes(64);
-        await SecureStore.setItemAsync(key, JSON.stringify({ junk: Array.from(junk), t: Date.now() }));
+        await getSecureStore().setItemAsync(key, JSON.stringify({ junk: Array.from(junk), t: Date.now() }));
       }
-      await SecureStore.deleteItemAsync(key);
+      await getSecureStore().deleteItemAsync(key);
     } catch {
       // still attempt delete
-      try { await SecureStore.deleteItemAsync(key); } catch {}
+      try { await getSecureStore().deleteItemAsync(key); } catch {}
     }
   }
 

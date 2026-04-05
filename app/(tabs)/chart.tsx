@@ -55,7 +55,6 @@ const ELEMENT_COLORS: Record<string, string> = {
 // ── Zodiac Font Family (matches wheel exactly) ──
 const ZODIAC_FAMILY = Platform.select({
   ios: 'Apple Symbols',
-  android: 'Noto Sans Symbols2',
   default: 'sans-serif',
 });
 
@@ -872,7 +871,7 @@ export default function ChartScreen() {
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 4 }}>
-              <Pressable onPress={() => router.replace('/(tabs)/blueprint' as Href)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Pressable onPress={() => router.replace('/(tabs)/identity' as Href)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <MetallicIcon name="arrow-back-outline" size={18} color="rgba(255,255,255,0.5)" />
                 <MetallicText style={{ fontSize: 14, letterSpacing: 0.3 }} color="rgba(255,255,255,0.5)">Identity</MetallicText>
               </Pressable>
@@ -2858,7 +2857,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '800',
     color: theme.textPrimary,
-    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', android: 'sans-serif-bold', default: 'System' }),
+    fontFamily: Platform.select({ ios: 'SFProDisplay-Bold', default: 'System' }),
     letterSpacing: -0.5,
     marginBottom: 4,
   },

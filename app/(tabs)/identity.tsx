@@ -1,4 +1,4 @@
-// File: app/(tabs)/blueprint.tsx
+// File: app/(tabs)/identity.tsx
 // MySky — Blueprint Hub
 //
 // Identity hub. Four entry cards expose the natal chart, life narrative,
@@ -94,6 +94,14 @@ const CARDS: BlueprintCard[] = [
     iconStyle: { color: PALETTE.lavender },
     gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
     route: '/(tabs)/inner-tensions' as Href,
+  },
+  {
+    title: 'Intelligence Profile',
+    description: 'Discover your unique mix of intelligences — how your mind is brilliant.',
+    icon: '✧',
+    iconStyle: { color: PALETTE.lavender },
+    gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
+    route: '/intelligence-profile' as Href,
   },
   {
     title: 'Cosmic Blueprint',

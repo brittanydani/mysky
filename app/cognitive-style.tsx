@@ -20,6 +20,7 @@ import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
 import Svg, { Polygon, Line, Circle } from 'react-native-svg';
+import { syncCognitiveStyleFromReflections } from '../services/insights/reflectionProfileSync';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
@@ -75,6 +76,11 @@ const DIMENSIONS: Dimension[] = [
 ];
 
 type Scores = Record<'scope' | 'processing' | 'decisions', number>; // 1–5
+
+interface StoredCognitiveProfile extends Partial<Scores> {
+  manualScores?: Partial<Scores>;
+  reflectionScores?: Partial<Scores>;
+}
 
 // --- Radar Chart Component ---
 const CognitiveSynthesisMap = ({ scores }: { scores: Scores }) => {
@@ -135,14 +141,22 @@ export default function CognitiveStyleScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-        if (raw) {
-          try {
-            setScores(JSON.parse(raw));
-            setSaved(true);
-          } catch {}
-        }
-      });
+      syncCognitiveStyleFromReflections({ includeDrafts: true })
+        .catch(() => {})
+        .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
+        .then((raw) => {
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw) as StoredCognitiveProfile;
+              setScores({
+                scope: parsed.scope,
+                processing: parsed.processing,
+                decisions: parsed.decisions,
+              });
+              setSaved(true);
+            } catch {}
+          }
+        });
     }, []),
   );
 
@@ -156,7 +170,13 @@ export default function CognitiveStyleScreen() {
 
   const handleSave = async () => {
     try {
-      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+      const raw = await EncryptedAsyncStorage.getItem(STORAGE_KEY);
+      const existing: StoredCognitiveProfile = raw ? JSON.parse(raw) : {};
+      await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+        ...existing,
+        ...scores,
+        manualScores: scores,
+      }));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setSaved(true);
     } catch {
@@ -177,6 +197,15 @@ export default function CognitiveStyleScreen() {
     return 'The Adaptive Synthesizer';
   };
 
+  const handleClose = () => {
+    Haptics.selectionAsync().catch(() => {});
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/inner-world');
+  };
+
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
@@ -189,7 +218,7 @@ export default function CognitiveStyleScreen() {
         <View style={styles.header}>
           <Pressable
             style={styles.closeButton}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            onPress={handleClose}
           >
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>

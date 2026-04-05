@@ -32,6 +32,8 @@ export interface ReflectionAnswer {
   notes?: string;          // Optional free-text reflection note for the category
 }
 
+export type ReflectionDraftAnswer = Omit<ReflectionAnswer, 'sealedAt'>;
+
 export interface DailyReflectionData {
   answers: ReflectionAnswer[];
   /** Total number of days where at least one answer was sealed */
@@ -45,11 +47,16 @@ export interface DayQuestions {
   questions: ReflectionQuestion[];
 }
 
+interface DraftReflectionData {
+  answers: ReflectionDraftAnswer[];
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = '@mysky:daily_reflections';
+const DRAFT_STORAGE_KEY = '@mysky:daily_reflection_drafts';
 const QUESTIONS_PER_CATEGORY = 365;
 
 
@@ -123,7 +130,7 @@ export async function getOrCreateTodayQuestions(
  */
 export async function clearPendingIfAllSealed(): Promise<void> {
   const sealStatus = await getCategorySealStatus();
-  if (sealStatus.values && sealStatus.archetypes && sealStatus.cognitive) {
+  if (sealStatus.values && sealStatus.archetypes && sealStatus.cognitive && sealStatus.intelligence) {
     await clearPendingQuestions();
   }
 }
@@ -217,9 +224,10 @@ export function getTodayQuestions(
 
   // Unique per-category prime offset so each category gets its own shuffled deck
   const categoryOffset: Record<ReflectionCategory, number> = {
-    values:     0,
-    archetypes: 31337,
-    cognitive:  98765,
+    values:       0,
+    archetypes:   31337,
+    cognitive:    98765,
+    intelligence: 142857,
   };
 
   // Seed encodes year + category + user so the deck reshuffles each year
@@ -250,7 +258,7 @@ export function getTodayQuestions(
  * Pass `userSeed` to personalise the rotation per user.
  */
 export function getAllTodayQuestions(date: Date = new Date(), userSeed?: string): DayQuestions[] {
-  const categories: ReflectionCategory[] = ['values', 'archetypes', 'cognitive'];
+  const categories: ReflectionCategory[] = ['values', 'archetypes', 'cognitive', 'intelligence'];
   return categories.map(category => ({
     category,
     questions: getTodayQuestions(category, date, userSeed),
@@ -275,6 +283,75 @@ export async function loadReflections(): Promise<DailyReflectionData> {
 /** Save reflection data to encrypted storage. */
 async function saveReflections(data: DailyReflectionData): Promise<void> {
   await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+async function loadDraftReflectionData(): Promise<DraftReflectionData> {
+  try {
+    const raw = await EncryptedAsyncStorage.getItem(DRAFT_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as DraftReflectionData;
+  } catch {
+    // Graceful fallback
+  }
+  return { answers: [] };
+}
+
+async function saveDraftReflectionData(data: DraftReflectionData): Promise<void> {
+  if (data.answers.length === 0) {
+    await EncryptedAsyncStorage.removeItem(DRAFT_STORAGE_KEY);
+    return;
+  }
+  await EncryptedAsyncStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(data));
+}
+
+function buildReflectionAnswerKey(
+  answer: Pick<ReflectionDraftAnswer, 'category' | 'date' | 'questionId'>,
+): string {
+  return `${answer.date}:${answer.category}:${answer.questionId}`;
+}
+
+export async function loadReflectionDrafts(): Promise<ReflectionDraftAnswer[]> {
+  const data = await loadDraftReflectionData();
+  return data.answers;
+}
+
+export async function getDraftAnswersByCategory(
+  category: ReflectionCategory,
+): Promise<ReflectionDraftAnswer[]> {
+  const drafts = await loadReflectionDrafts();
+  return drafts.filter((answer) => answer.category === category);
+}
+
+export async function upsertDraftAnswer(answer: ReflectionDraftAnswer): Promise<void> {
+  if (!answer.answer.trim()) return;
+
+  const data = await loadDraftReflectionData();
+  const key = buildReflectionAnswerKey(answer);
+  const existingIndex = data.answers.findIndex(
+    (draft) => buildReflectionAnswerKey(draft) === key,
+  );
+
+  if (existingIndex >= 0) {
+    data.answers[existingIndex] = answer;
+  } else {
+    data.answers.push(answer);
+  }
+
+  await saveDraftReflectionData(data);
+}
+
+export async function clearDraftAnswers(
+  category?: ReflectionCategory,
+  date?: string,
+): Promise<void> {
+  const data = await loadDraftReflectionData();
+  const filtered = data.answers.filter((answer) => {
+    const categoryMatches = category === undefined || answer.category === category;
+    const dateMatches = date === undefined || answer.date === date;
+    return !(categoryMatches && dateMatches);
+  });
+
+  if (filtered.length === data.answers.length) return;
+  await saveDraftReflectionData({ answers: filtered });
 }
 
 /**
@@ -315,6 +392,7 @@ export async function sealTodayAnswers(
   data.totalDaysCompleted = new Set(data.answers.map(a => a.date)).size;
 
   await saveReflections(data);
+  await clearDraftAnswers(undefined, newAnswers[0]?.date);
 
   // Enqueue sealed answers for cloud sync (fire-and-forget)
   import('../storage/syncService').then(({ enqueueReflectionBatch }) =>
@@ -361,6 +439,7 @@ export async function getCategorySealStatus(
     values: todayAnswers.some(a => a.category === 'values'),
     archetypes: todayAnswers.some(a => a.category === 'archetypes'),
     cognitive: todayAnswers.some(a => a.category === 'cognitive'),
+    intelligence: todayAnswers.some(a => a.category === 'intelligence'),
   };
 }
 
@@ -405,6 +484,7 @@ export async function sealCategoryAnswers(
   data.totalDaysCompleted = new Set(data.answers.map(a => a.date)).size;
 
   await saveReflections(data);
+  await clearDraftAnswers(category, newAnswers[0]?.date);
 
   // Enqueue sealed category answers for cloud sync (fire-and-forget)
   import('../storage/syncService').then(({ enqueueReflectionBatch }) =>
@@ -492,6 +572,7 @@ export async function getReflectionSummary(): Promise<{
     values: 0,
     archetypes: 0,
     cognitive: 0,
+    intelligence: 0,
   };
 
   for (const answer of data.answers) {

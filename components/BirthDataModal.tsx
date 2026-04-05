@@ -484,14 +484,6 @@ export default function BirthDataModal({
           </View>
         )}
 
-        {showDatePicker && Platform.OS === 'android' && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            onChange={onDateChange}
-            maximumDate={new Date()}
-          />
-        )}
       </View>
     </Modal>
   );

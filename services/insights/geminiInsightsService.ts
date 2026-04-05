@@ -137,6 +137,20 @@ async function setCachedResult(cacheKey: string, result: GeminiPatternResult): P
   } catch { /* ignore */ }
 }
 
+async function hasGeminiPatternSession(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      logger.warn('[GeminiPatterns] Failed to read Supabase session; using local pattern insights fallback.', error);
+      return false;
+    }
+    return Boolean(data.session?.access_token);
+  } catch (error) {
+    logger.warn('[GeminiPatterns] Failed to read Supabase session; using local pattern insights fallback.', error);
+    return false;
+  }
+}
+
 // ─── Build User Prompt ────────────────────────────────────────────────────────
 
 // Resolve relationship pattern tag IDs (t1–t14) to human-readable labels
@@ -306,6 +320,13 @@ export async function enhancePatternInsights(
   const cached = await getCachedResult(cacheKey);
   if (cached) return cached;
 
+  // The edge function requires an authenticated Supabase session.
+  // This enhancement is optional, so signed-out users fall back to the
+  // deterministic local insights without surfacing a runtime error.
+  if (!(await hasGeminiPatternSession())) {
+    return null;
+  }
+
   // ── Rate limit ──
   const now = Date.now();
   if (now - lastCallTimestamp < MIN_CALL_INTERVAL_MS) return null;
@@ -329,6 +350,12 @@ export async function enhancePatternInsights(
       if (error) {
         const status = (error as any)?.context?.status ?? 0;
         const message = (error as any)?.message ?? String(error);
+
+        if (status === 401 || status === 403) {
+          logger.warn('[GeminiPatterns] Edge function unauthorized; using local pattern insights fallback.');
+          return null;
+        }
+
         logger.error('[GeminiPatterns] Edge function error:', status, message);
 
         const retriable = status === 0 || status === 408 || status === 503 || status >= 500;

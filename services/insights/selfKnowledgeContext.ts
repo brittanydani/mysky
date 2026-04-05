@@ -44,6 +44,24 @@ export interface CognitiveScores {
   decisions: number;
 }
 
+export type IntelligenceDimensionId =
+  | 'linguistic' | 'logical' | 'musical' | 'spatial' | 'kinesthetic'
+  | 'interpersonal' | 'intrapersonal' | 'naturalistic' | 'existential';
+
+export interface IntelligenceProfile {
+  /** 1–5 score per dimension */
+  [key: string]: unknown;
+  linguistic?: number;
+  logical?: number;
+  musical?: number;
+  spatial?: number;
+  kinesthetic?: number;
+  interpersonal?: number;
+  intrapersonal?: number;
+  naturalistic?: number;
+  existential?: number;
+}
+
 export interface SomaticEntry {
   id: string;
   date: string; // ISO string from new Date().toISOString()
@@ -117,6 +135,7 @@ export interface SelfKnowledgeContext {
   triggers: TriggerData | null;
   relationshipPatterns: RelationshipPatternEntry[];
   dailyReflections: DailyReflectionSummary | null;
+  intelligenceProfile: IntelligenceProfile | null;
   /** Set by enrichSelfKnowledgeContext() after SQLite data is loaded */
   journalSummary?: JournalSummary | null;
   /** Set by enrichSelfKnowledgeContext() after SQLite data is loaded */
@@ -131,6 +150,7 @@ const STORAGE_KEYS = {
   coreValues:           '@mysky:core_values',
   archetypeProfile:     '@mysky:archetype_profile',
   cognitiveStyle:       '@mysky:cognitive_style',
+  intelligenceProfile:  '@mysky:intelligence_profile',
   somaticEntries:       '@mysky:somatic_entries',
   triggerEvents:        '@mysky:trigger_events',
   relationshipPatterns: '@mysky:relationship_patterns',
@@ -211,6 +231,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     coreValues,
     archetypeProfile,
     cognitiveStyle,
+    intelligenceProfile,
     somaticEntries,
     triggers,
     relationshipPatterns,
@@ -219,6 +240,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     readEncryptedJson<CoreValuesData>(STORAGE_KEYS.coreValues),
     readEncryptedJson<ArchetypeProfile>(STORAGE_KEYS.archetypeProfile),
     readEncryptedJson<CognitiveScores>(STORAGE_KEYS.cognitiveStyle),
+    readEncryptedJson<IntelligenceProfile>(STORAGE_KEYS.intelligenceProfile),
     readEncryptedJson<SomaticEntry[]>(STORAGE_KEYS.somaticEntries),
     loadTriggerData(),
     readEncryptedJson<RelationshipPatternEntry[]>(STORAGE_KEYS.relationshipPatterns),
@@ -229,6 +251,7 @@ export async function loadSelfKnowledgeContext(): Promise<SelfKnowledgeContext> 
     coreValues,
     archetypeProfile,
     cognitiveStyle,
+    intelligenceProfile,
     somaticEntries: somaticEntries ?? [],
     triggers,
     relationshipPatterns: relationshipPatterns ?? [],

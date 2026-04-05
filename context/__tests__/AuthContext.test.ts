@@ -7,19 +7,22 @@
  */
 
 const mockGetSession = jest.fn();
+const mockRefreshSession = jest.fn();
 const mockSignOut = jest.fn();
 const mockOnAuthStateChange = jest.fn();
 const mockStartAutoRefresh = jest.fn();
 const mockStopAutoRefresh = jest.fn();
+const mockAppStateAddEventListener = jest.fn();
 
 jest.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
       getSession: () => mockGetSession(),
+      refreshSession: () => mockRefreshSession(),
       signOut: () => mockSignOut(),
       onAuthStateChange: (cb: Function) => mockOnAuthStateChange(cb),
-      startAutoRefresh: mockStartAutoRefresh,
-      stopAutoRefresh: mockStopAutoRefresh,
+      startAutoRefresh: (...args: unknown[]) => mockStartAutoRefresh(...args),
+      stopAutoRefresh: (...args: unknown[]) => mockStopAutoRefresh(...args),
     },
   },
 }));
@@ -87,7 +90,7 @@ jest.mock('../../store/checkInStore', () => ({
 
 import React from 'react';
 import { render, waitFor, act } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { AppState, Text } from 'react-native';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 
 function AuthConsumer() {
@@ -107,6 +110,15 @@ beforeEach(() => {
   mockOnAuthStateChange.mockReturnValue({
     data: { subscription: { unsubscribe: jest.fn() } },
   });
+  mockAppStateAddEventListener.mockReturnValue({ remove: jest.fn() });
+  mockRefreshSession.mockResolvedValue({ data: { session: null }, error: null });
+  jest.spyOn(AppState, 'addEventListener').mockImplementation((...args: unknown[]) =>
+    mockAppStateAddEventListener(...args)
+  );
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe('Auth Workflow', () => {
@@ -214,6 +226,52 @@ describe('Auth Workflow', () => {
       });
 
       expect(mockRevenueCatLogOut).toHaveBeenCalled();
+    });
+
+    it('rehydrates and refreshes the session when the app becomes active', async () => {
+      const activeSession = {
+        user: { id: 'user-123', email: 'test@test.com' },
+        access_token: 'stale-token',
+        refresh_token: 'refresh-token',
+        expires_at: Math.floor(Date.now() / 1000),
+      };
+      const refreshedSession = {
+        ...activeSession,
+        access_token: 'fresh-token',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+      };
+
+      mockGetSession
+        .mockResolvedValueOnce({ data: { session: null }, error: null })
+        .mockResolvedValueOnce({ data: { session: activeSession }, error: null });
+      mockRefreshSession.mockResolvedValue({ data: { session: refreshedSession }, error: null });
+
+      let appStateHandler: ((status: string) => void) | undefined;
+      mockAppStateAddEventListener.mockImplementation((_event: string, handler: (status: string) => void) => {
+        appStateHandler = handler;
+        return { remove: jest.fn() };
+      });
+
+      const { getByTestId } = render(
+        React.createElement(AuthProvider, null, React.createElement(AuthConsumer)),
+      );
+
+      await waitFor(() => {
+        expect(getByTestId('loading').children[0]).toBe('false');
+      });
+
+      await act(async () => {
+        appStateHandler?.('active');
+      });
+
+      await waitFor(() => {
+        expect(getByTestId('session').children[0]).toBe('active');
+        expect(getByTestId('user-id').children[0]).toBe('user-123');
+      });
+
+      expect(mockStartAutoRefresh).toHaveBeenCalled();
+      expect(mockRefreshSession).toHaveBeenCalled();
+      expect(mockSeedIfNeeded).toHaveBeenCalledWith('test@test.com');
     });
   });
 

@@ -11,11 +11,11 @@ import { MetallicText } from '../../components/ui/MetallicText';
 import { SkiaGradient } from '../../components/ui/SkiaGradient';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 
-const VISIBLE_TABS = new Set(['home', 'growth', 'journal', 'blueprint', 'settings']);
+const VISIBLE_TABS = new Set(['home', 'patterns', 'journal', 'identity', 'settings']);
 
 const LUCIDE_MAP: Record<string, React.ComponentType<any>> = {
-  home: Home, growth: TrendingUp, journal: BookOpen,
-  blueprint: User, settings: LayoutGrid,
+  home: Home, patterns: TrendingUp, journal: BookOpen,
+  identity: User, settings: LayoutGrid,
 };
 
 // ── OPTICAL NUDGES ──
@@ -23,9 +23,9 @@ const LUCIDE_MAP: Record<string, React.ComponentType<any>> = {
 // tabTranslateY: Nudges the ENTIRE tab (Icon + Text + Dot) up or down
 const OPTICAL_ADJUSTMENTS: Record<string, { translateY?: number; translateX?: number; scale?: number; tabTranslateY?: number }> = {
   home:      { translateY: 0,  scale: 1,    tabTranslateY: 0 },
-  growth:    { translateY: 1,  scale: 1.05, tabTranslateY: 0 }, 
+  patterns:  { translateY: 1,  scale: 1.05, tabTranslateY: 0 }, 
   journal:   { translateY: 0,  scale: 1,    tabTranslateY: 0 },
-  blueprint: { translateY: -1, scale: 1.1,  tabTranslateY: 0 },  
+  identity:  { translateY: -1, scale: 1.1,  tabTranslateY: 0 },  
   settings:  { translateY: 0,  scale: 0.95, tabTranslateY: -1 }, // <-- Sub-pixel nudge for perfect optical alignment
 };
 
@@ -131,15 +131,15 @@ export default function TabLayout() {
   return (
     <Tabs tabBar={renderTabBar} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="home"      options={{ title: 'Today' }} />
-      <Tabs.Screen name="growth"    options={{ title: 'Patterns' }} />
-      <Tabs.Screen name="journal"   options={{ title: 'Archive' }} />
-      <Tabs.Screen name="blueprint" options={{ title: 'Identity' }} />
+      <Tabs.Screen name="patterns"          options={{ title: 'Patterns' }} />
+      <Tabs.Screen name="journal"            options={{ title: 'Archive' }} />
+      <Tabs.Screen name="identity"           options={{ title: 'Identity' }} />
       <Tabs.Screen name="settings"  options={{ title: 'Settings' }} />
 
       <Tabs.Screen name="chart"         options={{ href: null }} />
       <Tabs.Screen name="checkin"       options={{ href: null }} />
       <Tabs.Screen name="index"         options={{ href: null }} />
-      <Tabs.Screen name="mood"          options={{ href: null }} />
+      <Tabs.Screen name="internal-weather" options={{ href: null }} />
       <Tabs.Screen name="sleep"         options={{ href: null }} />
       <Tabs.Screen name="relationships" options={{ href: null }} />
       <Tabs.Screen name="healing"       options={{ href: null }} />

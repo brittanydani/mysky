@@ -149,15 +149,14 @@ const MAX_ASPECTS = 100;
 const MAX_CROSS_ASPECTS = 100;
 
 // ── System font families ──
-const SERIF_FAMILY = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' })!;
-const SANS_FAMILY = Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'sans-serif' })!;
+const SERIF_FAMILY = Platform.select({ ios: 'Georgia', default: 'serif' })!;
+const SANS_FAMILY = Platform.select({ ios: 'Helvetica Neue', default: 'sans-serif' })!;
 
 // Zodiac glyphs — use serif/sans (NOT Apple Color Emoji) so glyphs render as
 // monochrome text and respect the Skia color prop. Append \uFE0E to each symbol
 // as the text-presentation variation selector to prevent emoji substitution.
 const ZODIAC_FAMILY = Platform.select({
   ios: 'Apple Symbols',
-  android: 'Noto Sans Symbols2',
   default: 'sans-serif',
 })!;
 
@@ -518,7 +517,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
   const showPerson2 = !filterMode || filterMode.person2;
   const showCross = !filterMode || filterMode.cross;
 
-  // Use system fonts for astrological glyphs (Apple Symbols on iOS, Noto Sans Symbols2 on Android)
+  // Use system fonts for astrological glyphs so they render as text, not emoji.
   const symbolFont = null; // Removed to rely purely on matchFont fallbacks which are safer than bundled ttf
 
   // Fonts — system fonts via matchFont (no TTF files required)

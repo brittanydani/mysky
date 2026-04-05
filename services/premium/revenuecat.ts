@@ -29,6 +29,7 @@ async function getPurchases(): Promise<typeof PurchasesType> {
 class RevenueCatService {
   private initPromise: Promise<void> | null = null;
   private initialized = false;
+  private currentAppUserId: string | null = null;
   private readonly premiumEntitlementAliases = ['premium', 'pro', 'plus', 'deeper_sky'];
 
   async initialize(): Promise<void> {
@@ -36,10 +37,7 @@ class RevenueCatService {
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = (async () => {
-      const apiKey = Platform.select({
-        ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
-        android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
-      });
+      const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 
       // Sanity check logging
       logger.info('[RevenueCat] Platform:', Platform.OS);
@@ -51,7 +49,13 @@ class RevenueCatService {
 
       try {
         const Purchases = await getPurchases();
-        await Purchases.configure({ apiKey });
+        const alreadyConfigured = await Purchases.isConfigured().catch(() => false);
+
+        if (!alreadyConfigured) {
+          await Purchases.configure({ apiKey });
+        }
+
+        this.currentAppUserId = await Purchases.getAppUserID().catch(() => null);
         // NOTE: Purchases.setLogLevel() is a void TurboModule method. On iOS 26
         // (RN New Architecture) it throws an NSException that crashes inside
         // convertNSExceptionToJSError before we can catch it in JS. Removed
@@ -173,7 +177,12 @@ class RevenueCatService {
     }
     try {
       const Purchases = await getPurchases();
+      const currentAppUserId = this.currentAppUserId ?? await Purchases.getAppUserID().catch(() => null);
+      if (currentAppUserId === userId) {
+        return;
+      }
       await Purchases.logIn(userId);
+      this.currentAppUserId = userId;
       logger.info('[RevenueCat] User logged in successfully');
     } catch (error) {
       logger.error('[RevenueCat] logIn failed:', error);
@@ -185,6 +194,7 @@ class RevenueCatService {
     try {
       const Purchases = await getPurchases();
       await Purchases.logOut();
+      this.currentAppUserId = await Purchases.getAppUserID().catch(() => null);
       logger.info('[RevenueCat] Logged out');
     } catch (error) {
       logger.error('[RevenueCat] logOut failed:', error);

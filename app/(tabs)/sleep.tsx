@@ -8,12 +8,12 @@ import {
   Alert,
   Dimensions,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +35,7 @@ import { SleepEntry, generateId } from '../../services/storage/models';
 import { logger } from '../../utils/logger';
 import { toLocalDateString } from '../../utils/dateUtils';
 import { usePremium } from '../../context/PremiumContext';
+import { useAuth } from '../../context/AuthContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
@@ -68,6 +69,7 @@ import PremiumPill from '../../components/ui/PremiumPill';
 // GoldSubtitle reserved for future premium labels
 
 const SCREEN_W = Dimensions.get('window').width;
+const DREAM_TEXT_MAX_LENGTH = 10000;
 
 // ── Cinematic Palette (Obsidian & Gold) ──
 const PALETTE = {
@@ -264,8 +266,11 @@ function formatDuration(hours: number): string {
 // ── Component ──
 export default function SleepScreen() {
   const { isPremium } = usePremium();
+  const { session } = useAuth();
   const router = useRouter();
   useSyncDreamData();
+
+  const canUseGemini = isGeminiAvailable(Boolean(session?.access_token));
 
   const scrollRef = useRef<ScrollView>(null);
   const [chartId, setChartId] = useState<string | null>(null);
@@ -421,8 +426,8 @@ export default function SleepScreen() {
 
   const canSave = quality > 0 || hasDuration || dreamText.trim().length > 0;
 
-  const handleSave = async () => {
-    if (!chartId || !canSave || saving) return;
+  const handleSave = async (): Promise<boolean> => {
+    if (!chartId || !canSave || saving) return false;
     try {
       setSaving(true);
       setSaveError(null);
@@ -454,7 +459,7 @@ export default function SleepScreen() {
           setInterpretations(prev => ({ ...prev, [savedEntry.id]: result }));
           setExpandedEntryId(savedEntry.id);
           // Auto-trigger Gemini AI interpretation for premium users
-          if (isGeminiAvailable()) {
+          if (canUseGemini) {
             setAiLoading(savedEntry.id);
             generateGeminiDreamInterpretation({
               dreamText: savedEntry.dreamText,
@@ -470,8 +475,13 @@ export default function SleepScreen() {
             }).then(aiRes => {
               setAiInterpretations(prev => ({ ...prev, [savedEntry.id]: aiRes }));
             }).catch(e => {
-              logger.error('[Sleep] Auto AI interpretation failed:', e);
-              setAiError(e.message ?? 'AI interpretation failed');
+              const msg: string = e?.message ?? '';
+              if (msg.toLowerCase().includes('sign in')) {
+                logger.warn('[Sleep] Gemini unavailable — session expired or not signed in.');
+              } else {
+                logger.error('[Sleep] Auto AI interpretation failed:', e);
+                setAiError(msg || 'AI interpretation failed');
+              }
             }).finally(() => setAiLoading(null));
           }
         } catch (e) { logger.error('Auto dream interpretation failed:', e); }
@@ -479,14 +489,16 @@ export default function SleepScreen() {
         if (expandedEntryId === savedId) setExpandedEntryId(null);
       }
       applyEntryToForm(savedEntry);
-      if (savedEntry) setIsEditingUnlocked(true);
+      if (savedEntry) setIsEditingUnlocked(false);
       setSaving(false);
+      return true;
     } catch (e) {
       logger.error('Sleep save failed:', e);
       const msg = 'Could not save entry. Please try again.';
       setSaveError(msg);
       Alert.alert('Save Error', msg);
       setSaving(false);
+      return false;
     }
   };
 
@@ -506,7 +518,7 @@ export default function SleepScreen() {
       const result = generateDreamInterpretation({ entry, dreamText: entry.dreamText, feelings, metadata, aggregates, patterns });
       setInterpretations(prev => ({ ...prev, [entry.id]: result }));
       // Auto-trigger Gemini AI interpretation for premium users
-      if (isPremium && isGeminiAvailable()) {
+      if (isPremium && canUseGemini) {
         setAiLoading(entry.id);
         generateGeminiDreamInterpretation({
           dreamText: entry.dreamText,
@@ -522,14 +534,19 @@ export default function SleepScreen() {
         }).then(aiRes => {
           setAiInterpretations(prev => ({ ...prev, [entry.id]: aiRes }));
         }).catch(e => {
-          logger.error('[Sleep] Auto AI interpretation failed:', e);
+          const msg: string = e?.message ?? '';
+          if (msg.toLowerCase().includes('sign in')) {
+            logger.warn('[Sleep] Gemini unavailable — session expired or not signed in.');
+          } else {
+            logger.error('[Sleep] Auto AI interpretation failed:', e);
+          }
         }).finally(() => setAiLoading(null));
       }
     } catch (e) {
       logger.error('Dream interpretation failed:', e);
       setExpandedEntryId(null);
     }
-  }, [expandedEntryId, natalChart, entries, isPremium]);
+  }, [expandedEntryId, natalChart, entries, isPremium, canUseGemini]);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- handler pending UI wiring
   const handleDelete = (id: string) => {
@@ -599,7 +616,7 @@ export default function SleepScreen() {
         >
           {/* ── Header ── */}
           <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-            <Text style={styles.title}>Rest Log</Text>
+            <Text style={styles.title}>Nightly Log</Text>
             <GoldSubtitle style={styles.subtitle}>
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -704,6 +721,7 @@ export default function SleepScreen() {
                       onChangeText={setDreamText}
                       placeholder="Fragments, feelings, or full narratives..."
                       placeholderTextColor={PALETTE.textMuted}
+                      maxLength={DREAM_TEXT_MAX_LENGTH}
                       multiline
                       textAlignVertical="top"
                       selectionColor={PALETTE.gold}

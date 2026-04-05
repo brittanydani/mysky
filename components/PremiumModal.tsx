@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Modal, View, StyleSheet, Platform } from 'react-native';
+import { Modal, View, StyleSheet } from 'react-native';
 import PremiumScreen from './PremiumScreen';
 
 interface PremiumModalProps {
@@ -19,9 +19,7 @@ export default function PremiumModal({ visible, onClose }: PremiumModalProps) {
     <Modal
       visible={visible}
       animationType="slide"
-      // pageSheet on iOS gives that nice "layered" depth look
-      presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
-      statusBarTranslucent={Platform.OS === 'android'}
+      presentationStyle="pageSheet"
       onRequestClose={onClose}
       transparent={false}
     >

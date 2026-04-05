@@ -184,7 +184,6 @@ const SIGN_SYMBOL: Record<string, string> = {
 // ── Zodiac font family (matches chart screen exactly) ─────────────────────────
 const ZODIAC_FAMILY = Platform.select({
   ios: 'Apple Symbols',
-  android: 'Noto Sans Symbols2',
   default: 'sans-serif',
 });
 
@@ -352,7 +351,7 @@ export default function CosmicContext() {
 
   const handleBack = () => {
     Haptics.selectionAsync();
-    router.replace('/(tabs)/blueprint');
+    router.replace('/(tabs)/identity');
   };
 
   return (
@@ -568,7 +567,7 @@ export default function CosmicContext() {
             </View>
             <Text style={styles.promptText}>{getDailyPrompt()}</Text>
             <View style={styles.actionRow}>
-              <ActionPill label="Log Mood" icon="happy-outline" color="#C9AE78" onPress={() => router.push('/(tabs)/mood')} />
+              <ActionPill label="Log Mood" icon="happy-outline" color="#C9AE78" onPress={() => router.push('/(tabs)/internal-weather')} />
               <ActionPill label="Journal" icon="create-outline" color="#D4B872" onPress={() => router.push('/(tabs)/journal')} />
             </View>
           </LinearGradient>

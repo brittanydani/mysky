@@ -19,6 +19,7 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
+import { syncArchetypeProfileFromReflections } from '../services/insights/reflectionProfileSync';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
@@ -157,6 +158,8 @@ const PROMPTS: Prompt[] = [
 interface SavedProfile {
   dominant: ArchetypeKey;
   scores: Record<ArchetypeKey, number>;
+  quizScores?: Partial<Record<ArchetypeKey, number>>;
+  reflectionScores?: Partial<Record<ArchetypeKey, number>>;
   completedAt: string;
 }
 
@@ -168,15 +171,18 @@ export default function ArchetypesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-        if (raw) {
-          try {
-            const profile: SavedProfile = JSON.parse(raw);
-            setSavedProfile(profile);
-            setShowResult(true);
-          } catch {}
-        }
-      });
+      syncArchetypeProfileFromReflections({ includeDrafts: true })
+        .catch(() => {})
+        .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
+        .then((raw) => {
+          if (raw) {
+            try {
+              const profile: SavedProfile = JSON.parse(raw);
+              setSavedProfile(profile);
+              setShowResult(true);
+            } catch {}
+          }
+        });
     }, []),
   );
 
@@ -195,7 +201,12 @@ export default function ArchetypesScreen() {
     const dominant = (Object.keys(scores) as ArchetypeKey[]).reduce(
       (a, b) => (scores[a] >= scores[b] ? a : b),
     );
-    const profile: SavedProfile = { dominant, scores, completedAt: new Date().toISOString() };
+    const profile: SavedProfile = {
+      dominant,
+      scores,
+      quizScores: scores,
+      completedAt: new Date().toISOString(),
+    };
     try {
       await EncryptedAsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     } catch {
@@ -214,6 +225,15 @@ export default function ArchetypesScreen() {
     EncryptedAsyncStorage.removeItem(STORAGE_KEY);
   };
 
+  const handleClose = () => {
+    Haptics.selectionAsync().catch(() => {});
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/inner-world');
+  };
+
   const dominant = savedProfile ? ARCHETYPES[savedProfile.dominant] : null;
 
   return (
@@ -228,7 +248,7 @@ export default function ArchetypesScreen() {
         <View style={styles.header}>
           <Pressable
             style={styles.closeButton}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            onPress={handleClose}
           >
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>
@@ -244,6 +264,10 @@ export default function ArchetypesScreen() {
           {/* Result view */}
           {showResult && dominant && savedProfile ? (
             <Animated.View entering={FadeIn.duration(600)}>
+              {(() => {
+                const scoreCeiling = Math.max(...Object.values(savedProfile.scores), 1);
+                return (
+                  <>
               <View style={[styles.resultCard, { borderColor: `${dominant.color}40` }]}>
                 <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
                 <MetallicText style={styles.resultName} color={dominant.color}>{dominant.name}</MetallicText>
@@ -276,7 +300,7 @@ export default function ArchetypesScreen() {
                           <View
                             style={[
                               styles.scoreBarFill,
-                              { width: `${(score / PROMPTS.length) * 100}%`, backgroundColor: a.color },
+                              { width: `${(score / scoreCeiling) * 100}%`, backgroundColor: a.color },
                             ]}
                           />
                         </View>
@@ -316,6 +340,9 @@ export default function ArchetypesScreen() {
               <Pressable style={styles.retakeBtn} onPress={retake}>
                 <Text style={styles.retakeBtnText}>Retake Reflection</Text>
               </Pressable>
+                  </>
+                );
+              })()}
             </Animated.View>
           ) : (
             /* Quiz view */

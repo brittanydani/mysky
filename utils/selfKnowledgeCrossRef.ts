@@ -28,6 +28,8 @@ import {
   DailyReflectionSummary,
   JournalSummary,
   DreamSummary,
+  IntelligenceProfile,
+  IntelligenceDimensionId,
 } from '../services/insights/selfKnowledgeContext';
 import { DailyCheckIn } from '../services/patterns/types';
 
@@ -427,6 +429,68 @@ const COGNITIVE_NOTES: Record<string, string> = {
     'Your cognitive style flexes with context. Periodically checking whether you\'re acting from intuition or analysis in a given moment keeps decisions intentional.',
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 7b. Intelligence Profile Observation
+// ─────────────────────────────────────────────────────────────────────────────
+
+const INTELLIGENCE_DIMENSION_LABELS: Record<IntelligenceDimensionId, string> = {
+  linguistic: 'Linguistic',
+  logical: 'Logical-Mathematical',
+  musical: 'Musical',
+  spatial: 'Spatial',
+  kinesthetic: 'Bodily-Kinesthetic',
+  interpersonal: 'Interpersonal',
+  intrapersonal: 'Intrapersonal',
+  naturalistic: 'Naturalistic',
+  existential: 'Existential',
+};
+
+const INTELLIGENCE_NOTES: Record<IntelligenceDimensionId, string> = {
+  linguistic: 'You process the world through language — writing, reading, and conversation are how you make sense of complexity. Your insights often arrive as words.',
+  logical: 'Patterns, systems, and logic are your native language. You naturally deconstruct problems into solvable parts and spot inconsistencies others miss.',
+  musical: 'Rhythm, tone, and sound carry meaning for you. Music isn\'t just background — it\'s a processing tool that shapes your emotional landscape.',
+  spatial: 'You think in images and dimensions. Mental maps, visualizations, and spatial relationships come naturally, giving you an intuitive sense of design and navigation.',
+  kinesthetic: 'Your body is a primary thinking tool. Movement, touch, and physical engagement help you learn, remember, and regulate far more than sitting still.',
+  interpersonal: 'You read people fluently — motivations, emotions, and group dynamics are legible to you. Your intelligence shines brightest in connection with others.',
+  intrapersonal: 'You have unusual access to your own inner world. Self-awareness, reflection, and understanding your own patterns are where your intelligence runs deepest.',
+  naturalistic: 'You notice patterns in the living world — seasons, ecosystems, animal behavior, and natural systems speak to you in ways that feel intuitive.',
+  existential: 'You\'re drawn to the biggest questions — meaning, purpose, mortality, and the nature of existence. Your thinking naturally gravitates toward depth.',
+};
+
+function buildIntelligenceInsight(profile: IntelligenceProfile): CrossRefInsight | null {
+  const dims: IntelligenceDimensionId[] = [
+    'linguistic', 'logical', 'musical', 'spatial', 'kinesthetic',
+    'interpersonal', 'intrapersonal', 'naturalistic', 'existential',
+  ];
+
+  const scored = dims
+    .filter(d => typeof profile[d] === 'number' && (profile[d] as number) > 0)
+    .map(d => ({ id: d, score: profile[d] as number }));
+
+  if (scored.length < 2) return null;
+
+  scored.sort((a, b) => b.score - a.score);
+  const top = scored[0];
+  const second = scored[1];
+
+  const topLabel = INTELLIGENCE_DIMENSION_LABELS[top.id];
+  const secondLabel = INTELLIGENCE_DIMENSION_LABELS[second.id];
+  const note = INTELLIGENCE_NOTES[top.id];
+
+  const body = top.score === second.score
+    ? `Your ${topLabel} and ${secondLabel} intelligences are equally strong. ${note}`
+    : `${topLabel} intelligence leads your profile, with ${secondLabel} close behind. ${note}`;
+
+  return {
+    id: 'intelligence-profile',
+    title: 'Your Intelligence Profile',
+    body,
+    accentColor: 'lavender',
+    source: 'cognitive',
+    isConfirmed: false,
+  };
+}
+
 function buildCognitiveInsight(scores: NonNullable<SelfKnowledgeContext['cognitiveStyle']>): CrossRefInsight {
   const scope = scores.scope <= 2 ? 'big-picture' : scores.scope >= 4 ? 'detail-oriented' : 'balanced';
   const dec  = scores.decisions <= 2 ? 'quick-intuitive' : scores.decisions >= 4 ? 'careful-deliberate' : 'adaptive';
@@ -752,6 +816,12 @@ export function computeSelfKnowledgeCrossRef(
   // Cognitive style (always profile-based)
   if (context.cognitiveStyle) {
     all.push(buildCognitiveInsight(context.cognitiveStyle));
+  }
+
+  // Intelligence profile (always profile-based)
+  if (context.intelligenceProfile) {
+    const intel = buildIntelligenceInsight(context.intelligenceProfile);
+    if (intel) all.push(intel);
   }
 
   // Daily reflection depth (data-backed when mood correlation exists)

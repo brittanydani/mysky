@@ -22,8 +22,6 @@ export interface PendingWidgetCheckIn {
  * Push fresh energy data into the shared App Group UserDefaults so the
  * WidgetKit extension can read it on its next timeline refresh.
  * Also calls WidgetCenter.reloadAllTimelines() so changes appear immediately.
- *
- * No-op on Android.
  */
 export function updateWidgetData(data: WidgetData): void {
   if (Platform.OS !== 'ios') return;
@@ -32,11 +30,9 @@ export function updateWidgetData(data: WidgetData): void {
 
 /**
  * Atomically reads and clears all pending check-ins queued by QuickCheckInIntent.
- * The callback receives an empty array when there are no pending check-ins or on
- * Android. The caller is responsible for building the full DailyCheckIn record
+ * The callback receives an empty array when there are no pending check-ins.
+ * The caller is responsible for building the full DailyCheckIn record
  * (with natal-chart data) and persisting it via CheckInService.
- *
- * No-op on Android (calls callback with []).
  */
 export function consumePendingCheckIns(
   callback: (records: PendingWidgetCheckIn[]) => void,

@@ -1,15 +1,13 @@
 // File: utils/NotificationEngine.ts
 
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CHECK_IN_ID_KEY = 'notif_checkin_reminder_id';
 
 export class NotificationEngine {
   /**
-   * Requests OS-level notification permission. Required on iOS.
-   * Also creates the Android notification channel on first call.
-   * Configures foreground notification presentation on first invocation.
+  * Requests OS-level notification permission and configures foreground
+  * notification presentation on first invocation.
    */
   static async requestPermissions(): Promise<boolean> {
     try {
@@ -34,16 +32,6 @@ export class NotificationEngine {
 
       if (finalStatus !== 'granted') {
         return false;
-      }
-
-      // Android 8+ requires a named channel for local notifications
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('deeper-sky-rhythm', {
-          name: 'Daily Rhythm',
-          importance: Notifications.AndroidImportance.DEFAULT,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#D9BF8C',
-        });
       }
 
       return true;
@@ -74,7 +62,7 @@ export class NotificationEngine {
         content: {
           title: 'Subconscious Recall ✧',
           body: 'What was revealed in the dark? Log your rest and dream patterns.',
-          data: { route: '/(tabs)/growth' },
+          data: { route: '/(tabs)/patterns' },
           color: '#6E8CB4',
         },
         trigger: {

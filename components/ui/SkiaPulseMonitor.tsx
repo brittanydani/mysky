@@ -71,7 +71,7 @@ export default function SkiaPulseMonitor({
   onSyncComplete,
   isSaving = false,
 }: {
-  onSyncComplete: () => void;
+  onSyncComplete: () => boolean | void | Promise<boolean | void>;
   isSaving?: boolean;
 }) {
   const [complete, setComplete] = useState(false);
@@ -129,9 +129,19 @@ export default function SkiaPulseMonitor({
   const handleComplete = useCallback(() => {
     stopHaptics();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
-    setComplete(true);
-    onSyncComplete();
-  }, [stopHaptics, onSyncComplete]);
+    const result = onSyncComplete();
+    const revert = () => {
+      setComplete(false);
+      progress.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+    };
+    if (result instanceof Promise) {
+      result.then((ok) => { if (ok === false) revert(); else setComplete(true); }).catch(revert);
+    } else if (result === false) {
+      revert();
+    } else {
+      setComplete(true);
+    }
+  }, [stopHaptics, onSyncComplete, progress]);
 
   // ── Gesture ───────────────────────────────────────────────────────────────
   const tapGesture = Gesture.LongPress()

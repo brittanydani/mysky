@@ -15,7 +15,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Platform,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated, {
@@ -141,11 +140,7 @@ export default function AwakenStateSheet({
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.sheet, sheetStyle]}>
             {/* Frosted glass background */}
-            {Platform.OS === 'ios' ? (
-              <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill} />
-            ) : (
-              <View style={[StyleSheet.absoluteFill, styles.androidFrost]} />
-            )}
+            <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill} />
 
             {/* Handle bar */}
             <View style={styles.handle} />
@@ -213,9 +208,6 @@ const styles = StyleSheet.create({
     borderLeftColor:  'rgba(255,255,255,0.07)',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255,255,255,0.07)',
-  },
-  androidFrost: {
-    backgroundColor: 'rgba(8,16,40,0.94)',
   },
   handle: {
     width:           44,

@@ -285,7 +285,7 @@ export interface ReflectionThemeItem {
   theme: string;
   strength: number;     // 0..1 — average endorsement (0=low, 1=high)
   endorsements: number; // how many strongly-endorsed statements contributed
-  category: 'values' | 'archetypes' | 'cognitive';
+  category: 'values' | 'archetypes' | 'cognitive' | 'intelligence';
 }
 
 export interface ReflectionThemesCard {
@@ -1228,7 +1228,7 @@ function buildReflectionThemes(answers: ReflectionAnswer[]): ReflectionThemesCar
     totalScore: number;
     count: number;
     strongCount: number; // scaleValue >= 2
-    category: 'values' | 'archetypes' | 'cognitive';
+    category: 'values' | 'archetypes' | 'cognitive' | 'intelligence';
   }> = {};
 
   for (const answer of recent) {

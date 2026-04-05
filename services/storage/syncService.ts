@@ -66,6 +66,11 @@ interface BirthProfileFunctionResponse {
   profile: BirthProfileSync | null;
 }
 
+interface NamedError {
+  name?: string;
+  message?: string;
+}
+
 export type SyncTable =
   | 'birth_profiles'
   | 'journal_entries'
@@ -90,6 +95,7 @@ export interface SyncQueueItem {
 
 let isFlushing = false;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
+let didWarnBirthProfileSyncUnavailable = false;
 
 // ─── Internal: session guard ─────────────────────────────────────────────────
 
@@ -102,11 +108,32 @@ async function invokeBirthProfileSync(
   action: 'getLatest' | 'upsert' | 'delete',
   payload: Record<string, unknown> = {},
 ): Promise<BirthProfileFunctionResponse> {
+  const isFunctionHttpError = (error: unknown): boolean => {
+    const candidate = error as NamedError | null;
+    return candidate?.name === 'FunctionsHttpError'
+      || candidate?.message?.includes('non-2xx status code') === true;
+  };
+
+  const warnBirthProfileSyncUnavailable = (error: unknown) => {
+    if (didWarnBirthProfileSyncUnavailable) return;
+    didWarnBirthProfileSyncUnavailable = true;
+    logger.warn(
+      '[SyncService] Birth profile Edge Function is unavailable or misconfigured; skipping remote birth profile reads for this session.',
+      error,
+    );
+  };
+
   const { data, error } = await supabase.functions.invoke('birth-profile-sync', {
     body: { action, ...payload },
   });
 
-  if (error) throw error;
+  if (error) {
+    if (action === 'getLatest' && isFunctionHttpError(error)) {
+      warnBirthProfileSyncUnavailable(error);
+      return { profile: null };
+    }
+    throw error;
+  }
   return (data ?? { profile: null }) as BirthProfileFunctionResponse;
 }
 
@@ -139,6 +166,7 @@ function scheduleFlush(delayMs = 2000) {
     flushTimer = null;
     flushQueue().catch((e) => logger.error('[SyncService] Flush error:', e));
   }, delayMs);
+  (flushTimer as unknown as { unref?: () => void }).unref?.();
 }
 
 // ─── Flush: push pending items to Supabase ───────────────────────────────────

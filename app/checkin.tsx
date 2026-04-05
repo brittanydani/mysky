@@ -78,7 +78,7 @@ export default function CheckInHub() {
           <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
             <SectionHeader label="DAILY RESONANCE" icon="sparkles-outline" />
             <Pressable
-              onPress={() => nav('/(tabs)/mood' as Href)}
+              onPress={() => nav('/(tabs)/internal-weather' as Href)}
               style={({ pressed }) => [pressed && styles.pressableActive]}
             >
               <LinearGradient

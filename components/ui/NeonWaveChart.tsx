@@ -11,7 +11,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { toLocalDateString } from '../../utils/dateUtils';
-import { StyleSheet, Text, View, Pressable, Platform } from 'react-native';
+import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import {
   Canvas,
@@ -304,7 +304,7 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
           pointerEvents="none"
         >
           <BlurView
-            intensity={Platform.OS === 'android' ? 20 : 50}
+            intensity={50}
             tint="dark"
             style={StyleSheet.absoluteFill}
           />

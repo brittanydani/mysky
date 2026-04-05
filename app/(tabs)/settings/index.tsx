@@ -94,7 +94,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'Can I cancel my subscription?',
     answer:
-      'Yes. Monthly and yearly subscriptions are managed through your device’s app store. On iOS, go to Settings > Apple ID > Subscriptions. On Android, go to Google Play > Subscriptions. You keep access through the end of your billing period. Lifetime purchases do not renew and do not have a cancellation setting (refunds follow the app store’s policy).',
+      'Yes. Monthly and yearly subscriptions are managed through your device’s App Store account. Go to Settings > Apple ID > Subscriptions. You keep access through the end of your billing period. Lifetime purchases do not renew and do not have a cancellation setting (refunds follow the App Store policy).',
   },
   {
     question: 'How do I change my birth data?',
@@ -1031,18 +1031,10 @@ export default function SettingsScreen() {
                 onPress={async () => {
                   try { Haptics.selectionAsync().catch(() => {}); } catch {}
                   try {
-                    const url = Platform.select({
-                      ios: 'https://apps.apple.com/account/subscriptions',
-                      android: 'https://play.google.com/store/account/subscriptions',
-                      default: 'https://apps.apple.com/account/subscriptions',
-                    });
+                    const url = 'https://apps.apple.com/account/subscriptions';
                     await Linking.openURL(url);
                   } catch {
-                    const instructions = Platform.select({
-                      ios: 'Go to Settings → Apple ID → Subscriptions to manage your plan.',
-                      android: 'Go to Google Play → Payments & subscriptions → Subscriptions to manage your plan.',
-                      default: 'Go to your device\'s app store settings to manage your subscription.',
-                    });
+                    const instructions = 'Go to Settings → Apple ID → Subscriptions to manage your plan.';
                     Alert.alert('Unable to Open', instructions);
                   }
                 }}

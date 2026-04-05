@@ -75,31 +75,6 @@
         ]
       }
     },
-    "android": {
-      "package": "com.brittany.mysky",
-      "versionCode": 1,
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#020817"
-      },
-      "edgeToEdgeEnabled": true,
-      "permissions": [],
-      "blockedPermissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "READ_CONTACTS",
-        "WRITE_CONTACTS",
-        "READ_CALENDAR",
-        "WRITE_CALENDAR",
-        "READ_SMS",
-        "SEND_SMS",
-        "READ_PHONE_STATE",
-        "CALL_PHONE",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
-      ]
-    },
     "web": {
       "bundler": "metro",
       "output": "static",

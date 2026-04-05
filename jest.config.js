@@ -17,10 +17,10 @@ module.exports = {
     // @noble/ciphers uses ESM — redirect to the CJS-compatible build
     '^@noble/ciphers/aes\\.js$': '<rootDir>/__mocks__/noble-ciphers-aes.js',
     // @noble/hashes uses ESM — redirect to CJS-compatible mocks
-    '^@noble/hashes/hmac$': '<rootDir>/__mocks__/noble-hashes-hmac.js',
-    '^@noble/hashes/sha2$': '<rootDir>/__mocks__/noble-hashes-sha2.js',
-    '^@noble/hashes/utils$': '<rootDir>/__mocks__/noble-hashes-utils.js',
-    '^@noble/hashes/pbkdf2$': '<rootDir>/__mocks__/noble-hashes-pbkdf2.js',
+    '^@noble/hashes/hmac(\\.js)?$': '<rootDir>/__mocks__/noble-hashes-hmac.js',
+    '^@noble/hashes/sha2(\\.js)?$': '<rootDir>/__mocks__/noble-hashes-sha2.js',
+    '^@noble/hashes/utils(\\.js)?$': '<rootDir>/__mocks__/noble-hashes-utils.js',
+    '^@noble/hashes/pbkdf2(\\.js)?$': '<rootDir>/__mocks__/noble-hashes-pbkdf2.js',
     '^@/(.*)$': '<rootDir>/$1',
   },
   collectCoverageFrom: [

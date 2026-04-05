@@ -25,8 +25,12 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
-import { loadReflections } from '../services/insights/dailyReflectionService';
-import { VALUES_THEME_MAP, AGREEMENT_THRESHOLD } from '../services/insights/reflectionProfileSync';
+import { loadReflections, loadReflectionDrafts } from '../services/insights/dailyReflectionService';
+import {
+  VALUES_THEME_MAP,
+  AGREEMENT_THRESHOLD,
+  syncCoreValuesFromReflections,
+} from '../services/insights/reflectionProfileSync';
 
 const STORAGE_KEY = '@mysky:core_values';
 const MAX_TOP = 5;
@@ -81,20 +85,24 @@ export default function CoreValuesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      EncryptedAsyncStorage.getItem(STORAGE_KEY).then((raw) => {
-        if (raw) {
-          try {
-            const parsed = JSON.parse(raw);
-            setState(parsed);
-          } catch {}
-        }
-      });
+      syncCoreValuesFromReflections({ includeDrafts: true })
+        .catch(() => {})
+        .then(() => EncryptedAsyncStorage.getItem(STORAGE_KEY))
+        .then((raw) => {
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              setState(parsed);
+            } catch {}
+          }
+        });
 
       // Detect hidden paradoxes from reflection data
-      loadReflections().then(reflData => {
+      Promise.all([loadReflections(), loadReflectionDrafts()]).then(([reflData, draftAnswers]) => {
+        const combinedAnswers = [...reflData.answers, ...draftAnswers];
         const indicatedValues = new Set<string>();
         for (const theme of VALUES_THEME_MAP) {
-          const themeAnswers = reflData.answers.filter(
+          const themeAnswers = combinedAnswers.filter(
             a => a.category === 'values' && a.questionId >= theme.range[0] && a.questionId <= theme.range[1],
           );
           if (themeAnswers.length === 0) continue;
@@ -159,6 +167,15 @@ export default function CoreValuesScreen() {
     }
   };
 
+  const handleClose = () => {
+    Haptics.selectionAsync().catch(() => {});
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/inner-world');
+  };
+
   // Find active paradoxes based on Top 5 values
   const activeParadoxes = useMemo(() => {
     return VALUE_PARADOXES.filter(p => 
@@ -175,7 +192,7 @@ export default function CoreValuesScreen() {
         <View style={styles.header}>
           <Pressable
             style={styles.closeButton}
-            onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            onPress={handleClose}
           >
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>

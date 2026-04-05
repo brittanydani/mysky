@@ -176,7 +176,7 @@ export default function HealingSpaceScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Pressable
           style={styles.backBtn}
-          onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/blueprint' as Href); }}
+          onPress={() => { Haptics.selectionAsync(); router.replace('/(tabs)/identity' as Href); }}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
@@ -294,7 +294,7 @@ export default function HealingSpaceScreen() {
                 add at least one of these: Archetypes, Somatic Map entries, or Relationship Patterns.
               </Text>
 
-              <Pressable style={[styles.actionBtn, { marginTop: 16 }]} onPress={() => router.push('/(tabs)/blueprint' as Href)}>
+              <Pressable style={[styles.actionBtn, { marginTop: 16 }]} onPress={() => router.push('/(tabs)/identity' as Href)}>
                 <Text style={styles.actionBtnText}>Open Blueprint</Text>
               </Pressable>
               </LinearGradient>
