@@ -38,6 +38,82 @@ export interface TaggedContent {
   tags: ContentTag[];
 }
 
+/**
+ * Full user context used to personalize the daily affirmation.
+ * All fields are optional — any data present improves matching.
+ */
+export interface PersonalAffirmationContext {
+  // ── Natal chart (Blueprint) ───────────────────────────────────────────────
+  /** Sun-sign element from natal chart */
+  element?: 'fire' | 'earth' | 'air' | 'water';
+  /** Sun-sign modality from natal chart */
+  modality?: 'cardinal' | 'fixed' | 'mutable';
+
+  // ── Real-time check-in state ──────────────────────────────────────────────
+  /** Latest mood score 1–10 */
+  mood?: number;
+  /** Latest energy level */
+  energy?: 'low' | 'medium' | 'high';
+  /** Latest sleep duration in hours */
+  sleep?: number;
+  /** Weekly mood trend direction */
+  weeklyMoodTrend?: 'up' | 'down' | 'stable';
+
+  // ── Archetype & identity layer ────────────────────────────────────────────
+  /** Dominant archetype from self-knowledge profile */
+  archetype?: 'hero' | 'caregiver' | 'seeker' | 'sage' | 'rebel';
+  /** Top 5 core values (e.g. 'Growth', 'Connection', 'Creativity') */
+  coreValues?: string[];
+
+  // ── Cognitive style ───────────────────────────────────────────────────────
+  /**
+   * Cognitive scope score 1–5.
+   * 1 = Big Picture thinker, 5 = Detail-first thinker.
+   */
+  cognitiveScope?: number;
+  /**
+   * Cognitive processing score 1–5.
+   * 1 = Visual / Spatial, 5 = Verbal / Analytical.
+   */
+  cognitiveProcessing?: number;
+  /**
+   * Decision-making score 1–5.
+   * 1 = Quick / Intuitive, 5 = Careful / Deliberate.
+   */
+  cognitiveDecisions?: number;
+
+  // ── Intelligence profile ──────────────────────────────────────────────────
+  /**
+   * Dominant intelligence dimension (highest scoring).
+   * One of: linguistic, logical, musical, spatial, kinesthetic,
+   * interpersonal, intrapersonal, naturalistic, existential.
+   */
+  topIntelligence?: string;
+
+  // ── Somatic map ───────────────────────────────────────────────────────────
+  /** Average intensity of recent somatic entries (1–5), null if none */
+  avgSomaticIntensity?: number | null;
+  /** Most frequently logged body region (e.g. 'chest', 'throat') */
+  topSomaticRegion?: string | null;
+
+  // ── Trigger & glimmer log ─────────────────────────────────────────────────
+  /** Things logged as restoring / glimmers */
+  restores?: string[];
+  /** Things logged as draining */
+  drains?: string[];
+
+  // ── Relational mirror ─────────────────────────────────────────────────────
+  /** Tags extracted from recent relationship pattern entries */
+  relationshipTags?: string[];
+
+  // ── Common reflection themes ──────────────────────────────────────────────
+  /**
+   * The reflection category with the most answered questions
+   * (key from dailyReflections.byCategory, e.g. 'self', 'relationships', 'growth').
+   */
+  topReflectionCategory?: string | null;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // AFFIRMATIONS — 350+ entries
 // One shown per day. Personal, specific, never generic.
@@ -989,6 +1065,50 @@ export const AFFIRMATION_LIBRARY: TaggedContent[] = [
   { id: 866, text: `I am not my thoughts. I am the awareness behind them.`, tags: ['universal'] },
   { id: 867, text: `I choose to see this day as an invitation, not an obligation.`, tags: ['universal'] },
   { id: 868, text: `I am enough. Right now, without conditions.`, tags: ['universal'] },
+
+  // ────────────── FOCUS ACTIVE (Wisdom / Clarity / Deliberate mind) ──────────────
+  { id: 869, text: `My ability to focus deeply is a rare and powerful gift.`, tags: ['focus-active'] },
+  { id: 870, text: `I think clearly when I slow down enough to listen to myself.`, tags: ['focus-active'] },
+  { id: 871, text: `My precision is not overthinking — it is care in action.`, tags: ['focus-active'] },
+  { id: 872, text: `I trust the process of thinking things through before I move.`, tags: ['focus-active'] },
+  { id: 873, text: `My mind is a tool I have learned to use well. I use it with intention today.`, tags: ['focus-active'] },
+  { id: 874, text: `I find clarity not by silencing my mind but by directing it.`, tags: ['focus-active'] },
+  { id: 875, text: `I do my best work when I create the conditions for concentration.`, tags: ['focus-active'] },
+  { id: 876, text: `My deliberate approach is not hesitation — it is wisdom choosing its moment.`, tags: ['focus-active'] },
+  { id: 877, text: `I know the difference between distraction and rest. I honor both.`, tags: ['focus-active'] },
+  { id: 878, text: `The depth I bring to problems is exactly what they need.`, tags: ['focus-active'] },
+  { id: 879, text: `I am allowed to think slowly in a world that rewards fast.`, tags: ['focus-active'] },
+  { id: 880, text: `My analytical mind finds beauty in understanding. I let it roam today.`, tags: ['focus-active'] },
+  { id: 881, text: `I sharpen my attention the way others sharpen tools — with care and practice.`, tags: ['focus-active'] },
+  { id: 882, text: `I do not scatter. I go deep. That is my design.`, tags: ['focus-active'] },
+  { id: 883, text: `My capacity for nuance is something most people wish they had.`, tags: ['focus-active'] },
+  { id: 884, text: `I notice what others miss because I take the time to look again.`, tags: ['focus-active'] },
+  { id: 885, text: `Focus is a form of love — I give it generously to what matters most.`, tags: ['focus-active'] },
+  { id: 886, text: `I protect my concentration the way I protect my energy. Both are finite and valuable.`, tags: ['focus-active'] },
+  { id: 887, text: `My need for clarity before commitment is a strength, not a flaw.`, tags: ['focus-active'] },
+  { id: 888, text: `I bring full presence to what I choose to give my attention to today.`, tags: ['focus-active'] },
+
+  // ────────────── MOOD ACTIVE (Emotional processing / Inner weather / Intrapersonal) ──────────────
+  { id: 889, text: `Whatever I am feeling right now is valid. I do not need to justify it.`, tags: ['mood-active'] },
+  { id: 890, text: `My emotional awareness is intelligence. I trust it.`, tags: ['mood-active'] },
+  { id: 891, text: `I am allowed to not be okay — and I am also allowed to move through it.`, tags: ['mood-active'] },
+  { id: 892, text: `My inner world deserves the same attention I give to everything else.`, tags: ['mood-active'] },
+  { id: 893, text: `I notice my emotions without being consumed by them. That is a skill I have built.`, tags: ['mood-active'] },
+  { id: 894, text: `Heavy days are not evidence of a broken life. They are part of a full one.`, tags: ['mood-active'] },
+  { id: 895, text: `I hold space for my own complexity. I do not flatten myself for ease.`, tags: ['mood-active'] },
+  { id: 896, text: `My feelings are messengers. I read the message before I dismiss the messenger.`, tags: ['mood-active'] },
+  { id: 897, text: `I process at my own speed. No one else's timeline applies to me.`, tags: ['mood-active'] },
+  { id: 898, text: `I am the kind of person who knows themselves well. That is not easy to become.`, tags: ['mood-active'] },
+  { id: 899, text: `When I name what I am feeling, it loses some of its power over me.`, tags: ['mood-active'] },
+  { id: 900, text: `I do not perform okayness. I work toward it honestly.`, tags: ['mood-active'] },
+  { id: 901, text: `My self-awareness is a compass, not a wound. I use it to navigate.`, tags: ['mood-active'] },
+  { id: 902, text: `I give myself permission to feel the full spectrum without judgment.`, tags: ['mood-active'] },
+  { id: 903, text: `The days I struggle most are often the days I am growing the most.`, tags: ['mood-active'] },
+  { id: 904, text: `I am not too sensitive. I am exactly sensitive enough.`, tags: ['mood-active'] },
+  { id: 905, text: `I check in with myself today without trying to fix what I find.`, tags: ['mood-active'] },
+  { id: 906, text: `My emotional honesty is a form of courage most people avoid.`, tags: ['mood-active'] },
+  { id: 907, text: `I trust that this feeling will move — because all feelings do.`, tags: ['mood-active'] },
+  { id: 908, text: `Knowing my own heart is the most important kind of knowing.`, tags: ['mood-active'] },
 ];
 
 
@@ -2659,19 +2779,179 @@ export function getDailyJournalPrompt(sunElement?: 'fire' | 'earth' | 'air' | 'w
 }
 
 /**
- * Select an affirmation for today, personalized by the user's sun element.
+ * Select an affirmation for today, personalized using full user context.
  * Uses day-of-year as a stable seed so the affirmation stays consistent all day.
+ *
+ * Scoring: each affirmation earns +1 per matching active tag. Entries with
+ * the highest match count form the candidate pool; day-of-year picks from it.
  */
-export function getDailyAffirmation(sunElement?: 'fire' | 'earth' | 'air' | 'water'): TaggedContent {
+export function getDailyAffirmation(context: PersonalAffirmationContext = {}): TaggedContent {
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86_400_000);
 
-  const pool = AFFIRMATION_LIBRARY.filter(
-    p => p.tags.includes('universal') || (sunElement ? p.tags.includes(sunElement) : false),
-  );
+  // ── Derive active tags from context ──────────────────────────────────────
 
-  const candidates = pool.length > 0 ? pool : AFFIRMATION_LIBRARY;
+  const activeTags = new Set<ContentTag>();
 
-  return candidates[dayOfYear % candidates.length];
+  // Element + modality (from natal chart)
+  if (context.element) activeTags.add(context.element);
+  if (context.modality) activeTags.add(context.modality as ContentTag);
+
+  // Intensity — derived from mood and energy
+  const mood = context.mood ?? 5;
+  const energy = context.energy ?? 'medium';
+  if (mood <= 4 || energy === 'low') {
+    activeTags.add('intensity-calm');
+  } else if (mood >= 8 && energy === 'high') {
+    activeTags.add('intensity-intense');
+  } else {
+    activeTags.add('intensity-moderate');
+  }
+
+  // Mood trend — what tone to strike
+  if (context.weeklyMoodTrend === 'down') activeTags.add('mood-active');
+  if (context.weeklyMoodTrend === 'up') activeTags.add('energy-active');
+
+  // Archetype → domain tag
+  const archetypeDomain: Record<string, ContentTag> = {
+    hero:      'energy-active',
+    caregiver: 'love-active',
+    seeker:    'growth-active',
+    sage:      'focus-active',
+    rebel:     'growth-active',
+  };
+  if (context.archetype) {
+    const domain = archetypeDomain[context.archetype];
+    if (domain) activeTags.add(domain);
+  }
+
+  // Core values → domain tags
+  const valueDomain: Record<string, ContentTag> = {
+    growth: 'growth-active', learning: 'growth-active', creativity: 'growth-active', adventure: 'growth-active',
+    connection: 'love-active', love: 'love-active', family: 'love-active', community: 'love-active', friendship: 'love-active',
+    achievement: 'energy-active', success: 'energy-active', ambition: 'energy-active', productivity: 'energy-active',
+    wisdom: 'focus-active', knowledge: 'focus-active', clarity: 'focus-active', truth: 'focus-active',
+    peace: 'intensity-calm', balance: 'intensity-calm', health: 'intensity-calm', wellness: 'intensity-calm',
+    authenticity: 'mood-active', vulnerability: 'mood-active', 'self-awareness': 'mood-active',
+  };
+  for (const val of (context.coreValues ?? [])) {
+    const tag = valueDomain[val.toLowerCase()];
+    if (tag) activeTags.add(tag);
+  }
+
+  // Cognitive style
+  const scope = context.cognitiveScope;
+  const decisions = context.cognitiveDecisions;
+  const processing = context.cognitiveProcessing;
+  if (scope !== undefined) {
+    // Big-picture thinkers → growth / cardinal; detail-first → focus
+    if (scope <= 2) activeTags.add('growth-active');
+    else if (scope >= 4) activeTags.add('focus-active');
+  }
+  if (decisions !== undefined) {
+    // Intuitive → fire/cardinal energy; deliberate → earth/fixed energy
+    if (decisions <= 2) activeTags.add('cardinal');
+    else if (decisions >= 4) activeTags.add('fixed');
+  }
+  if (processing !== undefined) {
+    // Visual/spatial → earth; verbal/analytical → air
+    if (processing <= 2) activeTags.add('earth');
+    else if (processing >= 4) activeTags.add('air');
+  }
+
+  // Intelligence type → domain
+  const intelligenceDomain: Record<string, ContentTag> = {
+    linguistic:     'focus-active',
+    logical:        'focus-active',
+    musical:        'intensity-calm',
+    spatial:        'growth-active',
+    kinesthetic:    'energy-active',
+    interpersonal:  'love-active',
+    intrapersonal:  'mood-active',
+    naturalistic:   'intensity-calm',
+    existential:    'growth-active',
+  };
+  if (context.topIntelligence) {
+    const tag = intelligenceDomain[context.topIntelligence];
+    if (tag) activeTags.add(tag);
+  }
+
+  // Somatic map — high body intensity → calm support; low intensity → moderate
+  if (context.avgSomaticIntensity !== undefined && context.avgSomaticIntensity !== null) {
+    if (context.avgSomaticIntensity >= 3.5) activeTags.add('intensity-calm');
+    else activeTags.add('intensity-moderate');
+  }
+
+  // Glimmer / restore log — what replenishes this person
+  const restoreKeywords: Record<string, ContentTag> = {
+    movement: 'energy-active', exercise: 'energy-active', walk: 'energy-active', run: 'energy-active',
+    nature: 'intensity-calm', rest: 'intensity-calm', quiet: 'intensity-calm', sleep: 'intensity-calm',
+    music: 'intensity-calm', art: 'growth-active', writing: 'focus-active', reading: 'focus-active',
+    friends: 'love-active', family: 'love-active', connection: 'love-active', talk: 'love-active',
+    create: 'growth-active', learn: 'growth-active', explore: 'growth-active',
+  };
+  for (const restore of (context.restores ?? [])) {
+    const lower = restore.toLowerCase();
+    for (const [kw, tag] of Object.entries(restoreKeywords)) {
+      if (lower.includes(kw)) { activeTags.add(tag); break; }
+    }
+  }
+
+  // Drain log — if drained by social situations → mood support; drained by obligations → growth
+  for (const drain of (context.drains ?? [])) {
+    const lower = drain.toLowerCase();
+    if (lower.includes('social') || lower.includes('people') || lower.includes('crowd')) activeTags.add('mood-active');
+    if (lower.includes('obligation') || lower.includes('pressure') || lower.includes('expectation')) activeTags.add('growth-active');
+  }
+
+  // Relational mirror — relationship pattern tags
+  const relationalTagMap: Record<string, ContentTag> = {
+    conflict: 'mood-active', boundary: 'growth-active', connection: 'love-active',
+    trust: 'love-active', isolation: 'mood-active', support: 'love-active', growth: 'growth-active',
+  };
+  for (const tag of (context.relationshipTags ?? [])) {
+    const mapped = relationalTagMap[tag.toLowerCase()];
+    if (mapped) activeTags.add(mapped);
+  }
+
+  // Common reflection themes
+  const reflectionThemeMap: Record<string, ContentTag> = {
+    self: 'mood-active', identity: 'mood-active',
+    relationships: 'love-active', connection: 'love-active',
+    growth: 'growth-active', purpose: 'growth-active',
+    work: 'focus-active', productivity: 'focus-active',
+    body: 'energy-active', health: 'energy-active',
+    emotions: 'mood-active', feelings: 'mood-active',
+  };
+  if (context.topReflectionCategory) {
+    const tag = reflectionThemeMap[context.topReflectionCategory.toLowerCase()];
+    if (tag) activeTags.add(tag);
+  }
+
+  // Season (Northern Hemisphere calendar months)
+  const month = now.getMonth(); // 0-indexed
+  if (month >= 2 && month <= 4) activeTags.add('season-spring');
+  else if (month >= 5 && month <= 7) activeTags.add('season-summer');
+  else if (month >= 8 && month <= 10) activeTags.add('season-autumn');
+  else activeTags.add('season-winter');
+
+  // ── Score and select ─────────────────────────────────────────────────────
+
+  // Score each entry by number of tag matches
+  const scored = AFFIRMATION_LIBRARY.map(entry => {
+    let score = entry.tags.includes('universal') ? 1 : 0;
+    for (const tag of entry.tags) {
+      if (activeTags.has(tag)) score++;
+    }
+    return { entry, score };
+  });
+
+  // Only entries with at least 1 match form the candidate pool
+  const maxScore = Math.max(...scored.map(s => s.score));
+  // Accept entries within 1 point of the best match to widen daily variety
+  const threshold = Math.max(1, maxScore - 1);
+  const candidates = scored.filter(s => s.score >= threshold).map(s => s.entry);
+
+  return candidates[dayOfYear % candidates.length] ?? AFFIRMATION_LIBRARY[dayOfYear % AFFIRMATION_LIBRARY.length];
 }

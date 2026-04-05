@@ -534,14 +534,18 @@ export default function SettingsScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.header}>
-          <Text style={styles.greeting}>Settings</Text>
-          <GoldSubtitle style={styles.dateLabel}>
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </GoldSubtitle>
+          <View style={styles.headerRow}>
+            <View style={styles.titleArea}>
+              <Text style={styles.greeting}>Settings</Text>
+              <GoldSubtitle style={styles.dateLabel}>
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </GoldSubtitle>
+            </View>
+          </View>
         </Animated.View>
 
         <ScrollView

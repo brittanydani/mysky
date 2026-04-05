@@ -56,6 +56,16 @@ export const TAG_LABELS: Record<string, string> = {
 function tagLabel(tag: string): string {
   // Known tags get their proper label; custom user-typed tags get their
   // slug humanized (underscores → spaces) and capitalized.
+  
+  if (tag.endsWith('_pos')) {
+    const base = tag.replace('_pos', '');
+    return `${TAG_LABELS[base] ?? capitalize(base.replace(/_/g, ' '))} (Positive)`;
+  }
+  if (tag.endsWith('_neg')) {
+    const base = tag.replace('_neg', '');
+    return `${TAG_LABELS[base] ?? capitalize(base.replace(/_/g, ' '))} (Negative)`;
+  }
+  
   return TAG_LABELS[tag] ?? capitalize(tag.replace(/_/g, ' '));
 }
 
@@ -129,12 +139,24 @@ export function computeTagLift(aggregates: DailyAggregate[]): TagLiftCard {
   const items: TagLiftResult[] = [];
 
   for (const tag of allTags) {
+    const baseTag = tag.replace(/_pos$|_neg$/, '');
+    const posCount = aggregates.filter(d => d.tagsUnion.includes(`${baseTag}_pos`)).length;
+    const negCount = aggregates.filter(d => d.tagsUnion.includes(`${baseTag}_neg`)).length;
+    const neutralCount = aggregates.filter(d => d.tagsUnion.includes(baseTag)).length;
+    const totalSpecificCount = posCount + negCount + neutralCount;
+
     const totalDays = aggregates.filter(d => d.tagsUnion.includes(tag)).length;
-    if (totalDays < 2) continue;
+    
+    // Loosen constraints for explicit tagging if they logged the base tag enough
+    if (totalDays < 2 && !(totalSpecificCount >= 2 && (tag.endsWith('_pos') || tag.endsWith('_neg')))) continue;
 
     const bestRate = bestDays.filter(d => d.tagsUnion.includes(tag)).length / bestDays.length;
     const hardRate = hardDays.filter(d => d.tagsUnion.includes(tag)).length / hardDays.length;
-    const lift = bestRate - hardRate;
+    let lift = bestRate - hardRate;
+
+    // Direct signals from the user override purely statistical lift
+    if (tag.endsWith('_pos')) lift += 0.6;
+    if (tag.endsWith('_neg')) lift -= 0.6;
 
     items.push({ tag, label: tagLabel(tag), lift, bestRate, hardRate, totalDays });
   }
@@ -456,21 +478,33 @@ export function classifyTags(
   const neutral: ClassifiedTag[] = [];
 
   for (const tag of allTags) {
+    const baseTag = tag.replace(/_pos$|_neg$/, '');
+    const posCount = aggregates.filter(d => d.tagsUnion.includes(`${baseTag}_pos`)).length;
+    const negCount = aggregates.filter(d => d.tagsUnion.includes(`${baseTag}_neg`)).length;
+    const neutralCount = aggregates.filter(d => d.tagsUnion.includes(baseTag)).length;
+    const totalSpecificCount = posCount + negCount + neutralCount;
+
     const totalDays = aggregates.filter(d => d.tagsUnion.includes(tag)).length;
-    if (totalDays < 3) continue;
+    
+    // Skip small samples unless they are explicitly tagged
+    if (totalDays < 3 && !(totalSpecificCount >= 2 && (tag.endsWith('_pos') || tag.endsWith('_neg')))) continue;
 
     const liftItem = liftMap.get(tag);
     const impactItem = impactMap.get(tag);
 
-    const lift = liftItem?.lift ?? 0;
-    const moodDiff = impactItem?.moodDiff ?? 0;
-    const stressDiff = impactItem?.stressDiff ?? 0;
+    const lift = liftItem?.lift ?? (tag.endsWith('_pos') ? 0.6 : tag.endsWith('_neg') ? -0.6 : 0);
+    const moodDiff = impactItem?.moodDiff ?? (tag.endsWith('_pos') ? 1.0 : tag.endsWith('_neg') ? -1.0 : 0);
+    const stressDiff = impactItem?.stressDiff ?? (tag.endsWith('_pos') ? -1.0 : tag.endsWith('_neg') ? 1.0 : 0);
     const energyDiff = impactItem?.energyDiff ?? 0;
 
     const label = tagLabel(tag);
 
-    const isRestorer = lift >= 0.2 && (moodDiff >= 0.5 || stressDiff <= -0.5);
-    const isDrainer = lift <= -0.2 && (stressDiff >= 0.5 || moodDiff <= -0.5);
+    // Give auto-pass for explicit tagging
+    const explicitPos = tag.endsWith('_pos');
+    const explicitNeg = tag.endsWith('_neg');
+
+    const isRestorer = explicitPos || (lift >= 0.2 && (moodDiff >= 0.5 || stressDiff <= -0.5));
+    const isDrainer = explicitNeg || (lift <= -0.2 && (stressDiff >= 0.5 || moodDiff <= -0.5));
 
     let classification: TagClassification;
     let reason: string;

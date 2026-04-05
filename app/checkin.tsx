@@ -98,7 +98,7 @@ export default function CheckInHub() {
 
           {/* ── Mood & Energy ── */}
           <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
-            <SectionHeader label="DAILY RESONANCE" icon="sparkles-outline" />
+            <SectionHeader label="DAILY RESONANCE" icon="pulse-outline" />
             <Pressable
               onPress={() => nav('/(tabs)/internal-weather' as Href)}
               style={({ pressed }) => [pressed && styles.pressableActive]}
@@ -108,7 +108,7 @@ export default function CheckInHub() {
                 style={styles.entryCard}
               >
                 <View style={[styles.iconRing, { borderColor: PALETTE.gold + '40', backgroundColor: PALETTE.gold + '10' }]}>
-                  <MetallicIcon name="sparkles-outline" size={26} color={PALETTE.gold} />
+                  <MetallicIcon name="pulse-outline" size={26} color={PALETTE.gold} />
                 </View>
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Mood & Energy</Text>

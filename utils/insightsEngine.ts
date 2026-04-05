@@ -696,13 +696,36 @@ function buildTagInsights(checkIns: DailyCheckIn[]): RestoreDrainCard | null {
     const freqHard = hardDays.filter(c => c.tags.includes(tag)).length / hardDays.length;
     const lift = freqBest - freqHard;
     const count = checkIns.filter(c => c.tags.includes(tag)).length;
-    if (count >= 5) {
-      items.push({ tag: tag as ThemeTag, label: TAG_LABELS[tag as ThemeTag] ?? tag, lift, freqBest, freqHard, count });
+    
+    // Check base tag + polarities
+    const baseTag = tag.replace(/_pos$|_neg$/, '');
+    const posCount = checkIns.filter(c => c.tags.includes(`${baseTag}_pos`)).length;
+    const negCount = checkIns.filter(c => c.tags.includes(`${baseTag}_neg`)).length;
+    const neutralCount = checkIns.filter(c => c.tags.includes(baseTag)).length;
+    const totalSpecificCount = posCount + negCount + neutralCount;
+
+    // Adjust lift heavily towards explicit user tags if they used them
+    let adjustedLift = lift;
+    if (tag.endsWith('_pos')) {
+      adjustedLift += 0.6; // Overtly positive
+    } else if (tag.endsWith('_neg')) {
+      adjustedLift -= 0.6; // Overtly negative
+    } else if (totalSpecificCount > 0) {
+      // Neutral tags get nudged by the general sentiment of their family
+      adjustedLift += ((posCount - negCount) / totalSpecificCount) * 0.4;
+    }
+
+    if (count >= 5 || (totalSpecificCount >= 3 && (tag.endsWith('_pos') || tag.endsWith('_neg')))) {
+      const displayLabel = TAG_LABELS[baseTag as ThemeTag] ?? baseTag;
+      const finalLabel = tag.endsWith('_pos') ? `${displayLabel} (Positive)` :
+                         tag.endsWith('_neg') ? `${displayLabel} (Negative)` : 
+                         displayLabel;
+      items.push({ tag: tag as ThemeTag, label: finalLabel, lift: adjustedLift, freqBest, freqHard, count });
     }
   }
 
-  const restores = items.filter(t => t.lift > 0).sort((a, b) => b.lift - a.lift || a.tag.localeCompare(b.tag)).slice(0, 3);
-  const drains = items.filter(t => t.lift < 0).sort((a, b) => a.lift - b.lift || a.tag.localeCompare(b.tag)).slice(0, 3);
+  const restores = items.filter(t => t.lift > 0.1).sort((a, b) => b.lift - a.lift || a.tag.localeCompare(b.tag)).slice(0, 3);
+  const drains = items.filter(t => t.lift < -0.1).sort((a, b) => a.lift - b.lift || a.tag.localeCompare(b.tag)).slice(0, 3);
 
   return {
     restores,

@@ -235,7 +235,7 @@ export default function MoodCheckIn() {
   const [energy, setEnergy] = useState(5);
   const [stress, setStress] = useState(5);
 
-  const [selectedInfluences, setSelectedInfluences] = useState<Set<string>>(new Set());
+  const [selectedInfluences, setSelectedInfluences] = useState<Map<string, 'neutral' | 'pos' | 'neg'>>(new Map());
   const [selectedEmotions, setSelectedEmotions] = useState<Set<string>>(new Set());
   const [customInfluence, setCustomInfluence] = useState('');
   const [customEmotion, setCustomEmotion] = useState('');
@@ -373,8 +373,16 @@ export default function MoodCheckIn() {
             setMood(existing.moodScore);
             setEnergy(energyLevelToNum(existing.energyLevel));
             setStress(stressLevelToNum(existing.stressLevel));
-            setSelectedInfluences(new Set(
-              existing.tags.map(t => REV_INFLUENCE_TAG[t]).filter(Boolean)
+            setSelectedInfluences(new Map(
+              existing.tags.map(t => {
+                let baseTag = typeof t === 'string' ? t : '';
+                let polarity: 'neutral' | 'pos' | 'neg' = 'neutral';
+                if (baseTag.endsWith('_pos')) { baseTag = baseTag.replace('_pos', ''); polarity = 'pos'; }
+                else if (baseTag.endsWith('_neg')) { baseTag = baseTag.replace('_neg', ''); polarity = 'neg'; }
+                
+                const label = REV_INFLUENCE_TAG[baseTag];
+                return label ? [label, polarity] : null;
+              }).filter(Boolean) as [string, 'neutral' | 'pos' | 'neg'][]
             ));
             setSelectedEmotions(new Set(
               existing.tags.map(t => REV_EMOTION_TAG[t]).filter(Boolean)
@@ -398,7 +406,7 @@ export default function MoodCheckIn() {
             setMood(5);
             setEnergy(5);
             setStress(5);
-            setSelectedInfluences(new Set());
+            setSelectedInfluences(new Map());
             setSelectedEmotions(new Set());
             setCustomInfluence('');
             setCustomEmotion('');
@@ -413,7 +421,25 @@ export default function MoodCheckIn() {
     return () => { cancelled = true; };
   }, [chartId, selectedDate, selectedSlot]);
 
-  const toggleTag = (
+  const toggleInfluenceTag = (tag: string) => {
+    Haptics.selectionAsync();
+    setSelectedInfluences((prev) => {
+      const next = new Map(prev);
+      const curr = next.get(tag);
+      if (!curr) {
+        next.set(tag, 'neutral');
+      } else if (curr === 'neutral') {
+        next.set(tag, 'pos');
+      } else if (curr === 'pos') {
+        next.set(tag, 'neg');
+      } else {
+        next.delete(tag);
+      }
+      return next;
+    });
+  };
+
+  const toggleEmotionTag = (
     tag: string,
     set: Set<string>,
     setSetter: React.Dispatch<React.SetStateAction<Set<string>>>,
@@ -424,6 +450,7 @@ export default function MoodCheckIn() {
     else newSet.add(tag);
     setSetter(newSet);
   };
+
 
   // Converts free text into a stable tag slug for the insights pipeline.
   // Spaces → underscores so "burnt out" → "burnt_out" (readable in insights).
@@ -445,7 +472,12 @@ export default function MoodCheckIn() {
     if (!chartId || !natalChart || isSaving) return;
     setIsSaving(true);
     try {
-      const influenceTags: ThemeTag[] = [...selectedInfluences].map(t => INFLUENCE_TAG_MAP[t] ?? t);
+      const influenceTags: ThemeTag[] = [...selectedInfluences.entries()].map(([t, polarity]) => {
+        const baseTag = INFLUENCE_TAG_MAP[t] ?? t;
+        if (polarity === 'pos') return `${baseTag}_pos` as ThemeTag;
+        if (polarity === 'neg') return `${baseTag}_neg` as ThemeTag;
+        return baseTag as ThemeTag;
+      });
       const emotionTags: ThemeTag[] = isPremium
         ? [...selectedEmotions].map(t => EMOTION_TAG_MAP[t] ?? t)
         : [];
@@ -610,6 +642,7 @@ export default function MoodCheckIn() {
         {/* Influence Tags */}
         <View style={styles.tagsSection}>
           <Text style={styles.sectionLabel}>WHAT'S INFLUENCING THIS?</Text>
+          <Text style={styles.tagsHint}>Tap to select. Tap again to mark as positive or negative.</Text>
           <View style={styles.tagGrid}>
             {influences.map(tag => (
               <TagButton
@@ -617,7 +650,8 @@ export default function MoodCheckIn() {
                 title={tag}
                 icon={INFLUENCE_ICONS[tag]}
                 isSelected={selectedInfluences.has(tag)}
-                onPress={() => toggleTag(tag, selectedInfluences, setSelectedInfluences)}
+                polarity={selectedInfluences.get(tag) ?? 'neutral'}
+                onPress={() => toggleInfluenceTag(tag)}
               />
             ))}
             {customInfluence.trim().length > 0 && (
@@ -681,7 +715,7 @@ export default function MoodCheckIn() {
                     isSelected={selectedEmotions.has(tag)}
                     onPress={() => {
                       if (!isPremium) { setShowPremiumModal(true); return; }
-                      toggleTag(tag, selectedEmotions, setSelectedEmotions);
+                      toggleEmotionTag(tag, selectedEmotions, setSelectedEmotions);
                     }}
                     isPremiumVariant
                     isLocked={!isPremium}
@@ -860,6 +894,7 @@ const TagButton = ({
   title,
   icon,
   isSelected,
+  polarity = 'neutral',
   onPress,
   isPremiumVariant = false,
   isLocked = false,
@@ -867,6 +902,7 @@ const TagButton = ({
   title: string;
   icon?: React.ComponentProps<typeof Ionicons>['name'];
   isSelected: boolean;
+  polarity?: 'neutral' | 'pos' | 'neg';
   onPress: () => void;
   isPremiumVariant?: boolean;
   isLocked?: boolean;
@@ -874,7 +910,7 @@ const TagButton = ({
   const iconColor = isLocked
     ? 'rgba(110,140,180,0.3)'
     : isSelected
-      ? isPremiumVariant ? '#FFF' : '#050507'
+      ? (isPremiumVariant || polarity !== 'neutral') ? '#FFF' : '#050507'
       : isPremiumVariant ? 'rgba(110,140,180,0.7)' : 'rgba(255,255,255,0.5)';
 
   const resolvedIcon: React.ComponentProps<typeof Ionicons>['name'] =
@@ -887,6 +923,8 @@ const TagButton = ({
         styles.tagButton,
         isPremiumVariant && styles.tagButtonPremiumBase,
         isSelected && (isPremiumVariant ? styles.tagButtonSelectedPremium : styles.tagButtonSelected),
+        isSelected && polarity === 'pos' && styles.tagButtonPositive,
+        isSelected && polarity === 'neg' && styles.tagButtonNegative,
         isLocked && styles.tagButtonLocked,
       ]}
     >
@@ -896,7 +934,12 @@ const TagButton = ({
         color={iconColor}
         style={styles.tagIcon}
       />
-      <Text style={[styles.tagText, isSelected && styles.tagTextSelected, isLocked && styles.tagTextLocked]}>
+      <Text style={[
+        styles.tagText, 
+        isSelected && styles.tagTextSelected, 
+        isSelected && polarity !== 'neutral' && { color: '#FFF' },
+        isLocked && styles.tagTextLocked
+      ]}>
         {title}
       </Text>
       {isPremiumVariant && isSelected && (
@@ -934,6 +977,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   sectionLabel: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', marginTop: 8, marginBottom: 20 },
+  tagsHint: { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: -14, marginBottom: 20 },
 
   trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
@@ -997,6 +1041,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(110,140,180,0.2)',
   },
   tagButtonSelected: { backgroundColor: '#FFF', borderColor: '#FFF' },
+  tagButtonPositive: { backgroundColor: '#8BA496', borderColor: '#8BA496' },
+  tagButtonNegative: { backgroundColor: '#B47F7F', borderColor: '#B47F7F' },
   tagButtonSelectedPremium: {
     backgroundColor: '#6E8CB4',
     borderColor: '#8AABCF',

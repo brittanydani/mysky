@@ -20,8 +20,6 @@ import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStor
 import { computeTriggerPatternSummary, buildTriggerPatternNarrative } from '../../utils/triggerPatterns';
 import { logger } from '../../utils/logger';
 import { usePremium } from '../../context/PremiumContext';
-import { AstrologyCalculator } from '../../services/astrology/calculator';
-import { AstrologySettingsService } from '../../services/astrology/astrologySettingsService';
 import { runPipeline } from '../../services/insights/pipeline';
 import { computeEnhancedInsights, EnhancedInsightBundle } from '../../utils/journalInsights';
 import { computeNarrativeInsights, NarrativeInsightBundle, NarrativeInsight, NarrativeCategory } from '../../utils/narrativeInsights';
@@ -247,27 +245,7 @@ export default function PatternsScreen() {
               logger.error('Enriched cross-ref failed:', e);
             }
 
-            let natalChart = null;
-            if (isPremium) {
-              try {
-                const birthData = {
-                  date: saved.birthDate,
-                  time: saved.birthTime,
-                  hasUnknownTime: saved.hasUnknownTime,
-                  place: saved.birthPlace,
-                  latitude: saved.latitude,
-                  longitude: saved.longitude,
-                  timezone: saved.timezone,
-                  houseSystem: saved.houseSystem,
-                };
-                const astroSettings = await AstrologySettingsService.getSettings();
-                natalChart = AstrologyCalculator.generateNatalChart({ ...birthData, zodiacSystem: astroSettings.zodiacSystem, orbPreset: astroSettings.orbPreset });
-              } catch (e) {
-                logger.error('Natal chart generation failed:', e);
-              }
-            }
-
-            const pipelineResult = runPipeline({ checkIns: extCheckIns, journalEntries, sleepEntries, chart: natalChart, todayContext: null });
+            const pipelineResult = runPipeline({ checkIns: extCheckIns, journalEntries, sleepEntries, chart: null, todayContext: null });
             pipelineRef.current = {
               aggregates: pipelineResult.dailyAggregates,
               profile: pipelineResult.chartProfile,

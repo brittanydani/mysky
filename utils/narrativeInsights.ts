@@ -437,14 +437,22 @@ function buildHardDayReflection(profile: PatternProfile): NarrativeInsight | nul
   if (!hardDayProfile || hardDayProfile.dayCount < 2) return null;
   const hp = hardDayProfile;
 
-  const conditions: string[] = [];
-  if (hp.avgRestoration < overallAvg.restoration - 8) conditions.push('low restoration');
-  if (hp.avgStrain > overallAvg.strain + 8) conditions.push('elevated strain');
-  if (hp.avgSleepQuality != null && hp.avgSleepQuality <= 2.5) conditions.push('poor sleep');
+  const rawConditions: string[] = [];
+  if (hp.avgRestoration < overallAvg.restoration - 8) rawConditions.push('low restoration');
+  if (hp.avgStrain > overallAvg.strain + 8) rawConditions.push('elevated strain');
+  if (hp.avgSleepQuality != null && hp.avgSleepQuality <= 2.5) rawConditions.push('poor sleep');
+  
   if (hp.topTags.length > 0) {
     const mt = hp.topTags.filter(t => t.count >= 2).slice(0, 2);
-    if (mt.length > 0) conditions.push(mt.map(t => t.tag.replace(/_/g, ' ')).join(', '));
+    mt.forEach(t => {
+      const tagLabel = t.tag.replace(/_/g, ' ');
+      // avoid double-counting sleep if 'poor sleep' was already fired
+      if (tagLabel === 'sleep' && rawConditions.includes('poor sleep')) return;
+      rawConditions.push(tagLabel);
+    });
   }
+  
+  const conditions = Array.from(new Set(rawConditions));
 
   const effectStrength = overallAvg.stability - hp.avgStability;
   let body: string;

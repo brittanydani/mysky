@@ -50,8 +50,8 @@ import { AstrologySettingsService } from '../../services/astrology/astrologySett
 import { getDailyLoopData, DailyLoopData } from '../../services/today/dailyLoop';
 import { getLogicalToday } from '../../services/patterns/checkInService';
 import { toLocalDateString } from '../../utils/dateUtils';
-import { getDailyAffirmation } from '../../services/today/todayContentLibrary';
-import { loadSelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
+import { getDailyAffirmation, PersonalAffirmationContext } from '../../services/today/todayContentLibrary';
+import { loadSelfKnowledgeContext, SelfKnowledgeContext } from '../../services/insights/selfKnowledgeContext';
 import { logger } from '../../utils/logger';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
@@ -155,6 +155,9 @@ export default function HomeScreen() {
   // Daily loop — streak, weekly summary, insights, nudge
   const [dailyLoop, setDailyLoop] = useState<DailyLoopData | null>(null);
 
+  // Self-knowledge context — used to personalize affirmations
+  const [selfKnowledge, setSelfKnowledge] = useState<SelfKnowledgeContext | null>(null);
+
   // ── Chart Loading ──
 
   const loadUserChart = useCallback(
@@ -202,6 +205,7 @@ export default function HomeScreen() {
             ]);
 
             setWeeklyCheckIns(checkins);
+            setSelfKnowledge(selfKnowledge);
             if (checkins.length > 0) {
               const latest = checkins[0];
               if (latest.moodScore != null) setMood(latest.moodScore);
@@ -292,10 +296,57 @@ export default function HomeScreen() {
 
   // ── Daily Affirmation ──
   const affirmation = useMemo(() => {
-    const element = userChart?.sunSign?.element?.toLowerCase() as
-      | 'fire' | 'earth' | 'air' | 'water' | undefined;
-    return getDailyAffirmation(element);
-  }, [userChart]);
+    // Derive top intelligence dimension (highest score across all dimensions)
+    const ip = selfKnowledge?.intelligenceProfile;
+    const topIntelligence = ip
+      ? (Object.entries(ip) as [string, unknown][])
+          .filter(([, v]) => typeof v === 'number')
+          .sort((a, b) => (b[1] as number) - (a[1] as number))[0]?.[0]
+      : undefined;
+
+    // Derive avg somatic intensity from recent entries
+    const somaticEntries = selfKnowledge?.somaticEntries ?? [];
+    const avgSomaticIntensity = somaticEntries.length > 0
+      ? somaticEntries.reduce((sum, e) => sum + e.intensity, 0) / somaticEntries.length
+      : null;
+
+    // Top somatic body region
+    const regionCounts: Record<string, number> = {};
+    for (const e of somaticEntries) {
+      regionCounts[e.region] = (regionCounts[e.region] ?? 0) + 1;
+    }
+    const topSomaticRegion = Object.keys(regionCounts).sort((a, b) => regionCounts[b] - regionCounts[a])[0] ?? null;
+
+    // All relationship tags (flattened from recent entries)
+    const relationshipTags = (selfKnowledge?.relationshipPatterns ?? [])
+      .flatMap(entry => entry.tags);
+
+    // Top reflection category by count
+    const byCategory = selfKnowledge?.dailyReflections?.byCategory ?? {};
+    const topReflectionCategory = Object.keys(byCategory).sort((a, b) => byCategory[b] - byCategory[a])[0] ?? null;
+
+    const ctx: PersonalAffirmationContext = {
+      element: userChart?.sunSign?.element?.toLowerCase() as PersonalAffirmationContext['element'],
+      modality: userChart?.sunSign?.modality?.toLowerCase() as PersonalAffirmationContext['modality'],
+      mood,
+      energy: energy >= 7 ? 'high' : energy >= 5 ? 'medium' : 'low',
+      sleep: latestSleep,
+      archetype: selfKnowledge?.archetypeProfile?.dominant,
+      weeklyMoodTrend: dailyLoop?.weeklyReflection?.moodDirection,
+      coreValues: selfKnowledge?.coreValues?.topFive,
+      cognitiveScope: selfKnowledge?.cognitiveStyle?.scope,
+      cognitiveProcessing: selfKnowledge?.cognitiveStyle?.processing,
+      cognitiveDecisions: selfKnowledge?.cognitiveStyle?.decisions,
+      topIntelligence,
+      avgSomaticIntensity,
+      topSomaticRegion,
+      restores: selfKnowledge?.triggers?.restores,
+      drains: selfKnowledge?.triggers?.drains,
+      relationshipTags,
+      topReflectionCategory,
+    };
+    return getDailyAffirmation(ctx);
+  }, [userChart, mood, energy, latestSleep, selfKnowledge, dailyLoop]);
 
   // ── Balance Score + Stability Map ──
 

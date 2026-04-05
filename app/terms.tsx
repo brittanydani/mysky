@@ -12,6 +12,7 @@ import { SUPPORT_EMAIL } from '../constants/config';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
+import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -32,16 +33,25 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
       <SkiaDynamicCosmos />
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         {/* Header */}
-        <View style={styles.headerBar}>
-          <Pressable
-            style={styles.backButton}
-            onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
-            accessibilityRole="button"
-            accessibilityLabel="Back"
-          >
-            <Ionicons name="chevron-back-outline" size={24} color={theme.textPrimary} />
-          </Pressable>
-        </View>
+        <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
+          <View style={styles.headerRow}>
+            <Pressable
+              style={styles.backButton}
+              onPress={() => onBack ? onBack() : (router.canGoBack() ? router.back() : undefined)}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+            >
+              <Ionicons name="chevron-back-outline" size={22} color={theme.textPrimary} />
+            </Pressable>
+            
+            <View style={styles.titleArea}>
+              <Text style={styles.headerTitle}>Terms of Service</Text>
+              <GoldSubtitle style={styles.headerSubtitle}>Last updated: October 2024</GoldSubtitle>
+            </View>
+
+            <View style={styles.headerSpacer} />
+          </View>
+        </Animated.View>
 
         <ScrollView
           style={styles.scrollView}
@@ -250,23 +260,46 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  headerBar: {
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { 
-    fontSize: 16,
-    color: '#FFF',
-    letterSpacing: 2,
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerSpacer: {
+    width: 44,
+  },
+  titleArea: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: theme.textPrimary,
+    letterSpacing: -0.3,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.0,
     textTransform: 'uppercase',
-    opacity: 0.6,
+    marginTop: 2,
+    color: 'rgba(255,255,255,0.6)',
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
