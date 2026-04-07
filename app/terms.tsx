@@ -46,7 +46,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
             
             <View style={styles.titleArea}>
               <Text style={styles.headerTitle}>Terms of Service</Text>
-              <GoldSubtitle style={styles.headerSubtitle}>Last updated: October 2024</GoldSubtitle>
+              <GoldSubtitle style={styles.headerSubtitle}>Last updated: April 7, 2026</GoldSubtitle>
             </View>
 
             <View style={styles.headerSpacer} />
@@ -66,7 +66,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
               <Ionicons name="document-text-outline" size={132} color={theme.textGold} />
             </View>
 
-            <Text style={styles.lastUpdated}>Last updated: April 4, 2026</Text>
+            <Text style={styles.lastUpdated}>Last updated: April 7, 2026</Text>
 
             <Text style={styles.sectionTitle}>Acceptance of Terms of Use</Text>
             <Text style={styles.paragraph}>
@@ -94,10 +94,10 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
             <View style={styles.glassCard}>
               <Text style={[styles.subHeader, { color: PALETTE.gold }]}>Free & Premium Features</Text>
               <Text style={styles.paragraph}>
-                <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
+                <Text style={styles.boldText}>Free:</Text> Personal birth chart visualization, Big Three, daily mood/energy/stress check-ins, basic journal, sleep quality logging, AI dream interpretation using the standard Gemini model, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context.
               </Text>
               <Text style={styles.paragraph}>
-                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
+                <Text style={[styles.boldText, { color: PALETTE.gold }]}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted .msky backup and restore, and extended pattern reflections.
               </Text>
             </View>
 
@@ -108,7 +108,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Accounts</Text>
             <Text style={styles.paragraph}>
-              A free account is required to use MySky. Accounts are managed via Supabase Auth (email and password) and are used to authenticate your identity and enable optional premium features such as AI Reflection Insights. A Deeper Sky subscription is required for premium features.
+              A free account is required to use MySky. Accounts are managed via Supabase Auth (email and password) and are used to authenticate your identity, support purchase restoration, and enable optional network-backed features such as AI dream interpretation and AI Reflection Insights. A Deeper Sky subscription is required for premium upgrades, including the richer dream model and other premium features.
             </Text>
 
             <LinearGradient 
@@ -137,7 +137,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 
             <Text style={styles.sectionTitle}>Data & Privacy</Text>
             <Text style={styles.paragraph}>
-              All core data is stored locally on your device. Sensitive fields are encrypted with AES-256-GCM. No analytics SDKs, advertising identifiers, or cross-app tracking are used. For full details, see our Privacy Policy.
+              All core data is stored locally on your device. Sensitive fields are encrypted with AES-256-GCM. No analytics SDKs, advertising identifiers, or cross-app tracking are used. Optional AI features may transmit limited data to third-party processors only when needed to fulfill that feature, as described in our Privacy Policy.
             </Text>
 
             <Text style={styles.sectionTitle}>Limitation of Liability</Text>
@@ -156,7 +156,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
               WE DO NOT WARRANT THAT: (A) THE APP WILL MEET YOUR REQUIREMENTS; (B) THE APP WILL BE UNINTERRUPTED, TIMELY, SECURE, OR ERROR-FREE; (C) THE RESULTS OR CONTENT OBTAINED FROM USE OF THE APP WILL BE ACCURATE, RELIABLE, OR COMPLETE; OR (D) ANY ERRORS IN THE APP WILL BE CORRECTED.
             </Text>
             <Text style={styles.paragraph}>
-              ALL ASTROLOGICAL INTERPRETATIONS, DREAM REFLECTIONS, PATTERN ANALYSES, ARCHETYPE PROFILES, AND OTHER REFLECTIVE CONTENT ARE FOR SELF-AWARENESS AND PERSONAL EXPLORATION PURPOSES ONLY AND ARE PROVIDED WITHOUT ANY WARRANTY OF ACCURACY OR APPLICABILITY.
+              ALL ASTROLOGICAL INTERPRETATIONS, DREAM REFLECTIONS, AI DREAM INTERPRETATIONS, PATTERN ANALYSES, ARCHETYPE PROFILES, AND OTHER REFLECTIVE CONTENT ARE FOR SELF-AWARENESS AND PERSONAL EXPLORATION PURPOSES ONLY AND ARE PROVIDED WITHOUT ANY WARRANTY OF ACCURACY OR APPLICABILITY.
             </Text>
 
             <Text style={styles.sectionTitle}>Termination</Text>

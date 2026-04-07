@@ -114,7 +114,7 @@ const FAQ: { question: string; answer: string }[] = [
   {
     question: 'How do symbolic dream reflections work?',
     answer:
-      'Anyone can log a dream narrative — just open the Sleep tab and type in the Dream Memory field. Deeper Sky members also get symbolic interpretation: MySky scans your dream text for recurring symbols (water, falling, doors, etc.) and maps them to Jungian archetypes, weaving in context from your mood check-ins, sleep patterns, and journal entries. The result is a personalized reflection generated entirely on your device with no AI, no network calls, and no data leaving your phone.',
+      'Anyone can log a dream narrative — just open the Sleep tab and type in the Dream Memory field. MySky first scans your dream text for recurring symbols (water, falling, doors, etc.) and builds context from your selected dream feelings and recent patterns on-device, then sends only the dream text and selected feelings to Google Gemini for the narrative interpretation. Free users get the standard model, while Deeper Sky uses a richer model for more nuance.',
   },
 ];
 

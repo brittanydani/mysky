@@ -1,2 +1,5 @@
 [functions.birth-profile-sync]
 verify_jwt = false
+
+[functions.password-recovery]
+verify_jwt = false

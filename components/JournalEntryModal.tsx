@@ -293,6 +293,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   const [customTags, setCustomTags] = useState<CustomTag[]>([]);
   const [newTagModalCategory, setNewTagModalCategory] = useState<string | null>(null);
   const [newTagModalInput, setNewTagModalInput] = useState('');
+  const [editingCustomTagId, setEditingCustomTagId] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
   
@@ -398,22 +399,37 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     } catch {}
   }, []);
 
-  const saveCustomTag = useCallback(async (label: string, categoryId?: string) => {
+  const closeCustomTagComposer = useCallback(() => {
+    setNewTagModalInput('');
+    setNewTagModalCategory(null);
+    setEditingCustomTagId(null);
+  }, []);
+
+  const saveCustomTag = useCallback(async (label: string, categoryId?: string, editingId?: string | null) => {
     const trimmed = label.trim();
     if (!trimmed) return;
-    const id = 'custom_' + trimmed.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const id = editingId ?? ('custom_' + trimmed.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
     setCustomTags((prev) => {
-      if (prev.some((t) => t.id === id)) return prev;
-      const next = [...prev, { id, label: trimmed, categoryId }];
+      const duplicate = prev.find((tag) =>
+        tag.id !== id &&
+        tag.label.trim().toLowerCase() === trimmed.toLowerCase() &&
+        (tag.categoryId ?? null) === (categoryId ?? null)
+      );
+      if (duplicate) {
+        return prev;
+      }
+
+      const next = editingId
+        ? prev.map((tag) => (tag.id === editingId ? { ...tag, label: trimmed, categoryId } : tag))
+        : [...prev, { id, label: trimmed, categoryId }];
       AsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch((e) => {
         logger.warn('[JournalEntryModal] Failed to save custom tag:', e);
       });
       return next;
     });
     setTags((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    setNewTagModalInput('');
-    setNewTagModalCategory(null);
-  }, []);
+    closeCustomTagComposer();
+  }, [closeCustomTagComposer]);
 
   const deleteCustomTag = useCallback((id: string) => {
     setCustomTags((prev) => {
@@ -424,6 +440,28 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       return next;
     });
     setTags((prev) => prev.filter((t) => t !== id));
+    if (editingCustomTagId === id) closeCustomTagComposer();
+  }, [closeCustomTagComposer, editingCustomTagId]);
+
+  const promptCustomTagAction = useCallback((tag: CustomTag) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    Alert.alert('Custom Tag', `Manage "${tag.label}"`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Edit',
+        onPress: () => {
+          setNewTagModalCategory(tag.categoryId ?? 'uncategorized');
+          setNewTagModalInput(tag.label);
+          setEditingCustomTagId(tag.id);
+        },
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteCustomTag(tag.id),
+      },
+    ]);
+  }, [deleteCustomTag]);
   }, []);
 
   const loadUserChart = async () => {
@@ -476,20 +514,20 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     setPendingDate(null);
     setShowTagPicker(false);
     setTagSearch('');
-    setNewTagModalInput('');
-    setNewTagModalCategory(null);
+    closeCustomTagComposer();
     setShowPrompts(false);
     setWritingMode(false);
 
     InteractionManager.runAfterInteractions(() => {
       onClose();
     });
-  }, [onClose]);
+  }, [closeCustomTagComposer, onClose]);
 
   const handleRequestClose = useCallback(() => {
     if (showTagPicker) {
       setShowTagPicker(false);
       setTagSearch('');
+      closeCustomTagComposer();
       return;
     }
 
@@ -505,7 +543,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     }
 
     finalizeClose();
-  }, [exitWritingMode, finalizeClose, showDatePicker, showTagPicker, writingMode]);
+  }, [closeCustomTagComposer, exitWritingMode, finalizeClose, showDatePicker, showTagPicker, writingMode]);
 
   useEffect(() => {
     if (visible) return;
@@ -513,10 +551,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
     setShowDatePicker(false);
     setPendingDate(null);
     setTagSearch('');
-    setNewTagModalInput('');
-    setNewTagModalCategory(null);
+    closeCustomTagComposer();
     setShowPrompts(false);
-  }, [visible]);
+  }, [closeCustomTagComposer, visible]);
 
   useEffect(() => {
     if (!visible) return;
@@ -932,7 +969,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
           onShow={loadCustomTags}
         >
           <View style={styles.tagPickerOverlay} pointerEvents="box-none">
-            <Pressable onPress={() => { setShowTagPicker(false); setTagSearch(''); setNewTagModalInput(''); setNewTagModalCategory(null); }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+            <Pressable onPress={() => { setShowTagPicker(false); setTagSearch(''); closeCustomTagComposer(); }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
             <View style={styles.tagPickerSheet}>
               <View style={styles.tagPickerHandle} />
               <View style={styles.tagPickerHeader}>
@@ -985,11 +1022,8 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                           );
                         }}
                         onLongPress={isCustom ? () => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-                          Alert.alert('Remove Tag', `Delete "${tag.label}" from your custom tags?`, [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Delete', style: 'destructive', onPress: () => deleteCustomTag(tag.id) },
-                          ]);
+                          const customTag = customTags.find((candidate) => candidate.id === tag.id);
+                          if (customTag) promptCustomTagAction(customTag);
                         } : undefined}
                         style={[
                           styles.tagPickerChip,
@@ -1067,16 +1101,24 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                               autoFocus
                               maxLength={30}
                               returnKeyType="done"
-                              onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); setNewTagModalCategory(null); setNewTagModalInput(''); } }}
+                              onSubmitEditing={() => {
+                                const v = newTagModalInput.trim();
+                                if (v) saveCustomTag(v, undefined, editingCustomTagId);
+                                else closeCustomTagComposer();
+                              }}
                             />
-                            <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, undefined); } setNewTagModalCategory(null); setNewTagModalInput(''); }}>
+                            <Pressable hitSlop={8} onPress={() => {
+                              const v = newTagModalInput.trim();
+                              if (v) saveCustomTag(v, undefined, editingCustomTagId);
+                              else closeCustomTagComposer();
+                            }}>
                               <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
                             </Pressable>
                           </View>
                         ) : (
                           <Pressable
                             style={styles.newTagBtn}
-                            onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory('uncategorized'); setNewTagModalInput(''); }}
+                            onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory('uncategorized'); setNewTagModalInput(''); setEditingCustomTagId(null); }}
                           >
                             <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
                             <Text style={styles.newTagBtnText}>New tag</Text>
@@ -1084,7 +1126,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                         )}
                       </View>
                       {customTags.length > 0 && (
-                        <Text style={styles.tagPickerHint}>Hold to delete a custom tag</Text>
+                        <Text style={styles.tagPickerHint}>Hold a custom tag to edit or delete it</Text>
                       )}
 
                       {TAG_CATEGORIES.map((cat) => {
@@ -1106,16 +1148,24 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                     autoFocus
                                     maxLength={30}
                                     returnKeyType="done"
-                                    onSubmitEditing={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); setNewTagModalCategory(null); setNewTagModalInput(''); } }}
+                                    onSubmitEditing={() => {
+                                      const v = newTagModalInput.trim();
+                                      if (v) saveCustomTag(v, cat.id, editingCustomTagId);
+                                      else closeCustomTagComposer();
+                                    }}
                                   />
-                                  <Pressable hitSlop={8} onPress={() => { const v = newTagModalInput.trim(); if (v) { saveCustomTag(v, cat.id); } setNewTagModalCategory(null); setNewTagModalInput(''); }}>
+                                  <Pressable hitSlop={8} onPress={() => {
+                                    const v = newTagModalInput.trim();
+                                    if (v) saveCustomTag(v, cat.id, editingCustomTagId);
+                                    else closeCustomTagComposer();
+                                  }}>
                                     <Ionicons name={newTagModalInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={newTagModalInput.trim() ? PALETTE.jade : 'rgba(255,255,255,0.3)'} />
                                   </Pressable>
                                 </View>
                               ) : (
                                 <Pressable
                                   style={styles.newTagBtn}
-                                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory(cat.id); setNewTagModalInput(''); }}
+                                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setNewTagModalCategory(cat.id); setNewTagModalInput(''); setEditingCustomTagId(null); }}
                                 >
                                   <Ionicons name="add-outline" size={13} color={PALETTE.jade} />
                                   <Text style={styles.newTagBtnText}>New</Text>

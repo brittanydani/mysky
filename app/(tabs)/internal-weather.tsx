@@ -9,6 +9,7 @@ import {
   PanResponder,
   ActivityIndicator,
   TextInput,
+  Alert,
 } from 'react-native';
 import SkiaMoodSealButton from '../../components/ui/SkiaMoodSealButton';
 import { useRouter } from 'expo-router';
@@ -36,6 +37,22 @@ const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
 const CARD_INNER_W = width - 88;
 
+type PillPolarity = 'neutral' | 'pos' | 'neg';
+
+interface CustomPill {
+  id: string;
+  label: string;
+  polarity: PillPolarity;
+}
+
+interface CheckInMetaPayload {
+  customInfluences?: CustomPill[];
+  customEmotions?: CustomPill[];
+  sliders?: [number, number, number];
+}
+
+const CHECKIN_META_MARKER = '||CHECKIN_META||';
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function numToEnergyLevel(v: number): EnergyLevel {
@@ -48,6 +65,68 @@ function numToStressLevel(v: number): StressLevel {
   if (v <= 3) return 'low';
   if (v <= 7) return 'medium';
   return 'high';
+}
+
+function normalizePillLabel(value: string): string {
+  return value.trim().replace(/\s+/g, ' ');
+}
+
+function buildCustomPillId(label: string): string {
+  return normalizePillLabel(label)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function humanizeTag(tag: string): string {
+  return tag
+    .replace(/^eq_/, '')
+    .split('_')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
+}
+
+function nextPolarity(current?: PillPolarity): PillPolarity {
+  if (!current) return 'neutral';
+  if (current === 'neutral') return 'pos';
+  if (current === 'pos') return 'neg';
+  return 'neutral';
+}
+
+function serializeCheckInMeta(payload: CheckInMetaPayload): string {
+  return `${CHECKIN_META_MARKER}${encodeURIComponent(JSON.stringify(payload))}`;
+}
+
+function parseCheckInMeta(note?: string | null): CheckInMetaPayload {
+  const rawNote = note ?? '';
+  if (!rawNote) return {};
+
+  if (rawNote.includes(CHECKIN_META_MARKER)) {
+    const serialized = rawNote.split(CHECKIN_META_MARKER)[1] ?? '';
+    try {
+      return JSON.parse(decodeURIComponent(serialized)) as CheckInMetaPayload;
+    } catch {
+      return {};
+    }
+  }
+
+  const slidersMatch = rawNote.match(/\|\|SLIDERS\|\|(\d+),(\d+),(\d+)/);
+  const [legacyInfluence = '', legacyEmotion = ''] = rawNote.split('||EMOTION||');
+  const cleanedInfluence = legacyInfluence.replace(/\|\|SLIDERS\|\|.*$/, '').trim();
+  const cleanedEmotion = legacyEmotion.replace(/\|\|SLIDERS\|\|.*$/, '').trim();
+
+  return {
+    sliders: slidersMatch
+      ? [Number(slidersMatch[1]), Number(slidersMatch[2]), Number(slidersMatch[3])]
+      : undefined,
+    customInfluences: cleanedInfluence
+      ? [{ id: buildCustomPillId(cleanedInfluence), label: normalizePillLabel(cleanedInfluence), polarity: 'neutral' }]
+      : [],
+    customEmotions: cleanedEmotion
+      ? [{ id: buildCustomPillId(cleanedEmotion), label: normalizePillLabel(cleanedEmotion), polarity: 'neutral' }]
+      : [],
+  };
 }
 
 const INFLUENCE_TAG_MAP: Record<string, ThemeTag> = {
@@ -237,8 +316,12 @@ export default function MoodCheckIn() {
 
   const [selectedInfluences, setSelectedInfluences] = useState<Map<string, 'neutral' | 'pos' | 'neg'>>(new Map());
   const [selectedEmotions, setSelectedEmotions] = useState<Set<string>>(new Set());
-  const [customInfluence, setCustomInfluence] = useState('');
-  const [customEmotion, setCustomEmotion] = useState('');
+  const [customInfluenceInput, setCustomInfluenceInput] = useState('');
+  const [customEmotionInput, setCustomEmotionInput] = useState('');
+  const [customInfluences, setCustomInfluences] = useState<CustomPill[]>([]);
+  const [customEmotions, setCustomEmotions] = useState<CustomPill[]>([]);
+  const [editingCustomInfluenceId, setEditingCustomInfluenceId] = useState<string | null>(null);
+  const [editingCustomEmotionId, setEditingCustomEmotionId] = useState<string | null>(null);
   const [emotionSectionOpen, setEmotionSectionOpen] = useState(false);
 
   const [chartId, setChartId] = useState<string | null>(null);
@@ -266,7 +349,8 @@ export default function MoodCheckIn() {
     chartId, natalChart, isSaving,
     mood, energy, stress,
     selectedInfluences, selectedEmotions,
-    customInfluence, customEmotion,
+    customInfluenceInput, customEmotionInput,
+    customInfluences, customEmotions,
     isPremium, selectedSlot, selectedDate,
   });
   useEffect(() => {
@@ -274,7 +358,8 @@ export default function MoodCheckIn() {
       chartId, natalChart, isSaving,
       mood, energy, stress,
       selectedInfluences, selectedEmotions,
-      customInfluence, customEmotion,
+      customInfluenceInput, customEmotionInput,
+      customInfluences, customEmotions,
       isPremium, selectedSlot, selectedDate,
     };
   });
@@ -373,34 +458,69 @@ export default function MoodCheckIn() {
             setMood(existing.moodScore);
             setEnergy(energyLevelToNum(existing.energyLevel));
             setStress(stressLevelToNum(existing.stressLevel));
-            setSelectedInfluences(new Map(
-              existing.tags.map(t => {
-                let baseTag = typeof t === 'string' ? t : '';
-                let polarity: 'neutral' | 'pos' | 'neg' = 'neutral';
-                if (baseTag.endsWith('_pos')) { baseTag = baseTag.replace('_pos', ''); polarity = 'pos'; }
-                else if (baseTag.endsWith('_neg')) { baseTag = baseTag.replace('_neg', ''); polarity = 'neg'; }
-                
-                const label = REV_INFLUENCE_TAG[baseTag];
-                return label ? [label, polarity] : null;
-              }).filter(Boolean) as [string, 'neutral' | 'pos' | 'neg'][]
-            ));
-            setSelectedEmotions(new Set(
-              existing.tags.map(t => REV_EMOTION_TAG[t]).filter(Boolean)
-            ));
-            const [noteInfluence = '', noteEmotion = ''] = (existing.note ?? '').split('||EMOTION||');
-            // Extract exact slider values if present (stored as ||SLIDERS||m,e,s)
-            const slidersMatch = (existing.note ?? '').match(/\|\|SLIDERS\|\|(\d+),(\d+),(\d+)/);
-            if (slidersMatch) {
-              setMood(Number(slidersMatch[1]));
-              setEnergy(Number(slidersMatch[2]));
-              setStress(Number(slidersMatch[3]));
+            const meta = parseCheckInMeta(existing.note);
+            const influenceMetaById = new Map((meta.customInfluences ?? []).map((pill) => [pill.id, pill]));
+            const emotionMetaById = new Map((meta.customEmotions ?? []).map((pill) => [pill.id, pill]));
+            const restoredInfluences = new Map<string, PillPolarity>();
+            const restoredCustomInfluences: CustomPill[] = [];
+            const restoredEmotions = new Set<string>();
+            const restoredCustomEmotions: CustomPill[] = [];
+
+            existing.tags.forEach((tagValue) => {
+              let baseTag = typeof tagValue === 'string' ? tagValue : '';
+              let polarity: PillPolarity = 'neutral';
+              if (baseTag.endsWith('_pos')) { baseTag = baseTag.replace(/_pos$/, ''); polarity = 'pos'; }
+              else if (baseTag.endsWith('_neg')) { baseTag = baseTag.replace(/_neg$/, ''); polarity = 'neg'; }
+
+              const influenceLabel = REV_INFLUENCE_TAG[baseTag];
+              if (influenceLabel) {
+                restoredInfluences.set(influenceLabel, polarity);
+                return;
+              }
+
+              const emotionLabel = REV_EMOTION_TAG[baseTag];
+              if (emotionLabel) {
+                restoredEmotions.add(emotionLabel);
+                return;
+              }
+
+              if (baseTag.startsWith('eq_')) {
+                const emotionId = buildCustomPillId(humanizeTag(baseTag));
+                const knownEmotion = emotionMetaById.get(emotionId);
+                restoredCustomEmotions.push({
+                  id: knownEmotion?.id ?? emotionId,
+                  label: knownEmotion?.label ?? humanizeTag(baseTag),
+                  polarity: knownEmotion?.polarity ?? polarity,
+                });
+                return;
+              }
+
+              const influenceId = buildCustomPillId(humanizeTag(baseTag));
+              const knownInfluence = influenceMetaById.get(influenceId);
+              restoredCustomInfluences.push({
+                id: knownInfluence?.id ?? influenceId,
+                label: knownInfluence?.label ?? humanizeTag(baseTag),
+                polarity: knownInfluence?.polarity ?? polarity,
+              });
+            });
+
+            setSelectedInfluences(restoredInfluences);
+            setSelectedEmotions(restoredEmotions);
+            setCustomInfluences(restoredCustomInfluences.filter((pill, index, arr) => arr.findIndex((entry) => entry.id === pill.id) === index));
+            setCustomEmotions(restoredCustomEmotions.filter((pill, index, arr) => arr.findIndex((entry) => entry.id === pill.id) === index));
+            if (meta.sliders) {
+              setMood(Number(meta.sliders[0]));
+              setEnergy(Number(meta.sliders[1]));
+              setStress(Number(meta.sliders[2]));
             } else {
               setMood(existing.moodScore);
               setEnergy(energyLevelToNum(existing.energyLevel));
               setStress(stressLevelToNum(existing.stressLevel));
             }
-            setCustomInfluence(noteInfluence.replace(/\|\|SLIDERS\|\|.*$/, ''));
-            setCustomEmotion(noteEmotion.replace(/\|\|SLIDERS\|\|.*$/, ''));
+            setCustomInfluenceInput('');
+            setCustomEmotionInput('');
+            setEditingCustomInfluenceId(null);
+            setEditingCustomEmotionId(null);
           } else {
             setIsEditingExisting(false);
             setMood(5);
@@ -408,8 +528,12 @@ export default function MoodCheckIn() {
             setStress(5);
             setSelectedInfluences(new Map());
             setSelectedEmotions(new Set());
-            setCustomInfluence('');
-            setCustomEmotion('');
+            setCustomInfluenceInput('');
+            setCustomEmotionInput('');
+            setCustomInfluences([]);
+            setCustomEmotions([]);
+            setEditingCustomInfluenceId(null);
+            setEditingCustomEmotionId(null);
           }
         }
       } catch (e) {
@@ -426,18 +550,19 @@ export default function MoodCheckIn() {
     setSelectedInfluences((prev) => {
       const next = new Map(prev);
       const curr = next.get(tag);
-      if (!curr) {
-        next.set(tag, 'neutral');
-      } else if (curr === 'neutral') {
-        next.set(tag, 'pos');
-      } else if (curr === 'pos') {
-        next.set(tag, 'neg');
-      } else {
-        next.delete(tag);
-      }
+      next.set(tag, nextPolarity(curr));
       return next;
     });
   };
+
+  const clearInfluenceTag = useCallback((tag: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    setSelectedInfluences((prev) => {
+      const next = new Map(prev);
+      next.delete(tag);
+      return next;
+    });
+  }, []);
 
   const toggleEmotionTag = (
     tag: string,
@@ -450,6 +575,76 @@ export default function MoodCheckIn() {
     else newSet.add(tag);
     setSetter(newSet);
   };
+
+  const upsertCustomPill = useCallback((
+    label: string,
+    setPills: React.Dispatch<React.SetStateAction<CustomPill[]>>,
+    editingId: string | null,
+    clearEditing: () => void,
+  ) => {
+    const normalized = normalizePillLabel(label);
+    if (!normalized) return;
+    const nextId = buildCustomPillId(normalized);
+
+    setPills((prev) => {
+      const duplicate = prev.find((pill) => pill.id === nextId && pill.id !== editingId);
+      if (duplicate) {
+        return prev;
+      }
+      if (editingId) {
+        return prev.map((pill) => pill.id === editingId ? { ...pill, id: nextId, label: normalized } : pill);
+      }
+      return [...prev, { id: nextId, label: normalized, polarity: 'neutral' }];
+    });
+    clearEditing();
+  }, []);
+
+  const cycleCustomPill = useCallback((pillId: string, setPills: React.Dispatch<React.SetStateAction<CustomPill[]>>) => {
+    Haptics.selectionAsync().catch(() => {});
+    setPills((prev) => prev.map((pill) => pill.id === pillId ? { ...pill, polarity: nextPolarity(pill.polarity) } : pill));
+  }, []);
+
+  const promptCustomPillAction = useCallback((pill: CustomPill, type: 'influence' | 'emotion') => {
+    Alert.alert(
+      pill.label,
+      'Choose an action for this custom pill.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Edit',
+          onPress: () => {
+            if (type === 'influence') {
+              setEditingCustomInfluenceId(pill.id);
+              setCustomInfluenceInput(pill.label);
+            } else {
+              setEditingCustomEmotionId(pill.id);
+              setCustomEmotionInput(pill.label);
+              setEmotionSectionOpen(true);
+            }
+          },
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            if (type === 'influence') {
+              setCustomInfluences((prev) => prev.filter((entry) => entry.id !== pill.id));
+              if (editingCustomInfluenceId === pill.id) {
+                setEditingCustomInfluenceId(null);
+                setCustomInfluenceInput('');
+              }
+            } else {
+              setCustomEmotions((prev) => prev.filter((entry) => entry.id !== pill.id));
+              if (editingCustomEmotionId === pill.id) {
+                setEditingCustomEmotionId(null);
+                setCustomEmotionInput('');
+              }
+            }
+          },
+        },
+      ],
+    );
+  }, [editingCustomEmotionId, editingCustomInfluenceId]);
 
 
   // Converts free text into a stable tag slug for the insights pipeline.
@@ -465,7 +660,7 @@ export default function MoodCheckIn() {
       chartId, natalChart, isSaving,
       mood, energy, stress,
       selectedInfluences, selectedEmotions,
-      customInfluence, customEmotion,
+      customInfluences, customEmotions,
       isPremium, selectedSlot, selectedDate,
     } = sealRef.current;
 
@@ -481,30 +676,33 @@ export default function MoodCheckIn() {
       const emotionTags: ThemeTag[] = isPremium
         ? [...selectedEmotions].map(t => EMOTION_TAG_MAP[t] ?? t)
         : [];
-
-      // Custom free-text words — sanitize and inject directly into tags so the
-      // insights pipeline can pick them up for pattern tracking over time.
-      const inf = customInfluence.trim();
-      const emo = isPremium ? customEmotion.trim() : '';
-      if (inf) influenceTags.push(textToTag(inf));
-      if (emo) emotionTags.push(`eq_${textToTag(emo)}` as ThemeTag);
+      const customInfluenceTags: ThemeTag[] = customInfluences.map((pill) => {
+        const baseTag = textToTag(pill.label);
+        if (pill.polarity === 'pos') return `${baseTag}_pos` as ThemeTag;
+        if (pill.polarity === 'neg') return `${baseTag}_neg` as ThemeTag;
+        return baseTag;
+      });
+      const customEmotionTags: ThemeTag[] = isPremium
+        ? customEmotions.map((pill) => {
+            const baseTag = `eq_${textToTag(pill.label)}` as ThemeTag;
+            if (pill.polarity === 'pos') return `${baseTag}_pos` as ThemeTag;
+            if (pill.polarity === 'neg') return `${baseTag}_neg` as ThemeTag;
+            return baseTag;
+          })
+        : [];
 
       const input: CheckInInput = {
         moodScore: mood,
         energyLevel: numToEnergyLevel(energy),
         stressLevel: numToStressLevel(stress),
-        tags: [...influenceTags, ...emotionTags],
+        tags: [...influenceTags, ...emotionTags, ...customInfluenceTags, ...customEmotionTags],
         timeOfDay: selectedSlot,
         date: selectedDate,
-        // note stores the original display text for restore on edit.
-        // ||SLIDERS|| encodes the exact numeric slider values so they
-        // round-trip perfectly when the user taps back to this check-in.
-        note: (() => {
-          const sliders = `||SLIDERS||${mood},${energy},${stress}`;
-          if (inf && emo) return `${inf}||EMOTION||${emo}${sliders}`;
-          if (emo) return `||EMOTION||${emo}${sliders}`;
-          return `${inf}${sliders}`;
-        })(),
+        note: serializeCheckInMeta({
+          customInfluences,
+          customEmotions: isPremium ? customEmotions : [],
+          sliders: [mood, energy, stress],
+        }),
       };
       await CheckInService.saveCheckIn(input, natalChart, chartId);
 
@@ -642,7 +840,7 @@ export default function MoodCheckIn() {
         {/* Influence Tags */}
         <View style={styles.tagsSection}>
           <Text style={styles.sectionLabel}>WHAT'S INFLUENCING THIS?</Text>
-          <Text style={styles.tagsHint}>Tap to select. Tap again to mark as positive or negative.</Text>
+          <Text style={styles.tagsHint}>Tap to cycle white, green, red. Hold built-ins to clear. Hold custom pills to edit or delete.</Text>
           <View style={styles.tagGrid}>
             {influences.map(tag => (
               <TagButton
@@ -652,29 +850,58 @@ export default function MoodCheckIn() {
                 isSelected={selectedInfluences.has(tag)}
                 polarity={selectedInfluences.get(tag) ?? 'neutral'}
                 onPress={() => toggleInfluenceTag(tag)}
+                onLongPress={() => clearInfluenceTag(tag)}
               />
             ))}
-            {customInfluence.trim().length > 0 && (
+            {customInfluences.map((pill) => (
               <Pressable
-                style={[styles.tagButton, styles.tagButtonSelected]}
-                onPress={() => { Haptics.selectionAsync(); setCustomInfluence(''); }}
+                key={pill.id}
+                style={[
+                  styles.tagButton,
+                  styles.tagButtonSelected,
+                  pill.polarity === 'pos' && styles.tagButtonPositive,
+                  pill.polarity === 'neg' && styles.tagButtonNegative,
+                ]}
+                onPress={() => cycleCustomPill(pill.id, setCustomInfluences)}
+                onLongPress={() => promptCustomPillAction(pill, 'influence')}
               >
-                <Ionicons name="add-circle-outline" size={13} color="#050507" style={styles.tagIcon} />
-                <Text style={[styles.tagText, styles.tagTextSelected]}>{customInfluence.trim()}</Text>
-                <Ionicons name="close-outline" size={12} color="#050507" style={{ marginLeft: 3 }} />
+                <Ionicons name="add-circle-outline" size={13} color={pill.polarity === 'neutral' ? '#050507' : '#FFF'} style={styles.tagIcon} />
+                <Text style={[styles.tagText, pill.polarity === 'neutral' ? styles.tagTextSelected : { color: '#FFF', fontWeight: 'bold' }]}>{pill.label}</Text>
               </Pressable>
-            )}
+            ))}
           </View>
-          <TextInput
-            style={[styles.customInfluenceInput, customInfluence.trim().length > 0 && styles.customInputActive]}
-            placeholder="Anything else on your mind..."
-            placeholderTextColor="rgba(255,255,255,0.2)"
-            value={customInfluence}
-            onChangeText={setCustomInfluence}
-            onSubmitEditing={() => { if (customInfluence.trim()) Haptics.selectionAsync(); }}
-            returnKeyType="done"
-            maxLength={120}
-          />
+          <View style={styles.customPillComposer}>
+            <TextInput
+              style={[styles.customInfluenceInput, customInfluenceInput.trim().length > 0 && styles.customInputActive]}
+              placeholder="Anything else on your mind..."
+              placeholderTextColor="rgba(255,255,255,0.2)"
+              value={customInfluenceInput}
+              onChangeText={setCustomInfluenceInput}
+              onSubmitEditing={() => {
+                if (!customInfluenceInput.trim()) return;
+                Haptics.selectionAsync().catch(() => {});
+                upsertCustomPill(customInfluenceInput, setCustomInfluences, editingCustomInfluenceId, () => {
+                  setCustomInfluenceInput('');
+                  setEditingCustomInfluenceId(null);
+                });
+              }}
+              returnKeyType="done"
+              maxLength={120}
+            />
+            <Pressable
+              style={styles.customComposerAction}
+              onPress={() => {
+                if (!customInfluenceInput.trim()) return;
+                Haptics.selectionAsync().catch(() => {});
+                upsertCustomPill(customInfluenceInput, setCustomInfluences, editingCustomInfluenceId, () => {
+                  setCustomInfluenceInput('');
+                  setEditingCustomInfluenceId(null);
+                });
+              }}
+            >
+              <Text style={styles.customComposerActionText}>{editingCustomInfluenceId ? 'Update' : 'Add'}</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* Emotional Quality Tags (Deeper Sky) — collapsible dropdown */}
@@ -693,8 +920,8 @@ export default function MoodCheckIn() {
               {selectedEmotions.size > 0 && (
                 <Text style={styles.emotionDropdownCount}>{selectedEmotions.size} selected</Text>
               )}
-              {customEmotion.trim().length > 0 && (
-                <Text style={styles.emotionDropdownCustom} numberOfLines={1}>{customEmotion.trim()}</Text>
+              {customEmotions.length > 0 && (
+                <Text style={styles.emotionDropdownCustom} numberOfLines={1}>{customEmotions.map((pill) => pill.label).join(', ')}</Text>
               )}
               <Ionicons
                 name={emotionSectionOpen ? 'chevron-up' : 'chevron-down'}
@@ -721,28 +948,56 @@ export default function MoodCheckIn() {
                     isLocked={!isPremium}
                   />
                 ))}
-                {isPremium && customEmotion.trim().length > 0 && (
+                {isPremium && customEmotions.map((pill) => (
                   <Pressable
-                    style={[styles.tagButton, styles.tagButtonSelectedPremium]}
-                    onPress={() => { Haptics.selectionAsync(); setCustomEmotion(''); }}
+                    key={pill.id}
+                    style={[
+                      styles.tagButton,
+                      styles.tagButtonSelected,
+                      pill.polarity === 'pos' && styles.tagButtonPositive,
+                      pill.polarity === 'neg' && styles.tagButtonNegative,
+                    ]}
+                    onPress={() => cycleCustomPill(pill.id, setCustomEmotions)}
+                    onLongPress={() => promptCustomPillAction(pill, 'emotion')}
                   >
-                    <Ionicons name="add-circle-outline" size={13} color="#FFF" style={styles.tagIcon} />
-                    <Text style={[styles.tagText, { color: '#FFF', fontWeight: 'bold' }]}>{customEmotion.trim()}</Text>
-                    <Ionicons name="close-outline" size={12} color="#FFF" style={{ marginLeft: 3 }} />
+                    <Ionicons name="add-circle-outline" size={13} color={pill.polarity === 'neutral' ? '#050507' : '#FFF'} style={styles.tagIcon} />
+                    <Text style={[styles.tagText, pill.polarity === 'neutral' ? styles.tagTextSelected : { color: '#FFF', fontWeight: 'bold' }]}>{pill.label}</Text>
                   </Pressable>
-                )}
+                ))}
               </View>
               {isPremium && (
-                <TextInput
-                  style={[styles.customInfluenceInput, customEmotion.trim().length > 0 && styles.customInputActive]}
-                  placeholder="Your own word..."
-                  placeholderTextColor="rgba(110,140,180,0.35)"
-                  value={customEmotion}
-                  onChangeText={setCustomEmotion}
-                  onSubmitEditing={() => { if (customEmotion.trim()) Haptics.selectionAsync(); }}
-                  returnKeyType="done"
-                  maxLength={60}
-                />
+                <View style={styles.customPillComposer}>
+                  <TextInput
+                    style={[styles.customInfluenceInput, customEmotionInput.trim().length > 0 && styles.customInputActive]}
+                    placeholder="Your own word..."
+                    placeholderTextColor="rgba(110,140,180,0.35)"
+                    value={customEmotionInput}
+                    onChangeText={setCustomEmotionInput}
+                    onSubmitEditing={() => {
+                      if (!customEmotionInput.trim()) return;
+                      Haptics.selectionAsync().catch(() => {});
+                      upsertCustomPill(customEmotionInput, setCustomEmotions, editingCustomEmotionId, () => {
+                        setCustomEmotionInput('');
+                        setEditingCustomEmotionId(null);
+                      });
+                    }}
+                    returnKeyType="done"
+                    maxLength={60}
+                  />
+                  <Pressable
+                    style={styles.customComposerAction}
+                    onPress={() => {
+                      if (!customEmotionInput.trim()) return;
+                      Haptics.selectionAsync().catch(() => {});
+                      upsertCustomPill(customEmotionInput, setCustomEmotions, editingCustomEmotionId, () => {
+                        setCustomEmotionInput('');
+                        setEditingCustomEmotionId(null);
+                      });
+                    }}
+                  >
+                    <Text style={styles.customComposerActionText}>{editingCustomEmotionId ? 'Update' : 'Add'}</Text>
+                  </Pressable>
+                </View>
               )}
               {!isPremium && (
                 <Text style={styles.lockedHint}>
@@ -896,6 +1151,7 @@ const TagButton = ({
   isSelected,
   polarity = 'neutral',
   onPress,
+  onLongPress,
   isPremiumVariant = false,
   isLocked = false,
 }: {
@@ -904,6 +1160,7 @@ const TagButton = ({
   isSelected: boolean;
   polarity?: 'neutral' | 'pos' | 'neg';
   onPress: () => void;
+  onLongPress?: () => void;
   isPremiumVariant?: boolean;
   isLocked?: boolean;
 }) => {
@@ -919,6 +1176,7 @@ const TagButton = ({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       style={[
         styles.tagButton,
         isPremiumVariant && styles.tagButtonPremiumBase,
@@ -1003,7 +1261,6 @@ const styles = StyleSheet.create({
   sliderLabel: { fontSize: 8, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: 0.8, flex: 1 },
 
   customInfluenceInput: {
-    marginTop: 14,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 24,
     borderWidth: 1,
@@ -1012,10 +1269,30 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 13,
     color: 'rgba(255,255,255,0.75)',
+    flex: 1,
   },
   customInputActive: {
     borderColor: 'rgba(255,255,255,0.25)',
     backgroundColor: 'rgba(255,255,255,0.07)',
+  },
+  customPillComposer: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  customComposerAction: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  customComposerActionText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
 
   tagsSection: { marginBottom: 32 },

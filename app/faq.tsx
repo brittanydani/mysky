@@ -61,24 +61,24 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
             <Ionicons name="help-circle-outline" size={132} color={theme.textGold} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: April 4, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: April 7, 2026</Text>
 
           <View style={styles.faqSection}>
             <View style={styles.faqCard}>
             <Text style={styles.question}>Do I need an account to use MySky?</Text>
             <Text style={styles.answer}>
-              Yes. A free account (email and password) is required to use MySky. Your authentication credentials are stored securely on Supabase, while all personal data (journal entries, check-ins, birth data, etc.) stays on your device. Sign-up takes only a minute. All core features — mood tracking, journaling, sleep logging, and birth chart — are available on the free plan. Free users also get 1 relationship chart. A Deeper Sky subscription is required for premium features such as dream analysis, AI Reflection Insights, and encrypted backup.
+              Yes. A free account (email and password) is required to use MySky. Your authentication credentials are stored securely on Supabase, while all personal data (journal entries, check-ins, birth data, etc.) stays on your device. Sign-up takes only a minute. All core features — mood tracking, journaling, sleep logging, AI dream interpretation, and birth chart — are available on the free plan. Free users also get 1 relationship chart. A Deeper Sky subscription is required for premium upgrades such as the richer dream model, AI Reflection Insights, and encrypted backup.
             </Text>
 
             <Text style={styles.question}>What's included for free vs. Deeper Sky?</Text>
             <Text style={styles.answer}>
-              <Text style={styles.highlight}>Free:</Text> Personal birth chart, Big Three, daily mood/energy/stress check-ins, basic journaling, sleep quality logging, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context with moon phase and transit awareness.{"\n\n"}
-              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with symbolic reflections, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
+              <Text style={styles.highlight}>Free:</Text> Personal birth chart, Big Three, daily mood/energy/stress check-ins, basic journaling, sleep quality logging, AI dream interpretation with the standard Gemini model, balance dashboard, 2 rotating energy domains, 1 relationship chart, 3 personal story chapters, and daily context with moon phase and transit awareness.{"\n\n"}
+              <Text style={styles.highlight}>Deeper Sky:</Text> Dream journal with AI interpretation using a richer Gemini model, extended personal reflection trends, unlimited relationship charts, all 10 personal story chapters, growth and attachment reflections, full chakra energy reading with all 7 chakras, emotional quality tagging, AI Reflection Insights, personalized daily guidance with action steps, sensitivity and growth mapping, PDF chart export, encrypted backup and restore, and extended pattern reflections.
             </Text>
 
             <Text style={styles.question}>What data does MySky store and where?</Text>
             <Text style={styles.answer}>
-              Most of your data — birth data, journal entries, check-ins, sleep logs, dream content, relationship charts, energy readings, and settings — is stored locally on your device in a SQLite database. Sensitive fields (journal text, birth places, coordinates, dream content, mood/stress/energy scores, emotional tags, notes, wins, and challenges) are encrypted at rest using <Text style={styles.highlight}>AES-256-GCM</Text> with keys stored in your device's hardware-backed secure storage in the iOS Keychain. Your authentication credentials are stored on Supabase. External network calls are limited to authentication, geocoding lookups (city name only), subscription verification through RevenueCat, operational telemetry through Sentry, and optional AI features.
+              Most of your data — birth data, journal entries, check-ins, sleep logs, dream content, relationship charts, energy readings, and settings — is stored locally on your device in a SQLite database. Sensitive fields (journal text, birth places, coordinates, dream content, mood/stress/energy scores, emotional tags, notes, wins, and challenges) are encrypted at rest using <Text style={styles.highlight}>AES-256-GCM</Text> with keys stored in your device's hardware-backed secure storage in the iOS Keychain. Your authentication credentials are stored on Supabase. External network calls are limited to authentication, password recovery email delivery, geocoding lookups (city name only), subscription verification through RevenueCat, operational telemetry through Sentry, and optional AI features.
             </Text>
 
             <Text style={styles.question}>What are AI Reflection Insights and what data do they use?</Text>
@@ -88,7 +88,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>Are dream reflections powered by AI?</Text>
             <Text style={styles.answer}>
-              Standard dream reflections are generated <Text style={styles.highlight}>entirely on your device</Text> using symbolic pattern mapping with a Jungian archetype dictionary. Text signals, feelings, check-in context, and history are blended with weighted scoring. Separately, MySky also offers an optional premium AI-Enhanced Dream Interpretation feature that can send dream text and selected dream feelings to Google Gemini for an additional narrative layer.
+              Dream reflections combine on-device symbolic analysis with an AI narrative pass from Google Gemini. The app first extracts symbols, feelings, and pattern context locally, then sends only dream text and selected dream feelings for the AI interpretation. Free users use the standard Gemini model, while Deeper Sky uses a richer model for more depth.
             </Text>
 
             <Text style={styles.question}>How does the journal NLP analysis work?</Text>
@@ -98,7 +98,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>Is my data ever sold or shared with third parties?</Text>
             <Text style={styles.answer}>
-              Never. Your data is never sold, shared for advertising, or used for AI/ML training. MySky does not collect advertising identifiers or perform cross-app tracking. Limited disclosures to service providers include authentication (Supabase), city name geocoding (OpenStreetMap), subscription verification (RevenueCat), operational crash/error telemetry (Sentry), and optional AI features (Supabase/Anthropic/Google Gemini — aggregated stats or dream text only).
+              Never. Your data is never sold, shared for advertising, or used for AI/ML training. MySky does not collect advertising identifiers or perform cross-app tracking. Limited disclosures to service providers include authentication (Supabase), password recovery delivery (Resend), city name geocoding (OpenStreetMap), subscription verification (RevenueCat), operational crash/error telemetry (Sentry), and optional AI features (Supabase/Anthropic/Google Gemini — aggregated stats or dream text only).
             </Text>
 
             <Text style={styles.question}>Can I export or delete my data?</Text>
@@ -221,7 +221,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>How does AI-Enhanced Dream Interpretation work?</Text>
             <Text style={styles.answer}>
-              When available, dream text and selected dream feelings are sent to Google Gemini to generate a richer narrative interpretation that supplements the on-device symbolic engine. <Text style={styles.highlight}>No birth data, user identifiers, or other personal information is included.</Text> The on-device interpretation is always generated first, regardless of AI availability. This is a premium feature.
+              When available, dream text and selected dream feelings are sent to Google Gemini to generate the narrative interpretation shown in the app. <Text style={styles.highlight}>No birth data, user identifiers, or other personal information is included.</Text> The app still performs on-device symbolic analysis first to extract context and guardrails. Free users use the standard Gemini model, while Deeper Sky uses a richer model for more nuance.
             </Text>
 
             <Text style={styles.question}>What are AI Pattern Insights?</Text>

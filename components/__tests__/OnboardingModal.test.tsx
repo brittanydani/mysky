@@ -12,6 +12,8 @@ import { Alert } from 'react-native';
 
 const mockSignUp = jest.fn();
 const mockSignInWithPassword = jest.fn();
+const mockRequestPasswordRecoveryCode = jest.fn();
+const mockCompletePasswordRecovery = jest.fn();
 const mockGetSession = jest.fn();
 
 jest.mock('../../lib/supabase', () => ({
@@ -22,6 +24,11 @@ jest.mock('../../lib/supabase', () => ({
       getSession: () => mockGetSession(),
     },
   },
+}));
+
+jest.mock('../../services/auth/passwordRecovery', () => ({
+  requestPasswordRecoveryCode: (...args: unknown[]) => mockRequestPasswordRecoveryCode(...args),
+  completePasswordRecovery: (...args: unknown[]) => mockCompletePasswordRecovery(...args),
 }));
 
 const mockSaveChart = jest.fn().mockResolvedValue(undefined);
@@ -169,6 +176,21 @@ describe('OnboardingModal', () => {
   });
 
   describe('auth step within onboarding', () => {
+    it('toggles password visibility on the auth step', async () => {
+      const { getByText, getByLabelText, getByPlaceholderText } = render(<OnboardingModal {...defaultProps} />);
+
+      await act(async () => {
+        fireEvent.press(getByText(/get started/i));
+      });
+
+      expect(getByPlaceholderText(/password/i).props.secureTextEntry).toBe(true);
+
+      fireEvent.press(getByLabelText('Show password'));
+
+      expect(getByLabelText('Hide password')).toBeTruthy();
+      expect(getByPlaceholderText(/password/i).props.secureTextEntry).toBe(false);
+    });
+
     it('validates missing fields', async () => {
       const { getByText } = render(<OnboardingModal {...defaultProps} />);
       // Navigate to auth step
@@ -209,6 +231,91 @@ describe('OnboardingModal', () => {
         email: 'user@test.com',
         password: 'securepass',
       });
+    });
+
+    it('requests a recovery code from the auth step', async () => {
+      mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
+
+      const { getByText, getByLabelText } = render(<OnboardingModal {...defaultProps} />);
+      await act(async () => {
+        fireEvent.press(getByText(/get started/i));
+      });
+
+      await act(async () => {
+        fireEvent.press(getByLabelText('Forgot password'));
+      });
+
+      fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+
+      await act(async () => {
+        fireEvent.press(getByLabelText('Email Me a Code'));
+      });
+
+      expect(mockRequestPasswordRecoveryCode).toHaveBeenCalledWith('user@test.com');
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Check your email',
+        'If an account exists for this email, we sent a 6-digit recovery code.',
+      );
+    });
+
+    it('completes recovery and signs in from the auth step', async () => {
+      mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
+      mockCompletePasswordRecovery.mockResolvedValue(undefined);
+      mockSignInWithPassword.mockResolvedValue({ error: null });
+      mockGetCharts.mockResolvedValue([]);
+
+      const { getByText, getByLabelText } = render(<OnboardingModal {...defaultProps} />);
+      await act(async () => {
+        fireEvent.press(getByText(/get started/i));
+      });
+
+      await act(async () => {
+        fireEvent.press(getByLabelText('Forgot password'));
+      });
+
+      fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+
+      await act(async () => {
+        fireEvent.press(getByLabelText('Email Me a Code'));
+      });
+
+      fireEvent.changeText(getByLabelText('Recovery code'), '123456');
+      fireEvent.changeText(getByLabelText('New password'), 'securepass');
+      fireEvent.changeText(getByLabelText('Confirm new password'), 'securepass');
+
+      await act(async () => {
+        fireEvent.press(getByText('Reset Password'));
+      });
+
+      expect(mockCompletePasswordRecovery).toHaveBeenCalledWith({
+        email: 'user@test.com',
+        code: '123456',
+        newPassword: 'securepass',
+      });
+      expect(mockSignInWithPassword).toHaveBeenLastCalledWith({
+        email: 'user@test.com',
+        password: 'securepass',
+      });
+      expect(defaultProps.onComplete).not.toHaveBeenCalled();
+      expect(getByText(/your privacy matters/i)).toBeTruthy();
+    });
+
+    it('goes back to sign-in from recovery mode', async () => {
+      const { getByText, getByLabelText, queryByLabelText } = render(<OnboardingModal {...defaultProps} />);
+      await act(async () => {
+        fireEvent.press(getByText(/get started/i));
+      });
+
+      await act(async () => {
+        fireEvent.press(getByLabelText('Forgot password'));
+      });
+
+      await act(async () => {
+        fireEvent.press(getByLabelText('Back to sign in'));
+      });
+
+      expect(queryByLabelText('Recovery email address')).toBeNull();
+      expect(getByLabelText('Password')).toBeTruthy();
     });
 
     it('sign-up with no session prompts email confirmation', async () => {

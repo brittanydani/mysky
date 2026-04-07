@@ -51,6 +51,10 @@ import { toLocalDateString } from '../utils/dateUtils';
 import { logger } from     '../utils/logger';
 import Constants from 'expo-constants';
 import { supabase } from '../lib/supabase';
+import {
+  completePasswordRecovery,
+  requestPasswordRecoveryCode,
+} from '../services/auth/passwordRecovery';
 
 // ── Liquid Mirror Gold Palette ──
 const PREMIUM = {
@@ -260,6 +264,14 @@ export default function OnboardingModal({
   const [pendingChart, setPendingChart] = useState<NatalChart | null>(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
+  const [showAuthPassword, setShowAuthPassword] = useState(false);
+  const [authRecoveryOpen, setAuthRecoveryOpen] = useState(false);
+  const [authRecoveryCodeSent, setAuthRecoveryCodeSent] = useState(false);
+  const [authRecoveryEmail, setAuthRecoveryEmail] = useState('');
+  const [authRecoveryCode, setAuthRecoveryCode] = useState('');
+  const [authRecoveryPassword, setAuthRecoveryPassword] = useState('');
+  const [authRecoveryConfirmPassword, setAuthRecoveryConfirmPassword] = useState('');
+  const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'sign-up' | 'sign-in'>('sign-in');
   const [authLoading, setAuthLoading] = useState(false);
   const [passphrase, setPassphrase] = useState('');
@@ -530,6 +542,106 @@ export default function OnboardingModal({
       Alert.alert('Restore Failed', 'Could not restore from backup. Please check your passphrase and try again.', [
         { text: 'OK', onPress: () => setStep('welcome') },
       ]);
+    }
+  };
+
+  const closeAuthRecovery = () => {
+    setAuthRecoveryOpen(false);
+    setAuthRecoveryCodeSent(false);
+    setAuthRecoveryCode('');
+    setAuthRecoveryPassword('');
+    setAuthRecoveryConfirmPassword('');
+    setShowRecoveryPassword(false);
+  };
+
+  const openAuthRecovery = () => {
+    setAuthRecoveryEmail(authEmail.trim());
+    setAuthRecoveryCode('');
+    setAuthRecoveryPassword('');
+    setAuthRecoveryConfirmPassword('');
+    setShowRecoveryPassword(false);
+    setAuthRecoveryCodeSent(false);
+    setAuthRecoveryOpen(true);
+  };
+
+  const handleSendAuthRecoveryCode = async () => {
+    const trimmedEmail = authRecoveryEmail.trim();
+
+    if (!trimmedEmail) {
+      Alert.alert('Email required', 'Enter your email address to receive a recovery code.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      await requestPasswordRecoveryCode(trimmedEmail);
+      setAuthRecoveryCodeSent(true);
+      Alert.alert(
+        'Check your email',
+        'If an account exists for this email, we sent a 6-digit recovery code.',
+      );
+    } catch (error: unknown) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Password recovery is temporarily unavailable.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleCompleteAuthRecovery = async () => {
+    const trimmedEmail = authRecoveryEmail.trim();
+
+    if (!trimmedEmail) {
+      Alert.alert('Email required', 'Enter your email address to reset your password.');
+      return;
+    }
+    if (!authRecoveryCode.trim()) {
+      Alert.alert('Code required', 'Enter the 6-digit recovery code from your email.');
+      return;
+    }
+    if (authRecoveryPassword.length < 6) {
+      Alert.alert('Password too short', 'Password must be at least 6 characters.');
+      return;
+    }
+    if (authRecoveryPassword !== authRecoveryConfirmPassword) {
+      Alert.alert('Passwords do not match', 'Re-enter your new password so both fields match.');
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      await completePasswordRecovery({
+        email: trimmedEmail,
+        code: authRecoveryCode,
+        newPassword: authRecoveryPassword,
+      });
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: authRecoveryPassword,
+      });
+      if (error) throw error;
+
+      setAuthEmail(trimmedEmail);
+      setAuthPassword(authRecoveryPassword);
+      closeAuthRecovery();
+      if (pendingChart) {
+        onComplete(pendingChart);
+      } else {
+        const existingCharts = await localDb.getCharts();
+        if (existingCharts.length > 0) {
+          onComplete();
+        } else {
+          goToStep('privacy');
+        }
+      }
+    } catch (error: unknown) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Could not reset password right now.');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -1043,40 +1155,135 @@ export default function OnboardingModal({
                       <MetallicIcon name="sparkles-outline" size={32} color={PREMIUM.titanium} />
                     </View>
                     <Text style={st.etherealQuestion}>
-                      {authMode === 'sign-up' ? 'Create your account' : 'Welcome back'}
+                      {authRecoveryOpen ? 'Reset your password' : authMode === 'sign-up' ? 'Create your account' : 'Welcome back'}
                     </Text>
                     <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
-                      {authMode === 'sign-up'
-                        ? 'Your reflections stay private, encrypted, and yours.'
-                        : 'Sign in to restore access to your data.'}
+                      {authRecoveryOpen
+                        ? authRecoveryCodeSent
+                          ? 'Enter the code from your email and choose a new password.'
+                          : 'We will email you a one-time recovery code.'
+                        : authMode === 'sign-up'
+                          ? 'Your reflections stay private, encrypted, and yours.'
+                          : 'Sign in to restore access to your data.'}
                     </MetallicText>
 
                     <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginTop: 24, marginBottom: 10 }]}>
                       <TextInput
                         style={st.passphraseInput}
-                        value={authEmail}
-                        onChangeText={setAuthEmail}
+                        value={authRecoveryOpen ? authRecoveryEmail : authEmail}
+                        onChangeText={authRecoveryOpen ? setAuthRecoveryEmail : setAuthEmail}
                         placeholder="Email"
                         placeholderTextColor={PREMIUM.textMuted}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoCorrect={false}
                         selectionColor={PREMIUM.titanium}
+                        accessibilityLabel={authRecoveryOpen ? 'Recovery email address' : 'Email address'}
                       />
                     </BlurView>
-                    <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 20 }]}>
-                      <TextInput
-                        style={st.passphraseInput}
-                        value={authPassword}
-                        onChangeText={setAuthPassword}
-                        placeholder="Password"
-                        placeholderTextColor={PREMIUM.textMuted}
-                        secureTextEntry
-                        returnKeyType="done"
-                        onSubmitEditing={handleAuthSubmit}
-                        selectionColor={PREMIUM.titanium}
-                      />
-                    </BlurView>
+                    {authRecoveryOpen ? (
+                      <>
+                        {authRecoveryCodeSent && (
+                          <>
+                            <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 10 }]}>
+                              <TextInput
+                                style={st.passphraseInput}
+                                value={authRecoveryCode}
+                                onChangeText={setAuthRecoveryCode}
+                                placeholder="6-digit code"
+                                placeholderTextColor={PREMIUM.textMuted}
+                                keyboardType="number-pad"
+                                selectionColor={PREMIUM.titanium}
+                                maxLength={6}
+                                accessibilityLabel="Recovery code"
+                              />
+                            </BlurView>
+                            <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 10 }]}>
+                              <View style={st.passwordInputRow}>
+                                <TextInput
+                                  style={[st.passphraseInput, st.passwordInput]}
+                                  value={authRecoveryPassword}
+                                  onChangeText={setAuthRecoveryPassword}
+                                  placeholder="New password"
+                                  placeholderTextColor={PREMIUM.textMuted}
+                                  secureTextEntry={!showRecoveryPassword}
+                                  selectionColor={PREMIUM.titanium}
+                                  accessibilityLabel="New password"
+                                />
+                                <Pressable
+                                  onPress={() => setShowRecoveryPassword((current) => !current)}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={showRecoveryPassword ? 'Hide new password' : 'Show new password'}
+                                  style={st.passwordEyeButton}
+                                >
+                                  <Ionicons
+                                    name={showRecoveryPassword ? 'eye-off-outline' : 'eye-outline'}
+                                    size={20}
+                                    color={PREMIUM.textMuted}
+                                  />
+                                </Pressable>
+                              </View>
+                            </BlurView>
+                            <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 16 }]}>
+                              <TextInput
+                                style={st.passphraseInput}
+                                value={authRecoveryConfirmPassword}
+                                onChangeText={setAuthRecoveryConfirmPassword}
+                                placeholder="Confirm new password"
+                                placeholderTextColor={PREMIUM.textMuted}
+                                secureTextEntry={!showRecoveryPassword}
+                                returnKeyType="done"
+                                onSubmitEditing={handleCompleteAuthRecovery}
+                                selectionColor={PREMIUM.titanium}
+                                accessibilityLabel="Confirm new password"
+                              />
+                            </BlurView>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: authMode === 'sign-in' ? 10 : 20 }]}>
+                          <View style={st.passwordInputRow}>
+                            <TextInput
+                              style={[st.passphraseInput, st.passwordInput]}
+                              value={authPassword}
+                              onChangeText={setAuthPassword}
+                              placeholder="Password"
+                              placeholderTextColor={PREMIUM.textMuted}
+                              secureTextEntry={!showAuthPassword}
+                              returnKeyType="done"
+                              onSubmitEditing={handleAuthSubmit}
+                              selectionColor={PREMIUM.titanium}
+                              accessibilityLabel="Password"
+                            />
+                            <Pressable
+                              onPress={() => setShowAuthPassword((current) => !current)}
+                              accessibilityRole="button"
+                              accessibilityLabel={showAuthPassword ? 'Hide password' : 'Show password'}
+                              style={st.passwordEyeButton}
+                            >
+                              <Ionicons
+                                name={showAuthPassword ? 'eye-off-outline' : 'eye-outline'}
+                                size={20}
+                                color={PREMIUM.textMuted}
+                              />
+                            </Pressable>
+                          </View>
+                        </BlurView>
+
+                        {authMode === 'sign-in' && (
+                          <Pressable
+                            style={st.authSecondaryLink}
+                            onPress={openAuthRecovery}
+                            accessibilityRole="button"
+                            accessibilityLabel="Forgot password"
+                          >
+                            <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.titanium}>Forgot password?</MetallicText>
+                          </Pressable>
+                        )}
+                      </>
+                    )}
 
                     <Animated.View style={[st.primaryActionBtn, { width: '100%', marginBottom: 16 }, ctaAnimStyle]}>
                       <Pressable
@@ -1084,7 +1291,15 @@ export default function OnboardingModal({
                         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
                         onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
                         onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
-                        onPress={handleAuthSubmit}
+                        accessibilityRole="button"
+                        accessibilityLabel={authRecoveryOpen
+                          ? authRecoveryCodeSent ? 'Reset Password' : 'Email Me a Code'
+                          : authMode === 'sign-up' ? 'Create Account' : 'Sign In'}
+                        onPress={authRecoveryOpen
+                          ? authRecoveryCodeSent
+                            ? handleCompleteAuthRecovery
+                            : handleSendAuthRecoveryCode
+                          : handleAuthSubmit}
                       >
                         <LinearGradient
                           colors={LIQUID_GOLD}
@@ -1096,20 +1311,45 @@ export default function OnboardingModal({
                           <ActivityIndicator color={PREMIUM.bgOled} />
                         ) : (
                           <Text style={st.primaryActionBtnText}>
-                            {authMode === 'sign-up' ? 'Create Account' : 'Sign In'}
+                            {authRecoveryOpen
+                              ? authRecoveryCodeSent ? 'Reset Password' : 'Email Me a Code'
+                              : authMode === 'sign-up' ? 'Create Account' : 'Sign In'}
                           </Text>
                         )}
                       </Pressable>
                     </Animated.View>
 
-                    <Pressable
-                      style={st.restoreButton}
-                      onPress={() => setAuthMode(authMode === 'sign-up' ? 'sign-in' : 'sign-up')}
-                    >
-                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>
-                        {authMode === 'sign-up' ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-                      </MetallicText>
-                    </Pressable>
+                    {authRecoveryOpen ? (
+                      <>
+                        {authRecoveryCodeSent && (
+                          <Pressable
+                            style={st.restoreButton}
+                            onPress={handleSendAuthRecoveryCode}
+                            accessibilityRole="button"
+                            accessibilityLabel="Resend code"
+                          >
+                            <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Resend code</MetallicText>
+                          </Pressable>
+                        )}
+                        <Pressable
+                          style={st.restoreButton}
+                          onPress={closeAuthRecovery}
+                          accessibilityRole="button"
+                          accessibilityLabel="Back to sign in"
+                        >
+                          <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Back to sign in</MetallicText>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <Pressable
+                        style={st.restoreButton}
+                        onPress={() => setAuthMode(authMode === 'sign-up' ? 'sign-in' : 'sign-up')}
+                      >
+                        <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>
+                          {authMode === 'sign-up' ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                        </MetallicText>
+                      </Pressable>
+                    )}
                   </Animated.View>
                 </Pressable>
               )}
@@ -1800,5 +2040,25 @@ const st = StyleSheet.create({
     fontWeight: '500',
     color: PREMIUM.textMain,
     textAlign: 'center',
+  },
+  passwordInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingRight: 0,
+  },
+  passwordEyeButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+  },
+  authSecondaryLink: {
+    alignSelf: 'flex-end',
+    marginBottom: 16,
+  },
+  authSecondaryLinkText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

@@ -13,6 +13,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
@@ -29,6 +30,8 @@ import type { TriggerEvent, LogMode, NSState } from '../utils/triggerEventTypes'
 export type { TriggerEvent } from '../utils/triggerEventTypes';
 
 const STORAGE_KEY = '@mysky:trigger_events';
+const CUSTOM_AREAS_KEY = '@mysky:trigger_custom_areas';
+const CUSTOM_SENSATIONS_KEY = '@mysky:trigger_custom_sensations';
 
 const PALETTE = {
   bg: '#020817',
@@ -43,6 +46,17 @@ const PALETTE = {
 };
 
 type ViewMode = 'log' | 'history';
+
+interface CustomAreaOption {
+  id: string;
+  label: string;
+}
+
+interface CustomSensationOption {
+  id: string;
+  label: string;
+  mode: LogMode;
+}
 
 const SENSATIONS: Record<LogMode, string[]> = {
   drain: [
@@ -178,12 +192,16 @@ export default function TriggerLogScreen() {
   const [selectedSensations, setSelectedSensations] = useState<string[]>([]);
   const [customSensation, setCustomSensation] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customSensationOptions, setCustomSensationOptions] = useState<CustomSensationOption[]>([]);
+  const [editingCustomSensationId, setEditingCustomSensationId] = useState<string | null>(null);
   const [intensity, setIntensity] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
   const [resolution, setResolution] = useState('');
   const [contextArea, setContextArea] = useState<string | null>(null);
   const [showMoreAreas, setShowMoreAreas] = useState(false);
   const [customAreaInput, setCustomAreaInput] = useState('');
   const [showCustomAreaInput, setShowCustomAreaInput] = useState(false);
+  const [customAreaOptions, setCustomAreaOptions] = useState<CustomAreaOption[]>([]);
+  const [editingCustomAreaId, setEditingCustomAreaId] = useState<string | null>(null);
   const [beforeState, setBeforeState] = useState<NSState | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -192,6 +210,7 @@ export default function TriggerLogScreen() {
 
   useEffect(() => {
     loadHistory().catch(() => {});
+    loadCustomOptions().catch(() => {});
   }, []);
 
   const loadHistory = async () => {
@@ -203,6 +222,40 @@ export default function TriggerLogScreen() {
     } finally {
       setHistoryLoaded(true);
     }
+  };
+
+  const loadCustomOptions = async () => {
+    try {
+      const [areasRaw, sensationsRaw] = await Promise.all([
+        EncryptedAsyncStorage.getItem(CUSTOM_AREAS_KEY),
+        EncryptedAsyncStorage.getItem(CUSTOM_SENSATIONS_KEY),
+      ]);
+      setCustomAreaOptions(areasRaw ? JSON.parse(areasRaw) : []);
+      setCustomSensationOptions(sensationsRaw ? JSON.parse(sensationsRaw) : []);
+    } catch {
+      setCustomAreaOptions([]);
+      setCustomSensationOptions([]);
+    }
+  };
+
+  const closeCustomAreaComposer = () => {
+    setCustomAreaInput('');
+    setShowCustomAreaInput(false);
+    setEditingCustomAreaId(null);
+  };
+
+  const closeCustomSensationComposer = () => {
+    setCustomSensation('');
+    setShowCustomInput(false);
+    setEditingCustomSensationId(null);
+  };
+
+  const persistCustomAreas = (next: CustomAreaOption[]) => {
+    EncryptedAsyncStorage.setItem(CUSTOM_AREAS_KEY, JSON.stringify(next)).catch(() => {});
+  };
+
+  const persistCustomSensations = (next: CustomSensationOption[]) => {
+    EncryptedAsyncStorage.setItem(CUSTOM_SENSATIONS_KEY, JSON.stringify(next)).catch(() => {});
   };
 
   const toggleMode = (newMode: LogMode) => {
@@ -224,10 +277,113 @@ export default function TriggerLogScreen() {
 
   const addCustomSensation = () => {
     const trimmed = customSensation.trim();
-    if (!trimmed || selectedSensations.includes(trimmed)) return;
-    setSelectedSensations(prev => [...prev, trimmed]);
-    setCustomSensation('');
-    setShowCustomInput(false);
+    if (!trimmed) return;
+
+    const sensationId = editingCustomSensationId ?? `custom_${mode}_${trimmed.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
+    const previousLabel = editingCustomSensationId
+      ? customSensationOptions.find((option) => option.id === editingCustomSensationId)?.label
+      : null;
+
+    setCustomSensationOptions((prev) => {
+      const duplicate = prev.find((option) =>
+        option.id !== sensationId &&
+        option.mode === mode &&
+        option.label.trim().toLowerCase() === trimmed.toLowerCase()
+      );
+      if (duplicate) return prev;
+
+      const next = editingCustomSensationId
+        ? prev.map((option) => (option.id === editingCustomSensationId ? { ...option, label: trimmed, mode } : option))
+        : [...prev, { id: sensationId, label: trimmed, mode }];
+      persistCustomSensations(next);
+      return next;
+    });
+    setSelectedSensations((prev) => {
+      const withoutPrevious = previousLabel ? prev.filter((value) => value !== previousLabel) : prev;
+      return withoutPrevious.includes(trimmed) ? withoutPrevious : [...withoutPrevious, trimmed];
+    });
+    closeCustomSensationComposer();
+  };
+
+  const saveCustomArea = () => {
+    const trimmed = customAreaInput.trim();
+    if (!trimmed) return;
+
+    const areaId = editingCustomAreaId ?? `custom_area_${trimmed.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
+    const previousLabel = editingCustomAreaId
+      ? customAreaOptions.find((option) => option.id === editingCustomAreaId)?.label
+      : null;
+
+    setCustomAreaOptions((prev) => {
+      const duplicate = prev.find((option) =>
+        option.id !== areaId && option.label.trim().toLowerCase() === trimmed.toLowerCase()
+      );
+      if (duplicate) return prev;
+
+      const next = editingCustomAreaId
+        ? prev.map((option) => (option.id === editingCustomAreaId ? { ...option, label: trimmed } : option))
+        : [...prev, { id: areaId, label: trimmed }];
+      persistCustomAreas(next);
+      return next;
+    });
+    setContextArea((prev) => (previousLabel && prev === previousLabel ? trimmed : trimmed));
+    closeCustomAreaComposer();
+  };
+
+  const promptCustomAreaAction = (area: CustomAreaOption) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    Alert.alert('Custom Area', `Manage "${area.label}"`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Edit',
+        onPress: () => {
+          setCustomAreaInput(area.label);
+          setEditingCustomAreaId(area.id);
+          setShowCustomAreaInput(true);
+        },
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          setCustomAreaOptions((prev) => {
+            const next = prev.filter((option) => option.id !== area.id);
+            persistCustomAreas(next);
+            return next;
+          });
+          setContextArea((prev) => (prev === area.label ? null : prev));
+          if (editingCustomAreaId === area.id) closeCustomAreaComposer();
+        },
+      },
+    ]);
+  };
+
+  const promptCustomSensationAction = (sensation: CustomSensationOption) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    Alert.alert('Custom Cue', `Manage "${sensation.label}"`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Edit',
+        onPress: () => {
+          setCustomSensation(sensation.label);
+          setEditingCustomSensationId(sensation.id);
+          setShowCustomInput(true);
+        },
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          setCustomSensationOptions((prev) => {
+            const next = prev.filter((option) => option.id !== sensation.id);
+            persistCustomSensations(next);
+            return next;
+          });
+          setSelectedSensations((prev) => prev.filter((value) => value !== sensation.label));
+          if (editingCustomSensationId === sensation.id) closeCustomSensationComposer();
+        },
+      },
+    ]);
   };
 
   const handleSeal = async () => {
@@ -456,6 +612,7 @@ export default function TriggerLogScreen() {
           {/* ── Context Area ── */}
           <Animated.View entering={FadeInDown.delay(190).duration(500)} style={styles.section}>
             <Text style={styles.sectionLabel}>LIFE AREA</Text>
+            <Text style={styles.helperText}>Tap to select. Hold a custom area to edit or delete it.</Text>
             <View style={styles.tagCloud}>
               {(showMoreAreas ? [...PRIMARY_AREAS, ...EXTENDED_AREAS] : PRIMARY_AREAS).map(area => {
                 const isSelected = contextArea === area;
@@ -479,6 +636,30 @@ export default function TriggerLogScreen() {
                   </Pressable>
                 );
               })}
+              {customAreaOptions.map((area) => {
+                const isSelected = contextArea === area.label;
+                return (
+                  <Pressable
+                    key={area.id}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setContextArea(prev => (prev === area.label ? null : area.label));
+                    }}
+                    onLongPress={() => promptCustomAreaAction(area)}
+                    style={[
+                      styles.tagChip,
+                      styles.customChip,
+                      isSelected && { backgroundColor: `${activeColor}18`, borderColor: activeColor },
+                    ]}
+                  >
+                    {isSelected ? (
+                      <MetallicText style={styles.tagText} color={activeColor}>{area.label}</MetallicText>
+                    ) : (
+                      <Text style={styles.tagText}>{area.label}</Text>
+                    )}
+                  </Pressable>
+                );
+              })}
               {/* More toggle */}
               <Pressable
                 onPress={() => {
@@ -494,6 +675,8 @@ export default function TriggerLogScreen() {
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
                   setShowCustomAreaInput(prev => !prev);
+                  setEditingCustomAreaId(null);
+                  setCustomAreaInput('');
                 }}
                 style={[
                   styles.tagChip,
@@ -512,29 +695,17 @@ export default function TriggerLogScreen() {
                   placeholderTextColor={PALETTE.textMuted}
                   style={styles.customAreaInput}
                   returnKeyType="done"
-                  onSubmitEditing={() => {
-                    const val = customAreaInput.trim();
-                    if (val) {
-                      setContextArea(val);
-                      setShowCustomAreaInput(false);
-                    }
-                  }}
+                  onSubmitEditing={saveCustomArea}
                 />
                 <Pressable
-                  onPress={() => {
-                    const val = customAreaInput.trim();
-                    if (val) {
-                      setContextArea(val);
-                      setShowCustomAreaInput(false);
-                    }
-                  }}
+                  onPress={saveCustomArea}
                   style={[styles.customAreaConfirm, { borderColor: activeColor }]}
                 >
-                  <MetallicText style={styles.tagText} color={activeColor}>Set</MetallicText>
+                  <MetallicText style={styles.tagText} color={activeColor}>{editingCustomAreaId ? 'Update' : 'Set'}</MetallicText>
                 </Pressable>
               </View>
             )}
-            {contextArea && !PRIMARY_AREAS.includes(contextArea) && !EXTENDED_AREAS.includes(contextArea) && (
+            {contextArea && !PRIMARY_AREAS.includes(contextArea) && !EXTENDED_AREAS.includes(contextArea) && !customAreaOptions.some((area) => area.label === contextArea) && (
               <Pressable
                 onPress={() => setContextArea(null)}
                 style={[styles.tagChip, { alignSelf: 'flex-start', marginTop: 6 }]}
@@ -636,6 +807,7 @@ export default function TriggerLogScreen() {
           {/* ── Somatic Tags ── */}
           <Animated.View entering={FadeInDown.delay(240).duration(500)} style={styles.section}>
             <Text style={styles.sectionLabel}>SOMATIC CUES</Text>
+            <Text style={styles.helperText}>Tap to select. Hold a custom cue to edit or delete it.</Text>
             <View style={styles.tagCloud}>
               {SENSATIONS[mode].map((sensation) => {
                 const isSelected = selectedSensations.includes(sensation);
@@ -656,18 +828,28 @@ export default function TriggerLogScreen() {
                   </Pressable>
                 );
               })}
-              {/* Custom cues already added */}
-              {selectedSensations
-                .filter(s => !SENSATIONS[mode].includes(s))
-                .map(s => (
+              {customSensationOptions
+                .filter((option) => option.mode === mode)
+                .map((option) => {
+                  const isSelected = selectedSensations.includes(option.label);
+                  return (
                   <Pressable
-                    key={s}
-                    onPress={() => toggleSensation(s)}
-                    style={[styles.tagChip, { backgroundColor: `${activeColor}20`, borderColor: activeColor }]}
+                    key={option.id}
+                    onPress={() => toggleSensation(option.label)}
+                    onLongPress={() => promptCustomSensationAction(option)}
+                    style={[
+                      styles.tagChip,
+                      styles.customChip,
+                      isSelected && { backgroundColor: `${activeColor}20`, borderColor: activeColor },
+                    ]}
                   >
-                    <MetallicText style={styles.tagText} color={activeColor}>{s}</MetallicText>
+                    {isSelected ? (
+                      <MetallicText style={styles.tagText} color={activeColor}>{option.label}</MetallicText>
+                    ) : (
+                      <Text style={styles.tagText}>{option.label}</Text>
+                    )}
                   </Pressable>
-                ))}
+                )})}
               {/* Add custom cue */}
               {showCustomInput ? (
                 <View style={styles.customCueRow}>
@@ -683,13 +865,18 @@ export default function TriggerLogScreen() {
                     returnKeyType="done"
                   />
                   <Pressable style={styles.customCueAdd} onPress={addCustomSensation}>
-                    <Text style={[styles.customCueAddText, { color: activeColor }]}>Add</Text>
+                    <Text style={[styles.customCueAddText, { color: activeColor }]}>{editingCustomSensationId ? 'Update' : 'Add'}</Text>
                   </Pressable>
                 </View>
               ) : (
                 <Pressable
                   style={[styles.tagChip, styles.addCueChip]}
-                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowCustomInput(true); }}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setShowCustomInput(true);
+                    setEditingCustomSensationId(null);
+                    setCustomSensation('');
+                  }}
                 >
                   <Text style={[styles.tagText, { color: PALETTE.textMuted }]}>+ custom</Text>
                 </Pressable>
@@ -800,6 +987,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
+  helperText: { fontSize: 12, color: 'rgba(255,255,255,0.42)', marginTop: -6, marginBottom: 14 },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   intensityBtn: {
@@ -849,6 +1037,7 @@ const styles = StyleSheet.create({
     borderColor: PALETTE.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
+  customChip: { borderStyle: 'dashed' },
   addCueChip: { borderStyle: 'dashed' },
   tagText: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '500' },
 

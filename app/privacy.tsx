@@ -51,7 +51,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <Ionicons name="shield-checkmark-outline" size={132} color={theme.textGold} />
           </View>
 
-          <Text style={styles.lastUpdated}>Last updated: April 4, 2026</Text>
+          <Text style={styles.lastUpdated}>Last updated: April 7, 2026</Text>
 
           {/* ── Data Controller ── */}
           <LinearGradient colors={[theme.cardGradientStart, theme.cardGradientEnd]} style={styles.glassSection}>
@@ -89,7 +89,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 
             <View style={styles.dataBlock}>
               <Text style={styles.subSectionTitle}>Sleep & Dream Logs</Text>
-              <Text style={styles.paragraph}>Sleep data is stored locally on your device. Dream text, dream feelings, dream mood, dream metadata, and notes are encrypted at rest using AES-256-GCM. Sleep quality and duration are stored locally but not encrypted. Dream reflections are generated entirely on-device using symbolic pattern mapping — no AI service is involved.</Text>
+              <Text style={styles.paragraph}>Sleep data is stored locally on your device. Dream text, dream feelings, dream mood, dream metadata, and notes are encrypted at rest using AES-256-GCM. Sleep quality and duration are stored locally but not encrypted. MySky first performs on-device symbolic analysis of dreams, then can optionally send dream text and selected dream feelings to Google Gemini for the narrative dream interpretation shown in the app. Free users use the standard model, while Deeper Sky uses a richer model.</Text>
             </View>
 
             <View style={styles.dataBlock}>
@@ -116,7 +116,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
               <Text style={styles.subSectionTitle}>Premium AI Features (Optional)</Text>
               <Text style={styles.paragraph}>MySky includes three optional AI-powered features that transmit data to external services:</Text>
               <Text style={styles.paragraph}><Text style={styles.boldText}>AI Reflection Insights</Text> — Requires a Deeper Sky subscription. Aggregated behavioral statistics (mood/stress/energy trends, top tags, correlation data) are sent to a Supabase Edge Function which calls Anthropic Claude. Raw journal text, birth data, dream content, and personal notes are never transmitted. Rate limited to 5 requests per hour, enforced server-side.</Text>
-              <Text style={styles.paragraph}><Text style={styles.boldText}>AI-Enhanced Dream Interpretations</Text> — When available, dream text and selected dream feelings are sent to Google Gemini to generate a richer narrative interpretation. No birth data, user identifiers, or other personal information is included. This supplements the on-device dream engine; the on-device interpretation is always generated first regardless of AI availability.</Text>
+              <Text style={styles.paragraph}><Text style={styles.boldText}>AI-Enhanced Dream Interpretations</Text> — When available, dream text and selected dream feelings are sent to Google Gemini to generate the narrative dream interpretation shown in the app. No birth data, user identifiers, or other personal information is included. The app still performs on-device symbol and pattern analysis first to provide context and guardrails. Free users use a standard Gemini model, while Deeper Sky uses a richer model.</Text>
               <Text style={styles.paragraph}><Text style={styles.boldText}>AI Pattern Insights</Text> — When available, aggregated self-knowledge context (dominant archetype, top core values, cognitive style summary, top somatic pattern region, top relationship pattern tags, and behavioral check-in averages) is sent to Google Gemini to generate personalized pattern reflections. Raw journal text, birth data, dream content, and personal notes are never transmitted.</Text>
             </View>
 
@@ -177,6 +177,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>RevenueCat:</Text> Subscription and in-app purchase verification. RevenueCat receives a pseudonymous app user ID and purchase/device metadata needed to validate entitlements.</Text>
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>OpenStreetMap Nominatim:</Text> Birth city text sent for geocoding to coordinates. Only the city name string is transmitted.</Text>
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Supabase:</Text> A free account (email/password) is required to use MySky. Authentication credentials are stored on Supabase servers in the United States. Session tokens are stored in device secure storage. AI Reflection Insights additionally use a Supabase Edge Function.</Text>
+            <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Resend:</Text> Password recovery emails are delivered through Resend when you request a one-time recovery code. Resend receives your email address and the transactional message content needed to deliver the code.</Text>
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Anthropic Claude:</Text> AI Reflection Insights via Supabase Edge Function. Receives only aggregated behavioral stats — never raw text, birth data, or personal notes. API key lives exclusively in the Edge Function environment. Anthropic servers are located in the United States.</Text>
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Google Gemini:</Text> AI-enhanced dream interpretations and pattern insights. Dream text and feelings are sent for dream interpretations. Aggregated self-knowledge context (archetype, values, cognitive style, somatic patterns, relationship patterns, and check-in averages) is sent for pattern insights. No birth data, user identifiers, or raw journal text is transmitted. Google servers may be located in the United States or other countries.</Text>
             <Text style={styles.bulletPoint}>• <Text style={styles.boldText}>Sentry:</Text> Production crash, error, and sampled performance/replay telemetry. Configured with <Text style={styles.highlight}>sendDefaultPii: false</Text>, with user objects stripped before send.</Text>
@@ -186,7 +187,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>International Data Transfers</Text>
             <Text style={styles.paragraph}>
-              When you use optional AI-powered features, limited data is transmitted to servers located in the United States (Supabase, Anthropic) and potentially other countries (Google). These transfers are necessary to provide the requested service and are made on the basis of your explicit consent. All transmitted data is limited to the minimum necessary — no raw personal content, birth data, or identifying information is included.
+              When you use optional AI-powered features, limited data is transmitted to servers located in the United States (Supabase, Anthropic) and potentially other countries (Google). These transfers are necessary to provide the requested service and are made on the basis of your explicit consent. All transmitted data is limited to the minimum necessary. For AI dream interpretation this includes dream text and selected dream feelings, but not birth data or user identifiers. For AI Reflection Insights and AI Pattern Insights, only aggregated non-identifying statistics or summaries are transmitted.
             </Text>
             <Text style={styles.paragraph}>
               For users in the European Economic Area (EEA), United Kingdom, or Switzerland: data transfers to the United States rely on your explicit consent under GDPR Article 49(1)(a) and, where available, the service providers' adherence to Standard Contractual Clauses (SCCs) or equivalent safeguards.

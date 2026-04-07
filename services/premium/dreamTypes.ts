@@ -3025,7 +3025,7 @@ for (const f of DREAM_FEELINGS) {
 
 // ─── Dream Metadata ───────────────────────────────────────────────────────────
 
-export type AwakenState =
+export type BuiltInAwakenState =
   | 'calm'
   | 'anxious'
   | 'scared'
@@ -3047,8 +3047,10 @@ export type AwakenState =
   | 'hopeful'
   | 'unsettled';
 
+export type AwakenState = BuiltInAwakenState | (string & {});
+
 /** Overall theme tag for a dream */
-export type DreamTheme =
+export type BuiltInDreamTheme =
   | 'adventure'
   | 'conflict'
   | 'connection'
@@ -3059,6 +3061,8 @@ export type DreamTheme =
   | 'discovery'
   | 'mundane'
   | 'surreal';
+
+export type DreamTheme = BuiltInDreamTheme | (string & {});
 
 export interface DreamMetadata {
   vividness: number;        // 1–5
@@ -3073,7 +3077,9 @@ export interface DreamMetadata {
 
 export interface SelectedFeeling {
   id: string;          // matches DreamFeelingDef.id
+  label?: string;      // preserved for user-defined feelings
   intensity: number;   // 0–5
+  tier?: FeelingTier;
 }
 
 // ─── Precomputed Aggregates ───────────────────────────────────────────────────

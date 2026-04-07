@@ -33,7 +33,7 @@ export const DEEPER_SKY_FEATURES: DeeperSkyFeature[] = [
     premiumVersion: 'Symbolic dream interpretation drawing from your dream text, feelings, and check-in data, plus a recurring symbol cluster map and sleep quality trend analysis',
     isPremium: true,
     bullets: [
-      'Symbolic interpretation of your dream narratives — on-device, private',
+      'AI dream interpretation with a richer Gemini model',
       'Recurring symbol cluster map across all entries',
       'Sleep quality trends over time',
       'See what affects your rest most',

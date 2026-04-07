@@ -32,6 +32,7 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
+const CUSTOM_TAGS_KEY = '@mysky:relationship_pattern_custom_tags';
 
 const PALETTE = {
   anxious: '#7A9EBD',   // Steel blue — Moving Toward
@@ -112,6 +113,10 @@ export default function RelationshipPatternsScreen() {
   const [entries, setEntries] = useState<PatternEntry[]>([]);
   const [note, setNote] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [customTags, setCustomTags] = useState<PatternTag[]>([]);
+  const [customTagInput, setCustomTagInput] = useState('');
+  const [activeCustomCategory, setActiveCustomCategory] = useState<PatternCategory | null>(null);
+  const [editingCustomTagId, setEditingCustomTagId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -122,8 +127,83 @@ export default function RelationshipPatternsScreen() {
           }
         }
       }).catch((e) => { logger.warn('[RelationshipPatterns] Failed to load entries:', e); });
+      EncryptedAsyncStorage.getItem(CUSTOM_TAGS_KEY).then((raw) => {
+        if (raw) {
+          try { setCustomTags(JSON.parse(raw)); } catch (e) {
+            logger.warn('[RelationshipPatterns] Failed to parse custom tags:', e);
+          }
+        }
+      }).catch((e) => { logger.warn('[RelationshipPatterns] Failed to load custom tags:', e); });
     }, []),
   );
+
+  const allTags = useMemo(() => [...PATTERN_TAGS, ...customTags], [customTags]);
+
+  const closeCustomComposer = useCallback(() => {
+    setCustomTagInput('');
+    setActiveCustomCategory(null);
+    setEditingCustomTagId(null);
+  }, []);
+
+  const persistCustomTags = useCallback((next: PatternTag[]) => {
+    EncryptedAsyncStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(next)).catch((e) => {
+      logger.warn('[RelationshipPatterns] Failed to persist custom tags:', e);
+    });
+  }, []);
+
+  const saveCustomTag = useCallback((label: string, category: PatternCategory, editingId?: string | null) => {
+    const trimmed = label.trim();
+    if (!trimmed) return;
+
+    const tagId = editingId ?? `custom_${category}_${trimmed.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
+
+    setCustomTags((prev) => {
+      const duplicate = prev.find((tag) =>
+        tag.id !== tagId &&
+        tag.category === category &&
+        tag.label.trim().toLowerCase() === trimmed.toLowerCase()
+      );
+      if (duplicate) return prev;
+
+      const next = editingId
+        ? prev.map((tag) => (tag.id === editingId ? { ...tag, label: trimmed, category } : tag))
+        : [...prev, { id: tagId, label: trimmed, category }];
+      persistCustomTags(next);
+      return next;
+    });
+    setSelectedTags((prev) => (prev.includes(tagId) ? prev : [...prev, tagId]));
+    closeCustomComposer();
+  }, [closeCustomComposer, persistCustomTags]);
+
+  const deleteCustomTag = useCallback((tagId: string) => {
+    setCustomTags((prev) => {
+      const next = prev.filter((tag) => tag.id !== tagId);
+      persistCustomTags(next);
+      return next;
+    });
+    setSelectedTags((prev) => prev.filter((candidate) => candidate !== tagId));
+    if (editingCustomTagId === tagId) closeCustomComposer();
+  }, [closeCustomComposer, editingCustomTagId, persistCustomTags]);
+
+  const promptCustomTagAction = useCallback((tag: PatternTag) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    Alert.alert('Custom Pattern', `Manage "${tag.label}"`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Edit',
+        onPress: () => {
+          setActiveCustomCategory(tag.category);
+          setCustomTagInput(tag.label);
+          setEditingCustomTagId(tag.id);
+        },
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteCustomTag(tag.id),
+      },
+    ]);
+  }, [deleteCustomTag]);
 
   const toggleTag = (tagId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -167,7 +247,7 @@ export default function RelationshipPatternsScreen() {
 
     entries.forEach((entry) => {
       entry.tags.forEach((tagId) => {
-        const tag = PATTERN_TAGS.find((t) => t.id === tagId);
+        const tag = allTags.find((candidate) => candidate.id === tagId);
         if (tag?.category === 'anxious') anxiousCount++;
         if (tag?.category === 'avoidant') avoidantCount++;
         if (tag?.category === 'control') controlCount++;
@@ -183,7 +263,7 @@ export default function RelationshipPatternsScreen() {
       control: total > 0 ? (controlCount / total) * 100 : 0,
       secure: total > 0 ? (secureCount / total) * 100 : 0,
     };
-  }, [entries]);
+  }, [allTags, entries]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -296,11 +376,13 @@ export default function RelationshipPatternsScreen() {
               />
 
               <Text style={styles.tagSectionLabel}>SELECT ACTIVE PATTERNS</Text>
+              <Text style={styles.tagHint}>Tap to select. Hold a custom pattern to edit or delete it.</Text>
 
               {(['anxious', 'avoidant', 'control', 'secure'] as PatternCategory[]).map((category) => {
                 const categoryColor = PALETTE[category];
                 const categoryLabel = category === 'anxious' ? 'Moving Toward' : category === 'avoidant' ? 'Moving Away' : category === 'control' ? 'Rigidity' : 'Secure';
                 const categoryTags = PATTERN_TAGS.filter((t) => t.category === category);
+                const categoryCustomTags = customTags.filter((tag) => tag.category === category);
                 return (
                   <View key={category} style={styles.tagCategoryGroup}>
                     <View style={styles.tagCategoryHeader}>
@@ -331,6 +413,73 @@ export default function RelationshipPatternsScreen() {
                           </Pressable>
                         );
                       })}
+                      {categoryCustomTags.map((tag) => {
+                        const isSelected = selectedTags.includes(tag.id);
+                        return (
+                          <Pressable
+                            key={tag.id}
+                            style={[
+                              styles.patternTag,
+                              styles.customPatternTag,
+                              isSelected && { borderColor: categoryColor, backgroundColor: `${categoryColor}18` },
+                            ]}
+                            onPress={() => toggleTag(tag.id)}
+                            onLongPress={() => promptCustomTagAction(tag)}
+                          >
+                            {isSelected ? (
+                              <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={categoryColor}>
+                                {tag.label}
+                              </MetallicText>
+                            ) : (
+                              <Text style={styles.patternTagText}>
+                                {tag.label}
+                              </Text>
+                            )}
+                          </Pressable>
+                        );
+                      })}
+                      {activeCustomCategory === category ? (
+                        <View style={styles.customComposer}>
+                          <TextInput
+                            style={styles.customComposerInput}
+                            value={customTagInput}
+                            onChangeText={setCustomTagInput}
+                            placeholder="Type your own..."
+                            placeholderTextColor="rgba(255,255,255,0.28)"
+                            autoFocus
+                            maxLength={40}
+                            returnKeyType="done"
+                            onSubmitEditing={() => {
+                              const value = customTagInput.trim();
+                              if (value) saveCustomTag(value, category, editingCustomTagId);
+                              else closeCustomComposer();
+                            }}
+                          />
+                          <Pressable
+                            hitSlop={8}
+                            onPress={() => {
+                              const value = customTagInput.trim();
+                              if (value) saveCustomTag(value, category, editingCustomTagId);
+                              else closeCustomComposer();
+                            }}
+                          >
+                            <Ionicons name={customTagInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={customTagInput.trim() ? categoryColor : 'rgba(255,255,255,0.3)'} />
+                          </Pressable>
+                        </View>
+                      ) : (
+                        <Pressable
+                          style={[styles.patternTag, styles.addPatternTag]}
+                          onPress={() => {
+                            Haptics.selectionAsync().catch(() => {});
+                            setActiveCustomCategory(category);
+                            setCustomTagInput('');
+                            setEditingCustomTagId(null);
+                          }}
+                        >
+                          <Ionicons name="add-outline" size={14} color={categoryColor} />
+                          <MetallicText style={styles.addPatternTagText} color={categoryColor}>Custom</MetallicText>
+                        </Pressable>
+                      )}
                     </View>
                   </View>
                 );
@@ -363,7 +512,7 @@ export default function RelationshipPatternsScreen() {
                       {entry.tags.length > 0 && (
                         <View style={styles.entryTagsRow}>
                           {entry.tags.map((tagId) => {
-                            const tagData = PATTERN_TAGS.find((t) => t.id === tagId);
+                            const tagData = allTags.find((tag) => tag.id === tagId);
                             if (!tagData) return null;
                             const tagColor = PALETTE[tagData.category];
                             return (
@@ -425,9 +574,26 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#FFFFFF', fontSize: 19, fontWeight: '700' },
   noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
   tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  tagHint: { fontSize: 12, color: 'rgba(255,255,255,0.42)', marginTop: -8, marginBottom: 20 },
 
   patternTag: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)' },
+  customPatternTag: { borderStyle: 'dashed' },
   patternTagText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
+  addPatternTag: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  addPatternTagText: { fontSize: 13, fontWeight: '700' },
+  customComposer: {
+    minWidth: 170,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  customComposerInput: { minWidth: 120, flex: 1, color: PALETTE.textMain, fontSize: 13, paddingVertical: 0 },
 
   submitBtn: { height: 56, borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.4)', justifyContent: 'center', alignItems: 'center' },
   submitBtnText: { fontSize: 15, color: PALETTE.gold, fontWeight: '700', letterSpacing: 0.5 },

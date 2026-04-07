@@ -3,7 +3,7 @@
  * Full-Featured Sleep Detail Screen
  *
  * Deep-dive view for reading back a sleep entry, adding a dream narrative,
- * and accessing AI symbolic interpretation (premium).
+ * and accessing AI dream interpretation with a premium model upgrade.
  * Navigate to this screen via router.push('/(tabs)/journal/sleep-detail').
  */
 
@@ -36,7 +36,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremium } from '../../../context/PremiumContext';
 import { useAuth } from '../../../context/AuthContext';
 import { logger } from '../../../utils/logger';
-import { parseLocalDate } from '../../../utils/dateUtils';
+import { parseLocalDate, toLocalDateString } from '../../../utils/dateUtils';
 import { generateDreamInterpretation } from '../../../services/premium/dreamInterpretation';
 import {
   generateGeminiDreamInterpretation,
@@ -62,12 +62,18 @@ const DEFAULT_METADATA: DreamMetadata = {
   recurring: false,
 };
 
+const DAILY_REINTERPRET_KEY_PREFIX = '@mysky:dream_reinterpret';
+
+function getDailyReinterpretKey(userId?: string | null, date: Date = new Date()): string {
+  return `${DAILY_REINTERPRET_KEY_PREFIX}:${userId ?? 'anon'}:${toLocalDateString(date)}`;
+}
+
 export default function SleepDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { isPremium } = usePremium();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const canUseGemini = isGeminiAvailable(Boolean(session?.access_token));
 
   const [entry, setEntry] = useState<SleepEntry | null>(null);
@@ -86,7 +92,7 @@ export default function SleepDetailScreen() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isPremium && reinterpretCount > 0 && entry && dreamText.trim()) {
+    if (reinterpretCount > 0 && entry && dreamText.trim()) {
       void runInterpretation(entry, dreamText, allEntries);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -111,11 +117,11 @@ export default function SleepDetailScreen() {
       if (found) {
         setEntry(found);
         setDreamText(found.dreamText ?? '');
-        // Restore persisted reinterpret flag
-        const used = await AsyncStorage.getItem(`msky_reinterpreted_${entryId}`);
-        if (used === '1') setHasReinterpreted(true);
+        const dailyKey = getDailyReinterpretKey(user?.id);
+        const used = await AsyncStorage.getItem(dailyKey);
+        setHasReinterpreted(used === '1');
         // Auto-generate interpretation if entry already has dream text
-        if (isPremium && found.dreamText) {
+        if (found.dreamText) {
           void runInterpretation(found, found.dreamText, entries);
         }
       }
@@ -154,13 +160,14 @@ export default function SleepDetailScreen() {
         seedSuffix: reinterpretCount > 0 ? String(reinterpretCount) : undefined,
       });
       setInterpretation(result);
-      // Auto-trigger Gemini AI interpretation for premium users
-      if (isPremium && canUseGemini) {
+      // Auto-trigger Gemini AI interpretation for all signed-in users.
+      if (canUseGemini) {
         setAiLoading(true);
         setAiError(null);
         generateGeminiDreamInterpretation({
           dreamText: text,
           feelings,
+          modelTier: isPremium ? 'premium' : 'free',
           onDeviceSummary: result.paragraph,
           symbols: result.extractedSymbols,
           interpretiveThemes: result.interpretiveThemes,
@@ -229,7 +236,7 @@ export default function SleepDetailScreen() {
       }
 
       // Generate interpretation after a successful save when there's dream text
-      if (isPremium && dreamText.trim().length > 0) {
+      if (dreamText.trim().length > 0) {
         const refreshedEntries = allEntries.map((e) => e.id === saved.id ? saved : e);
         if (!allEntries.find((e) => e.id === saved.id)) {
           refreshedEntries.push(saved);
@@ -319,75 +326,90 @@ export default function SleepDetailScreen() {
         {/* Premium AI section */}
         <LinearGradient
           colors={['rgba(201,174,120,0.18)', 'transparent']}
-          style={[styles.premiumSection, !isPremium && styles.lockedSection]}
+          style={styles.premiumSection}
         >
           <MetallicLucideIcon icon={Sparkles} color="#C9AE78" size={20} />
-          <MetallicText color="#C9AE78" style={styles.premiumTitle}>Symbolic Interpretation</MetallicText>
-          {isPremium ? (
-            interpreting ? (
-              <ActivityIndicator color="#C9AE78" style={{ marginTop: 8 }} />
-            ) : interpretation ? (
-              <View style={{ gap: 16, width: '100%' }}>
-                {/* Show AI result as primary when available, on-device as fallback */}
-                {aiResult ? (
-                  <>
-                    <Text style={styles.interpretationParagraph}>{aiResult.paragraph}</Text>
-                    <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
-                  </>
-                ) : aiLoading ? (
-                  <>
-                    <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                    <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
-                    <View style={styles.aiLoadingRow}>
-                      <ActivityIndicator color="#C9AE78" size="small" />
-                      <Text style={styles.aiLoadingText}>Consulting the cosmos...</Text>
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
-                    <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
-                    {aiError && (
-                      <Text style={styles.aiErrorText}>{aiError}</Text>
-                    )}
-                  </>
-                )}
-                <Pressable
-                  style={[styles.rerunBtn, hasReinterpreted && { opacity: 0.4 }]}
+          <MetallicText color="#C9AE78" style={styles.premiumTitle}>AI Dream Interpretation</MetallicText>
+          <Text style={styles.modelHint}>
+            {isPremium
+              ? 'Deeper Sky uses a richer Gemini model for dream readings.'
+              : 'Free accounts use a faster Gemini model. Deeper Sky upgrades the depth and nuance.'}
+          </Text>
+          {interpreting ? (
+            <ActivityIndicator color="#C9AE78" style={{ marginTop: 8 }} />
+          ) : interpretation ? (
+            <View style={{ gap: 16, width: '100%' }}>
+              {aiResult ? (
+                <>
+                  <Text style={styles.interpretationParagraph}>{aiResult.paragraph}</Text>
+                  <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{aiResult.question}</MetallicText>
+                </>
+              ) : aiLoading ? (
+                <>
+                  <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
+                  <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                  <View style={styles.aiLoadingRow}>
+                    <ActivityIndicator color="#C9AE78" size="small" />
+                    <Text style={styles.aiLoadingText}>Consulting Gemini...</Text>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.interpretationParagraph}>{interpretation.paragraph}</Text>
+                  <MetallicText color="#C9AE78" style={styles.reflectionQuestion}>{interpretation.question}</MetallicText>
+                  {aiError && (
+                    <Text style={styles.aiErrorText}>{aiError}</Text>
+                  )}
+                </>
+              )}
+              <Pressable
+                style={[styles.rerunBtn, hasReinterpreted && { opacity: 0.4 }]}
+                onPress={() => {
+                  if (hasReinterpreted) return;
+                  if (entry && dreamText.trim()) {
+                    setAiResult(null);
+                    setAiError(null);
+                    setHasReinterpreted(true);
+                    void AsyncStorage.setItem(getDailyReinterpretKey(user?.id), '1');
+                    setReinterpretCount(c => c + 1);
+                  }
+                }}
+              >
+                <MetallicText color="#C9AE78" style={styles.rerunBtnText}>
+                  {hasReinterpreted ? 'RE-INTERPRET USED TODAY' : 'RE-INTERPRET'}
+                </MetallicText>
+              </Pressable>
+              <Text style={styles.reinterpretHint}>Available once per day.</Text>
+              {!isPremium && (
+                <SkiaMetallicPill
+                  label="UPGRADE TO DEEPER SKY MODEL"
                   onPress={() => {
-                    if (hasReinterpreted) return;
-                    if (entry && dreamText.trim()) {
-                      setAiResult(null);
-                      setAiError(null);
-                      setHasReinterpreted(true);
-                      void AsyncStorage.setItem(`msky_reinterpreted_${entry.id}`, '1');
-                      setReinterpretCount(c => c + 1);
-                    }
+                    Haptics.selectionAsync().catch(() => {});
+                    router.push('/(tabs)/premium' as Href);
                   }}
-                >
-                  <MetallicText color="#C9AE78" style={styles.rerunBtnText}>RE-INTERPRET</MetallicText>
-                </Pressable>
-              </View>
-            ) : (
-              <Text style={styles.premiumBody}>
-                Save your dream narrative above to generate your interpretation.
-              </Text>
-            )
+                  height={44}
+                  borderRadius={20}
+                  labelStyle={{ fontWeight: '800', fontSize: 11, letterSpacing: 1.5 }}
+                />
+              )}
+            </View>
           ) : (
             <>
               <Text style={styles.premiumBody}>
-                Unlock deep symbolic analysis of your dream patterns.
+                Save your dream narrative above to generate an AI interpretation.
               </Text>
-              <SkiaMetallicPill
-                label="UPGRADE TO DEEPER SKY"
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  router.push('/(tabs)/premium' as Href);
-                }}
-                height={44}
-                borderRadius={20}
-                labelStyle={{ fontWeight: '800', fontSize: 11, letterSpacing: 1.5 }}
-              />
+              {!isPremium && (
+                <SkiaMetallicPill
+                  label="UPGRADE TO DEEPER SKY MODEL"
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    router.push('/(tabs)/premium' as Href);
+                  }}
+                  height={44}
+                  borderRadius={20}
+                  labelStyle={{ fontWeight: '800', fontSize: 11, letterSpacing: 1.5 }}
+                />
+              )}
             </>
           )}
         </LinearGradient>
@@ -455,9 +477,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', padding: 32, borderRadius: 24,
     borderWidth: 1, borderColor: '#C9AE78', gap: 12,
   },
-  lockedSection: { borderStyle: 'dashed' },
   premiumTitle: {
     color: '#FFFFFF', fontSize: 16, fontWeight: '600', textAlign: 'center',
+  },
+  modelHint: {
+    color: 'rgba(255,255,255,0.62)', fontSize: 13, textAlign: 'center', lineHeight: 19,
   },
   premiumBody: {
     color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center', lineHeight: 20,
@@ -479,6 +503,7 @@ const styles = StyleSheet.create({
     borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)',
   },
   rerunBtnText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  reinterpretHint: { color: 'rgba(255,255,255,0.38)', fontSize: 12, textAlign: 'right' },
 
   // AI Gemini interpretation
   aiSection: { marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(217,191,140,0.2)', width: '100%' },

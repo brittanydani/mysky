@@ -92,20 +92,33 @@ interface DreamCardProps {
   entry: SleepEntry;
   formatDate: (s: string) => string;
   onPress: (entry: SleepEntry) => void;
+  onLongPress: (entry: SleepEntry) => void;
 }
 
-const DreamCard = memo(function DreamCard({ entry, formatDate, onPress }: DreamCardProps) {
+const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPress }: DreamCardProps) {
   const hasDream = !!(entry.dreamText?.trim());
   const moons = entry.quality ? '☽'.repeat(entry.quality) : null;
   const qualityLabel = entry.quality ? DREAM_QUALITY_LABELS[entry.quality] : null;
   const durationText = entry.durationHours ? `${entry.durationHours}h` : null;
+  const skipNextPressRef = useRef(false);
 
   return (
     <Pressable
-      onPress={() => onPress(entry)}
+      onPress={() => {
+        if (skipNextPressRef.current) {
+          skipNextPressRef.current = false;
+          return;
+        }
+        onPress(entry);
+      }}
+      onLongPress={() => {
+        skipNextPressRef.current = true;
+        onLongPress(entry);
+      }}
       style={({ pressed }) => [styles.dreamCardWrapper, pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] }]}
       accessibilityRole="button"
       accessibilityLabel={`Dream entry for ${formatDate(entry.date)}`}
+      accessibilityHint="Double tap to open. Long press for edit or delete options."
     >
       <LinearGradient
         colors={['rgba(201,174,120,0.18)', 'transparent']}
@@ -389,6 +402,20 @@ export default function JournalScreen() {
     void handleDeleteEntry(actionEntry);
   }, [actionEntry, closeEntryActions, handleDeleteEntry]);
 
+  const handleEditDream = useCallback((entry: SleepEntry) => {
+    router.push((`/(tabs)/sleep?entryId=${entry.id}`) as Href);
+  }, [router]);
+
+  const handleDeleteDream = useCallback(async (entry: SleepEntry) => {
+    try {
+      await localDb.deleteSleepEntry(entry.id);
+      await loadSleepEntries();
+    } catch (error) {
+      logger.error('Failed to delete dream entry:', error);
+      Alert.alert('Error', 'Failed to delete dream entry');
+    }
+  }, []);
+
   const stableFormatDate = useCallback((dateString: string) => {
     const date = parseLocalDate(dateString);
     if (!isValidDateValue(date)) {
@@ -412,6 +439,28 @@ export default function JournalScreen() {
       hour12: true,
     });
   }, []);
+
+  const presentDreamActions = useCallback((entry: SleepEntry) => {
+    Haptics.selectionAsync().catch(() => {});
+    Alert.alert(
+      'Dream Options',
+      stableFormatDate(entry.date),
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Edit Dream', onPress: () => handleEditDream(entry) },
+        {
+          text: 'Delete Dream',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert('Delete Dream', 'Remove this dream from your archive?', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Delete', style: 'destructive', onPress: () => void handleDeleteDream(entry) },
+            ]);
+          },
+        },
+      ],
+    );
+  }, [handleDeleteDream, handleEditDream, stableFormatDate]);
 
   const keyExtractor = useCallback((item: JournalEntry | SleepEntry) => item.id, []);
 
@@ -437,8 +486,9 @@ export default function JournalScreen() {
       entry={item}
       formatDate={stableFormatDate}
       onPress={(e) => router.push((`/(tabs)/journal/sleep-detail?id=${e.id}`) as Href)}
+      onLongPress={presentDreamActions}
     />
-  ), [stableFormatDate, router]);
+  ), [stableFormatDate, router, presentDreamActions]);
 
   const handleEndReached = useCallback(() => {
     if (activeTab === 'reflections' && !loadingMore && hasMore) {

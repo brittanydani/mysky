@@ -19,7 +19,7 @@ import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { useRouter, Href } from 'expo-router';
+import { useLocalSearchParams, useRouter, Href } from 'expo-router';
 import * as Haptics from '../../utils/haptics';
 // BlurView reserved for future dream UI
 import Svg, { Circle, Defs, RadialGradient, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
@@ -67,6 +67,10 @@ import SegmentRating from '../../components/ui/SegmentRating';
 import AwakenStateSheet from '../../components/ui/AwakenStateSheet';
 import PremiumPill from '../../components/ui/PremiumPill';
 // GoldSubtitle reserved for future premium labels
+
+function normalizeCustomFeelingId(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
 
 const SCREEN_W = Dimensions.get('window').width;
 const DREAM_TEXT_MAX_LENGTH = 10000;
@@ -244,6 +248,8 @@ const DREAM_THEMES: { id: DreamTheme; label: string }[] = [
   { id: 'loss', label: 'Loss / Grief' }, { id: 'discovery', label: 'Discovery' }, { id: 'mundane', label: 'Everyday Life' }, { id: 'surreal', label: 'Surreal' },
 ];
 
+const BUILT_IN_THEME_IDS = new Set<string>(DREAM_THEMES.map((themeOption) => themeOption.id));
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
   const todayStr = toLocalDateString();
@@ -268,6 +274,7 @@ export default function SleepScreen() {
   const { isPremium } = usePremium();
   const { session } = useAuth();
   const router = useRouter();
+  const { entryId } = useLocalSearchParams<{ entryId?: string }>();
   useSyncDreamData();
 
   const canUseGemini = isGeminiAvailable(Boolean(session?.access_token));
@@ -311,6 +318,9 @@ export default function SleepScreen() {
 
   const [feelingSearch, setFeelingSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [customFeelingText, setCustomFeelingText] = useState('');
+  const [customThemeText, setCustomThemeText] = useState('');
+  const [showCustomThemeInput, setShowCustomThemeInput] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -344,6 +354,19 @@ export default function SleepScreen() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [selectedTier, debouncedSearch]);
 
+  const isCustomThemeSelected = useMemo(() => {
+    return showCustomThemeInput || (!!dreamMetadata.overallTheme && !BUILT_IN_THEME_IDS.has(dreamMetadata.overallTheme));
+  }, [dreamMetadata.overallTheme, showCustomThemeInput]);
+
+  const selectedCustomFeelings = useMemo(() => {
+    if (!selectedTier) return [];
+    return selectedFeelings.filter((feel) => {
+      if (FEELING_LOOKUP.has(feel.id)) return false;
+      if (selectedTier === 'all') return true;
+      return (feel.tier ?? 'mixed') === selectedTier;
+    });
+  }, [selectedFeelings, selectedTier]);
+
   const handleToggleFeeling = useCallback((id: string) => {
     setSelectedFeelings(prev => {
       const exists = prev.some(f => f.id === id);
@@ -351,12 +374,35 @@ export default function SleepScreen() {
     });
   }, []);
 
+  const handleAddCustomFeeling = useCallback(() => {
+    const trimmed = customFeelingText.trim();
+    if (!trimmed || !selectedTier) return;
+
+    const builtInMatch = DREAM_FEELINGS.find((feel) => feel.label.toLowerCase() === trimmed.toLowerCase());
+    if (builtInMatch) {
+      handleToggleFeeling(builtInMatch.id);
+      setCustomFeelingText('');
+      return;
+    }
+
+    const id = normalizeCustomFeelingId(trimmed);
+    const tier = selectedTier === 'all' ? 'mixed' : selectedTier;
+
+    setSelectedFeelings((prev) => {
+      if (prev.some((feel) => feel.id === id)) {
+        return prev;
+      }
+      return [...prev, { id, label: trimmed, intensity: 3, tier }];
+    });
+    setCustomFeelingText('');
+  }, [customFeelingText, handleToggleFeeling, selectedTier]);
+
   const handleIntensityChange = useCallback((id: string, intensity: number) => {
     setSelectedFeelings(prev => prev.map(f => (f.id === id ? { ...f, intensity } : f)));
   }, []);
 
   const selectedFeelingLabels = useMemo(() => {
-    const labels = selectedFeelings.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.id);
+    const labels = selectedFeelings.map(f => FEELING_LOOKUP.get(f.id)?.label ?? f.label ?? f.id);
     if (labels.length <= 4) return labels.join(', ');
     return `${labels.slice(0, 4).join(', ')} +${labels.length - 4} more`;
   }, [selectedFeelings]);
@@ -375,18 +421,31 @@ export default function SleepScreen() {
         catch { setSelectedFeelings([]); }
       } else { setSelectedFeelings([]); }
       if (entry.dreamMetadata) {
-        try { setDreamMetadata(JSON.parse(entry.dreamMetadata) as DreamMetadata); }
+        try {
+          const parsedMetadata = JSON.parse(entry.dreamMetadata) as DreamMetadata;
+          setDreamMetadata(parsedMetadata);
+          const hasCustomTheme = !!parsedMetadata.overallTheme && !BUILT_IN_THEME_IDS.has(parsedMetadata.overallTheme);
+          setShowCustomThemeInput(hasCustomTheme);
+          setCustomThemeText(hasCustomTheme ? parsedMetadata.overallTheme! : '');
+        }
         catch { setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false }); }
-      } else { setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false }); }
+      } else {
+        setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
+        setShowCustomThemeInput(false);
+        setCustomThemeText('');
+      }
       setShowAwakenSheet(false);
       setShowFeelingPicker(false);
       setSelectedTier(null);
+      setCustomFeelingText('');
       setShowMetadata(false);
     } else {
       setEditingEntryId(null); setIsEditingUnlocked(false); setEditingDate(null); setQuality(0);
       setDurationHours(7.5); setHasDuration(false); setDreamText(''); setSelectedFeelings([]);
       setDreamMetadata({ vividness: 3, lucidity: 1, controlLevel: 3, awakenState: 'calm', recurring: false });
-      setShowAwakenSheet(false); setShowFeelingPicker(false); setSelectedTier(null); setShowMetadata(false);
+      setShowCustomThemeInput(false);
+      setCustomThemeText('');
+      setShowAwakenSheet(false); setShowFeelingPicker(false); setSelectedTier(null); setCustomFeelingText(''); setShowMetadata(false);
     }
   }, []);
 
@@ -406,7 +465,10 @@ export default function SleepScreen() {
             localDb.getCheckIns(savedChart.id, 30),
           ]);
           setEntries(data); setRecentCheckIns(checkIns);
-          applyEntryToForm(data.find(e => e.date === today));
+          const requestedEntryId = Array.isArray(entryId) ? entryId[0] : entryId;
+          const requestedEntry = requestedEntryId ? data.find((entry) => entry.id === requestedEntryId) : undefined;
+          applyEntryToForm(requestedEntry ?? data.find(e => e.date === today));
+          setIsEditingUnlocked(!!requestedEntry);
           try {
             const astroSettings = await AstrologySettingsService.getSettings();
             setNatalChart(AstrologyCalculator.generateNatalChart({
@@ -421,7 +483,7 @@ export default function SleepScreen() {
           setLoadError('Could not load your sleep data.');
         } finally { setLoading(false); }
       })();
-    }, [applyEntryToForm, today])
+    }, [applyEntryToForm, entryId, today])
   );
 
   const canSave = quality > 0 || hasDuration || dreamText.trim().length > 0;
@@ -451,19 +513,20 @@ export default function SleepScreen() {
       const savedEntry = updated.find(e => e.id === entry.id);
       const savedId = entry.id;
       setInterpretations(prev => { const next = { ...prev }; delete next[savedId]; return next; });
-      if (isPremium && savedEntry?.dreamText) {
+      if (savedEntry?.dreamText) {
         try {
           const aggregates = computeDreamAggregates(selectedFeelings, natalChart);
           const patterns = computeDreamPatterns(selectedFeelings, updated.filter(e => e.id !== savedEntry.id));
           const result = generateDreamInterpretation({ entry: savedEntry, dreamText: savedEntry.dreamText, feelings: selectedFeelings, metadata: dreamMetadata, aggregates, patterns });
           setInterpretations(prev => ({ ...prev, [savedEntry.id]: result }));
           setExpandedEntryId(savedEntry.id);
-          // Auto-trigger Gemini AI interpretation for premium users
+          // Auto-trigger Gemini AI interpretation for all signed-in users.
           if (canUseGemini) {
             setAiLoading(savedEntry.id);
             generateGeminiDreamInterpretation({
               dreamText: savedEntry.dreamText,
               feelings: selectedFeelings,
+              modelTier: isPremium ? 'premium' : 'free',
               onDeviceSummary: result.paragraph,
               symbols: result.extractedSymbols,
               interpretiveThemes: result.interpretiveThemes,
@@ -517,12 +580,13 @@ export default function SleepScreen() {
       const patterns = computeDreamPatterns(feelings, entries.filter(e => e.id !== entry.id));
       const result = generateDreamInterpretation({ entry, dreamText: entry.dreamText, feelings, metadata, aggregates, patterns });
       setInterpretations(prev => ({ ...prev, [entry.id]: result }));
-      // Auto-trigger Gemini AI interpretation for premium users
-      if (isPremium && canUseGemini) {
+      // Auto-trigger Gemini AI interpretation for all signed-in users.
+      if (canUseGemini) {
         setAiLoading(entry.id);
         generateGeminiDreamInterpretation({
           dreamText: entry.dreamText,
           feelings,
+          modelTier: isPremium ? 'premium' : 'free',
           onDeviceSummary: result.paragraph,
           symbols: result.extractedSymbols,
           interpretiveThemes: result.interpretiveThemes,
@@ -728,17 +792,36 @@ export default function SleepScreen() {
                     />
                   </View>
 
-                  {!isPremium && dreamText.trim().length > 0 && (
-                    <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} style={{ marginTop: 12 }}>
+                  {dreamText.trim().length > 0 && (
+                    <Pressable
+                      onPress={() => {
+                        if (!isPremium) {
+                          router.push('/(tabs)/premium' as Href);
+                        }
+                      }}
+                      disabled={isPremium}
+                      style={{ marginTop: 12 }}
+                    >
                       <LinearGradient colors={['rgba(157, 118, 193, 0.15)', 'rgba(10, 12, 18, 0.8)']} style={styles.premiumLockCard}>
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.premiumLockTitle, { color: PALETTE.textMain }]}>Symbolic Interpretation</Text>
-                          <Text style={styles.premiumLockSub}>Deep analysis of archetypes and emotional patterns in your dreams.</Text>
+                          <Text style={[styles.premiumLockTitle, { color: PALETTE.textMain }]}>AI Dream Interpretation</Text>
+                          <Text style={styles.premiumLockSub}>
+                            {isPremium
+                              ? 'Saving this dream uses the richer Deeper Sky Gemini model.'
+                              : 'Saving this dream uses Gemini. Free gets the faster model; Deeper Sky upgrades the depth.'}
+                          </Text>
                         </View>
-                        <View style={styles.deeperSkyBadge}>
-                          <MetallicIcon name="sparkles-outline" size={10} variant="gold" />
-                          <MetallicText style={styles.deeperSkyBadgeText} variant="gold">DEEPER SKY</MetallicText>
-                        </View>
+                        {isPremium ? (
+                          <View style={styles.deeperSkyBadge}>
+                            <MetallicIcon name="checkmark-outline" size={10} variant="gold" />
+                            <MetallicText style={styles.deeperSkyBadgeText} variant="gold">RICHER MODEL</MetallicText>
+                          </View>
+                        ) : (
+                          <View style={styles.deeperSkyBadge}>
+                            <MetallicIcon name="sparkles-outline" size={10} variant="gold" />
+                            <MetallicText style={styles.deeperSkyBadgeText} variant="gold">DEEPER SKY</MetallicText>
+                          </View>
+                        )}
                       </LinearGradient>
                     </Pressable>
                   )}
@@ -775,7 +858,7 @@ export default function SleepScreen() {
                                   onPress={() => {
                                     Haptics.selectionAsync().catch(() => {});
                                     setSelectedTier(prev => prev === tier.id ? null : tier.id);
-                                    setFeelingSearch(''); setDebouncedSearch('');
+                                    setFeelingSearch(''); setDebouncedSearch(''); setCustomFeelingText('');
                                   }}
                                   style={[styles.tierPill, isActive && { backgroundColor: tier.color + '22', borderColor: tier.color }]}
                                 >
@@ -810,6 +893,28 @@ export default function SleepScreen() {
                             </View>
                           )}
 
+                          {selectedTier && (
+                            <View style={styles.customFeelingComposer}>
+                              <TextInput
+                                style={styles.customFeelingInput}
+                                value={customFeelingText}
+                                onChangeText={setCustomFeelingText}
+                                placeholder="Type your own feeling"
+                                placeholderTextColor={theme.textMuted}
+                                autoCorrect={false}
+                                returnKeyType="done"
+                                onSubmitEditing={handleAddCustomFeeling}
+                              />
+                              <Pressable
+                                onPress={handleAddCustomFeeling}
+                                disabled={!customFeelingText.trim()}
+                                style={[styles.customFeelingAddBtn, !customFeelingText.trim() && styles.customFeelingAddBtnDisabled]}
+                              >
+                                <Text style={styles.customFeelingAddText}>Add</Text>
+                              </Pressable>
+                            </View>
+                          )}
+
                           {selectedTier && filteredFeelings.length > 0 && (
                             <ScrollView style={{ maxHeight: 320 }} nestedScrollEnabled keyboardShouldPersistTaps="handled">
                               {filteredFeelings.map(feel => {
@@ -826,6 +931,49 @@ export default function SleepScreen() {
                                 );
                               })}
                             </ScrollView>
+                          )}
+
+                          {selectedTier && selectedCustomFeelings.length > 0 && (
+                            <View style={styles.customFeelingSection}>
+                              <Text style={styles.customFeelingSectionLabel}>Your custom feelings</Text>
+                              {selectedCustomFeelings.map((feel) => (
+                                <View key={feel.id}>
+                                  <Pressable
+                                    onPress={() => {
+                                      Haptics.selectionAsync().catch(() => {});
+                                      handleToggleFeeling(feel.id);
+                                    }}
+                                    style={[styles.dreamMoodOption, styles.dreamMoodOptionSelected]}
+                                  >
+                                    <MetallicText color={PALETTE.amethyst} style={[styles.dreamMoodOptionText, styles.dreamMoodOptionTextSelected]}>
+                                      {feel.label ?? feel.id}
+                                    </MetallicText>
+                                    <Ionicons name="close-outline" size={18} color={PALETTE.amethyst} />
+                                  </Pressable>
+                                  <View style={styles.intensityRow}>
+                                    <Text style={styles.intensityLabel}>Intensity</Text>
+                                    <View style={styles.intensityDots}>
+                                      {[1, 2, 3, 4, 5].map(n => (
+                                        <Pressable
+                                          key={n}
+                                          onPress={() => {
+                                            Haptics.selectionAsync().catch(() => {});
+                                            handleIntensityChange(feel.id, n);
+                                          }}
+                                          style={[styles.intensityDot, n <= feel.intensity && styles.intensityDotActive]}
+                                        >
+                                          {n <= feel.intensity ? (
+                                            <MetallicText color={PALETTE.amethyst} style={[styles.intensityDotText, styles.intensityDotTextActive]}>{n}</MetallicText>
+                                          ) : (
+                                            <Text style={styles.intensityDotText}>{n}</Text>
+                                          )}
+                                        </Pressable>
+                                      ))}
+                                    </View>
+                                  </View>
+                                </View>
+                              ))}
+                            </View>
                           )}
 
                           {selectedTier && filteredFeelings.length === 0 && debouncedSearch.length > 0 && (
@@ -869,14 +1017,57 @@ export default function SleepScreen() {
                                   key={t.id}
                                   label={t.label}
                                   isSelected={dreamMetadata.overallTheme === t.id}
-                                  onToggle={() => setDreamMetadata(prev => ({
-                                    ...prev,
-                                    overallTheme: prev.overallTheme === t.id ? undefined : t.id,
-                                  }))}
+                                  onToggle={() => {
+                                    setShowCustomThemeInput(false);
+                                    setCustomThemeText('');
+                                    setDreamMetadata(prev => ({
+                                      ...prev,
+                                      overallTheme: prev.overallTheme === t.id ? undefined : t.id,
+                                    }));
+                                  }}
                                   accentColor={PALETTE.amethyst}
                                 />
                               ))}
+                              <PremiumPill
+                                label="Custom"
+                                isSelected={isCustomThemeSelected}
+                                onToggle={() => {
+                                  if (isCustomThemeSelected) {
+                                    setShowCustomThemeInput(false);
+                                    setCustomThemeText('');
+                                    setDreamMetadata(prev => ({
+                                      ...prev,
+                                      overallTheme: undefined,
+                                    }));
+                                  } else {
+                                    setShowCustomThemeInput(true);
+                                    setDreamMetadata(prev => ({
+                                      ...prev,
+                                      overallTheme: customThemeText.trim() || undefined,
+                                    }));
+                                  }
+                                }}
+                                accentColor={PALETTE.amethyst}
+                              />
                             </View>
+                            {isCustomThemeSelected && (
+                              <View style={styles.customThemeWrap}>
+                                <TextInput
+                                  style={styles.customThemeInput}
+                                  value={customThemeText}
+                                  onChangeText={(value) => {
+                                    setCustomThemeText(value);
+                                    setDreamMetadata(prev => ({
+                                      ...prev,
+                                      overallTheme: value.trim() || undefined,
+                                    }));
+                                  }}
+                                  placeholder="Type your own theme"
+                                  placeholderTextColor={theme.textMuted}
+                                  autoCorrect={false}
+                                />
+                              </View>
+                            )}
                           </View>
 
                           <View style={styles.metadataRow}>
@@ -1129,6 +1320,13 @@ const styles = StyleSheet.create({
 
   feelingSearchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
   feelingSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, height: 40 },
+  customFeelingComposer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
+  customFeelingInput: { flex: 1, color: PALETTE.textMain, fontSize: 15, minHeight: 40 },
+  customFeelingAddBtn: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(157,118,193,0.35)', backgroundColor: 'rgba(157,118,193,0.12)' },
+  customFeelingAddBtnDisabled: { opacity: 0.4 },
+  customFeelingAddText: { color: PALETTE.amethyst, fontSize: 13, fontWeight: '700' },
+  customFeelingSection: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
+  customFeelingSectionLabel: { color: PALETTE.textMuted, fontSize: 12, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8 },
 
   tierRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
   tierPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'transparent' },
@@ -1151,6 +1349,8 @@ const styles = StyleSheet.create({
   metadataRow: { marginBottom: 22 },
   metadataLabel: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '600', marginBottom: 12 },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  customThemeWrap: { marginTop: 12 },
+  customThemeInput: { borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)', paddingHorizontal: 16, paddingVertical: 14, color: PALETTE.textMain, fontSize: 15 },
   awakenDropdown: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },

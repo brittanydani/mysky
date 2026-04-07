@@ -11,6 +11,8 @@ import { Alert } from 'react-native';
 
 const mockSignUp = jest.fn();
 const mockSignInWithPassword = jest.fn();
+const mockRequestPasswordRecoveryCode = jest.fn();
+const mockCompletePasswordRecovery = jest.fn();
 
 jest.mock('../../lib/supabase', () => ({
   supabase: {
@@ -19,6 +21,11 @@ jest.mock('../../lib/supabase', () => ({
       signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
     },
   },
+}));
+
+jest.mock('../../services/auth/passwordRecovery', () => ({
+  requestPasswordRecoveryCode: (...args: unknown[]) => mockRequestPasswordRecoveryCode(...args),
+  completePasswordRecovery: (...args: unknown[]) => mockCompletePasswordRecovery(...args),
 }));
 
 // Theme uses no native modules, no mock needed
@@ -54,6 +61,18 @@ describe('AuthRequiredModal', () => {
     const { getByLabelText } = render(<AuthRequiredModal visible />);
     expect(getByLabelText('Email address')).toBeTruthy();
     expect(getByLabelText('Password')).toBeTruthy();
+    expect(getByLabelText('Show password')).toBeTruthy();
+  });
+
+  it('toggles password visibility', () => {
+    const { getByLabelText } = render(<AuthRequiredModal visible />);
+
+    expect(getByLabelText('Password').props.secureTextEntry).toBe(true);
+
+    fireEvent.press(getByLabelText('Show password'));
+
+    expect(getByLabelText('Hide password')).toBeTruthy();
+    expect(getByLabelText('Password').props.secureTextEntry).toBe(false);
   });
 
   it('defaults to sign-up mode', () => {
@@ -190,5 +209,66 @@ describe('AuthRequiredModal', () => {
       'Error',
       'Sign-in failed. Please check your email and password.',
     );
+  });
+
+  it('requests a recovery code from sign-in mode', async () => {
+    mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
+
+    const { getByLabelText, getByText } = render(<AuthRequiredModal visible />);
+    fireEvent.press(getByLabelText('Already have an account? Sign In'));
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Forgot password'));
+    });
+
+    fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Email Me a Code'));
+    });
+
+    expect(getByText('Reset your password')).toBeTruthy();
+    expect(mockRequestPasswordRecoveryCode).toHaveBeenCalledWith('user@test.com');
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Check your email',
+      'If an account exists for this email, we sent a 6-digit recovery code.',
+    );
+  });
+
+  it('completes password recovery and signs the user in', async () => {
+    mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
+    mockCompletePasswordRecovery.mockResolvedValue(undefined);
+    mockSignInWithPassword.mockResolvedValue({ error: null });
+
+    const { getByLabelText } = render(<AuthRequiredModal visible />);
+    fireEvent.press(getByLabelText('Already have an account? Sign In'));
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Forgot password'));
+    });
+
+    fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Email Me a Code'));
+    });
+
+    fireEvent.changeText(getByLabelText('Recovery code'), '123456');
+    fireEvent.changeText(getByLabelText('New password'), 'securepassword');
+    fireEvent.changeText(getByLabelText('Confirm new password'), 'securepassword');
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Reset Password'));
+    });
+
+    expect(mockCompletePasswordRecovery).toHaveBeenCalledWith({
+      email: 'user@test.com',
+      code: '123456',
+      newPassword: 'securepassword',
+    });
+    expect(mockSignInWithPassword).toHaveBeenLastCalledWith({
+      email: 'user@test.com',
+      password: 'securepassword',
+    });
   });
 });

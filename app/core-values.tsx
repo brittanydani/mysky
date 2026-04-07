@@ -11,6 +11,7 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
@@ -84,6 +85,7 @@ const VALUE_PARADOXES = [
 interface State {
   selected: string[];
   topFive: string[];
+  customValues?: string[];
 }
 
 type ValueReflectionAnswer = ReflectionAnswer | ReflectionDraftAnswer;
@@ -124,13 +126,14 @@ function getDaysAgo(dateKey: string, now = new Date()): number {
 }
 
 function buildDynamicMapValues(
+  allValues: string[],
   selected: string[],
   topFive: string[],
   answers: ValueReflectionAnswer[],
 ): string[] {
   const scoreByValue = new Map<string, number>();
 
-  for (const value of ALL_VALUES) {
+  for (const value of allValues) {
     let score = selected.includes(value) ? MAP_SELECTED_WEIGHT : 0;
     const topIndex = topFive.indexOf(value);
     if (topIndex >= 0) {
@@ -159,7 +162,7 @@ function buildDynamicMapValues(
     }
   }
 
-  return ALL_VALUES
+  return allValues
     .map((value, baseIndex) => ({
       value,
       score: scoreByValue.get(value) ?? 0,
@@ -319,6 +322,9 @@ export default function CoreValuesScreen() {
   const [state, setState] = useState<State>({ selected: [], topFive: [] });
   const [saved, setSaved] = useState(false);
   const [valueReflectionAnswers, setValueReflectionAnswers] = useState<ValueReflectionAnswer[]>([]);
+  const [customValueInput, setCustomValueInput] = useState('');
+  const [showCustomValueInput, setShowCustomValueInput] = useState(false);
+  const [editingCustomValue, setEditingCustomValue] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -332,15 +338,16 @@ export default function CoreValuesScreen() {
               setState({
                 selected: Array.isArray(parsed.selected) ? parsed.selected : [],
                 topFive: Array.isArray(parsed.topFive) ? parsed.topFive.slice(0, MAX_TOP) : [],
+                customValues: Array.isArray(parsed.customValues) ? parsed.customValues : [],
               });
               setSaved(true);
             } catch {
-              setState({ selected: [], topFive: [] });
+              setState({ selected: [], topFive: [], customValues: [] });
               setSaved(false);
             }
             return;
           }
-          setState({ selected: [], topFive: [] });
+          setState({ selected: [], topFive: [], customValues: [] });
           setSaved(false);
         });
 
@@ -362,6 +369,80 @@ export default function CoreValuesScreen() {
       return { selected: newSelected, topFive: newTopFive };
     });
     setSaved(false);
+  };
+
+  const closeCustomValueComposer = () => {
+    setCustomValueInput('');
+    setShowCustomValueInput(false);
+    setEditingCustomValue(null);
+  };
+
+  const saveCustomValue = () => {
+    const trimmed = customValueInput.trim();
+    if (!trimmed) return;
+
+    setState((prev) => {
+      const customValues = prev.customValues ?? [];
+      const normalized = trimmed.toLowerCase();
+      const duplicate = customValues.find((value) => value !== editingCustomValue && value.trim().toLowerCase() === normalized);
+      if (duplicate) return prev;
+
+      const nextCustomValues = editingCustomValue
+        ? customValues.map((value) => (value === editingCustomValue ? trimmed : value))
+        : [...customValues, trimmed];
+
+      const nextSelected = editingCustomValue
+        ? prev.selected.map((value) => (value === editingCustomValue ? trimmed : value))
+        : (prev.selected.includes(trimmed) ? prev.selected : [...prev.selected, trimmed]);
+
+      const nextTopFive = editingCustomValue
+        ? prev.topFive.map((value) => (value === editingCustomValue ? trimmed : value))
+        : prev.topFive;
+
+      return {
+        ...prev,
+        customValues: nextCustomValues,
+        selected: nextSelected,
+        topFive: nextTopFive,
+      };
+    });
+
+    closeCustomValueComposer();
+    setSaved(false);
+  };
+
+  const promptCustomValueAction = (value: string) => {
+    const isTop = state.topFive.includes(value);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    Alert.alert('Custom Value', `Manage "${value}"`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: isTop ? 'Remove From Top 5' : 'Mark Top 5',
+        onPress: () => toggleTop(value),
+      },
+      {
+        text: 'Edit',
+        onPress: () => {
+          setCustomValueInput(value);
+          setShowCustomValueInput(true);
+          setEditingCustomValue(value);
+        },
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          setState((prev) => ({
+            ...prev,
+            customValues: (prev.customValues ?? []).filter((candidate) => candidate !== value),
+            selected: prev.selected.filter((candidate) => candidate !== value),
+            topFive: prev.topFive.filter((candidate) => candidate !== value),
+          }));
+          if (editingCustomValue === value) closeCustomValueComposer();
+          setSaved(false);
+        },
+      },
+    ]);
   };
 
   const toggleTop = (value: string) => {
@@ -403,9 +484,14 @@ export default function CoreValuesScreen() {
   };
 
   // Find active paradoxes based on Top 5 values
+  const allValueOptions = useMemo(() => {
+    const customValues = state.customValues ?? [];
+    return [...ALL_VALUES, ...customValues.filter((value) => !ALL_VALUES.includes(value))];
+  }, [state.customValues]);
+
   const mapValues = useMemo(() => {
-    return buildDynamicMapValues(state.selected, state.topFive, valueReflectionAnswers);
-  }, [state.selected, state.topFive, valueReflectionAnswers]);
+    return buildDynamicMapValues(allValueOptions, state.selected, state.topFive, valueReflectionAnswers);
+  }, [allValueOptions, state.selected, state.topFive, valueReflectionAnswers]);
 
   const activeParadoxes = useMemo(() => {
     return VALUE_PARADOXES.filter(p => 
@@ -442,24 +528,32 @@ export default function CoreValuesScreen() {
           )}
 
           <Animated.View entering={FadeInDown.delay(140).duration(600)}>
-            <Text style={styles.sectionLabel}>TAP TO SELECT · HOLD TO MARK TOP 5</Text>
+            <Text style={styles.sectionLabel}>TAP TO SELECT · HOLD BUILT-INS TO MARK TOP 5 · HOLD CUSTOM VALUES TO MANAGE</Text>
           </Animated.View>
 
           {/* Value Cloud */}
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.chipsWrap}>
-            {ALL_VALUES.map((value) => {
+            {allValueOptions.map((value) => {
               const isSelected = state.selected.includes(value);
               const isTop = state.topFive.includes(value);
+              const isCustom = (state.customValues ?? []).includes(value);
               return (
                 <Pressable
                   key={value}
                   style={[
                     styles.chip,
+                    isCustom && styles.customChip,
                     isSelected && styles.chipSelected,
                     isTop && styles.chipTop,
                   ]}
                   onPress={() => toggleSelected(value)}
-                  onLongPress={() => toggleTop(value)}
+                  onLongPress={() => {
+                    if (isCustom) {
+                      promptCustomValueAction(value);
+                      return;
+                    }
+                    toggleTop(value);
+                  }}
                 >
                   {isTop && <Ionicons name="star-outline" size={10} color={PALETTE.bg} style={{ marginRight: 6 }} />}
                   {isTop ? (
@@ -472,6 +566,40 @@ export default function CoreValuesScreen() {
                 </Pressable>
               );
             })}
+            {showCustomValueInput ? (
+              <View style={styles.customComposer}>
+                <TextInput
+                  style={styles.customComposerInput}
+                  value={customValueInput}
+                  onChangeText={setCustomValueInput}
+                  placeholder="Type your own value..."
+                  placeholderTextColor="rgba(255,255,255,0.28)"
+                  autoFocus
+                  maxLength={40}
+                  returnKeyType="done"
+                  onSubmitEditing={saveCustomValue}
+                />
+                <Pressable hitSlop={8} onPress={() => {
+                  if (customValueInput.trim()) saveCustomValue();
+                  else closeCustomValueComposer();
+                }}>
+                  <Ionicons name={customValueInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={customValueInput.trim() ? PALETTE.gold : 'rgba(255,255,255,0.3)'} />
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                style={[styles.chip, styles.customChip, styles.addCustomChip]}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setShowCustomValueInput(true);
+                  setCustomValueInput('');
+                  setEditingCustomValue(null);
+                }}
+              >
+                <Ionicons name="add-outline" size={14} color={PALETTE.gold} style={{ marginRight: 6 }} />
+                <MetallicText style={styles.chipText} color={PALETTE.gold}>Custom value</MetallicText>
+              </Pressable>
+            )}
           </Animated.View>
 
           {/* Top 5 North Star Summary */}
@@ -579,11 +707,26 @@ const styles = StyleSheet.create({
 
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
+  customChip: { borderStyle: 'dashed' },
+  addCustomChip: { borderColor: 'rgba(217,191,140,0.28)' },
   chipSelected: { borderColor: 'rgba(217,191,140,0.4)', backgroundColor: 'rgba(217,191,140,0.1)' },
   chipTop: { borderColor: PALETTE.gold, backgroundColor: PALETTE.gold },
   chipText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '500' },
   chipTextSelected: { color: PALETTE.gold, fontWeight: '600' },
   chipTextTop: { color: PALETTE.bg, fontWeight: '800' },
+  customComposer: {
+    minWidth: 210,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  customComposerInput: { minWidth: 150, flex: 1, color: PALETTE.textMain, fontSize: 12, paddingVertical: 0 },
 
   summaryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)', padding: 28, marginBottom: 20, backgroundColor: 'rgba(255,255,255,0.02)' },
   summaryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },

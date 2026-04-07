@@ -21,7 +21,10 @@ import { FEELING_MAP } from './dreamTypes';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_MODELS = {
+  free: 'gemini-2.0-flash-lite',
+  premium: 'gemini-2.5-flash-lite',
+} as const;
 const MAX_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 800;
 const RETRY_MAX_DELAY_MS = 6_000;
@@ -130,6 +133,7 @@ export interface GeminiDreamResult {
 export interface GeminiDreamInput {
   dreamText: string;
   feelings?: SelectedFeeling[];
+  modelTier?: GeminiDreamTier;
   /** Optional on-device interpretation to provide as additional context */
   onDeviceSummary?: string;
   /** Symbols extracted from the dream text by the on-device engine */
@@ -142,6 +146,12 @@ export interface GeminiDreamInput {
     undercurrentLabel: string;
     endingType: string;
   };
+}
+
+export type GeminiDreamTier = keyof typeof GEMINI_MODELS;
+
+export function getGeminiDreamModel(modelTier: GeminiDreamTier = 'free'): string {
+  return GEMINI_MODELS[modelTier] ?? GEMINI_MODELS.free;
 }
 
 // ─── Availability ─────────────────────────────────────────────────────────────
@@ -258,11 +268,13 @@ export async function generateGeminiDreamInterpretation(
   }
   lastCallTimestamp = now;
 
+  const model = getGeminiDreamModel(input.modelTier);
+
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     try {
       const { data, error } = await supabase.functions.invoke('gemini-proxy', {
         body: {
-          model: GEMINI_MODEL,
+          model,
           systemPrompt: SYSTEM_PROMPT,
           userPrompt: buildUserPrompt(input),
           generationConfig: {
