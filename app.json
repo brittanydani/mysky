@@ -2,14 +2,14 @@
   "expo": {
     "name": "MySky",
     "slug": "mysky",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mysky",
     "backgroundColor": "#020817",
     "ios": {
       "bundleIdentifier": "com.brittany.mysky",
-      "buildNumber": "20",
+      "buildNumber": "37",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
