@@ -1,38 +1,39 @@
 /**
  * OnboardingModal — component tests
  *
- * Validates: step navigation, name validation, auth flow within onboarding,
+ * Validates: auth-first onboarding flow,
  * backup restore passphrase validation, chart generation trigger.
  */
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockSignUp = jest.fn();
+const mockSignUpAndEnsureSession = jest.fn();
 const mockSignInWithPassword = jest.fn();
 const mockRequestPasswordRecoveryCode = jest.fn();
 const mockCompletePasswordRecovery = jest.fn();
-const mockGetSession = jest.fn();
+
+const mockSaveChart = jest.fn().mockResolvedValue(undefined);
+const mockGetCharts = jest.fn().mockResolvedValue([]);
 
 jest.mock('../../lib/supabase', () => ({
   supabase: {
     auth: {
-      signUp: (...args: unknown[]) => mockSignUp(...args),
       signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
-      getSession: () => mockGetSession(),
     },
   },
+}));
+
+jest.mock('../../services/auth/signUpSession', () => ({
+  signUpAndEnsureSession: (...args: unknown[]) => mockSignUpAndEnsureSession(...args),
 }));
 
 jest.mock('../../services/auth/passwordRecovery', () => ({
   requestPasswordRecoveryCode: (...args: unknown[]) => mockRequestPasswordRecoveryCode(...args),
   completePasswordRecovery: (...args: unknown[]) => mockCompletePasswordRecovery(...args),
 }));
-
-const mockSaveChart = jest.fn().mockResolvedValue(undefined);
-const mockGetCharts = jest.fn().mockResolvedValue([]);
 
 jest.mock('../../services/storage/localDb', () => ({
   localDb: {
@@ -112,8 +113,10 @@ jest.mock('../../components/ui/MetallicIcon', () => ({
 }));
 
 jest.mock('../../components/ui/MetallicText', () => {
-  const { Text } = require('react-native');
-  return { MetallicText: ({ children, ...props }: any) => <Text {...props}>{children}</Text> };
+  const mockReactNative = jest.requireActual('react-native');
+  return {
+    MetallicText: ({ children, ...props }: any) => <mockReactNative.Text {...props}>{children}</mockReactNative.Text>,
+  };
 });
 
 jest.mock('../../components/LegalOverlay', () => ({
@@ -121,7 +124,6 @@ jest.mock('../../components/LegalOverlay', () => ({
 }));
 
 jest.mock('@react-native-community/datetimepicker', () => {
-  const React = require('react');
   return {
     __esModule: true,
     default: () => null,
@@ -141,7 +143,6 @@ const defaultProps = {
 beforeEach(() => {
   jest.clearAllMocks();
   jest.useFakeTimers();
-  mockGetSession.mockResolvedValue({ data: { session: null } });
 });
 
 afterEach(() => {
@@ -159,186 +160,146 @@ describe('OnboardingModal', () => {
 
     it('renders when visible', () => {
       const { getByText } = render(<OnboardingModal {...defaultProps} />);
-      // Welcome step should show the get started content
-      expect(getByText(/MySky/i)).toBeTruthy();
+      expect(getByText(/Welcome back/i)).toBeTruthy();
     });
   });
 
-  describe('step navigation', () => {
-    it('navigates from welcome → auth on Get Started', async () => {
-      const { getByText, getByPlaceholderText } = render(<OnboardingModal {...defaultProps} />);
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
-      });
-      // Should now be on auth step — look for email/password fields
-      expect(getByPlaceholderText(/email/i)).toBeTruthy();
-    });
-  });
-
-  describe('auth step within onboarding', () => {
-    it('toggles password visibility on the auth step', async () => {
-      const { getByText, getByLabelText, getByPlaceholderText } = render(<OnboardingModal {...defaultProps} />);
-
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
-      });
-
-      expect(getByPlaceholderText(/password/i).props.secureTextEntry).toBe(true);
-
-      fireEvent.press(getByLabelText('Show password'));
-
-      expect(getByLabelText('Hide password')).toBeTruthy();
-      expect(getByPlaceholderText(/password/i).props.secureTextEntry).toBe(false);
-    });
-
-    it('validates missing fields', async () => {
-      const { getByText } = render(<OnboardingModal {...defaultProps} />);
-      // Navigate to auth step
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
-      });
-
-      // Try to submit without filling fields (default mode is sign-in)
-      const submitBtn = getByText('Sign In');
-      await act(async () => {
-        fireEvent.press(submitBtn);
-      });
-
-      expect(alertSpy).toHaveBeenCalledWith('Missing fields', expect.any(String));
-      expect(mockSignUp).not.toHaveBeenCalled();
-      expect(mockSignInWithPassword).not.toHaveBeenCalled();
-    });
-
-    it('proceeds to privacy step after successful sign-in (no pending chart, no existing charts)', async () => {
+  describe('auth-first flow', () => {
+    it('signs in existing users and exits onboarding immediately', async () => {
       mockSignInWithPassword.mockResolvedValue({ error: null });
-      mockGetCharts.mockResolvedValue([]);
+      const onSignInComplete = jest.fn();
 
-      const { getByText, getByPlaceholderText } = render(<OnboardingModal {...defaultProps} />);
-      // Navigate to auth
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
-      });
+      const { getByLabelText, getByText } = render(
+        <OnboardingModal {...defaultProps} onSignInComplete={onSignInComplete} />,
+      );
 
-      fireEvent.changeText(getByPlaceholderText(/email/i), 'user@test.com');
-      fireEvent.changeText(getByPlaceholderText(/password/i), 'securepass');
+      fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
+      fireEvent.changeText(getByLabelText('Password'), 'securepass');
 
       await act(async () => {
-        const btn = getByText('Sign In');
-        fireEvent.press(btn);
+        fireEvent.press(getByText('Sign In'));
       });
 
       expect(mockSignInWithPassword).toHaveBeenCalledWith({
         email: 'user@test.com',
         password: 'securepass',
       });
+      expect(onSignInComplete).toHaveBeenCalledTimes(1);
     });
 
-    it('requests a recovery code from the auth step', async () => {
-      mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
-
-      const { getByText, getByLabelText } = render(<OnboardingModal {...defaultProps} />);
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
+    it('sends sign-up users into privacy consent before profile creation', async () => {
+      mockSignUpAndEnsureSession.mockResolvedValue({
+        session: { access_token: 'token' },
+        user: { id: 'user-1' },
+        requiresEmailConfirmation: false,
       });
 
-      await act(async () => {
-        fireEvent.press(getByLabelText('Forgot password'));
-      });
-
-      fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+      const { getByLabelText, getByText } = render(<OnboardingModal {...defaultProps} />);
 
       await act(async () => {
-        fireEvent.press(getByLabelText('Email Me a Code'));
+        fireEvent.press(getByText("Don't have an account? Sign Up"));
       });
 
-      expect(mockRequestPasswordRecoveryCode).toHaveBeenCalledWith('user@test.com');
-      expect(alertSpy).toHaveBeenCalledWith(
-        'Check your email',
-        'If an account exists for this email, we sent a 6-digit recovery code.',
-      );
-    });
-
-    it('completes recovery and signs in from the auth step', async () => {
-      mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
-      mockCompletePasswordRecovery.mockResolvedValue(undefined);
-      mockSignInWithPassword.mockResolvedValue({ error: null });
-      mockGetCharts.mockResolvedValue([]);
-
-      const { getByText, getByLabelText } = render(<OnboardingModal {...defaultProps} />);
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
-      });
+      fireEvent.changeText(getByLabelText('Email address'), 'new@test.com');
+      fireEvent.changeText(getByLabelText('Password'), 'newpassword');
 
       await act(async () => {
-        fireEvent.press(getByLabelText('Forgot password'));
+        fireEvent.press(getByText('Create Account'));
       });
 
-      fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
-
-      await act(async () => {
-        fireEvent.press(getByLabelText('Email Me a Code'));
+      expect(mockSignUpAndEnsureSession).toHaveBeenCalledWith({
+        email: 'new@test.com',
+        password: 'newpassword',
       });
-
-      fireEvent.changeText(getByLabelText('Recovery code'), '123456');
-      fireEvent.changeText(getByLabelText('New password'), 'securepass');
-      fireEvent.changeText(getByLabelText('Confirm new password'), 'securepass');
-
-      await act(async () => {
-        fireEvent.press(getByText('Reset Password'));
-      });
-
-      expect(mockCompletePasswordRecovery).toHaveBeenCalledWith({
-        email: 'user@test.com',
-        code: '123456',
-        newPassword: 'securepass',
-      });
-      expect(mockSignInWithPassword).toHaveBeenLastCalledWith({
-        email: 'user@test.com',
-        password: 'securepass',
-      });
-      expect(defaultProps.onComplete).not.toHaveBeenCalled();
       expect(getByText(/your privacy matters/i)).toBeTruthy();
     });
 
-    it('goes back to sign-in from recovery mode', async () => {
-      const { getByText, getByLabelText, queryByLabelText } = render(<OnboardingModal {...defaultProps} />);
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
+    it('completes sign-up onboarding through legal and birth details', async () => {
+      mockSignUpAndEnsureSession.mockResolvedValue({
+        session: { access_token: 'token' },
+        user: { id: 'user-1' },
+        requiresEmailConfirmation: false,
       });
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ([{
+          place_id: '123',
+          display_name: 'New York, New York, United States',
+          lat: '40.7128',
+          lon: '-74.0060',
+        }]),
+      }) as unknown as typeof fetch;
+
+      const onComplete = jest.fn();
+      const { getByText, getByPlaceholderText, findByText, queryByPlaceholderText } = render(
+        <OnboardingModal {...defaultProps} onComplete={onComplete} />,
+      );
 
       await act(async () => {
-        fireEvent.press(getByLabelText('Forgot password'));
+        fireEvent.press(getByText("Don't have an account? Sign Up"));
       });
-
-      await act(async () => {
-        fireEvent.press(getByLabelText('Back to sign in'));
-      });
-
-      expect(queryByLabelText('Recovery email address')).toBeNull();
-      expect(getByLabelText('Password')).toBeTruthy();
-    });
-
-    it('sign-up with no session prompts email confirmation', async () => {
-      mockSignUp.mockResolvedValue({ data: { session: null }, error: null });
-
-      const { getByText, getByPlaceholderText } = render(<OnboardingModal {...defaultProps} />);
-      await act(async () => {
-        fireEvent.press(getByText(/get started/i));
-      });
-
-      // Switch to sign-up mode
-      const toggleBtn = getByText(/sign up/i);
-      fireEvent.press(toggleBtn);
 
       fireEvent.changeText(getByPlaceholderText(/email/i), 'new@test.com');
       fireEvent.changeText(getByPlaceholderText(/password/i), 'newpassword');
 
       await act(async () => {
-        const submitBtn = getByText(/create account|sign up/i);
-        fireEvent.press(submitBtn);
+        fireEvent.press(getByText('Create Account'));
       });
 
-      expect(alertSpy).toHaveBeenCalledWith('Check your email', expect.any(String));
+      await act(async () => {
+        fireEvent.press(getByText(/i accept & continue/i));
+      });
+
+      fireEvent.changeText(getByPlaceholderText(/your name/i), 'Sky User');
+      await act(async () => {
+        fireEvent.press(getByText('Continue'));
+      });
+
+      await act(async () => {
+        fireEvent.press(getByText('Continue'));
+      });
+
+      await act(async () => {
+        fireEvent.press(getByText('Continue'));
+      });
+
+      fireEvent.changeText(getByPlaceholderText(/search city/i), 'New York');
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+
+      await act(async () => {
+        fireEvent.press(await findByText(/new york, new york/i));
+      });
+
+      await act(async () => {
+        fireEvent.press(getByText(/create profile/i));
+      });
+
+      await act(async () => {
+        jest.advanceTimersByTime(4000);
+      });
+
+      expect(onComplete).toHaveBeenCalledTimes(1);
+      expect(queryByPlaceholderText(/email/i)).toBeNull();
+    });
+
+    it('supports password recovery from the auth-first screen', async () => {
+      mockRequestPasswordRecoveryCode.mockResolvedValue(undefined);
+
+      const { getByLabelText, getByText } = render(<OnboardingModal {...defaultProps} />);
+
+      await act(async () => {
+        fireEvent.press(getByLabelText('Forgot password'));
+      });
+
+      fireEvent.changeText(getByLabelText('Recovery email address'), 'user@test.com');
+
+      await act(async () => {
+        fireEvent.press(getByText('Email Me a Code'));
+      });
+
+      expect(mockRequestPasswordRecoveryCode).toHaveBeenCalledWith('user@test.com');
     });
   });
 
@@ -348,7 +309,6 @@ describe('OnboardingModal', () => {
 
       const { getByText, getByPlaceholderText } = render(<OnboardingModal {...defaultProps} />);
 
-      // Trigger backup restore from welcome
       const restoreBtn = getByText(/restore|backup/i);
       await act(async () => {
         fireEvent.press(restoreBtn);

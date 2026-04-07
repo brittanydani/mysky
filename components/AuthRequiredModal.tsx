@@ -29,6 +29,7 @@ import { supabase } from '../lib/supabase';
 import { theme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
+import { signUpAndEnsureSession } from '../services/auth/signUpSession';
 import {
   completePasswordRecovery,
   requestPasswordRecoveryCode,
@@ -39,6 +40,7 @@ interface Props {
 }
 
 export default function AuthRequiredModal({ visible }: Props) {
+  const genericSignUpError = 'Could not create account. If you already have one, sign in or reset your password.';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -158,12 +160,11 @@ export default function AuthRequiredModal({ visible }: Props) {
     setLoading(true);
     try {
       if (mode === 'sign-up') {
-        const { data, error } = await supabase.auth.signUp({
+        const result = await signUpAndEnsureSession({
           email: email.trim(),
           password,
         });
-        if (error) throw error;
-        if (!data.session) {
+        if (result.requiresEmailConfirmation) {
           // Email confirmation required — prompt user to check inbox
           Alert.alert(
             'Check your email',
@@ -180,12 +181,12 @@ export default function AuthRequiredModal({ visible }: Props) {
         if (error) throw error;
         // AuthContext SIGNED_IN event fires → session updates → modal hides automatically
       }
-    } catch (err: unknown) {
+    } catch {
       // Avoid leaking Supabase error details (e.g. "Invalid login credentials"
       // vs "Email not confirmed") which would enable email enumeration.
       const message = mode === 'sign-in'
         ? 'Sign-in failed. Please check your email and password.'
-        : (err instanceof Error ? err.message : 'Something went wrong');
+        : genericSignUpError;
       Alert.alert('Error', message);
     } finally {
       setLoading(false);

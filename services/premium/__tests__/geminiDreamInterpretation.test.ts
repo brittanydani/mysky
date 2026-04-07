@@ -35,11 +35,15 @@ describe('geminiDreamInterpretation', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('reports Gemini unavailable without an authenticated session', () => {
     expect(isGeminiAvailable(false)).toBe(false);
     expect(isGeminiAvailable(true)).toBe(true);
-    expect(getGeminiDreamModel('free')).toBe('gemini-2.0-flash-lite');
-    expect(getGeminiDreamModel('premium')).toBe('gemini-2.5-flash-lite');
+    expect(getGeminiDreamModel('free')).toBe('gemini-2.5-flash-lite');
+    expect(getGeminiDreamModel('premium')).toBe('gemini-2.5-flash');
   });
 
   it('uses the free Gemini model by default', async () => {
@@ -61,9 +65,9 @@ describe('geminiDreamInterpretation', () => {
     });
 
     expect(mockInvoke).toHaveBeenCalledWith('gemini-proxy', expect.objectContaining({
-      body: expect.objectContaining({ model: 'gemini-2.0-flash-lite' }),
+      headers: expect.objectContaining({ Authorization: 'Bearer token' }),
+      body: expect.objectContaining({ model: 'gemini-2.5-flash-lite' }),
     }));
-    jest.restoreAllMocks();
   });
 
   it('uses the premium Gemini model when requested', async () => {
@@ -88,9 +92,9 @@ describe('geminiDreamInterpretation', () => {
     });
 
     expect(mockInvoke).toHaveBeenCalledWith('gemini-proxy', expect.objectContaining({
-      body: expect.objectContaining({ model: 'gemini-2.5-flash-lite' }),
+      headers: expect.objectContaining({ Authorization: 'Bearer token' }),
+      body: expect.objectContaining({ model: 'gemini-2.5-flash' }),
     }));
-    jest.restoreAllMocks();
   });
 
   it('throws a friendly auth error without invoking the edge function when there is no session', async () => {
@@ -103,7 +107,6 @@ describe('geminiDreamInterpretation', () => {
 
     expect(mockInvoke).not.toHaveBeenCalled();
     expect(mockLogger.warn).not.toHaveBeenCalled();
-    jest.restoreAllMocks();
   });
 
   it('throws a friendly auth error for unauthorized edge-function responses', async () => {
@@ -129,6 +132,71 @@ describe('geminiDreamInterpretation', () => {
       '[GeminiDream] Edge function unauthorized; AI dream insights require sign-in.',
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
-    jest.restoreAllMocks();
+  });
+
+  it('surfaces the edge-function JSON error message for 502 responses', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(130_000);
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: 'Edge Function returned a non-2xx status code',
+        context: {
+          status: 502,
+          json: jest.fn().mockResolvedValue({
+            error: 'AI insights are at capacity right now. Please wait a minute and try again.',
+          }),
+          clone() {
+            return this;
+          },
+        },
+      },
+    });
+
+    await expect(
+      generateGeminiDreamInterpretation({ dreamText: 'I was running through an empty station.' }),
+    ).rejects.toThrow('AI insights are at capacity right now. Please wait a minute and try again.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      '[GeminiDream] Edge function error:',
+      502,
+      'AI insights are at capacity right now. Please wait a minute and try again.',
+    );
+  });
+
+  it('maps upstream Gemini 404s to a temporary-unavailable message', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(150_000);
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: 'Edge Function returned a non-2xx status code',
+        context: {
+          status: 502,
+          json: jest.fn().mockResolvedValue({
+            error: 'Gemini API error: 404',
+          }),
+          clone() {
+            return this;
+          },
+        },
+      },
+    });
+
+    await expect(
+      generateGeminiDreamInterpretation({ dreamText: 'I was looking for a missing train.' }),
+    ).rejects.toThrow('AI insights are temporarily unavailable. Please try again soon.');
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      '[GeminiDream] Edge function error:',
+      502,
+      'Gemini API error: 404',
+    );
   });
 });

@@ -137,17 +137,19 @@ async function setCachedResult(cacheKey: string, result: GeminiPatternResult): P
   } catch { /* ignore */ }
 }
 
-async function hasGeminiPatternSession(): Promise<boolean> {
+async function getGeminiPatternAccessToken(): Promise<string | null> {
   try {
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       logger.warn('[GeminiPatterns] Failed to read Supabase session; using local pattern insights fallback.', error);
-      return false;
+      return null;
     }
-    return Boolean(data.session?.access_token);
+
+    const token = data.session?.access_token ?? null;
+    return token;
   } catch (error) {
     logger.warn('[GeminiPatterns] Failed to read Supabase session; using local pattern insights fallback.', error);
-    return false;
+    return null;
   }
 }
 
@@ -323,7 +325,8 @@ export async function enhancePatternInsights(
   // The edge function requires an authenticated Supabase session.
   // This enhancement is optional, so signed-out users fall back to the
   // deterministic local insights without surfacing a runtime error.
-  if (!(await hasGeminiPatternSession())) {
+  const accessToken = await getGeminiPatternAccessToken();
+  if (!accessToken) {
     return null;
   }
 
@@ -335,6 +338,9 @@ export async function enhancePatternInsights(
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     try {
       const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: {
           model: GEMINI_MODEL,
           systemPrompt: SYSTEM_PROMPT,

@@ -35,7 +35,6 @@ import {
 } from '../services/insights/dailyReflectionService';
 import {
   VALUES_THEME_MAP,
-  AGREEMENT_THRESHOLD,
   syncCoreValuesFromReflections,
 } from '../services/insights/reflectionProfileSync';
 

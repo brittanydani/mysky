@@ -101,6 +101,7 @@
   },
   "private": true,
   "overrides": {
+    "@tootallnate/once": "^3.0.1",
     "serialize-javascript": "^7.0.0"
   }
 }

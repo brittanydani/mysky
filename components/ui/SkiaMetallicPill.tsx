@@ -7,8 +7,8 @@ const PILL_HEIGHT = 56;
 const PILL_RADIUS = 999;
 
 // Rich diagonal metallic sweep matching the golden fill gradient system
-const pillGradientColors = [...metallicFillColors];
-const pillGradientPositions = [...metallicFillPositions];
+const pillGradientColors = [...metallicFillColors] as [string, string, ...string[]];
+const pillGradientPositions = [...metallicFillPositions] as [number, number, ...number[]];
 
 interface Props {
   /** Button label */

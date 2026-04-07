@@ -15,11 +15,20 @@
  * @noble/ciphers/aes.js is pure JS — works in Node without mocking.
  */
 
+const asyncStore = new Map<string, string>();
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(async (key: string) => asyncStore.get(key) ?? null),
+  setItem: jest.fn(async (key: string, value: string) => { asyncStore.set(key, value); }),
+  removeItem: jest.fn(async (key: string) => { asyncStore.delete(key); }),
+}));
+
 import {
   isDecryptionFailure,
   DECRYPTION_FAILED_PLACEHOLDER,
   FieldEncryptionService as fieldEncryption,
 } from '../fieldEncryption';
+import { logger } from '../../../utils/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reset state between tests (dekCache & SecureStore)
@@ -28,7 +37,8 @@ import {
 beforeEach(async () => {
   // Clear the SecureStore mock so each test starts with a fresh key state
   const SecureStore = require('expo-secure-store');
-  SecureStore.deleteItemAsync('field_encryption_dek');
+  await SecureStore.deleteItemAsync('field_encryption_dek');
+  asyncStore.clear();
   // Reset the internal DEK cache by re-initializing
   // (cast to any to access private dekCache)
   (fieldEncryption as any).dekCache = null;
@@ -162,6 +172,28 @@ describe('fieldEncryption.decryptField', () => {
     const tampered = encrypted.slice(0, -4) + 'XXXX';
     const result = await fieldEncryption.decryptField(tampered);
     expect(result).toBe(DECRYPTION_FAILED_PLACEHOLDER);
+  });
+
+  it('returns placeholder without logger.error when the DEK is missing', async () => {
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined);
+
+    const encrypted = await fieldEncryption.encryptField('real content');
+
+    const SecureStore = require('expo-secure-store');
+    await SecureStore.deleteItemAsync('field_encryption_dek');
+    (fieldEncryption as any).dekCache = null;
+
+    const result = await fieldEncryption.decryptField(encrypted);
+
+    expect(result).toBe(DECRYPTION_FAILED_PLACEHOLDER);
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[FieldEncryption] AES-GCM key unavailable on this device; returning placeholder'
+    );
+
+    warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 });
 

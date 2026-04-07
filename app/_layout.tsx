@@ -181,26 +181,32 @@ function RootLayout() {
 export default RootLayout;
 
 function loadSyncService() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Promise.resolve().then(() => require('../services/storage/syncService'));
 }
 
 function loadSecureStore() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Promise.resolve().then(() => require('expo-secure-store'));
 }
 
 function loadWebCrypto() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Promise.resolve().then(() => require('expo-standard-web-crypto'));
 }
 
 function loadNotifications() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Promise.resolve().then(() => require('expo-notifications'));
 }
 
 function loadGrowthAnalytics() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Promise.resolve().then(() => require('../services/growth/localAnalytics'));
 }
 
 function loadSentry() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Promise.resolve().then(() => require('../utils/sentry'));
 }
 
@@ -239,6 +245,7 @@ function AppShell() {
   // Prevent double-navigation after onboarding completes
   const didNavigatePostOnboarding = useRef(false);
   const sessionBootstrapRef = useRef(0);
+  const authEntryIntentRef = useRef<'sign-in-home' | null>(null);
 
   const bindLocalSettingsToUser = async (userId: string, resetSyncState = false) => {
     const current = await localDb.getSettings();
@@ -407,8 +414,7 @@ function AppShell() {
 
         logger.info('[init] step: privacy consent');
         const privacyManager = new PrivacyComplianceManager();
-        const consentStatus = await privacyManager.requestConsent();
-        setNeedsPrivacyConsent(consentStatus.required);
+        let consentStatus = await privacyManager.requestConsent();
 
         logger.info('[init] step: terms consent');
         let termsAccepted = await getTermsConsent();
@@ -418,11 +424,28 @@ function AppShell() {
         // Read the live session directly — `session` state is null at closure
         // capture time since this effect runs once with [] deps.
         const { data: { session: initLiveSession } } = await supabase.auth.getSession();
+        if (consentStatus.required && initLiveSession) {
+          logger.info('[init] session present — auto-restoring privacy consent');
+          await privacyManager.recordConsent({
+            granted: true,
+            policyVersion: consentStatus.policyVersion,
+            timestamp: new Date().toISOString(),
+            method: 'explicit',
+            lawfulBasis: 'consent',
+            purpose: 'astrology_personalization',
+          });
+          consentStatus = {
+            ...consentStatus,
+            required: false,
+          };
+        }
+
         if (!termsAccepted && initLiveSession) {
           logger.info('[init] session present — auto-restoring terms consent');
           await setTermsConsent(true);
           termsAccepted = true;
         }
+        setNeedsPrivacyConsent(consentStatus.required);
         setNeedsTermsConsent(!termsAccepted);
 
         // Only initialize DB / settings after privacy consent is granted
@@ -591,6 +614,7 @@ function AppShell() {
       didNavigatePostOnboarding.current = false;
       setCompletingOnboarding(false);
       setSessionDataReady(false);
+      authEntryIntentRef.current = null;
     }
   }, [session]);
 
@@ -625,6 +649,13 @@ function AppShell() {
       if (isStale()) return;
       await bindLocalSettingsToUser(session.user.id, false).catch(() => {});
       if (isStale()) return;
+
+      if (authEntryIntentRef.current === 'sign-in-home') {
+        setOnboardingComplete(true);
+        setSessionDataReady(true);
+        return;
+      }
+
       await checkIfOnboardingCanBeSkipped().catch(() => false);
       if (isStale()) return;
       setSessionDataReady(true);
@@ -660,6 +691,19 @@ function AppShell() {
       logger.error('[RootLayout] Failed to track onboarding_completed:', e);
     }
     // Navigation is handled by the useEffect above once session confirms.
+  };
+
+  const handleExistingSignInComplete = async () => {
+    authEntryIntentRef.current = 'sign-in-home';
+    setCompletingOnboarding(true);
+    setOnboardingComplete(true);
+
+    if (needsPrivacyConsent) {
+      await handlePrivacyConsent(true);
+    } else {
+      await setTermsConsent(true);
+      setNeedsTermsConsent(false);
+    }
   };
 
   // Hide splash screen once all init gates have passed, then init Sentry.
@@ -758,6 +802,7 @@ function AppShell() {
             <OnboardingModal
               visible
               onPrivacyConsent={() => handlePrivacyConsent(true)}
+              onSignInComplete={handleExistingSignInComplete}
               onComplete={handleOnboardingComplete}
             />
           )}

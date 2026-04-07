@@ -1,7 +1,7 @@
 // app/(tabs)/settings/index.tsx
 
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, Linking, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -1193,6 +1193,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
 
   header: { marginTop: 10, marginBottom: 8, paddingHorizontal: 24 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  titleArea: { flex: 1 },
   greeting: {
     color: '#FFFFFF',
     fontSize: 34,

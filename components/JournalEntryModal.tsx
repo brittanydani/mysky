@@ -462,7 +462,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
       },
     ]);
   }, [deleteCustomTag]);
-  }, []);
 
   const loadUserChart = async () => {
     try {
@@ -489,11 +488,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
   };
 
   const pulseStyle = useAnimatedStyle(() => ({ opacity: pulseOpacity.value }));
-
-  const enterWritingMode = useCallback(() => {
-    setWritingMode(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-  }, []);
 
   const dismissWritingKeyboard = useCallback(() => {
     Keyboard.dismiss();
@@ -1202,7 +1196,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
-  header: { paddingHorizontal: 24, paddingTop: 36, paddingBottom: 28 },
+  header: { paddingHorizontal: 24, paddingTop: 52, paddingBottom: 28 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerDateLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase' },

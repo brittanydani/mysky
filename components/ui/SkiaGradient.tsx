@@ -19,6 +19,18 @@ function normalizePoint(
   return point;
 }
 
+function normalizeColors(colors: string[]): [string, string, ...string[]] {
+  return colors as [string, string, ...string[]];
+}
+
+function normalizeLocations(locations?: number[] | null): [number, number, ...number[]] | undefined {
+  if (!locations || locations.length < 2) {
+    return undefined;
+  }
+
+  return locations as [number, number, ...number[]];
+}
+
 export const SkiaGradient: React.FC<LinearGradientProps> = ({
   colors,
   locations,
@@ -31,8 +43,8 @@ export const SkiaGradient: React.FC<LinearGradientProps> = ({
   return (
     <View style={[style, { overflow: 'hidden' }]} {...rest}>
       <LinearGradient
-        colors={colors}
-        locations={locations ?? undefined}
+        colors={normalizeColors(colors)}
+        locations={normalizeLocations(locations)}
         start={normalizePoint(start)}
         end={normalizePoint(end)}
         style={StyleSheet.absoluteFillObject}

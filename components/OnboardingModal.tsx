@@ -51,6 +51,7 @@ import { toLocalDateString } from '../utils/dateUtils';
 import { logger } from     '../utils/logger';
 import Constants from 'expo-constants';
 import { supabase } from '../lib/supabase';
+import { signUpAndEnsureSession } from '../services/auth/signUpSession';
 import {
   completePasswordRecovery,
   requestPasswordRecoveryCode,
@@ -94,10 +95,10 @@ interface LocationSuggestion {
   lon: string;
 }
 
-type OnboardingStep = 'welcome' | 'privacy' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase' | 'auth';
+type OnboardingStep = 'auth' | 'privacy' | 'name' | 'birthDate' | 'birthTime' | 'location' | 'processing' | 'passphrase';
 
 const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
-  welcome: -1,
+  auth: -1,
   privacy: -1,
   name: 0,
   birthDate: 1,
@@ -105,7 +106,6 @@ const STEP_PROGRESS_INDEX: Record<OnboardingStep, number> = {
   location: 3,
   processing: -1,
   passphrase: -1,
-  auth: -1,
 };
 
 // ── Living Volumetric Nebula ──
@@ -235,15 +235,32 @@ interface OnboardingModalProps {
   visible: boolean;
   onComplete: (chart?: NatalChart) => void;
   onPrivacyConsent?: () => void;
+  onSignInComplete?: () => Promise<void> | void;
 }
 
 export default function OnboardingModal({
   visible,
   onComplete,
   onPrivacyConsent,
+  onSignInComplete,
 }: OnboardingModalProps) {
-  const [step, setStep] = useState<OnboardingStep>('welcome');
+  const [step, setStep] = useState<OnboardingStep>('auth');
   const [legalView, setLegalView] = useState<null | 'terms' | 'privacy' | 'faq'>(null);
+
+  const genericSignUpError = 'Could not create account. If you already have one, sign in or reset your password.';
+  const genericSignInError = 'Sign-in failed. Please check your email and password.';
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authShowPassword, setAuthShowPassword] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
+  const [authRecoveryOpen, setAuthRecoveryOpen] = useState(false);
+  const [authRecoveryCodeSent, setAuthRecoveryCodeSent] = useState(false);
+  const [authRecoveryEmail, setAuthRecoveryEmail] = useState('');
+  const [authRecoveryCode, setAuthRecoveryCode] = useState('');
+  const [authRecoveryPassword, setAuthRecoveryPassword] = useState('');
+  const [authRecoveryConfirmPassword, setAuthRecoveryConfirmPassword] = useState('');
+  const [authShowRecoveryPassword, setAuthShowRecoveryPassword] = useState(false);
 
   const [userName, setUserName] = useState('');
   const [birthDate, setBirthDate] = useState<Date>(new Date());
@@ -261,19 +278,6 @@ export default function OnboardingModal({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const [backupUri, setBackupUri] = useState<string | null>(null);
-  const [pendingChart, setPendingChart] = useState<NatalChart | null>(null);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [showAuthPassword, setShowAuthPassword] = useState(false);
-  const [authRecoveryOpen, setAuthRecoveryOpen] = useState(false);
-  const [authRecoveryCodeSent, setAuthRecoveryCodeSent] = useState(false);
-  const [authRecoveryEmail, setAuthRecoveryEmail] = useState('');
-  const [authRecoveryCode, setAuthRecoveryCode] = useState('');
-  const [authRecoveryPassword, setAuthRecoveryPassword] = useState('');
-  const [authRecoveryConfirmPassword, setAuthRecoveryConfirmPassword] = useState('');
-  const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
-  const [authMode, setAuthMode] = useState<'sign-up' | 'sign-in'>('sign-in');
-  const [authLoading, setAuthLoading] = useState(false);
   const [passphrase, setPassphrase] = useState('');
   const [isNameFocused, setIsNameFocused] = useState(false);
 
@@ -282,6 +286,7 @@ export default function OnboardingModal({
   const ctaAnimStyle = useAnimatedStyle(() => ({ transform: [{ scale: ctaScale.value }] }));
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const authSubmitInFlightRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -299,10 +304,6 @@ export default function OnboardingModal({
   };
 
   const goBack = () => {
-    if (step === 'auth') {
-      goToStep('welcome');
-      return;
-    }
     if (step === 'privacy') {
       goToStep('auth');
       return;
@@ -311,9 +312,142 @@ export default function OnboardingModal({
     if (idx > 0) goToStep(STEP_ORDER[idx - 1]);
   };
 
-  const handleGetStarted = () => {
-    Haptics.selectionAsync().catch(() => {});
-    goToStep('auth');
+  const closeAuthRecovery = () => {
+    setAuthRecoveryOpen(false);
+    setAuthRecoveryCodeSent(false);
+    setAuthRecoveryCode('');
+    setAuthRecoveryPassword('');
+    setAuthRecoveryConfirmPassword('');
+    setAuthShowRecoveryPassword(false);
+  };
+
+  const openAuthRecovery = () => {
+    setAuthRecoveryEmail(authEmail.trim());
+    setAuthRecoveryCode('');
+    setAuthRecoveryPassword('');
+    setAuthRecoveryConfirmPassword('');
+    setAuthShowRecoveryPassword(false);
+    setAuthRecoveryCodeSent(false);
+    setAuthRecoveryOpen(true);
+  };
+
+  const handleSendAuthRecoveryCode = async () => {
+    const trimmedEmail = authRecoveryEmail.trim();
+
+    if (!trimmedEmail) {
+      Alert.alert('Email required', 'Enter your email address to receive a recovery code.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      await requestPasswordRecoveryCode(trimmedEmail);
+      setAuthRecoveryCodeSent(true);
+      Alert.alert(
+        'Check your email',
+        'If an account exists for this email, we sent a 6-digit recovery code.',
+      );
+    } catch (error: unknown) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Password recovery is temporarily unavailable.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleCompleteAuthRecovery = async () => {
+    const trimmedEmail = authRecoveryEmail.trim();
+
+    if (!trimmedEmail) {
+      Alert.alert('Email required', 'Enter your email address to reset your password.');
+      return;
+    }
+    if (!authRecoveryCode.trim()) {
+      Alert.alert('Code required', 'Enter the 6-digit recovery code from your email.');
+      return;
+    }
+    if (authRecoveryPassword.length < 6) {
+      Alert.alert('Password too short', 'Password must be at least 6 characters.');
+      return;
+    }
+    if (authRecoveryPassword !== authRecoveryConfirmPassword) {
+      Alert.alert('Passwords do not match', 'Re-enter your new password so both fields match.');
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      await completePasswordRecovery({
+        email: trimmedEmail,
+        code: authRecoveryCode,
+        newPassword: authRecoveryPassword,
+      });
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: authRecoveryPassword,
+      });
+      if (error) throw error;
+
+      setAuthEmail(trimmedEmail);
+      setAuthPassword(authRecoveryPassword);
+      closeAuthRecovery();
+      await onSignInComplete?.();
+    } catch (error: unknown) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Could not reset password right now.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleAuthSubmit = async () => {
+    if (authSubmitInFlightRef.current) return;
+
+    if (!authEmail.trim() || !authPassword.trim()) {
+      Alert.alert('Missing fields', 'Please enter your email and password.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail.trim())) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+    if (authPassword.length < 6) {
+      Alert.alert('Password too short', 'Password must be at least 6 characters.');
+      return;
+    }
+
+    authSubmitInFlightRef.current = true;
+    Keyboard.dismiss();
+    setAuthLoading(true);
+    try {
+      if (authMode === 'sign-up') {
+        const result = await signUpAndEnsureSession({
+          email: authEmail.trim(),
+          password: authPassword,
+        });
+        if (result.requiresEmailConfirmation) {
+          Alert.alert('Check your email', 'We sent a confirmation link. Tap it, then come back and sign in.');
+          setAuthMode('sign-in');
+        } else {
+          goToStep('privacy');
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authEmail.trim(),
+          password: authPassword,
+        });
+        if (error) throw error;
+        await onSignInComplete?.();
+      }
+    } catch {
+      Alert.alert('Error', authMode === 'sign-up' ? genericSignUpError : genericSignInError);
+    } finally {
+      authSubmitInFlightRef.current = false;
+      setAuthLoading(false);
+    }
   };
 
   const handlePrivacyAccept = () => {
@@ -405,16 +539,9 @@ export default function OnboardingModal({
         timezone: chart.birthData.timezone,
       }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
 
-      timeoutRef.current = setTimeout(async () => {
-        // If already authenticated (signed in/up at start), complete directly
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (currentSession) {
-          onComplete(chart);
-        } else {
-          setPendingChart(chart);
-          setStep('auth');
-        }
-      }, 4000);
+        timeoutRef.current = setTimeout(async () => {
+          await completeChart(chart);
+        }, 4000);
     } catch (error) {
       logger.error('Failed to generate chart:', error);
       Alert.alert('Something went wrong', 'We could not create your profile. Please try again.', [
@@ -475,6 +602,10 @@ export default function OnboardingModal({
     Keyboard.dismiss();
   };
 
+  const completeChart = async (chart: NatalChart) => {
+    onComplete(chart);
+  };
+
   const handleRestoreBackup = async () => {
     Haptics.selectionAsync().catch(() => {});
     try {
@@ -523,189 +654,21 @@ export default function OnboardingModal({
           timezone: charts[0].timezone,
         }).catch((err) => logger.error('[OnboardingModal] IdentityVault seal failed:', err));
 
-        timeoutRef.current = setTimeout(async () => {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          if (currentSession) {
-            onComplete(chart);
-          } else {
-            setPendingChart(chart);
-            setStep('auth');
-          }
-        }, 900);
+          timeoutRef.current = setTimeout(async () => {
+            await completeChart(chart);
+          }, 900);
       } else {
         Alert.alert('No Data Found', 'The backup did not contain any profile data.', [
-          { text: 'OK', onPress: () => setStep('welcome') },
+          { text: 'OK', onPress: () => setStep('auth') },
         ]);
       }
     } catch (error) {
       logger.error('Failed to restore backup:', error);
       Alert.alert('Restore Failed', 'Could not restore from backup. Please check your passphrase and try again.', [
-        { text: 'OK', onPress: () => setStep('welcome') },
+        { text: 'OK', onPress: () => setStep('auth') },
       ]);
     }
   };
-
-  const closeAuthRecovery = () => {
-    setAuthRecoveryOpen(false);
-    setAuthRecoveryCodeSent(false);
-    setAuthRecoveryCode('');
-    setAuthRecoveryPassword('');
-    setAuthRecoveryConfirmPassword('');
-    setShowRecoveryPassword(false);
-  };
-
-  const openAuthRecovery = () => {
-    setAuthRecoveryEmail(authEmail.trim());
-    setAuthRecoveryCode('');
-    setAuthRecoveryPassword('');
-    setAuthRecoveryConfirmPassword('');
-    setShowRecoveryPassword(false);
-    setAuthRecoveryCodeSent(false);
-    setAuthRecoveryOpen(true);
-  };
-
-  const handleSendAuthRecoveryCode = async () => {
-    const trimmedEmail = authRecoveryEmail.trim();
-
-    if (!trimmedEmail) {
-      Alert.alert('Email required', 'Enter your email address to receive a recovery code.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      Alert.alert('Invalid email', 'Please enter a valid email address.');
-      return;
-    }
-
-    setAuthLoading(true);
-    try {
-      await requestPasswordRecoveryCode(trimmedEmail);
-      setAuthRecoveryCodeSent(true);
-      Alert.alert(
-        'Check your email',
-        'If an account exists for this email, we sent a 6-digit recovery code.',
-      );
-    } catch (error: unknown) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Password recovery is temporarily unavailable.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleCompleteAuthRecovery = async () => {
-    const trimmedEmail = authRecoveryEmail.trim();
-
-    if (!trimmedEmail) {
-      Alert.alert('Email required', 'Enter your email address to reset your password.');
-      return;
-    }
-    if (!authRecoveryCode.trim()) {
-      Alert.alert('Code required', 'Enter the 6-digit recovery code from your email.');
-      return;
-    }
-    if (authRecoveryPassword.length < 6) {
-      Alert.alert('Password too short', 'Password must be at least 6 characters.');
-      return;
-    }
-    if (authRecoveryPassword !== authRecoveryConfirmPassword) {
-      Alert.alert('Passwords do not match', 'Re-enter your new password so both fields match.');
-      return;
-    }
-
-    setAuthLoading(true);
-    try {
-      await completePasswordRecovery({
-        email: trimmedEmail,
-        code: authRecoveryCode,
-        newPassword: authRecoveryPassword,
-      });
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
-        password: authRecoveryPassword,
-      });
-      if (error) throw error;
-
-      setAuthEmail(trimmedEmail);
-      setAuthPassword(authRecoveryPassword);
-      closeAuthRecovery();
-      if (pendingChart) {
-        onComplete(pendingChart);
-      } else {
-        const existingCharts = await localDb.getCharts();
-        if (existingCharts.length > 0) {
-          onComplete();
-        } else {
-          goToStep('privacy');
-        }
-      }
-    } catch (error: unknown) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Could not reset password right now.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  // ── Shared auth handler used by both button press and keyboard submit ──
-  const handleAuthSubmit = async () => {
-    if (!authEmail.trim() || !authPassword.trim()) {
-      Alert.alert('Missing fields', 'Please enter your email and password.');
-      return;
-    }
-    Keyboard.dismiss();
-    setAuthLoading(true);
-    try {
-      if (authMode === 'sign-up') {
-        const { data, error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword });
-        if (error) throw error;
-        if (!data.session) {
-          Alert.alert('Check your email', 'We sent a confirmation link. Tap it, then come back and sign in.');
-          setAuthMode('sign-in');
-        } else if (pendingChart) {
-          // Post-processing sign-up: complete with generated chart
-          onComplete(pendingChart);
-        } else {
-          // Early sign-up (before chart): continue to onboarding
-          goToStep('privacy');
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
-        if (error) throw error;
-        if (pendingChart) {
-          onComplete(pendingChart);
-        } else {
-          // Check if this device already has chart data. If yes → go home.
-          // If no (new device / reinstall) → collect birth data before proceeding.
-          const existingCharts = await localDb.getCharts();
-          if (existingCharts.length > 0) {
-            onComplete();
-          } else {
-            // New device / reinstall — try pulling cloud data before forcing birth re-entry
-            const PULL_TIMEOUT_MS = 15_000;
-            try {
-              const { pullFromSupabase } = await import('../services/storage/syncService');
-              await Promise.race([
-                pullFromSupabase(),
-                new Promise<void>((_, reject) =>
-                  setTimeout(() => reject(new Error('pull_timeout')), PULL_TIMEOUT_MS)
-                ),
-              ]);
-            } catch { /* network unavailable or timed out — continue to birth entry */ }
-            const refreshedCharts = await localDb.getCharts();
-            if (refreshedCharts.length > 0) {
-              onComplete();
-            } else {
-              goToStep('privacy');
-            }
-          }
-        }
-      }
-    } catch (err: unknown) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
 
   const showProgress = STEP_PROGRESS_INDEX[step] >= 0;
 
@@ -739,56 +702,203 @@ export default function OnboardingModal({
 
             <View style={st.contentArea}>
 
-              {/* ══════ WELCOME ══════ */}
-              {step === 'welcome' && (
+              {/* ══════ AUTH ══════ */}
+              {step === 'auth' && (
                 <View style={st.centeredFlex}>
-                  <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.welcomeContainer}>
-                    <Text style={st.welcomeTitle}>Welcome to MySky</Text>
-                    <MetallicText style={st.welcomeSubtitle} variant="gold">Your private self-pattern tracker</MetallicText>
-                    <MetallicText style={st.welcomeDescription} color={PREMIUM.textMuted}>
-                      Track sleep, mood, dreams, and relationships so you can understand yourself over time.
+                  <Animated.View entering={FadeInDown.delay(100).duration(900)} style={st.singleQuestionContainer}>
+                    <Text style={st.etherealQuestion}>{authRecoveryOpen ? 'Reset your password' : authMode === 'sign-in' ? 'Welcome back' : 'Create your account'}</Text>
+                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
+                      {authRecoveryOpen
+                        ? authRecoveryCodeSent
+                          ? 'Enter the recovery code from your email and choose a new password.'
+                          : 'We will email you a one-time recovery code.'
+                        : authMode === 'sign-in'
+                          ? 'Sign in to go straight to your home page.'
+                          : 'Create your account first, then we will set up your profile.'}
                     </MetallicText>
                   </Animated.View>
 
-                  {/* Clean, flush feature list. Removed the distracting individual glass cards. */}
-                  <Animated.View entering={FadeInUp.delay(400).duration(700)} style={st.featuresContainer}>
-                    {[
-                      { icon: 'pencil-outline' as const, text: 'Daily journaling and dream reflection' },
-                      { icon: 'pulse-outline' as const, text: 'Sleep, mood, and energy tracking' },
-                      { icon: 'analytics-outline' as const, text: 'Weekly pattern shifts and recurring themes' },
-                      { icon: 'lock-closed-outline' as const, text: 'Private by design, encrypted on-device' },
-                    ].map((item, i) => (
-                      <View key={i} style={st.featureRow}>
-                        <View style={st.featureIcon}>
-                          <MetallicIcon name={item.icon} size={22} color={PREMIUM.titanium} />
+                  <Animated.View entering={FadeInUp.delay(250).duration(600)} style={st.ctaContainerFixed}>
+                    {authRecoveryOpen ? (
+                      <>
+                        <View style={st.passphraseInputWrapper}>
+                          <TextInput
+                            style={st.passphraseInput}
+                            placeholder="Email"
+                            placeholderTextColor={PREMIUM.textMuted}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            value={authRecoveryEmail}
+                            onChangeText={setAuthRecoveryEmail}
+                            accessibilityLabel="Recovery email address"
+                          />
                         </View>
-                        <Text style={st.featureText}>{item.text}</Text>
-                      </View>
-                    ))}
-                  </Animated.View>
 
-                  <Animated.View entering={FadeInUp.delay(700).duration(600)} style={st.ctaContainer}>
-                    <Animated.View style={[st.primaryActionBtn, ctaAnimStyle]}>
-                      <Pressable
-                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
-                        onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); Haptics.selectionAsync().catch(() => {}); }}
-                        onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
-                        onPress={handleGetStarted}
-                      >
-                        <LinearGradient
-                          colors={LIQUID_GOLD}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={st.liquidGoldFill}
-                        />
-                        <Text style={st.primaryActionBtnText}>Get Started</Text>
-                        <Ionicons name="arrow-forward-outline" size={18} color="#000000" style={{ marginLeft: 10 }} />
-                      </Pressable>
-                    </Animated.View>
-                    <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
-                      <MetallicIcon name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
-                      <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Restore from Backup</MetallicText>
-                    </Pressable>
+                        {authRecoveryCodeSent && (
+                          <>
+                            <View style={st.passphraseInputWrapper}>
+                              <TextInput
+                                style={st.passphraseInput}
+                                placeholder="6-digit code"
+                                placeholderTextColor={PREMIUM.textMuted}
+                                keyboardType="number-pad"
+                                value={authRecoveryCode}
+                                onChangeText={setAuthRecoveryCode}
+                                accessibilityLabel="Recovery code"
+                                maxLength={6}
+                              />
+                            </View>
+                            <View style={st.passphraseInputWrapper}>
+                              <View style={st.passwordInputRow}>
+                                <TextInput
+                                  style={[st.passphraseInput, st.passwordInput]}
+                                  placeholder="New password"
+                                  placeholderTextColor={PREMIUM.textMuted}
+                                  secureTextEntry={!authShowRecoveryPassword}
+                                  value={authRecoveryPassword}
+                                  onChangeText={setAuthRecoveryPassword}
+                                  accessibilityLabel="New password"
+                                />
+                                <Pressable
+                                  style={st.passwordEyeButton}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={authShowRecoveryPassword ? 'Hide new password' : 'Show new password'}
+                                  onPress={() => setAuthShowRecoveryPassword((current) => !current)}
+                                >
+                                  <Ionicons
+                                    name={authShowRecoveryPassword ? 'eye-off-outline' : 'eye-outline'}
+                                    size={20}
+                                    color={PREMIUM.textMuted}
+                                  />
+                                </Pressable>
+                              </View>
+                            </View>
+                            <View style={st.passphraseInputWrapper}>
+                              <TextInput
+                                style={st.passphraseInput}
+                                placeholder="Confirm new password"
+                                placeholderTextColor={PREMIUM.textMuted}
+                                secureTextEntry={!authShowRecoveryPassword}
+                                value={authRecoveryConfirmPassword}
+                                onChangeText={setAuthRecoveryConfirmPassword}
+                                accessibilityLabel="Confirm new password"
+                                returnKeyType="done"
+                                onSubmitEditing={handleCompleteAuthRecovery}
+                              />
+                            </View>
+                          </>
+                        )}
+
+                        <Animated.View style={[st.primaryActionBtn, { width: '100%' }, ctaAnimStyle]}>
+                          <Pressable
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                            onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
+                            onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
+                            onPress={authRecoveryCodeSent ? handleCompleteAuthRecovery : handleSendAuthRecoveryCode}
+                            disabled={authLoading}
+                          >
+                            <LinearGradient colors={LIQUID_GOLD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.liquidGoldFill} />
+                            {authLoading ? (
+                              <ActivityIndicator color="#000000" />
+                            ) : (
+                              <Text style={st.primaryActionBtnText}>{authRecoveryCodeSent ? 'Reset Password' : 'Email Me a Code'}</Text>
+                            )}
+                          </Pressable>
+                        </Animated.View>
+
+                        {authRecoveryCodeSent && (
+                          <Pressable style={st.authSecondaryLink} onPress={handleSendAuthRecoveryCode} accessibilityLabel="Resend code">
+                            <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>Resend code</MetallicText>
+                          </Pressable>
+                        )}
+
+                        <Pressable style={st.authSecondaryLink} onPress={closeAuthRecovery} accessibilityRole="button" accessibilityLabel="Back to sign in">
+                          <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>Back to sign in</MetallicText>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <>
+                        <View style={st.passphraseInputWrapper}>
+                          <TextInput
+                            style={st.passphraseInput}
+                            placeholder="Email"
+                            placeholderTextColor={PREMIUM.textMuted}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            value={authEmail}
+                            onChangeText={setAuthEmail}
+                            accessibilityLabel="Email address"
+                          />
+                        </View>
+                        <View style={st.passphraseInputWrapper}>
+                          <View style={st.passwordInputRow}>
+                            <TextInput
+                              style={[st.passphraseInput, st.passwordInput]}
+                              placeholder="Password"
+                              placeholderTextColor={PREMIUM.textMuted}
+                              secureTextEntry={!authShowPassword}
+                              value={authPassword}
+                              onChangeText={setAuthPassword}
+                              accessibilityLabel="Password"
+                              returnKeyType="done"
+                              onSubmitEditing={handleAuthSubmit}
+                            />
+                            <Pressable
+                              style={st.passwordEyeButton}
+                              accessibilityRole="button"
+                              accessibilityLabel={authShowPassword ? 'Hide password' : 'Show password'}
+                              onPress={() => setAuthShowPassword((current) => !current)}
+                            >
+                              <Ionicons
+                                name={authShowPassword ? 'eye-off-outline' : 'eye-outline'}
+                                size={20}
+                                color={PREMIUM.textMuted}
+                              />
+                            </Pressable>
+                          </View>
+                        </View>
+
+                        {authMode === 'sign-in' && (
+                          <Pressable style={st.authSecondaryLink} onPress={openAuthRecovery} accessibilityRole="button" accessibilityLabel="Forgot password">
+                            <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>Forgot password?</MetallicText>
+                          </Pressable>
+                        )}
+
+                        <Animated.View style={[st.primaryActionBtn, { width: '100%' }, ctaAnimStyle]}>
+                          <Pressable
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                            onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
+                            onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
+                            onPress={handleAuthSubmit}
+                            disabled={authLoading}
+                          >
+                            <LinearGradient colors={LIQUID_GOLD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.liquidGoldFill} />
+                            {authLoading ? (
+                              <ActivityIndicator color="#000000" />
+                            ) : (
+                              <Text style={st.primaryActionBtnText}>{authMode === 'sign-in' ? 'Sign In' : 'Create Account'}</Text>
+                            )}
+                          </Pressable>
+                        </Animated.View>
+
+                        <Pressable
+                          style={st.authSecondaryLink}
+                          onPress={() => setAuthMode(authMode === 'sign-in' ? 'sign-up' : 'sign-in')}
+                          accessibilityRole="button"
+                          accessibilityLabel={authMode === 'sign-in' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+                        >
+                          <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.textMuted}>
+                            {authMode === 'sign-in' ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+                          </MetallicText>
+                        </Pressable>
+                        <Pressable style={st.restoreButton} onPress={handleRestoreBackup} accessibilityRole="button">
+                          <MetallicIcon name="cloud-download-outline" size={16} color={PREMIUM.textMuted} />
+                          <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Restore from Backup</MetallicText>
+                        </Pressable>
+                      </>
+                    )}
                   </Animated.View>
                 </View>
               )}
@@ -870,7 +980,7 @@ export default function OnboardingModal({
                         <Text style={st.termsAcceptBtnText}>I Accept & Continue</Text>
                       </LinearGradient>
                     </Pressable>
-                    <Pressable style={st.restoreButton} onPress={() => goToStep('welcome')}>
+                    <Pressable style={st.restoreButton} onPress={() => goToStep('auth')}>
                       <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Go Back</MetallicText>
                     </Pressable>
                   </Animated.View>
@@ -920,7 +1030,7 @@ export default function OnboardingModal({
 
               {/* ══════ BIRTH DATE ══════ */}
               {step === 'birthDate' && (
-                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
+                <Pressable style={[st.centeredFlex, st.birthDetailsStep]} onPress={Keyboard.dismiss} accessible={false}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>When did your journey begin?</Text>
                     <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
@@ -951,7 +1061,7 @@ export default function OnboardingModal({
 
               {/* ══════ BIRTH TIME ══════ */}
               {step === 'birthTime' && (
-                <View style={st.centeredFlex}>
+                <View style={[st.centeredFlex, st.birthDetailsStep]}>
                   <Animated.View entering={FadeIn.delay(100).duration(900)} style={st.singleQuestionContainer}>
                     <Text style={st.etherealQuestion}>What time did you arrive?</Text>
                     <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
@@ -1057,7 +1167,7 @@ export default function OnboardingModal({
               {step === 'location' && (
                 <ScrollView
                   style={{ flex: 1 }}
-                  contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+                  contentContainerStyle={st.birthDetailsScrollContent}
                   keyboardShouldPersistTaps="handled"
                   keyboardDismissMode="on-drag"
                   showsVerticalScrollIndicator={false}
@@ -1147,213 +1257,6 @@ export default function OnboardingModal({
                 </View>
               )}
 
-              {/* ══════ AUTH (Sign Up / Sign In) ══════ */}
-              {step === 'auth' && (
-                <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
-                  <Animated.View entering={FadeInUp.delay(100).duration(800)} style={st.singleQuestionContainer}>
-                    <View style={[st.passphraseIconWrap, { marginBottom: 8 }]}>
-                      <MetallicIcon name="sparkles-outline" size={32} color={PREMIUM.titanium} />
-                    </View>
-                    <Text style={st.etherealQuestion}>
-                      {authRecoveryOpen ? 'Reset your password' : authMode === 'sign-up' ? 'Create your account' : 'Welcome back'}
-                    </Text>
-                    <MetallicText style={st.etherealSubtext} color={PREMIUM.textMuted}>
-                      {authRecoveryOpen
-                        ? authRecoveryCodeSent
-                          ? 'Enter the code from your email and choose a new password.'
-                          : 'We will email you a one-time recovery code.'
-                        : authMode === 'sign-up'
-                          ? 'Your reflections stay private, encrypted, and yours.'
-                          : 'Sign in to restore access to your data.'}
-                    </MetallicText>
-
-                    <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginTop: 24, marginBottom: 10 }]}>
-                      <TextInput
-                        style={st.passphraseInput}
-                        value={authRecoveryOpen ? authRecoveryEmail : authEmail}
-                        onChangeText={authRecoveryOpen ? setAuthRecoveryEmail : setAuthEmail}
-                        placeholder="Email"
-                        placeholderTextColor={PREMIUM.textMuted}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        selectionColor={PREMIUM.titanium}
-                        accessibilityLabel={authRecoveryOpen ? 'Recovery email address' : 'Email address'}
-                      />
-                    </BlurView>
-                    {authRecoveryOpen ? (
-                      <>
-                        {authRecoveryCodeSent && (
-                          <>
-                            <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 10 }]}>
-                              <TextInput
-                                style={st.passphraseInput}
-                                value={authRecoveryCode}
-                                onChangeText={setAuthRecoveryCode}
-                                placeholder="6-digit code"
-                                placeholderTextColor={PREMIUM.textMuted}
-                                keyboardType="number-pad"
-                                selectionColor={PREMIUM.titanium}
-                                maxLength={6}
-                                accessibilityLabel="Recovery code"
-                              />
-                            </BlurView>
-                            <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 10 }]}>
-                              <View style={st.passwordInputRow}>
-                                <TextInput
-                                  style={[st.passphraseInput, st.passwordInput]}
-                                  value={authRecoveryPassword}
-                                  onChangeText={setAuthRecoveryPassword}
-                                  placeholder="New password"
-                                  placeholderTextColor={PREMIUM.textMuted}
-                                  secureTextEntry={!showRecoveryPassword}
-                                  selectionColor={PREMIUM.titanium}
-                                  accessibilityLabel="New password"
-                                />
-                                <Pressable
-                                  onPress={() => setShowRecoveryPassword((current) => !current)}
-                                  accessibilityRole="button"
-                                  accessibilityLabel={showRecoveryPassword ? 'Hide new password' : 'Show new password'}
-                                  style={st.passwordEyeButton}
-                                >
-                                  <Ionicons
-                                    name={showRecoveryPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={20}
-                                    color={PREMIUM.textMuted}
-                                  />
-                                </Pressable>
-                              </View>
-                            </BlurView>
-                            <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: 16 }]}>
-                              <TextInput
-                                style={st.passphraseInput}
-                                value={authRecoveryConfirmPassword}
-                                onChangeText={setAuthRecoveryConfirmPassword}
-                                placeholder="Confirm new password"
-                                placeholderTextColor={PREMIUM.textMuted}
-                                secureTextEntry={!showRecoveryPassword}
-                                returnKeyType="done"
-                                onSubmitEditing={handleCompleteAuthRecovery}
-                                selectionColor={PREMIUM.titanium}
-                                accessibilityLabel="Confirm new password"
-                              />
-                            </BlurView>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <BlurView intensity={30} tint="dark" style={[st.passphraseInputWrapper, { marginBottom: authMode === 'sign-in' ? 10 : 20 }]}>
-                          <View style={st.passwordInputRow}>
-                            <TextInput
-                              style={[st.passphraseInput, st.passwordInput]}
-                              value={authPassword}
-                              onChangeText={setAuthPassword}
-                              placeholder="Password"
-                              placeholderTextColor={PREMIUM.textMuted}
-                              secureTextEntry={!showAuthPassword}
-                              returnKeyType="done"
-                              onSubmitEditing={handleAuthSubmit}
-                              selectionColor={PREMIUM.titanium}
-                              accessibilityLabel="Password"
-                            />
-                            <Pressable
-                              onPress={() => setShowAuthPassword((current) => !current)}
-                              accessibilityRole="button"
-                              accessibilityLabel={showAuthPassword ? 'Hide password' : 'Show password'}
-                              style={st.passwordEyeButton}
-                            >
-                              <Ionicons
-                                name={showAuthPassword ? 'eye-off-outline' : 'eye-outline'}
-                                size={20}
-                                color={PREMIUM.textMuted}
-                              />
-                            </Pressable>
-                          </View>
-                        </BlurView>
-
-                        {authMode === 'sign-in' && (
-                          <Pressable
-                            style={st.authSecondaryLink}
-                            onPress={openAuthRecovery}
-                            accessibilityRole="button"
-                            accessibilityLabel="Forgot password"
-                          >
-                            <MetallicText style={st.authSecondaryLinkText} color={PREMIUM.titanium}>Forgot password?</MetallicText>
-                          </Pressable>
-                        )}
-                      </>
-                    )}
-
-                    <Animated.View style={[st.primaryActionBtn, { width: '100%', marginBottom: 16 }, ctaAnimStyle]}>
-                      <Pressable
-                        disabled={authLoading}
-                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
-                        onPressIn={() => { ctaScale.value = withSpring(0.97, { mass: 0.5, stiffness: 400 }); }}
-                        onPressOut={() => { ctaScale.value = withSpring(1.0, { mass: 0.5, stiffness: 400 }); }}
-                        accessibilityRole="button"
-                        accessibilityLabel={authRecoveryOpen
-                          ? authRecoveryCodeSent ? 'Reset Password' : 'Email Me a Code'
-                          : authMode === 'sign-up' ? 'Create Account' : 'Sign In'}
-                        onPress={authRecoveryOpen
-                          ? authRecoveryCodeSent
-                            ? handleCompleteAuthRecovery
-                            : handleSendAuthRecoveryCode
-                          : handleAuthSubmit}
-                      >
-                        <LinearGradient
-                          colors={LIQUID_GOLD}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={st.liquidGoldFill}
-                        />
-                        {authLoading ? (
-                          <ActivityIndicator color={PREMIUM.bgOled} />
-                        ) : (
-                          <Text style={st.primaryActionBtnText}>
-                            {authRecoveryOpen
-                              ? authRecoveryCodeSent ? 'Reset Password' : 'Email Me a Code'
-                              : authMode === 'sign-up' ? 'Create Account' : 'Sign In'}
-                          </Text>
-                        )}
-                      </Pressable>
-                    </Animated.View>
-
-                    {authRecoveryOpen ? (
-                      <>
-                        {authRecoveryCodeSent && (
-                          <Pressable
-                            style={st.restoreButton}
-                            onPress={handleSendAuthRecoveryCode}
-                            accessibilityRole="button"
-                            accessibilityLabel="Resend code"
-                          >
-                            <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Resend code</MetallicText>
-                          </Pressable>
-                        )}
-                        <Pressable
-                          style={st.restoreButton}
-                          onPress={closeAuthRecovery}
-                          accessibilityRole="button"
-                          accessibilityLabel="Back to sign in"
-                        >
-                          <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Back to sign in</MetallicText>
-                        </Pressable>
-                      </>
-                    ) : (
-                      <Pressable
-                        style={st.restoreButton}
-                        onPress={() => setAuthMode(authMode === 'sign-up' ? 'sign-in' : 'sign-up')}
-                      >
-                        <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>
-                          {authMode === 'sign-up' ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-                        </MetallicText>
-                      </Pressable>
-                    )}
-                  </Animated.View>
-                </Pressable>
-              )}
-
               {/* ══════ PASSPHRASE (Restore) ══════ */}
               {step === 'passphrase' && (
                 <Pressable style={st.centeredFlex} onPress={Keyboard.dismiss} accessible={false}>
@@ -1398,7 +1301,7 @@ export default function OnboardingModal({
                       </Pressable>
                     </Animated.View>
 
-                    <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('welcome')}>
+                    <Pressable style={[st.restoreButton, { alignSelf: 'center' }]} onPress={() => setStep('auth')}>
                       <MetallicText style={st.restoreText} color={PREMIUM.textMuted}>Cancel</MetallicText>
                     </Pressable>
                   </Animated.View>
@@ -1479,6 +1382,15 @@ const st = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     width: '100%',
+  },
+  birthDetailsStep: {
+    justifyContent: 'flex-start',
+    paddingTop: 56,
+  },
+  birthDetailsScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    paddingTop: 56,
   },
 
   // ── Welcome (Left-aligned, refined hierarchy) ──
@@ -2042,16 +1954,24 @@ const st = StyleSheet.create({
     textAlign: 'center',
   },
   passwordInputRow: {
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   passwordInput: {
-    flex: 1,
-    paddingRight: 0,
+    width: '100%',
+    paddingLeft: 56,
+    paddingRight: 56,
   },
   passwordEyeButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 18,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   authSecondaryLink: {
     alignSelf: 'flex-end',

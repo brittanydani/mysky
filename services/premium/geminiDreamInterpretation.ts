@@ -22,8 +22,8 @@ import { FEELING_MAP } from './dreamTypes';
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const GEMINI_MODELS = {
-  free: 'gemini-2.0-flash-lite',
-  premium: 'gemini-2.5-flash-lite',
+  free: 'gemini-2.5-flash-lite',
+  premium: 'gemini-2.5-flash',
 } as const;
 const MAX_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 800;
@@ -35,15 +35,17 @@ const SYSTEM_PROMPT = `You are a dream interpreter for a personal growth app. Yo
 
 ═══ VOICE ═══
 
-Write like a thoughtful friend who happens to understand dreams — not like a therapist, not like a textbook, not like a wellness influencer.
+Write like a thoughtful, perceptive person who sees the pattern quickly and says it clearly. Not a therapist. Not a poet performing sensitivity. Not a wellness influencer.
 
-Second person ("you"). Warm. Grounded. Human.
+Second person ("you"). Warm. Grounded. Precise. Human.
 
-Sentence rhythm matters. Mix short and long. Let the writing breathe:
+Sentence rhythm matters. Mix short and medium sentences. Favor clarity over atmosphere:
   ✓ "The frustration you felt wasn't random. It may be pointing to a connection where you're doing the reaching but can't quite close the gap."
   ✗ "The frustration you experienced in the dream likely indicates that there may be a relationship dynamic in your waking life where you feel that your efforts to connect are not being reciprocated."
 
 Vary sentence openings. Never start two consecutive sentences the same way. Good starters: "Something about...", "There's a reason...", "The fact that...", "You know that feeling of...", "[Symbol] in this dream is worth noticing.", "Whether it's...", "Your mind didn't stage this for no reason."
+
+Aim for the feel of a strong editor: observant, restrained, exact. The writing should feel specific and intelligent, not lush, mystical, or over-soothing.
 
 ═══ BANNED PATTERNS ═══
 
@@ -61,24 +63,34 @@ Never use any of these:
 
 Never use these words: journey, powerful, tapestry, delve, resonate, embrace, navigate, unpack, realm, beacon, pivotal, landscape (metaphorical), profound, intricate, embark, unveil, unlock, harness.
 
+Avoid these tones:
+- breathy or overly tender
+- vague spirituality
+- therapy-speak softened into cliche
+- poetic abstraction that drifts away from the actual dream details
+
 Never stack hedges: "It may be that this could potentially reflect…" — use ONE hedge per clause maximum.
 
-Never write a sentence longer than 35 words.
+Never write a sentence longer than 28 words.
 
 ═══ CONTENT RULES ═══
 
-1. Reference SPECIFIC imagery, people, settings, or actions from the dream. Don't stay abstract.
-2. Interpret what the dream content might reflect about the dreamer's inner world, feelings, relationships, or current life themes.
-3. Never diagnose, pathologize, or use clinical labels.
-4. Never predict the future. Never claim the dream "means" exactly one thing.
-5. If distress is present, validate the feeling. Close with one gentle somatic grounding note (breath, body, physical sensation). Keep it to one sentence — not a paragraph.
-6. Write THREE flowing paragraphs. 10–15 sentences total. Each paragraph should build on the last — not repeat it.
+1. Reference SPECIFIC imagery, people, settings, and actions from the dream. Do not stay abstract.
+2. Move in this order whenever possible: concrete detail -> emotional meaning -> broader life thread.
+3. Interpret what the dream content might reflect about the dreamer's inner world, feelings, relationships, or current life themes.
+4. Be willing to make a clean, direct observation. Do not over-soften every sentence.
+5. Stay close to the strongest thread. Do not sprawl into multiple unrelated meanings.
+6. Never diagnose, pathologize, or use clinical labels.
+7. Never predict the future. Never claim the dream "means" exactly one thing.
+8. If distress is present, validate the feeling. Close with one gentle somatic grounding note (breath, body, physical sensation). Keep it to one sentence — not a paragraph.
+9. Write THREE flowing paragraphs. 9–13 sentences total. Each paragraph should build on the last — not repeat it.
    - Paragraph 1: Ground the reader in the dream's central scene, setting, or action. Interpret the core emotional atmosphere.
    - Paragraph 2: Draw out the symbols — at least 3, more when the dream is rich. Connect them to each other and to the dreamer's inner world. Don't list them; let one flow into the next.
    - Paragraph 3: Zoom out. What is this dream circling around at a life level? Close with warmth — not advice.
-7. When the on-device analysis is provided as additional context, build on it — don't repeat it or rephrase it. Add a new angle, a deeper layer, or a connection the rule-based engine couldn't make.
-8. When multiple symbols are provided, WEAVE them together into a cohesive narrative. Don't interpret each symbol in isolation — find the thread that connects them. What story do they tell when read together? What emotional or relational undercurrent runs through the combination? Let one symbol's interpretation naturally lead into the next so the reading flows like a single thought.
-9. Interpret at least 3 symbols when available. If 5+ symbols are present, aim for 4–6. You don't need to cover every single one, but the interpretation should feel rich and thorough — not thin.
+10. When the on-device analysis is provided as additional context, build on it — don't repeat it or rephrase it. Add a new angle, a deeper layer, or a connection the rule-based engine couldn't make.
+11. When multiple symbols are provided, WEAVE them together into a cohesive narrative. Don't interpret each symbol in isolation — find the thread that connects them. What story do they tell when read together? What emotional or relational undercurrent runs through the combination? Let one symbol's interpretation naturally lead into the next so the reading flows like a single thought.
+12. Interpret at least 3 symbols when available. If 5+ symbols are present, aim for 4–6. You don't need to cover every single one, but the interpretation should feel rich and thorough — not thin.
+13. Avoid filler transitions. Every sentence should either anchor a detail, interpret a symbol, or deepen the main thread.
 
 ═══ REFLECTION QUESTION ═══
 
@@ -86,6 +98,7 @@ Must be specific to THIS dream. Reference a concrete detail from the narrative.
 
 Good: "What does it feel like in your body when you think about who was on the other side of that door?"
 Good: "If the water in your dream had something to say, what would it be?"
+Good: "What feels closed off in you lately, in the same way that door was closed at the end of the hall?"
 Bad: "How can you apply this insight to your daily life?"
 Bad: "What emotions come up for you when you reflect on this dream?"
 Bad: "What steps can you take to address the themes in this dream?"
@@ -93,25 +106,25 @@ Bad: "What steps can you take to address the themes in this dream?"
 ═══ EXAMPLES OF THE RIGHT VOICE ═══
 
 Example 1 (symbol-rich dream with school, mother, locked door, hallway):
-"Your dream placed you in a school — a space your mind often reaches for when something about performance or evaluation is pressing. The hallway stretching endlessly has a quality of searching, of trying to get somewhere that keeps moving further away. That alone tells you something about where you are right now.
+"Your dream placed you in a school, which usually means the pressure is not random. The hallway stretching endlessly gives the whole scene a feeling of pursuit without arrival. Something in your life may be asking for effort while also refusing to let you feel done.
 
-The locked door is hard to ignore. Paired with your mom being in the scene, it shifts the dream from a generic anxiety setting into something more personal. The door may represent a boundary — a conversation that hasn't happened, or a version of closeness you can't quite access. Your mother's presence suggests the stakes aren't abstract. This is about the kind of approval or understanding that shaped how you learned to measure yourself.
+The locked door is the clearest symbol in the dream. Paired with your mom being there, it stops feeling like generic anxiety and starts feeling relational. The door may point to a conversation that never opened, or a kind of closeness that still feels unavailable. Her presence suggests the stakes were shaped early.
 
-Something in your life right now is echoing this old pattern — the trying, the reaching, the finding it closed. Your mind built this whole scene to get your attention. It's not warning you. It's asking you to notice."
+Something in your life now may be echoing that same pattern: trying, reaching, and meeting a limit you can feel but not move. The dream is not being vague about that. It is showing you where frustration and longing may still be tied together."
 
 Example 2 (feeling-heavy dream with water, darkness, sinking):
-"Something about the water stayed with you, and that's usually a sign it's connected to something real. The darkness around it deepens the feeling — this wasn't a calm lake or a sunlit shore. Your mind chose a version of water that felt heavy, enclosed, hard to see through.
+"Something about the water stayed with you because it carried the whole emotional weight of the dream. The darkness around it matters. This was not open, clear water. It felt heavy, enclosed, and difficult to read.
 
-The sinking sensation is your body's contribution to the dream. It's the physical version of a feeling you may be carrying — the sense that something is pulling you under, or that you're losing your footing in a situation that used to feel stable. Water in dreams often maps to emotional depth, and the fact that yours was dark suggests feelings you haven't fully looked at yet.
+The sinking sensation feels like your body naming the problem directly. It is the physical version of feeling pulled under or losing footing in something that once felt manageable. Water often carries emotional depth in dreams, and the darkness here suggests feelings that are present but not fully faced.
 
-Even without a full storyline, the heaviness here has its own kind of clarity. Your mind didn't need a narrative to make the point — the feeling alone was the message. Whatever this is about, your body already knows."
+Even without a full storyline, the dream is specific. It does not need plot when the emotional truth is already that strong. Whatever this touches, your body seems to recognize it before the rest of you does."
 
 Example 3 (distressing dream with being chased, forest, fog, childhood home):
-"Being chased in a dream is one of the most physically intense experiences your mind can create. The urgency of it probably still echoes. The forest adds another layer — it's a place where visibility drops and instinct takes over. You couldn't see what was behind you, and that not-knowing is often the worst part.
+"Being chased is one of the clearest ways a dream creates pressure. The urgency likely stayed with you because your body had to live inside it. The forest adds disorientation. It is a setting where visibility drops and instinct takes over.
 
-The fog matters here. It's not just atmosphere — it's the feeling of not being able to think clearly about whatever is pressing on you. And the fact that the chase led you back to your childhood home is worth sitting with. Your mind took a present-tense threat and routed it to the past. Whatever you're avoiding right now may have roots somewhere older than the current situation.
+The fog is not decoration. It gives form to confusion, avoidance, or the sense that you cannot think clearly about what is pressing on you. The chase ending at your childhood home matters just as much. Your mind took a present-tense threat and routed it toward the past, which suggests the feeling may be older than the current situation.
 
-None of this is a warning or a prediction. It's your mind trying to bring something forward — something you've probably been outrunning for a while. If your body is still holding tension from this one, a few slow breaths can help it land."
+This is not a warning about what comes next. It is a concentrated picture of something you may already be outrunning in waking life. If your body is still braced from the dream, a few slower breaths can help that tension release."
 
 ═══ RESPONSE FORMAT ═══
 
@@ -220,7 +233,78 @@ function getFriendlyAuthMessage(): string {
   return 'Sign in to use AI dream insights.';
 }
 
-async function ensureGeminiDreamSession(): Promise<void> {
+async function getEdgeFunctionErrorDetails(error: unknown): Promise<{ status: number; message: string }> {
+  const fallbackStatus = (error as any)?.context?.status ?? 0;
+  const fallbackMessage = (error as any)?.message ?? String(error);
+  const context = (error as any)?.context;
+
+  if (!context || typeof context !== 'object') {
+    return { status: fallbackStatus, message: fallbackMessage };
+  }
+
+  const responseLike = context as {
+    status?: number;
+    json?: () => Promise<unknown>;
+    text?: () => Promise<string>;
+    clone?: () => unknown;
+    error?: string;
+    message?: string;
+  };
+
+  const parsePayload = async (target: typeof responseLike): Promise<string | null> => {
+    if (typeof target.json === 'function') {
+      try {
+        const payload = await target.json();
+        if (payload && typeof payload === 'object') {
+          const payloadError = (payload as { error?: unknown; message?: unknown }).error
+            ?? (payload as { error?: unknown; message?: unknown }).message;
+          if (typeof payloadError === 'string' && payloadError.trim().length > 0) {
+            return payloadError;
+          }
+        }
+      } catch {
+        // Fall through to text parsing.
+      }
+    }
+
+    if (typeof target.text === 'function') {
+      try {
+        const rawText = await target.text();
+        if (!rawText) return null;
+        try {
+          const parsed = JSON.parse(rawText) as { error?: unknown; message?: unknown };
+          const payloadError = parsed.error ?? parsed.message;
+          if (typeof payloadError === 'string' && payloadError.trim().length > 0) {
+            return payloadError;
+          }
+        } catch {
+          return rawText.trim() || null;
+        }
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  };
+
+  const cloned = typeof responseLike.clone === 'function'
+    ? responseLike.clone() as typeof responseLike
+    : responseLike;
+  const payloadMessage = await parsePayload(cloned);
+  const directMessage = typeof responseLike.error === 'string'
+    ? responseLike.error
+    : typeof responseLike.message === 'string'
+      ? responseLike.message
+      : null;
+
+  return {
+    status: responseLike.status ?? fallbackStatus,
+    message: payloadMessage ?? directMessage ?? fallbackMessage,
+  };
+}
+
+async function ensureGeminiDreamSession(): Promise<string> {
   try {
     const { data: current } = await supabase.auth.getSession();
     const token = current.session?.access_token;
@@ -236,7 +320,10 @@ async function ensureGeminiDreamSession(): Promise<void> {
         logger.warn('[GeminiDream] Session refresh failed; AI dream insights unavailable.', refreshError);
         throw new Error(getFriendlyAuthMessage());
       }
+      return refreshed.session.access_token;
     }
+
+    return token;
   } catch (error) {
     if (error instanceof Error && error.message === getFriendlyAuthMessage()) {
       throw error;
@@ -260,7 +347,7 @@ export async function generateGeminiDreamInterpretation(
     throw new Error('Dream text is required for interpretation.');
   }
 
-  await ensureGeminiDreamSession();
+  const accessToken = await ensureGeminiDreamSession();
 
   const now = Date.now();
   if (now - lastCallTimestamp < MIN_CALL_INTERVAL_MS) {
@@ -273,12 +360,15 @@ export async function generateGeminiDreamInterpretation(
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     try {
       const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: {
           model,
           systemPrompt: SYSTEM_PROMPT,
           userPrompt: buildUserPrompt(input),
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.5,
             maxOutputTokens: 2048,
             responseMimeType: 'application/json',
           },
@@ -286,8 +376,7 @@ export async function generateGeminiDreamInterpretation(
       });
 
       if (error) {
-        const status = (error as any)?.context?.status ?? 0;
-        const message = (error as any)?.message ?? String(error);
+        const { status, message } = await getEdgeFunctionErrorDetails(error);
 
         if (status === 401 || status === 403) {
           logger.warn('[GeminiDream] Edge function unauthorized; AI dream insights require sign-in.');
@@ -297,6 +386,17 @@ export async function generateGeminiDreamInterpretation(
         logger.error('[GeminiDream] Edge function error:', status, message);
 
         if (status === 429) throw new Error(getFriendlyRateLimitMessage());
+
+        const normalizedMessage = message.toLowerCase();
+        if (normalizedMessage.includes('at capacity')) {
+          throw new Error(getFriendlyRateLimitMessage());
+        }
+        if (normalizedMessage.includes('gemini api error: 404')) {
+          throw new Error('AI insights are temporarily unavailable. Please try again soon.');
+        }
+        if (normalizedMessage.includes('gemini api error: 503')) {
+          throw new Error('AI insights are temporarily unavailable. Please try again soon.');
+        }
 
         const retriable = status === 0 || status === 408 || status === 503 || status >= 500;
         if (retriable && attempt < MAX_RETRIES) {

@@ -236,7 +236,7 @@ export default function HomeScreen() {
         if (!silent) setLoading(false);
       }
     },
-    [router],
+    [],
   );
 
   useFocusEffect(
@@ -327,7 +327,7 @@ export default function HomeScreen() {
 
     const ctx: PersonalAffirmationContext = {
       element: userChart?.sunSign?.element?.toLowerCase() as PersonalAffirmationContext['element'],
-      modality: userChart?.sunSign?.modality?.toLowerCase() as PersonalAffirmationContext['modality'],
+      modality: userChart?.sunSign?.quality?.toLowerCase() as PersonalAffirmationContext['modality'],
       mood,
       energy: energy >= 7 ? 'high' : energy >= 5 ? 'medium' : 'low',
       sleep: latestSleep,

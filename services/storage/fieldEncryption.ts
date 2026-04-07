@@ -51,6 +51,7 @@
 // All access goes through getCrypto() which lazy-loads the module on first use.
 import type * as CryptoType from 'expo-crypto';
 import { gcm } from '@noble/ciphers/aes.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let _crypto: typeof CryptoType | null = null;
 function getCrypto(): typeof CryptoType {
@@ -80,6 +81,7 @@ import { logger } from '../../utils/logger';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DEK_KEY = 'field_encryption_dek';
+const DEK_CREATED_MARKER_KEY = 'field_encryption_dek_created';
 const DEK_SIZE = 32; // 256 bits for AES-256
 const IV_SIZE = 12;  // 96 bits for GCM
 const ENCRYPTED_PREFIX = 'ENC:';
@@ -241,6 +243,41 @@ async function legacyXorDecrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uin
 class FieldEncryptionServiceClass {
   private dekCache: Uint8Array | null = null;
 
+  private async hasExistingDekMarker(): Promise<boolean> {
+    try {
+      return (await AsyncStorage.getItem(DEK_CREATED_MARKER_KEY)) === '1';
+    } catch {
+      logger.error('[FieldEncryption] AsyncStorage unavailable while checking DEK marker');
+      throw new Error('Local storage unavailable — cannot determine encryption key state');
+    }
+  }
+
+  private async persistDekMarker(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(DEK_CREATED_MARKER_KEY, '1');
+    } catch (error) {
+      logger.warn('[FieldEncryption] Failed to persist DEK marker', error);
+    }
+  }
+
+  private async clearDekMarker(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(DEK_CREATED_MARKER_KEY);
+    } catch (error) {
+      logger.warn('[FieldEncryption] Failed to clear DEK marker', error);
+    }
+  }
+
+  private async assertCanCreateDek(): Promise<void> {
+    if (await this.hasExistingDekMarker()) {
+      logger.warn('[FieldEncryption] DEK missing after prior initialization');
+      throw new Error(
+        'Unable to access your encryption key on this device. ' +
+        'Restore from a backup or delete local data to start fresh.'
+      );
+    }
+  }
+
   /**
    * Initialize the Data Encryption Key.
    * Creates a new DEK only on genuine first run (no existing key).
@@ -262,13 +299,17 @@ class FieldEncryptionServiceClass {
     }
 
     if (!existingDek) {
+      await this.assertCanCreateDek();
+
       // Genuine first run — no key exists yet
       const newDek = generateRandomBytes(DEK_SIZE);
       await getSecureStore().setItemAsync(DEK_KEY, uint8ArrayToBase64(newDek));
       this.dekCache = newDek;
+      await this.persistDekMarker();
       logger.info('[FieldEncryption] Generated new DEK (first run)');
     } else {
       this.dekCache = base64ToUint8Array(existingDek);
+      await this.persistDekMarker();
       logger.info('[FieldEncryption] Loaded existing DEK');
     }
   }
@@ -294,6 +335,9 @@ class FieldEncryptionServiceClass {
     if (!stored) {
       // Key doesn't exist yet — initialize will create one (first run only)
       await this.initialize();
+      if (!this.dekCache) {
+        throw new Error('Encryption key unavailable');
+      }
       return this.dekCache!;
     }
 
@@ -359,7 +403,12 @@ class FieldEncryptionServiceClass {
       } catch {
         // Never return the raw encrypted blob — it would show gibberish in the UI.
         // Return a controlled, user-safe placeholder so the app remains usable.
-        logger.error('[FieldEncryption] AES-GCM decryption failed (encryption key may be unavailable)');
+        const keyAvailable = await this.isKeyAvailable();
+        logger.warn(
+          keyAvailable
+            ? '[FieldEncryption] AES-GCM decryption failed; returning placeholder'
+            : '[FieldEncryption] AES-GCM key unavailable on this device; returning placeholder'
+        );
         return DECRYPTION_FAILED_PLACEHOLDER;
       }
     }
@@ -388,7 +437,12 @@ class FieldEncryptionServiceClass {
         return await legacyXorDecrypt(ciphertext, dek, iv, tag);
       } catch {
         // Never return the raw encrypted blob — it would show gibberish in the UI.
-        logger.error('[FieldEncryption] Legacy decryption failed (encryption key may be unavailable)');
+                const keyAvailable = await this.isKeyAvailable();
+                logger.warn(
+                  keyAvailable
+                    ? '[FieldEncryption] Legacy decryption failed; returning placeholder'
+                    : '[FieldEncryption] Legacy key unavailable on this device; returning placeholder'
+                );
         return DECRYPTION_FAILED_PLACEHOLDER;
       }
     }
@@ -547,6 +601,7 @@ class FieldEncryptionServiceClass {
     
     await getSecureStore().setItemAsync(DEK_KEY, dekBase64);
     this.dekCache = dekBytes;
+    await this.persistDekMarker();
     logger.info('[FieldEncryption] DEK imported');
   }
 
@@ -584,6 +639,7 @@ class FieldEncryptionServiceClass {
   async destroyDek(): Promise<void> {
     this.dekCache = null;
     await getSecureStore().deleteItemAsync(DEK_KEY);
+    await this.clearDekMarker();
     logger.info('[FieldEncryption] DEK permanently destroyed');
   }
 }

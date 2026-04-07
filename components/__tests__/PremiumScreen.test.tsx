@@ -5,7 +5,7 @@
  * restore flow, premium active state.
  */
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────

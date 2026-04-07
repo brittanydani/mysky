@@ -217,7 +217,6 @@ export default function PatternsScreen() {
 
           // ── Enhanced insights pipeline ──
           try {
-            const saved = charts[0];
             const extCheckIns = await localDb.getCheckIns(chartId, 90);
             const journalEntries = await localDb.getJournalEntriesPaginated(90);
             const sleepEntries = await localDb.getSleepEntries(chartId, 90);
@@ -267,7 +266,7 @@ export default function PatternsScreen() {
         }
       })();
       return () => { active = false; };
-    }, [isPremium, syncRhythm, syncCorrelations])
+    }, [syncRhythm, syncCorrelations])
   );
 
   const stressLabel = (trend: SnapshotData['stressTrend']): string | null => {

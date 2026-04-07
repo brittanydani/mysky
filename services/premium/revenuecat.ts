@@ -26,6 +26,30 @@ async function getPurchases(): Promise<typeof PurchasesType> {
   return _purchasesModule.default;
 }
 
+async function isPurchasesConfigured(Purchases: typeof PurchasesType): Promise<boolean> {
+  if (typeof Purchases.isConfigured !== 'function') {
+    return false;
+  }
+
+  try {
+    return await Purchases.isConfigured();
+  } catch {
+    return false;
+  }
+}
+
+async function getPurchasesAppUserId(Purchases: typeof PurchasesType): Promise<string | null> {
+  if (typeof Purchases.getAppUserID !== 'function') {
+    return null;
+  }
+
+  try {
+    return await Purchases.getAppUserID();
+  } catch {
+    return null;
+  }
+}
+
 class RevenueCatService {
   private initPromise: Promise<void> | null = null;
   private initialized = false;
@@ -49,13 +73,13 @@ class RevenueCatService {
 
       try {
         const Purchases = await getPurchases();
-        const alreadyConfigured = await Purchases.isConfigured().catch(() => false);
+        const alreadyConfigured = await isPurchasesConfigured(Purchases);
 
         if (!alreadyConfigured) {
           await Purchases.configure({ apiKey });
         }
 
-        this.currentAppUserId = await Purchases.getAppUserID().catch(() => null);
+        this.currentAppUserId = await getPurchasesAppUserId(Purchases);
         // NOTE: Purchases.setLogLevel() is a void TurboModule method. On iOS 26
         // (RN New Architecture) it throws an NSException that crashes inside
         // convertNSExceptionToJSError before we can catch it in JS. Removed
@@ -177,7 +201,7 @@ class RevenueCatService {
     }
     try {
       const Purchases = await getPurchases();
-      const currentAppUserId = this.currentAppUserId ?? await Purchases.getAppUserID().catch(() => null);
+      const currentAppUserId = this.currentAppUserId ?? await getPurchasesAppUserId(Purchases);
       if (currentAppUserId === userId) {
         return;
       }
@@ -194,7 +218,7 @@ class RevenueCatService {
     try {
       const Purchases = await getPurchases();
       await Purchases.logOut();
-      this.currentAppUserId = await Purchases.getAppUserID().catch(() => null);
+      this.currentAppUserId = await getPurchasesAppUserId(Purchases);
       logger.info('[RevenueCat] Logged out');
     } catch (error) {
       logger.error('[RevenueCat] logOut failed:', error);

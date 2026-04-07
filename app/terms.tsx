@@ -31,9 +31,9 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
   return (
     <View style={styles.container}>
       <SkiaDynamicCosmos />
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <SafeAreaView edges={['bottom']} style={styles.safeArea}>
         {/* Header */}
-        <Animated.View entering={FadeInDown.delay(100)} style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
           <View style={styles.headerRow}>
             <Pressable
               style={styles.backButton}
@@ -45,13 +45,13 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
             </Pressable>
             
             <View style={styles.titleArea}>
-              <Text style={styles.headerTitle}>Terms of Service</Text>
+              <Text style={styles.headerTitle}>Terms</Text>
               <GoldSubtitle style={styles.headerSubtitle}>Last updated: April 7, 2026</GoldSubtitle>
             </View>
 
             <View style={styles.headerSpacer} />
           </View>
-        </Animated.View>
+        </View>
 
         <ScrollView
           style={styles.scrollView}
@@ -262,7 +262,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 10,
     paddingBottom: 20,
   },
   headerRow: {

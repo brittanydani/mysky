@@ -88,6 +88,9 @@ describe('geminiInsightsService', () => {
 
     expect(result).toBeNull();
     expect(mockInvoke).toHaveBeenCalledTimes(1);
+    expect(mockInvoke).toHaveBeenCalledWith('gemini-proxy', expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'Bearer token' }),
+    }));
     expect(mockLogger.warn).toHaveBeenCalledWith(
       '[GeminiPatterns] Edge function unauthorized; using local pattern insights fallback.',
     );

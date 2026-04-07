@@ -142,6 +142,19 @@ async function sendRecoveryEmail(email: string, code: string): Promise<void> {
   }
 }
 
+async function invalidateRecoveryCode(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  codeId: number | null | undefined,
+): Promise<void> {
+  if (!codeId) return;
+
+  await supabaseAdmin
+    .from("password_recovery_codes")
+    .update({ consumed_at: new Date().toISOString() })
+    .eq("id", codeId)
+    .is("consumed_at", null);
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -220,75 +233,59 @@ serve(async (req: Request) => {
         return jsonResponse({ error: "Password recovery is temporarily unavailable." }, 503);
       }
 
-      await sendRecoveryEmail(payload.email, code);
-      return jsonResponse({ ok: true });
-    }
-
-    const { data: userId, error: lookupError } = await supabaseAdmin.rpc(
-      "find_auth_user_id_by_email",
-      { p_email: payload.email },
-    );
-
-    if (lookupError) {
-      console.error("Password recovery lookup failed:", lookupError.message);
-      return jsonResponse({ error: "Password recovery is temporarily unavailable." }, 503);
-    }
-
-    if (!userId) {
-      return jsonResponse({ error: "That code is invalid or expired." }, 400);
-    }
-
-    const { data: recoveryRows, error: recoveryError } = await supabaseAdmin
-      .from("password_recovery_codes")
-      .select("id, code_hash, attempt_count, expires_at")
-      .eq("user_id", userId)
-      .eq("email", payload.email)
-      .is("consumed_at", null)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (recoveryError) {
-      console.error("Password recovery verify lookup failed:", recoveryError.message);
-      return jsonResponse({ error: "Password recovery is temporarily unavailable." }, 503);
-    }
-
-    const recoveryRow = recoveryRows?.[0];
-    if (!recoveryRow || new Date(recoveryRow.expires_at).getTime() <= Date.now()) {
-      if (recoveryRow) {
+      try {
+        await sendRecoveryEmail(payload.email, code);
+      } catch (error) {
         await supabaseAdmin
           .from("password_recovery_codes")
           .update({ consumed_at: new Date().toISOString() })
-          .eq("id", recoveryRow.id);
+          .eq("user_id", userId)
+          .eq("email", payload.email)
+          .eq("code_hash", codeHash)
+          .is("consumed_at", null);
+        throw error;
       }
-      return jsonResponse({ error: "That code is invalid or expired." }, 400);
+
+      return jsonResponse({ ok: true });
     }
 
     const expectedHash = await hashRecoveryCode(payload.email, payload.code, pepper);
-    if (expectedHash !== recoveryRow.code_hash) {
-      const nextAttempts = recoveryRow.attempt_count + 1;
-      await supabaseAdmin
-        .from("password_recovery_codes")
-        .update({
-          attempt_count: nextAttempts,
-          consumed_at: nextAttempts >= MAX_VERIFY_ATTEMPTS ? new Date().toISOString() : null,
-        })
-        .eq("id", recoveryRow.id);
+    const { data: consumeRows, error: consumeError } = await supabaseAdmin.rpc(
+      "consume_password_recovery_code",
+      {
+        p_email: payload.email,
+        p_code_hash: expectedHash,
+        p_max_attempts: MAX_VERIFY_ATTEMPTS,
+      },
+    );
+
+    if (consumeError) {
+      console.error("Password recovery verify failed:", consumeError.message);
+      return jsonResponse({ error: "Password recovery is temporarily unavailable." }, 503);
+    }
+
+    const consumeResult = consumeRows?.[0] as
+      | { status?: string; user_id?: string | null; code_id?: number | null }
+      | undefined;
+
+    if (!consumeResult || consumeResult.status !== "verified" || !consumeResult.user_id) {
       return jsonResponse({ error: "That code is invalid or expired." }, 400);
     }
 
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(consumeResult.user_id, {
       password: payload.newPassword,
     });
 
     if (updateError) {
       console.error("Password update failed:", updateError.message);
+      await invalidateRecoveryCode(supabaseAdmin, consumeResult.code_id);
       return jsonResponse({ error: "Could not update password right now." }, 503);
     }
 
     await supabaseAdmin
       .from("password_recovery_codes")
       .update({ consumed_at: new Date().toISOString() })
-      .eq("user_id", userId)
+      .eq("user_id", consumeResult.user_id)
       .is("consumed_at", null);
 
     return jsonResponse({ ok: true });

@@ -303,7 +303,6 @@ export default function IntelligenceProfileScreen() {
     setSaved(false);
   };
 
-  const allSet = DIMENSIONS.every((d) => scores[d.id] !== undefined);
   const anySet = DIMENSIONS.some((d) => scores[d.id] !== undefined);
   const displayScores: Scores = DIMENSIONS.reduce((acc, dim) => {
     acc[dim.id] = scores[dim.id] ?? 3;

@@ -4,7 +4,7 @@
  * Validates: validation, auth flows, mode toggling, error handling.
  */
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
@@ -147,6 +147,7 @@ describe('AuthRequiredModal', () => {
 
   it('prompts email confirmation when session is null after sign-up', async () => {
     mockSignUp.mockResolvedValue({ data: { session: null }, error: null });
+    mockSignInWithPassword.mockResolvedValue({ data: { session: null, user: null }, error: new Error('Email not confirmed') });
 
     const { getByLabelText } = render(<AuthRequiredModal visible />);
     fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
@@ -156,8 +157,34 @@ describe('AuthRequiredModal', () => {
     });
 
     expect(alertSpy).toHaveBeenCalledWith('Check your email', expect.any(String));
+    expect(mockSignInWithPassword).toHaveBeenCalledWith({
+      email: 'user@test.com',
+      password: 'securepassword',
+    });
     // Mode should switch to sign-in
     expect(getByLabelText('Sign In')).toBeTruthy();
+  });
+
+  it('creates a live session immediately after sign-up when Supabase sign-in succeeds', async () => {
+    mockSignUp.mockResolvedValue({ data: { session: null, user: { id: 'user-1' } }, error: null });
+    mockSignInWithPassword.mockResolvedValue({
+      data: { session: { access_token: 'token', user: { id: 'user-1' } }, user: { id: 'user-1' } },
+      error: null,
+    });
+
+    const { getByLabelText } = render(<AuthRequiredModal visible />);
+    fireEvent.changeText(getByLabelText('Email address'), 'user@test.com');
+    fireEvent.changeText(getByLabelText('Password'), 'securepassword');
+
+    await act(async () => {
+      fireEvent.press(getByLabelText('Create Account'));
+    });
+
+    expect(mockSignInWithPassword).toHaveBeenCalledWith({
+      email: 'user@test.com',
+      password: 'securepassword',
+    });
+    expect(alertSpy).not.toHaveBeenCalledWith('Check your email', expect.any(String));
   });
 
   it('shows generic error on sign-up failure', async () => {
@@ -170,7 +197,10 @@ describe('AuthRequiredModal', () => {
       fireEvent.press(getByLabelText('Create Account'));
     });
 
-    expect(alertSpy).toHaveBeenCalledWith('Error', 'Signup failed');
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Error',
+      'Could not create account. If you already have one, sign in or reset your password.',
+    );
   });
 
   // ── Sign-in flow ──

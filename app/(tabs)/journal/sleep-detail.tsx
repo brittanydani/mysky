@@ -13,12 +13,10 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  TextInput,
   Pressable,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,7 +29,7 @@ import { MetallicLucideIcon } from '../../../components/ui/MetallicLucideIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
 import { localDb } from '../../../services/storage/localDb';
-import { SleepEntry, generateId } from '../../../services/storage/models';
+import { SleepEntry } from '../../../services/storage/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremium } from '../../../context/PremiumContext';
 import { useAuth } from '../../../context/AuthContext';
@@ -52,8 +50,6 @@ import {
 } from '../../../services/premium/dreamTypes';
 
 const QUALITY_LABELS = ['Exhausted', 'Restless', 'Neutral', 'Restored', 'Deeply Vibrant'];
-const DREAM_TEXT_MAX_LENGTH = 10000;
-
 const DEFAULT_METADATA: DreamMetadata = {
   vividness: 3,
   lucidity: 1,
@@ -79,7 +75,6 @@ export default function SleepDetailScreen() {
   const [entry, setEntry] = useState<SleepEntry | null>(null);
   const [allEntries, setAllEntries] = useState<SleepEntry[]>([]);
   const [dreamText, setDreamText] = useState('');
-  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!!id);
   const [interpretation, setInterpretation] = useState<DreamInterpretation | null>(null);
   const [interpreting, setInterpreting] = useState(false);
@@ -193,62 +188,6 @@ export default function SleepDetailScreen() {
       logger.error('[SleepDetail] Interpretation failed:', e);
     } finally {
       setInterpreting(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (saving) return;
-    setSaving(true);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-
-    try {
-      let saved: SleepEntry;
-      if (entry) {
-        const now = new Date().toISOString();
-        saved = { ...entry, dreamText, updatedAt: now };
-        await localDb.saveSleepEntry(saved);
-        setEntry(saved);
-      } else {
-        const charts = await localDb.getCharts();
-        if (!charts.length) {
-          logger.warn('[SleepDetail] No chart found — entry not saved');
-          return;
-        }
-        const now = new Date();
-        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        // Check for existing entry on this date to avoid duplicates
-        const existing = await localDb.getSleepEntryByDate(charts[0].id, dateStr);
-        if (existing) {
-          saved = { ...existing, dreamText, updatedAt: now.toISOString() };
-        } else {
-          saved = {
-            id: generateId(),
-            chartId: charts[0].id,
-            date: dateStr,
-            dreamText,
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-            isDeleted: false,
-          };
-        }
-        await localDb.saveSleepEntry(saved);
-        setEntry(saved);
-      }
-
-      // Generate interpretation after a successful save when there's dream text
-      if (dreamText.trim().length > 0) {
-        const refreshedEntries = allEntries.map((e) => e.id === saved.id ? saved : e);
-        if (!allEntries.find((e) => e.id === saved.id)) {
-          refreshedEntries.push(saved);
-        }
-        setAllEntries(refreshedEntries);
-        void runInterpretation(saved, dreamText, refreshedEntries);
-      }
-    } catch (e) {
-      logger.error('[SleepDetail] Failed to save entry:', e);
-      Alert.alert('Save Error', 'Could not save entry. Please try again.');
-    } finally {
-      setSaving(false);
     }
   };
 

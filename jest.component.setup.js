@@ -32,7 +32,7 @@ jest.mock('react-native-reanimated', () => {
     withDelay: (_, v) => v,
     withSequence: (...args) => args[args.length - 1],
     withRepeat: (v) => v,
-    Easing: { bezier: () => jest.fn(), linear: jest.fn(), ease: jest.fn() },
+    Easing: { bezier: () => jest.fn(), linear: jest.fn(), ease: jest.fn(), inOut: (value) => value },
     FadeIn: chainable(),
     FadeOut: chainable(),
     FadeInDown: chainable(),

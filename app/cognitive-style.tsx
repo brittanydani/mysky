@@ -166,7 +166,6 @@ export default function CognitiveStyleScreen() {
     setSaved(false);
   };
 
-  const allSet = DIMENSIONS.every((d) => scores[d.id] !== undefined);
   const anySet = DIMENSIONS.some((d) => scores[d.id] !== undefined);
   const displayScores: Scores = {
     scope: scores.scope ?? 3,
