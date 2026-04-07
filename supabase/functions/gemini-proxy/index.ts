@@ -46,6 +46,7 @@ const REQUEST_TIMEOUT_MS = 25_000;
 // Only fast/cheap models are permitted. Clients cannot target expensive models.
 
 const ALLOWED_MODELS = new Set([
+  "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
   "gemini-2.0-flash",
   "gemini-2.0-flash-lite",
@@ -150,9 +151,9 @@ serve(async (req: Request) => {
   }
 
   try {
-    // ── Auth: JWT verified by Supabase gateway ────────────────────────────────
-    // Function is deployed WITHOUT --no-verify-jwt so only valid Supabase
-    // sessions reach this handler.
+    // ── Auth: validate the caller's Supabase session inside the function ─────
+    // This function accepts modern user access tokens, so legacy-secret gateway
+    // verification stays disabled and we verify the session with auth.getUser().
     const authHeader = req.headers.get("authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(
@@ -164,15 +165,16 @@ serve(async (req: Request) => {
       );
     }
 
-    // Verify the user identity — we don't store anything here but we confirm
-    // the JWT is valid and get the user ID for logging.
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    // Verify the user identity with the same user-token pattern used by the
+    // other authenticated edge functions in this project.
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const userToken = authHeader.replace("Bearer ", "");
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(userToken);
     if (authError || !user) {
+      console.error("[gemini-proxy] Auth failed:", authError?.message ?? "No user returned");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "content-type": "application/json" },
@@ -181,7 +183,7 @@ serve(async (req: Request) => {
 
     // ── Rate limit ────────────────────────────────────────────────────────────
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
+      supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
     if (await isRateLimited(supabaseAdmin, user.id)) {
