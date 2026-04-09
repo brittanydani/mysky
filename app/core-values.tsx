@@ -678,7 +678,7 @@ export default function CoreValuesScreen() {
                 style={StyleSheet.absoluteFill}
               />
               <MetallicText style={styles.saveBtnText} color={saved ? '#8CBEAA' : PALETTE.gold}>
-                {saved ? '✓ Values Sealed · Hold to Edit' : 'Seal My Values'}
+                {saved ? '✓ Values Sealed · Hold to Edit' : 'Seal My Values & Continue'}
               </MetallicText>
             </Pressable>
           </Animated.View>

@@ -6,8 +6,7 @@
  * Each day the user rates 2–3 statements from each category on a scale.
  * Over 12 months the system builds a deep psychological profile.
  *
- * Values & Archetypes use an agreement scale: Not True / Somewhat / True / Very True
- * Cognitive uses a frequency scale: Not at All / Some of the Time / Almost Always / Always
+ * All categories use an agreement scale: Not True / Somewhat True / True / Very True
  *
  * Statements are indexed 0–364 and rotated deterministically by day-of-year.
  */
@@ -295,7 +294,7 @@ export const VALUES_QUESTIONS: ReflectionQuestion[] = [
   { id: 248, text: 'I would live differently if I were completely free from expectations.' },
   { id: 249, text: 'I protect my inner freedom even when external conditions are restrictive.' },
   { id: 250, text: 'Freedom to pursue what I want matters more than freedom from what I don\'t.' },
-  { id: 251, text: 'I sometimes feel trapped in situations I originally chose.' },
+  { id: 251, text: 'I sometimes feel trapped in paths I once chose.' },
   { id: 252, text: 'I am experiencing liberation in my emotional life.' },
   { id: 253, text: 'I regularly feel free and alive in my body.' },
   { id: 254, text: 'I carry expectations from others that I wish I could shed.' },
@@ -1336,7 +1335,7 @@ export const COGNITIVE_QUESTIONS: ReflectionQuestion[] = [
 // INTELLIGENCE PROFILE — 365 statements
 // Themes: linguistic, logical, musical, spatial, kinesthetic,
 //         interpersonal, intrapersonal, naturalistic, existential
-// Uses frequency scale: Not at All / Some of the Time / Almost Always / Always
+// Uses agreement scale: Not True / Somewhat True / True / Very True
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const INTELLIGENCE_QUESTIONS: ReflectionQuestion[] = [
@@ -1353,7 +1352,7 @@ export const INTELLIGENCE_QUESTIONS: ReflectionQuestion[] = [
   { id: 9, text: 'I notice subtle differences in how words are used.' },
   { id: 10, text: 'I enjoy debating ideas with thoughtful language.' },
   { id: 11, text: 'I keep journals, notes, or letters regularly.' },
-  { id: 12, text: 'I pick up new languages more easily than most people.' },
+  { id: 12, text: 'I tend to absorb new languages naturally and quickly.' },
   { id: 13, text: 'I find comfort in the rhythm and sound of words.' },
   { id: 14, text: 'I think through problems by talking or writing them out.' },
   { id: 15, text: 'I can explain complex ideas in simple language.' },
@@ -1447,7 +1446,7 @@ export const INTELLIGENCE_QUESTIONS: ReflectionQuestion[] = [
   { id: 99, text: 'I associate specific songs with vivid memories.' },
   { id: 100, text: 'I am more aware of background music than most people.' },
   { id: 101, text: 'I would feel deeply diminished if music disappeared from my life.' },
-  { id: 102, text: 'I can often tell what genre or era a piece of music comes from.' },
+  { id: 102, text: 'I naturally recognize patterns in music, like genre or era.' },
   { id: 103, text: 'I enjoy experimenting with sound — instruments, apps, or voice.' },
   { id: 104, text: 'I notice the rhythm of speech and find some voices musical.' },
   { id: 105, text: 'I focus better with the right kind of background music.' },
@@ -1778,6 +1777,6 @@ export const ANSWER_SCALES: Record<AnswerScaleType, ScaleOption[]> = {
 export const CATEGORY_SCALE: Record<ReflectionCategory, AnswerScaleType> = {
   values: 'agreement',
   archetypes: 'agreement',
-  cognitive: 'frequency',
-  intelligence: 'frequency',
+  cognitive: 'agreement',
+  intelligence: 'agreement',
 };

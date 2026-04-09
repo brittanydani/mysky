@@ -958,7 +958,6 @@ export const DemoSeedService = {
     // Daily reflections — pull unique questions from the actual question banks
     const reflectionAnswers: object[] = [];
     const AGREEMENT = ['Not True','Somewhat True','True','Very True'];
-    const FREQUENCY = ['Not at All','Some of the Time','Almost Always','Always'];
 
     // 56 unique value questions (2 per day × 28 days), starting at id 0
     const valuesQuestions = [
@@ -1149,8 +1148,8 @@ export const DemoSeedService = {
         { questionId: i * 2 + 1, category: 'values', questionText: valuesQuestions[i * 2 + 1], answer: AGREEMENT[(i + 2) % 4], scaleValue: (i + 2) % 4, date: dateStr, sealedAt },
         { questionId: i * 2, category: 'archetypes', questionText: archetypeQuestions[i * 2], answer: AGREEMENT[(i + 3) % 4], scaleValue: (i + 3) % 4, date: dateStr, sealedAt },
         { questionId: i * 2 + 1, category: 'archetypes', questionText: archetypeQuestions[i * 2 + 1], answer: AGREEMENT[(i + 3) % 4], scaleValue: (i + 3) % 4, date: dateStr, sealedAt },
-        { questionId: i * 2, category: 'cognitive', questionText: cognitiveQuestions[i * 2], answer: FREQUENCY[(i + 1) % 4], scaleValue: (i + 1) % 4, date: dateStr, sealedAt },
-        { questionId: i * 2 + 1, category: 'cognitive', questionText: cognitiveQuestions[i * 2 + 1], answer: FREQUENCY[(i + 1) % 4], scaleValue: (i + 1) % 4, date: dateStr, sealedAt },
+        { questionId: i * 2, category: 'cognitive', questionText: cognitiveQuestions[i * 2], answer: AGREEMENT[(i + 1) % 4], scaleValue: (i + 1) % 4, date: dateStr, sealedAt },
+        { questionId: i * 2 + 1, category: 'cognitive', questionText: cognitiveQuestions[i * 2 + 1], answer: AGREEMENT[(i + 1) % 4], scaleValue: (i + 1) % 4, date: dateStr, sealedAt },
       );
     }
     await EncryptedAsyncStorage.setItem('@mysky:daily_reflections', JSON.stringify({

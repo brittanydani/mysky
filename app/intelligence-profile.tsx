@@ -469,7 +469,7 @@ export default function IntelligenceProfileScreen() {
               }}
             >
               <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.lavender}>
-                {saved ? '✓ Profile Sealed · Hold to Edit' : 'Seal Profile'}
+                {saved ? '✓ Profile Sealed · Hold to Edit' : 'Seal Profile & Continue'}
               </MetallicText>
             </Pressable>
           </Animated.View>

@@ -347,7 +347,7 @@ export default function CognitiveStyleScreen() {
               }}
             >
               <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.silverBlue}>
-                {saved ? '✓ Blueprint Sealed · Hold to Edit' : 'Seal Blueprint'}
+                {saved ? '✓ Blueprint Sealed · Hold to Edit' : 'Seal Blueprint & Continue'}
               </MetallicText>
             </Pressable>
           </Animated.View>
