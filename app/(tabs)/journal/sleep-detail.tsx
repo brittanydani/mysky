@@ -33,6 +33,7 @@ import { SleepEntry } from '../../../services/storage/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremium } from '../../../context/PremiumContext';
 import { useAuth } from '../../../context/AuthContext';
+import { getDreamReinterpretDailyLimit } from '../../../constants/config';
 import { logger } from '../../../utils/logger';
 import { parseLocalDate, toLocalDateString } from '../../../utils/dateUtils';
 import { generateDreamInterpretation } from '../../../services/premium/dreamInterpretation';
@@ -71,6 +72,7 @@ export default function SleepDetailScreen() {
   const { isPremium } = usePremium();
   const { session, user } = useAuth();
   const canUseGemini = isGeminiAvailable(Boolean(session?.access_token));
+  const dailyReinterpretLimit = getDreamReinterpretDailyLimit(user?.email);
 
   const [entry, setEntry] = useState<SleepEntry | null>(null);
   const [allEntries, setAllEntries] = useState<SleepEntry[]>([]);
@@ -79,7 +81,7 @@ export default function SleepDetailScreen() {
   const [interpretation, setInterpretation] = useState<DreamInterpretation | null>(null);
   const [interpreting, setInterpreting] = useState(false);
   const [reinterpretCount, setReinterpretCount] = useState(0);
-  const [hasReinterpreted, setHasReinterpreted] = useState(false);
+  const [dailyReinterpretUsedCount, setDailyReinterpretUsedCount] = useState(0);
 
   // Gemini AI state
   const [aiResult, setAiResult] = useState<GeminiDreamResult | null>(null);
@@ -92,6 +94,9 @@ export default function SleepDetailScreen() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reinterpretCount]);
+
+  const hasReachedDailyReinterpretLimit = dailyReinterpretUsedCount >= dailyReinterpretLimit;
+  const remainingReinterprets = Math.max(0, dailyReinterpretLimit - dailyReinterpretUsedCount);
 
   useFocusEffect(
     useCallback(() => {
@@ -114,7 +119,8 @@ export default function SleepDetailScreen() {
         setDreamText(found.dreamText ?? '');
         const dailyKey = getDailyReinterpretKey(user?.id);
         const used = await AsyncStorage.getItem(dailyKey);
-        setHasReinterpreted(used === '1');
+        const parsedUsed = Number.parseInt(used ?? '0', 10);
+        setDailyReinterpretUsedCount(Number.isFinite(parsedUsed) ? parsedUsed : 0);
         // Auto-generate interpretation if entry already has dream text
         if (found.dreamText) {
           void runInterpretation(found, found.dreamText, entries);
@@ -302,23 +308,28 @@ export default function SleepDetailScreen() {
                 </>
               )}
               <Pressable
-                style={[styles.rerunBtn, hasReinterpreted && { opacity: 0.4 }]}
+                style={[styles.rerunBtn, hasReachedDailyReinterpretLimit && { opacity: 0.4 }]}
                 onPress={() => {
-                  if (hasReinterpreted) return;
+                  if (hasReachedDailyReinterpretLimit) return;
                   if (entry && dreamText.trim()) {
                     setAiResult(null);
                     setAiError(null);
-                    setHasReinterpreted(true);
-                    void AsyncStorage.setItem(getDailyReinterpretKey(user?.id), '1');
+                    const nextUsedCount = dailyReinterpretUsedCount + 1;
+                    setDailyReinterpretUsedCount(nextUsedCount);
+                    void AsyncStorage.setItem(getDailyReinterpretKey(user?.id), String(nextUsedCount));
                     setReinterpretCount(c => c + 1);
                   }
                 }}
               >
                 <MetallicText color="#C9AE78" style={styles.rerunBtnText}>
-                  {hasReinterpreted ? 'RE-INTERPRET USED TODAY' : 'RE-INTERPRET'}
+                  {hasReachedDailyReinterpretLimit ? 'RE-INTERPRET LIMIT REACHED' : 'RE-INTERPRET'}
                 </MetallicText>
               </Pressable>
-              <Text style={styles.reinterpretHint}>Available once per day.</Text>
+              <Text style={styles.reinterpretHint}>
+                {remainingReinterprets === 1
+                  ? '1 re-interpret remaining today.'
+                  : `${remainingReinterprets} re-interprets remaining today.`}
+              </Text>
               {!isPremium && (
                 <SkiaMetallicPill
                   label="UPGRADE TO DEEPER SKY MODEL"

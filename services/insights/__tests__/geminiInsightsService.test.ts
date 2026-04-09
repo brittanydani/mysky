@@ -35,6 +35,8 @@ jest.mock('../../../utils/logger', () => ({
 import { enhancePatternInsights } from '../geminiInsightsService';
 
 describe('geminiInsightsService', () => {
+  let mockNow = 1_000_000;
+
   const context = {
     coreValues: null,
     archetypeProfile: null,
@@ -58,6 +60,12 @@ describe('geminiInsightsService', () => {
   beforeEach(() => {
     encryptedStore.clear();
     jest.clearAllMocks();
+    mockNow += 20_000;
+    jest.spyOn(Date, 'now').mockReturnValue(mockNow);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('returns null without invoking the edge function when there is no session', async () => {
@@ -88,12 +96,34 @@ describe('geminiInsightsService', () => {
 
     expect(result).toBeNull();
     expect(mockInvoke).toHaveBeenCalledTimes(1);
-    expect(mockInvoke).toHaveBeenCalledWith('gemini-proxy', expect.objectContaining({
+    expect(mockInvoke).toHaveBeenCalledWith('pattern-insights', expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer token' }),
     }));
     expect(mockLogger.warn).toHaveBeenCalledWith(
       '[GeminiPatterns] Edge function unauthorized; using local pattern insights fallback.',
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  it('returns normalized insights from the dedicated pattern insights function', async () => {
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'token' } },
+      error: null,
+    });
+    mockInvoke.mockResolvedValue({
+      data: {
+        insights: [{ id: 'pattern-1', body: 'You feel conflict in your body long after the moment passes.' }],
+        generatedAt: '2026-04-08T12:00:00.000Z',
+      },
+      error: null,
+    });
+
+    const result = await enhancePatternInsights(insights as any, context as any, []);
+
+    expect(result).toEqual({
+      insights: [{ id: 'pattern-1', body: 'You feel conflict in your body long after the moment passes.' }],
+      generatedAt: '2026-04-08T12:00:00.000Z',
+    });
+    expect(mockInvoke).toHaveBeenCalledWith('pattern-insights', expect.any(Object));
   });
 });

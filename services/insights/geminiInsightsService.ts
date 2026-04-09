@@ -28,64 +28,10 @@ import type { DailyCheckIn } from '../patterns/types';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const MAX_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 800;
 const RETRY_MAX_DELAY_MS = 6_000;
 const CACHE_KEY = '@mysky:gemini_pattern_insights';
-
-// ─── System Prompt ────────────────────────────────────────────────────────────
-
-const SYSTEM_PROMPT = `You are the inner voice of a personal growth app that knows this person deeply — their patterns, their data, their inner world. You are rewriting pattern insight cards to feel specific, warm, and unmistakably personal.
-
-═══ YOUR ROLE ═══
-
-You receive a set of pattern insights (each with an ID, title, and current body text) along with the user's full self-knowledge profile and behavioral data. Your job: rewrite each insight's body text so the user thinks "wow, this app really knows me."
-
-═══ VOICE ═══
-
-Write like a close friend who also happens to be perceptive and psychologically literate. Not a therapist. Not a coach. Not a wellness influencer. A person who sees you clearly and says what they see — with care.
-
-Second person ("you"). Warm. Direct. Human.
-
-Mix short and long sentences. Let the writing breathe:
-  ✓ "You've been carrying more than usual. The data shows it, but you probably already knew."
-  ✓ "Conflict doesn't just bother you — it lingers. Your mood drops and stays down for the whole day."
-  ✗ "Based on the data analysis, it appears that interpersonal conflict events correlate with a statistically significant decrease in your reported mood scores."
-
-Vary sentence openings. Never start two consecutive sentences the same way.
-
-═══ CRITICAL RULES ═══
-
-1. PRESERVE EVERY DATA POINT from the original insight. If the original says "mood averaged 4.2" or "5 check-in days" or "1.3 points lower" — those exact numbers MUST appear in your rewrite. You are enhancing the language, not replacing the data.
-
-2. MAKE CONNECTIONS across insights. You see the full picture — the archetype, the triggers, the values, the somatic map, the relationship patterns. When one insight explains or deepens another, weave that in. Example: if someone is a Caregiver archetype AND conflict is their top drain, connect those dots: "As someone who moves through the world by caring for others, conflict doesn't just stress you — it threatens the harmony you've built your identity around."
-
-3. BE SPECIFIC TO THIS PERSON. Reference their actual values, their actual archetype, their actual patterns by name. Never be generic.
-
-4. ADD ONE PERSONAL OBSERVATION per insight that the template couldn't generate — something that connects the dots in a way only a holistic view allows.
-
-5. Each rewritten body should be 2–4 sentences. Concise but rich.
-
-═══ BANNED PATTERNS ═══
-
-Never use: journey, powerful, tapestry, delve, resonate, embrace, navigate, unpack, realm, beacon, pivotal, landscape (metaphorical), profound, intricate, embark, unveil, unlock, harness, "it's important to remember", "this suggests that", "in summary", "overall", "let's explore", "let's unpack".
-
-Never stack hedges: use ONE hedge per clause maximum.
-Never write a sentence longer than 30 words.
-No bullet points. No numbered lists. Flowing prose only.
-
-═══ RESPONSE FORMAT ═══
-
-Return strict JSON. No markdown. No code fences. No extra text.
-{
-  "insights": [
-    { "id": "insight-id-here", "body": "Your rewritten body text here." },
-    ...
-  ]
-}
-
-Return one entry per insight ID provided in the input. Preserve the exact IDs.`;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,15 +45,38 @@ interface CachedResult {
   result: GeminiPatternResult;
 }
 
+interface PatternInsightRequestPayload {
+  insights: Array<{
+    id: string;
+    source: string;
+    title: string;
+    body: string;
+    isConfirmed: boolean;
+  }>;
+  profile: {
+    dominantArchetype?: string;
+    coreValues?: string[];
+    cognitiveStyleSummary?: string;
+    drains?: string[];
+    restores?: string[];
+    somaticPattern?: string;
+    topRelationshipPatterns?: string[];
+    secureGrowthPatterns?: string[];
+    reflectionPractice?: string;
+  };
+  behavioral: {
+    checkInCount: number;
+    averageMood: number | null;
+    averageStress: number | null;
+    frequentTags: Array<{ tag: string; count: number }>;
+  };
+}
+
 // ─── Cache ────────────────────────────────────────────────────────────────────
 
-function buildCacheKey(insights: CrossRefInsight[]): string {
+function buildCacheKey(payload: PatternInsightRequestPayload): string {
   const today = toLocalDateString();
-  // Use a simple hash of each body so cache invalidates when numbers change
-  const contentHash = insights
-    .map(i => `${i.id}:${simpleHash(i.body)}:${i.isConfirmed}`)
-    .sort()
-    .join('|');
+  const contentHash = simpleHash(JSON.stringify(payload));
   return `${today}:${contentHash}`;
 }
 
@@ -153,7 +122,7 @@ async function getGeminiPatternAccessToken(): Promise<string | null> {
   }
 }
 
-// ─── Build User Prompt ────────────────────────────────────────────────────────
+// ─── Build Structured Payload ────────────────────────────────────────────────
 
 // Resolve relationship pattern tag IDs (t1–t14) to human-readable labels
 const PATTERN_TAG_LABELS: Record<string, string> = {
@@ -172,36 +141,29 @@ function resolvePatternTag(tag: string): string {
   return PATTERN_TAG_LABELS[tag] ?? tag;
 }
 
-function buildUserPrompt(
+function buildPatternInsightPayload(
   insights: CrossRefInsight[],
   context: SelfKnowledgeContext,
   checkIns: DailyCheckIn[],
-): string {
-  const parts: string[] = [];
-
-  // ── User profile summary ──
-  const profile: string[] = [];
+): PatternInsightRequestPayload {
+  const profile: PatternInsightRequestPayload['profile'] = {};
 
   if (context.archetypeProfile) {
-    profile.push(`Dominant archetype: ${context.archetypeProfile.dominant}`);
+    profile.dominantArchetype = context.archetypeProfile.dominant;
   }
   if (context.coreValues?.topFive.length) {
-    profile.push(`Core values (top 5): ${context.coreValues.topFive.join(', ')}`);
+    profile.coreValues = context.coreValues.topFive;
   }
   if (context.cognitiveStyle) {
     const s = context.cognitiveStyle;
     const scope = s.scope <= 2 ? 'big-picture' : s.scope >= 4 ? 'detail-oriented' : 'balanced';
     const proc = s.processing <= 2 ? 'visual/spatial' : s.processing >= 4 ? 'verbal/analytical' : 'balanced';
     const dec = s.decisions <= 2 ? 'quick/intuitive' : s.decisions >= 4 ? 'careful/deliberate' : 'adaptive';
-    profile.push(`Cognitive style: ${scope} thinker, ${proc} processor, ${dec} decider`);
+    profile.cognitiveStyleSummary = `${scope} thinker, ${proc} processor, ${dec} decider`;
   }
   if (context.triggers) {
-    if (context.triggers.drains.length) {
-      profile.push(`Self-reported drains: ${context.triggers.drains.join(', ')}`);
-    }
-    if (context.triggers.restores.length) {
-      profile.push(`Self-reported restores: ${context.triggers.restores.join(', ')}`);
-    }
+    if (context.triggers.drains.length) profile.drains = context.triggers.drains;
+    if (context.triggers.restores.length) profile.restores = context.triggers.restores;
   }
   if (context.somaticEntries.length > 0) {
     const regionCounts: Record<string, number> = {};
@@ -213,7 +175,7 @@ function buildUserPrompt(
     const topRegion = Object.entries(regionCounts).sort((a, b) => b[1] - a[1])[0];
     const topEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0];
     if (topRegion && topEmotion) {
-      profile.push(`Somatic pattern: ${topEmotion[0]} most often held in ${topRegion[0]} (${context.somaticEntries.length} entries)`);
+      profile.somaticPattern = `${topEmotion[0]} most often held in ${topRegion[0]} (${context.somaticEntries.length} entries)`;
     }
   }
   if (context.relationshipPatterns.length > 0) {
@@ -228,26 +190,23 @@ function buildUserPrompt(
     }
     const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
     if (topTags.length) {
-      profile.push(`Top relationship patterns: ${topTags.map(([t, c]) => `${resolvePatternTag(t)} (${c}×)`).join(', ')}`);
+      profile.topRelationshipPatterns = topTags.map(([t, c]) => `${resolvePatternTag(t)} (${c}×)`);
     }
     const topSecure = Object.entries(secureTagCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
     if (topSecure.length) {
-      profile.push(`Secure growth patterns (integration evidence): ${topSecure.map(([t, c]) => `${resolvePatternTag(t)} (${c}×)`).join(', ')}`);
+      profile.secureGrowthPatterns = topSecure.map(([t, c]) => `${resolvePatternTag(t)} (${c}×)`);
     }
   }
   if (context.dailyReflections) {
     const r = context.dailyReflections;
-    profile.push(`Reflection practice: ${r.totalDays} days, ${r.totalAnswers} answers, ${r.streak}-day streak`);
+    profile.reflectionPractice = `${r.totalDays} days, ${r.totalAnswers} answers, ${r.streak}-day streak`;
   }
 
-  if (profile.length) {
-    parts.push(`USER PROFILE:\n${profile.join('\n')}`);
-  }
-
-  // ── Behavioral snapshot ──
   if (checkIns.length > 0) {
     const moods = checkIns.map(c => c.moodScore).filter((v): v is number => v != null);
-    const avgMood = moods.length ? (moods.reduce((a, b) => a + b, 0) / moods.length).toFixed(1) : 'N/A';
+    const avgMood = moods.length
+      ? Math.round((moods.reduce((a, b) => a + b, 0) / moods.length) * 10) / 10
+      : null;
 
     const stressScores = checkIns.map(c => {
       if (c.stressLevel === 'low') return 2 as number;
@@ -255,34 +214,52 @@ function buildUserPrompt(
       if (c.stressLevel === 'high') return 9 as number;
       return null;
     }).filter((v): v is number => v != null);
-    const avgStress = stressScores.length ? (stressScores.reduce((a, b) => a + b, 0) / stressScores.length).toFixed(1) : 'N/A';
+    const avgStress = stressScores.length
+      ? Math.round((stressScores.reduce((a, b) => a + b, 0) / stressScores.length) * 10) / 10
+      : null;
 
-    // Tag frequency
     const tagCounts: Record<string, number> = {};
     for (const c of checkIns) {
       for (const t of c.tags) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
     }
-    const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
 
-    const behavioral = [
-      `Check-ins: ${checkIns.length} over the recent period`,
-      `Average mood: ${avgMood}/10`,
-      `Average stress: ${avgStress}/9`,
-      topTags.length ? `Most frequent tags: ${topTags.map(([t, c]) => `${t} (${c}×)`).join(', ')}` : null,
-    ].filter(Boolean);
-
-    parts.push(`BEHAVIORAL DATA:\n${behavioral.join('\n')}`);
+    return {
+      insights: insights.map((insight) => ({
+        id: insight.id,
+        source: insight.source,
+        title: insight.title,
+        body: insight.body,
+        isConfirmed: insight.isConfirmed,
+      })),
+      profile,
+      behavioral: {
+        checkInCount: checkIns.length,
+        averageMood: avgMood,
+        averageStress: avgStress,
+        frequentTags: Object.entries(tagCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([tag, count]) => ({ tag, count })),
+      },
+    };
   }
 
-  // ── Insights to rewrite ──
-  const insightBlock = insights.map(i => {
-    const confirmed = i.isConfirmed ? ' [DATA-CONFIRMED]' : ' [PROFILE-BASED]';
-    return `ID: ${i.id}\nSource: ${i.source}\nTitle: ${i.title}${confirmed}\nCurrent body: ${i.body}`;
-  }).join('\n\n');
-
-  parts.push(`INSIGHTS TO REWRITE:\n\n${insightBlock}`);
-
-  return parts.join('\n\n---\n\n');
+  return {
+    insights: insights.map((insight) => ({
+      id: insight.id,
+      source: insight.source,
+      title: insight.title,
+      body: insight.body,
+      isConfirmed: insight.isConfirmed,
+    })),
+    profile,
+    behavioral: {
+      checkInCount: 0,
+      averageMood: null,
+      averageStress: null,
+      frequentTags: [],
+    },
+  };
 }
 
 // ─── Retry Helpers ────────────────────────────────────────────────────────────
@@ -317,8 +294,10 @@ export async function enhancePatternInsights(
 ): Promise<GeminiPatternResult | null> {
   if (!insights.length) return null;
 
+  const payload = buildPatternInsightPayload(insights, context, checkIns);
+
   // ── Check cache ──
-  const cacheKey = buildCacheKey(insights);
+  const cacheKey = buildCacheKey(payload);
   const cached = await getCachedResult(cacheKey);
   if (cached) return cached;
 
@@ -337,20 +316,11 @@ export async function enhancePatternInsights(
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-proxy', {
+      const { data, error } = await supabase.functions.invoke('pattern-insights', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-        body: {
-          model: GEMINI_MODEL,
-          systemPrompt: SYSTEM_PROMPT,
-          userPrompt: buildUserPrompt(insights, context, checkIns),
-          generationConfig: {
-            temperature: 0.75,
-            maxOutputTokens: 2048,
-            responseMimeType: 'application/json',
-          },
-        },
+        body: payload,
       });
 
       if (error) {
@@ -372,26 +342,12 @@ export async function enhancePatternInsights(
         return null;
       }
 
-      const text: string = data?.text;
-      if (!text) {
-        logger.error('[GeminiPatterns] No text in edge function response');
-        return null;
-      }
-
-      let parsed: any;
-      try {
-        parsed = JSON.parse(text);
-      } catch {
-        logger.error('[GeminiPatterns] Malformed JSON from Gemini:', text.slice(0, 200));
-        return null;
-      }
-
-      if (!parsed.insights || !Array.isArray(parsed.insights)) {
+      if (!data?.insights || !Array.isArray(data.insights)) {
         logger.error('[GeminiPatterns] Invalid response structure');
         return null;
       }
 
-      const validInsights = parsed.insights.filter(
+      const validInsights = data.insights.filter(
         (i: any) => typeof i?.id === 'string' && typeof i?.body === 'string' && i.body.trim().length > 0,
       );
       if (!validInsights.length) {
@@ -401,7 +357,7 @@ export async function enhancePatternInsights(
 
       const result: GeminiPatternResult = {
         insights: validInsights,
-        generatedAt: new Date().toISOString(),
+        generatedAt: typeof data.generatedAt === 'string' ? data.generatedAt : new Date().toISOString(),
       };
 
       await setCachedResult(cacheKey, result);

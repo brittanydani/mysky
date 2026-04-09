@@ -339,20 +339,20 @@ export default function RelationshipPatternsScreen() {
 
                 <View style={styles.legendRow}>
                   <View style={styles.legendItem}>
-                    <MetallicText style={styles.legendDot} color={PALETTE.anxious}>◆</MetallicText>
-                    <MetallicText style={styles.legendText} color={PALETTE.anxious}>Moving Toward</MetallicText>
+                    <Text style={[styles.legendDot, { color: PALETTE.anxious }]}>◆</Text>
+                    <Text style={[styles.legendText, { color: PALETTE.anxious }]}>Moving Toward</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <MetallicText style={styles.legendDot} color={PALETTE.avoidant}>◆</MetallicText>
-                    <MetallicText style={styles.legendText} color={PALETTE.avoidant}>Moving Away</MetallicText>
+                    <Text style={[styles.legendDot, { color: PALETTE.avoidant }]}>◆</Text>
+                    <Text style={[styles.legendText, { color: PALETTE.avoidant }]}>Moving Away</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <MetallicText style={styles.legendDot} color={PALETTE.control}>◆</MetallicText>
-                    <MetallicText style={styles.legendText} color={PALETTE.control}>Rigidity</MetallicText>
+                    <Text style={[styles.legendDot, { color: PALETTE.control }]}>◆</Text>
+                    <Text style={[styles.legendText, { color: PALETTE.control }]}>Rigidity</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <MetallicText style={styles.legendDot} color={PALETTE.secure}>◆</MetallicText>
-                    <MetallicText style={styles.legendText} color={PALETTE.secure}>Secure</MetallicText>
+                    <Text style={[styles.legendDot, { color: PALETTE.secure }]}>◆</Text>
+                    <Text style={[styles.legendText, { color: PALETTE.secure }]}>Secure</Text>
                   </View>
                 </View>
               </Animated.View>

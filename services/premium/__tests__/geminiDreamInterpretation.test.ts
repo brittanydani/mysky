@@ -53,7 +53,7 @@ describe('geminiDreamInterpretation', () => {
       error: null,
     });
     mockInvoke.mockResolvedValue({
-      data: { text: '{"paragraph":"Free paragraph","question":"Free question?"}' },
+      data: { paragraph: 'Free paragraph', question: 'Free question?' },
       error: null,
     });
 
@@ -64,9 +64,9 @@ describe('geminiDreamInterpretation', () => {
       question: 'Free question?',
     });
 
-    expect(mockInvoke).toHaveBeenCalledWith('gemini-proxy', expect.objectContaining({
+    expect(mockInvoke).toHaveBeenCalledWith('dream-insights', expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer token' }),
-      body: expect.objectContaining({ model: 'gemini-2.5-flash-lite' }),
+      body: expect.objectContaining({ modelTier: 'free' }),
     }));
   });
 
@@ -77,7 +77,7 @@ describe('geminiDreamInterpretation', () => {
       error: null,
     });
     mockInvoke.mockResolvedValue({
-      data: { text: '{"paragraph":"Premium paragraph","question":"Premium question?"}' },
+      data: { paragraph: 'Premium paragraph', question: 'Premium question?' },
       error: null,
     });
 
@@ -91,9 +91,9 @@ describe('geminiDreamInterpretation', () => {
       question: 'Premium question?',
     });
 
-    expect(mockInvoke).toHaveBeenCalledWith('gemini-proxy', expect.objectContaining({
+    expect(mockInvoke).toHaveBeenCalledWith('dream-insights', expect.objectContaining({
       headers: expect.objectContaining({ Authorization: 'Bearer token' }),
-      body: expect.objectContaining({ model: 'gemini-2.5-flash' }),
+      body: expect.objectContaining({ modelTier: 'premium' }),
     }));
   });
 

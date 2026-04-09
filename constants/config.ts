@@ -8,6 +8,20 @@ export const LEGAL_URL = 'https://amber-divan-e75.notion.site/Privacy-Policy-for
 // Support contact — single source of truth for all in-app references
 export const SUPPORT_EMAIL = 'brittanyapps@outlook.com';
 
+const DREAM_REINTERPRET_DEFAULT_DAILY_LIMIT = 1;
+const DREAM_REINTERPRET_EMAIL_LIMIT_OVERRIDES: Record<string, number> = {
+  'brithornick92@gmail.com': 5,
+};
+
+export function getDreamReinterpretDailyLimit(email?: string | null): number {
+  if (!email) {
+    return DREAM_REINTERPRET_DEFAULT_DAILY_LIMIT;
+  }
+
+  return DREAM_REINTERPRET_EMAIL_LIMIT_OVERRIDES[email.trim().toLowerCase()]
+    ?? DREAM_REINTERPRET_DEFAULT_DAILY_LIMIT;
+}
+
 export const config = {
   appName: 'MySky',
   tagline: 'Track sleep, mood, dreams, and relationships to understand yourself over time.',
