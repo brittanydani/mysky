@@ -38,15 +38,15 @@ export const GOLD_TEXT = {
 // ── Single source of truth for the MySky visual system ──────────────
 export const MYSTIC = {
   // ─ Backgrounds ─
-  bgTop: '#020817',
-  bgMid: '#020817',
-  bgBottom: '#020817',
-  bgDeep: '#020817',
+  bgTop: '#0A0A0F',
+  bgMid: '#0A0A0F',
+  bgBottom: '#0A0A0F',
+  bgDeep: '#0A0A0F',
 
   // ─ Text hierarchy ─
   heading: '#FFFFFF',
-  body: 'rgba(226,232,240,0.78)',
-  muted: 'rgba(226,232,240,0.45)',
+  body: 'rgba(255,255,255,0.72)',
+  muted: 'rgba(255,255,255,0.50)',
 
   // ─ Champagne-gold accents ─
   subtitleGold: '#FFFFFF',
@@ -80,9 +80,9 @@ export const MYSTIC = {
   starDim: 'rgba(255,255,255,0.72)',
 
   // ─ Glass card system ─
-  cardBg: 'rgba(255, 255, 255, 0.03)',
-  cardBorder: 'rgba(255, 255, 255, 0.06)',
-  cardHighlight: 'rgba(255, 255, 255, 0.06)',
+  cardBg: 'rgba(255, 255, 255, 0.04)',
+  cardBorder: 'rgba(255, 255, 255, 0.10)',
+  cardHighlight: 'rgba(255, 255, 255, 0.12)',
 
   // ─ Semantic accents ─
   success: '#6EBF8B',
@@ -94,172 +94,252 @@ export const MYSTIC = {
   gold: '#D4AF37',
 } as const;
 
-export const theme = {
-  // Primary Colors — champagne-gold
-  primary: MYSTIC.restoreGold,
-  primaryLight: MYSTIC.subtitleGold,
-  primaryDark: MYSTIC.restoreGold,
+export const AURORA = {
+  // Backgrounds
+  bgTop: '#F5EFE4',
+  bgMid: '#F7F2E8',
+  bgBottom: '#EFE5D3',
+  bgDeep: '#E8DDC8',
 
-  // Background Colors — dark navy-obsidian
-  background: MYSTIC.bgTop,
-  backgroundDeep: MYSTIC.bgDeep,
-  backgroundSecondary: '#060E21',
-  backgroundTertiary: '#0A142A',
-  surface: '#0A142A',
-  surfaceLight: '#0E1A36',
+  // Text hierarchy
+  heading: '#162033',
+  body: 'rgba(22, 32, 51, 0.78)',
+  muted: 'rgba(22, 32, 51, 0.52)',
 
-  // Accent Colors
-  indigo: '#2D3A5C',
-  plum: '#3D2952',
-  purple: '#4A3B6B',
-  rose: '#3D2940',
+  // Champagne-gold accents
+  subtitleGold: '#8A6A32',
+  restoreGold: '#8A6A32',
+  featureIconGold: '#B89457',
 
-  // Human-first mood colors
-  love: MYSTIC.love,
-  energy: MYSTIC.success,
-  growth: MYSTIC.silverBlue,
-  calm: MYSTIC.success,
-  soft: MYSTIC.silverBlue,
-  okay: MYSTIC.restoreGold,
-  heavy: MYSTIC.restoreGold,
-  stormy: MYSTIC.error,
+  // CTA / premium button surface
+  ctaText: '#FFFFFF',
+  ctaBorder: 'rgba(138,106,50,0.16)',
+  ctaGloss: 'rgba(255,255,255,0.35)',
 
-  // Text Colors
-  textPrimary: MYSTIC.heading,
-  textSecondary: MYSTIC.body,
-  textMuted: MYSTIC.muted,
-  textGold: MYSTIC.subtitleGold,
+  // Metallic gold gradients
+  goldGradient: [
+    '#FFF5DE',
+    '#E9D4A6',
+    '#C89D5B',
+    '#9B7A46',
+    '#6F552E',
+  ] as const,
 
-  // Semantic Colors
-  success: MYSTIC.success,
-  error: MYSTIC.error,
-  warning: MYSTIC.restoreGold,
+  goldGradientSoft: [
+    '#FFF8E7',
+    '#EEDCB4',
+    '#D1B27B',
+    '#A8834F',
+    '#775C33',
+  ] as const,
 
-  // Card Colors — transparent glass
-  cardGradientStart: 'rgba(255, 255, 255, 0.03)',
-  cardGradientEnd: 'rgba(255, 255, 255, 0.03)',
-  cardBorder: MYSTIC.cardBorder,
+  // Star colors
+  star: 'rgba(255,255,255,0.98)',
+  starDim: 'rgba(138,106,50,0.52)',
 
-  // Locked/Premium
-  lockedOverlay: 'rgba(2, 8, 23, 0.7)',
-  premiumGlow: 'rgba(232, 214, 174, 0.25)',
+  // Glass card system
+  cardBg: 'rgba(255, 255, 255, 0.72)',
+  cardBorder: 'rgba(93, 74, 42, 0.10)',
+  cardHighlight: 'rgba(255, 255, 255, 0.44)',
 
-  // Spacing
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 24,
-    xxl: 32,
-  },
-
-  // Border Radius
-  borderRadius: {
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
-    full: 9999,
-  },
-
-  // Typography
-  typography: {
-    headerLarge: {
-      fontSize: 34,
-      fontWeight: '300' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Thin', default: 'System' }),
-      letterSpacing: 2.5,
-      textTransform: 'uppercase' as const,
-    },
-    headerMedium: {
-      fontSize: 24,
-      fontWeight: '300' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Light', default: 'System' }),
-      letterSpacing: 2.0,
-      textTransform: 'uppercase' as const,
-    },
-    headerSmall: {
-      fontSize: 18,
-      fontWeight: '400' as const,
-      fontFamily: Platform.select({ ios: 'SFProDisplay-Regular', default: 'System' }),
-      letterSpacing: 1.5,
-    },
-
-    bodyLarge: {
-      fontSize: 16,
-      fontWeight: '400' as const,
-      lineHeight: 26,
-    },
-    bodyMedium: {
-      fontSize: 14,
-      fontWeight: '400' as const,
-      lineHeight: 22,
-    },
-    bodySmall: {
-      fontSize: 12,
-      fontWeight: '400' as const,
-      lineHeight: 18,
-    },
-    caption: {
-      fontSize: 11,
-      fontWeight: '500' as const,
-      textTransform: 'uppercase' as const,
-      letterSpacing: 1,
-    },
-  },
-
-  // Gold gradient (used for CTAs / premium buttons)
-  goldGradient: MYSTIC.goldGradient,
-  ctaGradient: MYSTIC.goldGradient,
-  ctaTextDark: MYSTIC.ctaText,
-
-  // Shadows
-  shadows: {
-    soft: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-    glow: {
-      shadowColor: MYSTIC.restoreGold,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 6,
-    },
-  },
-
-  // High-end obsidian glass effects
-  glass: {
-    base: MYSTIC.cardBg,
-    border: MYSTIC.cardHighlight,
-    highlight: 'rgba(255, 255, 255, 0.08)',
-  },
-
-  // Archetypal mapping
-  archetypes: {
-    shadow: { main: MYSTIC.amethyst, glow: 'rgba(157, 118, 193, 0.15)' },
-    self: { main: MYSTIC.subtitleGold, glow: 'rgba(232, 214, 174, 0.15)' },
-    threshold: { main: MYSTIC.silverBlue, glow: 'rgba(201, 174, 120, 0.15)' },
-    transform: { main: MYSTIC.copper, glow: 'rgba(205, 127, 93, 0.15)' },
-  },
-
-  // Cinematic palette
-  cinematic: {
-    gold: MYSTIC.subtitleGold,
-    silverBlue: MYSTIC.silverBlue,
-    copper: MYSTIC.copper,
-    emerald: MYSTIC.success,
-    rose: '#D4A3B3',
-    textMain: MYSTIC.heading,
-    glassBorder: MYSTIC.cardHighlight,
-    glassHighlight: 'rgba(255,255,255,0.08)',
-  },
-
-  // Enhanced Gradients — transparent glass
-  obsidianGradient: ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)'] as const,
-  amethystGradient: ['rgba(40, 30, 60, 0.25)', 'rgba(2,8,23,0.50)'] as const,
+  // Semantic accents
+  success: '#4E8A64',
+  error: '#C06A6A',
+  love: '#CC7E96',
+  silverBlue: '#7A90A8',
+  copper: '#B4765B',
+  amethyst: '#8B77AA',
+  gold: '#B58A3A',
 } as const;
+
+type ThemePalette = typeof MYSTIC | typeof AURORA;
+
+function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
+  const isDark = mode === 'dark';
+
+  return {
+    mode,
+    isDark,
+    blurTint: isDark ? 'dark' : 'light',
+    statusBarStyle: isDark ? 'light' : 'dark',
+
+    // Primary Colors — champagne-gold
+    primary: palette.restoreGold,
+    primaryLight: palette.subtitleGold,
+    primaryDark: mode === 'dark' ? palette.restoreGold : '#6F552E',
+
+    // Background Colors
+    background: palette.bgTop,
+    backgroundDeep: palette.bgDeep,
+    backgroundSecondary: isDark ? '#101119' : '#FAF6EE',
+    backgroundTertiary: isDark ? '#151724' : '#F1E8D9',
+    surface: isDark ? '#12141D' : '#FFFFFF',
+    surfaceLight: isDark ? '#181B27' : '#FBF7F0',
+
+    // Accent Colors
+    indigo: isDark ? '#2D3A5C' : '#6A7B96',
+    plum: isDark ? '#3D2952' : '#8A6E96',
+    purple: isDark ? '#4A3B6B' : '#9D8BB4',
+    rose: isDark ? '#3D2940' : '#D8B7C1',
+
+    // Human-first mood colors
+    love: palette.love,
+    energy: palette.success,
+    growth: palette.silverBlue,
+    calm: palette.success,
+    soft: palette.silverBlue,
+    okay: palette.restoreGold,
+    heavy: palette.restoreGold,
+    stormy: palette.error,
+
+    // Text Colors
+    textPrimary: palette.heading,
+    textSecondary: palette.body,
+    textMuted: palette.muted,
+    textGold: palette.subtitleGold,
+
+    // Semantic Colors
+    success: palette.success,
+    error: palette.error,
+    warning: palette.restoreGold,
+
+    // Card Colors
+    cardGradientStart: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.82)',
+    cardGradientEnd: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(250, 246, 238, 0.94)',
+    cardBorder: palette.cardBorder,
+
+    // Locked/Premium
+    lockedOverlay: isDark ? 'rgba(2, 8, 23, 0.7)' : 'rgba(245, 239, 228, 0.82)',
+    premiumGlow: isDark ? 'rgba(232, 214, 174, 0.25)' : 'rgba(201, 174, 120, 0.18)',
+
+    // Spacing
+    spacing: {
+      xs: 4,
+      sm: 8,
+      md: 12,
+      lg: 16,
+      xl: 24,
+      xxl: 32,
+    },
+
+    // Border Radius
+    borderRadius: {
+      sm: 8,
+      md: 12,
+      lg: 16,
+      xl: 20,
+      full: 9999,
+    },
+
+    // Typography
+    typography: {
+      headerLarge: {
+        fontSize: 34,
+        fontWeight: '300' as const,
+        fontFamily: Platform.select({ ios: 'SFProDisplay-Thin', default: 'System' }),
+        letterSpacing: 2.5,
+        textTransform: 'uppercase' as const,
+      },
+      headerMedium: {
+        fontSize: 24,
+        fontWeight: '300' as const,
+        fontFamily: Platform.select({ ios: 'SFProDisplay-Light', default: 'System' }),
+        letterSpacing: 2.0,
+        textTransform: 'uppercase' as const,
+      },
+      headerSmall: {
+        fontSize: 18,
+        fontWeight: '400' as const,
+        fontFamily: Platform.select({ ios: 'SFProDisplay-Regular', default: 'System' }),
+        letterSpacing: 1.5,
+      },
+
+      bodyLarge: {
+        fontSize: 16,
+        fontWeight: '400' as const,
+        lineHeight: 26,
+      },
+      bodyMedium: {
+        fontSize: 14,
+        fontWeight: '400' as const,
+        lineHeight: 22,
+      },
+      bodySmall: {
+        fontSize: 12,
+        fontWeight: '400' as const,
+        lineHeight: 18,
+      },
+      caption: {
+        fontSize: 11,
+        fontWeight: '500' as const,
+        textTransform: 'uppercase' as const,
+        letterSpacing: 1,
+      },
+    },
+
+    // Gold gradient (used for CTAs / premium buttons)
+    goldGradient: palette.goldGradient,
+    ctaGradient: palette.goldGradient,
+    ctaTextDark: palette.ctaText,
+
+    // Shadows
+    shadows: {
+      soft: {
+        shadowColor: isDark ? '#000' : '#6F552E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.3 : 0.12,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+      glow: {
+        shadowColor: palette.restoreGold,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: isDark ? 0.3 : 0.18,
+        shadowRadius: 12,
+        elevation: 6,
+      },
+    },
+
+    // Glass effects
+    glass: {
+      base: palette.cardBg,
+      border: palette.cardHighlight,
+      highlight: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.52)',
+    },
+
+    // Archetypal mapping
+    archetypes: {
+      shadow: { main: palette.amethyst, glow: isDark ? 'rgba(157, 118, 193, 0.15)' : 'rgba(139, 119, 170, 0.18)' },
+      self: { main: palette.subtitleGold, glow: isDark ? 'rgba(232, 214, 174, 0.15)' : 'rgba(201, 174, 120, 0.16)' },
+      threshold: { main: palette.silverBlue, glow: isDark ? 'rgba(201, 174, 120, 0.15)' : 'rgba(122, 144, 168, 0.18)' },
+      transform: { main: palette.copper, glow: isDark ? 'rgba(205, 127, 93, 0.15)' : 'rgba(180, 118, 91, 0.18)' },
+    },
+
+    // Cinematic palette
+    cinematic: {
+      gold: palette.subtitleGold,
+      silverBlue: palette.silverBlue,
+      copper: palette.copper,
+      emerald: palette.success,
+      rose: isDark ? '#D4A3B3' : '#C88D9F',
+      textMain: palette.heading,
+      glassBorder: palette.cardHighlight,
+      glassHighlight: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.42)',
+    },
+
+    // Enhanced Gradients
+    obsidianGradient: isDark
+      ? (['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)'] as const)
+      : (['rgba(255,255,255,0.86)', 'rgba(241,232,217,0.92)'] as const),
+    amethystGradient: isDark
+      ? (['rgba(40, 30, 60, 0.25)', 'rgba(2,8,23,0.50)'] as const)
+      : (['rgba(205, 192, 224, 0.22)', 'rgba(241,232,217,0.68)'] as const),
+  } as const;
+}
+
+export const darkTheme = createTheme(MYSTIC, 'dark');
+export const lightTheme = createTheme(AURORA, 'light');
+
+export type AppTheme = ReturnType<typeof createTheme>;
+
+export const theme = darkTheme;

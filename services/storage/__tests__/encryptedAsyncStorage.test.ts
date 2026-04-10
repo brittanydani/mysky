@@ -9,12 +9,20 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 const mockEncryptField = jest.fn(async (v: string) => `enc:${v}`);
 const mockDecryptField = jest.fn(async (v: string) => v.replace(/^enc:/, ''));
 const mockIsEncrypted = jest.fn((v: string) => v.startsWith('enc:'));
+type TryDecryptFieldResult =
+  | { ok: true; value: string }
+  | { ok: false; error: 'key_missing' | 'auth_failed' | 'invalid_format' };
+
+const mockTryDecryptField = jest.fn<Promise<TryDecryptFieldResult>, [string]>(
+  async (v: string) => ({ ok: true as const, value: v.replace(/^enc:/, '') })
+);
 
 jest.mock('../fieldEncryption', () => ({
   FieldEncryptionService: {
     encryptField: mockEncryptField,
     decryptField: mockDecryptField,
     isEncrypted: mockIsEncrypted,
+    tryDecryptField: mockTryDecryptField,
   },
 }));
 
@@ -32,6 +40,7 @@ describe('EncryptedAsyncStorage', () => {
     mockEncryptField.mockImplementation(async (v: string) => `enc:${v}`);
     mockDecryptField.mockImplementation(async (v: string) => v.replace(/^enc:/, ''));
     mockIsEncrypted.mockImplementation((v: string) => v.startsWith('enc:'));
+    mockTryDecryptField.mockImplementation(async (v: string) => ({ ok: true as const, value: v.replace(/^enc:/, '') }));
   });
 
   describe('setItem()', () => {
@@ -65,7 +74,7 @@ describe('EncryptedAsyncStorage', () => {
       asyncStore.set('@key', 'enc:hello');
       const result = await EncryptedAsyncStorage.getItem('@key');
       expect(result).toBe('hello');
-      expect(mockDecryptField).toHaveBeenCalledWith('enc:hello');
+      expect(mockTryDecryptField).toHaveBeenCalledWith('enc:hello');
     });
 
     it('returns plaintext as-is for legacy (unencrypted) values', async () => {
@@ -78,7 +87,14 @@ describe('EncryptedAsyncStorage', () => {
 
     it('returns null when decryption fails', async () => {
       asyncStore.set('@key', 'enc:baddata');
-      mockDecryptField.mockRejectedValueOnce(new Error('Bad tag'));
+      mockTryDecryptField.mockResolvedValueOnce({ ok: false as const, error: 'auth_failed' as const });
+      const result = await EncryptedAsyncStorage.getItem('@key');
+      expect(result).toBeNull();
+    });
+
+    it('returns null when the encryption key is unavailable', async () => {
+      asyncStore.set('@key', 'enc:baddata');
+      mockTryDecryptField.mockResolvedValueOnce({ ok: false as const, error: 'key_missing' as const });
       const result = await EncryptedAsyncStorage.getItem('@key');
       expect(result).toBeNull();
     });

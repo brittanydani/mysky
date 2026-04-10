@@ -10,12 +10,13 @@ import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { usePremium } from '../context/PremiumContext';
 import { config, LEGAL_URL } from '../constants/config';
 import { DEEPER_SKY_FEATURES, DEEPER_SKY_MARKETING } from '../services/premium/deeperSkyFeatures';
 import { metallicFillColors, metallicFillPositions } from '../constants/mySkyMetallic';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 type PlanType = 'monthly' | 'yearly' | 'lifetime';
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -28,6 +29,8 @@ interface PremiumScreenProps {
 }
 
 export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium, offerings, loading, purchase, restore } = usePremium();
@@ -419,7 +422,7 @@ export default function PremiumScreen({ onClose }: PremiumScreenProps = {}) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.background,

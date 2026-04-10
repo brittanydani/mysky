@@ -13,7 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from '../../../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { theme } from '../../../constants/theme';
+import { type AppTheme } from '../../../constants/theme';
 
 import PremiumRequiredScreen from '../../../components/PremiumRequiredScreen';
 import { localDb } from '../../../services/storage/localDb';
@@ -28,6 +28,8 @@ import { analyzeJournalContent } from '../../../services/journal/nlp';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { DreamClusterMap } from '../../../components/ui/DreamClusterMap';
+import { PremiumSegmentedControl } from '../../../components/ui/PremiumSegmentedControl';
+import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
 
 const VALID_MOODS = ['calm', 'soft', 'okay', 'heavy', 'stormy'] as const;
 
@@ -88,6 +90,35 @@ const DREAM_QUALITY_LABELS: Record<number, string> = {
   5: 'Vibrant',
 };
 
+function formatTitleCaseSegment(segment: string): string {
+  const SMALL_WORDS = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'nor', 'of', 'on', 'or', 'per', 'the', 'to', 'vs', 'via']);
+  return segment
+    .split(/(\s+)/)
+    .map((part, index, all) => {
+      if (!part.trim()) return part;
+      const normalized = part.toLowerCase();
+      const isFirst = index === 0;
+      const isLast = index === all.length - 1;
+      if (!isFirst && !isLast && SMALL_WORDS.has(normalized)) {
+        return normalized;
+      }
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    })
+    .join('');
+}
+
+function normalizeJournalTitle(title?: string): string {
+  const trimmed = (title ?? '').trim().replace(/\s+/g, ' ');
+  if (!trimmed) return '';
+  return trimmed
+    .split(/([:–—-])/)
+    .map((segment) => (/^[:–—-]$/.test(segment) ? segment : formatTitleCaseSegment(segment)))
+    .join('')
+    .replace(/\s+([:–—-])/g, ' $1')
+    .replace(/([:–—-])\s+/g, '$1 ')
+    .trim();
+}
+
 interface DreamCardProps {
   entry: SleepEntry;
   formatDate: (s: string) => string;
@@ -96,8 +127,11 @@ interface DreamCardProps {
 }
 
 const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPress }: DreamCardProps) {
+  const styles = useThemedStyles(createStyles);
   const hasDream = !!(entry.dreamText?.trim());
-  const moons = entry.quality ? '☽'.repeat(entry.quality) : null;
+  const quality = Math.max(0, Math.min(5, entry.quality ?? 0));
+  const moons = quality > 0 ? '☽'.repeat(quality) : null;
+  const remainingMoons = quality > 0 ? '☾'.repeat(5 - quality) : null;
   const qualityLabel = entry.quality ? DREAM_QUALITY_LABELS[entry.quality] : null;
   const durationText = entry.durationHours ? `${entry.durationHours}h` : null;
   const skipNextPressRef = useRef(false);
@@ -129,7 +163,12 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPr
             <Text style={styles.dreamCardDate}>{formatDate(entry.date)}</Text>
             {(moons || durationText) && (
               <View style={styles.dreamMeta}>
-                {moons && <MetallicText color="#C9AE78" style={styles.dreamMoons}>{moons}</MetallicText>}
+                {moons && (
+                  <View style={styles.dreamMoonsRow}>
+                    <MetallicText color="#C9AE78" style={styles.dreamMoons}>{moons}</MetallicText>
+                    {!!remainingMoons && <Text style={styles.dreamMoonsEmpty}>{remainingMoons}</Text>}
+                  </View>
+                )}
                 {qualityLabel && <MetallicText color="#C9AE78" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
                 {durationText && <Text style={styles.dreamDuration}> · {durationText}</Text>}
               </View>
@@ -190,6 +229,8 @@ const EntryCard = memo(function EntryCard({
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function JournalScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
   const reflectionsListRef = useRef<FlatList<JournalEntry> | null>(null);
@@ -517,11 +558,15 @@ export default function JournalScreen() {
       {/* ── Browse + Search ── */}
       {(totalCount > 0 || sleepEntries.length > 0) && (
         <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.filterSection}>
-          <Pressable onPress={toggleBrowseSearch} style={styles.browseSectionHeader}>
-            <MetallicIcon name="library-outline" size={18} color={PALETTE.gold} />
-            <Text style={styles.browseSectionTitle}>Browse</Text>
-            <MetallicIcon name={showSearch ? 'close-outline' : 'search-outline'} size={16} color={PALETTE.gold} style={{ marginLeft: 'auto' }} />
-          </Pressable>
+          <View style={styles.browseSectionHeader}>
+            <View style={styles.browseTitleGroup}>
+              <MetallicIcon name="library-outline" size={18} color={PALETTE.gold} />
+              <Text style={styles.browseSectionTitle}>Browse</Text>
+            </View>
+            <Pressable onPress={toggleBrowseSearch} style={styles.browseSearchButton} hitSlop={8}>
+              <MetallicIcon name={showSearch ? 'close-outline' : 'search-outline'} size={16} color={PALETTE.gold} />
+            </Pressable>
+          </View>
           {showSearch && (
             <Animated.View entering={FadeInDown.duration(300)} style={styles.searchContainer}>
               <Ionicons name="search-outline" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
@@ -543,48 +588,17 @@ export default function JournalScreen() {
             </Animated.View>
           )}
           {/* ── Tab Switcher ── */}
-          <View style={styles.segmentedControl}>
-            {(['reflections', 'dreams'] as const).map((tab) => (
-              <Pressable
-                key={tab}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setActiveTab(tab);
-                }}
-                style={[styles.segmentBtn, activeTab === tab && styles.segmentBtnActive]}
-                accessibilityRole="button"
-                accessibilityLabel={`Switch to ${tab} tab`}
-              >
-                {activeTab === tab ? (
-                  <MetallicIcon
-                    name={tab === 'reflections' ? 'book-outline' : 'moon-outline'}
-                    size={14}
-                    color="#D4B872"
-                  />
-                ) : (
-                  <Ionicons
-                    name={tab === 'reflections' ? 'book-outline' : 'moon-outline'}
-                    size={14}
-                    color="rgba(255,255,255,0.35)"
-                  />
-                )}
-                {activeTab === tab ? (
-                  <MetallicText color="#D4B872" style={[styles.segmentText, styles.segmentTextActive]}>
-                    {tab === 'reflections' ? 'Reflections' : 'Dreams'}
-                  </MetallicText>
-                ) : (
-                  <Text style={styles.segmentText}>
-                    {tab === 'reflections' ? 'Reflections' : 'Dreams'}
-                  </Text>
-                )}
-                {(() => {
-                  const count = tab === 'reflections' ? totalCount : sleepEntries.length;
-                  if (!count) return null;
-                  return <Text style={[styles.segmentCount, activeTab === tab && styles.segmentCountActive]}>{count}</Text>;
-                })()}
-              </Pressable>
-            ))}
-          </View>
+          <PremiumSegmentedControl
+            options={[
+              { id: 'reflections', label: 'REFLECTIONS', count: totalCount },
+              { id: 'dreams', label: 'DREAMS', count: sleepEntries.length },
+            ]}
+            selectedIndex={activeTab === 'reflections' ? 0 : 1}
+            onChange={(index) => {
+              Haptics.selectionAsync().catch(() => {});
+              setActiveTab(index === 0 ? 'reflections' : 'dreams');
+            }}
+          />
         </Animated.View>
       )}
 
@@ -780,6 +794,7 @@ export default function JournalScreen() {
         const updated: JournalEntry = {
           ...editingEntry,
           ...data,
+          title: normalizeJournalTitle(data.title ?? editingEntry.title),
           ...nlpFields,
           id: editingEntry.id,
           createdAt: editingEntry.createdAt ?? nowIso,
@@ -794,7 +809,7 @@ export default function JournalScreen() {
       } else {
         const created: JournalEntry = {
           id: generateId(),
-          title: data.title ?? '',
+          title: normalizeJournalTitle(data.title),
           content: data.content ?? '',
           mood: (data.mood ?? 'okay') as any,
           moonPhase: (data.moonPhase ?? 'new') as any,
@@ -959,6 +974,8 @@ export default function JournalScreen() {
 // ── Section Header (matches Today screen) ────────────────────────────────
 
 function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  const sectionHeaderStyles = useThemedStyles(createSectionHeaderStyles);
+
   return (
     <View style={sectionHeaderStyles.container}>
       <MetallicIcon name={icon as any} size={18} variant="gold" />
@@ -967,7 +984,7 @@ function SectionHeader({ title, icon }: { title: string; icon: string }) {
   );
 }
 
-const sectionHeaderStyles = StyleSheet.create({
+const createSectionHeaderStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -986,6 +1003,8 @@ const sectionHeaderStyles = StyleSheet.create({
 // ── Luminous Journal FAB (identical to Today) ────────────────────────────────
 
 function JournalFAB({ onPress }: { onPress: () => void }) {
+  const theme = useAppTheme();
+  const journalFabStyles = useThemedStyles(createJournalFabStyles);
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -1005,7 +1024,7 @@ function JournalFAB({ onPress }: { onPress: () => void }) {
       accessibilityRole="button"
     >
       <Animated.View style={[journalFabStyles.glowWrapper, animatedStyle]}>
-        <BlurView intensity={60} tint="dark" style={journalFabStyles.glassCircle}>
+        <BlurView intensity={60} tint={theme.blurTint} style={journalFabStyles.glassCircle}>
           <MetallicIcon name="add-outline" size={28} variant="gold" />
         </BlurView>
       </Animated.View>
@@ -1013,7 +1032,7 @@ function JournalFAB({ onPress }: { onPress: () => void }) {
   );
 }
 
-const journalFabStyles = StyleSheet.create({
+const createJournalFabStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 120,
@@ -1039,7 +1058,7 @@ const journalFabStyles = StyleSheet.create({
   },
 });
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
@@ -1130,9 +1149,24 @@ const styles = StyleSheet.create({
   browseSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
     marginBottom: 20,
     marginTop: 8,
+    justifyContent: 'space-between',
+  },
+  browseTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  browseSearchButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   browseSectionTitle: {
     color: PALETTE.textMain,
@@ -1302,60 +1336,6 @@ const styles = StyleSheet.create({
   entryTitle: { fontSize: 18, color: theme.textPrimary, marginBottom: 8 },
   entryContent: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
   expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
-
-
-
-  // ── Segmented control ──
-  segmentedControl: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    padding: 4,
-    marginBottom: 20,
-  },
-  segmentBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    gap: 6,
-  },
-  segmentBtnActive: {
-    backgroundColor: `${PALETTE.gold}18`,
-    borderWidth: 1,
-    borderColor: `${PALETTE.gold}40`,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.35)',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  segmentTextActive: {
-    color: PALETTE.gold,
-  },
-  segmentCount: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 6,
-    overflow: 'hidden',
-    letterSpacing: 0.4,
-  },
-  segmentCountActive: {
-    color: PALETTE.gold,
-    backgroundColor: `${PALETTE.gold}22`,
-  },
-
   // ── Dream card ──
   dreamCardWrapper: {
     marginBottom: 16,
@@ -1383,10 +1363,20 @@ const styles = StyleSheet.create({
   dreamMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  dreamMoonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   dreamMoons: {
     fontSize: 14,
     color: '#C9AE78',
+    letterSpacing: 1,
+  },
+  dreamMoonsEmpty: {
+    fontSize: 14,
+    color: 'rgba(201,174,120,0.26)',
     letterSpacing: 1,
   },
   dreamQualityLabel: {

@@ -415,7 +415,9 @@ export function computeJournalingImpact(
   return {
     type: 'journaling_vs_not',
     insight,
-    stat: `Mood ${diffMood >= 0 ? '+' : ''}${diffMood.toFixed(1)} on journaling days (${effectLabel} effect)`,
+    stat: diffMood >= 0
+      ? `Mood averages ${diffMood.toFixed(1)} points higher on journaling days (${effectLabel} effect)`
+      : `Mood averages ${Math.abs(diffMood).toFixed(1)} points lower on journaling days (${effectLabel} effect)`,
     confidence: journalConfidence(aggregates.length, journalDays.length),
     data: {
       avgMoodJournal: parseFloat(avgMoodJournal.toFixed(1)),

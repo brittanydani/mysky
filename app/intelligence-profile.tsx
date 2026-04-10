@@ -20,18 +20,20 @@ import Animated, { FadeInDown, FadeIn, Layout } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { EncryptedAsyncStorage } from '../services/storage/encryptedAsyncStorage';
 import * as Haptics from 'expo-haptics';
-import Svg, { Polygon, Line, Circle, Text as SvgText } from 'react-native-svg';
+import { Canvas, Circle, Group, Path, Skia, BlurMask } from '@shopify/react-native-skia';
 
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { syncIntelligenceFromReflections } from '../services/insights/reflectionProfileSync';
+import { keepLastWordsTogether } from '../utils/textLayout';
 
 const STORAGE_KEY = '@mysky:intelligence_profile';
 
 const PALETTE = {
-  gold: '#D9BF8C',
+  gold: '#D4AF37',
   silverBlue: '#C9AE78',
   sage: '#8CBEAA',
   lavender: '#A89BC8',
@@ -40,7 +42,7 @@ const PALETTE = {
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#020817',
+  bg: '#0A0A0F',
 };
 
 interface IntelligenceDimension {
@@ -142,9 +144,9 @@ type Scores = Record<string, number>; // 1–5
 // ── Octagon Radar Chart ──
 
 const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
-  const size = 240;
+  const size = 264;
   const center = size / 2;
-  const radius = size / 2 - 30;
+  const radius = size / 2 - 42;
   const count = DIMENSIONS.length;
 
   const getPoint = (score: number, index: number) => {
@@ -167,62 +169,115 @@ const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
     };
   };
 
-  const makePolygon = (score: number) =>
-    DIMENSIONS.map((_, i) => {
+  const makePolygonPath = (score: number) => {
+    const path = Skia.Path.Make();
+    DIMENSIONS.forEach((_, i) => {
       const p = getPoint(score, i);
-      return `${p.x},${p.y}`;
-    }).join(' ');
+      if (i === 0) path.moveTo(p.x, p.y);
+      else path.lineTo(p.x, p.y);
+    });
+    path.close();
+    return path;
+  };
 
-  const userPolygon = DIMENSIONS.map((d, i) => {
-    const p = getPoint(scores[d.id] ?? 3, i);
-    return `${p.x},${p.y}`;
-  }).join(' ');
+  const makeAxisPath = (index: number) => {
+    const path = Skia.Path.Make();
+    const p = getPoint(5, index);
+    path.moveTo(center, center);
+    path.lineTo(p.x, p.y);
+    return path;
+  };
+
+  const userPath = (() => {
+    const path = Skia.Path.Make();
+    DIMENSIONS.forEach((d, i) => {
+      const p = getPoint(scores[d.id] ?? 3, i);
+      if (i === 0) path.moveTo(p.x, p.y);
+      else path.lineTo(p.x, p.y);
+    });
+    path.close();
+    return path;
+  })();
 
   const LABELS = ['LIN', 'LOG', 'MUS', 'SPA', 'BOD', 'INT', 'INTR', 'NAT', 'EXI'];
 
   return (
     <View style={styles.radarContainer}>
-      <Svg width={size} height={size}>
-        {/* Background rings */}
-        <Polygon points={makePolygon(5)} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-        <Polygon points={makePolygon(3)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+      <Canvas style={styles.radarCanvas}>
+        <Group>
+          {[5, 4, 3, 2, 1].map((ring) => (
+            <Path
+              key={ring}
+              path={makePolygonPath(ring)}
+              color={ring === 5 ? 'rgba(255,255,255,0.11)' : 'rgba(255,255,255,0.06)'}
+              style="stroke"
+              strokeWidth={ring === 5 ? 1.2 : 1}
+            />
+          ))}
 
-        {/* Axes */}
-        {DIMENSIONS.map((_, i) => {
-          const p = getPoint(5, i);
-          return (
-            <Line key={i} x1={center} y1={center} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-          );
-        })}
+          {DIMENSIONS.map((_, i) => (
+            <Path
+              key={`axis-${i}`}
+              path={makeAxisPath(i)}
+              color="rgba(255,255,255,0.08)"
+              style="stroke"
+              strokeWidth={1}
+            />
+          ))}
 
-        {/* User polygon */}
-        <Polygon points={userPolygon} fill="rgba(168,155,200,0.2)" stroke={PALETTE.lavender} strokeWidth="2" />
+          <Path path={userPath} color="rgba(168,155,200,0.24)">
+            <BlurMask blur={14} style="normal" />
+          </Path>
+          <Path
+            path={userPath}
+            color="rgba(217,191,140,0.14)"
+          />
+          <Path
+            path={userPath}
+            color={PALETTE.gold}
+            style="stroke"
+            strokeWidth={2.2}
+          >
+            <BlurMask blur={6} style="solid" />
+          </Path>
+          <Path
+            path={userPath}
+            color={PALETTE.lavender}
+            style="stroke"
+            strokeWidth={1.4}
+          />
 
-        {/* Data points */}
-        {DIMENSIONS.map((d, i) => {
-          const p = getPoint(scores[d.id] ?? 3, i);
-          return <Circle key={d.id} cx={p.x} cy={p.y} r="4" fill={PALETTE.lavender} />;
-        })}
+          {DIMENSIONS.map((d, i) => {
+            const p = getPoint(scores[d.id] ?? 3, i);
+            return (
+              <Group key={d.id}>
+                <Circle cx={p.x} cy={p.y} r={7} color="rgba(217,191,140,0.16)">
+                  <BlurMask blur={10} style="solid" />
+                </Circle>
+                <Circle cx={p.x} cy={p.y} r={4.2} color={PALETTE.gold} />
+              </Group>
+            );
+          })}
+        </Group>
+      </Canvas>
 
-        {/* Labels */}
-        {DIMENSIONS.map((_, i) => {
-          const lp = getLabelPoint(i);
-          return (
-            <SvgText
-              key={i}
-              x={lp.x}
-              y={lp.y}
-              fontSize="8"
-              fontWeight="800"
-              fill="rgba(255,255,255,0.4)"
-              textAnchor="middle"
-              alignmentBaseline="middle"
-            >
-              {LABELS[i]}
-            </SvgText>
-          );
-        })}
-      </Svg>
+      {DIMENSIONS.map((_, i) => {
+        const lp = getLabelPoint(i);
+        return (
+          <View
+            key={`label-${LABELS[i]}`}
+            style={[
+              styles.radarLabelWrap,
+              {
+                left: lp.x - 18,
+                top: lp.y - 10,
+              },
+            ]}
+          >
+            <Text style={styles.radarLabel}>{LABELS[i]}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 };
@@ -350,7 +405,7 @@ export default function IntelligenceProfileScreen() {
         </View>
 
         <View style={styles.titleArea}>
-          <Text style={styles.headerTitle}>Intelligence Profile</Text>
+          <Text style={styles.headerTitle}>{keepLastWordsTogether('Intelligence Profile')}</Text>
           <GoldSubtitle style={styles.headerSubtitle}>How your mind is uniquely brilliant</GoldSubtitle>
         </View>
 
@@ -364,20 +419,21 @@ export default function IntelligenceProfileScreen() {
             <Animated.View
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
-              style={styles.synthesisCard}
             >
-              <View style={styles.synthesisHeader}>
-                <MetallicIcon name="sparkles-outline" size={18} color={PALETTE.lavender} />
-                <MetallicText style={styles.synthesisEyebrow} color={PALETTE.lavender}>INTELLIGENCE FINGERPRINT</MetallicText>
-              </View>
+              <VelvetGlassSurface style={styles.synthesisCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.68)">
+                <View style={styles.synthesisHeader}>
+                  <MetallicIcon name="sparkles-outline" size={18} color={PALETTE.gold} />
+                  <MetallicText style={styles.synthesisEyebrow} color={PALETTE.gold}>INTELLIGENCE FINGERPRINT</MetallicText>
+                </View>
 
-              <Text style={styles.synthesisTitle}>{getProfileTitle(displayScores)}</Text>
+                <Text style={styles.synthesisTitle}>{getProfileTitle(displayScores)}</Text>
 
-              <IntelligenceRadar scores={displayScores} />
+                <IntelligenceRadar scores={displayScores} />
 
-              <Text style={styles.synthesisBody}>
-                {getProfileSummary(displayScores)}
-              </Text>
+                <Text style={styles.synthesisBody}>
+                  {getProfileSummary(displayScores)}
+                </Text>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
@@ -398,55 +454,60 @@ export default function IntelligenceProfileScreen() {
                 <Animated.View
                   key={dim.id}
                   entering={FadeInDown.delay(200 + i * 60).duration(500)}
-                  style={styles.dimensionBlock}
                 >
-                  <View style={styles.dimInner}>
-                    <View style={styles.dimHeader}>
-                      <MetallicIcon name={dim.icon as any} size={20} color={PALETTE.lavender} />
-                      <MetallicText style={styles.dimName} color={PALETTE.lavender}>{dim.name}</MetallicText>
+                  <VelvetGlassSurface style={styles.dimensionBlock} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+                    <View style={styles.dimInner}>
+                      <View style={styles.dimHeader}>
+                        <MetallicIcon name={dim.icon as any} size={20} color={PALETTE.gold} />
+                        <MetallicText style={styles.dimName} color={PALETTE.gold}>{dim.name}</MetallicText>
+                      </View>
+
+                      <Text style={styles.dimQuestion}>{dim.prompt}</Text>
+
+                      <View style={styles.scaleRow}>
+                        {[1, 2, 3, 4, 5].map((v) => {
+                          const isSelected = currentScore === v;
+                          return (
+                            <Pressable
+                              key={v}
+                              style={[
+                                styles.scaleBtn,
+                                isSelected && styles.scaleBtnSelected,
+                                isSelected && saved && styles.scaleBtnSealed,
+                              ]}
+                              onPress={() => setScore(dim.id, v)}
+                            >
+                              {isSelected ? (
+                                <MetallicText
+                                  style={[styles.scaleBtnText, styles.scaleBtnTextSelected]}
+                                  color="#0A0A0F"
+                                >
+                                  {v}
+                                </MetallicText>
+                              ) : (
+                                <Text style={styles.scaleBtnText}>{v}</Text>
+                              )}
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+
+                      <View style={styles.dimLabels}>
+                        <View style={styles.dimLabelBlockLeft}>
+                          <Text style={styles.dimLabelText}>{dim.lowLabel}</Text>
+                        </View>
+                        <View style={styles.dimLabelBlockRight}>
+                          <Text style={[styles.dimLabelText, styles.dimLabelTextRight]}>{dim.highLabel}</Text>
+                        </View>
+                      </View>
+
+                      {currentScore != null && (
+                        <Animated.View entering={FadeIn.duration(400)}>
+                          <Text style={styles.dimDescription}>{dim.description}</Text>
+                        </Animated.View>
+                      )}
                     </View>
-
-                    <Text style={styles.dimQuestion}>{dim.prompt}</Text>
-
-                    <View style={styles.scaleRow}>
-                      {[1, 2, 3, 4, 5].map((v) => {
-                        const isSelected = currentScore === v;
-                        return (
-                          <Pressable
-                            key={v}
-                            style={[
-                              styles.scaleBtn,
-                              isSelected && styles.scaleBtnSelected,
-                              isSelected && saved && styles.scaleBtnSealed,
-                            ]}
-                            onPress={() => setScore(dim.id, v)}
-                          >
-                            {isSelected ? (
-                              <MetallicText
-                                style={[styles.scaleBtnText, styles.scaleBtnTextSelected]}
-                                color={saved ? PALETTE.gold : PALETTE.lavender}
-                              >
-                                {v}
-                              </MetallicText>
-                            ) : (
-                              <Text style={styles.scaleBtnText}>{v}</Text>
-                            )}
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-
-                    <View style={styles.dimLabels}>
-                      <Text style={styles.dimLabelText}>{dim.lowLabel}</Text>
-                      <Text style={[styles.dimLabelText, { textAlign: 'right' }]}>{dim.highLabel}</Text>
-                    </View>
-
-                    {currentScore != null && (
-                      <Animated.View entering={FadeIn.duration(400)}>
-                        <Text style={styles.dimDescription}>{dim.description}</Text>
-                      </Animated.View>
-                    )}
-                  </View>
+                  </VelvetGlassSurface>
                 </Animated.View>
               );
             })}
@@ -468,9 +529,9 @@ export default function IntelligenceProfileScreen() {
                 }
               }}
             >
-              <MetallicText style={styles.saveBtnText} color={saved ? PALETTE.sage : PALETTE.lavender}>
+              <Text style={[styles.saveBtnText, saved && styles.saveBtnTextDone]}>
                 {saved ? '✓ Profile Sealed · Hold to Edit' : 'Seal Profile & Continue'}
-              </MetallicText>
+              </Text>
             </Pressable>
           </Animated.View>
         )}
@@ -484,48 +545,55 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 14 },
   closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerSubtitle: { fontSize: 14 },
+  headerTitle: { fontSize: 26, lineHeight: 31, color: PALETTE.textMain, fontWeight: '700', letterSpacing: -0.85, marginBottom: 6, maxWidth: '88%' },
+  headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.68)', lineHeight: 18 },
 
-  instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, marginBottom: 28 },
+  instruction: { fontSize: 13, color: 'rgba(255,255,255,0.58)', lineHeight: 21, marginBottom: 28, maxWidth: 320 },
 
-  synthesisCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(168,155,200,0.25)', padding: 28, marginBottom: 32, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)' },
+  synthesisCard: { borderRadius: 30, padding: 24, marginBottom: 34, alignItems: 'center' },
   synthesisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 16 },
   synthesisEyebrow: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
-  synthesisTitle: { fontSize: 26, fontWeight: '700', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start' },
+  synthesisTitle: { fontSize: 28, lineHeight: 32, fontWeight: '700', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start', letterSpacing: -0.75 },
 
-  radarContainer: { width: 240, height: 240, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  radarContainer: { width: 264, height: 264, justifyContent: 'center', alignItems: 'center', marginBottom: 26, position: 'relative' },
+  radarCanvas: { width: 264, height: 264 },
+  radarLabelWrap: { position: 'absolute', width: 36, alignItems: 'center' },
+  radarLabel: { fontSize: 8, fontWeight: '800', letterSpacing: 0.8, color: 'rgba(255,255,255,0.46)' },
 
-  synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22, textAlign: 'center', marginBottom: 24 },
+  synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 23, textAlign: 'center', marginBottom: 4 },
 
-  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.95)' },
-  saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.lavender, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(168,155,200,0.1)' },
+  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(10,10,15,0.95)' },
+  saveBtn: { height: 50, paddingHorizontal: 32, borderRadius: 25, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)' },
   saveBtnFull: { width: '100%' },
-  saveBtnDone: { borderColor: PALETTE.sage, backgroundColor: 'rgba(140,190,170,0.1)' },
-  saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center' },
+  saveBtnDone: { borderColor: '#D4AF37', backgroundColor: '#D4AF37' },
+  saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', color: PALETTE.textMain },
+  saveBtnTextDone: { color: '#0A0A0F' },
 
   dimensionsContainer: { gap: 16 },
-  dimensionBlock: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' },
-  dimInner: { padding: 20 },
+  dimensionBlock: { borderRadius: 28 },
+  dimInner: { padding: 24 },
   dimHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   dimIcon: { width: 20, alignItems: 'center' },
   dimName: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
-  dimQuestion: { fontSize: 15, fontWeight: '400', color: PALETTE.textMain, lineHeight: 22, marginBottom: 20 },
+  dimQuestion: { fontSize: 16, fontWeight: '400', color: PALETTE.textMain, lineHeight: 24, marginBottom: 22 },
 
-  scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, gap: 8 },
-  scaleBtn: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center', alignItems: 'center' },
-  scaleBtnSelected: { borderColor: 'rgba(168,155,200,0.6)', backgroundColor: 'rgba(168,155,200,0.15)' },
-  scaleBtnSealed: { borderColor: 'rgba(217,191,140,0.85)', backgroundColor: 'rgba(217,191,140,0.22)' },
-  scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.3)', fontWeight: '700' },
-  scaleBtnTextSelected: { fontSize: 15, fontWeight: '800' },
+  scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14, gap: 8 },
+  scaleBtn: { flex: 1, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16 },
+  scaleBtnSelected: { backgroundColor: '#D4AF37' },
+  scaleBtnSealed: { backgroundColor: '#D4AF37' },
+  scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.74)', fontWeight: '700' },
+  scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 
-  dimLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  dimLabelText: { fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: '600' },
-  dimDescription: { marginTop: 14, fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 18, fontStyle: 'italic' },
+  dimLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
+  dimLabelBlockLeft: { flex: 1, alignItems: 'flex-start' },
+  dimLabelBlockRight: { flex: 1, alignItems: 'flex-end' },
+  dimLabelText: { fontSize: 11, color: 'rgba(255,255,255,0.42)', fontWeight: '600' },
+  dimLabelTextRight: { textAlign: 'right' },
+  dimDescription: { marginTop: 16, fontSize: 12, color: 'rgba(255,255,255,0.54)', lineHeight: 19, fontStyle: 'italic' },
 });

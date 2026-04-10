@@ -26,6 +26,13 @@ function getSecureStore(): SecureStoreModule {
  *  and progressively trim array values that exceed it.                       */
 const SECURE_STORE_SOFT_LIMIT = 2048;
 
+type EncryptedReadStatus = 'ok' | 'missing' | 'invalid_json' | 'integrity_failed' | 'legacy_plaintext';
+
+type EncryptedReadResult<T> = {
+  value: T | null;
+  status: EncryptedReadStatus;
+};
+
 class SecureStorageService {
   private static readonly KEYS = {
     CHARTS: 'secure_charts',
@@ -40,6 +47,14 @@ class SecureStorageService {
     AUDIT_TRAIL: 'secure_audit_trail',
     CONSENT_HISTORY: 'consent_history',
   };
+
+  private readonly selfHealingIntegrityKeys = new Set<string>([
+    SecureStorageService.KEYS.AUDIT_TRAIL,
+    SecureStorageService.KEYS.CONSENT_HISTORY,
+    SecureStorageService.KEYS.LAWFUL_BASIS_RECORDS,
+  ]);
+
+  private readonly reportedIntegrityFailures = new Set<string>();
 
   // ---- helpers ----
   private async newId(): Promise<string> {
@@ -244,7 +259,11 @@ class SecureStorageService {
   /** Returns the most recent security events (up to 10). */
   async getRecentSecurityEvents(): Promise<any[]> {
     try {
-      return (await this.getEncryptedItem<any[]>(SecureStorageService.KEYS.AUDIT_TRAIL)) ?? [];
+      const result = await this.readEncryptedItem<any[]>(SecureStorageService.KEYS.AUDIT_TRAIL);
+      if (result.status === 'integrity_failed') {
+        await this.healIntegrityFailureIfAllowed(SecureStorageService.KEYS.AUDIT_TRAIL);
+      }
+      return result.value ?? [];
     } catch {
       return [];
     }
@@ -257,7 +276,11 @@ class SecureStorageService {
 
   async getConsentHistory(): Promise<any[]> {
     try {
-      const history = (await this.getEncryptedItem<any[]>(SecureStorageService.KEYS.CONSENT_HISTORY)) ?? [];
+      const result = await this.readEncryptedItem<any[]>(SecureStorageService.KEYS.CONSENT_HISTORY);
+      if (result.status === 'integrity_failed') {
+        await this.healIntegrityFailureIfAllowed(SecureStorageService.KEYS.CONSENT_HISTORY);
+      }
+      const history = result.value ?? [];
       await this.auditDataAccess('consent_history_read', { count: history.length });
       return history;
     } catch {
@@ -268,7 +291,11 @@ class SecureStorageService {
   // Lawful basis records for GDPR compliance
   async getLawfulBasisRecords(): Promise<any[]> {
     try {
-      const records = (await this.getEncryptedItem<any[]>(SecureStorageService.KEYS.LAWFUL_BASIS_RECORDS)) ?? [];
+      const result = await this.readEncryptedItem<any[]>(SecureStorageService.KEYS.LAWFUL_BASIS_RECORDS);
+      if (result.status === 'integrity_failed') {
+        await this.healIntegrityFailureIfAllowed(SecureStorageService.KEYS.LAWFUL_BASIS_RECORDS);
+      }
+      const records = result.value ?? [];
       return records;
     } catch (error) {
       logger.error('[SecureStorage] Error getting lawful basis records:', error);
@@ -393,28 +420,56 @@ class SecureStorageService {
   }
 
   private async getEncryptedItem<T>(key: string): Promise<T | null> {
+    const result = await this.readEncryptedItem<T>(key);
+    return result.value;
+  }
+
+  private async readEncryptedItem<T>(key: string): Promise<EncryptedReadResult<T>> {
     const stored = await getSecureStore().getItemAsync(key);
-    if (!stored) return null;
+    if (!stored) {
+      return { value: null, status: 'missing' };
+    }
 
     const parsed = this.safeJsonParse(stored);
-    if (!parsed) return null;
+    if (!parsed) {
+      return { value: null, status: 'invalid_json' };
+    }
 
     if (this.isEncryptedEnvelope(parsed)) {
       try {
-        return await EncryptionManager.verifySensitiveData<T>(parsed.payload);
+        return {
+          value: await EncryptionManager.verifySensitiveData<T>(parsed.payload),
+          status: 'ok',
+        };
       } catch {
         // HMAC verification failed — reject the data to preserve integrity.
         // This can happen after a simulator reset / app reinstall / device
         // migration where the HMAC key in SecureStore was regenerated.
         // We do NOT silently re-sign because that would bypass tamper detection.
-        logger.error(`[SecureStorage] HMAC integrity check failed for "${key}" — rejecting data`);
-        return null;
+        if (!this.reportedIntegrityFailures.has(key)) {
+          this.reportedIntegrityFailures.add(key);
+          logger.error(`[SecureStorage] HMAC integrity check failed for "${key}" — rejecting data`);
+        }
+        return { value: null, status: 'integrity_failed' };
       }
     }
 
     // Legacy plaintext storage detected; upgrade
     await this.setEncryptedItem(key, parsed);
-    return parsed as T;
+    return { value: parsed as T, status: 'legacy_plaintext' };
+  }
+
+  private async healIntegrityFailureIfAllowed(key: string): Promise<void> {
+    if (!this.selfHealingIntegrityKeys.has(key)) {
+      return;
+    }
+
+    try {
+      await this.bestEffortDeleteKey(key);
+      logger.warn(`[SecureStorage] Deleted unreadable value for "${key}" after integrity failure`);
+    } catch (error) {
+      logger.warn(`[SecureStorage] Failed to delete unreadable value for "${key}"`, error);
+    }
   }
 
   private safeJsonParse(value: string): any | null {

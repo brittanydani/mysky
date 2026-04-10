@@ -11,14 +11,13 @@
  *              Trigger Reflections
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   Pressable,
-  Dimensions,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,12 +26,20 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import { Lock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import {
+  Canvas,
+  LinearGradient as SkiaLinearGradient,
+  Path as SkiaPath,
+  Shadow,
+  Skia,
+  vec,
+} from '@shopify/react-native-skia';
 
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
-import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { localDb } from '../../services/storage/localDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
 import { usePremium } from '../../context/PremiumContext';
@@ -58,8 +65,8 @@ const PALETTE = {
   lavender:    '#A89BC8',
   coral:       '#D4826A',
   textMain:    '#FFFFFF',
-  textMuted:   'rgba(226,232,240,0.45)',
-  textDim:     'rgba(255,255,255,0.35)',
+  textMuted:   'rgba(226,232,240,0.72)',
+  textDim:     'rgba(255,255,255,0.62)',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassBg:     'rgba(255,255,255,0.04)',
   lockBg:      'rgba(20,15,30,0.85)',
@@ -89,36 +96,99 @@ function conflictScoreColor(score: number): string {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <Text style={styles.sectionLabel}>{children}</Text>
+    <Text style={styles.sectionLabel}>{children.toUpperCase()}</Text>
   );
 }
 
 function GlassCard({ children, style }: { children: React.ReactNode; style?: object }) {
   return (
-    <View style={[styles.glassCard, style]}>
+    <VelvetGlassSurface
+      style={[styles.glassCard, style]}
+      intensity={45}
+      backgroundColor="rgba(11, 15, 25, 0.34)"
+      borderColor="rgba(255,255,255,0.10)"
+      highlightColor="rgba(255,255,255,0.05)"
+    >
       {children}
+    </VelvetGlassSurface>
+  );
+}
+
+function CircularConflictGauge({ score, color }: { score: number; color: string }) {
+  const pct = Math.max(4, Math.round(score * 100));
+  const size = 120;
+  const strokeWidth = 11;
+  const startAngle = 135;
+  const sweepAngle = 270;
+  const rect = {
+    x: strokeWidth / 2,
+    y: strokeWidth / 2,
+    width: size - strokeWidth,
+    height: size - strokeWidth,
+  };
+
+  const trackPath = useMemo(() => {
+    const path = Skia.Path.Make();
+    path.addArc(rect, startAngle, sweepAngle);
+    return path;
+  }, []);
+
+  const valuePath = useMemo(() => {
+    const path = Skia.Path.Make();
+    path.addArc(rect, startAngle, sweepAngle * Math.max(0.04, Math.min(score, 1)));
+    return path;
+  }, [score]);
+
+  return (
+    <View style={styles.conflictGaugeWrap}>
+      <Canvas style={styles.conflictGaugeCanvas}>
+        <SkiaPath path={trackPath} style="stroke" strokeWidth={strokeWidth} strokeCap="round" color="rgba(255,255,255,0.08)" />
+        <SkiaPath path={valuePath} style="stroke" strokeWidth={strokeWidth} strokeCap="round">
+          <SkiaLinearGradient
+            start={vec(0, 0)}
+            end={vec(size, size)}
+            colors={['#F2D27A', color]}
+          />
+          <Shadow dx={0} dy={0} blur={18} color="#D4AF37" />
+        </SkiaPath>
+      </Canvas>
+      <View style={styles.conflictGaugeCenter}>
+        <Text style={[styles.conflictGaugeNumber, { color }]}>{pct}</Text>
+        <Text style={styles.conflictGaugeUnit}>/100</Text>
+      </View>
     </View>
   );
 }
 
-function ConflictBar({
-  score,
-  stateA,
-  stateB,
+function TugOfWarBar({
+  profile,
+  states,
 }: {
-  score: number;
-  stateA: NervousSystemBranch;
-  stateB: NervousSystemBranch;
+  profile: InnerTensionsData['nsProfile'];
+  states: [NervousSystemBranch, NervousSystemBranch];
 }) {
-  // Width fractions: state1 = 1/(1+score), state2 = score/(1+score)
-  const frac1 = 1 / (1 + score);
-  const colorA = NS_BRANCH_COLORS[stateA];
-  const colorB = NS_BRANCH_COLORS[stateB];
+  const [leftState, rightState] = states;
+  const leftValue = profile[leftState] ?? 0;
+  const rightValue = profile[rightState] ?? 0;
+  const total = leftValue + rightValue;
+  const leftPct = total > 0 ? (leftValue / total) * 100 : 50;
+  const rightPct = 100 - leftPct;
 
   return (
-    <View style={styles.conflictBarWrap}>
-      <View style={[styles.conflictBarSegA, { flex: frac1, backgroundColor: colorA + 'CC' }]} />
-      <View style={[styles.conflictBarSegB, { flex: 1 - frac1, backgroundColor: colorB + 'CC' }]} />
+    <View style={styles.tugWrap}>
+      <View style={styles.tugHeader}>
+        <Text style={[styles.tugLabel, { color: NS_BRANCH_COLORS[leftState] }]}>{NS_STATE_FULL_LABELS[leftState]}</Text>
+        <Text style={styles.tugHint}>State distribution</Text>
+        <Text style={[styles.tugLabel, { color: NS_BRANCH_COLORS[rightState] }]}>{NS_STATE_FULL_LABELS[rightState]}</Text>
+      </View>
+      <View style={styles.tugTrack}>
+        <View style={[styles.tugFillLeft, { width: `${leftPct}%`, backgroundColor: NS_BRANCH_COLORS[leftState] }]} />
+        <View style={[styles.tugFillRight, { width: `${rightPct}%`, backgroundColor: NS_BRANCH_COLORS[rightState] }]} />
+      </View>
+      <View style={styles.tugValues}>
+        <Text style={styles.tugValue}>{Math.round(leftPct)}%</Text>
+        <Text style={styles.tugValue}>{Math.round(rightPct)}%</Text>
+      </View>
     </View>
   );
 }
@@ -132,7 +202,7 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
   if (!hasData) {
     return (
       <GlassCard>
-        <Text style={styles.cardTitle}>Nervous System Tension</Text>
+        <Text style={styles.cardTitle}>Nervous System Shifts</Text>
         <Text style={styles.emptyStateText}>
           Your tension map grows as you log dreams and journal entries. Add feelings to a sleep entry or write a journal reflection to activate this view.
         </Text>
@@ -145,24 +215,24 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
 
   return (
     <GlassCard>
-      <Text style={styles.cardTitle}>Nervous System Tension</Text>
+      <Text style={styles.cardTitle}>Overall Conflict Load</Text>
+      <Text style={styles.cardSubtitle}>
+        A single read on how much inner friction your recent entries are carrying.
+      </Text>
 
-      {/* Score row */}
       <View style={styles.conflictScoreRow}>
-        <View style={styles.conflictScoreCircle}>
-          <MetallicText style={styles.conflictScoreNumber} color={scoreColor}>
-            {Math.round(nsConflict.conflictScore * 100)}
-          </MetallicText>
-          <Text style={styles.conflictScoreUnit}>/100</Text>
-        </View>
+        <CircularConflictGauge score={nsConflict.conflictScore} color={scoreColor} />
         <View style={styles.conflictScoreRight}>
           <MetallicText style={styles.conflictScoreLabel} color={scoreColor}>
-            {nsConflict.conflictScore > 0.75 ? 'High Tension'
-              : nsConflict.conflictScore > 0.45 ? 'Moderate Tension'
-              : 'Low Tension'}
+            {nsConflict.conflictScore > 0.75 ? 'High Internal Friction'
+              : nsConflict.conflictScore > 0.45 ? 'Moderate Internal Friction'
+              : 'Low Internal Friction'}
           </MetallicText>
           <Text style={styles.conflictScoreHint}>
-            based on {dataQuality.totalEntries} entr{dataQuality.totalEntries !== 1 ? 'ies' : 'y'} (dreams + journals)
+            based on {dataQuality.totalEntries} entr{dataQuality.totalEntries !== 1 ? 'ies' : 'y'} across dreams, journals, and check-ins
+          </Text>
+          <Text style={styles.conflictGaugeHint}>
+            This ring measures overall push-pull load. The bar below shows which direction the tension is leaning.
           </Text>
         </View>
       </View>
@@ -170,7 +240,11 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
       {/* Competing states */}
       {stateA && stateB && (
         <>
-          <ConflictBar score={nsConflict.conflictScore} stateA={stateA} stateB={stateB} />
+          <View style={styles.conflictPairHeader}>
+            <Text style={styles.conflictPairLabel}>Most active pairing</Text>
+            <Text style={styles.conflictPairHint}>These are the two states showing up most often together.</Text>
+          </View>
+          <TugOfWarBar profile={data.nsProfile} states={[stateA, stateB]} />
           <View style={styles.conflictStatesRow}>
             <View style={styles.conflictState}>
               <View style={[styles.stateDot, { backgroundColor: NS_BRANCH_COLORS[stateA] }]} />
@@ -228,12 +302,20 @@ function NSBranchMapSection({ data }: { data: InnerTensionsData }) {
     <Animated.View entering={FadeInDown.delay(100).duration(400)}>
       <SectionLabel>State Balance</SectionLabel>
       <GlassCard>
-        <Text style={styles.cardTitle}>Nervous System Map</Text>
+        <Text style={styles.cardTitle}>Balance Across States</Text>
         <Text style={styles.cardSubtitle}>
-          How your six nervous system states distribute across your dream journal.
+          A separate view of which states are carrying the most weight right now. This is your state mix, not your conflict-load score.
         </Text>
         <View style={styles.radarWrap}>
-          <PsychologicalForcesRadar forces={data.nsBranchForces} size={Dimensions.get('window').width - 32} />
+          {data.nsBranchForces.map((force) => (
+            <View key={force.label} style={styles.stateBalanceRow}>
+              <Text style={styles.stateBalanceLabel}>{force.label}</Text>
+              <View style={styles.stateBalanceBar}>
+                <View style={[styles.stateBalanceFill, { width: `${Math.max(force.value, 4)}%`, backgroundColor: force.color }]} />
+              </View>
+              <Text style={styles.stateBalanceValue}>{Math.round(force.value)}</Text>
+            </View>
+          ))}
         </View>
         {data.dataQuality.entriesWithFeelings === 0 && (
           <Text style={styles.emptyStateText}>Log dreams with feelings to populate the map.</Text>
@@ -248,7 +330,7 @@ function AmbivalenceSection({ data }: { data: InnerTensionsData }) {
 
   return (
     <Animated.View entering={FadeInDown.delay(150).duration(400)}>
-      <SectionLabel>Ambivalence Patterns</SectionLabel>
+      <SectionLabel>Conflicting Pulls</SectionLabel>
       <GlassCard>
         <Text style={styles.cardTitle}>Conflicting Emotional Pairs</Text>
         <Text style={styles.cardSubtitle}>
@@ -274,7 +356,10 @@ function AmbivalenceSection({ data }: { data: InnerTensionsData }) {
                   <View style={styles.ambivalenceTriggerWrap}>
                     <MetallicText style={styles.ambivalenceTrigger} color={PALETTE.coral}>{labelB}</MetallicText>
                   </View>
-                  <Text style={styles.ambivalenceIntensity}>{intensityPct}%</Text>
+                  <View style={styles.ambivalenceIntensityWrap}>
+                    <Text style={styles.ambivalenceIntensity}>{intensityPct}%</Text>
+                    <Text style={styles.ambivalenceIntensityLabel}>pattern frequency</Text>
+                  </View>
                 </View>
                 <View style={styles.ambivalenceBarBg}>
                   <View style={[styles.ambivalenceBarFill, { width: `${intensityPct}%` }]} />
@@ -322,7 +407,8 @@ function DreamPatternsSection({ data }: { data: InnerTensionsData }) {
                   style={StyleSheet.absoluteFillObject}
                 />
                 <View style={styles.patternChipBadge}>
-                  <MetallicText style={styles.patternChipBadgeText} color={PALETTE.lavender}>{p.count}</MetallicText>
+                  <Text style={styles.patternChipBadgeCount}>{p.count}</Text>
+                  <Text style={styles.patternChipBadgeLabel}>{p.count === 1 ? 'dream' : 'dreams'}</Text>
                 </View>
                 <Text style={styles.patternChipLabel}>{p.label}</Text>
                 <View style={styles.patternConfidenceBar}>
@@ -348,7 +434,7 @@ function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
 
   return (
     <Animated.View entering={FadeInDown.delay(250).duration(400)}>
-      <SectionLabel>Trigger Reflections</SectionLabel>
+      <SectionLabel>What Changed Your Energy</SectionLabel>
       <GlassCard>
         <Text style={styles.cardTitle}>Your Most Active Triggers</Text>
         <Text style={styles.cardSubtitle}>
@@ -376,7 +462,7 @@ function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
                   </View>
                   <View style={styles.triggerIntensityWrap}>
                     <Text style={styles.triggerIntensityText}>{intensityPct}%</Text>
-                    <Text style={styles.triggerChevron}>{isOpen ? '↑' : '↓'}</Text>
+                    <Text style={styles.triggerChevron}>{isOpen ? '⌃' : '⌄'}</Text>
                   </View>
                 </View>
                 <View style={styles.triggerBarBg}>
@@ -467,8 +553,8 @@ export default function InnerTensionsScreen() {
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <Pressable style={styles.closeButton} onPress={goBack}>
-            <Text style={styles.closeIcon}>×</Text>
+          <Pressable style={styles.backButton} onPress={goBack} accessibilityRole="button" accessibilityLabel="Go back">
+            <Text style={styles.backIcon}>‹</Text>
           </Pressable>
         </View>
 
@@ -500,7 +586,7 @@ export default function InnerTensionsScreen() {
             <>
               {/* ── FREE SECTION ── */}
               <Animated.View entering={FadeInDown.delay(60).duration(400)}>
-                <SectionLabel>Nervous System</SectionLabel>
+                <SectionLabel>Nervous System Shifts</SectionLabel>
                 <NSConflictCard data={data} />
               </Animated.View>
 
@@ -549,27 +635,27 @@ const styles = StyleSheet.create({
   },
   header:           { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:        { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton:      { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:        { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  backButton:       { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
+  backIcon:         { color: '#FFF', fontSize: 34, lineHeight: 34, marginTop: -2 },
   scrollContent:    { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   loader:           { marginTop: 80 },
   bottomSpacer:     { height: 40 },
 
-  screenTitle: { fontSize: 34, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, marginBottom: 4 },
+  screenTitle: { fontSize: 31, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
   screenSubtitle: { fontSize: 14, marginBottom: 32 },
 
   // Section label
   sectionLabel: {
-    fontSize: 16, fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: 12, fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
     marginTop: 8, marginBottom: 20,
   },
 
   // Glass card
   glassCard: {
-    backgroundColor: PALETTE.glassBg,
-    borderWidth: 1, borderColor: PALETTE.glassBorder,
-    borderRadius: 24, padding: 28, marginBottom: 4,
+    borderRadius: 24, padding: 36, marginBottom: 4,
     overflow: 'hidden',
   },
   cardTitle: {
@@ -595,27 +681,34 @@ const styles = StyleSheet.create({
 
   // Conflict score
   conflictScoreRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 16 },
-  conflictScoreCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    borderWidth: 1.5, borderColor: PALETTE.glassBorder,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  conflictScoreNumber: { fontSize: 22, fontWeight: '300', letterSpacing: -0.5 },
-  conflictScoreUnit:   { fontSize: 10, color: PALETTE.textDim, marginTop: -2 },
   conflictScoreRight:  { flex: 1 },
   conflictScoreLabel:  { fontSize: 15, fontWeight: '500', marginBottom: 3 },
   conflictScoreHint:   { fontSize: 12, color: PALETTE.textDim },
+  conflictGaugeWrap: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
+  conflictGaugeCanvas: { width: 120, height: 120 },
+  conflictGaugeCenter: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
+  conflictGaugeNumber: { fontSize: 28, fontWeight: '700', letterSpacing: -0.8 },
+  conflictGaugeUnit: { fontSize: 10, color: PALETTE.textDim, marginTop: 1 },
+  conflictGaugeHint: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18, marginTop: 12 },
 
-  // Conflict bar
-  conflictBarWrap:  { flexDirection: 'row', height: 5, borderRadius: 3, overflow: 'hidden', marginBottom: 14 },
-  conflictBarSegA:  { borderTopLeftRadius: 3, borderBottomLeftRadius: 3 },
-  conflictBarSegB:  { borderTopRightRadius: 3, borderBottomRightRadius: 3 },
+  conflictPairHeader: { marginBottom: 12 },
+  conflictPairLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.66)', marginBottom: 4 },
+  conflictPairHint: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18 },
+  tugWrap: { marginBottom: 16 },
+  tugHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 },
+  tugLabel: { flex: 1, fontSize: 11, fontWeight: '700' },
+  tugHint: { fontSize: 10, color: PALETTE.textDim, textTransform: 'uppercase', letterSpacing: 1.1 },
+  tugTrack: { flexDirection: 'row', height: 8, borderRadius: 999, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)' },
+  tugFillLeft: { height: '100%' },
+  tugFillRight: { height: '100%' },
+  tugValues: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
+  tugValue: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '700' },
 
   conflictStatesRow:    { gap: 12, marginBottom: 14 },
   conflictState:        { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   stateDot:             { width: 8, height: 8, borderRadius: 4, marginTop: 4 },
   stateName:            { fontSize: 13, fontWeight: '600', marginBottom: 2 },
-  stateDesc:            { fontSize: 11, color: PALETTE.textDim, letterSpacing: 0.2 },
+  stateDesc:            { fontSize: 12, color: PALETTE.textMuted, letterSpacing: 0.2, lineHeight: 17 },
   conflictInterpretation: {
     fontSize: 13, color: PALETTE.textMuted, lineHeight: 19,
     borderTopWidth: 1, borderTopColor: PALETTE.glassBorder,
@@ -642,14 +735,19 @@ const styles = StyleSheet.create({
   blurPreviewWrap:    { position: 'relative', overflow: 'hidden', borderRadius: 16 },
   blurPreviewCard: { backgroundColor: PALETTE.glassBg, borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, padding: 28, opacity: 0.4 },
   blurPreviewTitle:   { fontSize: 17, fontWeight: '500', color: PALETTE.textMain, marginBottom: 12 },
-  blurPreviewRadar:   { height: 150, backgroundColor: 'rgba(168,155,200,0.08)', borderRadius: 12 },
+  blurPreviewRadar:   { height: 150, backgroundColor: 'rgba(168,155,200,0.08)', borderRadius: 16 },
   blurPreviewOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(6,6,8,0.6)',
   },
 
   // Radar
-  radarWrap: { alignItems: 'center', marginVertical: 8 },
+  radarWrap: { alignItems: 'stretch', marginVertical: 8, gap: 12 },
+  stateBalanceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  stateBalanceLabel: { width: 76, fontSize: 12, color: PALETTE.textMain, fontWeight: '600' },
+  stateBalanceBar: { flex: 1, height: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  stateBalanceFill: { height: '100%', borderRadius: 999 },
+  stateBalanceValue: { width: 28, textAlign: 'right', fontSize: 12, color: 'rgba(255,255,255,0.62)', fontWeight: '600' },
 
   // Ambivalence
   ambivalencePair:    { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: PALETTE.glassBorder },
@@ -657,9 +755,11 @@ const styles = StyleSheet.create({
   ambivalenceTriggerWrap: { flex: 1 },
   ambivalenceTrigger: { fontSize: 14, fontWeight: '600' },
   ambivalenceArrow:   { fontSize: 14, color: PALETTE.textDim },
-  ambivalenceIntensity: { fontSize: 12, color: PALETTE.textDim, minWidth: 36, textAlign: 'right' },
-  ambivalenceBarBg:   { height: 4, backgroundColor: PALETTE.glassBorder, borderRadius: 2, marginBottom: 10 },
-  ambivalenceBarFill: { height: 4, backgroundColor: PALETTE.gold + '80', borderRadius: 2 },
+  ambivalenceIntensityWrap: { minWidth: 60, alignItems: 'flex-end' },
+  ambivalenceIntensity: { fontSize: 12, color: PALETTE.textMain, minWidth: 36, textAlign: 'right', fontWeight: '700' },
+  ambivalenceIntensityLabel: { fontSize: 9, color: PALETTE.textDim, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 2 },
+  ambivalenceBarBg:   { height: 8, backgroundColor: PALETTE.glassBorder, borderRadius: 999, marginBottom: 10, overflow: 'hidden' },
+  ambivalenceBarFill: { height: 8, backgroundColor: PALETTE.gold + '80', borderRadius: 999 },
   ambivalenceReflection: { fontSize: 12, color: PALETTE.textDim, lineHeight: 18 },
 
   // Dream patterns
@@ -671,11 +771,19 @@ const styles = StyleSheet.create({
   },
   patternChipBadge: {
     position: 'absolute', top: 10, right: 10,
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: 'rgba(168,155,200,0.3)',
+    minWidth: 42,
+    paddingHorizontal: 8,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(168,155,200,0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(168,155,200,0.28)',
     alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 4,
   },
-  patternChipBadgeText: { fontSize: 11, fontWeight: '700' },
+  patternChipBadgeCount: { fontSize: 11, fontWeight: '800', color: PALETTE.lavender, lineHeight: 12, textAlign: 'center' },
+  patternChipBadgeLabel: { fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.68)', textTransform: 'uppercase', letterSpacing: 0.6 },
   patternChipLabel:     { fontSize: 12, color: PALETTE.textMain, fontWeight: '500', lineHeight: 17, marginRight: 24 },
   patternConfidenceBar: { height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2, marginTop: 10 },
   patternConfidenceFill: { height: 3, backgroundColor: PALETTE.lavender + '80', borderRadius: 2 },

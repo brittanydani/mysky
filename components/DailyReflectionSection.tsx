@@ -79,7 +79,7 @@ interface DailyReflectionSectionProps {
 
 export default function DailyReflectionSection({
   title = "Today's Questions",
-  subtitle = 'Seal each category to complete the day',
+  subtitle = 'Record each category to complete the day',
 }: DailyReflectionSectionProps) {
   const [categoryQuestions, setCategoryQuestions] = useState<Record<ReflectionCategory, DayQuestions>>({
     values: { category: 'values', questions: [] },
@@ -255,21 +255,21 @@ export default function DailyReflectionSection({
             <MetallicText style={styles.statValue} color={PALETTE.gold}>
               {totalDays}
             </MetallicText>
-            <Text style={styles.statLabel}>days</Text>
+            <Text style={styles.statLabel}>reflection days</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <MetallicText style={styles.statValue} color={PALETTE.emerald}>
               {streak}
             </MetallicText>
-            <Text style={styles.statLabel}>streak</Text>
+            <Text style={styles.statLabel}>current streak</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <MetallicText style={styles.statValue} color={PALETTE.silverBlue}>
               {sealedCount}/4
             </MetallicText>
-            <Text style={styles.statLabel}>sealed</Text>
+            <Text style={styles.statLabel}>categories sealed</Text>
           </View>
         </Animated.View>
       )}
@@ -278,7 +278,7 @@ export default function DailyReflectionSection({
         <Animated.View entering={FadeIn.duration(500)} style={styles.sealedBanner}>
           <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.emerald} />
           <MetallicText style={styles.sealedBannerText} color={PALETTE.emerald}>
-            ALL CATEGORIES SEALED TODAY
+            ALL CATEGORIES RECORDED TODAY
           </MetallicText>
         </Animated.View>
       )}
@@ -314,7 +314,7 @@ export default function DailyReflectionSection({
               {isSealed && (
                 <View style={styles.categorySealedBadge}>
                   <MetallicIcon name="lock-closed-outline" size={10} color={PALETTE.emerald} />
-                  <MetallicText style={styles.categorySealedText} color={PALETTE.emerald}>SEALED</MetallicText>
+                  <MetallicText style={styles.categorySealedText} color={PALETTE.emerald}>RECORDED</MetallicText>
                 </View>
               )}
             </View>
@@ -344,6 +344,7 @@ export default function DailyReflectionSection({
                             key={option.value}
                             style={[
                               styles.scalePill,
+                              styles.scalePillHalf,
                               isSelected && {
                                 backgroundColor: `rgba(${rgb}, 0.25)`,
                                 borderColor: color,
@@ -370,7 +371,7 @@ export default function DailyReflectionSection({
                     {hasAnswer && isSealed && (
                       <View style={styles.answerMeta}>
                         <MetallicIcon name="lock-closed-outline" size={11} color={PALETTE.emerald} />
-                        <Text style={[styles.answerMetaText, { color: PALETTE.emerald }]}>Sealed</Text>
+                        <Text style={[styles.answerMetaText, { color: PALETTE.emerald }]}>Recorded</Text>
                       </View>
                     )}
                   </LinearGradient>
@@ -380,9 +381,10 @@ export default function DailyReflectionSection({
 
             {!isSealed && allAnswered && dayQuestions.questions.length > 0 && (
               <View style={styles.notesContainer}>
-                <Text style={styles.notesLabel}>
-                  What made you think of this today? <Text style={styles.notesOptional}>(optional)</Text>
-                </Text>
+                <View style={styles.notesLabelRow}>
+                  <Text style={styles.notesLabel}>What made you think of this today?</Text>
+                  <Text style={styles.notesOptional}>Optional</Text>
+                </View>
                 <TextInput
                   style={styles.notesInput}
                   value={categoryNotes[category]}
@@ -414,7 +416,7 @@ export default function DailyReflectionSection({
                   color={allAnswered ? color : PALETTE.textMuted}
                 />
                 <Text style={[styles.sealCategoryText, allAnswered ? { color } : { color: PALETTE.textMuted }]}>
-                  Seal {CATEGORY_LABELS[category]}
+                  Record {CATEGORY_LABELS[category]}
                 </Text>
               </Pressable>
             )}
@@ -434,7 +436,7 @@ export default function DailyReflectionSection({
                 }}
               >
                 <MetallicIcon name="lock-open-outline" size={16} color={PALETTE.emerald} />
-                <Text style={[styles.sealCategoryText, { color: PALETTE.emerald }]}>Unseal to Edit</Text>
+                <Text style={[styles.sealCategoryText, { color: PALETTE.emerald }]}>Reopen to Edit</Text>
               </Pressable>
             )}
           </Animated.View>
@@ -462,7 +464,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 20, fontWeight: '700' },
   statLabel: {
     fontSize: 10,
-    color: PALETTE.textMuted,
+    color: 'rgba(255,255,255,0.62)',
     fontWeight: '600',
     letterSpacing: 1,
     marginTop: 2,
@@ -484,11 +486,12 @@ const styles = StyleSheet.create({
   sealedBannerText: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
   dailyHeader: { marginBottom: 24 },
   dailyHeaderTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     marginBottom: 6,
+    letterSpacing: 0.2,
   },
-  dailyHeaderSub: { fontSize: 13 },
+  dailyHeaderSub: { fontSize: 13, color: 'rgba(255,255,255,0.66)' },
   categorySection: { marginBottom: 28 },
   categoryHeader: {
     flexDirection: 'row',
@@ -516,7 +519,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
     marginBottom: 14,
-    padding: 20,
+    padding: 28,
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   questionText: {
@@ -529,9 +532,13 @@ const styles = StyleSheet.create({
   scaleRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: 8,
   },
   scalePill: {
+    minHeight: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 14,
@@ -539,12 +546,18 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
+  scalePillHalf: {
+    flexBasis: '48%',
+    maxWidth: '48%',
+  },
   scalePillSealed: { opacity: 0.7 },
   scalePillText: {
     fontSize: 13,
     color: PALETTE.textMuted,
     fontWeight: '600',
     letterSpacing: 0.2,
+    lineHeight: 15,
+    textAlign: 'center',
   },
   answerMeta: {
     flexDirection: 'row',
@@ -585,15 +598,25 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     gap: 8,
   },
+  notesLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   notesLabel: {
     fontSize: 12,
     color: 'rgba(255,255,255,0.6)',
     fontWeight: '600',
     letterSpacing: 0.3,
+    flex: 1,
   },
   notesOptional: {
-    color: 'rgba(255,255,255,0.35)',
-    fontWeight: '400',
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   notesInput: {
     backgroundColor: 'rgba(255,255,255,0.04)',

@@ -7,25 +7,26 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: theme.textGold,
-  silverBlue: '#C9AE78',
-  emerald: '#6EBF8B',
-  copper: '#CD7F5D',
-  textMain: theme.textPrimary,
-  glassBorder: theme.cardBorder,
-  glassHighlight: theme.glass.highlight,
-};
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } = {}) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const PALETTE = {
+    gold: theme.textGold,
+    silverBlue: '#C9AE78',
+    emerald: '#6EBF8B',
+    copper: '#CD7F5D',
+    textMain: theme.textPrimary,
+    glassBorder: theme.cardBorder,
+    glassHighlight: theme.glass.highlight,
+  };
 
   return (
     <View style={styles.container}>
@@ -372,7 +373,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: {

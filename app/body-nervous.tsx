@@ -81,10 +81,10 @@ export default function BodyNervousScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <Pressable
-            style={styles.closeButton}
+            style={styles.backButton}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}
           >
-            <Text style={styles.closeIcon}>×</Text>
+            <Text style={styles.backIcon}>‹</Text>
           </Pressable>
         </View>
 
@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  backIcon:   { color: '#FFF', fontSize: 34, lineHeight: 34, marginTop: -2 },
 
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },

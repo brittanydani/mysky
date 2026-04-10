@@ -28,8 +28,8 @@ const PALETTE = {
   amethyst: '#9D76C1',
   bg: '#020817',
   textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.45)',
-  glassBorder: 'rgba(255,255,255,0.06)',
+  textMuted: 'rgba(226,232,240,0.58)',
+  glassBorder: 'rgba(255,255,255,0.10)',
 };
 
 export default function CheckInHub() {
@@ -89,7 +89,7 @@ export default function CheckInHub() {
                 </View>
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Today&apos;s Questions</Text>
-                  <Text style={styles.cardDescription}>Open your daily guided reflection prompts and seal each category.</Text>
+                  <Text style={styles.cardDescription}>Open your daily guided reflection prompts and record each category when you&apos;re ready.</Text>
                 </View>
                 <Ionicons name="chevron-forward-outline" size={18} color={PALETTE.textMuted} />
               </LinearGradient>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     borderRadius: 160,
     opacity: 0.6,
   },
-  header: { marginBottom: 32 },
+  header: { marginBottom: 28 },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   closeButton: {
     width: 44,
@@ -181,19 +181,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 4,
   },
-  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 4 },
-  subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
+  title: { fontSize: 31, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
+  subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)' },
   section: { marginBottom: 0 },
   sectionHeaderWrap: { marginBottom: 20, marginTop: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sectionHeaderLabel: { fontSize: 19, fontWeight: '700', color: '#FFFFFF' },
+  sectionHeaderLabel: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', letterSpacing: 1.3, textTransform: 'uppercase' },
   entryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 28,
+    padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
     marginBottom: 32,
   },
   pressableActive: {
@@ -201,15 +202,15 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   iconRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 20,
+    marginRight: 16,
   },
   cardText: { flex: 1 },
-  cardTitle: { fontSize: 20, fontWeight: '700', color: PALETTE.textMain, marginBottom: 4 },
-  cardDescription: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 6 },
+  cardDescription: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 20 },
 });

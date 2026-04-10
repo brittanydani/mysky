@@ -12,7 +12,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
 
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
 import { METALLIC_RED } from '../../constants/metallicPalettes';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
@@ -43,6 +43,7 @@ import { parseLocalDate } from '../../utils/dateUtils';
 import { analyzeChartDignity, analyzeDispositorChain, detectChartShape, detectSingletons, detectInterceptions, ChartDignityAnalysis, DispositorChain, ChartShapeResult, Singleton, Interception } from '../../services/astrology/dignityService';
 import { generatePlanetDeepDive, generateHouseDeepDives, generateAngleInterpretations, selectKeyAspects, generatePointInterpretations, PlanetDeepDive, HouseDeepDive, AngleInterpretation, KeyAspect, PointInterpretation } from '../../services/astrology/natalDeepInterpretations';
 import { generateCoreIdentitySummary, generateRelationshipProfile, generateCareerProfile, generateEmotionalProfile, generateShadowGrowth, CoreIdentitySummary, RelationshipProfile, CareerProfile, EmotionalProfile, ShadowGrowthProfile } from '../../services/astrology/natalSynthesis';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 // ── Colors per element ──
 const ELEMENT_COLORS: Record<string, string> = {
@@ -165,6 +166,8 @@ function SectionAccordion({
   setOpenSections: React.Dispatch<React.SetStateAction<Set<string>>>;
   children: React.ReactNode;
 }) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const isOpen = openSections.has(sectionKey);
   return (
     <>
@@ -281,6 +284,8 @@ const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
 };
 
 export default function ChartScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
 
@@ -2822,7 +2827,7 @@ export default function ChartScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   center: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {

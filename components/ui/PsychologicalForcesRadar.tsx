@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient, BlurMask } from '@shopify/react-native-skia';
-import { theme } from '../../constants/theme';
-import { MetallicText } from './MetallicText';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 interface ForceData {
   label: string;
@@ -45,6 +45,8 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   forces, 
   size = 300 
 }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const center = size / 2;
   const radius = (size / 2) * 0.65;
   const steps = 5;
@@ -53,7 +55,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   const getCoordinates = (value: number, index: number, isLabel: boolean = false) => {
     // Offset by -90 degrees (Math.PI / 2) to start at the top
     const angle = (Math.PI * 2 * index) / forces.length - Math.PI / 2;
-    const r = isLabel ? radius * 1.08 : (radius * value) / 100;
+    const r = isLabel ? radius * 1.01 : (radius * value) / 100;
     return {
       x: center + r * Math.cos(angle),
       y: center + r * Math.sin(angle),
@@ -156,8 +158,8 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
         const isCenter = !isLeft && !isRight;
         const isAbove  = labelPoint.y < center;
 
-        const leftOffset = isCenter ? -50 : isLeft ? -108 : 8;
-        const topOffset  = isCenter ? (isAbove ? -22 : 4) : -10;
+        const leftOffset = isCenter ? -56 : isLeft ? -116 : 10;
+        const topOffset  = isCenter ? (isAbove ? -24 : 6) : -12;
 
         const textContent = SHORT_FORCE_LABELS[force.label] ?? force.label;
 
@@ -171,16 +173,19 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
               width: 100,
               alignItems: isCenter ? 'center' : isLeft ? 'flex-end' : 'flex-start',
             }}>
-            <MetallicText
+            <Text
               numberOfLines={1}
-              color={force.color}
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: '600',
-                letterSpacing: 0.3,
+                letterSpacing: 0.2,
+                color: '#FFFFFF',
+                textShadowColor: 'rgba(0,0,0,0.45)',
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 4,
               }}>
               {textContent}
-            </MetallicText>
+            </Text>
           </View>
         );
       })}
@@ -188,7 +193,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

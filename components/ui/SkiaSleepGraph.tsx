@@ -13,8 +13,8 @@
  *  - Terminal "Moon" node: pulsing indicator on the most recent night
  */
 
-import React, { memo, useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { memo, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
   Canvas,
   Path,
@@ -22,9 +22,12 @@ import {
   LinearGradient,
   vec,
   BlurMask,
+  Shadow,
   Group,
   Circle,
+  Rect,
 } from '@shopify/react-native-skia';
+import { VelvetGlassSurface } from './VelvetGlassSurface';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -46,20 +49,32 @@ interface SkiaSleepGraphProps {
 // ─── Palette ───────────────────────────────────────────────────────────────────
 
 const COLORS = {
-  /** High-quality deep rest — radiant silver-blue */
-  deepRest: '#C9AE78',
-  /** Low-quality / restless — dim indigo */
-  restless: '#4A3B6B',
-  /** Moonlight aura for background glow */
-  moonlightBright: 'rgba(201, 174, 120, 0.45)',
-  moonlightDim: 'rgba(74, 59, 107, 0.20)',
-  /** Terminal node inner color */
-  moonCore: '#F0EAD6',
-  /** Axis text */
-  axisText: 'rgba(240, 234, 214, 0.35)',
-  /** Grid lines */
-  gridLine: 'rgba(255, 255, 255, 0.04)',
+  deepRest: '#E6C785',
+  deepRestSoft: '#F5E8C4',
+  dreamMist: '#9CB8D8',
+  amethyst: '#A88BEB',
+  restless: '#556B95',
+  moonlightBright: 'rgba(230, 199, 133, 0.40)',
+  moonlightDim: 'rgba(86, 106, 148, 0.18)',
+  moonCore: '#FFF5DC',
+  axisText: 'rgba(240, 234, 214, 0.40)',
+  gridLine: 'rgba(255, 255, 255, 0.06)',
 };
+
+function qualityToLabel(quality: number): string {
+  if (quality >= 4.5) return 'Restorative';
+  if (quality >= 3.5) return 'Deep';
+  if (quality >= 2.5) return 'Steady';
+  if (quality >= 1.5) return 'Light';
+  return 'Restless';
+}
+
+function formatDuration(duration: number): string {
+  const wholeHours = Math.floor(duration);
+  const minutes = Math.round((duration - wholeHours) * 60);
+  if (minutes === 0) return `${wholeHours}h`;
+  return `${wholeHours}h ${minutes}m`;
+}
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
@@ -68,7 +83,9 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
   width,
   height,
 }: SkiaSleepGraphProps) {
-  const MARGIN = { top: 16, bottom: 24, left: 4, right: 4 };
+  const [activeIdx, setActiveIdx] = useState<number | null>(data.length - 1);
+
+  const MARGIN = { top: 18, bottom: 34, left: 10, right: 10 };
   const graphW = width - MARGIN.left - MARGIN.right;
   const graphH = height - MARGIN.top - MARGIN.bottom;
 
@@ -85,9 +102,9 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
    *  2. areaPath  — the filled region beneath the line (gradient fill)
    *  3. lastPt    — coordinates of the terminal data point ("Moon")
    */
-  const { strokePath, areaPath, lastPt, points } = useMemo(() => {
+  const { strokePath, areaPath, lastPt, points, minY, maxY } = useMemo(() => {
     if (data.length < 2)
-      return { strokePath: null, areaPath: null, lastPt: null, points: [] };
+      return { strokePath: null, areaPath: null, lastPt: null, points: [], minY: 0, maxY: 0 };
 
     // Auto-scale: use actual data range with padding so small variations show
     const durations = data.map(p => p.duration);
@@ -124,7 +141,7 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
     area.lineTo(pts[0].x, MARGIN.top + graphH);
     area.close();
 
-    return { strokePath: stroke, areaPath: area, lastPt: last, points: pts };
+    return { strokePath: stroke, areaPath: area, lastPt: last, points: pts, minY, maxY };
   }, [data, graphW, graphH, MARGIN.left, MARGIN.top]);
 
   // ── Empty state ──
@@ -144,128 +161,188 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
   }
 
   // Dynamic blur intensity: well-rested → bloom, restless → sharp
-  const glowBlur = 2 + avgQualityNorm * 6;     // 2 … 8
-  const areaBlur = 8 + avgQualityNorm * 14;     // 8 … 22
-  const moonGlow = 4 + avgQualityNorm * 8;      // 4 … 12
+  const glowBlur = 10 + avgQualityNorm * 14;
+  const coreGlowBlur = 5 + avgQualityNorm * 8;
+  const areaBlur = 14 + avgQualityNorm * 18;
+  const moonGlow = 8 + avgQualityNorm * 10;
 
   // Gradient alpha modulated by quality
-  const areaAlphaHex = Math.round(0x10 + avgQualityNorm * 0x60)
+  const areaAlphaHex = Math.round(0x16 + avgQualityNorm * 0x52)
     .toString(16)
     .padStart(2, '0');
 
+  const gridValues = Array.from({ length: 4 }, (_, index) => {
+    const ratio = index / 3;
+    return {
+      value: maxY - (maxY - minY) * ratio,
+      y: MARGIN.top + graphH * ratio,
+    };
+  });
+
+  const activePoint = activeIdx !== null ? points[activeIdx] : lastPt;
+  const activeDatum = activeIdx !== null ? data[activeIdx] : data[data.length - 1];
+
   return (
-    <Canvas
+    <View
       style={{ width, height }}
       accessibilityLabel={`Sleep restoration graph showing ${data.length} nights. Average quality ${(avgQualityNorm * 4 + 1).toFixed(1)} out of 5.`}
     >
-      <Group>
-        {/* ── 1. Background Atmosphere (quality-driven glow) ── */}
-        <Path path={areaPath} style="fill">
-          <LinearGradient
-            start={vec(0, MARGIN.top)}
-            end={vec(0, MARGIN.top + graphH)}
-            colors={[
-              avgQualityNorm > 0.5
-                ? COLORS.moonlightBright
-                : COLORS.moonlightDim,
-              'transparent',
-            ]}
-          />
-          <BlurMask blur={areaBlur} style="inner" />
-        </Path>
+      <Canvas style={StyleSheet.absoluteFill}>
+        <Group>
+          <Circle cx={width * 0.78} cy={MARGIN.top + graphH * 0.24} r={34} color={COLORS.moonlightBright}>
+            <BlurMask blur={38} style="normal" />
+          </Circle>
+          <Circle cx={width * 0.2} cy={MARGIN.top + graphH * 0.82} r={42} color={COLORS.moonlightDim}>
+            <BlurMask blur={42} style="normal" />
+          </Circle>
 
-        {/* ── 2. Gradient area fill — deep water feel ── */}
-        <Path path={areaPath} style="fill">
-          <LinearGradient
-            start={vec(0, MARGIN.top)}
-            end={vec(0, MARGIN.top + graphH)}
-            colors={[
-              `${COLORS.deepRest}${areaAlphaHex}`,
-              `${COLORS.restless}08`,
-            ]}
-          />
-        </Path>
-
-        {/* ── 3. Restoration Line — outer glow (neon bleed) ── */}
-        <Path
-          path={strokePath}
-          style="stroke"
-          strokeWidth={3}
-          strokeCap="round"
-          strokeJoin="round"
-        >
-          <LinearGradient
-            start={vec(0, 0)}
-            end={vec(width, 0)}
-            colors={[COLORS.restless, COLORS.deepRest, COLORS.deepRest]}
-          />
-          <BlurMask blur={glowBlur} style="outer" />
-        </Path>
-
-        {/* ── 4. Crisp inner stroke ── */}
-        <Path
-          path={strokePath}
-          style="stroke"
-          strokeWidth={2}
-          strokeCap="round"
-          strokeJoin="round"
-        >
-          <LinearGradient
-            start={vec(0, 0)}
-            end={vec(width, 0)}
-            colors={[COLORS.restless, COLORS.deepRest, COLORS.deepRest]}
-          />
-        </Path>
-
-        {/* ── 5. Per-night quality dots ── */}
-        {points.map((pt, i) => {
-          // Normalize quality 1-5 → 0-1 for color interpolation
-          const qNorm = Math.min(1, Math.max(0, (pt.quality - 1) / 4));
-          // Dim dot for low quality, bright for high
-          const dotAlpha = Math.round(0x30 + qNorm * 0xA0)
-            .toString(16)
-            .padStart(2, '0');
-          return (
-            <Circle
-              key={i}
-              cx={pt.x}
-              cy={pt.y}
-              r={qNorm > 0.6 ? 3 : 2}
-              color={
-                qNorm > 0.6
-                  ? `${COLORS.deepRest}${dotAlpha}`
-                  : `${COLORS.restless}${dotAlpha}`
-              }
+          {gridValues.map((grid) => (
+            <Rect
+              key={grid.value}
+              x={MARGIN.left}
+              y={grid.y}
+              width={graphW}
+              height={1}
+              color={COLORS.gridLine}
             />
-          );
-        })}
+          ))}
 
-        {/* ── 6. Terminal "Moon" node — pulsing last-data-point ── */}
-        {/* Outer glow */}
-        <Circle
-          cx={lastPt.x}
-          cy={lastPt.y}
-          r={7}
-          color={`${COLORS.deepRest}50`}
+          <Path path={areaPath} style="fill">
+            <LinearGradient
+              start={vec(0, MARGIN.top)}
+              end={vec(0, MARGIN.top + graphH)}
+              colors={[COLORS.moonlightBright, 'rgba(16,22,35,0)']}
+            />
+            <BlurMask blur={areaBlur} style="normal" />
+          </Path>
+
+          <Path path={areaPath} style="fill">
+            <LinearGradient
+              start={vec(0, MARGIN.top)}
+              end={vec(0, MARGIN.top + graphH)}
+              colors={[
+                `${COLORS.deepRest}${areaAlphaHex}`,
+                'rgba(140, 184, 216, 0.08)',
+                'rgba(10, 14, 22, 0.00)',
+              ]}
+              positions={[0, 0.45, 1]}
+            />
+          </Path>
+
+          <Path path={strokePath} style="stroke" strokeWidth={3.2} strokeCap="round" strokeJoin="round">
+            <LinearGradient
+              start={vec(MARGIN.left, MARGIN.top)}
+              end={vec(width - MARGIN.right, MARGIN.top)}
+              colors={[COLORS.restless, COLORS.amethyst, COLORS.deepRestSoft]}
+            />
+            <Shadow dx={0} dy={0} blur={glowBlur} color="rgba(245, 232, 196, 0.34)" />
+            <Shadow dx={0} dy={0} blur={coreGlowBlur} color="rgba(245, 232, 196, 0.68)" />
+          </Path>
+
+          <Path path={strokePath} style="stroke" strokeWidth={1.9} strokeCap="round" strokeJoin="round">
+            <LinearGradient
+              start={vec(MARGIN.left, MARGIN.top)}
+              end={vec(width - MARGIN.right, MARGIN.top)}
+              colors={[COLORS.dreamMist, COLORS.amethyst, COLORS.deepRestSoft]}
+            />
+          </Path>
+
+          {points.map((pt, i) => {
+            const qNorm = Math.min(1, Math.max(0, (pt.quality - 1) / 4));
+            const isActive = activeIdx === i;
+            const fill = qNorm > 0.5 ? COLORS.deepRestSoft : COLORS.dreamMist;
+            return (
+              <React.Fragment key={i}>
+                {isActive && (
+                  <Circle cx={pt.x} cy={pt.y} r={11} color="rgba(230, 199, 133, 0.22)">
+                    <BlurMask blur={18} style="normal" />
+                  </Circle>
+                )}
+                <Circle cx={pt.x} cy={pt.y} r={isActive ? 4.5 : 3} color={fill} />
+              </React.Fragment>
+            );
+          })}
+
+          <Circle cx={activePoint.x} cy={activePoint.y} r={7} color="rgba(230, 199, 133, 0.36)">
+            <BlurMask blur={moonGlow} style="normal" />
+          </Circle>
+          <Circle cx={activePoint.x} cy={activePoint.y} r={4.2} color={COLORS.deepRest} />
+          <Circle cx={activePoint.x} cy={activePoint.y} r={2.2} color={COLORS.moonCore} />
+        </Group>
+      </Canvas>
+
+      <View style={styles.gridLabels} pointerEvents="none">
+        {gridValues.map((grid) => (
+          <Text key={grid.value} style={[styles.axisLabel, { top: grid.y - 8 }]}>
+            {grid.value.toFixed(0)}h
+          </Text>
+        ))}
+      </View>
+
+      {points.map((pt, index) => (
+        <Pressable
+          key={`${pt.x}-${index}`}
+          style={[
+            styles.hitTarget,
+            {
+              left: pt.x - 18,
+              top: MARGIN.top,
+              height: graphH,
+            },
+          ]}
+          onPress={() => setActiveIdx((current) => (current === index ? null : index))}
+        />
+      ))}
+
+      <View style={styles.dayLabels} pointerEvents="none">
+        {points.map((pt, index) => (
+          <Text
+            key={`day-${index}`}
+            style={[
+              styles.dayLabel,
+              {
+                left: pt.x - 16,
+                color: activeIdx === index ? 'rgba(255,255,255,0.88)' : COLORS.axisText,
+              },
+            ]}
+          >
+            {new Date((data[index].date ?? '') + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short' }).slice(0, 1)}
+          </Text>
+        ))}
+      </View>
+
+      {activeIdx !== null && activeDatum && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.tooltipWrap,
+            {
+              left: Math.max(8, Math.min(width - 172, activePoint.x - 78)),
+              top: Math.max(4, activePoint.y - 82),
+            },
+          ]}
         >
-          <BlurMask blur={moonGlow} style="normal" />
-        </Circle>
-        {/* Mid ring */}
-        <Circle
-          cx={lastPt.x}
-          cy={lastPt.y}
-          r={4.5}
-          color={COLORS.deepRest}
-        />
-        {/* Core */}
-        <Circle
-          cx={lastPt.x}
-          cy={lastPt.y}
-          r={2.5}
-          color={COLORS.moonCore}
-        />
-      </Group>
-    </Canvas>
+          <VelvetGlassSurface
+            style={styles.tooltipSurface}
+            intensity={52}
+            backgroundColor="rgba(10, 14, 23, 0.34)"
+            borderColor="rgba(255,255,255,0.12)"
+            highlightColor="rgba(255,255,255,0.05)"
+          >
+            <View style={styles.tooltipAccent} />
+            <Text style={styles.tooltipDate}>{activeDatum.date ? new Date(`${activeDatum.date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Night'}</Text>
+            <Text style={styles.tooltipDuration}>{formatDuration(activeDatum.duration)}</Text>
+            <View style={styles.tooltipMetaRow}>
+              <View style={styles.tooltipMetaItem}>
+                <View style={[styles.tooltipDot, { backgroundColor: COLORS.deepRest }]} />
+                <Text style={styles.tooltipMetaLabel}>{qualityToLabel(activeDatum.quality)}</Text>
+              </View>
+              <Text style={styles.tooltipMetaValue}>{activeDatum.quality.toFixed(1)}/5</Text>
+            </View>
+          </VelvetGlassSurface>
+        </View>
+      )}
+    </View>
   );
 });
 
@@ -283,5 +360,94 @@ const localStyles = StyleSheet.create({
     color: 'rgba(240, 234, 214, 0.4)',
     fontSize: 13,
     textAlign: 'center',
+  },
+});
+
+const styles = StyleSheet.create({
+  hitTarget: {
+    position: 'absolute',
+    width: 36,
+  },
+  gridLabels: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  axisLabel: {
+    position: 'absolute',
+    left: 0,
+    fontSize: 10,
+    color: COLORS.axisText,
+    letterSpacing: 0.6,
+  },
+  dayLabels: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 22,
+  },
+  dayLabel: {
+    position: 'absolute',
+    bottom: 0,
+    width: 32,
+    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.9,
+  },
+  tooltipWrap: {
+    position: 'absolute',
+    width: 156,
+  },
+  tooltipSurface: {
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  tooltipAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(230, 199, 133, 0.62)',
+  },
+  tooltipDate: {
+    color: 'rgba(255,255,255,0.58)',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+  },
+  tooltipDuration: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  tooltipMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tooltipMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tooltipDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  tooltipMetaLabel: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  tooltipMetaValue: {
+    color: COLORS.deepRestSoft,
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

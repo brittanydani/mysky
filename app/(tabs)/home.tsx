@@ -34,6 +34,8 @@ import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withSpring } fr
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 
 // ── Custom Skia Suite ──
@@ -59,6 +61,7 @@ import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
+import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 
 const { width } = Dimensions.get('window');
 
@@ -129,6 +132,7 @@ const ACCENT_MAP: Record<string, string> = {
 // ── Home Screen ─────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
+  const theme = useAppTheme();
   const router = useRouter();
   const { isPremium } = usePremium();
   const warpRef = useRef<WarpRef>(null);
@@ -502,13 +506,10 @@ export default function HomeScreen() {
           {/* ── Daily Balance Score ── */}
           <SectionHeader title="Daily Balance" icon="pulse-outline" />
           <Animated.View entering={FadeInDown.delay(400).duration(600)}>
-            <LinearGradient colors={['rgba(142, 184, 212, 0.10)', 'rgba(10,10,12,0.9)']} style={styles.scoreCard}>
+            <VelvetGlassSurface style={styles.scoreCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.56)">
+              <LinearGradient pointerEvents="none" colors={['rgba(142, 184, 212, 0.10)', 'rgba(10,10,12,0.9)']} style={StyleSheet.absoluteFill} />
               <View style={styles.scoreHeader}>
                 <Text style={styles.cardLabel}>DAILY BALANCE</Text>
-                <View style={styles.trendBadgeScore}>
-                  <MetallicIcon name="trending-up-outline" size={12} color="#8EB8D4" />
-                  <MetallicText style={styles.trendTextScore} color="#8EB8D4">Score</MetallicText>
-                </View>
               </View>
               {hasDataToday ? (
                 <>
@@ -527,20 +528,21 @@ export default function HomeScreen() {
                   <Text style={styles.noDataText}>No data yet</Text>
                 </View>
               )}
-            </LinearGradient>
+            </VelvetGlassSurface>
           </Animated.View>
 
           {/* ── 7-Day Internal Weather ── */}
           <SectionHeader title="Internal Weather" icon="cloudy-outline" />
           <Animated.View entering={FadeInDown.delay(550).duration(600)}>
-            <LinearGradient colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={styles.graphCard}>
+            <VelvetGlassSurface style={styles.graphCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.56)">
+              <LinearGradient pointerEvents="none" colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.9)']} style={StyleSheet.absoluteFill} />
               <View style={styles.graphCardHeader}>
                 <View style={styles.graphBadge}>
                   <Text style={styles.graphBadgeText}>7 DAYS</Text>
                 </View>
               </View>
               <MoodTrendGraph bars={stabilityBars} dayLabels={stabilityDayLabels} />
-            </LinearGradient>
+            </VelvetGlassSurface>
           </Animated.View>
 
           {/* ── Actionable Insight ── */}
@@ -828,6 +830,8 @@ function ScorePill({ label, val, color }: { label: string; val: string; color: s
 // ── Luminous Check-In FAB ────────────────────────────────────────────────────
 
 function CheckInFAB() {
+  const theme = useAppTheme();
+  const fabStyles = useThemedStyles(createFabStyles);
   const router = useRouter();
   const scale = useSharedValue(1);
 
@@ -848,7 +852,7 @@ function CheckInFAB() {
       accessibilityRole="button"
     >
       <Animated.View style={[fabStyles.glowWrapper, animatedStyle]}>
-        <BlurView intensity={60} tint="dark" style={fabStyles.glassCircle}>
+        <BlurView intensity={60} tint={theme.blurTint} style={fabStyles.glassCircle}>
           <MetallicIcon name="add-outline" size={28} variant="gold" />
         </BlurView>
       </Animated.View>
@@ -856,7 +860,7 @@ function CheckInFAB() {
   );
 }
 
-const fabStyles = StyleSheet.create({
+const createFabStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 120,
@@ -927,9 +931,10 @@ const styles = StyleSheet.create({
   insightCard: { marginTop: 0, marginBottom: 32 },
   insightGradient: {
     borderRadius: 24,
-    padding: 28,
+    padding: 36,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
   },
   insightHeader: {
     flexDirection: 'row',
@@ -946,32 +951,37 @@ const styles = StyleSheet.create({
   },
   insightText: {
     color: PALETTE.textMain,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 27,
   },
 
   // Daily Affirmation card
   affirmationCard: {
     borderRadius: 24,
-    padding: 28,
+    padding: 36,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
     marginBottom: 32,
   },
   affirmationText: {
     color: PALETTE.textMain,
-    fontSize: 18,
+    fontSize: 14,
     lineHeight: 28,
     fontStyle: 'italic',
+    fontWeight: '400',
+    paddingHorizontal: 8,
+    letterSpacing: 0.2,
     textAlign: 'center',
   },
 
   // Premium preview
   premiumPreviewCard: {
     borderRadius: 24,
-    padding: 28,
+    padding: 36,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
     marginBottom: 32,
   },
   premiumPreviewHeader: {
@@ -1039,9 +1049,10 @@ const styles = StyleSheet.create({
   weeklyCard: { marginBottom: 32 },
   weeklyGradient: {
     borderRadius: 24,
-    padding: 28,
+    padding: 36,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
   },
   weeklySummaryText: {
     color: PALETTE.textMain,
@@ -1093,57 +1104,44 @@ const styles = StyleSheet.create({
   // Daily Balance Score card
   cardLabel: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.58)',
     fontWeight: '800',
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
   scoreCard: {
-    padding: 28,
+    padding: 34,
     borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
     marginBottom: 32,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    overflow: 'hidden',
   },
   scoreHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    marginBottom: 16,
-  },
-  trendBadgeScore: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(140, 190, 170, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
-  },
-  trendTextScore: {
-    color: '#8CBEAA',
-    fontSize: 11,
-    fontWeight: '700',
+    marginBottom: 14,
   },
   scoreMain: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'flex-end',
     marginBottom: 20,
   },
   scoreValue: {
-    fontSize: 60,
+    fontSize: 56,
     fontWeight: '700',
     color: '#FFFFFF',
+    lineHeight: 58,
   },
   noDataText: {
     fontSize: 16,
     color: 'rgba(255,255,255,0.4)',
   },
   scoreMax: {
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.3)',
+    fontSize: 17,
+    color: 'rgba(255,255,255,0.5)',
     marginLeft: 8,
+    marginBottom: 8,
+    lineHeight: 20,
   },
   pillsRow: {
     flexDirection: 'row',
@@ -1153,9 +1151,12 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     borderRadius: 14,
     gap: 4,
   },
@@ -1166,7 +1167,7 @@ const styles = StyleSheet.create({
   },
   pillLabel: {
     fontSize: 8,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.62)',
     textTransform: 'uppercase',
     fontWeight: '700',
     flex: 1,
@@ -1179,13 +1180,10 @@ const styles = StyleSheet.create({
 
   // 7-Day Internal Weather
   graphCard: {
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingTop: 24,
+    paddingHorizontal: 28,
+    paddingBottom: 28,
     borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
     marginBottom: 32,
     overflow: 'hidden',
   },
@@ -1203,7 +1201,7 @@ const styles = StyleSheet.create({
   },
   graphBadgeText: {
     fontSize: 9,
-    color: 'rgba(201,174,120,0.7)',
+    color: 'rgba(201,174,120,0.74)',
     fontWeight: '700',
     letterSpacing: 1.5,
   },
@@ -1218,8 +1216,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: PALETTE.textMain,
-    fontSize: 19,
+    fontSize: 14,
     fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1.4,
   },
 
   // Explore Blueprint section

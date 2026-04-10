@@ -20,7 +20,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
 
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import SkiaMetallicPill from '../ui/SkiaMetallicPill';
 import { localDb } from '../../services/storage/localDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
@@ -43,6 +43,7 @@ import ChakraWheelComponent from '../ui/ChakraWheel';
 import { SkiaChakraGlyph } from '../ui/SkiaChakraNode';
 import { useCorrelationStore } from '../../store/correlationStore';
 import { updateWidgetData } from '../../services/widgets/widgetDataService';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const CorrelationGyroscope = React.lazy(() =>
   import('../ui/CorrelationGyroscope').then(m => ({ default: m.CorrelationGyroscope }))
@@ -51,12 +52,6 @@ const CorrelationGyroscope = React.lazy(() =>
 /* ── Constants ── */
 const { width: SCREEN_W } = Dimensions.get('window');
 const WHEEL_SIZE = SCREEN_W * 0.75;
-
-const INTENSITY_META: Record<EnergyIntensity, { label: string; color: string }> = {
-  Low:      { label: 'Low Intensity',      color: theme.calm },
-  Moderate: { label: 'Steady Intensity',   color: theme.okay },
-  High:     { label: 'Elevated Intensity', color: theme.stormy },
-};
 
 function safeHaptic() {
   Haptics.selectionAsync().catch(() => {});
@@ -74,6 +69,8 @@ interface EnergyScrollContentProps {
    MAIN COMPONENT
    ════════════════════════════════════════════════ */
 export function EnergyScrollContent({ embedded = false }: EnergyScrollContentProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
   const syncCorrelations = useCorrelationStore((s) => s.syncCorrelations);
@@ -86,6 +83,11 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
   const [expandedDomain, setExpandedDomain] = useState<number | null>(null);
   const [wheelTooltip, setWheelTooltip] = useState<string | null>(null);
   const wheelTooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const INTENSITY_META: Record<EnergyIntensity, { label: string; color: string }> = {
+    Low: { label: 'Low Intensity', color: theme.calm },
+    Moderate: { label: 'Steady Intensity', color: theme.okay },
+    High: { label: 'Elevated Intensity', color: theme.stormy },
+  };
 
   useEffect(() => {
     return () => {
@@ -458,6 +460,8 @@ export function EnergyScrollContent({ embedded = false }: EnergyScrollContentPro
    ════════════════════════════════════════════════ */
 
 function SectionHeader({ icon, title, delay }: { icon: keyof typeof Ionicons.glyphMap; title: string; delay?: number }) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const content = (
     <View style={styles.sectionTitleRow}>
       <Ionicons name={icon} size={18} color={theme.primary} />
@@ -473,6 +477,7 @@ function SectionHeader({ icon, title, delay }: { icon: keyof typeof Ionicons.gly
 type ChakraRole = 'primary' | 'secondary' | 'background';
 
 function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highlight?: boolean; role?: ChakraRole }) {
+  const styles = useThemedStyles(createStyles);
   const resolvedRole = highlight ? 'primary' : (role ?? 'background');
 
   if (resolvedRole === 'background') {
@@ -584,6 +589,7 @@ function ChakraCard({ chakra, highlight, role }: { chakra: ChakraReading; highli
 }
 
 function GuidanceBlock({ icon, label, text, context, color }: { icon: keyof typeof Ionicons.glyphMap; label: string; text: string; context?: string; color: string }) {
+  const styles = useThemedStyles(createStyles);
   const isWhite = color === '#FFFFFF';
   return (
     <View style={styles.guidanceBlock}>
@@ -608,7 +614,7 @@ function GuidanceBlock({ icon, label, text, context, color }: { icon: keyof type
 /* ════════════════════════════════════════════════
    STYLES
    ════════════════════════════════════════════════ */
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   inlineLoading: {
     paddingVertical: 48,
     alignItems: 'center',

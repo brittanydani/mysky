@@ -56,6 +56,7 @@ import {
   completePasswordRecovery,
   requestPasswordRecoveryCode,
 } from '../services/auth/passwordRecovery';
+import { useAppTheme, useThemePreference } from '../context/ThemeContext';
 
 // ── Liquid Mirror Gold Palette ──
 const PREMIUM = {
@@ -244,6 +245,8 @@ export default function OnboardingModal({
   onPrivacyConsent,
   onSignInComplete,
 }: OnboardingModalProps) {
+  const theme = useAppTheme();
+  const { resolvedMode } = useThemePreference();
   const [step, setStep] = useState<OnboardingStep>('auth');
   const [legalView, setLegalView] = useState<null | 'terms' | 'privacy' | 'faq'>(null);
 
@@ -1037,7 +1040,7 @@ export default function OnboardingModal({
                       Used to accurately map your internal weather and profile.
                     </MetallicText>
 
-                    <BlurView intensity={30} tint="dark" style={st.glassCard}>
+                    <BlurView intensity={30} tint={theme.blurTint} style={st.glassCard}>
                       <DateTimePicker
                         value={birthDate}
                         mode="date"
@@ -1047,7 +1050,7 @@ export default function OnboardingModal({
                         }}
                         maximumDate={new Date()}
                         minimumDate={new Date(1900, 0, 1)}
-                        themeVariant="dark"
+                        themeVariant={resolvedMode}
                         textColor="#FFFFFF"
                         style={{ width: '100%' }}
                       />
@@ -1178,7 +1181,7 @@ export default function OnboardingModal({
                       City of birth roots your profile baseline.
                     </MetallicText>
 
-                    <BlurView intensity={30} tint="dark" style={st.locationSearchRow}>
+                    <BlurView intensity={30} tint={theme.blurTint} style={st.locationSearchRow}>
                       <MetallicIcon name="search-outline" size={20} color={PREMIUM.titanium} />
                       <TextInput
                         style={st.locationInput}
@@ -1201,7 +1204,7 @@ export default function OnboardingModal({
                     </BlurView>
 
                     {locationSuggestions.length > 0 && !locationSelected && (
-                      <BlurView intensity={40} tint="dark" style={st.suggestionsContainer}>
+                      <BlurView intensity={40} tint={theme.blurTint} style={st.suggestionsContainer}>
                         {locationSuggestions.map((suggestion, idx) => {
                           const parts = suggestion.display_name.split(', ');
                           const city = parts.slice(0, 2).join(', ');
@@ -1269,7 +1272,7 @@ export default function OnboardingModal({
                       Provide the passphrase used to secure your backup.
                     </MetallicText>
                     
-                    <BlurView intensity={30} tint="dark" style={st.passphraseInputWrapper}>
+                    <BlurView intensity={30} tint={theme.blurTint} style={st.passphraseInputWrapper}>
                       <TextInput
                         style={st.passphraseInput}
                         value={passphrase}

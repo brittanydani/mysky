@@ -120,22 +120,22 @@ function buildEmotionalUndercurrent(profile: PatternProfile): NarrativeInsight |
   let effectStrength: number;
 
   if (volatility > 15) {
-    body = `Your emotional tone has been moving through wider swings lately — variability of ${Math.round(volatility)} across your ${profile.windowDays}-day window. This isn't necessarily a problem — it may reflect a period of processing, transition, or heightened sensitivity. Noticing the rhythm matters more than steadying it by force.`;
+    body = `Your emotional tone has been swinging wider lately. Across the last ${profile.windowDays} days, variability reached ${Math.round(volatility)}. That doesn't automatically mean something is wrong. It usually means your system is processing more than usual, and the pattern is worth noticing before you try to control it.`;
     effectStrength = 60;
   } else if (recentDiff < -10) {
-    body = `Your recent entries suggest a quieter heaviness beneath the surface — stability has dipped ${Math.round(Math.abs(recentDiff))} points from your baseline of ${overallAvg.stability}. Even when you keep going, your system may be asking for more softness than pressure. This may be a season for gentleness.`;
+    body = `Your recent entries point to a quieter heaviness under the surface. Stability is down ${Math.round(Math.abs(recentDiff))} points from your usual ${overallAvg.stability}. Even if you're still functioning, your system looks like it needs less pressure and more gentleness right now.`;
     effectStrength = Math.abs(recentDiff);
   } else if (recentDiff > 10) {
-    body = `There's a noticeable lift in your recent emotional tone — stability is up ${Math.round(recentDiff)} points to ${recentAvg.stability}. Something is settling — whether it's external circumstances or your own internal recalibration. Worth noticing what's different right now.`;
+    body = `There is a noticeable lift in your recent emotional tone. Stability is up ${Math.round(recentDiff)} points to ${recentAvg.stability}. Something is settling, and it is worth protecting whatever changed.`;
     effectStrength = recentDiff;
   } else if (volatility < 5 && overallAvg.stability >= 60) {
     body = `Your emotional landscape has been remarkably steady — stability averaging ${overallAvg.stability} with very low variability across ${profile.windowDays} days. This kind of consistency often reflects either genuine stability or a practiced steadiness. Either way, it's something your system seems to be holding well.`;
     effectStrength = 40;
   } else if (overallAvg.stability < 40) {
-    body = `Your entries carry a persistent undertone of heaviness — stability averaging ${overallAvg.stability} over ${profile.windowDays} days. This isn't about fixing anything — it's about recognizing what your inner world has been carrying, and whether it needs more room to breathe.`;
+    body = `Your entries carry a persistent undertone of heaviness. Stability has averaged ${overallAvg.stability} across ${profile.windowDays} days. The useful move here is not to pathologize it, but to recognize how much your inner world has been carrying.`;
     effectStrength = 100 - overallAvg.stability;
   } else {
-    body = `Your emotional tone has been moving through a gentle middle range — stability around ${overallAvg.stability} with moderate variability. Not dramatic, but textured. Subtle shifts often carry information that extremes don't. Pay attention to the quiet undercurrents.`;
+    body = `Your emotional tone has been living in a middle range, with stability around ${overallAvg.stability} and moderate variability. Nothing dramatic, but not flat either. The quieter shifts are carrying the signal here.`;
     effectStrength = 30;
   }
 
@@ -198,12 +198,14 @@ function buildEnergyRhythm(profile: PatternProfile): NarrativeInsight | null {
     effectStrength = 30;
   }
 
+  const streakLabel = maxLowStreak === 1 ? 'day' : 'days';
+
   return {
     id: 'narrative-energy-rhythm',
     category: 'energy_rhythm',
     label: 'Energy Rhythm',
     body,
-    stat: `Restoration avg: ${overallAvg.restoration}/100 · ${restorationTrend?.direction === 'falling' ? 'Declining' : restorationTrend?.direction === 'rising' ? 'Rising' : 'Steady'} · ${maxLowStreak > 0 ? `Longest low streak: ${maxLowStreak} days` : 'No extended low streaks'}`,
+    stat: `Restoration avg: ${overallAvg.restoration}/100 · ${restorationTrend?.direction === 'falling' ? 'Declining' : restorationTrend?.direction === 'rising' ? 'Rising' : 'Steady'} · ${maxLowStreak > 0 ? `Longest low streak: ${maxLowStreak} ${streakLabel}` : 'No extended low streaks'}`,
     confidence: insightConfidence(profile.windowDays, effectStrength, maxLowStreak <= 2),
     accent: 'gold',
   };
@@ -360,11 +362,11 @@ function buildRestorationPattern(profile: PatternProfile): NarrativeInsight | nu
   if (restoreSignals.length >= 2) {
     const top = restoreSignals.slice(0, 3).map(s => s.tag.replace(/_/g, ' ')).join(', ');
     effectStrength = restoreSignals[0].lift;
-    body = `Your data points to specific conditions that tend to support your wellbeing: ${top}. These aren\'t just nice-to-haves — on days involving them, your restoration score is measurably higher.`;
+    body = `Your data points to specific conditions that support your wellbeing: ${top}. These are not luxuries. On days when they show up, your restoration score is measurably higher.`;
   } else if (lowDays >= 3 && recoveries > 0) {
     const rate = Math.round((recoveries / lowDays) * 100);
     effectStrength = rate * 0.7;
-    body = `After difficult days, your restoration improves about ${rate}% of the time the very next day. Your system knows how to come back — even when it doesn\'t feel like it.`;
+    body = `After difficult days, your restoration improves about ${rate}% of the time the very next day. Your system does know how to come back, even when the day itself says otherwise.`;
   } else if (restoreSignals.length === 1) {
     effectStrength = restoreSignals[0].lift;
     body = `Among your tracked activities, ${restoreSignals[0].tag.replace(/_/g, ' ')} stands out as restorative — your restoration score averages ${Math.round(restoreSignals[0].lift)} points higher on those days.`;
@@ -457,9 +459,9 @@ function buildHardDayReflection(profile: PatternProfile): NarrativeInsight | nul
   const effectStrength = overallAvg.stability - hp.avgStability;
   let body: string;
   if (conditions.length >= 2) {
-    body = `Your hardest days often involve ${conditions.slice(0, 2).join(' and ')}${conditions.length > 2 ? `, alongside ${conditions.slice(2).join(', ')}` : ''}. These conditions tend to compound — one alone is manageable, but together they lower your floor.`;
+    body = `Your hardest days usually involve ${conditions.slice(0, 2).join(' and ')}${conditions.length > 2 ? `, alongside ${conditions.slice(2).join(', ')}` : ''}. None of these signals mean you are failing. They simply stack fast, and together they lower your floor.`;
   } else if (conditions.length === 1) {
-    body = `${capitalize(conditions[0])} appears to be a common thread on your harder days. This isn\'t a verdict — it\'s a signal worth noticing.`;
+    body = `${capitalize(conditions[0])} is a recurring thread on your harder days. That is a useful signal, not a verdict.`;
   } else {
     body = 'Your harder days don\'t follow a single identifiable pattern yet. Emotional difficulty often comes from accumulation rather than any one cause.';
   }
@@ -503,7 +505,7 @@ function buildSensitivityTheme(profile: PatternProfile): NarrativeInsight | null
       id: 'narrative-sensitivity-theme',
       category: 'sensitivity_theme',
       label: 'Sensitivity Theme',
-      body: `Your emotional intensity shifts noticeably on certain days — variability of ${Math.round(volatility)} — though the triggers aren't yet clear in your tags. Pay attention to what's happening on days when your system reacts more strongly.`,
+      body: `Some days hit your system harder than others. Emotional intensity variability reached ${Math.round(volatility)}, though the trigger pattern is not clear yet. When a day feels louder, that is the moment to get curious about context, not critical about mood.`,
       stat: `Emotional intensity variability: ${Math.round(volatility)} · Still detecting patterns`,
       confidence: 'low',
       accent: 'rose',
@@ -522,7 +524,7 @@ function buildSensitivityTheme(profile: PatternProfile): NarrativeInsight | null
       `Your system is most reactive to ${labels.join(', ')}.`,
       `Your system appears most reactive to ${labels.join(', ')}.`,
       `There may be emerging sensitivities around ${labels.join(', ')}.`,
-    ) + ` ${capitalize(labels[0])} has the strongest impact — stability falls ${Math.round(top.stabilityDrop)} points on those days.`;
+    ) + ` ${capitalize(labels[0])} has the strongest impact. On those days, stability falls ${Math.round(top.stabilityDrop)} points.`;
   } else {
     const conf = insightConfidence(profile.windowDays, effectStrength, false);
     body = confidentPhrase(conf,

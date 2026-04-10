@@ -41,7 +41,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   if (!VISIBLE_TABS.has(currentRouteName)) return null;
 
   const safeBottom = insets.bottom > 0 ? insets.bottom : 20;
-  const BAR_HEIGHT = 65 + safeBottom; 
+  const BAR_HEIGHT = 65 + safeBottom;
 
   return (
     <View style={[styles.tabBarContainer, { height: BAR_HEIGHT, paddingBottom: safeBottom }]}>
@@ -110,7 +110,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                   </View>
                 )}
               </View>
-              
+
               {isFocused ? (
                 <MetallicText style={styles.tabLabel}>{options.title}</MetallicText>
               ) : (
@@ -160,11 +160,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, 
     borderTopColor: 'rgba(255,255,255,0.1)',
   },
-  glassHighlight: { 
+  glassHighlight: {
     ...StyleSheet.absoluteFillObject, 
     backgroundColor: 'rgba(255,255,255,0.02)' 
   },
-  tabItemsRow: { 
+  tabItemsRow: {
     flexDirection: 'row', 
     justifyContent: 'space-around', 
     alignItems: 'center', 

@@ -99,8 +99,8 @@ export function buildTriggerPatternNarrative(summary: TriggerPatternSummary): st
 
   const ratioText =
     ratio >= 1
-      ? `Glimmers are keeping pace with drains (${glimmerCount} vs ${drainCount}).`
-      : `Drains are outpacing glimmers ${drainCount} to ${glimmerCount} — creating space for nourishing moments matters.`;
+      ? `Restoring moments are keeping pace with harder moments (${glimmerCount} vs ${drainCount}).`
+      : `Hard moments are outweighing restoring moments ${drainCount} to ${glimmerCount}. Keep the next step small and concrete.`;
 
   const areaText = topDrainArea
     ? ` Your nervous system is most frequently activated in the context of ${topDrainArea.toLowerCase()}.`
@@ -116,8 +116,13 @@ export function buildTriggerPatternNarrative(summary: TriggerPatternSummary): st
 
   const resolutionText =
     resolvedDrainCount > 0
-      ? ` You've noted what helped in ${resolvedDrainCount} of ${drainCount} drain entries — that's a regulation toolkit building.`
+      ? ` You've noted what helped in ${resolvedDrainCount} of ${drainCount} hard moments. That is a real regulation toolkit taking shape.`
       : '';
 
-  return `${ratioText}${areaText}${todText}${intensityText}${resolutionText}`;
+  const nextStepText =
+    ratio < 1
+      ? ' Next step: protect one low-effort glimmer today, even if it only lasts five minutes.'
+      : ' Next step: keep repeating the moments that help your system come back.';
+
+  return `${ratioText}${areaText}${todText}${intensityText}${resolutionText}${nextStepText}`;
 }

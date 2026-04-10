@@ -40,7 +40,8 @@ import {
   interpolateColor,
 } from 'react-native-reanimated';
 import { selection as hapticSelection } from '../../utils/haptics';
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 // ── Dimensions ──────────────────────────────────────────────────────────────
 
@@ -91,6 +92,8 @@ const SkiaCelestialToggle = memo(function SkiaCelestialToggle({
   description,
   disabled = false,
 }: Props) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   // ── Animation (0 = off, 1 = on) ──
   const toggleProgress = useSharedValue(value ? 1 : 0);
 
@@ -277,7 +280,7 @@ export default SkiaCelestialToggle;
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

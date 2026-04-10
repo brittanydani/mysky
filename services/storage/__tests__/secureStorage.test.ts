@@ -138,6 +138,36 @@ describe('SecureStorageService', () => {
       const record = await secureStorage.getConsentRecord();
       expect(record).toBeNull();
     });
+
+    it('deletes unreadable consent history after integrity failure', async () => {
+      const SecureStore = require('expo-secure-store');
+      await SecureStore.setItemAsync(
+        'consent_history',
+        JSON.stringify({ encrypted: true, payload: 'broken-payload' })
+      );
+
+      (EncryptionManager.verifySensitiveData as jest.Mock).mockRejectedValueOnce(new Error('Bad HMAC'));
+
+      const history = await secureStorage.getConsentHistory();
+
+      expect(history).toEqual([]);
+      expect(await SecureStore.getItemAsync('consent_history')).toBeNull();
+    });
+
+    it('deletes unreadable lawful basis records after integrity failure', async () => {
+      const SecureStore = require('expo-secure-store');
+      await SecureStore.setItemAsync(
+        'lawful_basis_records',
+        JSON.stringify({ encrypted: true, payload: 'broken-payload' })
+      );
+
+      (EncryptionManager.verifySensitiveData as jest.Mock).mockRejectedValueOnce(new Error('Bad HMAC'));
+
+      const records = await secureStorage.getLawfulBasisRecords();
+
+      expect(records).toEqual([]);
+      expect(await SecureStore.getItemAsync('lawful_basis_records')).toBeNull();
+    });
   });
 
   // ── deleteAllUserData ────────────────────────────────────────────────────

@@ -16,7 +16,7 @@
  */
 
 import React, { memo, useEffect, useMemo } from 'react';
-import { StyleSheet, Text, View, Platform } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import {
   Canvas,
   Circle,
@@ -24,8 +24,6 @@ import {
   Skia,
   BlurMask,
   Group,
-  Text as SkiaText,
-  matchFont,
   LinearGradient,
   RadialGradient,
   vec,
@@ -75,14 +73,11 @@ const DIMENSIONS: Dimension[] = [
   { key: 'connection', label: 'CONNECTION',             icon: '◎',  color: CLR_CONNECTION, glow: GLOW_CONNECTION },
   { key: 'stress',     label: 'STRESS &\nRELEASE',     icon: '❋',  color: CLR_STRESS,     glow: GLOW_STRESS },
   { key: 'rest',       label: 'REST &\nRECOVERY',      icon: '☽',  color: CLR_REST,       glow: GLOW_REST },
-  { key: 'trust',      label: 'SELF-\nTRUST',          icon: '♧',  color: CLR_TRUST,      glow: GLOW_TRUST },
+  { key: 'trust',      label: 'SELF-\nTRUST',          icon: '◈',  color: CLR_TRUST,      glow: GLOW_TRUST },
   { key: 'clarity',    label: 'CLARITY\n& FOCUS',      icon: '◉',  color: CLR_CLARITY,    glow: GLOW_CLARITY },
 ];
 
 const NUM_DIM = DIMENSIONS.length;
-
-const SERIF_FAMILY = Platform.select({ ios: 'Georgia', default: 'serif' })!;
-const SANS_FAMILY = Platform.select({ ios: 'System', default: 'sans-serif' })!;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -249,9 +244,6 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   // ── Animation: breathing pulse ──────────────────────────────────────────
   const breath = useSharedValue(0);
 
-  // ── Skia fonts for in-canvas text ──────────────────────────────────────
-  const serifTheme = useMemo(() => matchFont({ fontFamily: SERIF_FAMILY, fontSize: 18, fontWeight: '800' }), []);
-  const sansSummary = useMemo(() => matchFont({ fontFamily: SANS_FAMILY, fontSize: 12, fontWeight: '500' }), []);
   useEffect(() => {
     breath.value = withRepeat(
       withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.sin) }),
@@ -486,40 +478,12 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
           })}
         </Group>
 
-        {/* ── Center text (white, precisely centered) ── */}
-        {(() => {
-          const themeStr = themes.join(' · ');
-          const themeW = serifTheme ? serifTheme.getTextWidth(themeStr) : themeStr.length * 6;
-          const summaryW = sansSummary ? sansSummary.getTextWidth(summary) : summary.length * 4.5;
-
-          // Total block height: theme(18) + gap(6) + summary(12) = 36
-          const blockH = 36;
-          const topY = cy - blockH / 2;
-
-          return (
-            <Group>
-              {serifTheme && (
-                <SkiaText
-                  x={cx - themeW / 2}
-                  y={topY + 18}
-                  text={themeStr}
-                  font={serifTheme}
-                  color="#FFFFFF"
-                />
-              )}
-              {sansSummary && (
-                <SkiaText
-                  x={cx - summaryW / 2}
-                  y={topY + 18 + 6 + 12}
-                  text={summary}
-                  font={sansSummary}
-                  color="rgba(255,255,255,0.6)"
-                />
-              )}
-            </Group>
-          );
-        })()}
       </Canvas>
+
+      <View pointerEvents="none" style={styles.centerCopyWrap}>
+        <Text style={styles.centerThemes}>{themes.join(' · ').toUpperCase()}</Text>
+        <Text style={styles.centerSummary}>{summary}</Text>
+      </View>
 
       {/* ── Dimension symbols only ── */}
       {nodes.map((node, i) => {
@@ -570,6 +534,29 @@ const styles = StyleSheet.create({
   dimLabel: {
     position: 'absolute',
     alignItems: 'center',
+  },
+  centerCopyWrap: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: '58%',
+    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    alignItems: 'center',
+    gap: 8,
+  },
+  centerThemes: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  centerSummary: {
+    color: 'rgba(255,255,255,0.68)',
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
   },
   dimIcon: {
     fontSize: 18,

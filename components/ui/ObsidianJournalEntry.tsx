@@ -25,8 +25,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import { MetallicText } from './MetallicText';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 // ── Archetype → accent color mapping ────────────────────────────────────────
 
@@ -62,6 +63,17 @@ function toneColor(tone: ArchetoneTone): string {
     neutral: '#D4B872',
   };
   return map[tone];
+}
+
+function buildPreviewContent(title: string | undefined, content: string): string {
+  const trimmedContent = content.trim();
+  const trimmedTitle = title?.trim();
+  if (!trimmedTitle) return trimmedContent;
+  if (trimmedContent.toLowerCase().startsWith(trimmedTitle.toLowerCase())) {
+    const stripped = trimmedContent.slice(trimmedTitle.length).replace(/^[:\-.–—\s]+/, '').trim();
+    return stripped || trimmedContent;
+  }
+  return trimmedContent;
 }
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -104,8 +116,11 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   wordCount,
   stabilityDelta,
 }: Props) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const tone = toneFromMood(mood);
   const accent = toneColor(tone);
+  const previewContent = buildPreviewContent(title, content);
 
   return (
     <View style={styles.wrapper}>
@@ -120,7 +135,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
           </View>
           <Pressable
             onPress={onOpenActions}
-            hitSlop={10}
+            hitSlop={14}
             style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
             accessibilityRole="button"
             accessibilityLabel={`Actions for journal entry: ${title || dateLabel}`}
@@ -141,7 +156,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
           style={styles.body}
           numberOfLines={isExpanded ? undefined : 3}
         >
-          {content}
+          {previewContent}
         </Text>
 
         {/* Footer */}
@@ -173,7 +188,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
               />
             </Pressable>
           </View>
-          <View style={[styles.toneBadge, { backgroundColor: accent + '20' }]}>
+          <View style={styles.toneBadge}>
             <MetallicText style={styles.toneBadgeText} color={accent}>
               {mood ? (MOOD_DISPLAY_LABELS[mood] ?? mood) : tone}
             </MetallicText>
@@ -188,7 +203,7 @@ export default ObsidianJournalEntry;
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   wrapper: {
     marginBottom: 16,
   },
@@ -208,9 +223,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -273,6 +288,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   toneBadge: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,

@@ -29,7 +29,8 @@ import {
 
 import { NatalChart, Aspect, HouseCusp } from '../../services/astrology/types';
 import { AstrologySettingsService, ChartOrientation } from '../../services/astrology/astrologySettingsService';
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 // Remove SVG icon imports; will use Skia-native drawing below
 // Skia-native Pholus icon
 function SkiaPholusIcon({ x, y, size = 24, color = '#C9AE78' }: { x: number, y: number, size?: number, color?: string }) {
@@ -393,14 +394,15 @@ function spreadPlanets(
   ascLongitude: number,
   minSeparationDeg: number = 8,
   radialStepPx: number = 14,
-  baseRadius: number = R_PLANET_RING
+  baseRadius: number = R_PLANET_RING,
+  fallbackColor: string = '#FFFFFF'
 ): PlacedPlanet[] {
   const items: PlacedPlanet[] = planets.map((p) => {
     const angle = astroToAngle(p.longitude, ascLongitude);
     return {
       label: p.label,
       symbol: PLANET_SYMBOLS[p.label] || '?',
-      color: PLANET_COLORS[p.label] || theme.textPrimary,
+      color: PLANET_COLORS[p.label] || fallbackColor,
       originalAngle: angle,
       displayAngle: angle,
       radialOffset: 0,
@@ -482,6 +484,8 @@ interface Props {
 }
 
 function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName, filterMode, orientation: orientationProp }: Props) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const rawAscLongitude = getLongitude((chart as any).ascendant) ?? 0;
 
   const [settingsOrientation, setSettingsOrientation] = useState<ChartOrientation>('standard-natal');
@@ -549,8 +553,8 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       if (lon === null) continue;
       raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    return spreadPlanets(raw, ascLongitude, 10, 14, R_PLANET_RING);
-  }, [chart, ascLongitude]);
+    return spreadPlanets(raw, ascLongitude, 10, 14, R_PLANET_RING, theme.textPrimary);
+  }, [chart, ascLongitude, theme.textPrimary]);
 
   // ── Planet longitude map for aspect lookups ──
   const planetLongitudes = useMemo(() => {
@@ -580,12 +584,12 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
       if (lon === null) continue;
       raw.push({ label, longitude: lon, isRetrograde: getRetrograde(obj) });
     }
-    const placed = spreadPlanets(raw, ascLongitude, 10, 12, R_OVERLAY_RING);
+    const placed = spreadPlanets(raw, ascLongitude, 10, 12, R_OVERLAY_RING, theme.textPrimary);
     return placed.map((p) => ({
       ...p,
       color: OVERLAY_PLANET_COLORS[p.label] || '#9C8FD2',
     }));
-  }, [overlayChart, ascLongitude, R_OVERLAY_RING]);
+  }, [overlayChart, ascLongitude, R_OVERLAY_RING, theme.textPrimary]);
 
   // ── Cross-chart (synastry) aspect lines ──
   const crossAspects = useMemo(() => {
@@ -1578,7 +1582,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
 export default memo(NatalChartWheel);
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

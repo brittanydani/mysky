@@ -33,9 +33,11 @@ import { ENCRYPTED_ASYNC_USER_DATA_KEYS, PLAIN_ASYNC_USER_DATA_KEYS } from '../s
 import { generateId } from '../services/storage/models';
 import { logger } from '../utils/logger';
 import { supabase } from '../lib/supabase';
+import { darkTheme, type AppTheme } from '../constants/theme';
 import { IdentityVault } from '../utils/IdentityVault';
 import { usePendingWidgetCheckIns } from '../hooks/usePendingWidgetCheckIns';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
+import { ThemeProvider, useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // Keep splash visible until the app finishes initializing
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -104,6 +106,46 @@ const ALLOWED_NOTIFICATION_ROUTES = new Set([
   '/archetypes',
 ]);
 
+const errorBoundaryStyles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    backgroundColor: darkTheme.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+  },
+  errorTitle: {
+    color: darkTheme.textPrimary,
+    fontSize: 26,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorBody: {
+    color: darkTheme.textSecondary,
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 22,
+    paddingHorizontal: 20,
+  },
+  errorButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: darkTheme.cardBorder,
+    backgroundColor: darkTheme.surface,
+  },
+  errorButtonText: {
+    color: darkTheme.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});
+
 // ── Cinematic Error Boundary ──
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   constructor(props: { children: ReactNode }) {
@@ -127,14 +169,14 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
   render() {
     if (this.state.hasError) {
       return (
-        <View style={styles.errorContainer}>
+        <View style={errorBoundaryStyles.errorContainer}>
           <Ionicons name="warning-outline" size={56} color="#E8D6AE" style={{ marginBottom: 20 }} />
-          <Text style={styles.errorTitle}>Something went wrong</Text>
-          <Text style={styles.errorBody}>An unexpected error occurred. Please close the app and reopen it, or try reloading below.</Text>
+          <Text style={errorBoundaryStyles.errorTitle}>Something went wrong</Text>
+          <Text style={errorBoundaryStyles.errorBody}>An unexpected error occurred. Please close the app and reopen it, or try reloading below.</Text>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.setState({ hasError: false })}>
-            <View style={styles.errorButtonGradient}>
+            <View style={errorBoundaryStyles.errorButtonGradient}>
               <Ionicons name="refresh-outline" size={16} color="#E8D6AE" style={{ marginRight: 8 }} />
-              <Text style={styles.errorButtonText}>Reload Experience</Text>
+              <Text style={errorBoundaryStyles.errorButtonText}>Reload Experience</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -166,11 +208,13 @@ async function setTermsConsent(granted: boolean) {
 function RootLayout() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <StarNotificationProvider>
-          <AppShell />
-        </StarNotificationProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <StarNotificationProvider>
+            <AppShell />
+          </StarNotificationProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
@@ -211,6 +255,8 @@ function loadSentry() {
 }
 
 function AppShell() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
 
@@ -744,11 +790,11 @@ function AppShell() {
     <PremiumProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, position: 'relative' }}>
-        <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: '#020817' }} />}>
+        <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: theme.background }} />}>
           <CosmicBackground />
         </React.Suspense>
         <SafeAreaProvider>
-          <StatusBar style="light" />
+          <StatusBar style={theme.statusBarStyle} />
           <Stack
             screenOptions={{
               headerShown: false,
@@ -765,14 +811,14 @@ function AppShell() {
               name="checkin"
               options={{
                 presentation: 'modal',
-                contentStyle: { backgroundColor: '#020817' },
+                contentStyle: { backgroundColor: theme.background },
               }}
             />
             <Stack.Screen
               name="daily-reflection"
               options={{
                 presentation: 'modal',
-                contentStyle: { backgroundColor: '#020817' },
+                contentStyle: { backgroundColor: theme.background },
               }}
             />
             <Stack.Screen
@@ -825,41 +871,42 @@ function AppShell() {
   );
 }
 
-const styles = StyleSheet.create({
-  errorContainer: { 
-    flex: 1, 
-    backgroundColor: '#020817', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    padding: 32 
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    backgroundColor: theme.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
   },
-  errorTitle: { 
-    color: '#FFFFFF', 
-    fontSize: 26, 
+  errorTitle: {
+    color: theme.textPrimary,
+    fontSize: 26,
     fontWeight: '700',
     marginBottom: 12,
-    textAlign: 'center'
+    textAlign: 'center',
   },
-  errorBody: { 
-    color: '#8A8D98', 
-    fontSize: 15, 
-    textAlign: 'center', 
-    marginBottom: 40, 
+  errorBody: {
+    color: theme.textSecondary,
+    fontSize: 15,
+    textAlign: 'center',
+    marginBottom: 40,
     lineHeight: 22,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
-  errorButtonGradient: { 
+  errorButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 28, 
-    paddingVertical: 14, 
-    borderRadius: 20, 
-    borderWidth: 1, 
-    borderColor: 'rgba(232,214,174,0.25)' 
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.surface,
   },
-  errorButtonText: { 
-    color: '#FFFFFF', 
-    fontSize: 15, 
-    fontWeight: '600' 
+  errorButtonText: {
+    color: theme.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

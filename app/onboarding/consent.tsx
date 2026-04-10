@@ -8,15 +8,18 @@ import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter, Href } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { PrivacyComplianceManager } from '../../services/privacy/privacyComplianceManager';
 import { logger } from '../../utils/logger';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const TERMS_VERSION = '2026-03-03';
 
 export default function OnboardingConsentScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ mode?: string }>();
@@ -147,7 +150,7 @@ export default function OnboardingConsentScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   

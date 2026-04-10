@@ -223,8 +223,8 @@ export default function InnerWorldScreen() {
             {/* Sync Status Banner */}
             {allToolsCompleted && (
               <Animated.View entering={FadeInDown.duration(500)} layout={Layout.springify()} style={styles.syncBanner}>
-                <MetallicIcon name="git-network-outline" size={16} color={PALETTE.emerald} />
-                <MetallicText style={styles.syncText} color={PALETTE.emerald}>INNER WORLD SYNCHRONIZED</MetallicText>
+                <MetallicIcon name="git-network-outline" size={16} color={PALETTE.gold} />
+                <MetallicText style={styles.syncText} color={PALETTE.gold}>INNER WORLD SYNCHRONIZED</MetallicText>
               </Animated.View>
             )}
 
@@ -239,7 +239,7 @@ export default function InnerWorldScreen() {
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <MetallicText style={styles.statValue} color={PALETTE.emerald}>
+                  <MetallicText style={styles.statValue} color={PALETTE.gold}>
                     {streak}
                   </MetallicText>
                   <Text style={styles.statLabel}>streak</Text>
@@ -249,7 +249,7 @@ export default function InnerWorldScreen() {
                   <MetallicText style={styles.statValue} color={PALETTE.silverBlue}>
                     {Object.values(categorySealed).filter(Boolean).length}/4
                   </MetallicText>
-                  <Text style={styles.statLabel}>sealed</Text>
+                  <Text style={styles.statLabel}>recorded</Text>
                 </View>
               </Animated.View>
             )}
@@ -257,9 +257,9 @@ export default function InnerWorldScreen() {
             {/* All Sealed Banner */}
             {allCategoriesSealed && (
               <Animated.View entering={FadeIn.duration(500)} style={styles.sealedBanner}>
-                <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.emerald} />
-                <MetallicText style={styles.sealedBannerText} color={PALETTE.emerald}>
-                  ALL CATEGORIES SEALED TODAY
+                <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.gold} />
+                <MetallicText style={styles.sealedBannerText} color={PALETTE.gold}>
+                  ALL CATEGORIES RECORDED TODAY
                 </MetallicText>
               </Animated.View>
             )}
@@ -291,13 +291,13 @@ export default function InnerWorldScreen() {
                         <View style={styles.cardHeader}>
                           <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
 
-                          <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.emerald}20`, borderColor: `${PALETTE.emerald}40` } : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+                          <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.gold}18`, borderColor: `${PALETTE.gold}38` } : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
                             {isDone ? (
-                              <MetallicText style={styles.badgeText} color={PALETTE.emerald}>SEALED</MetallicText>
+                              <MetallicText style={styles.badgeText} color={PALETTE.gold}>RECORDED</MetallicText>
                             ) : (
                               <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>EXPLORE</Text>
                             )}
-                            {isDone && <MetallicIcon name="checkmark-outline" size={10} color={PALETTE.emerald} style={{ marginLeft: 4 }} />}
+                            {isDone && <MetallicIcon name="checkmark-outline" size={10} color={PALETTE.gold} style={{ marginLeft: 4 }} />}
                           </View>
                         </View>
 
@@ -389,13 +389,14 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 31,
     color: PALETTE.textMain,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -0.9,
     marginBottom: 4,
+    maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.72)' },
 
   syncBanner: {
     flexDirection: 'row',
@@ -418,15 +419,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16,
     paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     marginBottom: 24,
   },
   statItem: { alignItems: 'center', flex: 1 },
   statValue: { fontSize: 20, fontWeight: '700' },
-  statLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '600', letterSpacing: 1, marginTop: 2, textTransform: 'uppercase' },
+  statLabel: { fontSize: 10, color: 'rgba(255,255,255,0.62)', fontWeight: '600', letterSpacing: 1, marginTop: 2, textTransform: 'uppercase' },
   statDivider: { width: 1, height: 28, backgroundColor: PALETTE.glassBorder },
 
   // Sealed banner
@@ -446,10 +447,11 @@ const styles = StyleSheet.create({
 
   grid: { gap: 20, marginBottom: 36 },
   card: {
-    padding: 28,
+    padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.12)',
+    borderTopColor: 'rgba(255,255,255,0.18)',
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
@@ -474,19 +476,20 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   cardSubtitle: {
-    fontSize: 16,
-    color: PALETTE.textMuted,
-    lineHeight: 24,
+    fontSize: 15,
+    color: 'rgba(226,232,240,0.7)',
+    lineHeight: 22,
   },
 
   // Daily questions header
   dailyHeader: { marginBottom: 24 },
   dailyHeaderTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     marginBottom: 6,
+    letterSpacing: 0.2,
   },
-  dailyHeaderSub: { fontSize: 13 },
+  dailyHeaderSub: { fontSize: 13, color: 'rgba(255,255,255,0.66)' },
 
   // Progress
   progressSection: {
@@ -517,8 +520,8 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
-    color: PALETTE.textMuted,
-    lineHeight: 16,
+    color: 'rgba(226,232,240,0.68)',
+    lineHeight: 18,
   },
   pastLink: {
     flexDirection: 'row',

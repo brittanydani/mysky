@@ -23,7 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
 
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import {
   AstrologySettingsService,
   AstrologySettings,
@@ -39,6 +39,7 @@ import { HouseSystem, ZodiacSystem, Ayanamsa } from '../services/astrology/types
 import { localDb } from '../services/storage/localDb';
 import { logger } from '../utils/logger';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -58,6 +59,8 @@ export default function AstrologySettingsModal({
   onClose,
   onSettingsChanged,
 }: AstrologySettingsModalProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<AstrologySettings | null>(null);
@@ -346,7 +349,7 @@ export default function AstrologySettingsModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
   headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginBottom: 20 },

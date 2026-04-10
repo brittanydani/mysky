@@ -50,7 +50,7 @@ export default function DailyReflectionScreen() {
             </View>
           </Animated.View>
 
-          <DailyReflectionSection subtitle="Seal each category when you are ready" />
+          <DailyReflectionSection subtitle="Record each category when you are ready" />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  header: { marginBottom: 24 },
+  header: { marginBottom: 20 },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   headerText: { flex: 1, paddingRight: 16 },
   closeButton: {
@@ -76,11 +76,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   title: {
-    fontSize: 34,
+    fontSize: 31,
     fontWeight: '800',
     color: PALETTE.textMain,
-    letterSpacing: -0.5,
+    letterSpacing: -0.9,
     marginBottom: 4,
+    maxWidth: '88%',
   },
   subtitle: {
     fontSize: 12,
@@ -88,6 +89,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.72)',
   },
 });

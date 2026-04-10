@@ -25,7 +25,9 @@ import * as Haptics from 'expo-haptics';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { formatTime, formatDate, timeOfDayLabel } from '../utils/triggerLogHelpers';
+import { keepLastWordsTogether } from '../utils/textLayout';
 import type { TriggerEvent, LogMode, NSState } from '../utils/triggerEventTypes';
 export type { TriggerEvent } from '../utils/triggerEventTypes';
 
@@ -34,10 +36,12 @@ const CUSTOM_AREAS_KEY = '@mysky:trigger_custom_areas';
 const CUSTOM_SENSATIONS_KEY = '@mysky:trigger_custom_sensations';
 
 const PALETTE = {
-  bg: '#020817',
+  bg: '#0A0A0F',
+  gold: '#D9BF8C',
   sage: '#8CBEAA',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
+  crimson: '#FF8FA1',
   copper: '#CD7F5D',
   lavender: '#A89BC8',
   textMain: '#FFFFFF',
@@ -91,7 +95,7 @@ function HistoryEntry({ entry }: { entry: TriggerEvent }) {
   const stateCard = NS_STATE_CARDS[entry.nsState];
 
   return (
-    <View style={[histStyles.card, { borderColor: `${accentColor}30` }]}>
+    <VelvetGlassSurface style={histStyles.card} intensity={26} backgroundColor="rgba(15, 15, 20, 0.54)">
       <View style={histStyles.cardHeader}>
         <View style={[histStyles.modeBadge, { backgroundColor: `${accentColor}18`, borderColor: `${accentColor}40` }]}>
           <Text style={[histStyles.modeBadgeText, { color: accentColor }]}>
@@ -142,16 +146,14 @@ function HistoryEntry({ entry }: { entry: TriggerEvent }) {
           <Text style={histStyles.resolutionText}>{entry.resolution}</Text>
         </View>
       ) : null}
-    </View>
+    </VelvetGlassSurface>
   );
 }
 
 const histStyles = StyleSheet.create({
   card: {
     borderRadius: 20,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.025)',
-    padding: 16,
+    padding: 20,
     marginBottom: 14,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
@@ -427,7 +429,8 @@ export default function TriggerLogScreen() {
     }, 2200);
   };
 
-  const activeColor = mode === 'drain' ? PALETTE.copper : PALETTE.sage;
+  const activeColor = mode === 'drain' ? PALETTE.crimson : PALETTE.gold;
+  const placeholderColor = 'rgba(255,255,255,0.35)';
 
   return (
     <View style={styles.container}>
@@ -446,7 +449,7 @@ export default function TriggerLogScreen() {
           style={styles.confirmOverlay}
           pointerEvents="none"
         >
-          <View style={styles.confirmCard}>
+          <VelvetGlassSurface style={styles.confirmCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.66)">
             <MetallicIcon
               name={mode === 'drain' ? 'pulse-outline' : 'sunny-outline'}
               size={44}
@@ -458,19 +461,19 @@ export default function TriggerLogScreen() {
                 ? 'You noticed. That awareness is the first shift.'
                 : 'A glimmer recognized becomes a resource carried forward.'}
             </Text>
-          </View>
+          </VelvetGlassSurface>
         </Animated.View>
       )}
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
           <Pressable
-            style={styles.closeButton}
+            style={styles.backButton}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <MetallicIcon name="close-outline" size={22} color={PALETTE.textMuted} />
+            <MetallicIcon name="chevron-back-outline" size={22} color={PALETTE.textMuted} />
           </Pressable>
 
           {/* ── View mode toggle: Log / History ── */}
@@ -493,8 +496,8 @@ export default function TriggerLogScreen() {
         </View>
 
         <View style={styles.titleArea}>
-          <Text style={styles.headerTitle}>Nervous System Log</Text>
-          <GoldSubtitle style={styles.headerSubtitle}>Polyvagal triggers · drains · glimmers</GoldSubtitle>
+          <Text style={styles.headerTitle}>{keepLastWordsTogether('Nervous System Log')}</Text>
+          <GoldSubtitle style={styles.headerSubtitle}>Triggers, drains, and glimmers</GoldSubtitle>
         </View>
 
         {/* ════════════════════════ HISTORY VIEW ════════════════════════ */}
@@ -542,28 +545,27 @@ export default function TriggerLogScreen() {
               style={[styles.toggleBtn, mode === 'drain' && styles.toggleBtnActiveDrain]}
               onPress={() => toggleMode('drain')}
             >
-              {mode === 'drain' ? (
-                <MetallicText style={styles.toggleText} color={PALETTE.rose}>Trigger (Drain)</MetallicText>
-              ) : (
-                <Text style={styles.toggleText}>Trigger (Drain)</Text>
-              )}
+              <Text style={[styles.toggleText, mode === 'drain' && styles.toggleTextActiveDrain]}>Trigger (Drain)</Text>
             </Pressable>
             <Pressable
               style={[styles.toggleBtn, mode === 'nourish' && styles.toggleBtnActiveNourish]}
               onPress={() => toggleMode('nourish')}
             >
-              {mode === 'nourish' ? (
-                <MetallicText style={styles.toggleText} color={PALETTE.sage}>Glimmer (Nourish)</MetallicText>
-              ) : (
-                <Text style={styles.toggleText}>Glimmer (Nourish)</Text>
-              )}
+              <Text style={[styles.toggleText, mode === 'nourish' && styles.toggleTextActiveNourish]}>Glimmer (Nourish)</Text>
             </Pressable>
           </Animated.View>
 
           {/* ── Event Input ── */}
           <Animated.View entering={FadeInDown.delay(160).duration(500)} style={styles.inputSection}>
             <Text style={styles.sectionLabel}>WHAT HAPPENED?</Text>
-            <View style={[styles.inputGlass, { borderColor: `${activeColor}40` }]}>
+            <VelvetGlassSurface
+              style={[styles.inputGlass, { borderColor: `${activeColor}40` }]}
+              intensity={30}
+              backgroundColor="rgba(18, 18, 24, 0.7)"
+              borderColor={`${activeColor}30`}
+              highlightColor="rgba(255,255,255,0.16)"
+              topEdgeColor="rgba(255,255,255,0.24)"
+            >
               <TextInput
                 style={styles.textInput}
                 placeholder={
@@ -571,13 +573,13 @@ export default function TriggerLogScreen() {
                     ? 'What shifted your energy downward?'
                     : 'What brought you a moment of peace?'
                 }
-                placeholderTextColor={PALETTE.textMuted}
+                placeholderTextColor={placeholderColor}
                 value={eventText}
                 onChangeText={setEventText}
                 multiline
                 maxLength={1000}
               />
-            </View>
+            </VelvetGlassSurface>
           </Animated.View>
 
           {/* ── Intensity ── */}
@@ -586,23 +588,25 @@ export default function TriggerLogScreen() {
               {mode === 'drain' ? 'INTENSITY' : 'DEPTH OF SHIFT'}
             </Text>
             <View style={styles.intensityRow}>
-              {([1, 2, 3, 4, 5] as const).map(n => (
-                <Pressable
-                  key={n}
-                  style={[
-                    styles.intensityBtn,
-                    intensity === n && { backgroundColor: `${activeColor}25`, borderColor: activeColor },
-                  ]}
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setIntensity(prev => (prev === n ? null : n));
-                  }}
-                >
-                  <Text style={[styles.intensityNum, intensity !== null && n <= intensity && { color: activeColor }]}>
-                    {n}
-                  </Text>
-                </Pressable>
-              ))}
+              <View style={styles.intensityScaleRow}>
+                {([1, 2, 3, 4, 5] as const).map(n => (
+                  <Pressable
+                    key={n}
+                    style={[
+                      styles.intensityBtn,
+                      intensity === n && styles.intensityBtnSelected,
+                    ]}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setIntensity(prev => (prev === n ? null : n));
+                    }}
+                  >
+                    <Text style={[styles.intensityNum, intensity === n && styles.intensityNumSelected]}> 
+                      {n}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
               <Text style={styles.intensityHint}>
                 {intensity === null ? 'optional' : intensity <= 2 ? 'mild' : intensity <= 3 ? 'moderate' : intensity === 4 ? 'strong' : 'overwhelming'}
               </Text>
@@ -625,11 +629,11 @@ export default function TriggerLogScreen() {
                     }}
                     style={[
                       styles.tagChip,
-                      isSelected && { backgroundColor: `${activeColor}18`, borderColor: activeColor },
+                      isSelected && styles.tagChipSelected,
                     ]}
                   >
                     {isSelected ? (
-                      <MetallicText style={styles.tagText} color={activeColor}>{area}</MetallicText>
+                      <MetallicText style={styles.tagText} color="#0A0A0F">{area}</MetallicText>
                     ) : (
                       <Text style={styles.tagText}>{area}</Text>
                     )}
@@ -649,11 +653,11 @@ export default function TriggerLogScreen() {
                     style={[
                       styles.tagChip,
                       styles.customChip,
-                      isSelected && { backgroundColor: `${activeColor}18`, borderColor: activeColor },
+                      isSelected && styles.tagChipSelected,
                     ]}
                   >
                     {isSelected ? (
-                      <MetallicText style={styles.tagText} color={activeColor}>{area.label}</MetallicText>
+                      <MetallicText style={styles.tagText} color="#0A0A0F">{area.label}</MetallicText>
                     ) : (
                       <Text style={styles.tagText}>{area.label}</Text>
                     )}
@@ -666,7 +670,7 @@ export default function TriggerLogScreen() {
                   Haptics.selectionAsync().catch(() => {});
                   setShowMoreAreas(prev => !prev);
                 }}
-                style={[styles.tagChip, { borderStyle: 'dashed' }]}
+                style={[styles.tagChip, styles.utilityChip]}
               >
                 <Text style={styles.tagText}>{showMoreAreas ? 'Less ↑' : 'More ↓'}</Text>
               </Pressable>
@@ -680,7 +684,8 @@ export default function TriggerLogScreen() {
                 }}
                 style={[
                   styles.tagChip,
-                  showCustomAreaInput && { backgroundColor: `${activeColor}18`, borderColor: activeColor },
+                  styles.utilityChip,
+                  showCustomAreaInput && styles.tagChipSelected,
                 ]}
               >
                 <Text style={styles.tagText}>+ Custom</Text>
@@ -692,7 +697,7 @@ export default function TriggerLogScreen() {
                   value={customAreaInput}
                   onChangeText={setCustomAreaInput}
                   placeholder="e.g. School, Caregiving…"
-                  placeholderTextColor={PALETTE.textMuted}
+                  placeholderTextColor={placeholderColor}
                   style={styles.customAreaInput}
                   returnKeyType="done"
                   onSubmitEditing={saveCustomArea}
@@ -715,9 +720,9 @@ export default function TriggerLogScreen() {
             )}
           </Animated.View>
 
-          {/* ── Polyvagal State ── */}
+          {/* ── Current State ── */}
           <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.section}>
-            <Text style={styles.sectionLabel}>NERVOUS SYSTEM STATE</Text>
+            <Text style={styles.sectionLabel}>CURRENT STATE</Text>
             <View style={styles.stateGrid}>
               {mode === 'drain' ? (
                 <>
@@ -729,7 +734,7 @@ export default function TriggerLogScreen() {
                         key={state}
                         style={[
                           styles.stateCard,
-                          isSelected && { borderColor: card.color, backgroundColor: `${card.color}15` },
+                          isSelected && styles.stateCardSelected,
                         ]}
                         onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState(state); }}
                       >
@@ -753,7 +758,7 @@ export default function TriggerLogScreen() {
                         key={state}
                         style={[
                           styles.stateCard,
-                          isSelected && { borderColor: card.color, backgroundColor: `${card.color}15` },
+                          isSelected && styles.stateCardSelected,
                         ]}
                         onPress={() => { Haptics.selectionAsync().catch(() => {}); setSelectedState(state); }}
                       >
@@ -774,7 +779,7 @@ export default function TriggerLogScreen() {
           {/* ── Before State (Glimmers only) ── */}
           {mode === 'nourish' && (
             <Animated.View entering={FadeInDown.delay(210).duration(500)} style={styles.section}>
-              <Text style={styles.sectionLabel}>WHERE WERE YOU BEFORE?</Text>
+              <Text style={styles.sectionLabel}>WHERE DID YOU START?</Text>
               <View style={styles.stateGrid}>
                 {(['sympathetic', 'dorsal', 'ventral', 'still'] as NSState[]).map(state => {
                   const card = NS_STATE_CARDS[state];
@@ -817,11 +822,11 @@ export default function TriggerLogScreen() {
                     onPress={() => toggleSensation(sensation)}
                     style={[
                       styles.tagChip,
-                      isSelected && { backgroundColor: `${activeColor}20`, borderColor: activeColor },
+                      isSelected && styles.tagChipSelected,
                     ]}
                   >
                     {isSelected ? (
-                      <MetallicText style={styles.tagText} color={activeColor}>{sensation}</MetallicText>
+                      <MetallicText style={styles.tagText} color="#0A0A0F">{sensation}</MetallicText>
                     ) : (
                       <Text style={styles.tagText}>{sensation}</Text>
                     )}
@@ -840,11 +845,11 @@ export default function TriggerLogScreen() {
                     style={[
                       styles.tagChip,
                       styles.customChip,
-                      isSelected && { backgroundColor: `${activeColor}20`, borderColor: activeColor },
+                      isSelected && styles.tagChipSelected,
                     ]}
                   >
                     {isSelected ? (
-                      <MetallicText style={styles.tagText} color={activeColor}>{option.label}</MetallicText>
+                      <MetallicText style={styles.tagText} color="#0A0A0F">{option.label}</MetallicText>
                     ) : (
                       <Text style={styles.tagText}>{option.label}</Text>
                     )}
@@ -856,7 +861,7 @@ export default function TriggerLogScreen() {
                   <TextInput
                     style={styles.customCueInput}
                     placeholder="Custom cue…"
-                    placeholderTextColor={PALETTE.textMuted}
+                    placeholderTextColor={placeholderColor}
                     value={customSensation}
                     onChangeText={setCustomSensation}
                     autoFocus
@@ -864,13 +869,13 @@ export default function TriggerLogScreen() {
                     onSubmitEditing={addCustomSensation}
                     returnKeyType="done"
                   />
-                  <Pressable style={styles.customCueAdd} onPress={addCustomSensation}>
+                  <Pressable style={[styles.customCueAdd, styles.utilityChip]} onPress={addCustomSensation}>
                     <Text style={[styles.customCueAddText, { color: activeColor }]}>{editingCustomSensationId ? 'Update' : 'Add'}</Text>
                   </Pressable>
                 </View>
               ) : (
                 <Pressable
-                  style={[styles.tagChip, styles.addCueChip]}
+                  style={[styles.tagChip, styles.addCueChip, styles.utilityChip]}
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
                     setShowCustomInput(true);
@@ -889,7 +894,13 @@ export default function TriggerLogScreen() {
             <Text style={styles.sectionLabel}>
               {mode === 'drain' ? 'WHAT HELPED? (optional)' : 'WHAT CREATED THIS? (optional)'}
             </Text>
-            <View style={[styles.inputGlass, { borderColor: `${activeColor}25` }]}>
+            <VelvetGlassSurface
+              style={styles.inputGlass}
+              intensity={30}
+              backgroundColor="rgba(18, 18, 24, 0.7)"
+              borderColor={`${activeColor}24`}
+              highlightColor="rgba(255,255,255,0.14)"
+            >
               <TextInput
                 style={[styles.textInput, { fontSize: 14 }]}
                 placeholder={
@@ -897,13 +908,13 @@ export default function TriggerLogScreen() {
                     ? 'Walked, breathed, called someone, sat outside…'
                     : 'Music, sunlight, a kind word, stillness…'
                 }
-                placeholderTextColor={PALETTE.textMuted}
+                placeholderTextColor={placeholderColor}
                 value={resolution}
                 onChangeText={setResolution}
                 multiline
                 maxLength={500}
               />
-            </View>
+            </VelvetGlassSurface>
           </Animated.View>
 
           {/* ── Submit Button ── */}
@@ -945,101 +956,126 @@ const styles = StyleSheet.create({
 
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
+  titleArea: { paddingHorizontal: 24, paddingBottom: 14 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
 
-  viewToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 3 },
-  viewToggleBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10 },
-  viewToggleBtnActive: { backgroundColor: 'rgba(255,255,255,0.1)' },
+  viewToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.035)', borderRadius: 14, padding: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  viewToggleBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  viewToggleBtnActive: { backgroundColor: 'rgba(255,255,255,0.09)', borderColor: 'rgba(255,255,255,0.16)' },
   viewToggleText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '600' },
   viewToggleTextActive: { color: PALETTE.textMain },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 24,
     color: PALETTE.textMain,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 4,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    lineHeight: 29,
+    marginBottom: 6,
+    maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)', lineHeight: 17 },
 
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 18,
     padding: 4,
-    marginBottom: 32,
+    marginBottom: 30,
   },
-  toggleBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12 },
-  toggleBtnActiveDrain: { backgroundColor: 'rgba(205, 127, 93, 0.15)' },
-  toggleBtnActiveNourish: { backgroundColor: 'rgba(140, 190, 170, 0.15)' },
-  toggleText: { fontSize: 13, fontWeight: '700', color: PALETTE.textMuted, letterSpacing: 0.5 },
+  toggleBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)' },
+  toggleBtnActiveDrain: {
+    backgroundColor: 'rgba(220, 50, 50, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(220, 50, 50, 0.3)',
+    shadowColor: '#FF8FA1',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  toggleBtnActiveNourish: {
+    backgroundColor: '#D4AF37',
+  },
+  toggleText: { fontSize: 13, fontWeight: '700', color: PALETTE.textMuted, letterSpacing: 0.35 },
+  toggleTextActiveDrain: { color: 'rgba(255,255,255,0.92)' },
+  toggleTextActiveNourish: { color: '#0A0A0F' },
 
   section: { marginBottom: 32 },
   sectionLabel: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.62)',
     fontWeight: '700',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginTop: 8,
     marginBottom: 16,
   },
-  helperText: { fontSize: 12, color: 'rgba(255,255,255,0.42)', marginTop: -6, marginBottom: 14 },
+  helperText: { fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: -6, marginBottom: 14, lineHeight: 18 },
 
-  intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  intensityScaleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   intensityBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   intensityNum: { fontSize: 16, fontWeight: '700', color: PALETTE.textMuted },
-  intensityHint: { fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 4 },
+  intensityBtnSelected: { backgroundColor: '#D4AF37' },
+  intensityNumSelected: { color: '#0A0A0F' },
+  intensityHint: { fontSize: 11, color: 'rgba(255,255,255,0.58)' },
 
   inputSection: { marginBottom: 32 },
   inputGlass: {
-    borderRadius: 24,
+    borderRadius: 28,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 20,
-    minHeight: 100,
+    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 24,
+    paddingVertical: 0,
+    minHeight: 154,
   },
   textInput: {
     color: PALETTE.textMain,
     fontSize: 16,
     lineHeight: 24,
+    minHeight: 154,
+    paddingTop: 16,
+    paddingBottom: 22,
+    textAlignVertical: 'top',
   },
 
   stateGrid: { gap: 12 },
   stateCard: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 20,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 24,
   },
+  stateCardSelected: { backgroundColor: 'rgba(255,255,255,0.9)' },
   stateTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, marginBottom: 4 },
-  stateSub: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 18 },
+  stateSub: { fontSize: 13, color: 'rgba(226,232,240,0.68)', lineHeight: 19 },
 
   tagCloud: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tagChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  customChip: { borderStyle: 'dashed' },
-  addCueChip: { borderStyle: 'dashed' },
-  tagText: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '500' },
+  tagChipSelected: { backgroundColor: 'rgba(255,255,255,0.9)' },
+  customChip: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  addCueChip: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  utilityChip: { backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  tagText: { fontSize: 11, color: 'rgba(226,232,240,0.76)', fontWeight: '600' },
 
   customAreaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
   customAreaInput: {
@@ -1054,11 +1090,11 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
   },
   customAreaConfirm: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 18,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   customCueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   customCueInput: {
@@ -1072,15 +1108,16 @@ const styles = StyleSheet.create({
     color: PALETTE.textMain,
     fontSize: 12,
   },
-  customCueAdd: { paddingHorizontal: 12, paddingVertical: 7 },
+  customCueAdd: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)' },
   customCueAddText: { fontSize: 12, fontWeight: '700' },
 
   submitSection: { paddingHorizontal: 0, marginBottom: 8 },
   submitHint: {
     fontSize: 12,
-    color: PALETTE.textMuted,
+    color: 'rgba(226,232,240,0.66)',
     textAlign: 'center',
     marginBottom: 12,
+    lineHeight: 18,
   },
   sealBtn: {
     height: 56,
@@ -1110,10 +1147,7 @@ const styles = StyleSheet.create({
   },
   confirmCard: {
     borderRadius: 32,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    padding: 40,
+    padding: 36,
     alignItems: 'center',
     maxWidth: 300,
   },

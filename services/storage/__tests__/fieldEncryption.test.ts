@@ -39,9 +39,7 @@ beforeEach(async () => {
   const SecureStore = require('expo-secure-store');
   await SecureStore.deleteItemAsync('field_encryption_dek');
   asyncStore.clear();
-  // Reset the internal DEK cache by re-initializing
-  // (cast to any to access private dekCache)
-  (fieldEncryption as any).dekCache = null;
+  fieldEncryption.clearCache();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,6 +192,28 @@ describe('fieldEncryption.decryptField', () => {
 
     warnSpy.mockRestore();
     errorSpy.mockRestore();
+  });
+
+  it('logs the AES-GCM missing-key warning only once per session', async () => {
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+
+    const encryptedOne = await fieldEncryption.encryptField('first');
+    const encryptedTwo = await fieldEncryption.encryptField('second');
+
+    const SecureStore = require('expo-secure-store');
+    await SecureStore.deleteItemAsync('field_encryption_dek');
+    (fieldEncryption as any).dekCache = null;
+
+    await fieldEncryption.decryptField(encryptedOne);
+    await fieldEncryption.decryptField(encryptedTwo);
+
+    expect(
+      warnSpy.mock.calls.filter(
+        ([message]) => message === '[FieldEncryption] AES-GCM key unavailable on this device; returning placeholder'
+      )
+    ).toHaveLength(1);
+
+    warnSpy.mockRestore();
   });
 });
 

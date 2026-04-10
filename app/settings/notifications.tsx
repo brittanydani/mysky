@@ -9,6 +9,7 @@ import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { useThemePreference } from '../../context/ThemeContext';
 
 // ── Persistence keys ──────────────────────────────────────────────────────────
 const KEYS = {
@@ -34,6 +35,7 @@ function formatTime(date: Date): string {
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function NotificationSettings() {
   const router = useRouter();
+  const { resolvedMode } = useThemePreference();
   const [isRhythmEnabled, setIsRhythmEnabled] = useState(false);
 
   const [morningTime, setMorningTime] = useState(makeTime(8, 0));
@@ -213,7 +215,7 @@ export default function NotificationSettings() {
               display="spinner"
               onChange={(e, d) => handlePickerChange(slot, e, d)}
               textColor="#FFFFFF"
-              themeVariant="dark"
+              themeVariant={resolvedMode}
               style={styles.picker}
             />
             <Pressable style={styles.doneButton} onPress={confirmIOSTime}>

@@ -2,8 +2,8 @@
  * NeonWaveChart.tsx
  * MySky — 7-Day Aurora Pillar Chart (Skia)
  *
- * Each day = a glowing vertical pillar whose height encodes Mood.
- * Energy (teal) + Stress (rose) appear as slim accent strips flanking each pillar.
+ * Each day = a soft translucent pill whose height encodes Mood.
+ * Energy (teal) + Stress (rose) appear as slim accent strips flanking each pill.
  * TODAY's pillar glows brightest. Tap any pillar for a frosted-glass tooltip.
  *
  * No overlapping wave areas — completely redesigned.
@@ -19,9 +19,12 @@ import {
   Circle,
   BlurMask,
   Rect,
+  RoundedRect,
   vec,
+  rrect,
 } from '@shopify/react-native-skia';
 import { DailyCheckIn } from '../../services/patterns/types';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -50,6 +53,7 @@ export interface NeonWaveChartProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartProps) {
+  const theme = useAppTheme();
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
   // Always display exactly 7 days (oldest → today)
@@ -150,41 +154,25 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
           return (
             <React.Fragment key={i}>
               {/* Atmospheric glow halo (wider + blurred) */}
-              <Rect
-                x={day.px - 5}
-                y={day.topY - 10}
-                width={PILLAR_W + 10}
-                height={day.moodH + 14}
-                color={hexAlpha(MOOD_COLOR, day.isToday || isActive ? 0.15 : 0.05)}
+              <RoundedRect
+                rect={rrect({ x: day.px - 6, y: day.topY - 10, width: PILLAR_W + 12, height: day.moodH + 16 }, 999, 999)}
+                color={hexAlpha(MOOD_COLOR, day.isToday || isActive ? 0.14 : 0.05)}
               >
                 <BlurMask blur={18} style="normal" />
-              </Rect>
+              </RoundedRect>
 
-              {/* Main pillar body — horizontal metallic sweep */}
-              <Rect x={day.px} y={day.topY} width={PILLAR_W} height={day.moodH}>
+              {/* Main pillar body — soft vertical glass gradient */}
+              <RoundedRect rect={rrect({ x: day.px, y: day.topY, width: PILLAR_W, height: day.moodH }, 999, 999)}>
                 <LinearGradient
-                  start={vec(day.px, 0)}
-                  end={vec(day.px + PILLAR_W, 0)}
-                  positions={[0, 0.22, 0.5, 0.78, 1]}
+                  start={vec(day.px, bottom)}
+                  end={vec(day.px, day.topY)}
+                  positions={[0, 0.48, 1]}
                   colors={day.isToday
-                    ? ['rgba(74,47,16,0.72)', 'rgba(168,116,46,0.82)', 'rgba(239,213,150,0.90)', 'rgba(168,116,46,0.82)', 'rgba(74,47,16,0.72)']
-                    : ['rgba(74,47,16,0.28)', 'rgba(168,116,46,0.38)', 'rgba(221,186,106,0.44)', 'rgba(168,116,46,0.38)', 'rgba(74,47,16,0.28)']
+                    ? ['rgba(125,89,34,0.18)', 'rgba(201,174,120,0.34)', 'rgba(244,230,188,0.92)']
+                    : ['rgba(125,89,34,0.10)', 'rgba(201,174,120,0.20)', 'rgba(244,230,188,0.58)']
                   }
                 />
-              </Rect>
-
-              {/* Rounded top cap — horizontal metallic sweep */}
-              <Circle cx={cx} cy={day.topY} r={PILLAR_W / 2}>
-                <LinearGradient
-                  start={vec(cx - PILLAR_W / 2, 0)}
-                  end={vec(cx + PILLAR_W / 2, 0)}
-                  positions={[0, 0.22, 0.5, 0.78, 1]}
-                  colors={day.isToday
-                    ? ['rgba(74,47,16,0.80)', 'rgba(168,116,46,0.88)', '#EFD596', 'rgba(168,116,46,0.88)', 'rgba(74,47,16,0.80)']
-                    : ['rgba(74,47,16,0.38)', 'rgba(168,116,46,0.50)', 'rgba(201,153,73,0.60)', 'rgba(168,116,46,0.50)', 'rgba(74,47,16,0.38)']
-                  }
-                />
-              </Circle>
+              </RoundedRect>
 
               {/* Energy accent — metallic blue left strip */}
               {day.energyH > 0 && (
@@ -229,7 +217,7 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
                 cx={cx}
                 cy={day.topY}
                 r={day.isToday ? 3.5 : 2.5}
-                color={day.isToday ? MOOD_COLOR : hexAlpha(MOOD_COLOR, 0.72)}
+                color={day.isToday ? '#F4E6BC' : hexAlpha(MOOD_COLOR, 0.72)}
               />
 
               {/* Top glow bloom */}
@@ -305,7 +293,7 @@ export function NeonWaveChart({ checkIns, width, height = 200 }: NeonWaveChartPr
         >
           <BlurView
             intensity={50}
-            tint="dark"
+            tint={theme.blurTint}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.tooltipTint} />

@@ -14,7 +14,7 @@ import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EncryptedAsyncStorage } from '../../../services/storage/encryptedAsyncStorage';
 
-import { theme } from '../../../constants/theme';
+import { type AppTheme } from '../../../constants/theme';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
@@ -39,6 +39,7 @@ import { setHapticsEnabled } from '../../../utils/haptics';
 import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
+import { useAppTheme, useThemedStyles, useThemePreference } from '../../../context/ThemeContext';
 
 const FAQ: { question: string; answer: string }[] = [
   {
@@ -119,6 +120,9 @@ const FAQ: { question: string; answer: string }[] = [
 ];
 
 export default function SettingsScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+  const { preference: appearanceMode, resolvedMode, setPreference: setAppearanceMode } = useThemePreference();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
@@ -133,6 +137,11 @@ export default function SettingsScreen() {
   const accentBlue = '#C9AE78';
   const accentCopper = '#CD7F5D';
   const accentEmerald = '#6EBF8B';
+  const appearanceOptions: Array<{ value: 'light' | 'dark' | 'system'; label: string }> = [
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+    { value: 'system', label: 'System' },
+  ];
 
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -822,6 +831,44 @@ export default function SettingsScreen() {
                 label="Subconscious Capture"
                 description="Enable dream logging and archetypal reflection"
               />
+              <ObsidianDivider />
+              <View style={styles.appearanceBlock}>
+                <View style={styles.settingRow}>
+                  <View style={styles.settingInfo}>
+                    <View style={styles.settingHeader}>
+                      <MetallicIcon name="sunny-outline" size={20} color={accentGold} />
+                      <Text style={styles.settingTitle}>Appearance</Text>
+                    </View>
+                    <Text style={styles.settingDescription}>
+                      Choose light mode, dark mode, or follow your device setting.
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.appearanceOptionRow}>
+                  {appearanceOptions.map((option) => {
+                    const selected = appearanceMode === option.value;
+                    return (
+                      <Pressable
+                        key={option.value}
+                        style={[styles.appearanceChip, selected && styles.appearanceChipActive]}
+                        onPress={() => {
+                          void setAppearanceMode(option.value);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Use ${option.label.toLowerCase()} appearance`}
+                        accessibilityState={{ selected }}
+                      >
+                        <Text style={[styles.appearanceChipText, selected && styles.appearanceChipTextActive]}>
+                          {option.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <Text style={styles.appearanceCaption}>
+                  Active now: {resolvedMode === 'light' ? 'Light mode' : 'Dark mode'}
+                </Text>
+              </View>
             </ObsidianSettingsGroup>
           </Animated.View>
 
@@ -1188,7 +1235,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
 
@@ -1337,6 +1384,43 @@ const styles = StyleSheet.create({
   },
   privacyItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   privacyText: { fontSize: 12, color: theme.textSecondary, flex: 1 },
+
+  appearanceBlock: {
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  appearanceOptionRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+  },
+  appearanceChip: {
+    flex: 1,
+    borderRadius: theme.borderRadius.full,
+    borderWidth: 1,
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.surface,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appearanceChipActive: {
+    backgroundColor: 'rgba(201, 174, 120, 0.14)',
+    borderColor: 'rgba(201, 174, 120, 0.34)',
+  },
+  appearanceChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.textSecondary,
+  },
+  appearanceChipTextActive: {
+    color: theme.primary,
+  },
+  appearanceCaption: {
+    marginTop: theme.spacing.sm,
+    fontSize: 12,
+    color: theme.textMuted,
+  },
 
   securityGrid: { gap: theme.spacing.lg, paddingHorizontal: 20, paddingVertical: 4 },
   securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },

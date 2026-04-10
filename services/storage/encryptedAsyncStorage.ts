@@ -21,6 +21,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FieldEncryptionService } from './fieldEncryption';
 import { logger } from '../../utils/logger';
 
+const reportedUnreadableKeys = new Set<string>();
+
+function logUnreadableKeyOnce(key: string, reason: 'key_missing' | 'auth_failed' | 'invalid_format'): void {
+  const marker = `${key}:${reason}`;
+  if (reportedUnreadableKeys.has(marker)) {
+    return;
+  }
+
+  reportedUnreadableKeys.add(marker);
+  logger.warn(
+    reason === 'key_missing'
+      ? `[EncryptedAsyncStorage] Encryption key unavailable for key "${key}"; treating value as missing`
+      : reason === 'invalid_format'
+        ? `[EncryptedAsyncStorage] Encrypted value for key "${key}" is malformed; treating value as missing`
+        : `[EncryptedAsyncStorage] Decryption failed for key "${key}"; treating value as missing`
+  );
+}
+
 export const EncryptedAsyncStorage = {
   /**
    * Read and decrypt a value. Handles both encrypted and legacy plaintext
@@ -31,12 +49,13 @@ export const EncryptedAsyncStorage = {
     if (raw === null) return null;
 
     if (FieldEncryptionService.isEncrypted(raw)) {
-      try {
-        return await FieldEncryptionService.decryptField(raw);
-      } catch {
-        logger.error(`[EncryptedAsyncStorage] Decryption failed for key "${key}"`);
-        return null;
+      const result = await FieldEncryptionService.tryDecryptField(raw);
+      if (result.ok) {
+        return result.value;
       }
+
+      logUnreadableKeyOnce(key, result.error);
+      return null;
     }
 
     // Legacy plaintext — return as-is. The next setItem will encrypt it.
@@ -50,6 +69,9 @@ export const EncryptedAsyncStorage = {
     try {
       const encrypted = await FieldEncryptionService.encryptField(value);
       await AsyncStorage.setItem(key, encrypted);
+      reportedUnreadableKeys.delete(`${key}:key_missing`);
+      reportedUnreadableKeys.delete(`${key}:auth_failed`);
+      reportedUnreadableKeys.delete(`${key}:invalid_format`);
     } catch (e) {
       logger.error(`[EncryptedAsyncStorage] Write failed for key "${key}"`, e);
       throw e;
@@ -62,6 +84,9 @@ export const EncryptedAsyncStorage = {
   async removeItem(key: string): Promise<void> {
     try {
       await AsyncStorage.removeItem(key);
+      reportedUnreadableKeys.delete(`${key}:key_missing`);
+      reportedUnreadableKeys.delete(`${key}:auth_failed`);
+      reportedUnreadableKeys.delete(`${key}:invalid_format`);
     } catch (e) {
       logger.error(`[EncryptedAsyncStorage] Delete failed for key "${key}"`, e);
       throw e;

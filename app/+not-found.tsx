@@ -3,9 +3,13 @@ import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { router, Href } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 export default function NotFoundScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
@@ -31,7 +35,7 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.background,

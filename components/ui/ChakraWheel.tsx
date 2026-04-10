@@ -18,8 +18,9 @@ import {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import { SkiaChakraNode, CHAKRA_COLORS } from './SkiaChakraNode';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 export type ChakraState = 'Flowing' | 'Sensitive' | 'Grounding Needed' | 'Quiet';
 
@@ -79,6 +80,8 @@ function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
 export default function ChakraWheel({
   chakras, dominantChakra, size, showLabels = true,
 }: ChakraWheelProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const wheelSize = size || SCREEN_W * 0.58;
   const cx = wheelSize / 2;
   const cy = wheelSize / 2;
@@ -255,6 +258,7 @@ export default function ChakraWheel({
 
 /* Legend bar */
 export function ChakraLegend() {
+  const styles = useThemedStyles(createStyles);
   const states: ChakraState[] = ['Flowing', 'Sensitive', 'Grounding Needed', 'Quiet'];
   const dotColors: Record<ChakraState, string> = {
     Flowing: '#C9AE78',             // Gold
@@ -275,7 +279,7 @@ export function ChakraLegend() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     position: 'relative',
     alignSelf: 'center',

@@ -37,7 +37,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from '../utils/haptics';
 
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from './ui/GoldSubtitle';
@@ -53,6 +53,8 @@ import { getArchetypeProfile, getArchetypePrompt, ArchetypeProfile, ArchetypeJou
 import { AdvancedJournalAnalyzer } from '../services/premium/advancedJournal';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
+import { VelvetGlassSurface } from './ui/VelvetGlassSurface';
+import { useAppTheme, useThemedStyles, useThemePreference } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -83,6 +85,35 @@ const MOOD_OPTIONS: { key: MoodKey; label: string; color: string }[] = [
   { key: 'heavy',  label: 'Heavy',  color: '#A89BC8' },
   { key: 'stormy', label: 'Stormy', color: '#E07A7A' },
 ];
+
+function formatTitleCaseSegment(segment: string): string {
+  const SMALL_WORDS = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'if', 'in', 'nor', 'of', 'on', 'or', 'per', 'the', 'to', 'vs', 'via']);
+  return segment
+    .split(/(\s+)/)
+    .map((part, index, all) => {
+      if (!part.trim()) return part;
+      const normalized = part.toLowerCase();
+      const isFirst = index === 0;
+      const isLast = index === all.length - 1;
+      if (!isFirst && !isLast && SMALL_WORDS.has(normalized)) {
+        return normalized;
+      }
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    })
+    .join('');
+}
+
+function normalizeJournalTitle(title: string): string {
+  const trimmed = title.trim().replace(/\s+/g, ' ');
+  if (!trimmed) return '';
+  return trimmed
+    .split(/([:–—-])/)
+    .map((segment) => (/^[:–—-]$/.test(segment) ? segment : formatTitleCaseSegment(segment)))
+    .join('')
+    .replace(/\s+([:–—-])/g, ' $1')
+    .replace(/([:–—-])\s+/g, '$1 ')
+    .trim();
+}
 
 const TAG_CATEGORIES: { id: string; label: string; tags: { id: string; label: string }[] }[] = [
   {
@@ -274,6 +305,9 @@ interface CustomTag {
 }
 
 export default function JournalEntryModal({ visible, onClose, onSave, initialData, recentTags }: JournalEntryModalProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+  const { resolvedMode } = useThemePreference();
   const { isPremium } = usePremium();
   
   // ── Writing-mode state ──
@@ -598,7 +632,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         date: toLocalDateString(date),
         mood,
         moonPhase: ({ low: 'waning', steady: 'full', high: 'waxing' } as Record<EnergyKey, string>)[energyLevel] as any,
-        title: title.trim() || undefined,
+        title: normalizeJournalTitle(title) || undefined,
         content: content.trim(),
         tags: tags.length > 0 ? tags : undefined,
         chartId: chartId || undefined,
@@ -656,12 +690,6 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                 <View style={styles.headerTopRow}>
                   <View>
                     <Text style={styles.headerTitle}>{initialData ? 'Edit Entry' : 'New Reflection'}</Text>
-                    <Pressable onPress={() => setShowDatePicker(true)} hitSlop={12} style={styles.headerDateRow}>
-                      <GoldSubtitle style={styles.headerDateLabel}>
-                        {date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                      </GoldSubtitle>
-                      <Ionicons name="calendar-outline" size={13} color="rgba(201,174,120,0.6)" style={{ marginLeft: 5, marginTop: 1 }} />
-                    </Pressable>
                   </View>
                   <Pressable style={styles.iconBtn} onPress={handleRequestClose} hitSlop={15}>
                     <Ionicons name="close-outline" size={18} color="rgba(255,255,255,0.55)" />
@@ -679,7 +707,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     value={content}
                     onChangeText={setContent}
                     placeholder="What is surfacing for you right now?"
-                    placeholderTextColor="rgba(255,255,255,0.35)"
+                    placeholderTextColor="rgba(255,255,255,0.64)"
                     maxLength={BODY_MAX_LENGTH}
                     multiline
                     textAlignVertical="top"
@@ -732,6 +760,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <View style={styles.cardRow}>
                         <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.cardRowText}>{formatDate(date)}</Text>
+                        <Ionicons name="chevron-down-outline" size={18} color="rgba(255,255,255,0.38)" />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -746,7 +775,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       value={title}
                       onChangeText={setTitle}
                       placeholder="Title this moment..."
-                      placeholderTextColor="rgba(255,255,255,0.22)"
+                      placeholderTextColor="rgba(255,255,255,0.60)"
                       maxLength={TITLE_MAX_LENGTH}
                     />
                   </LinearGradient>
@@ -769,9 +798,9 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                             ]}
                           >
                             {isSelected ? (
-                              <MetallicText style={[styles.moodPillText, { fontWeight: '700' }]} color={m.color} numberOfLines={1}>{m.label}</MetallicText>
+                              <MetallicText style={[styles.moodPillText, { fontWeight: '700' }]} color={m.color}>{m.label}</MetallicText>
                             ) : (
-                              <Text style={[styles.moodPillText, { color: 'rgba(255,255,255,0.4)' }]} numberOfLines={1}>{m.label}</Text>
+                              <Text style={[styles.moodPillText, { color: 'rgba(255,255,255,0.4)' }]}>{m.label}</Text>
                             )}
                           </Pressable>
                         );
@@ -843,7 +872,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       value={content}
                       onChangeText={setContent}
                       placeholder="What is surfacing for you right now?"
-                      placeholderTextColor="rgba(255,255,255,0.22)"
+                      placeholderTextColor="rgba(255,255,255,0.60)"
                       maxLength={BODY_MAX_LENGTH}
                       multiline
                       textAlignVertical="top"
@@ -933,7 +962,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                     value={pendingDate ?? date}
                     mode="date"
                     display="spinner"
-                    themeVariant="dark"
+                    themeVariant={resolvedMode}
                     textColor="#FFFFFF"
                     maximumDate={new Date()}
                     onChange={(_e, d) => { if (d) setPendingDate(d); }}
@@ -945,7 +974,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   value={date}
                   mode="date"
                   display="default"
-                  themeVariant="dark"
+                  themeVariant={resolvedMode}
                   maximumDate={new Date()}
                   onChange={(_e, d) => { setShowDatePicker(false); if (d) setDate(d); }}
                 />
@@ -964,7 +993,13 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
         >
           <View style={styles.tagPickerOverlay} pointerEvents="box-none">
             <Pressable onPress={() => { setShowTagPicker(false); setTagSearch(''); closeCustomTagComposer(); }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-            <View style={styles.tagPickerSheet}>
+            <VelvetGlassSurface
+              style={styles.tagPickerSheet}
+              intensity={50}
+              backgroundColor="rgba(11, 15, 25, 0.36)"
+              borderColor="rgba(255,255,255,0.10)"
+              highlightColor="rgba(255,255,255,0.05)"
+            >
               <View style={styles.tagPickerHandle} />
               <View style={styles.tagPickerHeader}>
                 <Text style={styles.tagPickerTitle}>Add Tags</Text>
@@ -981,7 +1016,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   value={tagSearch}
                   onChangeText={setTagSearch}
                   placeholder="Search tags..."
-                  placeholderTextColor="rgba(255,255,255,0.22)"
+                  placeholderTextColor="rgba(255,255,255,0.38)"
                   autoCorrect={false}
                   returnKeyType="search"
                 />
@@ -1091,7 +1126,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                               value={newTagModalInput}
                               onChangeText={setNewTagModalInput}
                               placeholder="Tag name…"
-                              placeholderTextColor="rgba(255,255,255,0.28)"
+                              placeholderTextColor="rgba(255,255,255,0.42)"
                               autoFocus
                               maxLength={30}
                               returnKeyType="done"
@@ -1138,7 +1173,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                     value={newTagModalInput}
                                     onChangeText={setNewTagModalInput}
                                     placeholder="Tag name…"
-                                    placeholderTextColor="rgba(255,255,255,0.28)"
+                                    placeholderTextColor="rgba(255,255,255,0.42)"
                                     autoFocus
                                     maxLength={30}
                                     returnKeyType="done"
@@ -1173,7 +1208,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   );
                 })()}
               </ScrollView>
-            </View>
+            </VelvetGlassSurface>
           </View>
         </Modal>
         </>
@@ -1184,6 +1219,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
 
 // ── Section Header (matches Today screen) ────────────────────────────────────
 function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.sectionHeader}>
       <MetallicIcon name={icon as any} size={18} color="#C9AE78" />
@@ -1192,16 +1228,13 @@ function SectionHeader({ title, icon }: { title: string; icon: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { paddingHorizontal: 24, paddingTop: 52, paddingBottom: 28 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerDateLabel: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase' },
-  headerDateLabelTappable: { textDecorationLine: 'underline', textDecorationColor: 'rgba(201,174,120,0.4)' },
-  headerDateRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
 
   // ── Writing mode header ──
@@ -1223,7 +1256,7 @@ const styles = StyleSheet.create({
   // ── Mood quick-pick toolbar (sits above keyboard in writing mode) ──
   moodToolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.75)' },
   moodChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },
-  moodChipText: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.65)' },
+  moodChipText: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.72)' },
 
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 4, paddingBottom: 60 },
@@ -1236,7 +1269,7 @@ const styles = StyleSheet.create({
   sectionCard: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cardRowText: { flex: 1, color: PALETTE.textMain, fontSize: 16, fontWeight: '500' },
-  cardTextInput: { color: PALETTE.textMain, fontSize: 17, paddingVertical: 0, minHeight: 24 },
+  cardTextInput: { color: PALETTE.textMain, fontSize: 17, paddingVertical: 0, paddingTop: 2, minHeight: 24 },
 
   promptsToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, marginBottom: 14 },
   promptsToggleText: { fontSize: 13, color: PALETTE.gold, fontWeight: '600' },
@@ -1248,7 +1281,7 @@ const styles = StyleSheet.create({
   primaryPromptText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
   
-  contentInput: { color: PALETTE.textMain, fontSize: 17, lineHeight: 27, minHeight: 180, paddingVertical: 0 },
+  contentInput: { color: PALETTE.textMain, fontSize: 17, lineHeight: 27, minHeight: 180, paddingTop: 4, paddingBottom: 0 },
 
   // ── Archetype lens prompt card ──
   archetypePromptCard: { flexDirection: 'row', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.025)', marginBottom: 16 },
@@ -1259,9 +1292,11 @@ const styles = StyleSheet.create({
   archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 21, marginTop: 2 },
   
   // ── Mood row ──
-  moodRow: { flexDirection: 'row', flexWrap: 'nowrap', gap: 6, justifyContent: 'space-between' },
+  moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' },
   moodPill: {
-    flex: 1,
+    flexBasis: '31%',
+    maxWidth: '31%',
+    minHeight: 48,
     paddingHorizontal: 8,
     paddingVertical: 12,
     borderRadius: 16,
@@ -1271,14 +1306,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  moodPillText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.70)', textAlign: 'center' },
+  moodPillText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.70)', textAlign: 'center', lineHeight: 16 },
 
   // ── Tags ──
   addTagsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.08)' },
   addTagsBtnText: { fontSize: 12, color: PALETTE.jade, fontWeight: '600' },
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tagPlaceholder: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingHorizontal: 0 },
-  tagPlaceholderText: { fontSize: 13, color: 'rgba(255,255,255,0.22)',  },
+  tagPlaceholderText: { fontSize: 13, color: 'rgba(255,255,255,0.60)' },
   tagChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1304,20 +1339,20 @@ const styles = StyleSheet.create({
 
   // ── Tag Picker Modal ──
   tagPickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.60)', justifyContent: 'flex-end' },
-  tagPickerSheet: { backgroundColor: '#0D1117', borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxHeight: '92%', minHeight: '70%', flexShrink: 1, marginBottom: 64 },
-  tagPickerHandle: { width: 44, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.18)', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  tagPickerSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%', minHeight: '70%', flexShrink: 1, marginBottom: 64, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: -10 }, shadowOpacity: 0.22, shadowRadius: 28, elevation: 18 },
+  tagPickerHandle: { width: 44, height: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.18)', alignSelf: 'center', marginTop: 12, marginBottom: 8 },
   tagPickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
   tagPickerTitle: { fontSize: 16, color: '#FFFFFF', fontWeight: '600' },
   tagPickerDone: { fontSize: 16, color: PALETTE.gold, fontWeight: '700' },
-  tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', gap: 8 },
+  tagSearchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', gap: 8 },
   tagSearchInput: { flex: 1, color: PALETTE.textMain, fontSize: 14, padding: 0 },
   tagPickerScroll: { paddingHorizontal: 16, paddingBottom: 72, flex: 1 },
   tagPickerSectionLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(201,174,120,0.65)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 18, marginBottom: 8, paddingLeft: 2 },
   tagPickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)' },
+  tagPickerChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.07)' },
   tagPickerChipSelected: { borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.14)' },
   tagPickerChipSelectedCustom: { borderColor: 'rgba(107,191,163,0.50)', backgroundColor: 'rgba(107,191,163,0.14)' },
-  tagPickerChipText: { fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: '500' },
+  tagPickerChipText: { fontSize: 11, color: 'rgba(255,255,255,0.74)', fontWeight: '600' },
   tagPickerChipTextSelected: { color: PALETTE.jade, fontWeight: '700' },
   tagPickerChipTextSelectedCustom: { color: PALETTE.jade, fontWeight: '700' },
   createTagBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.35)', backgroundColor: 'rgba(107,191,163,0.10)' },
@@ -1335,7 +1370,7 @@ const styles = StyleSheet.create({
   newTagPopupCancelText: { fontSize: 15, fontWeight: '600', color: 'rgba(255,255,255,0.60)' },
   newTagPopupCreate: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: 'rgba(107,191,163,0.22)', borderWidth: 1, borderColor: 'rgba(107,191,163,0.45)', alignItems: 'center' },
   newTagPopupCreateText: { fontSize: 15, fontWeight: '700', color: PALETTE.jade },
-  newTagInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(107,191,163,0.30)', backgroundColor: 'rgba(107,191,163,0.05)', minWidth: 90 },
+  newTagInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(107,191,163,0.24)', backgroundColor: 'rgba(255,255,255,0.06)', minWidth: 90 },
   newTagInput: { flex: 1, color: PALETTE.textMain, fontSize: 13, padding: 0, minWidth: 60 },
   tagPickerHint: { fontSize: 10, color: 'rgba(255,255,255,0.20)', textAlign: 'center', marginTop: 6, marginBottom: 2,  },
 

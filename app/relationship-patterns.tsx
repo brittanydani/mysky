@@ -30,6 +30,7 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
 const CUSTOM_TAGS_KEY = '@mysky:relationship_pattern_custom_tags';
@@ -38,7 +39,7 @@ const PALETTE = {
   anxious: '#7A9EBD',   // Steel blue — Moving Toward
   avoidant: '#C4877F',  // Dusty rose — Moving Away
   control: '#9088A8',   // Lavender grey — Rigidity
-  secure: '#7BAE8F',    // Sage green — Secure
+  secure: '#D9BF8C',    // Gold — Secure
   gold: '#D9BF8C',
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
@@ -117,6 +118,7 @@ export default function RelationshipPatternsScreen() {
   const [customTagInput, setCustomTagInput] = useState('');
   const [activeCustomCategory, setActiveCustomCategory] = useState<PatternCategory | null>(null);
   const [editingCustomTagId, setEditingCustomTagId] = useState<string | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<PatternCategory>('anxious');
 
   useFocusEffect(
     useCallback(() => {
@@ -282,10 +284,10 @@ export default function RelationshipPatternsScreen() {
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.header}>
             <Pressable
-              style={styles.closeButton}
+              style={styles.backButton}
               onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}
             >
-              <Text style={styles.closeIcon}>×</Text>
+              <Text style={styles.backIcon}>‹</Text>
             </Pressable>
           </View>
 
@@ -300,7 +302,8 @@ export default function RelationshipPatternsScreen() {
             {gravityStats.total > 0 && (
               <>
               <SectionHeader title="Relational Gravity" icon="planet-outline" />
-              <Animated.View entering={FadeIn.duration(600)} style={styles.summaryCard}>
+              <Animated.View entering={FadeIn.duration(600)}>
+                <VelvetGlassSurface style={styles.summaryCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.56)">
                 <View style={styles.summaryHeader}>
                   <MetallicIcon name="planet-outline" size={16} color={PALETTE.gold} />
                   <MetallicText style={styles.summaryTitle} color={PALETTE.gold}>YOUR RELATIONAL GRAVITY</MetallicText>
@@ -343,30 +346,32 @@ export default function RelationshipPatternsScreen() {
                     <Text style={[styles.legendText, { color: PALETTE.anxious }]}>Moving Toward</Text>
                   </View>
                   <View style={styles.legendItem}>
-                    <Text style={[styles.legendDot, { color: PALETTE.avoidant }]}>◆</Text>
-                    <Text style={[styles.legendText, { color: PALETTE.avoidant }]}>Moving Away</Text>
-                  </View>
-                  <View style={styles.legendItem}>
                     <Text style={[styles.legendDot, { color: PALETTE.control }]}>◆</Text>
                     <Text style={[styles.legendText, { color: PALETTE.control }]}>Rigidity</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <Text style={[styles.legendDot, { color: PALETTE.avoidant }]}>◆</Text>
+                    <Text style={[styles.legendText, { color: PALETTE.avoidant }]}>Moving Away</Text>
                   </View>
                   <View style={styles.legendItem}>
                     <Text style={[styles.legendDot, { color: PALETTE.secure }]}>◆</Text>
                     <Text style={[styles.legendText, { color: PALETTE.secure }]}>Secure</Text>
                   </View>
                 </View>
+                </VelvetGlassSurface>
               </Animated.View>
               </>
             )}
 
             {/* Log Entry Form */}
             <SectionHeader title="Log a Pattern" icon="pencil-outline" />
-            <Animated.View entering={FadeInDown.delay(220).duration(500)} style={styles.formCard}>
+            <Animated.View entering={FadeInDown.delay(220).duration(500)}>
+              <VelvetGlassSurface style={styles.formCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.56)">
 
               <TextInput
                 style={styles.noteInput}
                 placeholder="What dynamic played out today? Write freely..."
-                placeholderTextColor="rgba(255,255,255,0.25)"
+                placeholderTextColor="rgba(255,255,255,0.64)"
                 multiline
                 maxLength={1000}
                 value={note}
@@ -383,104 +388,128 @@ export default function RelationshipPatternsScreen() {
                 const categoryLabel = category === 'anxious' ? 'Moving Toward' : category === 'avoidant' ? 'Moving Away' : category === 'control' ? 'Rigidity' : 'Secure';
                 const categoryTags = PATTERN_TAGS.filter((t) => t.category === category);
                 const categoryCustomTags = customTags.filter((tag) => tag.category === category);
+                const selectedCount = selectedTags.filter((tagId) => allTags.find((tag) => tag.id === tagId)?.category === category).length;
+                const isExpanded = expandedCategory === category;
                 return (
                   <View key={category} style={styles.tagCategoryGroup}>
-                    <View style={styles.tagCategoryHeader}>
-                      <MetallicText style={styles.tagCategoryDot} color={categoryColor}>◆</MetallicText>
-                      <MetallicText style={styles.tagCategoryLabel} color={categoryColor}>{categoryLabel}</MetallicText>
-                    </View>
-                    <View style={styles.tagGrid}>
-                      {categoryTags.map((tag) => {
-                        const isSelected = selectedTags.includes(tag.id);
-                        return (
-                          <Pressable
-                            key={tag.id}
-                            style={[
-                              styles.patternTag,
-                              isSelected && { borderColor: categoryColor, backgroundColor: `${categoryColor}18` },
-                            ]}
-                            onPress={() => toggleTag(tag.id)}
-                          >
-                            {isSelected ? (
-                              <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={categoryColor}>
-                                {tag.label}
-                              </MetallicText>
-                            ) : (
-                              <Text style={styles.patternTagText}>
-                                {tag.label}
-                              </Text>
-                            )}
-                          </Pressable>
-                        );
-                      })}
-                      {categoryCustomTags.map((tag) => {
-                        const isSelected = selectedTags.includes(tag.id);
-                        return (
-                          <Pressable
-                            key={tag.id}
-                            style={[
-                              styles.patternTag,
-                              styles.customPatternTag,
-                              isSelected && { borderColor: categoryColor, backgroundColor: `${categoryColor}18` },
-                            ]}
-                            onPress={() => toggleTag(tag.id)}
-                            onLongPress={() => promptCustomTagAction(tag)}
-                          >
-                            {isSelected ? (
-                              <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={categoryColor}>
-                                {tag.label}
-                              </MetallicText>
-                            ) : (
-                              <Text style={styles.patternTagText}>
-                                {tag.label}
-                              </Text>
-                            )}
-                          </Pressable>
-                        );
-                      })}
-                      {activeCustomCategory === category ? (
-                        <View style={styles.customComposer}>
-                          <TextInput
-                            style={styles.customComposerInput}
-                            value={customTagInput}
-                            onChangeText={setCustomTagInput}
-                            placeholder="Type your own..."
-                            placeholderTextColor="rgba(255,255,255,0.28)"
-                            autoFocus
-                            maxLength={40}
-                            returnKeyType="done"
-                            onSubmitEditing={() => {
-                              const value = customTagInput.trim();
-                              if (value) saveCustomTag(value, category, editingCustomTagId);
-                              else closeCustomComposer();
-                            }}
-                          />
-                          <Pressable
-                            hitSlop={8}
-                            onPress={() => {
-                              const value = customTagInput.trim();
-                              if (value) saveCustomTag(value, category, editingCustomTagId);
-                              else closeCustomComposer();
-                            }}
-                          >
-                            <Ionicons name={customTagInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={customTagInput.trim() ? categoryColor : 'rgba(255,255,255,0.3)'} />
-                          </Pressable>
-                        </View>
-                      ) : (
-                        <Pressable
-                          style={[styles.patternTag, styles.addPatternTag]}
-                          onPress={() => {
-                            Haptics.selectionAsync().catch(() => {});
-                            setActiveCustomCategory(category);
-                            setCustomTagInput('');
-                            setEditingCustomTagId(null);
-                          }}
+                    <Pressable
+                      style={styles.tagCategoryHeader}
+                      onPress={() => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setExpandedCategory((current) => current === category ? current : category);
+                      }}
+                    >
+                      <Text style={[styles.tagCategoryDot, { color: `${categoryColor}B8` }]}>◆</Text>
+                      <Text style={styles.tagCategoryLabel}>{categoryLabel.toUpperCase()}</Text>
+                      <View style={styles.tagCategoryMeta}>
+                        {selectedCount > 0 && (
+                          <Text style={styles.tagCategoryCount}>{selectedCount} selected</Text>
+                        )}
+                        <Ionicons name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'} size={16} color={categoryColor} />
+                      </View>
+                    </Pressable>
+                    {isExpanded && (
+                      <View style={styles.tagCategoryBody}>
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          contentContainerStyle={styles.tagRailContent}
+                          style={styles.tagRail}
                         >
-                          <Ionicons name="add-outline" size={14} color={categoryColor} />
-                          <MetallicText style={styles.addPatternTagText} color={categoryColor}>Custom</MetallicText>
-                        </Pressable>
-                      )}
-                    </View>
+                          {categoryTags.map((tag) => {
+                            const isSelected = selectedTags.includes(tag.id);
+                            return (
+                              <Pressable
+                                key={tag.id}
+                                style={[
+                                  styles.patternTag,
+                                  isSelected && { borderColor: categoryColor, backgroundColor: `${categoryColor}18` },
+                                ]}
+                                onPress={() => toggleTag(tag.id)}
+                              >
+                                {isSelected ? (
+                                  <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={categoryColor}>
+                                    {tag.label}
+                                  </MetallicText>
+                                ) : (
+                                  <Text style={styles.patternTagText}>
+                                    {tag.label}
+                                  </Text>
+                                )}
+                              </Pressable>
+                            );
+                          })}
+                          {categoryCustomTags.map((tag) => {
+                            const isSelected = selectedTags.includes(tag.id);
+                            return (
+                              <Pressable
+                                key={tag.id}
+                                style={[
+                                  styles.patternTag,
+                                  styles.customPatternTag,
+                                  isSelected && { borderColor: categoryColor, backgroundColor: `${categoryColor}18` },
+                                ]}
+                                onPress={() => toggleTag(tag.id)}
+                                onLongPress={() => promptCustomTagAction(tag)}
+                              >
+                                {isSelected ? (
+                                  <MetallicText style={[styles.patternTagText, { fontWeight: '600' }]} color={categoryColor}>
+                                    {tag.label}
+                                  </MetallicText>
+                                ) : (
+                                  <Text style={styles.patternTagText}>
+                                    {tag.label}
+                                  </Text>
+                                )}
+                              </Pressable>
+                            );
+                          })}
+                          {activeCustomCategory === category ? (
+                            <View style={styles.customComposer}>
+                              <TextInput
+                                style={styles.customComposerInput}
+                                value={customTagInput}
+                                onChangeText={setCustomTagInput}
+                                placeholder="Type your own..."
+                                placeholderTextColor="rgba(255,255,255,0.42)"
+                                autoFocus
+                                maxLength={40}
+                                returnKeyType="done"
+                                onSubmitEditing={() => {
+                                  const value = customTagInput.trim();
+                                  if (value) saveCustomTag(value, category, editingCustomTagId);
+                                  else closeCustomComposer();
+                                }}
+                              />
+                              <Pressable
+                                hitSlop={8}
+                                onPress={() => {
+                                  const value = customTagInput.trim();
+                                  if (value) saveCustomTag(value, category, editingCustomTagId);
+                                  else closeCustomComposer();
+                                }}
+                              >
+                                <Ionicons name={customTagInput.trim() ? 'checkmark-circle' : 'close-circle'} size={18} color={customTagInput.trim() ? categoryColor : 'rgba(255,255,255,0.42)'} />
+                              </Pressable>
+                            </View>
+                          ) : (
+                            <Pressable
+                              style={[styles.patternTag, styles.addPatternTag, styles.addPatternTagStandalone]}
+                              onPress={() => {
+                                Haptics.selectionAsync().catch(() => {});
+                                setExpandedCategory(category);
+                                setActiveCustomCategory(category);
+                                setCustomTagInput('');
+                                setEditingCustomTagId(null);
+                              }}
+                            >
+                              <Ionicons name="add-outline" size={14} color={categoryColor} />
+                              <MetallicText style={styles.addPatternTagText} color={categoryColor}>Custom</MetallicText>
+                            </Pressable>
+                          )}
+                        </ScrollView>
+                      </View>
+                    )}
                   </View>
                 );
               })}
@@ -493,6 +522,7 @@ export default function RelationshipPatternsScreen() {
                   </Pressable>
                 </Animated.View>
               )}
+              </VelvetGlassSurface>
             </Animated.View>
 
             {/* History */}
@@ -501,7 +531,7 @@ export default function RelationshipPatternsScreen() {
                 <SectionHeader title="Previous Reflections" icon="journal-outline" />
                 <View style={styles.entryList}>
                   {entries.slice(0, 15).map((entry) => (
-                    <View key={entry.id} style={styles.entryCard}>
+                    <VelvetGlassSurface key={entry.id} style={styles.entryCard} intensity={28} backgroundColor="rgba(15, 15, 20, 0.54)">
                       <View style={styles.entryHeaderRow}>
                         <Ionicons name="journal-outline" size={14} color={PALETTE.textMuted} />
                         <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
@@ -523,7 +553,7 @@ export default function RelationshipPatternsScreen() {
                           })}
                         </View>
                       )}
-                    </View>
+                    </VelvetGlassSurface>
                   ))}
                 </View>
               </Animated.View>
@@ -550,14 +580,14 @@ const styles = StyleSheet.create({
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 32 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
+  backIcon:   { color: '#FFF', fontSize: 34, lineHeight: 34, marginTop: -2 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 29, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.3, marginBottom: 4 },
   headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
 
-  summaryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
+  summaryCard: { borderRadius: 24, padding: 24, marginBottom: 32 },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   summaryTitle: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
   summaryDescription: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 32, fontWeight: '400' },
@@ -565,21 +595,22 @@ const styles = StyleSheet.create({
   gravityBarContainer: { height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 24, gap: 3 },
   gravitySegment: { height: '100%', borderRadius: 4 },
 
-  legendRow: { flexDirection: 'row', marginTop: 8, justifyContent: 'space-evenly', flexWrap: 'wrap' },
-  legendItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 4, paddingVertical: 2 },
+  legendRow: { flexDirection: 'row', marginTop: 8, justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
+  legendItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 6, paddingVertical: 2 },
 
-  formCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
+  formCard: { borderRadius: 24, padding: 24, marginBottom: 32 },
   formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20, marginTop: 8 },
   sectionTitle: { color: '#FFFFFF', fontSize: 19, fontWeight: '700' },
-  noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
-  tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
-  tagHint: { fontSize: 12, color: 'rgba(255,255,255,0.42)', marginTop: -8, marginBottom: 20 },
+  noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
+  tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.58)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  tagHint: { fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: -8, marginBottom: 20, lineHeight: 18 },
 
-  patternTag: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)' },
-  customPatternTag: { borderStyle: 'dashed' },
-  patternTagText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
+  patternTag: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)' },
+  customPatternTag: { borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)' },
+  patternTagText: { fontSize: 13, color: 'rgba(255,255,255,0.84)', fontWeight: '600' },
   addPatternTag: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  addPatternTagStandalone: { alignSelf: 'flex-start', marginTop: 2 },
   addPatternTagText: { fontSize: 13, fontWeight: '700' },
   customComposer: {
     minWidth: 170,
@@ -590,26 +621,30 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   customComposerInput: { minWidth: 120, flex: 1, color: PALETTE.textMain, fontSize: 13, paddingVertical: 0 },
 
-  submitBtn: { height: 56, borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.4)', justifyContent: 'center', alignItems: 'center' },
-  submitBtnText: { fontSize: 15, color: PALETTE.gold, fontWeight: '700', letterSpacing: 0.5 },
+  submitBtn: { height: 58, borderRadius: 29, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.56)', justifyContent: 'center', alignItems: 'center', shadowColor: PALETTE.gold, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.16, shadowRadius: 22, elevation: 6 },
+  submitBtnText: { fontSize: 15, color: PALETTE.gold, fontWeight: '800', letterSpacing: 0.7 },
 
-  tagCategoryGroup: { marginBottom: 24 },
-  tagCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  tagCategoryDot: { fontSize: 8, marginTop: 1 },
-  tagCategoryLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2 },
-  tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tagCategoryGroup: { marginBottom: 18, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 18 },
+  tagCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tagCategoryDot: { fontSize: 7, marginTop: 1 },
+  tagCategoryLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.8, color: 'rgba(255,255,255,0.52)' },
+  tagCategoryMeta: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 10 },
+  tagCategoryCount: { fontSize: 11, color: 'rgba(255,255,255,0.62)', fontWeight: '600' },
+  tagCategoryBody: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
+  tagRail: { marginHorizontal: -2 },
+  tagRailContent: { gap: 10, paddingHorizontal: 2, alignItems: 'center' },
 
   legendDot: { fontSize: 8 },
   legendText: { fontSize: 12, fontWeight: '600' },
 
   historySection: { marginTop: 0 },
   entryList: { gap: 16 },
-  entryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 28, backgroundColor: 'rgba(255,255,255,0.02)' },
+  entryCard: { borderRadius: 24, padding: 24 },
   entryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   entryDate: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
   entryNote: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 20 },

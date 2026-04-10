@@ -51,7 +51,8 @@ const HOLD_MS = 1800;    // milliseconds required to hold
 
 const GOLD    = '#D9BF8C';
 const EMERALD = '#6EBF8B';
-const BG      = '#020817';
+const BG      = '#0A0A0F';
+const TEXT_DIM = 'rgba(255,255,255,0.72)';
 
 // ── Precomputed tick-mark paths ───────────────────────────────────────────────
 // 60 ticks on the outer orbit — alternate major/minor
@@ -217,6 +218,9 @@ export default function SkiaMoodSealButton({
   const outerGlowR  = useDerivedValue(() => RING_R + 24 + breathe.value * 4);
   const outerGlowOp = useDerivedValue(() => 0.04 + breathe.value * 0.04);
 
+  const pulseRingR = useDerivedValue(() => RING_R + 10 + breathe.value * 10 + progress.value * 18);
+  const pulseRingOp = useDerivedValue(() => 0.05 + breathe.value * 0.05 + progress.value * 0.18);
+
   // Gold progress arc
   const arcPath = useDerivedValue(() => {
     const p     = Skia.Path.Make();
@@ -298,6 +302,19 @@ export default function SkiaMoodSealButton({
                 <BlurMask blur={20} style="outer" />
               </Circle>
 
+              {/* ── 2b. Radial pulse ring to clarify sustained hold ── */}
+              <Circle
+                cx={CENTER}
+                cy={CENTER}
+                r={pulseRingR}
+                color={accent}
+                opacity={pulseRingOp}
+                style="stroke"
+                strokeWidth={progress.value > 0.02 ? 2.4 : 1.2}
+              >
+                <BlurMask blur={18} style="solid" />
+              </Circle>
+
               {/* ── 3. Orbit tick marks ── */}
               {TICK_PATHS.map(({ path, isMajor }, i) => (
                 <Path
@@ -305,14 +322,14 @@ export default function SkiaMoodSealButton({
                   path={path}
                   style="stroke"
                   strokeWidth={isMajor ? 1.5 : 0.7}
-                  color={`rgba(255,255,255,${isMajor ? 0.14 : 0.06})`}
+                  color={`rgba(255,255,255,${isMajor ? 0.24 : 0.12})`}
                 />
               ))}
 
               {/* ── 4. Static track ring ── */}
               <Circle cx={CENTER} cy={CENTER} r={RING_R}
                 style="stroke" strokeWidth={1.5}
-                color="rgba(255,255,255,0.06)" />
+                color="rgba(255,255,255,0.10)" />
 
               {/* ── 5. Arc glow layer ── */}
               <Path
@@ -389,6 +406,9 @@ export default function SkiaMoodSealButton({
           <Text style={[styles.label, complete && styles.labelComplete]}>
             {isSaving ? 'SEALING…' : complete ? 'SEALED  ✦' : isEditing ? 'HOLD  TO  UPDATE' : 'HOLD  TO  SEAL'}
           </Text>
+          <Text style={styles.subLabel}>
+            {isEditing ? 'Press and hold until the ring blooms to update this check-in' : 'Press and hold until the ring blooms to save this check-in'}
+          </Text>
         </View>
       </GestureDetector>
     </View>
@@ -419,15 +439,24 @@ const styles = StyleSheet.create({
   },
   label: {
     marginTop:     8,
-    color:         'rgba(255,255,255,0.30)',
-    fontSize:      10,
+    color:         'rgba(255,255,255,0.72)',
+    fontSize:      11,
     fontWeight:    '800',
-    letterSpacing: 3.5,
+    letterSpacing: 3.8,
     textTransform: 'uppercase',
     textAlign:     'center',
   },
   labelComplete: {
     color:    '#6EBF8B',
     opacity:  1,
+  },
+  subLabel: {
+    marginTop: 6,
+    color: TEXT_DIM,
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 18,
+    textAlign: 'center',
+    maxWidth: 220,
   },
 });

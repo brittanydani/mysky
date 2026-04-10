@@ -6,11 +6,18 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
-  PanResponder,
   ActivityIndicator,
   TextInput,
   Alert,
 } from 'react-native';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import SkiaMoodSealButton from '../../components/ui/SkiaMoodSealButton';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/core';
@@ -32,10 +39,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
+import { keepLastWordsTogether } from '../../utils/textLayout';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
 const CARD_INNER_W = width - 88;
+const APPLE_SPRING = { damping: 20, stiffness: 90, mass: 1 } as const;
+const SLIDER_THUMB_WIDTH = 20;
+const SLIDER_THUMB_HEIGHT = 42;
 
 type PillPolarity = 'neutral' | 'pos' | 'neg';
 
@@ -759,14 +771,14 @@ export default function MoodCheckIn() {
       <View style={styles.header}>
         <Pressable
           onPress={() => { Haptics.selectionAsync(); router.back(); }}
-          style={styles.closeButton}
+          style={styles.backButton}
         >
-          <Text style={styles.closeIcon}>×</Text>
+          <Ionicons name="chevron-back-outline" size={22} color="#FFF" />
         </Pressable>
       </View>
 
       <View style={styles.titleArea}>
-        <Text style={styles.headerTitle}>Internal Weather</Text>
+        <Text style={styles.headerTitle}>{keepLastWordsTogether('Internal Weather')}</Text>
         {isEditingExisting ? (
           <MetallicText style={styles.headerEditingBadge} variant="gold">
             {selectedDate === todayStr
@@ -806,7 +818,13 @@ export default function MoodCheckIn() {
       >
 
         {/* 7-Day Trend */}
-        <View style={styles.trendCard}>
+        <VelvetGlassSurface
+          style={styles.trendCard}
+          intensity={34}
+          backgroundColor="rgba(11, 14, 24, 0.32)"
+          borderColor="rgba(226, 194, 122, 0.18)"
+          highlightColor="rgba(255,255,255,0.035)"
+        >
           <View style={styles.trendHeader}>
             <Text style={[styles.sectionLabel, styles.trendSectionLabel]}>7-DAY MOOD TREND</Text>
             <MetallicText style={styles.trendValue} color="#E2C27A">{isLoading ? '…' : trendLabel}</MetallicText>
@@ -826,21 +844,34 @@ export default function MoodCheckIn() {
               </Text>
             </View>
           )}
-        </View>
+        </VelvetGlassSurface>
 
         {/* 1–10 Haptic Sliders */}
-        <View style={styles.slidersContainer}>
+        <VelvetGlassSurface
+          style={styles.slidersContainer}
+          intensity={32}
+          backgroundColor="rgba(10, 14, 23, 0.34)"
+          borderColor="rgba(255,255,255,0.1)"
+          highlightColor="rgba(255,255,255,0.03)"
+        >
           <CustomHapticSlider title="Mood" value={mood} setValue={setMood} color="#D9BF8C" labels={['Low', 'Neutral', 'High']} />
           <View style={styles.divider} />
           <CustomHapticSlider title="Energy" value={energy} setValue={setEnergy} color="#6E8CB4" labels={['Exhausted', 'Steady', 'Energized']} />
           <View style={styles.divider} />
           <CustomHapticSlider title="Stress" value={stress} setValue={setStress} color="#D98C8C" labels={['Calm', 'Balanced', 'Overwhelmed']} />
-        </View>
+        </VelvetGlassSurface>
 
         {/* Influence Tags */}
-        <View style={styles.tagsSection}>
-          <Text style={styles.sectionLabel}>WHAT'S INFLUENCING THIS?</Text>
-          <Text style={styles.tagsHint}>Tap to cycle white, green, red. Hold built-ins to clear. Hold custom pills to edit or delete.</Text>
+        <VelvetGlassSurface
+          style={styles.tagsCard}
+          intensity={32}
+          backgroundColor="rgba(11, 14, 24, 0.34)"
+          borderColor="rgba(255,255,255,0.10)"
+          highlightColor="rgba(255,255,255,0.04)"
+        >
+          <View style={styles.tagsSection}>
+            <Text style={styles.sectionLabel}>WHAT'S INFLUENCING THIS?</Text>
+            <Text style={styles.tagsHint}>Tap to cycle neutral, glimmer, or drain. Hold built-ins to clear. Hold custom pills to edit or delete.</Text>
           <View style={styles.tagGrid}>
             {influences.map(tag => (
               <TagButton
@@ -865,8 +896,12 @@ export default function MoodCheckIn() {
                 onPress={() => cycleCustomPill(pill.id, setCustomInfluences)}
                 onLongPress={() => promptCustomPillAction(pill, 'influence')}
               >
-                <Ionicons name="add-circle-outline" size={13} color={pill.polarity === 'neutral' ? '#050507' : '#FFF'} style={styles.tagIcon} />
-                <Text style={[styles.tagText, pill.polarity === 'neutral' ? styles.tagTextSelected : { color: '#FFF', fontWeight: 'bold' }]}>{pill.label}</Text>
+                <Ionicons name="add-circle-outline" size={13} color={pill.polarity === 'neg' ? '#FFF4F6' : '#050507'} style={styles.tagIcon} />
+                <Text style={[
+                  styles.tagText,
+                  pill.polarity !== 'neg' && styles.tagTextSelected,
+                  pill.polarity === 'neg' && styles.tagTextDangerActive,
+                ]}>{pill.label}</Text>
               </Pressable>
             ))}
           </View>
@@ -874,7 +909,7 @@ export default function MoodCheckIn() {
             <TextInput
               style={[styles.customInfluenceInput, customInfluenceInput.trim().length > 0 && styles.customInputActive]}
               placeholder="Anything else on your mind..."
-              placeholderTextColor="rgba(255,255,255,0.2)"
+              placeholderTextColor="rgba(255,255,255,0.36)"
               value={customInfluenceInput}
               onChangeText={setCustomInfluenceInput}
               onSubmitEditing={() => {
@@ -889,7 +924,10 @@ export default function MoodCheckIn() {
               maxLength={120}
             />
             <Pressable
-              style={styles.customComposerAction}
+              style={[
+                styles.customComposerAction,
+                customInfluenceInput.trim().length > 0 && styles.customComposerActionEnabled,
+              ]}
               onPress={() => {
                 if (!customInfluenceInput.trim()) return;
                 Haptics.selectionAsync().catch(() => {});
@@ -899,37 +937,46 @@ export default function MoodCheckIn() {
                 });
               }}
             >
-              <Text style={styles.customComposerActionText}>{editingCustomInfluenceId ? 'Update' : 'Add'}</Text>
+              <Ionicons name={editingCustomInfluenceId ? 'checkmark-outline' : 'add-outline'} size={15} color={customInfluenceInput.trim().length > 0 ? '#08110D' : 'rgba(255,255,255,0.7)'} />
+              <Text style={[styles.customComposerActionText, customInfluenceInput.trim().length > 0 && styles.customComposerActionTextEnabled]}>{editingCustomInfluenceId ? 'Update' : 'Add'}</Text>
             </Pressable>
           </View>
-        </View>
+          </View>
+        </VelvetGlassSurface>
 
         {/* Emotional Quality Tags (Deeper Sky) — collapsible dropdown */}
-        <View style={styles.tagsSection}>
-          <Pressable
-            style={styles.emotionDropdownHeader}
-            onPress={() => { Haptics.selectionAsync(); setEmotionSectionOpen(o => !o); }}
-          >
-            <View style={styles.premiumHeaderRow}>
-              <Text style={styles.sectionLabel}>EMOTIONAL QUALITY</Text>
-              <View style={styles.premiumBadge}>
-                <MetallicText style={styles.premiumBadgeText} variant="gold">✦ DEEPER SKY</MetallicText>
+        <VelvetGlassSurface
+          style={styles.tagsCard}
+          intensity={32}
+          backgroundColor="rgba(11, 14, 24, 0.34)"
+          borderColor="rgba(255,255,255,0.10)"
+          highlightColor="rgba(255,255,255,0.04)"
+        >
+          <View style={styles.tagsSection}>
+            <Pressable
+              style={styles.emotionDropdownHeader}
+              onPress={() => { Haptics.selectionAsync(); setEmotionSectionOpen(o => !o); }}
+            >
+              <View style={styles.premiumHeaderRow}>
+                <Text style={styles.sectionLabel}>EMOTIONAL QUALITY</Text>
+                <View style={styles.premiumBadge}>
+                  <MetallicText style={styles.premiumBadgeText} variant="gold">✦ DEEPER SKY</MetallicText>
+                </View>
               </View>
-            </View>
-            <View style={styles.emotionDropdownChevronRow}>
-              {selectedEmotions.size > 0 && (
-                <Text style={styles.emotionDropdownCount}>{selectedEmotions.size} selected</Text>
-              )}
-              {customEmotions.length > 0 && (
-                <Text style={styles.emotionDropdownCustom} numberOfLines={1}>{customEmotions.map((pill) => pill.label).join(', ')}</Text>
-              )}
-              <Ionicons
-                name={emotionSectionOpen ? 'chevron-up' : 'chevron-down'}
-                size={16}
-                color="rgba(255,255,255,0.35)"
-              />
-            </View>
-          </Pressable>
+              <View style={styles.emotionDropdownChevronRow}>
+                {selectedEmotions.size > 0 && (
+                  <Text style={styles.emotionDropdownCount}>{selectedEmotions.size} selected</Text>
+                )}
+                {customEmotions.length > 0 && (
+                  <Text style={styles.emotionDropdownCustom} numberOfLines={1}>{customEmotions.map((pill) => pill.label).join(', ')}</Text>
+                )}
+                <Ionicons
+                  name={emotionSectionOpen ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color="rgba(255,255,255,0.35)"
+                />
+              </View>
+            </Pressable>
 
           {emotionSectionOpen && (
             <>
@@ -960,8 +1007,12 @@ export default function MoodCheckIn() {
                     onPress={() => cycleCustomPill(pill.id, setCustomEmotions)}
                     onLongPress={() => promptCustomPillAction(pill, 'emotion')}
                   >
-                    <Ionicons name="add-circle-outline" size={13} color={pill.polarity === 'neutral' ? '#050507' : '#FFF'} style={styles.tagIcon} />
-                    <Text style={[styles.tagText, pill.polarity === 'neutral' ? styles.tagTextSelected : { color: '#FFF', fontWeight: 'bold' }]}>{pill.label}</Text>
+                    <Ionicons name="add-circle-outline" size={13} color={pill.polarity === 'neg' ? '#FFF4F6' : '#050507'} style={styles.tagIcon} />
+                    <Text style={[
+                      styles.tagText,
+                      pill.polarity !== 'neg' && styles.tagTextSelected,
+                      pill.polarity === 'neg' && styles.tagTextDangerActive,
+                    ]}>{pill.label}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -970,7 +1021,7 @@ export default function MoodCheckIn() {
                   <TextInput
                     style={[styles.customInfluenceInput, customEmotionInput.trim().length > 0 && styles.customInputActive]}
                     placeholder="Your own word..."
-                    placeholderTextColor="rgba(110,140,180,0.35)"
+                      placeholderTextColor="rgba(110,140,180,0.52)"
                     value={customEmotionInput}
                     onChangeText={setCustomEmotionInput}
                     onSubmitEditing={() => {
@@ -985,7 +1036,10 @@ export default function MoodCheckIn() {
                     maxLength={60}
                   />
                   <Pressable
-                    style={styles.customComposerAction}
+                    style={[
+                      styles.customComposerAction,
+                      customEmotionInput.trim().length > 0 && styles.customComposerActionEnabled,
+                    ]}
                     onPress={() => {
                       if (!customEmotionInput.trim()) return;
                       Haptics.selectionAsync().catch(() => {});
@@ -995,18 +1049,20 @@ export default function MoodCheckIn() {
                       });
                     }}
                   >
-                    <Text style={styles.customComposerActionText}>{editingCustomEmotionId ? 'Update' : 'Add'}</Text>
+                    <Ionicons name={editingCustomEmotionId ? 'checkmark-outline' : 'add-outline'} size={15} color={customEmotionInput.trim().length > 0 ? '#08110D' : 'rgba(255,255,255,0.7)'} />
+                    <Text style={[styles.customComposerActionText, customEmotionInput.trim().length > 0 && styles.customComposerActionTextEnabled]}>{editingCustomEmotionId ? 'Update' : 'Add'}</Text>
                   </Pressable>
                 </View>
               )}
               {!isPremium && (
                 <Text style={styles.lockedHint}>
-                  Unlock with Deeper Sky to track emotional quality
+                  Unlock with Deeper Sky to track emotional quality.
                 </Text>
               )}
             </>
           )}
-        </View>
+          </View>
+        </VelvetGlassSurface>
 
         {/* Time Slot Tracker — tap a slot to edit it */}
         <View style={styles.slotRow}>
@@ -1092,34 +1148,90 @@ const CustomHapticSlider = ({
   color: string;
   labels: string[];
 }) => {
-  const sliderWidth = width - 88;
   const maxSteps = 10;
+  const trackWidth = useSharedValue(CARD_INNER_W);
+  const progress = useSharedValue((value - 1) / (maxSteps - 1));
+  const currentStep = useSharedValue(value);
+  const thumbScale = useSharedValue(1);
+  const glowOpacity = useSharedValue(0.42);
 
-  // Keep a ref so the panResponder (created once) always reads the current step.
-  const valueRef = useRef(value);
-  valueRef.current = value;
+  const emitStepHaptic = useCallback(() => {
+    Haptics.selectionAsync().catch(() => {});
+  }, []);
 
-  const handleTouch = (locationX: number) => {
-    let rawPercentage = locationX / sliderWidth;
-    rawPercentage = Math.max(0, Math.min(1, rawPercentage));
-    let step = Math.round(rawPercentage * (maxSteps - 1)) + 1;
-    step = Math.max(1, Math.min(maxSteps, step));
-    if (step !== valueRef.current) {
-      Haptics.selectionAsync();
-      setValue(step);
-    }
-  };
+  useEffect(() => {
+    currentStep.value = value;
+    progress.value = withSpring((value - 1) / (maxSteps - 1), APPLE_SPRING);
+  }, [currentStep, maxSteps, progress, value]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt) => handleTouch(evt.nativeEvent.locationX),
-      onPanResponderMove: (evt) => handleTouch(evt.nativeEvent.locationX),
+  const commitStep = useCallback((nextStep: number) => {
+    setValue(nextStep);
+  }, [setValue]);
+
+  const panGesture = Gesture.Pan()
+    .minDistance(0)
+    .onBegin((event) => {
+      'worklet';
+      thumbScale.value = withSpring(0.95, APPLE_SPRING);
+      glowOpacity.value = withTiming(0.88, { duration: 140 });
+
+      const widthValue = Math.max(trackWidth.value, 1);
+      const clampedX = Math.max(0, Math.min(event.x, widthValue));
+      const nextProgress = clampedX / widthValue;
+      const nextStep = Math.max(1, Math.min(maxSteps, Math.round(nextProgress * (maxSteps - 1)) + 1));
+
+      progress.value = nextProgress;
+      if (nextStep !== currentStep.value) {
+        currentStep.value = nextStep;
+        runOnJS(emitStepHaptic)();
+        runOnJS(commitStep)(nextStep);
+      }
     })
-  ).current;
+    .onUpdate((event) => {
+      'worklet';
+      const widthValue = Math.max(trackWidth.value, 1);
+      const clampedX = Math.max(0, Math.min(event.x, widthValue));
+      const nextProgress = clampedX / widthValue;
+      const nextStep = Math.max(1, Math.min(maxSteps, Math.round(nextProgress * (maxSteps - 1)) + 1));
 
-  const fillWidth = ((value - 1) / (maxSteps - 1)) * sliderWidth;
+      progress.value = nextProgress;
+      if (nextStep !== currentStep.value) {
+        currentStep.value = nextStep;
+        runOnJS(emitStepHaptic)();
+        runOnJS(commitStep)(nextStep);
+      }
+    })
+    .onFinalize(() => {
+      'worklet';
+      thumbScale.value = withSpring(1, APPLE_SPRING);
+      glowOpacity.value = withTiming(0.42, { duration: 220 });
+      progress.value = withSpring((currentStep.value - 1) / (maxSteps - 1), APPLE_SPRING);
+    });
+
+  const fillStyle = useAnimatedStyle(() => ({
+    width: Math.max(progress.value * trackWidth.value, 12),
+  }));
+
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: progress.value * trackWidth.value - (SLIDER_THUMB_WIDTH / 2) },
+      { scale: thumbScale.value },
+    ],
+    shadowOpacity: glowOpacity.value,
+  }));
+
+  const thumbHaloStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: progress.value * trackWidth.value - 15 },
+      { scale: thumbScale.value },
+    ],
+    opacity: glowOpacity.value * 0.36,
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    width: Math.max(progress.value * trackWidth.value, 18),
+    opacity: glowOpacity.value * 0.34,
+  }));
 
   return (
     <View style={styles.sliderWrapper}>
@@ -1128,11 +1240,29 @@ const CustomHapticSlider = ({
         <MetallicText style={[styles.sliderValue]} color={color}>{value}</MetallicText>
       </View>
 
-      <View style={styles.trackContainer} {...panResponder.panHandlers}>
-        <View style={styles.trackBackground} />
-        <View style={[styles.trackFill, { width: fillWidth, backgroundColor: color }]} />
-        <View style={[styles.thumb, { transform: [{ translateX: fillWidth - 12 }], shadowColor: color }]} />
-      </View>
+      <GestureDetector gesture={panGesture}>
+        <View
+          style={styles.trackContainer}
+          onLayout={(event) => {
+            trackWidth.value = event.nativeEvent.layout.width;
+          }}
+        >
+          <View style={styles.trackBackground} />
+          <View style={styles.trackTicksRow} pointerEvents="none">
+            {Array.from({ length: maxSteps }).map((_, index) => (
+              <View key={`${title}-${index + 1}`} style={styles.trackTick} />
+            ))}
+          </View>
+          <Animated.View style={[styles.trackGlow, glowStyle, { backgroundColor: color }]} />
+          <Animated.View style={[styles.trackFill, fillStyle, { backgroundColor: color }]} />
+          <Animated.View pointerEvents="none" style={[styles.thumbHalo, thumbHaloStyle, { backgroundColor: color }]} />
+          <Animated.View style={[styles.thumb, thumbStyle, { shadowColor: color, borderColor: `${color}55` }]}> 
+            <View style={styles.thumbSheen} />
+            <View style={[styles.thumbInner, { backgroundColor: color }]} />
+            <View style={styles.thumbCoreHighlight} />
+          </Animated.View>
+        </View>
+      </GestureDetector>
 
       <View style={styles.labelsRow}>
         <Text style={styles.sliderLabel}>{labels[0]}</Text>
@@ -1167,8 +1297,8 @@ const TagButton = ({
   const iconColor = isLocked
     ? 'rgba(110,140,180,0.3)'
     : isSelected
-      ? (isPremiumVariant || polarity !== 'neutral') ? '#FFF' : '#050507'
-      : isPremiumVariant ? 'rgba(110,140,180,0.7)' : 'rgba(255,255,255,0.5)';
+      ? polarity === 'neg' ? '#FFF4F6' : '#050507'
+      : isPremiumVariant ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.78)';
 
   const resolvedIcon: React.ComponentProps<typeof Ionicons>['name'] =
     isLocked ? 'lock-closed-outline' : (icon ?? 'ellipse-outline');
@@ -1193,9 +1323,9 @@ const TagButton = ({
         style={styles.tagIcon}
       />
       <Text style={[
-        styles.tagText, 
-        isSelected && styles.tagTextSelected, 
-        isSelected && polarity !== 'neutral' && { color: '#FFF' },
+        styles.tagText,
+        isSelected && styles.tagTextSelected,
+        isSelected && polarity === 'neg' && styles.tagTextDangerActive,
         isLocked && styles.tagTextLocked
       ]}>
         {title}
@@ -1210,7 +1340,7 @@ const TagButton = ({
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
 
   glowOrb: {
     position: 'absolute',
@@ -1223,9 +1353,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   headerSubtitle: { marginTop: 2 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
-  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 23, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.72, lineHeight: 27, marginBottom: 4, maxWidth: '82%' },
   headerEditingBadge: { fontSize: 10, color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },
@@ -1234,17 +1363,17 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
-  sectionLabel: { fontSize: 16, fontWeight: '700', color: '#FFFFFF', marginTop: 8, marginBottom: 20 },
-  tagsHint: { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: -14, marginBottom: 20 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.84)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 0, marginBottom: 12 },
+  tagsHint: { fontSize: 12, color: 'rgba(255,255,255,0.64)', marginTop: 0, marginBottom: 18, lineHeight: 18 },
 
-  trendCard: { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(226, 194, 122, 0.14)', marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
+  trendCard: { borderRadius: 24, padding: 24, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   trendSectionLabel: { marginTop: 0, marginBottom: 0, fontSize: 12 },
   trendValue: { fontSize: 13, color: '#C9AE78', fontWeight: '700', letterSpacing: 0.3 },
   trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
-  trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.25)', textAlign: 'center' },
+  trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.52)', textAlign: 'center', lineHeight: 18 },
 
-  slidersContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 32 },
+  slidersContainer: { borderRadius: 24, padding: 24, marginBottom: 32 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 },
 
   sliderWrapper: { width: '100%' },
@@ -1252,23 +1381,64 @@ const styles = StyleSheet.create({
   sliderTitle: { fontSize: 16, fontWeight: '700', color: '#FFF' },
   sliderValue: { fontSize: 18, fontWeight: 'bold' },
 
-  trackContainer: { height: 32, justifyContent: 'center' },
-  trackBackground: { position: 'absolute', left: 0, right: 0, height: 8, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 4 },
-  trackFill: { position: 'absolute', left: 0, height: 8, borderRadius: 4 },
-  thumb: { position: 'absolute', left: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFF', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 8, elevation: 4 },
+  trackContainer: { height: 50, justifyContent: 'center' },
+  trackBackground: { position: 'absolute', left: 0, right: 0, height: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' },
+  trackTicksRow: { position: 'absolute', left: 8, right: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  trackTick: { width: 1, height: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.14)' },
+  trackGlow: { position: 'absolute', left: 0, height: 18, borderRadius: 999 },
+  trackFill: { position: 'absolute', left: 0, height: 12, borderRadius: 999, opacity: 0.9 },
+  thumbHalo: {
+    position: 'absolute',
+    left: 0,
+    width: 30,
+    height: 52,
+    borderRadius: 999,
+  },
+  thumb: {
+    position: 'absolute',
+    left: 0,
+    width: SLIDER_THUMB_WIDTH,
+    height: SLIDER_THUMB_HEIGHT,
+    borderRadius: 999,
+    backgroundColor: 'rgba(244,248,255,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.26)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 16,
+    elevation: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbSheen: {
+    position: 'absolute',
+    top: 5,
+    width: 10,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.24)',
+  },
+  thumbInner: { width: 8, height: 28, borderRadius: 999 },
+  thumbCoreHighlight: {
+    position: 'absolute',
+    top: 10,
+    width: 4,
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.30)',
+  },
 
   labelsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   sliderLabel: { fontSize: 8, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: 0.8, flex: 1 },
 
   customInfluenceInput: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 24,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     paddingHorizontal: 20,
     paddingVertical: 12,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.88)',
     flex: 1,
   },
   customInputActive: {
@@ -1282,64 +1452,78 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   customComposerAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  customComposerActionEnabled: {
+    borderColor: 'rgba(217,191,140,0.52)',
+    backgroundColor: 'rgba(217,191,140,0.92)',
   },
   customComposerActionText: {
-    color: '#FFFFFF',
+    color: 'rgba(255,255,255,0.78)',
     fontSize: 13,
     fontWeight: '700',
   },
+  customComposerActionTextEnabled: {
+    color: '#100B02',
+  },
 
-  tagsSection: { marginBottom: 32 },
+  tagsCard: { borderRadius: 24, padding: 24, marginBottom: 20 },
+  tagsSection: { marginBottom: 0 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   premiumBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(201, 174, 120, 0.15)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201, 174, 120, 0.3)', marginTop: -16 },
   premiumBadgeText: { color: '#C9AE78', fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
-  lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.5)', marginTop: 12 },
+  lockedHint: { fontSize: 11, color: 'rgba(201,174,120,0.72)', marginTop: 12, lineHeight: 16 },
 
   tagGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tagButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(255,255,255,0.08)',
     overflow: 'hidden',
   },
   tagButtonPremiumBase: {
-    backgroundColor: 'rgba(110,140,180,0.07)',
-    borderColor: 'rgba(110,140,180,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  tagButtonSelected: { backgroundColor: '#FFF', borderColor: '#FFF' },
-  tagButtonPositive: { backgroundColor: '#8BA496', borderColor: '#8BA496' },
-  tagButtonNegative: { backgroundColor: '#B47F7F', borderColor: '#B47F7F' },
+  tagButtonSelected: { backgroundColor: 'rgba(255,255,255,0.94)', borderColor: 'rgba(255,255,255,0.18)' },
+  tagButtonPositive: { backgroundColor: 'rgba(212,175,55,0.88)', borderColor: 'rgba(255,255,255,0.24)' },
+  tagButtonNegative: { backgroundColor: 'rgba(145,42,62,0.24)', borderColor: 'rgba(255,143,161,0.38)' },
   tagButtonSelectedPremium: {
-    backgroundColor: '#6E8CB4',
-    borderColor: '#8AABCF',
-    shadowColor: '#6E8CB4',
+    backgroundColor: 'rgba(212,175,55,0.88)',
+    borderColor: 'rgba(255,255,255,0.24)',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 10,
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
     elevation: 6,
   },
-  tagButtonLocked: { opacity: 0.35 },
-  tagIcon: { marginRight: 5 },
+  tagButtonLocked: { opacity: 0.6 },
+  tagIcon: { marginRight: 6 },
   tagPremiumGlow: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 20,
   },
-  tagText: { fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
+  tagText: { fontSize: 13, color: 'rgba(255,255,255,0.82)', fontWeight: '600' },
   tagTextSelected: { color: '#050507', fontWeight: 'bold' },
-  tagTextLocked: { color: 'rgba(255,255,255,0.4)' },
+  tagTextDangerActive: { color: '#FFF4F6', fontWeight: '700' },
+  tagTextLocked: { color: 'rgba(255,255,255,0.68)' },
 
   sealContainer: { alignItems: 'center', marginTop: 8 },
 
@@ -1356,22 +1540,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(255,255,255,0.12)',
     minWidth: 72,
   },
   slotPillDone: {
-    backgroundColor: 'rgba(110,191,139,0.10)',
-    borderColor: 'rgba(110,191,139,0.30)',
+    backgroundColor: 'rgba(217,191,140,0.10)',
+    borderColor: 'rgba(217,191,140,0.34)',
   },
   slotPillSelected: {
     borderColor: 'rgba(217,191,140,0.55)',
     backgroundColor: 'rgba(217,191,140,0.08)',
   },
   slotPillSelectedDone: {
-    borderColor: 'rgba(110,191,139,0.55)',
-    backgroundColor: 'rgba(110,191,139,0.14)',
+    borderColor: 'rgba(255,255,255,0.26)',
+    backgroundColor: 'rgba(217,191,140,0.16)',
   },
   slotIconWrap: {
     width: 30,
@@ -1384,10 +1568,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   slotIconWrapDone: {
-    borderColor: 'rgba(110,191,139,0.40)',
+    borderColor: 'rgba(217,191,140,0.40)',
     backgroundColor: 'rgba(201,174,120,0.12)',
   },
-  slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.28)', fontWeight: '600', letterSpacing: 0.5 },
+  slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.56)', fontWeight: '700', letterSpacing: 0.5 },
   slotLabelDone: { color: '#C9AE78' },
 
   emotionDropdownHeader: {
@@ -1401,12 +1585,12 @@ const styles = StyleSheet.create({
   },
   emotionDropdownCount: {
     fontSize: 11,
-    color: 'rgba(110,140,180,0.8)',
+    color: 'rgba(184,204,230,0.88)',
     fontWeight: '600',
   },
   emotionDropdownCustom: {
     fontSize: 11,
-    color: 'rgba(110,140,180,0.6)',
+    color: 'rgba(184,204,230,0.74)',
     flex: 1,
   },
 });

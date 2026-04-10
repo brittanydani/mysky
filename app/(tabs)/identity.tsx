@@ -17,6 +17,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { useRouter, Href } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { CircleDot, Compass, Crosshair, Diamond, Orbit, Sparkles } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
@@ -28,6 +30,7 @@ import { usePremium } from '../../context/PremiumContext';
 import { logger } from '../../utils/logger';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { PremiumSegmentedControl } from '../../components/ui/PremiumSegmentedControl';
 import { EnergyScrollContent } from '../../components/screens/EnergyScrollContent';
 
@@ -46,7 +49,7 @@ const PALETTE = {
 interface BlueprintCard {
   title: string;
   description: string;
-  icon: string;
+  lucideIcon: React.ComponentType<{ color: string; size: number; strokeWidth?: number }>;
   iconStyle: TextStyle;
   gradientColors: [string, string];
   route: Href;
@@ -57,7 +60,7 @@ const CARDS: BlueprintCard[] = [
   {
     title: 'Inner World',
     description: 'Core Values, Jungian Archetypes, Cognitive Style, and Intelligence — your mind\'s blueprint.',
-    icon: '◈',
+    lucideIcon: Diamond,
     iconStyle: { color: PALETTE.lavender },
     gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
     route: '/inner-world' as Href,
@@ -65,7 +68,7 @@ const CARDS: BlueprintCard[] = [
   {
     title: 'Body & Nervous System',
     description: 'Somatic map and trigger log — how your body holds experience.',
-    icon: '◍',
+    lucideIcon: CircleDot,
     iconStyle: { color: PALETTE.sage },
     gradientColors: ['rgba(140, 190, 170, 0.1)', 'transparent'],
     route: '/body-nervous' as Href,
@@ -73,7 +76,7 @@ const CARDS: BlueprintCard[] = [
   {
     title: 'Relational Mirror',
     description: 'Attachment tendencies and nervous system patterns you notice in connection.',
-    icon: '⚯',
+    lucideIcon: Orbit,
     iconStyle: { color: PALETTE.rose },
     gradientColors: ['rgba(212, 163, 179, 0.1)', 'transparent'],
     route: '/relationship-patterns' as Href,
@@ -81,7 +84,7 @@ const CARDS: BlueprintCard[] = [
   {
     title: 'Healing Space',
     description: 'Shadow work, inner child needs, and restorative anchors.',
-    icon: '⚕',
+    lucideIcon: Sparkles,
     iconStyle: { color: PALETTE.emerald },
     gradientColors: ['rgba(110, 191, 139, 0.1)', 'transparent'],
     route: '/(tabs)/healing' as Href,
@@ -90,7 +93,7 @@ const CARDS: BlueprintCard[] = [
   {
     title: 'Inner Tensions',
     description: 'Nervous system conflict, ambivalence, and shadow triggers.',
-    icon: '⊗',
+    lucideIcon: Crosshair,
     iconStyle: { color: PALETTE.lavender },
     gradientColors: ['rgba(168, 155, 200, 0.1)', 'transparent'],
     route: '/(tabs)/inner-tensions' as Href,
@@ -98,7 +101,7 @@ const CARDS: BlueprintCard[] = [
   {
     title: 'Cosmic Blueprint',
     description: 'Planets, houses, and aspects mapping the moment of your arrival.',
-    icon: '⚝',
+    lucideIcon: Compass,
     iconStyle: { color: 'rgba(217,191,140,0.65)' },
     gradientColors: ['rgba(217, 191, 140, 0.07)', 'transparent'],
     route: '/(tabs)/chart' as Href,
@@ -163,12 +166,24 @@ export default function BlueprintScreen() {
         >
           {/* Header */}
           <Animated.View entering={FadeInDown.delay(80).duration(600)} style={styles.header}>
-            <Text style={styles.headerTitle}>Identity</Text>
-            <GoldSubtitle style={styles.headerSubtitle}>
-              {chartName
-                ? `${chartName} · Know yourself deeply`
-                : 'Values, patterns, body & mind'}
-            </GoldSubtitle>
+            <View style={styles.headerRow}>
+              <View style={styles.headerTextWrap}>
+                <Text style={styles.headerTitle}>Inner World</Text>
+                <GoldSubtitle style={styles.headerSubtitle}>
+                  {chartName
+                    ? `${chartName} · Know yourself deeply`
+                    : 'Values, patterns, body & mind'}
+                </GoldSubtitle>
+              </View>
+              <Pressable
+                style={styles.headerAction}
+                onPress={() => nav('/inner-world' as Href)}
+                accessibilityRole="button"
+                accessibilityLabel="Open inner world hub"
+              >
+                <Ionicons name="arrow-forward-outline" size={18} color="rgba(255,255,255,0.7)" />
+              </Pressable>
+            </View>
           </Animated.View>
 
           {/* Tab Pill */}
@@ -194,7 +209,14 @@ export default function BlueprintScreen() {
                 >
                   <LinearGradient colors={card.gradientColors} style={styles.card}>
                     <View style={styles.cardIconRow}>
-                      <MetallicText style={[styles.cardIcon, card.iconStyle]} color={card.iconStyle.color as string}>{card.icon}</MetallicText>
+                      <View style={styles.cardIconBadge}>
+                        <MetallicLucideIcon
+                          icon={card.lucideIcon}
+                          size={20}
+                          strokeWidth={1.5}
+                          color={card.iconStyle.color as string}
+                        />
+                      </View>
                       {card.premium && <PremiumBadge />}
                     </View>
                     <Text style={styles.cardTitle}>{card.title}</Text>
@@ -238,6 +260,18 @@ const styles = StyleSheet.create({
 
   // Header
   header: { marginBottom: 32 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
+  headerTextWrap: { flex: 1 },
+  headerAction: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
   headerTitle: {
     fontSize: 34,
     color: PALETTE.textMain,
@@ -260,14 +294,23 @@ const styles = StyleSheet.create({
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 
-  cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  cardIconRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
 
-  cardIcon: { fontSize: 32 },
+  cardIconBadge: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
   cardTitle: {
     fontSize: 20,
     color: PALETTE.textMain,
     fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   cardSubtitle: {
     fontSize: 16,

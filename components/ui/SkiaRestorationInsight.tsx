@@ -9,7 +9,7 @@
  *   Restless nights → diffused, low-opacity Indigo
  *
  * Each night is rendered as a vertical "horizon band" whose
- * height = quality, brightness = mood, and colour shifts
+ * height = quality, glow intensity = mood, and colour shifts
  * from indigo (low) through amethyst (mid) to silver-blue (high).
  *
  * Requires: @shopify/react-native-skia 2.x, react-native-reanimated 4.x
@@ -26,13 +26,16 @@ import {
   BlurMask,
   vec,
 } from '@shopify/react-native-skia';
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
+import { useThemedStyles } from '../../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = SCREEN_W - 32;
 const CARD_H = 180;
 const GRAPH_H = 110;
-const BAR_GAP = 3;
+const GRAPH_TOP = 20;
+const GRAPH_SIDE_PAD = 18;
+const BAR_GAP = 10;
 
 // ── Colour stops ────────────────────────────────────────────────────────────
 
@@ -70,11 +73,14 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
   data,
   title = 'Sleep Quality vs. Morning Mood',
 }: Props) {
+  const styles = useThemedStyles(createStyles);
   const points = data.slice(-14); // max 14 days
   const barWidth = useMemo(() => {
     if (points.length === 0) return 0;
-    return Math.max(6, (CARD_W - 32 - BAR_GAP * (points.length - 1)) / points.length);
+    const availableWidth = CARD_W - GRAPH_SIDE_PAD * 2 - BAR_GAP * (points.length - 1);
+    return Math.max(7, Math.min(12, availableWidth / points.length));
   }, [points.length]);
+  const baselineY = GRAPH_TOP + GRAPH_H;
 
   return (
     <View style={styles.wrapper}>
@@ -103,29 +109,39 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
           color="rgba(255,255,255,0.06)"
         />
 
+        <Rect
+          x={GRAPH_SIDE_PAD}
+          y={baselineY + 2}
+          width={CARD_W - GRAPH_SIDE_PAD * 2}
+          height={1}
+          color="rgba(255,255,255,0.08)"
+        />
+
         {/* Horizon bars */}
         <Group>
           {points.map((pt, i) => {
-            const x = 16 + i * (barWidth + BAR_GAP);
+            const x = GRAPH_SIDE_PAD + i * (barWidth + BAR_GAP);
             const normQ = pt.quality / 5;
-            const barH = Math.max(4, normQ * GRAPH_H);
-            const y = 20 + (GRAPH_H - barH);
+            const barH = Math.max(12, normQ * GRAPH_H);
+            const y = GRAPH_TOP + (GRAPH_H - barH);
             const [topColor, botColor] = barColors(pt.quality);
             const glowOp = moodGlow(pt.moodScore);
+            const radius = barWidth / 2;
 
             return (
               <Group key={i}>
                 {/* Glow beneath bar */}
-                <Rect
-                  x={x - 2}
-                  y={y + barH * 0.5}
-                  width={barWidth + 4}
-                  height={barH * 0.6}
+                <RoundedRect
+                  x={x - 1}
+                  y={y}
+                  width={barWidth + 2}
+                  height={barH}
+                  r={(barWidth + 2) / 2}
                   color={topColor}
                   opacity={glowOp}
                 >
-                  <BlurMask blur={12} style="normal" />
-                </Rect>
+                  <BlurMask blur={14} style="normal" />
+                </RoundedRect>
 
                 {/* The horizon bar */}
                 <RoundedRect
@@ -133,23 +149,24 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
                   y={y}
                   width={barWidth}
                   height={barH}
-                  r={barWidth / 2}
+                  r={radius}
                 >
                   <LinearGradient
-                    start={vec(x, y)}
-                    end={vec(x, y + barH)}
+                    start={vec(x, y + barH)}
+                    end={vec(x, y)}
                     colors={[topColor, botColor]}
+                    positions={[0, 0.55]}
                   />
                 </RoundedRect>
 
                 {/* Specular highlight at top */}
                 <RoundedRect
-                  x={x + 1}
-                  y={y}
-                  width={barWidth - 2}
-                  height={Math.min(4, barH * 0.3)}
-                  r={(barWidth - 2) / 2}
-                  color="rgba(255, 255, 255, 0.15)"
+                  x={x + barWidth * 0.22}
+                  y={y + 4}
+                  width={barWidth * 0.56}
+                  height={Math.min(5, Math.max(3, barH * 0.16))}
+                  r={999}
+                  color="rgba(255, 255, 255, 0.18)"
                 />
               </Group>
             );
@@ -180,7 +197,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
           <View style={[styles.legendDot, { backgroundColor: 'rgba(60, 50, 120, 0.6)' }]} />
           <Text style={styles.legendText}>Restless</Text>
         </View>
-        <Text style={styles.legendNote}>Brightness = morning mood</Text>
+        <Text style={styles.legendNote}>Glow intensity = morning mood</Text>
       </View>
     </View>
   );
@@ -190,7 +207,7 @@ export default SkiaRestorationInsight;
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   wrapper: {
     width: CARD_W,
     alignSelf: 'center',
@@ -209,7 +226,7 @@ const styles = StyleSheet.create({
   },
   labelRow: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    paddingHorizontal: GRAPH_SIDE_PAD,
     marginTop: 6,
   },
   dayLabel: {

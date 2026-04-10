@@ -677,7 +677,7 @@ export default function CoreValuesScreen() {
                 colors={saved ? ['rgba(140,190,170,0.3)', 'rgba(140,190,170,0.1)'] : ['rgba(217,191,140,0.3)', 'rgba(217,191,140,0.1)']}
                 style={StyleSheet.absoluteFill}
               />
-              <MetallicText style={styles.saveBtnText} color={saved ? '#8CBEAA' : PALETTE.gold}>
+              <MetallicText style={styles.saveBtnText} color={PALETTE.gold}>
                 {saved ? '✓ Values Sealed · Hold to Edit' : 'Seal My Values & Continue'}
               </MetallicText>
             </Pressable>
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
 
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
-  customChip: { borderStyle: 'dashed' },
+  customChip: { borderWidth: 1, borderColor: 'rgba(217,191,140,0.24)', backgroundColor: 'rgba(217,191,140,0.06)' },
   addCustomChip: { borderColor: 'rgba(217,191,140,0.28)' },
   chipSelected: { borderColor: 'rgba(217,191,140,0.4)', backgroundColor: 'rgba(217,191,140,0.1)' },
   chipTop: { borderColor: PALETTE.gold, backgroundColor: PALETTE.gold },

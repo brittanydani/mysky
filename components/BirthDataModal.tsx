@@ -27,10 +27,11 @@ import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { BirthData, HouseSystem } from '../services/astrology/types';
 import { InputValidator } from '../services/astrology/inputValidator';
+import { useAppTheme, useThemedStyles, useThemePreference } from '../context/ThemeContext';
 
 const PALETTE = {
   gold: '#C5B5A1',
@@ -93,6 +94,9 @@ export default function BirthDataModal({
   title,
   onRestore,
 }: BirthDataModalProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+  const { resolvedMode } = useThemePreference();
   const [chartName, setChartName] = useState(initialData?.chartName || '');
   const [date, setDate] = useState<Date>(parseISODateToDate(initialData?.date));
   const [time, setTime] = useState<Date>(parseHHMMToDate(initialData?.time));
@@ -475,7 +479,7 @@ export default function BirthDataModal({
                 value={date}
                 mode="date"
                 display="spinner"
-                themeVariant="dark"
+                themeVariant={resolvedMode}
                 textColor="#FFFFFF"
                 onChange={onDateChange}
                 maximumDate={new Date()}
@@ -489,7 +493,7 @@ export default function BirthDataModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#020817',

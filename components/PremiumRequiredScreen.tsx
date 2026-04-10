@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { useRouter, Href } from 'expo-router';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
 import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 interface PremiumRequiredScreenProps {
   feature?: string;
@@ -34,6 +35,8 @@ export default function PremiumRequiredScreen({
   feature,
   teaser,
 }: PremiumRequiredScreenProps = {}) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
 
   const safeGoBack = () => {
@@ -114,7 +117,7 @@ export default function PremiumRequiredScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',

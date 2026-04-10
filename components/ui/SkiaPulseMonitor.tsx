@@ -79,6 +79,7 @@ export default function SkiaPulseMonitor({
   // Reanimated shared values
   const progress     = useSharedValue(0);
   const breathe      = useSharedValue(0);
+  const discoveryPulse = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
 
   // After saving finishes (isSaving true→false), reset so user can re-seal.
@@ -102,6 +103,14 @@ export default function SkiaPulseMonitor({
       true,
     );
   }, [breathe]);
+
+  useEffect(() => {
+    discoveryPulse.value = withRepeat(
+      withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      false,
+    );
+  }, [discoveryPulse]);
 
   // ── Accelerating haptic heartbeat ─────────────────────────────────────────
   const hapticTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -175,6 +184,10 @@ export default function SkiaPulseMonitor({
   // Ambient aura: grows and brightens as progress advances
   const auraR  = useDerivedValue(() => CORE_R + 8 + breathe.value * 6 + progress.value * 22);
   const auraOp = useDerivedValue(() => 0.10 + breathe.value * 0.08 + progress.value * 0.22);
+  const cueOuterR = useDerivedValue(() => ORBIT_R + 4 + discoveryPulse.value * 12);
+  const cueOuterOp = useDerivedValue(() => (complete || isSaving ? 0 : 0.16 - discoveryPulse.value * 0.12));
+  const cueInnerR = useDerivedValue(() => ORBIT_R - 2 + discoveryPulse.value * 8);
+  const cueInnerOp = useDerivedValue(() => (complete || isSaving ? 0 : 0.10 - discoveryPulse.value * 0.07));
 
   // Gold progress arc (sweeps −90° → +270°)
   const arcPath = useDerivedValue(() => {
@@ -221,6 +234,28 @@ export default function SkiaPulseMonitor({
                 <BlurMask blur={24} style="outer" />
               </Circle>
 
+              {/* ── 1b. Idle pulse hints that the control responds to a sustained hold ── */}
+              <Circle
+                cx={CENTER}
+                cy={CENTER}
+                r={cueOuterR}
+                style="stroke"
+                strokeWidth={1.4}
+                color={GOLD}
+                opacity={cueOuterOp}
+              >
+                <BlurMask blur={8} style="solid" />
+              </Circle>
+              <Circle
+                cx={CENTER}
+                cy={CENTER}
+                r={cueInnerR}
+                style="stroke"
+                strokeWidth={1}
+                color="rgba(255,255,255,0.9)"
+                opacity={cueInnerOp}
+              />
+
               {/* ── 2. Outer orbit tick marks ── */}
               {TICK_PATHS.map(({ path, isMajor }, i) => (
                 <Path
@@ -228,14 +263,14 @@ export default function SkiaPulseMonitor({
                   path={path}
                   style="stroke"
                   strokeWidth={isMajor ? 1.4 : 0.7}
-                  color="rgba(255,255,255,0.10)"
+                  color={`rgba(255,255,255,${isMajor ? 0.18 : 0.12})`}
                 />
               ))}
 
               {/* ── 3. Static track ring ── */}
               <Circle cx={CENTER} cy={CENTER} r={RING_R}
                 style="stroke" strokeWidth={2}
-                color="rgba(255,255,255,0.06)" />
+                color="rgba(255,255,255,0.10)" />
 
               {/* ── 4. Gold progress arc (glow layer) ── */}
               <Path path={arcPath} style="stroke" strokeWidth={5} strokeCap="round"
@@ -306,10 +341,10 @@ const styles = StyleSheet.create({
   },
   label: {
     marginTop:     10,
-    color:         'rgba(255,255,255,0.35)',
-    fontSize:      10,
+    color:         'rgba(255,255,255,0.68)',
+    fontSize:      11,
     fontWeight:    '800',
-    letterSpacing: 3.5,
+    letterSpacing: 3.8,
     textTransform: 'uppercase',
     textAlign:     'center',
   },

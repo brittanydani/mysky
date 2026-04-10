@@ -242,6 +242,7 @@ async function legacyXorDecrypt(ciphertext: Uint8Array, key: Uint8Array, iv: Uin
 
 class FieldEncryptionServiceClass {
   private dekCache: Uint8Array | null = null;
+  private readonly reportedDecryptWarnings = new Set<string>();
 
   private async hasExistingDekMarker(): Promise<boolean> {
     try {
@@ -387,64 +388,24 @@ class FieldEncryptionServiceClass {
 
     // New AES-GCM format
     if (encrypted.startsWith(AES_PREFIX)) {
-      try {
-        const dek = await this.getDek();
-        const payload = encrypted.slice(AES_PREFIX.length);
-        const parts = payload.split(':');
-        
-        if (parts.length !== 2) {
-          throw new Error('Invalid AES encrypted format');
-        }
-        
-        const iv = base64ToUint8Array(parts[0]);
-        const ciphertextWithTag = base64ToUint8Array(parts[1]);
-
-        return aesGcmDecrypt(ciphertextWithTag, dek, iv);
-      } catch {
-        // Never return the raw encrypted blob — it would show gibberish in the UI.
-        // Return a controlled, user-safe placeholder so the app remains usable.
-        const keyAvailable = await this.isKeyAvailable();
-        logger.warn(
-          keyAvailable
-            ? '[FieldEncryption] AES-GCM decryption failed; returning placeholder'
-            : '[FieldEncryption] AES-GCM key unavailable on this device; returning placeholder'
-        );
-        return DECRYPTION_FAILED_PLACEHOLDER;
+      const result = await this.tryDecryptField(encrypted);
+      if (result.ok) {
+        return result.value;
       }
+
+      this.logDecryptFailureOnce('aes', result.error);
+      return DECRYPTION_FAILED_PLACEHOLDER;
     }
     
     // Legacy XOR format (backward compatibility)
     if (encrypted.startsWith(ENCRYPTED_PREFIX)) {
-      try {
-        const dek = await this.getDek();
-        const payload = encrypted.slice(ENCRYPTED_PREFIX.length);
-        const parts = payload.split(':');
-        
-        if (parts.length !== 3) {
-          throw new Error('Invalid legacy encrypted format');
-        }
-        
-        const legacyData: LegacyEncryptedData = {
-          iv: parts[0],
-          ciphertext: parts[1],
-          tag: parts[2],
-        };
-        
-        const iv = base64ToUint8Array(legacyData.iv);
-        const ciphertext = base64ToUint8Array(legacyData.ciphertext);
-        const tag = base64ToUint8Array(legacyData.tag);
-        
-        return await legacyXorDecrypt(ciphertext, dek, iv, tag);
-      } catch {
-        // Never return the raw encrypted blob — it would show gibberish in the UI.
-                const keyAvailable = await this.isKeyAvailable();
-                logger.warn(
-                  keyAvailable
-                    ? '[FieldEncryption] Legacy decryption failed; returning placeholder'
-                    : '[FieldEncryption] Legacy key unavailable on this device; returning placeholder'
-                );
-        return DECRYPTION_FAILED_PLACEHOLDER;
+      const result = await this.tryDecryptField(encrypted);
+      if (result.ok) {
+        return result.value;
       }
+
+      this.logDecryptFailureOnce('legacy', result.error);
+      return DECRYPTION_FAILED_PLACEHOLDER;
     }
 
     // Already plaintext
@@ -504,6 +465,37 @@ class FieldEncryptionServiceClass {
     } catch {
       return { ok: false, error: 'auth_failed' };
     }
+  }
+
+  private logDecryptFailureOnce(
+    format: 'aes' | 'legacy',
+    error: 'key_missing' | 'auth_failed' | 'invalid_format'
+  ): void {
+    const key = `${format}:${error}`;
+    if (this.reportedDecryptWarnings.has(key)) {
+      return;
+    }
+
+    this.reportedDecryptWarnings.add(key);
+
+    if (format === 'aes') {
+      logger.warn(
+        error === 'key_missing'
+          ? '[FieldEncryption] AES-GCM key unavailable on this device; returning placeholder'
+          : error === 'invalid_format'
+            ? '[FieldEncryption] AES-GCM payload is malformed; returning placeholder'
+            : '[FieldEncryption] AES-GCM decryption failed; returning placeholder'
+      );
+      return;
+    }
+
+    logger.warn(
+      error === 'key_missing'
+        ? '[FieldEncryption] Legacy key unavailable on this device; returning placeholder'
+        : error === 'invalid_format'
+          ? '[FieldEncryption] Legacy payload is malformed; returning placeholder'
+          : '[FieldEncryption] Legacy decryption failed; returning placeholder'
+    );
   }
 
   /**
@@ -625,6 +617,7 @@ class FieldEncryptionServiceClass {
    */
   clearCache(): void {
     this.dekCache = null;
+    this.reportedDecryptWarnings.clear();
   }
 
   /**
@@ -638,6 +631,7 @@ class FieldEncryptionServiceClass {
    */
   async destroyDek(): Promise<void> {
     this.dekCache = null;
+    this.reportedDecryptWarnings.clear();
     await getSecureStore().deleteItemAsync(DEK_KEY);
     await this.clearDekMarker();
     logger.info('[FieldEncryption] DEK permanently destroyed');

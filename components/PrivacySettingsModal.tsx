@@ -13,11 +13,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { MetallicIcon } from './ui/MetallicIcon';
 
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { PrivacyComplianceManager } from '../services/privacy/privacyComplianceManager';
 import { logger } from '../utils/logger';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { localDb } from '../services/storage/localDb';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -35,6 +36,8 @@ interface PrivacySettingsModalProps {
 }
 
 export default function PrivacySettingsModal({ visible, onClose }: PrivacySettingsModalProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const [hasData, setHasData] = useState(false);
   const [consentRecord, setConsentRecord] = useState<{
     granted: boolean;
@@ -276,7 +279,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },

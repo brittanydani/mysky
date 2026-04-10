@@ -18,7 +18,7 @@ import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from '@react-navigation/core';
 
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import BirthDataModal from '../../components/BirthDataModal';
 import { localDb } from '../../services/storage/localDb';
@@ -40,6 +40,7 @@ import NatalChartWheel from '../../components/ui/NatalChartWheel';
 import { useSceneStore } from '../../store/sceneStore';
 import { useResonanceStore } from '../../store/resonanceStore';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 // ── Cinematic Palette ──
 
@@ -68,6 +69,8 @@ const RELATIONSHIP_ICONS: Record<RelationshipType, keyof typeof Ionicons.glyphMa
 };
 
 export default function RelationshipsScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const { isPremium } = usePremium();
   const router = useRouter();
   
@@ -570,9 +573,9 @@ export default function RelationshipsScreen() {
 
             {activeTab === 'overview' && (
               <Animated.View entering={FadeInDown.duration(400)}>
-                <LinearGradient colors={['rgba(110, 191, 139, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
+                <LinearGradient colors={['rgba(122, 144, 168, 0.15)', 'rgba(2,8,23,0.60)']} style={styles.insightCardGradient}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <MetallicIcon name="heart-outline" size={20} color="#6EBF8B" />
+                    <MetallicIcon name="heart-outline" size={20} color="#7A90A8" />
                     <Text style={styles.insightCardTitle}>Your Connection</Text>
                   </View>
                   <Text style={styles.insightCardText}>{synastryReport.primaryConnection}</Text>
@@ -749,7 +752,7 @@ export default function RelationshipsScreen() {
                         <View style={styles.previewSection}>
                           <View style={styles.previewDivider} />
                           {preview.aspects.map((aspect, i) => {
-                            const catColors: Record<string, string> = { connection: '#6EBF8B', chemistry: '#D4A3B3', growth: '#C9AE78', challenge: '#CD7F5D' };
+                            const catColors: Record<string, string> = { connection: '#7A90A8', chemistry: '#D4A3B3', growth: '#C9AE78', challenge: '#CD7F5D' };
                             const catColor = catColors[aspect.category] || theme.textMuted;
                             return (
                               <View key={i} style={styles.previewAspectRow}>
@@ -826,7 +829,7 @@ export default function RelationshipsScreen() {
               </View>
 
               <View style={styles.discoverItem}>
-                <MetallicIcon name="refresh-outline" size={20} color="#6EBF8B" />
+                <MetallicIcon name="refresh-outline" size={20} color="#7A90A8" />
                 <View style={styles.discoverContent}>
                   <Text style={styles.discoverItemTitle}>Repair Strategies</Text>
                   <Text style={styles.discoverItemText}>How to reconnect after conflict</Text>
@@ -848,7 +851,7 @@ export default function RelationshipsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
@@ -918,7 +921,7 @@ const styles = StyleSheet.create({
   personPillActive: { borderColor: 'rgba(230, 213, 184, 0.4)', backgroundColor: 'rgba(230, 213, 184, 0.1)' },
   personPillText: { fontSize: 14, fontWeight: '600', color: theme.textMuted },
   personPillType: { fontSize: 11, color: theme.textMuted, marginLeft: 4 },
-  personPillAdd: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(230, 213, 184, 0.3)', borderStyle: 'dashed' },
+  personPillAdd: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(230, 213, 184, 0.34)', backgroundColor: 'rgba(230, 213, 184, 0.08)' },
   personPillAddText: { fontSize: 14, fontWeight: '600', color: theme.textGold },
 
   filterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginVertical: 16 },

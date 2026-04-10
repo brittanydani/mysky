@@ -22,8 +22,10 @@ import { MetallicText } from './ui/MetallicText';
 import { MetallicIcon } from './ui/MetallicIcon';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import SkiaMetallicPill from './ui/SkiaMetallicPill';
+import { VelvetGlassSurface } from './ui/VelvetGlassSurface';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 interface BackupPassphraseModalProps {
   visible: boolean;
@@ -48,6 +50,8 @@ export default function BackupPassphraseModal({
   onCancel,
   onConfirm,
 }: BackupPassphraseModalProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const [passphrase, setPassphrase] = useState('');
   const [confirm, setConfirm] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -112,70 +116,78 @@ export default function BackupPassphraseModal({
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
               >
-                <Text style={styles.description}>
-                  {mode === 'backup'
-                    ? 'This passphrase encrypts your data. MySky cannot recover it—store it in a secure location.'
-                    : 'Enter the passphrase used to secure this backup file.'}
-                </Text>
+                <VelvetGlassSurface
+                  style={styles.contentSurface}
+                  intensity={42}
+                  backgroundColor="rgba(10, 14, 23, 0.34)"
+                  borderColor="rgba(255,255,255,0.10)"
+                  highlightColor="rgba(255,255,255,0.05)"
+                >
+                  <Text style={styles.description}>
+                    {mode === 'backup'
+                      ? 'This passphrase encrypts your data. MySky cannot recover it—store it in a secure location.'
+                      : 'Enter the passphrase used to secure this backup file.'}
+                  </Text>
 
-                <View style={styles.inputGroup}>
-                  <MetallicText color={PALETTE.gold} style={styles.label}>Passphrase</MetallicText>
-                  <TextInput
-                    style={[styles.input, validation.isTooShort && styles.inputError]}
-                    value={passphrase}
-                    onChangeText={setPassphrase}
-                    placeholder={mode === 'backup' ? 'At least 12 characters' : 'Enter passphrase'}
-                    placeholderTextColor={theme.textMuted}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType={needsConfirm ? 'next' : 'done'}
-                    onSubmitEditing={() => {
-                      if (!needsConfirm) handleSubmit();
-                    }}
-                  />
-                  {validation.isTooShort && (
-                    <MetallicText color={PALETTE.copper} style={styles.warningText}>
-                      Required: {mode === 'backup' ? '12' : '8'} characters minimum
-                    </MetallicText>
-                  )}
-                </View>
-
-                {needsConfirm && (
                   <View style={styles.inputGroup}>
-                    <MetallicText color={PALETTE.gold} style={styles.label}>Verify Passphrase</MetallicText>
+                    <MetallicText color={PALETTE.gold} style={styles.label}>Passphrase</MetallicText>
                     <TextInput
-                      style={[styles.input, validation.mismatch && styles.inputError]}
-                      value={confirm}
-                      onChangeText={setConfirm}
-                      placeholder="Repeat passphrase"
+                      style={[styles.input, validation.isTooShort && styles.inputError]}
+                      value={passphrase}
+                      onChangeText={setPassphrase}
+                      placeholder={mode === 'backup' ? 'At least 12 characters' : 'Enter passphrase'}
                       placeholderTextColor={theme.textMuted}
                       secureTextEntry
                       autoCapitalize="none"
                       autoCorrect={false}
-                      returnKeyType="done"
-                      onSubmitEditing={handleSubmit}
+                      returnKeyType={needsConfirm ? 'next' : 'done'}
+                      onSubmitEditing={() => {
+                        if (!needsConfirm) handleSubmit();
+                      }}
                     />
-                    {validation.mismatch && (
-                      <MetallicText color={PALETTE.copper} style={styles.warningText}>Passphrases do not match</MetallicText>
+                    {validation.isTooShort && (
+                      <MetallicText color={PALETTE.copper} style={styles.warningText}>
+                        Required: {mode === 'backup' ? '12' : '8'} characters minimum
+                      </MetallicText>
                     )}
                   </View>
-                )}
 
-                <SkiaMetallicPill
-                  label={submitting ? 'Processing…' : mode === 'backup' ? 'Confirm & Backup' : 'Confirm & Restore'}
-                  onPress={handleSubmit}
-                  disabled={!validation.canSubmit || submitting}
-                />
+                  {needsConfirm && (
+                    <View style={styles.inputGroup}>
+                      <MetallicText color={PALETTE.gold} style={styles.label}>Verify Passphrase</MetallicText>
+                      <TextInput
+                        style={[styles.input, validation.mismatch && styles.inputError]}
+                        value={confirm}
+                        onChangeText={setConfirm}
+                        placeholder="Repeat passphrase"
+                        placeholderTextColor={theme.textMuted}
+                        secureTextEntry
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        returnKeyType="done"
+                        onSubmitEditing={handleSubmit}
+                      />
+                      {validation.mismatch && (
+                        <MetallicText color={PALETTE.copper} style={styles.warningText}>Passphrases do not match</MetallicText>
+                      )}
+                    </View>
+                  )}
 
-                {mode === 'backup' && (
-                  <View style={styles.securityNote}>
-                    <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.silverBlue} />
-                    <Text style={styles.helperText}>
-                      We recommend using a phrase of 4+ random words. This encryption happens entirely on your device.
-                    </Text>
-                  </View>
-                )}
+                  <SkiaMetallicPill
+                    label={submitting ? 'Processing…' : mode === 'backup' ? 'Confirm & Backup' : 'Confirm & Restore'}
+                    onPress={handleSubmit}
+                    disabled={!validation.canSubmit || submitting}
+                  />
+
+                  {mode === 'backup' && (
+                    <View style={styles.securityNote}>
+                      <MetallicIcon name="shield-checkmark-outline" size={16} color={PALETTE.silverBlue} />
+                      <Text style={styles.helperText}>
+                        We recommend using a phrase of 4+ random words. This encryption happens entirely on your device.
+                      </Text>
+                    </View>
+                  )}
+                </VelvetGlassSurface>
               </ScrollView>
             </KeyboardAvoidingView>
           </SafeAreaView>
@@ -184,7 +196,7 @@ export default function BackupPassphraseModal({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   flex: { flex: 1 },
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
@@ -208,6 +220,15 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 60,
   },
+  contentSurface: {
+    borderRadius: 28,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+    elevation: 12,
+  },
   description: {
     fontSize: 15,
     color: theme.textSecondary,
@@ -227,10 +248,10 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   input: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: 'rgba(255,255,255,0.10)',
     paddingHorizontal: 20,
     paddingVertical: 16,
     color: PALETTE.textMain,
@@ -269,11 +290,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
     marginTop: 32,
-    backgroundColor: 'rgba(201, 174, 120, 0.05)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(201, 174, 120, 0.1)',
+    borderColor: 'rgba(201, 174, 120, 0.14)',
   },
   helperText: {
     flex: 1,

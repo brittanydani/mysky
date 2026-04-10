@@ -26,7 +26,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { supabase } from '../lib/supabase';
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from './ui/SkiaGradient';
 import { signUpAndEnsureSession } from '../services/auth/signUpSession';
@@ -34,12 +34,15 @@ import {
   completePasswordRecovery,
   requestPasswordRecoveryCode,
 } from '../services/auth/passwordRecovery';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 interface Props {
   visible: boolean;
 }
 
 export default function AuthRequiredModal({ visible }: Props) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const genericSignUpError = 'Could not create account. If you already have one, sign in or reset your password.';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -418,7 +421,7 @@ export default function AuthRequiredModal({ visible }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.background,

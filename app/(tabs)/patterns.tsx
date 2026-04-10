@@ -41,6 +41,7 @@ import { useCorrelationStore } from '../../store/correlationStore';
 import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/insightsPdfExport';
 import { DailyAggregate, ChartProfile } from '../../services/insights/types';
 import { TriggerEvent } from '../../utils/triggerEventTypes';
+import { keepLastWordsTogether } from '../../utils/textLayout';
 
 const SCREEN_W = Dimensions.get('window').width;
 const ORBIT_SIZE = SCREEN_W - 48;
@@ -378,7 +379,7 @@ export default function PatternsScreen() {
                 <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />
               ) : (
                 <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
-                  <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, textAlign: 'center', marginTop: 12 }}>
+                  <Text style={{ color: 'rgba(255,255,255,0.58)', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 20 }}>
                     Log a few check-ins to reveal your pattern orbit map.
                   </Text>
                 </View>
@@ -406,8 +407,8 @@ export default function PatternsScreen() {
                   colors={['rgba(201, 174, 120, 0.1)', 'rgba(10,10,12,0.9)']}
                   style={styles.insightCard}
                 >
-                  <Text style={styles.blendedTitle}>{card.title}</Text>
-                  <Text style={styles.insightBody}>{card.body}</Text>
+                  <Text style={styles.blendedTitle}>{keepLastWordsTogether(card.title)}</Text>
+                  <Text style={styles.insightBody}>{keepLastWordsTogether(card.body)}</Text>
                   {card.stat !== '' && (
                     <Text style={styles.statText}>{card.stat}</Text>
                   )}
@@ -424,20 +425,20 @@ export default function PatternsScreen() {
           {enhanced && enhanced.keywordLift.hasData && (
             <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
               <SectionHeader label="WHAT LIFTS & DRAINS YOU" icon="swap-vertical-outline" />
-              <LinearGradient colors={['rgba(110, 191, 139, 0.08)', 'rgba(10, 10, 12, 0.9)']} style={styles.insightCard}>
+              <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10, 10, 12, 0.9)']} style={styles.insightCard}>
                 <Text style={styles.liftIntro}>
                   These themes appear more often on your best vs. hardest days — based on your own words.
                 </Text>
                 {enhanced.keywordLift.restores.length > 0 && (
                   <View style={styles.liftGroup}>
                     <View style={styles.liftLabelRow}>
-                      <Ionicons name="arrow-up-circle-outline" size={16} color={PALETTE.emerald} />
-                      <MetallicText style={[styles.liftGroupLabel, { color: PALETTE.emerald }]}>Restores you</MetallicText>
+                      <Ionicons name="arrow-up-circle-outline" size={16} color={PALETTE.gold} />
+                      <MetallicText style={[styles.liftGroupLabel, { color: PALETTE.gold }]}>Restores you</MetallicText>
                     </View>
                     <View style={styles.pillRow}>
                       {enhanced.keywordLift.restores.map(r => (
-                        <View key={r.label} style={[styles.liftPill, { borderColor: `${PALETTE.emerald}50`, backgroundColor: `${PALETTE.emerald}12` }]}>
-                          <Text style={[styles.pillText, { color: PALETTE.emerald }]}>{r.label}</Text>
+                        <View key={r.label} style={[styles.liftPill, { borderColor: `${PALETTE.gold}50`, backgroundColor: `${PALETTE.gold}12` }]}>
+                          <Text style={[styles.pillText, { color: PALETTE.gold }]}>{r.label}</Text>
                         </View>
                       ))}
                     </View>
@@ -472,7 +473,7 @@ export default function PatternsScreen() {
                   colors={['rgba(168, 155, 200, 0.1)', 'rgba(10,10,12,0.9)']}
                   style={styles.insightCard}
                 >
-                  <Text style={styles.insightBody}>{tp.insight}</Text>
+                  <Text style={styles.insightBody}>{keepLastWordsTogether(tp.insight)}</Text>
                   {tp.buckets && tp.buckets.length > 0 && (
                     <View style={styles.timeGrid}>
                       {tp.buckets.map(b => (
@@ -512,10 +513,12 @@ export default function PatternsScreen() {
                 <Text style={styles.liftIntro}>Which emotions show up more on your best and hardest days.</Text>
                 {enhanced.emotionBucketLift.map((item, i) => {
                   const isPositive = item.lift > 0;
-                  const color = isPositive ? PALETTE.emerald : PALETTE.copper;
+                  const color = isPositive ? PALETTE.gold : PALETTE.copper;
                   return (
                     <View key={item.category} style={[styles.emotionRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
-                      <Text style={styles.emotionName}>{item.category.charAt(0).toUpperCase() + item.category.slice(1)}</Text>
+                      <View style={styles.emotionNameWrap}>
+                        <Text style={styles.emotionName} numberOfLines={1}>{item.category.charAt(0).toUpperCase() + item.category.slice(1)}</Text>
+                      </View>
                       <View style={{ flex: 1, marginHorizontal: 12 }}>
                         <Text style={[styles.emotionInsight, { color: 'rgba(255,255,255,0.55)' }]}>{item.insight}</Text>
                       </View>
@@ -534,7 +537,7 @@ export default function PatternsScreen() {
             <Animated.View entering={FadeInDown.delay(370)} style={styles.section}>
               <SectionHeader label="WHAT'S ON YOUR MIND" icon="chatbubble-ellipses-outline" />
               <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
-                <Text style={styles.insightBody}>{enhanced.keywordThemes.insight}</Text>
+                <Text style={styles.insightBody}>{keepLastWordsTogether(enhanced.keywordThemes.insight)}</Text>
                 <View style={[styles.pillRow, { marginTop: 16 }]}>
                   {enhanced.keywordThemes.topKeywords.map(kw => (
                     <View key={kw.word} style={[styles.keywordPill, { borderColor: `${PALETTE.gold}35` }]}>
@@ -554,10 +557,10 @@ export default function PatternsScreen() {
               {enhanced.journalImpact.map((card, i) => (
                 <LinearGradient
                   key={i}
-                  colors={['rgba(110, 191, 139, 0.08)', 'rgba(10,10,12,0.9)']}
+                  colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']}
                   style={styles.insightCard}
                 >
-                  <Text style={styles.insightBody}>{card.insight}</Text>
+                  <Text style={styles.insightBody}>{keepLastWordsTogether(card.insight)}</Text>
                   <Text style={styles.statText}>{card.stat}</Text>
                 </LinearGradient>
               ))}
@@ -569,11 +572,11 @@ export default function PatternsScreen() {
             <Animated.View entering={FadeInDown.delay(410)} style={styles.section}>
               <SectionHeader label="HOW YOUR TONE IS SHIFTING" icon="pulse-outline" />
               <LinearGradient colors={['rgba(212, 184, 114, 0.08)', 'rgba(10, 10, 12, 0.9)']} style={styles.insightCard}>
-                <Text style={styles.insightBody}>{enhanced.emotionToneShift.insight}</Text>
+                <Text style={styles.insightBody}>{keepLastWordsTogether(enhanced.emotionToneShift.insight)}</Text>
                 {enhanced.emotionToneShift.rising.length > 0 && (
                   <View style={[styles.toneRow, { marginTop: 16 }]}>
-                    <Ionicons name="arrow-up-circle-outline" size={15} color={PALETTE.emerald} />
-                    <Text style={[styles.toneLabel, { color: PALETTE.emerald }]}>Rising: </Text>
+                    <Ionicons name="arrow-up-circle-outline" size={15} color={PALETTE.copper} />
+                    <Text style={[styles.toneLabel, { color: PALETTE.copper }]}>Rising: </Text>
                     <Text style={styles.toneValue}>
                       {enhanced.emotionToneShift.rising.map(r => r.category).join(', ')}
                     </Text>
@@ -581,8 +584,8 @@ export default function PatternsScreen() {
                 )}
                 {enhanced.emotionToneShift.falling.length > 0 && (
                   <View style={styles.toneRow}>
-                    <Ionicons name="arrow-down-circle-outline" size={15} color={PALETTE.rose} />
-                    <Text style={[styles.toneLabel, { color: PALETTE.rose }]}>Falling: </Text>
+                    <Ionicons name="arrow-down-circle-outline" size={15} color={PALETTE.gold} />
+                    <Text style={[styles.toneLabel, { color: PALETTE.gold }]}>Falling: </Text>
                     <Text style={styles.toneValue}>
                       {enhanced.emotionToneShift.falling.map(r => r.category).join(', ')}
                     </Text>
@@ -601,7 +604,7 @@ export default function PatternsScreen() {
                 <Text style={styles.liftIntro}>How consistent your scores have been day-to-day.</Text>
                 {enhanced.volatility.map((v, i) => {
                   const label = v.metric === 'mood' ? 'Mood' : v.metric === 'stress' ? 'Stress' : 'Sentiment';
-                  const color = v.level === 'low' ? PALETTE.emerald : v.level === 'moderate' ? PALETTE.gold : PALETTE.copper;
+                  const color = v.level === 'low' ? PALETTE.gold : v.level === 'moderate' ? PALETTE.silverBlue : PALETTE.copper;
                   const description = v.level === 'low' ? 'Very consistent' : v.level === 'moderate' ? 'Some variation' : 'Noticeably variable';
                   return (
                     <View key={v.metric} style={[styles.stabilityRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
@@ -631,7 +634,7 @@ export default function PatternsScreen() {
                 {correlations.slice(0, 5).map((c, i) => {
                   const abs = Math.abs(c.correlation);
                   const isPositive = c.correlation > 0;
-                  const color = abs >= 0.5 ? (isPositive ? PALETTE.emerald : PALETTE.rose) : PALETTE.gold;
+                  const color = abs >= 0.5 ? (isPositive ? PALETTE.gold : PALETTE.rose) : PALETTE.silverBlue;
                   return (
                     <View key={`${c.metric_a}-${c.metric_b}`} style={[styles.correlationRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
                       <Text style={styles.correlationMetrics}>
@@ -672,8 +675,8 @@ export default function PatternsScreen() {
                         </View>
                       )}
                     </View>
-                    <Text style={styles.patternTitle}>{insight.title}</Text>
-                    <Text style={styles.insightBody}>{insight.body}</Text>
+                    <Text style={styles.patternTitle}>{keepLastWordsTogether(insight.title)}</Text>
+                    <Text style={styles.insightBody}>{keepLastWordsTogether(insight.body)}</Text>
                   </LinearGradient>
                 );
               })}
@@ -715,7 +718,7 @@ export default function PatternsScreen() {
               {deepInsights.season && (
                 <LinearGradient colors={[`${PALETTE.gold}10`, 'rgba(10,10,12,0.9)']} style={styles.seasonCard}>
                   <MetallicText style={styles.seasonLabel} variant="gold">{deepInsights.season.label.toUpperCase()}</MetallicText>
-                  <Text style={styles.insightBody}>{deepInsights.season.body}</Text>
+                  <Text style={styles.insightBody}>{keepLastWordsTogether(deepInsights.season.body)}</Text>
                 </LinearGradient>
               )}
 
@@ -772,7 +775,7 @@ export default function PatternsScreen() {
 
             return (
               <Animated.View entering={FadeInDown.delay(450)} style={styles.section}>
-                <SectionHeader label="NERVOUS SYSTEM LOG" icon="pulse-outline" subtitle="From your polyvagal trigger entries" />
+                <SectionHeader label="WHAT CHANGED YOUR ENERGY" icon="pulse-outline" subtitle="From your trigger and glimmer entries" />
                 <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
                   <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
                     <View style={{ flex: 1, backgroundColor: 'rgba(205,127,93,0.1)', borderRadius: 16, padding: 14, alignItems: 'center' }}>
@@ -784,7 +787,14 @@ export default function PatternsScreen() {
                       <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: 0.8 }}>GLIMMERS</Text>
                     </View>
                   </View>
-                  <Text style={styles.insightBody}>{narrative}</Text>
+                  <Text style={styles.insightBody}>{keepLastWordsTogether(narrative)}</Text>
+                  <View style={styles.supportCallout}>
+                    <View style={styles.supportCalloutHeader}>
+                      <Ionicons name="leaf-outline" size={13} color={PALETTE.emerald} />
+                      <Text style={styles.supportCalloutLabel}>Next step</Text>
+                    </View>
+                    <Text style={styles.supportCalloutBody}>Choose one low-friction reset today: step outside, drink water, loosen your jaw, or text one safe person back.</Text>
+                  </View>
                 </LinearGradient>
               </Animated.View>
             );
@@ -816,8 +826,8 @@ const SectionHeader = ({ icon, label, subtitle }: { icon: keyof typeof Ionicons.
 
 const LoopCard = ({ content }: { content: LoopCardContent }) => (
   <LinearGradient colors={[`${content.accent}18`, 'rgba(10,10,12,0.85)']} style={[styles.insightCard, styles.loopCard]}>
-    <Text style={[styles.loopTitle, { color: content.accent }]}>{content.title}</Text>
-    <Text style={styles.insightBody}>{content.body}</Text>
+    <Text style={[styles.loopTitle, { color: content.accent }]}>{keepLastWordsTogether(content.title)}</Text>
+    <Text style={styles.insightBody}>{keepLastWordsTogether(content.body)}</Text>
   </LinearGradient>
 );
 
@@ -845,9 +855,33 @@ const NARRATIVE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   emerging_pattern:       'sparkles-outline',
 };
 
+const NARRATIVE_SUPPORT: Partial<Record<NarrativeInsight['category'], { label: string; body: string; icon: keyof typeof Ionicons.glyphMap }>> = {
+  emotional_undercurrent: {
+    label: 'Gentle read',
+    body: 'Treat the pattern as information, not a diagnosis. Name the tone, lower the demand, and let steadiness return on its own timeline.',
+    icon: 'compass-outline',
+  },
+  stress_signal: {
+    label: 'Grounding cue',
+    body: 'Reduce input before you add effort. Fewer tabs, one postponed demand, one slower exhale.',
+    icon: 'leaf-outline',
+  },
+  hard_day: {
+    label: 'Glimmer to protect',
+    body: 'Look for the smallest thing already helping: warmth, water, sunlight, movement, or one safe person.',
+    icon: 'sunny-outline',
+  },
+  sensitivity_theme: {
+    label: 'Somatic release',
+    body: 'Orient outward first. Unclench the jaw, drop the shoulders, lengthen the exhale, then decide what actually needs action.',
+    icon: 'body-outline',
+  },
+};
+
 const NarrativeCard = ({ insight }: { insight: NarrativeInsight }) => {
   const accent = NARRATIVE_ACCENT[insight.accent] ?? PALETTE.gold;
   const icon = NARRATIVE_ICONS[insight.category] ?? 'sparkles-outline';
+  const support = NARRATIVE_SUPPORT[insight.category];
   return (
     <LinearGradient colors={[`${accent}14`, 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
       <View style={styles.narrativeHeader}>
@@ -859,7 +893,16 @@ const NarrativeCard = ({ insight }: { insight: NarrativeInsight }) => {
           </Text>
         </View>
       </View>
-      <Text style={styles.insightBody}>{insight.body}</Text>
+      <Text style={styles.insightBody}>{keepLastWordsTogether(insight.body)}</Text>
+      {support && (
+        <View style={styles.supportCallout}>
+          <View style={styles.supportCalloutHeader}>
+            <Ionicons name={support.icon} size={13} color={PALETTE.emerald} />
+            <Text style={styles.supportCalloutLabel}>{support.label}</Text>
+          </View>
+          <Text style={styles.supportCalloutBody}>{support.body}</Text>
+        </View>
+      )}
       <Text style={styles.statText}>{insight.stat}</Text>
     </LinearGradient>
   );
@@ -902,7 +945,7 @@ const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
           {insight.job === 'name' ? '◆ NAMING' : insight.job === 'clarify' ? '◆ CLARIFYING' : insight.job === 'guide' ? '◆ GUIDING' : '◆ INTEGRATING'}
         </Text>
       </View>
-      <Text style={styles.insightBody}>{insight.body}</Text>
+      <Text style={styles.insightBody}>{keepLastWordsTogether(insight.body)}</Text>
       {insight.detail && <Text style={styles.statText}>{insight.detail}</Text>}
       {insight.selfLanguage && (
         <Text style={[styles.selfLanguageText, { color: `${accent}CC` }]}>&ldquo;{insight.selfLanguage}&rdquo;</Text>
@@ -910,7 +953,7 @@ const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
       {insight.reflectionPrompt && (
         <View style={styles.reflectionPromptWrap}>
           <Ionicons name="chatbubble-ellipses-outline" size={12} color="rgba(255,255,255,0.35)" />
-          <Text style={styles.reflectionPromptText}>{insight.reflectionPrompt}</Text>
+          <Text style={styles.reflectionPromptText}>{keepLastWordsTogether(insight.reflectionPrompt)}</Text>
         </View>
       )}
     </LinearGradient>
@@ -941,28 +984,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 4,
   },
-  title: { fontSize: 34, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.5, marginBottom: 4 },
+  title: { fontSize: 29, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.28, marginBottom: 4 },
   subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
-  snapshotRow: { flexDirection: 'row', gap: 12, marginBottom: 40 },
-  metricCard: { flex: 1, padding: 20, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', minHeight: 110, backgroundColor: 'rgba(255,255,255,0.02)' },
+  snapshotRow: { flexDirection: 'row', gap: 14, marginBottom: 40 },
+  metricCard: { flex: 1, paddingVertical: 24, paddingHorizontal: 18, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', minHeight: 118, backgroundColor: 'rgba(255,255,255,0.04)' },
   metricLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, marginBottom: 10, textTransform: 'uppercase', textAlign: 'center' },
-  metricValue: { color: PALETTE.textMain, fontSize: 26, fontWeight: '500', fontVariant: ['tabular-nums'] },
-  metricSub: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '500' },
+  metricValue: { color: PALETTE.textMain, fontSize: 24, fontWeight: '500', fontVariant: ['tabular-nums'] },
+  metricSub: { color: 'rgba(255,255,255,0.66)', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '500' },
   visualSection: { alignItems: 'center', marginBottom: 40 },
-  orbitCard: { borderRadius: 24, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', width: '100%', overflow: 'visible' },
+  orbitCard: { borderRadius: 24, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center', width: '100%', overflow: 'visible' },
   orbitCardBg: { borderRadius: 24, overflow: 'hidden' },
   orbitCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 8, paddingHorizontal: 20 },
   orbitCardEyebrow: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
   orbitCardFooter: { marginTop: 8, alignSelf: 'center' },
-  orbitCardFooterText: { fontSize: 11, color: 'rgba(255,255,255,0.30)', textAlign: 'center' },
+  orbitCardFooterText: { fontSize: 11, color: 'rgba(255,255,255,0.54)', textAlign: 'center', lineHeight: 17 },
   section: { marginBottom: 0 },
   sectionHeaderWrap: { marginBottom: 20, marginTop: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sectionHeaderLabel: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
-  sectionHeaderSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 4 },
-  insightCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, marginBottom: 32 },
+  sectionHeaderLabel: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', letterSpacing: 1.3, textTransform: 'uppercase' as const },
+  sectionHeaderSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.62)', marginTop: 4, lineHeight: 19 },
+  insightCard: { padding: 32, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', marginBottom: 32, overflow: 'hidden' },
   insightLabel: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, marginBottom: 12, textTransform: 'uppercase' },
-  insightBody: { color: 'rgba(255,255,255,0.7)', fontSize: 16, lineHeight: 24 },
+  insightBody: { color: 'rgba(255,255,255,0.82)', fontSize: 16, lineHeight: 24 },
   loopCard: { marginBottom: 32 },
   loopTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
 
@@ -971,35 +1014,36 @@ const styles = StyleSheet.create({
   // Blended
   blendedTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.textMain, marginBottom: 10 },
   journalPromptBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: 'rgba(201,174,120,0.06)', borderWidth: 1, borderColor: 'rgba(201,174,120,0.15)' },
-  journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 22 },
-  statText: { fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 12, lineHeight: 16 },
+  journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.74)', fontSize: 14, lineHeight: 22 },
+  statText: { fontSize: 11, color: 'rgba(255,255,255,0.56)', marginTop: 8, lineHeight: 17 },
 
   // Lift & Drain
-  liftIntro: { fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 22, marginBottom: 16 },
+  liftIntro: { fontSize: 14, color: 'rgba(255,255,255,0.74)', lineHeight: 22, marginBottom: 16 },
   liftGroup: {},
   liftLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   liftGroupLabel: { fontSize: 13, fontWeight: '700' },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  liftPill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
+  liftPill: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
   pillText: { fontSize: 13, fontWeight: '600' },
 
   // Time patterns
   timeGrid: { marginTop: 16, gap: 10 },
   timeBucket: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  timeBucketLabel: { width: 80, fontSize: 12, color: 'rgba(255,255,255,0.5)' },
-  timeBucketBar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
-  timeBucketFill: { height: '100%', borderRadius: 3 },
-  timeBucketValue: { width: 28, textAlign: 'right', fontSize: 12, color: 'rgba(255,255,255,0.5)' },
+  timeBucketLabel: { width: 80, fontSize: 12, color: 'rgba(255,255,255,0.66)' },
+  timeBucketBar: { flex: 1, height: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  timeBucketFill: { height: '100%', borderRadius: 999 },
+  timeBucketValue: { width: 28, textAlign: 'right', fontSize: 12, color: 'rgba(255,255,255,0.68)' },
 
   dayGrid: { flexDirection: 'row', gap: 6, marginTop: 16, height: 60, alignItems: 'flex-end' },
   dayColumn: { flex: 1, alignItems: 'center', gap: 6 },
   dayBarWrap: { flex: 1, width: '100%', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden', justifyContent: 'flex-end' },
   dayBarFill: { width: '100%', borderRadius: 4 },
-  dayLabel: { fontSize: 10, color: 'rgba(255,255,255,0.35)' },
+  dayLabel: { fontSize: 10, color: 'rgba(255,255,255,0.56)' },
 
   // Emotion patterns
   emotionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
-  emotionName: { width: 72, fontSize: 13, color: PALETTE.textMain, fontWeight: '600' },
+  emotionNameWrap: { width: 124, justifyContent: 'center', paddingRight: 6 },
+  emotionName: { fontSize: 13, color: PALETTE.textMain, fontWeight: '600' },
   emotionInsight: { fontSize: 12, lineHeight: 18 },
   emotionBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
   emotionBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
@@ -1012,7 +1056,7 @@ const styles = StyleSheet.create({
   // Tone
   toneRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   toneLabel: { fontSize: 13, fontWeight: '700' },
-  toneValue: { fontSize: 13, color: 'rgba(255,255,255,0.6)' },
+  toneValue: { fontSize: 13, color: 'rgba(255,255,255,0.74)' },
 
   // Stability
   stabilityRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 10 },
@@ -1024,7 +1068,7 @@ const styles = StyleSheet.create({
 
   // Correlations
   correlationRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
-  correlationMetrics: { width: 130, fontSize: 12, color: 'rgba(255,255,255,0.6)', textTransform: 'capitalize' },
+  correlationMetrics: { width: 130, fontSize: 12, color: 'rgba(255,255,255,0.74)', textTransform: 'capitalize' },
   correlationBarWrap: { flex: 1, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
   correlationFill: { height: '100%', borderRadius: 2 },
   correlationLabel: { fontSize: 10, fontWeight: '700', textAlign: 'right', width: 90 },
@@ -1039,6 +1083,10 @@ const styles = StyleSheet.create({
   narrativeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   narrativeConfidence: { marginLeft: 'auto', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
   narrativeConfidenceText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.8 },
+  supportCallout: { marginTop: 14, padding: 14, borderRadius: 16, backgroundColor: 'rgba(107,144,128,0.10)', borderWidth: 1, borderColor: 'rgba(107,144,128,0.20)' },
+  supportCalloutHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  supportCalloutLabel: { color: '#6B9080', fontSize: 11, fontWeight: '800', letterSpacing: 1.1, textTransform: 'uppercase' as const },
+  supportCalloutBody: { color: 'rgba(255,255,255,0.82)', fontSize: 14, lineHeight: 21 },
   deepLevelBadge: { marginBottom: 10 },
   deepLevelText: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' as const },
   personalTruthsWrap: { marginTop: 20, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212,175,55,0.15)', backgroundColor: 'rgba(212,175,55,0.04)' },

@@ -10,8 +10,9 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import { ShadowQuote, ShadowTone } from '../../services/astrology/shadowQuotes';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 interface ShadowQuoteCardProps {
   quote: ShadowQuote;
@@ -59,6 +60,8 @@ export default function ShadowQuoteCard({
   onLongPress,
   isCloseQuote = false,
 }: ShadowQuoteCardProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const tone = TONE_CONFIG[quote.tone] || TONE_CONFIG.awareness;
 
   const handleLongPress = () => {
@@ -116,6 +119,7 @@ export default function ShadowQuoteCard({
 }
 
 export function ShadowQuoteInline({ text, delay = 0 }: { text: string; delay?: number }) {
+  const styles = useThemedStyles(createStyles);
   return (
     <Animated.View entering={FadeIn.delay(delay).duration(1000)} style={styles.inlineContainer}>
       <Text style={styles.inlineText}>"{text}"</Text>
@@ -123,7 +127,7 @@ export function ShadowQuoteInline({ text, delay = 0 }: { text: string; delay?: n
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   card: {
     borderRadius: 24,
     padding: 28,

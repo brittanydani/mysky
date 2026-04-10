@@ -2,27 +2,27 @@
 
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { theme } from '../constants/theme';
+import { type AppTheme } from '../constants/theme';
 import { SUPPORT_EMAIL } from '../constants/config';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: theme.textGold,
-  silverBlue: '#C9AE78',
-  textMain: theme.textPrimary,
-  glassBorder: theme.cardBorder,
-};
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const PALETTE = {
+    gold: theme.textGold,
+    silverBlue: '#C9AE78',
+    textMain: theme.textPrimary,
+    glassBorder: theme.cardBorder,
+  };
 
   return (
     <View style={styles.container}>
@@ -83,7 +83,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 
             <Text style={styles.question}>What are AI Reflection Insights and what data do they use?</Text>
             <Text style={styles.answer}>
-              AI Reflection Insights are an optional premium feature. When active, only aggregated, non-identifying behavioral statistics — mood/stress/energy trends, averages, top restoring and draining tags, and correlation data — are sent to a Supabase Edge Function that calls Anthropic Claude. <Text style={styles.highlight}>Raw journal text, birth data, dream content, and personal notes are never transmitted.</Text> Requests are rate limited to 5 per hour and cached once per calendar day.
+              AI Reflection Insights are an optional premium feature. When active, only aggregated, non-identifying behavioral statistics — mood/stress/energy trends, averages, top restoring and draining tags, and correlation data — are sent to a Supabase Edge Function that calls Google Gemini. <Text style={styles.highlight}>Raw journal text, birth data, dream content, and personal notes are never transmitted.</Text> Requests are rate limited to 5 per hour and cached once per calendar day.
             </Text>
 
             <Text style={styles.question}>Are dream reflections powered by AI?</Text>
@@ -276,7 +276,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020817' },
   safeArea: { flex: 1 },
 
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     marginBottom: 16 
   },
   highlight: {
-    color: PALETTE.silverBlue,
+    color: theme.textGold,
     fontWeight: '600',
   }
 });

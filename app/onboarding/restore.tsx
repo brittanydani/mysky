@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter, Href } from 'expo-router';
 
-import { theme } from '../../constants/theme';
+import { type AppTheme } from '../../constants/theme';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { BackupService } from '../../services/storage/backupService';
@@ -17,6 +17,7 @@ import { IdentityVault } from '../../utils/IdentityVault';
 import { logger } from '../../utils/logger';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -27,6 +28,8 @@ const PALETTE = {
 };
 
 export default function OnboardingRestoreScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [backupUri, setBackupUri] = useState<string | null>(null);
   const [passphrase, setPassphrase] = useState('');
@@ -177,7 +180,7 @@ export default function OnboardingRestoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   

@@ -28,6 +28,7 @@ import Animated, {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { MetallicIcon } from './MetallicIcon';
+import { VelvetGlassSurface } from './VelvetGlassSurface';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -139,47 +140,58 @@ export default function AwakenStateSheet({
       <View style={styles.sheetAnchor} pointerEvents="box-none">
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.sheet, sheetStyle]}>
-            {/* Frosted glass background */}
-            <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill} />
-
-            {/* Handle bar */}
-            <View style={styles.handle} />
-
-            {/* Title */}
-            <View style={styles.titleRow}>
-              <MetallicIcon name="moon-outline" size={16} color={AMETHYST} />
-              <Text style={styles.title}>Woke up feeling</Text>
-            </View>
-
-            {/* Options */}
-            <ScrollView
-              style={styles.listContainer}
-              contentContainerStyle={styles.list}
-              showsVerticalScrollIndicator={false}
-              bounces={false}
+            <VelvetGlassSurface
+              style={styles.sheetSurface}
+              intensity={52}
+              backgroundColor="rgba(11, 15, 25, 0.34)"
+              borderColor="rgba(255,255,255,0.10)"
+              highlightColor="rgba(255,255,255,0.05)"
             >
-              {options.map((opt) => {
-                const isSelected = opt.id === selected;
-                return (
-                  <Pressable
-                    key={opt.id}
-                    onPress={() => handleSelect(opt.id)}
-                    style={({ pressed }) => [
-                      styles.item,
-                      isSelected && styles.itemSelected,
-                      pressed && styles.itemPressed,
-                    ]}
-                  >
-                    <Text style={[styles.itemLabel, isSelected && styles.itemLabelSelected]}>
-                      {opt.label}
-                    </Text>
-                    {isSelected && (
-                      <MetallicIcon name="checkmark-outline" size={16} color={AMETHYST} />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+              <View style={styles.topSheen} pointerEvents="none" />
+
+              <View style={styles.handle} />
+
+              <View style={styles.titleRow}>
+                <MetallicIcon name="moon-outline" size={16} color={AMETHYST} />
+                <View style={styles.titleTextWrap}>
+                  <Text style={styles.title}>Woke up feeling</Text>
+                  <Text style={styles.subtitle}>Choose the state that best matches the first emotional tone you noticed.</Text>
+                </View>
+              </View>
+
+              <ScrollView
+                style={styles.listContainer}
+                contentContainerStyle={styles.list}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+              >
+                {options.map((opt) => {
+                  const isSelected = opt.id === selected;
+                  return (
+                    <Pressable
+                      key={opt.id}
+                      onPress={() => handleSelect(opt.id)}
+                      style={({ pressed }) => [
+                        styles.item,
+                        isSelected && styles.itemSelected,
+                        pressed && styles.itemPressed,
+                      ]}
+                    >
+                      <Text style={[styles.itemLabel, isSelected && styles.itemLabelSelected]}>
+                        {opt.label}
+                      </Text>
+                      <View style={[styles.itemBadge, isSelected && styles.itemBadgeSelected]}>
+                        {isSelected ? (
+                          <MetallicIcon name="checkmark-outline" size={15} color={AMETHYST} />
+                        ) : (
+                          <View style={styles.itemBadgeIdle} />
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </VelvetGlassSurface>
           </Animated.View>
         </GestureDetector>
       </View>
@@ -202,12 +214,26 @@ const styles = StyleSheet.create({
     borderTopLeftRadius:  20,
     borderTopRightRadius: 20,
     overflow:         'hidden',
-    borderTopWidth:   1,
-    borderTopColor:   'rgba(255,255,255,0.10)',
-    borderLeftWidth:  1,
-    borderLeftColor:  'rgba(255,255,255,0.07)',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.07)',
+    marginHorizontal: 10,
+    marginBottom: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -12 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 16,
+  },
+  sheetSurface: {
+    flex: 1,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  topSheen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '42%',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   handle: {
     width:           44,
@@ -216,22 +242,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.18)',
     alignSelf:       'center',
     marginTop:       12,
-    marginBottom:    4,
+    marginBottom:    10,
   },
   titleRow: {
     flexDirection:  'row',
-    alignItems:     'center',
+    alignItems:     'flex-start',
     gap:            8,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.06)',
   },
+  titleTextWrap: {
+    flex: 1,
+  },
   title: {
     color:         '#FFFFFF',
     fontSize:      14,
     fontWeight:    '700',
     letterSpacing: 0.5,
+  },
+  subtitle: {
+    color: 'rgba(255,255,255,0.58)',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 4,
   },
   listContainer: {
     flex: 1,
@@ -249,23 +284,43 @@ const styles = StyleSheet.create({
     paddingHorizontal:  16,
     borderRadius:   12,
     borderWidth:    1,
-    borderColor:    'rgba(255,255,255,0.06)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderColor:    'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   itemSelected: {
-    backgroundColor: 'rgba(157,118,193,0.12)',
-    borderColor:     'rgba(157,118,193,0.35)',
+    backgroundColor: 'rgba(157,118,193,0.14)',
+    borderColor:     'rgba(157,118,193,0.42)',
   },
   itemPressed: {
     opacity: 0.75,
   },
   itemLabel: {
-    color:      'rgba(255,255,255,0.75)',
+    color:      'rgba(255,255,255,0.82)',
     fontSize:   15,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   itemLabelSelected: {
     color:      '#FFFFFF',
     fontWeight: '600',
+  },
+  itemBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  itemBadgeSelected: {
+    borderColor: 'rgba(157,118,193,0.28)',
+    backgroundColor: 'rgba(157,118,193,0.10)',
+  },
+  itemBadgeIdle: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.22)',
   },
 });
