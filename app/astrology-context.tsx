@@ -16,6 +16,7 @@ import MoonPhaseView from '../components/ui/MoonPhaseView';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { localDb } from '../services/storage/localDb';
 import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, TransitSnapshot } from '../services/premium/advancedJournal';
 import { usePremium } from '../context/PremiumContext';
@@ -469,7 +470,7 @@ export default function CosmicContext() {
 
         {/* ── Retrograde Alerts ──────────────────────────────────────── */}
         {retrogrades.length > 0 && (
-          <View style={styles.rxAlertCard}>
+          <VelvetGlassSurface style={styles.rxAlertCard} intensity={42} backgroundColor="rgba(28, 18, 18, 0.56)">
             <View style={styles.rxAlertHeader}>
               <MetallicIcon name="warning-outline" size={16} color="#D98C8C" />
               <MetallicText style={styles.rxAlertTitle} color="#D98C8C">
@@ -482,11 +483,11 @@ export default function CosmicContext() {
               Revisit, review, and reflect. Avoid launching new initiatives in the domains governed by{' '}
               {retrogrades.join(' and ')}.
             </Text>
-          </View>
+          </VelvetGlassSurface>
         )}
 
         {/* ── Daily Alignment ────────────────────────────────────────── */}
-        <View style={styles.affirmationCard}>
+        <VelvetGlassSurface style={styles.affirmationCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
           <View style={styles.premiumHeaderRow}>
             <MetallicText style={styles.affirmationLabel} color="#D9BF8C">DAILY ALIGNMENT</MetallicText>
             <MetallicText style={styles.premiumIcon} color="#D9BF8C">✦</MetallicText>
@@ -494,12 +495,12 @@ export default function CosmicContext() {
           <Text style={styles.affirmationText}>
             {moonInfo.emoji}{'  '}{moonInfo.message}
           </Text>
-        </View>
+        </VelvetGlassSurface>
 
         {/* ── Active Transits ────────────────────────────────────────── */}
         <View style={styles.transitsSection}>
           <Text style={styles.sectionLabel}>ACTIVE TRANSITS</Text>
-          <View style={styles.transitsContainer}>
+          <VelvetGlassSurface style={styles.transitsContainer} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
             {activeTransits.map((transit, index) => (
               <View key={transit.planet}>
                 <View style={styles.transitRow}>
@@ -533,7 +534,7 @@ export default function CosmicContext() {
                 {index < activeTransits.length - 1 && <View style={styles.divider} />}
               </View>
             ))}
-          </View>
+          </VelvetGlassSurface>
         </View>
 
         {/* ── Astrology Insights from Journal ── */}
@@ -542,7 +543,10 @@ export default function CosmicContext() {
             <Text style={styles.sectionLabel}>YOUR COSMIC PATTERNS</Text>
             <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 14, marginTop: -10 }}>How planetary transits correlate with your journal entries</Text>
             {transitInsights.map((insight, idx) => (
-              <LinearGradient key={`${insight.title}-${idx}`} colors={['rgba(168,155,200,0.18)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+              <VelvetGlassSurface key={`${insight.title}-${idx}`} style={styles.insightCard} intensity={40} backgroundColor="rgba(18, 18, 24, 0.58)">
+                <LinearGradient colors={['rgba(168,155,200,0.12)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
+                  <View />
+                </LinearGradient>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 }}>
                   <MetallicIcon name={(insight.icon ?? 'planet-outline') as any} size={16} color="#A89BC8" />
                   <MetallicText color="#A89BC8" style={{ fontSize: 14, fontWeight: '600', flex: 1 }}>{insight.title}</MetallicText>
@@ -553,14 +557,17 @@ export default function CosmicContext() {
                 <Text style={styles.transitImpact}>{insight.description}</Text>
                 {!!insight.evidence && <Text style={[styles.transitSource, { marginTop: 4 }]}>{insight.evidence}</Text>}
                 {!!insight.actionable && <Text style={[styles.transitImpact, { color: 'rgba(255,255,255,0.85)', marginTop: 6 }]}>{insight.actionable}</Text>}
-              </LinearGradient>
+              </VelvetGlassSurface>
             ))}
           </Animated.View>
         )}
 
         {/* ── Reflection Prompt ── */}
         <Animated.View entering={FadeInDown.delay(300)} style={{ marginBottom: 24 }}>
-          <LinearGradient colors={['rgba(212, 184, 114, 0.12)', 'rgba(10, 10, 12, 0.8)']} style={styles.reflectionCard}>
+          <VelvetGlassSurface style={styles.reflectionCard} intensity={42} backgroundColor="rgba(18, 18, 24, 0.62)">
+            <LinearGradient colors={['rgba(212, 184, 114, 0.10)', 'rgba(10, 10, 12, 0.18)']} style={StyleSheet.absoluteFill}>
+              <View />
+            </LinearGradient>
             <View style={styles.promptHeader}>
               <MetallicIcon name="sparkles-outline" size={14} variant="gold" />
               <MetallicText style={styles.promptEyebrow} variant="gold">TODAY'S REFLECTION</MetallicText>
@@ -570,7 +577,7 @@ export default function CosmicContext() {
               <ActionPill label="Log Mood" icon="happy-outline" color="#C9AE78" onPress={() => router.push('/(tabs)/internal-weather')} />
               <ActionPill label="Journal" icon="create-outline" color="#D4B872" onPress={() => router.push('/(tabs)/journal')} />
             </View>
-          </LinearGradient>
+          </VelvetGlassSurface>
         </Animated.View>
 
         <View style={{ height: 60 }} />
@@ -581,17 +588,17 @@ export default function CosmicContext() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   safeArea: { flex: 1 },
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
   titleHeader: { marginBottom: 32 },
-  headerTitle: { fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerSubtitle: { fontSize: 14 },
+  headerTitle: { fontSize: 30, color: '#FFFFFF', fontWeight: '700', letterSpacing: -0.8, marginBottom: 6, maxWidth: '88%' },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
@@ -602,7 +609,7 @@ const styles = StyleSheet.create({
   // ── Weekly Moon ───────────────────────────────────────────────────────────
   weekHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, marginBottom: 4 },
   weekHeaderLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5 },
-  weekRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, paddingVertical: 16, paddingHorizontal: 8, borderWidth: 1, borderColor: 'rgba(212,184,114,0.12)', marginBottom: 28 },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 22, paddingVertical: 16, paddingHorizontal: 8, borderWidth: 1, borderColor: 'rgba(212,184,114,0.16)', marginBottom: 28 },
   weekDayCol: { flex: 1, alignItems: 'center', gap: 4 },
   weekDayName: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.35)', letterSpacing: 0.8 },
   weekDayNameToday: { color: '#FFFFFF' },
@@ -612,7 +619,7 @@ const styles = StyleSheet.create({
   weekOrbToday: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212,184,114,0.4)' },
   weekDayColActive: { backgroundColor: 'rgba(212,184,114,0.08)', borderRadius: 12 },
   weekInfoStrip: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(212,184,114,0.18)',
@@ -637,13 +644,13 @@ const styles = StyleSheet.create({
   vocText: { fontSize: 10, fontWeight: '800', color: '#FFFFFF', letterSpacing: 1.2 },
 
   // ── Retrograde Alert ──────────────────────────────────────────────────────
-  rxAlertCard: { backgroundColor: 'rgba(217,140,140,0.07)', borderWidth: 1, borderColor: 'rgba(217,140,140,0.25)', borderRadius: 24, padding: 28, marginBottom: 24 },
+  rxAlertCard: { borderRadius: 28, padding: 28, marginBottom: 24 },
   rxAlertHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   rxAlertTitle: { fontSize: 14, fontWeight: '700', color: '#D98C8C' },
-  rxAlertBody: { fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 20 },
+  rxAlertBody: { fontSize: 13, color: 'rgba(255,255,255,0.68)', lineHeight: 20 },
 
   // ── Daily Alignment ───────────────────────────────────────────────────────
-  affirmationCard: { padding: 28, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.2)', marginBottom: 32, backgroundColor: 'rgba(255,255,255,0.02)' },
+  affirmationCard: { padding: 28, borderRadius: 28, marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#FFFFFF', letterSpacing: 1.5 },
   premiumIcon: { color: '#C9AE78', fontSize: 14 },
@@ -651,21 +658,20 @@ const styles = StyleSheet.create({
 
   // ── Transits ──────────────────────────────────────────────────────────────
   transitsSection: { marginBottom: 32 },
-  transitsContainer: { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  transitsContainer: { borderRadius: 28, padding: 28 },
   transitRow: { flexDirection: 'row', alignItems: 'flex-start' },
   transitDetails: { flex: 1 },
   transitHeaderRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 },
   transitTitle: { fontSize: 16, color: '#FFF', fontWeight: '600' },
   transitIn: { fontSize: 16, color: 'rgba(255,255,255,0.45)', fontWeight: '400' },
   rxBadge: { backgroundColor: 'rgba(217,140,140,0.2)', color: '#D98C8C', fontSize: 9, fontWeight: 'bold', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
-  transitImpact: { fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 20 },
-  transitSource: { fontSize: 12, color: 'rgba(212,184,114,0.45)', lineHeight: 17, marginTop: 5, fontStyle: 'italic' },
+  transitImpact: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 20 },
+  transitSource: { fontSize: 12, color: 'rgba(212,184,114,0.58)', lineHeight: 17, marginTop: 5, fontStyle: 'italic' },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 20, marginLeft: 44 },
   insightCard: {
     padding: 18,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(168,155,200,0.14)',
+    overflow: 'hidden',
     marginBottom: 12,
   },
   confidenceBadge: {
@@ -692,7 +698,7 @@ const styles = StyleSheet.create({
   },
 
   // Reflection prompt
-  reflectionCard: { padding: 24, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: 8 },
+  reflectionCard: { padding: 24, borderRadius: 28, marginBottom: 8, overflow: 'hidden' },
   promptHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   promptEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
   promptText: { color: '#FFFFFF', fontSize: 20, lineHeight: 30, fontWeight: '700', marginBottom: 20 },

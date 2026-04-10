@@ -26,6 +26,8 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
+import { EditorialPillGrid } from '../components/ui/EditorialPillGrid';
 import { formatTime, formatDate, timeOfDayLabel } from '../utils/triggerLogHelpers';
 import { keepLastWordsTogether } from '../utils/textLayout';
 import type { TriggerEvent, LogMode, NSState } from '../utils/triggerEventTypes';
@@ -588,25 +590,17 @@ export default function TriggerLogScreen() {
               {mode === 'drain' ? 'INTENSITY' : 'DEPTH OF SHIFT'}
             </Text>
             <View style={styles.intensityRow}>
-              <View style={styles.intensityScaleRow}>
-                {([1, 2, 3, 4, 5] as const).map(n => (
-                  <Pressable
-                    key={n}
-                    style={[
-                      styles.intensityBtn,
-                      intensity === n && styles.intensityBtnSelected,
-                    ]}
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setIntensity(prev => (prev === n ? null : n));
-                    }}
-                  >
-                    <Text style={[styles.intensityNum, intensity === n && styles.intensityNumSelected]}> 
-                      {n}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+              <EditorialLikertScale
+                value={intensity}
+                onChange={(nextValue) => setIntensity(nextValue as 1 | 2 | 3 | 4 | 5 | null)}
+                clearable
+                stretch={false}
+                style={styles.intensityScaleRow}
+                buttonStyle={styles.intensityBtn}
+                selectedButtonStyle={styles.intensityBtnSelected}
+                labelStyle={styles.intensityNum}
+                selectedLabelStyle={styles.intensityNumSelected}
+              />
               <Text style={styles.intensityHint}>
                 {intensity === null ? 'optional' : intensity <= 2 ? 'mild' : intensity <= 3 ? 'moderate' : intensity === 4 ? 'strong' : 'overwhelming'}
               </Text>
@@ -617,80 +611,62 @@ export default function TriggerLogScreen() {
           <Animated.View entering={FadeInDown.delay(190).duration(500)} style={styles.section}>
             <Text style={styles.sectionLabel}>LIFE AREA</Text>
             <Text style={styles.helperText}>Tap to select. Hold a custom area to edit or delete it.</Text>
-            <View style={styles.tagCloud}>
-              {(showMoreAreas ? [...PRIMARY_AREAS, ...EXTENDED_AREAS] : PRIMARY_AREAS).map(area => {
-                const isSelected = contextArea === area;
-                return (
-                  <Pressable
-                    key={area}
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setContextArea(prev => (prev === area ? null : area));
-                    }}
-                    style={[
-                      styles.tagChip,
-                      isSelected && styles.tagChipSelected,
-                    ]}
-                  >
-                    {isSelected ? (
-                      <MetallicText style={styles.tagText} color="#0A0A0F">{area}</MetallicText>
-                    ) : (
-                      <Text style={styles.tagText}>{area}</Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-              {customAreaOptions.map((area) => {
-                const isSelected = contextArea === area.label;
-                return (
-                  <Pressable
-                    key={area.id}
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setContextArea(prev => (prev === area.label ? null : area.label));
-                    }}
-                    onLongPress={() => promptCustomAreaAction(area)}
-                    style={[
-                      styles.tagChip,
-                      styles.customChip,
-                      isSelected && styles.tagChipSelected,
-                    ]}
-                  >
-                    {isSelected ? (
-                      <MetallicText style={styles.tagText} color="#0A0A0F">{area.label}</MetallicText>
-                    ) : (
-                      <Text style={styles.tagText}>{area.label}</Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-              {/* More toggle */}
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setShowMoreAreas(prev => !prev);
-                }}
-                style={[styles.tagChip, styles.utilityChip]}
-              >
-                <Text style={styles.tagText}>{showMoreAreas ? 'Less ↑' : 'More ↓'}</Text>
-              </Pressable>
-              {/* Custom area */}
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setShowCustomAreaInput(prev => !prev);
-                  setEditingCustomAreaId(null);
-                  setCustomAreaInput('');
-                }}
-                style={[
-                  styles.tagChip,
-                  styles.utilityChip,
-                  showCustomAreaInput && styles.tagChipSelected,
-                ]}
-              >
-                <Text style={styles.tagText}>+ Custom</Text>
-              </Pressable>
-            </View>
+            <EditorialPillGrid
+              style={styles.tagCloud}
+              items={[
+                ...(showMoreAreas ? [...PRIMARY_AREAS, ...EXTENDED_AREAS] : PRIMARY_AREAS).map((area) => ({
+                  key: area,
+                  label: area,
+                  selected: contextArea === area,
+                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  onPress: () => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setContextArea((prev) => (prev === area ? null : area));
+                  },
+                  labelStyle: styles.tagText,
+                  selectedLabelStyle: styles.tagTextSelected,
+                })),
+                ...customAreaOptions.map((area) => ({
+                  key: area.id,
+                  label: area.label,
+                  selected: contextArea === area.label,
+                  variant: 'custom' as const,
+                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  onPress: () => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setContextArea((prev) => (prev === area.label ? null : area.label));
+                  },
+                  onLongPress: () => promptCustomAreaAction(area),
+                  labelStyle: styles.tagText,
+                  selectedLabelStyle: styles.tagTextSelected,
+                })),
+                {
+                  key: 'toggle-areas',
+                  label: showMoreAreas ? 'Less ↑' : 'More ↓',
+                  variant: 'utility' as const,
+                  onPress: () => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setShowMoreAreas((prev) => !prev);
+                  },
+                  labelStyle: styles.tagText,
+                },
+                {
+                  key: 'custom-area',
+                  label: '+ Custom',
+                  selected: showCustomAreaInput,
+                  variant: 'utility' as const,
+                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  onPress: () => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setShowCustomAreaInput((prev) => !prev);
+                    setEditingCustomAreaId(null);
+                    setCustomAreaInput('');
+                  },
+                  labelStyle: styles.tagText,
+                  selectedLabelStyle: styles.tagTextSelected,
+                },
+              ]}
+            />
             {showCustomAreaInput && (
               <View style={styles.customAreaRow}>
                 <TextInput
@@ -711,12 +687,17 @@ export default function TriggerLogScreen() {
               </View>
             )}
             {contextArea && !PRIMARY_AREAS.includes(contextArea) && !EXTENDED_AREAS.includes(contextArea) && !customAreaOptions.some((area) => area.label === contextArea) && (
-              <Pressable
-                onPress={() => setContextArea(null)}
-                style={[styles.tagChip, { alignSelf: 'flex-start', marginTop: 6 }]}
-              >
-                <Text style={styles.tagText}>{contextArea} ✕</Text>
-              </Pressable>
+              <EditorialPillGrid
+                items={[
+                  {
+                    key: `ad-hoc-${contextArea}`,
+                    label: `${contextArea} ✕`,
+                    onPress: () => setContextArea(null),
+                    style: styles.adHocContextChip,
+                    labelStyle: styles.tagText,
+                  },
+                ]}
+              />
             )}
           </Animated.View>
 
@@ -813,49 +794,48 @@ export default function TriggerLogScreen() {
           <Animated.View entering={FadeInDown.delay(240).duration(500)} style={styles.section}>
             <Text style={styles.sectionLabel}>SOMATIC CUES</Text>
             <Text style={styles.helperText}>Tap to select. Hold a custom cue to edit or delete it.</Text>
-            <View style={styles.tagCloud}>
-              {SENSATIONS[mode].map((sensation) => {
-                const isSelected = selectedSensations.includes(sensation);
-                return (
-                  <Pressable
-                    key={sensation}
-                    onPress={() => toggleSensation(sensation)}
-                    style={[
-                      styles.tagChip,
-                      isSelected && styles.tagChipSelected,
-                    ]}
-                  >
-                    {isSelected ? (
-                      <MetallicText style={styles.tagText} color="#0A0A0F">{sensation}</MetallicText>
-                    ) : (
-                      <Text style={styles.tagText}>{sensation}</Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-              {customSensationOptions
-                .filter((option) => option.mode === mode)
-                .map((option) => {
-                  const isSelected = selectedSensations.includes(option.label);
-                  return (
-                  <Pressable
-                    key={option.id}
-                    onPress={() => toggleSensation(option.label)}
-                    onLongPress={() => promptCustomSensationAction(option)}
-                    style={[
-                      styles.tagChip,
-                      styles.customChip,
-                      isSelected && styles.tagChipSelected,
-                    ]}
-                  >
-                    {isSelected ? (
-                      <MetallicText style={styles.tagText} color="#0A0A0F">{option.label}</MetallicText>
-                    ) : (
-                      <Text style={styles.tagText}>{option.label}</Text>
-                    )}
-                  </Pressable>
-                )})}
-              {/* Add custom cue */}
+            <EditorialPillGrid
+              style={styles.tagCloud}
+              items={[
+                ...SENSATIONS[mode].map((sensation) => ({
+                  key: sensation,
+                  label: sensation,
+                  selected: selectedSensations.includes(sensation),
+                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  onPress: () => toggleSensation(sensation),
+                  labelStyle: styles.tagText,
+                  selectedLabelStyle: styles.tagTextSelected,
+                })),
+                ...customSensationOptions
+                  .filter((option) => option.mode === mode)
+                  .map((option) => ({
+                    key: option.id,
+                    label: option.label,
+                    selected: selectedSensations.includes(option.label),
+                    variant: 'custom' as const,
+                    selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                    onPress: () => toggleSensation(option.label),
+                    onLongPress: () => promptCustomSensationAction(option),
+                    labelStyle: styles.tagText,
+                    selectedLabelStyle: styles.tagTextSelected,
+                  })),
+                ...(!showCustomInput
+                  ? [{
+                      key: 'add-custom-cue',
+                      label: '+ custom',
+                      variant: 'utility' as const,
+                      style: styles.addCueChip,
+                      labelStyle: [styles.tagText, styles.addCueText],
+                      onPress: () => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setShowCustomInput(true);
+                        setEditingCustomSensationId(null);
+                        setCustomSensation('');
+                      },
+                    }]
+                  : []),
+              ]}
+            />
               {showCustomInput ? (
                 <View style={styles.customCueRow}>
                   <TextInput
@@ -873,20 +853,7 @@ export default function TriggerLogScreen() {
                     <Text style={[styles.customCueAddText, { color: activeColor }]}>{editingCustomSensationId ? 'Update' : 'Add'}</Text>
                   </Pressable>
                 </View>
-              ) : (
-                <Pressable
-                  style={[styles.tagChip, styles.addCueChip, styles.utilityChip]}
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setShowCustomInput(true);
-                    setEditingCustomSensationId(null);
-                    setCustomSensation('');
-                  }}
-                >
-                  <Text style={[styles.tagText, { color: PALETTE.textMuted }]}>+ custom</Text>
-                </Pressable>
-              )}
-            </View>
+              ) : null}
           </Animated.View>
 
           {/* ── What Helped / Resolution ── */}
@@ -980,7 +947,7 @@ const styles = StyleSheet.create({
 
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 18,
     padding: 4,
     marginBottom: 30,
@@ -1016,17 +983,16 @@ const styles = StyleSheet.create({
   helperText: { fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: -6, marginBottom: 14, lineHeight: 18 },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  intensityScaleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  intensityScaleRow: { alignItems: 'center' },
   intensityBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
   intensityNum: { fontSize: 16, fontWeight: '700', color: PALETTE.textMuted },
-  intensityBtnSelected: { backgroundColor: '#D4AF37' },
+  intensityBtnSelected: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
   intensityNumSelected: { color: '#0A0A0F' },
   intensityHint: { fontSize: 11, color: 'rgba(255,255,255,0.58)' },
 
@@ -1062,20 +1028,13 @@ const styles = StyleSheet.create({
   stateTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, marginBottom: 4 },
   stateSub: { fontSize: 13, color: 'rgba(226,232,240,0.68)', lineHeight: 19 },
 
-  tagCloud: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tagChip: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  tagChipSelected: { backgroundColor: 'rgba(255,255,255,0.9)' },
-  customChip: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  addCueChip: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  tagCloud: {},
+  addCueChip: { borderRadius: 20 },
   utilityChip: { backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   tagText: { fontSize: 11, color: 'rgba(226,232,240,0.76)', fontWeight: '600' },
+  tagTextSelected: { color: '#0A0A0F' },
+  addCueText: { color: PALETTE.textMuted },
+  adHocContextChip: { alignSelf: 'flex-start', marginTop: 6 },
 
   customAreaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
   customAreaInput: {

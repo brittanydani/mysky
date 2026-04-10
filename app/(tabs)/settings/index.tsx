@@ -737,7 +737,7 @@ export default function SettingsScreen() {
                 <View style={styles.securityGrid}>
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="lock-closed-outline" size={16} color={successColor} />
+                      <MetallicIcon name="lock-closed-outline" size={16} color={accentGold} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Local Encryption</Text>
@@ -747,7 +747,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="airplane-outline" size={16} color={successColor} />
+                      <MetallicIcon name="airplane-outline" size={16} color={accentGold} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>No Content Transmitted</Text>
@@ -757,7 +757,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="analytics-outline" size={16} color={successColor} />
+                      <MetallicIcon name="analytics-outline" size={16} color={accentGold} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Zero Third-Party Analytics</Text>
@@ -767,7 +767,7 @@ export default function SettingsScreen() {
 
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
-                      <MetallicIcon name="document-text-outline" size={16} color={successColor} />
+                      <MetallicIcon name="document-text-outline" size={16} color={accentGold} />
                     </View>
                     <View style={styles.securityContent}>
                       <Text style={styles.securityLabel}>Minimal Event Logging</Text>
@@ -793,14 +793,14 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <MetallicIcon name="notifications-outline" size={20} color={accentAmethyst} />
+                      <MetallicIcon name="notifications-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Notification Schedule</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       Set morning and evening reminder times
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -878,28 +878,28 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <MetallicIcon name="shield-checkmark-outline" size={20} color={accentBlue} />
+                      <MetallicIcon name="shield-checkmark-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Privacy Settings</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       Export, delete, or manage your data on this device
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
                 </View>
               </Pressable>
               <ObsidianDivider />
               <View style={[styles.privacyInfo, { marginHorizontal: 16, marginBottom: 8 }]}>
                 <View style={styles.privacyItem}>
-                  <MetallicIcon name="phone-portrait-outline" size={16} color={accentBlue} />
+                  <MetallicIcon name="phone-portrait-outline" size={16} color={accentGold} />
                   <Text style={styles.privacyText}>Data stored locally on your device</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <MetallicIcon name="shield-outline" size={16} color={accentEmerald} />
+                  <MetallicIcon name="shield-outline" size={16} color={accentGold} />
                   <Text style={styles.privacyText}>Protected by your device passcode / biometrics</Text>
                 </View>
                 <View style={styles.privacyItem}>
-                  <MetallicIcon name="ban-outline" size={16} color={accentAmethyst} />
+                  <MetallicIcon name="ban-outline" size={16} color={accentGold} />
                   <Text style={styles.privacyText}>Never sold or shared</Text>
                 </View>
               </View>
@@ -970,14 +970,14 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <MetallicIcon name="shield-half-outline" size={20} color={accentCopper} />
+                      <MetallicIcon name="shield-half-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Privacy Policy</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       How MySky handles your data and protects your privacy
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -990,14 +990,14 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <MetallicIcon name="ribbon-outline" size={20} color={accentCopper} />
+                      <MetallicIcon name="ribbon-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>Terms of Use (EULA)</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       App terms, subscription details, and disclaimers
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -1010,14 +1010,14 @@ export default function SettingsScreen() {
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
                     <View style={styles.settingHeader}>
-                      <MetallicIcon name="diamond-outline" size={20} color={accentCopper} />
+                      <MetallicIcon name="diamond-outline" size={20} color={accentGold} />
                       <Text style={styles.settingTitle}>FAQ</Text>
                     </View>
                     <Text style={styles.settingDescription}>
                       Answers to common questions about privacy, backups, and premium
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
                 </View>
               </Pressable>
             </ObsidianSettingsGroup>
@@ -1143,7 +1143,7 @@ export default function SettingsScreen() {
                         <Text style={styles.settingTitle}>Sign Out</Text>
                       </View>
                     </View>
-                    <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
+                    <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
                   </View>
                 </Pressable>
                 <ObsidianDivider />
@@ -1175,17 +1175,19 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Delete account"
                 >
-                  <View style={styles.settingRow}>
-                    <View style={styles.settingInfo}>
-                      <View style={styles.settingHeader}>
-                        <MetallicIcon name="trash-outline" size={20} color={errorColor} />
-                        <MetallicText color={errorColor} style={styles.settingTitle}>Delete Account</MetallicText>
+                  <View style={styles.deleteAccountRow}>
+                    <View style={styles.settingRow}>
+                      <View style={styles.settingInfo}>
+                        <View style={styles.settingHeader}>
+                          <MetallicIcon name="trash-outline" size={20} color={errorColor} />
+                          <MetallicText color={errorColor} style={styles.settingTitle}>Delete Account</MetallicText>
+                        </View>
+                        <Text style={styles.settingDescription}>
+                          Permanently removes your account and synced data
+                        </Text>
                       </View>
-                      <Text style={styles.settingDescription}>
-                        Permanently removes your account and synced data
-                      </Text>
+                      <Ionicons name="chevron-forward-outline" size={16} color="rgba(220,50,50,0.4)" />
                     </View>
-                    <Ionicons name="chevron-forward-outline" size={20} color={theme.textMuted} />
                   </View>
                 </Pressable>
               </ObsidianSettingsGroup>
@@ -1344,11 +1346,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderRadius: 12,
-    backgroundColor: 'rgba(201, 174, 120, 0.08)',
+    backgroundColor: 'rgba(201, 174, 120, 0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(201, 174, 120, 0.15)',
+    borderTopColor: 'rgba(201, 174, 120, 0.28)',
+    borderLeftColor: 'rgba(201, 174, 120, 0.18)',
+    borderRightColor: 'rgba(201, 174, 120, 0.12)',
+    borderBottomColor: 'rgba(201, 174, 120, 0.08)',
   },
   identityEditText: {
     fontSize: 14,
@@ -1398,23 +1403,24 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
-    borderColor: theme.cardBorder,
-    backgroundColor: theme.surface,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   appearanceChipActive: {
-    backgroundColor: 'rgba(201, 174, 120, 0.14)',
-    borderColor: 'rgba(201, 174, 120, 0.34)',
+    backgroundColor: 'rgba(201, 174, 120, 0.18)',
+    borderColor: 'rgba(201, 174, 120, 0.50)',
   },
   appearanceChipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: theme.textSecondary,
+    color: 'rgba(255,255,255,0.4)',
   },
   appearanceChipTextActive: {
-    color: theme.primary,
+    color: '#D4AF37',
+    fontWeight: '700',
   },
   appearanceCaption: {
     marginTop: theme.spacing.sm,
@@ -1422,9 +1428,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     color: theme.textMuted,
   },
 
-  securityGrid: { gap: theme.spacing.lg, paddingHorizontal: 20, paddingVertical: 4 },
+  securityGrid: { gap: 20, paddingHorizontal: 20, paddingVertical: 8 },
   securityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
-  securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(72, 187, 120, 0.12)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  securityBullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(201, 174, 120, 0.10)', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   securityContent: { flex: 1 },
   securityLabel: { fontSize: 14, fontWeight: '600', color: theme.textPrimary, marginBottom: 2 },
   securityDetail: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },
@@ -1446,6 +1452,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   glossaryDefinition: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs },
 
   versionText: { fontSize: 11, color: 'rgba(226,232,240,0.25)', textAlign: 'center', marginTop: theme.spacing.xl, marginBottom: theme.spacing.sm, letterSpacing: 0.5 },
+
+  deleteAccountRow: {
+    borderRadius: 12,
+    marginHorizontal: 8,
+    marginBottom: 4,
+    backgroundColor: 'rgba(220, 50, 50, 0.05)',
+    paddingHorizontal: 12,
+    paddingVertical: 2,
+  },
 
   // Key-loss warning banner
   keyLossBanner: {

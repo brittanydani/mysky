@@ -97,6 +97,16 @@ let isFlushing = false;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let didWarnBirthProfileSyncUnavailable = false;
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function normalizeDailyCheckInPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const normalized = { ...payload };
+  delete normalized.id;
+  return normalized;
+}
+
 // ─── Internal: session guard ─────────────────────────────────────────────────
 
 async function getSession() {
@@ -207,13 +217,16 @@ export async function flushQueue(): Promise<void> {
         }
 
         if (item.operation === 'upsert') {
+          const normalizedPayload = item.table_name === 'daily_check_ins'
+            ? normalizeDailyCheckInPayload(payload)
+            : payload;
           const onConflict = item.table_name === 'daily_check_ins'
             ? 'user_id,log_date,time_of_day'
             : 'id';
           const { error } = await supabase
             .from(item.table_name)
             .upsert(
-            { ...payload, user_id: userId },
+            { ...normalizedPayload, user_id: userId },
             { onConflict },
           );
 
@@ -224,11 +237,31 @@ export async function flushQueue(): Promise<void> {
           const deletePayload: Record<string, unknown> = { is_deleted: true, updated_at: now };
           const tablesWithDeletedAt = new Set<SyncTable>(['journal_entries', 'daily_check_ins', 'birth_profiles']);
           if (tablesWithDeletedAt.has(item.table_name)) deletePayload.deleted_at = now;
-          const { error } = await supabase
+          let deleteQuery = supabase
             .from(item.table_name)
             .update(deletePayload)
-            .eq('id', item.record_id)
             .eq('user_id', userId);
+
+          if (item.table_name === 'daily_check_ins') {
+            const logDate = typeof payload.log_date === 'string' ? payload.log_date : null;
+            const timeOfDay = typeof payload.time_of_day === 'string' ? payload.time_of_day : null;
+            const chartId = typeof payload.chart_id === 'string' ? payload.chart_id : null;
+
+            if (logDate && timeOfDay) {
+              deleteQuery = deleteQuery.eq('log_date', logDate).eq('time_of_day', timeOfDay);
+              if (chartId) deleteQuery = deleteQuery.eq('chart_id', chartId);
+            } else if (isUuid(item.record_id)) {
+              deleteQuery = deleteQuery.eq('id', item.record_id);
+            } else {
+              throw new Error(
+                `Cannot sync deleted daily check-in without composite key fields or UUID id: ${item.record_id}`,
+              );
+            }
+          } else {
+            deleteQuery = deleteQuery.eq('id', item.record_id);
+          }
+
+          const { error } = await deleteQuery;
 
           if (error) throw error;
         }

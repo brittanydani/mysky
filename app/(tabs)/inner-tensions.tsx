@@ -24,7 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Href } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
-import { Lock } from 'lucide-react-native';
+import { ChevronDown, ChevronLeft, ChevronUp, Lock } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import {
   Canvas,
@@ -37,6 +37,7 @@ import {
 
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
@@ -406,13 +407,24 @@ function DreamPatternsSection({ data }: { data: InnerTensionsData }) {
                   end={{ x: 1, y: 1 }}
                   style={StyleSheet.absoluteFillObject}
                 />
-                <View style={styles.patternChipBadge}>
-                  <Text style={styles.patternChipBadgeCount}>{p.count}</Text>
-                  <Text style={styles.patternChipBadgeLabel}>{p.count === 1 ? 'dream' : 'dreams'}</Text>
-                </View>
-                <Text style={styles.patternChipLabel}>{p.label}</Text>
-                <View style={styles.patternConfidenceBar}>
-                  <View style={[styles.patternConfidenceFill, { width: `${Math.round(p.topConfidence * 100)}%` }]} />
+                <View style={styles.patternChipInner}>
+                  <View style={styles.patternChipHeader}>
+                    <Text
+                      style={styles.patternChipLabel}
+                      numberOfLines={2}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.9}
+                    >
+                      {p.label}
+                    </Text>
+                    <View style={styles.patternChipBadge}>
+                      <Text style={styles.patternChipBadgeCount}>{p.count}</Text>
+                      <Text style={styles.patternChipBadgeLabel}>{p.count === 1 ? 'dream' : 'dreams'}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.patternConfidenceBar}>
+                    <View style={[styles.patternConfidenceFill, { width: `${Math.round(p.topConfidence * 100)}%` }]} />
+                  </View>
                 </View>
               </View>
             ))}
@@ -454,7 +466,11 @@ function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
             const intensityPct = Math.round(item.score * 100);
 
             return (
-              <Pressable key={item.trigger} onPress={() => toggle(item.trigger)} style={styles.triggerRow}>
+              <Pressable
+                key={item.trigger}
+                onPress={() => toggle(item.trigger)}
+                style={[styles.triggerRow, i === 0 && styles.triggerRowFirst]}
+              >
                 <View style={styles.triggerHeader}>
                   <View style={styles.triggerNameRow}>
                     <View style={[styles.triggerDot, { backgroundColor: PALETTE.gold + 'AA' }]} />
@@ -462,7 +478,11 @@ function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
                   </View>
                   <View style={styles.triggerIntensityWrap}>
                     <Text style={styles.triggerIntensityText}>{intensityPct}%</Text>
-                    <Text style={styles.triggerChevron}>{isOpen ? '⌃' : '⌄'}</Text>
+                    {isOpen ? (
+                      <ChevronUp size={14} color={PALETTE.textDim} strokeWidth={1.5} style={styles.triggerChevron} />
+                    ) : (
+                      <ChevronDown size={14} color={PALETTE.textDim} strokeWidth={1.5} style={styles.triggerChevron} />
+                    )}
                   </View>
                 </View>
                 <View style={styles.triggerBarBg}>
@@ -554,7 +574,7 @@ export default function InnerTensionsScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <Pressable style={styles.backButton} onPress={goBack} accessibilityRole="button" accessibilityLabel="Go back">
-            <Text style={styles.backIcon}>‹</Text>
+            <MetallicLucideIcon icon={ChevronLeft} size={20} color={PALETTE.textMain} />
           </Pressable>
         </View>
 
@@ -624,7 +644,7 @@ export default function InnerTensionsScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#020817' },
+  container:        { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea:         { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -636,7 +656,6 @@ const styles = StyleSheet.create({
   header:           { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:        { paddingHorizontal: 24, paddingBottom: 8 },
   backButton:       { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
-  backIcon:         { color: '#FFF', fontSize: 34, lineHeight: 34, marginTop: -2 },
   scrollContent:    { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   loader:           { marginTop: 80 },
   bottomSpacer:     { height: 40 },
@@ -769,8 +788,18 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: PALETTE.glassBorder,
     overflow: 'hidden', position: 'relative',
   },
+  patternChipInner: {
+    minHeight: 92,
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  patternChipHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   patternChipBadge: {
-    position: 'absolute', top: 10, right: 10,
     minWidth: 42,
     paddingHorizontal: 8,
     height: 24,
@@ -781,22 +810,31 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     flexDirection: 'row',
     gap: 4,
+    flexShrink: 0,
   },
   patternChipBadgeCount: { fontSize: 11, fontWeight: '800', color: PALETTE.lavender, lineHeight: 12, textAlign: 'center' },
   patternChipBadgeLabel: { fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.68)', textTransform: 'uppercase', letterSpacing: 0.6 },
-  patternChipLabel:     { fontSize: 12, color: PALETTE.textMain, fontWeight: '500', lineHeight: 17, marginRight: 24 },
-  patternConfidenceBar: { height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2, marginTop: 10 },
+  patternChipLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: PALETTE.textMain,
+    fontWeight: '500',
+    lineHeight: 17,
+    flexWrap: 'wrap',
+  },
+  patternConfidenceBar: { height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2 },
   patternConfidenceFill: { height: 3, backgroundColor: PALETTE.lavender + '80', borderRadius: 2 },
 
   // Trigger reflections
   triggerRow: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: PALETTE.glassBorder },
+  triggerRowFirst: { marginTop: 16, paddingTop: 0, borderTopWidth: 0 },
   triggerHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   triggerNameRow:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
   triggerDot:         { width: 7, height: 7, borderRadius: 4 },
   triggerName:        { fontSize: 14, fontWeight: '600', color: PALETTE.textMain },
   triggerIntensityWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   triggerIntensityText: { fontSize: 12, color: PALETTE.textDim },
-  triggerChevron:       { fontSize: 12, color: PALETTE.textDim },
+  triggerChevron: { marginTop: 2 },
   triggerBarBg:  { height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2, marginBottom: 0 },
   triggerBarFill: { height: 3, backgroundColor: PALETTE.gold + '60', borderRadius: 2 },
   triggerExpanded: { marginTop: 12 },

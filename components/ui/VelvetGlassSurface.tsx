@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface VelvetGlassSurfaceProps {
   children: React.ReactNode;
@@ -37,7 +38,13 @@ export function VelvetGlassSurface({
     <View style={[styles.container, style]}>
       <BlurView intensity={intensity} tint={resolvedTint} style={StyleSheet.absoluteFill} />
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor }]} />
-      <View pointerEvents="none" style={[styles.highlight, { backgroundColor: highlightColor }]} />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[highlightColor, 'transparent']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
       <View
         pointerEvents="none"
         style={[
@@ -59,13 +66,7 @@ const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
   },
-  highlight: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '42%',
-  },
+
   directionalBorder: {
     ...StyleSheet.absoluteFillObject,
     borderWidth: 1,

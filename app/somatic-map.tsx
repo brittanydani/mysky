@@ -27,6 +27,7 @@ import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { keepLastWordsTogether } from '../utils/textLayout';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { EditorialPillGrid } from '../components/ui/EditorialPillGrid';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
@@ -342,13 +343,13 @@ export default function SomaticMapScreen() {
                 <Path
                   d={silhouettePath}
                   fill="rgba(231,243,255,0.14)"
-                  stroke="rgba(236,245,255,0.5)"
-                  strokeWidth={1}
+                  stroke="rgba(236,245,255,0.6)"
+                  strokeWidth={1.2}
                 />
                 <Path
                   d={silhouettePath}
                   fill="transparent"
-                  stroke="rgba(140,190,170,0.16)"
+                  stroke="rgba(140,190,170,0.30)"
                   strokeWidth={2.4}
                 />
               </Svg>
@@ -412,41 +413,35 @@ export default function SomaticMapScreen() {
           {/* Emotion selector */}
           <Animated.View entering={FadeInDown.delay(220).duration(500)}>
             <Text style={[styles.sectionLabel, { marginTop: 24 }]}>EMOTION PRESENT</Text>
-            <View style={styles.emotionWrap}>
-              {(showMoreEmotions ? [...EMOTIONS_CORE, ...EMOTIONS_EXTENDED] : EMOTIONS_CORE).map((em) => {
-                const isSelected = selectedEmotion === em;
-                const color = EMOTION_COLORS[em] ?? PALETTE.sage;
-                return (
-                  <Pressable
-                    key={em}
-                    style={[
-                      styles.emotionChip,
-                      isSelected && { backgroundColor: '#D4AF37' },
-                    ]}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                      setSelectedEmotion(isSelected ? null : em);
-                    }}
-                  >
-                    {isSelected
-                      ? <MetallicText style={styles.emotionText} color="#0A0A0F">{em}</MetallicText>
-                      : <Text style={styles.emotionText}>{em}</Text>
-                    }
-                  </Pressable>
-                );
-              })}
-              <Pressable
-                style={styles.emotionMoreBtn}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-                  setShowMoreEmotions((p) => !p);
-                }}
-              >
-                <Text style={styles.emotionMoreText}>
-                  {showMoreEmotions ? '− Less' : '+ More'}
-                </Text>
-              </Pressable>
-            </View>
+            <EditorialPillGrid
+              style={styles.emotionWrap}
+              items={[
+                ...(showMoreEmotions ? [...EMOTIONS_CORE, ...EMOTIONS_EXTENDED] : EMOTIONS_CORE).map((em) => ({
+                  key: em,
+                  label: em,
+                  selected: selectedEmotion === em,
+                  accentColor: EMOTION_COLORS[em] ?? PALETTE.sage,
+                  selectedBackgroundColor: '#D4AF37',
+                  onPress: () => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                    setSelectedEmotion(selectedEmotion === em ? null : em);
+                  },
+                  labelStyle: styles.emotionText,
+                  selectedLabelStyle: styles.emotionTextSelected,
+                })),
+                {
+                  key: 'toggle-emotions',
+                  label: showMoreEmotions ? '− Less' : '+ More',
+                  variant: 'utility',
+                  style: styles.emotionMoreBtn,
+                  labelStyle: styles.emotionMoreText,
+                  onPress: () => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                    setShowMoreEmotions((prev) => !prev);
+                  },
+                },
+              ]}
+            />
           </Animated.View>
 
           {/* Intensity */}
@@ -685,18 +680,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center' },
-  emotionMoreBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center' },
+  emotionWrap: { justifyContent: 'center' },
+  emotionMoreBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20 },
   emotionMoreText: { fontSize: 11, color: 'rgba(255,255,255,0.68)', fontWeight: '700', letterSpacing: 0.5 },
-  emotionChip: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emotionText: { fontSize: 13, color: 'rgba(226,232,240,0.82)', fontWeight: '600', textAlign: 'center' },
+  emotionTextSelected: { color: '#0A0A0F' },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   intensityDot: {

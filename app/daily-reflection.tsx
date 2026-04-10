@@ -58,7 +58,7 @@ export default function DailyReflectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   header: { marginBottom: 20 },

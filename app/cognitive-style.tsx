@@ -36,6 +36,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
 import { keepLastWordsTogether } from '../utils/textLayout';
 
 const STORAGE_KEY = '@mysky:cognitive_style';
@@ -48,7 +49,7 @@ const PALETTE = {
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#020817',
+  bg: '#0A0A0F',
 };
 
 interface Dimension {
@@ -321,26 +322,19 @@ export default function CognitiveStyleScreen() {
                   <VelvetGlassSurface style={styles.dimInner} intensity={28} backgroundColor="rgba(12, 15, 24, 0.30)">
                     <Text style={styles.dimQuestion}>{keepLastWordsTogether(dim.question)}</Text>
 
-                    <View style={styles.scaleRow}>
-                      {[1, 2, 3, 4, 5].map((v) => {
-                        const isSelected = currentScore === v;
-                        return (
-                          <Pressable
-                            key={v}
-                            style={[
-                              styles.scaleBtn,
-                              isSelected && styles.scaleBtnSelected,
-                              isSelected && saved && styles.scaleBtnSealed,
-                            ]}
-                            onPress={() => setScore(dim.id, v)}
-                          >
-                            <Text style={[styles.scaleBtnText, isSelected && styles.scaleBtnTextSelected]}>
-                              {v}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
+                    <EditorialLikertScale
+                      value={currentScore ?? null}
+                      onChange={(nextValue) => {
+                        if (nextValue != null) {
+                          setScore(dim.id, nextValue);
+                        }
+                      }}
+                      style={styles.scaleRow}
+                      buttonStyle={styles.scaleBtn}
+                      selectedButtonStyle={saved ? styles.scaleBtnSealed : undefined}
+                      labelStyle={styles.scaleBtnText}
+                      selectedLabelStyle={styles.scaleBtnTextSelected}
+                    />
 
                     <View style={styles.dimLabels}>
                       <View style={[styles.dimLabelBlock, styles.dimLabelBlockLeft]}>
@@ -425,10 +419,9 @@ const styles = StyleSheet.create({
   dimInner: { padding: 24, borderRadius: 24 },
   dimQuestion: { fontSize: 15, fontWeight: '400', color: PALETTE.textMain, lineHeight: 22, marginBottom: 20 },
 
-  scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, gap: 8 },
-  scaleBtn: { flex: 1, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16 },
-  scaleBtnSelected: { backgroundColor: '#D4AF37' },
-  scaleBtnSealed: { backgroundColor: '#D4AF37' },
+  scaleRow: { marginBottom: 16 },
+  scaleBtn: { borderRadius: 12 },
+  scaleBtnSealed: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
   scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.74)', fontWeight: '700' },
   scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 

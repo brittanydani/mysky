@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 
 const PALETTE = {
   sage: '#8CBEAA',
@@ -96,14 +97,17 @@ export default function BodyNervousScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
           <Animated.View entering={FadeInDown.delay(140).duration(600)}>
+            <VelvetGlassSurface style={styles.infoCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
             <LinearGradient
-              colors={['rgba(140,190,170,0.08)', 'rgba(10,10,12,0.85)']}
-              style={styles.infoCard}
+              colors={['rgba(140,190,170,0.08)', 'rgba(10,10,12,0.18)']}
+              style={StyleSheet.absoluteFill}
             >
+              <View />
+            </LinearGradient>
               <Text style={styles.infoText}>
                 Your body holds wisdom your mind hasn't named yet. These tools help you listen.
               </Text>
-            </LinearGradient>
+            </VelvetGlassSurface>
           </Animated.View>
 
           <View style={[styles.grid, { marginTop: 20 }]}>
@@ -116,14 +120,17 @@ export default function BodyNervousScreen() {
                   style={({ pressed }) => [pressed && styles.cardPressed]}
                   onPress={() => nav(tool.route)}
                 >
+                  <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
                   <LinearGradient
-                    colors={[`rgba(${tool.accentRgb}, 0.1)`, 'rgba(10,10,12,0.85)']}
-                    style={styles.card}
+                    colors={[`rgba(${tool.accentRgb}, 0.10)`, 'rgba(10,10,12,0.18)']}
+                    style={StyleSheet.absoluteFill}
                   >
+                    <View />
+                  </LinearGradient>
                     <MetallicText style={[styles.cardIcon, { marginBottom: tool.iconOffset ?? 0, marginLeft: tool.iconLeft ?? 0 }]} color={tool.iconColor}>{tool.icon}</MetallicText>
                     <Text style={styles.cardTitle}>{tool.title}</Text>
                     <Text style={styles.cardSubtitle}>{tool.description}</Text>
-                  </LinearGradient>
+                  </VelvetGlassSurface>
                 </Pressable>
               </Animated.View>
             ))}
@@ -137,45 +144,42 @@ export default function BodyNervousScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
   backIcon:   { color: '#FFF', fontSize: 34, lineHeight: 34, marginTop: -2 },
 
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 30,
     color: PALETTE.textMain,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 4,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    marginBottom: 6,
+    maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
 
   infoCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(140,190,170,0.15)',
+    borderRadius: 28,
     padding: 28,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    overflow: 'hidden',
   },
   infoText: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
+    color: 'rgba(255,255,255,0.68)',
     lineHeight: 20,
   },
 
   grid: { gap: 20 },
   card: {
     padding: 28,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 28,
+    overflow: 'hidden',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
   cardIcon: { fontSize: 32, marginBottom: 16 },
@@ -187,7 +191,7 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: 16,
-    color: PALETTE.textMuted,
-    lineHeight: 24,
+    color: 'rgba(255,255,255,0.72)',
+    lineHeight: 22,
   },
 });

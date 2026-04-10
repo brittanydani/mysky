@@ -106,7 +106,7 @@ export default function OnboardingBirthScreen() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#020817' 
+    backgroundColor: '#0A0A0F' 
   },
   safeArea: { 
     flex: 1 

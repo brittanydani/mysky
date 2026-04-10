@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { useRouter, Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { CircleDot, Compass, Crosshair, Diamond, Orbit, Sparkles } from 'lucide-react-native';
+import { CircleDot, Compass, Crosshair, Diamond, Orbit, Sparkles, Star } from 'lucide-react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/core';
 import * as Haptics from 'expo-haptics';
@@ -240,14 +240,14 @@ export default function BlueprintScreen() {
 // Premium lock indicator
 const PremiumBadge = () => (
   <View style={styles.badgeContainer}>
-    <MetallicText style={styles.badgeIcon} variant="gold">✦</MetallicText>
+    <MetallicLucideIcon icon={Star} size={12} strokeWidth={1.5} variant="gold" />
   </View>
 );
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 
@@ -330,6 +330,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(217, 191, 140, 0.3)',
   },
-  badgeIcon: { fontSize: 10 },
   badgeText: { fontSize: 9, fontWeight: 'bold', letterSpacing: 1 },
 });

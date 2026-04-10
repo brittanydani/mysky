@@ -374,7 +374,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   header: {
     paddingHorizontal: 24,
@@ -431,7 +431,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 28,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     marginBottom: 24,
   },
   sectionTitle: {
@@ -474,7 +474,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 28,
     borderWidth: 1,
     borderColor: 'rgba(110,191,139,0.20)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   securityHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   securityTitle: { fontSize: 15, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -485,7 +485,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 12,
     padding: 28,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },

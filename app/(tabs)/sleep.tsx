@@ -78,7 +78,7 @@ const DREAM_TEXT_MAX_LENGTH = 10000;
 
 // ── Cinematic Palette (Obsidian & Gold) ──
 const PALETTE = {
-  bg: '#020817',
+  bg: '#0A0A0F',
   cardBg: 'rgba(15, 18, 25, 0.65)',
   gold: '#C9AE78',
   goldGlow: 'rgba(201, 174, 120, 0.15)',
@@ -1284,7 +1284,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   entryListFeelingText: { fontSize: 12, color: PALETTE.textMuted, fontStyle: 'italic' },
 
   // ── Form Card (deep glassmorphic volume) ──
-  formCard: { borderRadius: 24, borderWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)', borderLeftColor: 'rgba(255,255,255,0.08)', borderRightColor: 'rgba(255,255,255,0.08)', borderBottomColor: 'rgba(255,255,255,0.03)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  formCard: { borderRadius: 24, borderWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)', borderLeftColor: 'rgba(255,255,255,0.08)', borderRightColor: 'rgba(255,255,255,0.08)', borderBottomColor: 'rgba(255,255,255,0.03)', backgroundColor: 'rgba(255,255,255,0.05)' },
   formInner: { padding: 24 },
   formTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
   formTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain },
@@ -1357,8 +1357,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   metadataLabel: { fontSize: 14, color: PALETTE.textMuted, fontWeight: '600', marginBottom: 12 },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   customThemeWrap: { marginTop: 12 },
-  customThemeInput: { borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)', paddingHorizontal: 16, paddingVertical: 14, color: PALETTE.textMain, fontSize: 15 },
-  awakenDropdown: { backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  customThemeInput: { borderRadius: 16, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 16, paddingVertical: 14, color: PALETTE.textMain, fontSize: 15 },
+  awakenDropdown: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 20, paddingVertical: 14, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   awakenDropdownText: { color: PALETTE.textMain, fontSize: 15, fontWeight: '500' },
   recurringRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   toggleTrack: { width: 50, height: 28, borderRadius: 14, backgroundColor: 'transparent', justifyContent: 'center', paddingHorizontal: 3, borderWidth: 1, borderColor: PALETTE.glassBorder },

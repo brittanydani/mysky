@@ -54,7 +54,7 @@ const PALETTE = {
   connection: '#9D76C1',
   lavender: '#A89BC8',
   rose: '#D4A3B3',
-  bg: '#020817',
+  bg: '#0A0A0F',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.06)',
 };
@@ -961,7 +961,7 @@ const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   header: { marginBottom: 32 },
@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
   personalTruthText: { color: 'rgba(255,255,255,0.78)', fontSize: 14, lineHeight: 22, marginBottom: 12, fontWeight: '400' },
   seasonCard: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212,175,55,0.12)', marginBottom: 16, backgroundColor: 'rgba(212,175,55,0.03)' },
   seasonLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 12 },
-  memoryWrap: { marginTop: 16, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  memoryWrap: { marginTop: 16, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)' },
   memoryText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 20, marginBottom: 10, fontStyle: 'italic' as const, fontWeight: '400' },
   selfLanguageText: { fontSize: 13, fontStyle: 'italic' as const, marginTop: 10, fontWeight: '500' },
   reflectionPromptWrap: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8, marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)' },

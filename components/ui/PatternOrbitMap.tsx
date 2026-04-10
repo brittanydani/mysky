@@ -480,7 +480,17 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
 
       </Canvas>
 
-      <View pointerEvents="none" style={styles.centerCopyWrap}>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.centerCopyWrap,
+          {
+            width: size * 0.58,
+            left: cx - size * 0.29,
+            top: cy - 28,
+          },
+        ]}
+      >
         <Text style={styles.centerThemes}>{themes.join(' · ').toUpperCase()}</Text>
         <Text style={styles.centerSummary}>{summary}</Text>
       </View>
@@ -537,10 +547,6 @@ const styles = StyleSheet.create({
   },
   centerCopyWrap: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: '58%',
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
     alignItems: 'center',
     gap: 8,
   },

@@ -24,6 +24,7 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import {
   getCategorySealStatus,
   getReflectionDate,
@@ -41,7 +42,7 @@ import {
 } from '../constants/dailyReflectionQuestions';
 
 const PALETTE = {
-  gold: '#D9BF8C',
+  gold: '#D4AF37',
   lavender: '#A89BC8',
   silverBlue: '#C9AE78',
   emerald: '#6EBF8B',
@@ -49,7 +50,7 @@ const PALETTE = {
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#020817',
+  bg: '#0A0A0F',
 };
 
 const SOMATIC_FALLBACK_LABELS = {
@@ -284,10 +285,13 @@ export default function InnerWorldScreen() {
                       style={({ pressed }) => [pressed && styles.cardPressed]}
                       onPress={() => nav(tool.route)}
                     >
-                      <LinearGradient
-                        colors={[`rgba(${tool.accentRgb}, 0.1)`, 'rgba(10,10,15,0.85)']}
-                        style={styles.card}
-                      >
+                      <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+                        <LinearGradient
+                          colors={[`rgba(${tool.accentRgb}, 0.10)`, 'rgba(10,10,15,0.18)']}
+                          style={StyleSheet.absoluteFill}
+                        >
+                          <View />
+                        </LinearGradient>
                         <View style={styles.cardHeader}>
                           <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
 
@@ -303,7 +307,7 @@ export default function InnerWorldScreen() {
 
                         <Text style={styles.cardTitle}>{tool.title}</Text>
                         <Text style={styles.cardSubtitle}>{tool.description}</Text>
-                      </LinearGradient>
+                      </VelvetGlassSurface>
                     </Pressable>
                   </Animated.View>
                 );
@@ -344,10 +348,8 @@ export default function InnerWorldScreen() {
 
             {/* Body Intelligence */}
             {somaticCorrelations.length > 0 && (
-              <Animated.View
-                entering={FadeInDown.delay(400).duration(500)}
-                style={styles.somaticCard}
-              >
+              <Animated.View entering={FadeInDown.delay(400).duration(500)}>
+                <VelvetGlassSurface style={styles.somaticCard} intensity={40} backgroundColor="rgba(18, 24, 20, 0.56)">
                 <Text style={styles.somaticLabel}>BODY INTELLIGENCE</Text>
                 <Text style={styles.somaticDesc}>
                   The body states that show up most often on your reflection days:
@@ -367,6 +369,7 @@ export default function InnerWorldScreen() {
                     </View>
                   </View>
                 ))}
+                </VelvetGlassSurface>
               </Animated.View>
             )}
 
@@ -384,14 +387,14 @@ const styles = StyleSheet.create({
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 31,
     color: PALETTE.textMain,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.9,
     marginBottom: 4,
     maxWidth: '88%',
@@ -402,9 +405,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(110, 191, 139, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(110, 191, 139, 0.3)',
+    borderColor: 'rgba(217,191,140,0.18)',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 16,
@@ -417,7 +420,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16,
@@ -435,9 +438,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(110, 191, 139, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(110, 191, 139, 0.3)',
+    borderColor: 'rgba(217,191,140,0.18)',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 16,
@@ -452,7 +455,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
     borderTopColor: 'rgba(255,255,255,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 
@@ -530,7 +533,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(217, 191, 140, 0.06)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(217, 191, 140, 0.15)',
     borderRadius: 14,
@@ -544,10 +547,7 @@ const styles = StyleSheet.create({
   // Body Intelligence (somatic cross-reference)
   somaticCard: {
     marginTop: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(110,191,139,0.2)',
-    backgroundColor: 'rgba(110,191,139,0.04)',
+    borderRadius: 24,
     padding: 20,
     gap: 10,
   },

@@ -25,7 +25,7 @@ interface MetallicLucideIconProps {
 export const MetallicLucideIcon: React.FC<MetallicLucideIconProps> = ({
   icon: Icon,
   size = 24,
-  strokeWidth,
+  strokeWidth = 1.5,
   style,
   variant,
   color,

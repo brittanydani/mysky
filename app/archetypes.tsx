@@ -24,17 +24,18 @@ import { syncArchetypeProfileFromReflections } from '../services/insights/reflec
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 
 const STORAGE_KEY = '@mysky:archetype_profile';
 
 const PALETTE = {
   lavender: '#A89BC8',
-  gold: '#D9BF8C',
+  gold: '#D4AF37',
   rose: '#D4A3B3',
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#020817',
+  bg: '#0A0A0F',
 };
 
 type ArchetypeKey = 'hero' | 'caregiver' | 'seeker' | 'sage' | 'rebel';
@@ -268,7 +269,7 @@ export default function ArchetypesScreen() {
                 const scoreCeiling = Math.max(...Object.values(savedProfile.scores), 1);
                 return (
                   <>
-              <View style={[styles.resultCard, { borderColor: `${dominant.color}40` }]}>
+              <VelvetGlassSurface style={[styles.resultCard, { borderColor: `${dominant.color}40` }]} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)"> 
                 <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
                 <MetallicText style={styles.resultName} color={dominant.color}>{dominant.name}</MetallicText>
                 <Text style={styles.resultTagline}>{dominant.tagline}</Text>
@@ -282,10 +283,10 @@ export default function ArchetypesScreen() {
 
                 <Text style={styles.traitLabel}>GROWTH EDGE</Text>
                 <Text style={styles.traitText}>{dominant.shadow}</Text>
-              </View>
+              </VelvetGlassSurface>
 
               {/* Score breakdown */}
-              <View style={styles.scoresCard}>
+              <VelvetGlassSurface style={styles.scoresCard} intensity={42} backgroundColor="rgba(18, 18, 24, 0.56)">
                 <Text style={styles.scoresTitle}>SCORE BREAKDOWN</Text>
                 {(Object.keys(savedProfile.scores) as ArchetypeKey[])
                   .sort((a, b) => savedProfile.scores[b] - savedProfile.scores[a])
@@ -308,7 +309,7 @@ export default function ArchetypesScreen() {
                       </View>
                     );
                   })}
-              </View>
+              </VelvetGlassSurface>
 
               {/* Reflection evolution nudge */}
               {(() => {
@@ -323,7 +324,7 @@ export default function ArchetypesScreen() {
                 if (totalRefVotes < 6 || refDominant === savedProfile.dominant) return null;
                 const arc = ARCHETYPES[refDominant];
                 return (
-                  <View style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]}>
+                  <VelvetGlassSurface style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]} intensity={38} backgroundColor="rgba(18, 18, 24, 0.52)"> 
                     <MetallicText style={styles.evolutionIcon} color={arc.color}>{arc.icon}</MetallicText>
                     <View style={styles.evolutionText}>
                       <Text style={[styles.evolutionTitle, { color: arc.color }]}>
@@ -333,7 +334,7 @@ export default function ArchetypesScreen() {
                         Your daily answers are showing a growing pattern toward {arc.name.replace('The ', '')} energy. Retake the quiz when this feels true.
                       </Text>
                     </View>
-                  </View>
+                  </VelvetGlassSurface>
                 );
               })()}
 
@@ -421,23 +422,24 @@ const styles = StyleSheet.create({
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 30,
     color: PALETTE.textMain,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 4,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    marginBottom: 6,
+    maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
 
   instruction: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.45)',
-    lineHeight: 20,
+    color: 'rgba(255,255,255,0.62)',
+    lineHeight: 21,
     marginBottom: 28,
   },
 
@@ -466,10 +468,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  optionText: { fontSize: 13, color: PALETTE.textMuted, flex: 1, lineHeight: 18 },
+  optionText: { fontSize: 13, color: 'rgba(255,255,255,0.76)', flex: 1, lineHeight: 18 },
   optionCheck: { fontSize: 14, fontWeight: '700', marginLeft: 8 },
 
   submitRow: { marginTop: 8, marginBottom: 24, alignItems: 'center' },
@@ -486,12 +488,12 @@ const styles = StyleSheet.create({
   submitBtnText: { fontSize: 15, color: PALETTE.lavender, fontWeight: '700' },
 
   // Result
-  resultCard: { borderRadius: 24, borderWidth: 1, padding: 28, marginBottom: 20, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.02)' },
+  resultCard: { borderRadius: 28, padding: 28, marginBottom: 20, alignItems: 'center' },
   resultIcon: { fontSize: 48, marginBottom: 12 },
   resultName: { fontSize: 26, fontWeight: '700', marginBottom: 6 },
   resultTagline: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.72)',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -501,23 +503,23 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.5,
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.52)',
     marginBottom: 6,
     alignSelf: 'flex-start',
   },
-  traitText: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 20, alignSelf: 'flex-start' },
+  traitText: { fontSize: 14, color: 'rgba(255,255,255,0.78)', lineHeight: 20, alignSelf: 'flex-start' },
 
-  scoresCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', padding: 28, marginBottom: 20, gap: 12, backgroundColor: 'rgba(255,255,255,0.02)' },
+  scoresCard: { borderRadius: 28, padding: 28, marginBottom: 20, gap: 12 },
   scoresTitle: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.5,
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.52)',
     marginBottom: 4,
   },
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   scoreIcon: { fontSize: 16, width: 20, textAlign: 'center' },
-  scoreName: { fontSize: 13, color: PALETTE.textMuted, width: 100 },
+  scoreName: { fontSize: 13, color: 'rgba(255,255,255,0.72)', width: 100 },
   scoreBarBg: {
     flex: 1,
     height: 4,
@@ -526,7 +528,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   scoreBarFill: { height: '100%', borderRadius: 2 },
-  scoreNum: { fontSize: 12, color: 'rgba(255,255,255,0.35)', width: 16, textAlign: 'right' },
+  scoreNum: { fontSize: 12, color: 'rgba(255,255,255,0.52)', width: 16, textAlign: 'right' },
 
   retakeBtn: {
     alignSelf: 'center',
@@ -545,13 +547,11 @@ const styles = StyleSheet.create({
     gap: 14,
     padding: 20,
     borderRadius: 20,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.02)',
     marginTop: 12,
     marginBottom: 4,
   },
   evolutionIcon: { fontSize: 28, marginTop: 2 },
   evolutionText: { flex: 1, gap: 4 },
   evolutionTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
-  evolutionBody: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 19 },
+  evolutionBody: { fontSize: 13, color: 'rgba(255,255,255,0.66)', lineHeight: 19 },
 });

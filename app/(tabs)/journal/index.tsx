@@ -70,7 +70,7 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  bg: '#020817',
+  bg: '#0A0A0F',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.12)',
@@ -1059,7 +1059,7 @@ const createJournalFabStyles = (theme: AppTheme) => StyleSheet.create({
 });
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
 
@@ -1117,7 +1117,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 32,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   lockTitle: { color: theme.textGold, marginTop: 12, fontWeight: '600', fontSize: 16 },
   lockSubtitle: { color: theme.textSecondary, fontSize: 14, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },

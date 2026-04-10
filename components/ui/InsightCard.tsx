@@ -1,8 +1,9 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { luxuryTheme } from '../../constants/luxuryTheme';
 import { MetallicIcon } from './MetallicIcon';
+import { VelvetGlassCard } from './VelvetGlassCard';
 
 interface InsightCardProps {
   title: string;
@@ -42,16 +43,24 @@ function InsightCard({
     ? 'rgba(232, 214, 174, 0.06)'
     : 'rgba(255, 255, 255, 0.03)';
 
+  const topEdgeColor = locked
+    ? 'rgba(157, 118, 193, 0.38)'
+    : isFeatured
+    ? 'rgba(232, 214, 174, 0.28)'
+    : undefined;
+
+  const borderColor = locked
+    ? 'rgba(157, 118, 193, 0.22)'
+    : undefined;
+
   return (
-    <Pressable
+    <VelvetGlassCard
       onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => [
-        styles.container,
-        { backgroundColor },
-        locked && styles.lockedContainer,
-        pressed && styles.pressed,
-      ]}
+      interactive={!!onPress}
+      backgroundColor={backgroundColor}
+      topEdgeColor={topEdgeColor}
+      borderColor={borderColor}
+      style={styles.container}
     >
       <View style={styles.gradient}>
         <View style={styles.header}>
@@ -101,7 +110,7 @@ function InsightCard({
           </View>
         )}
       </View>
-    </Pressable>
+    </VelvetGlassCard>
   );
 }
 
@@ -111,20 +120,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: luxuryTheme.card.border,
-    borderTopColor: luxuryTheme.card.borderTop,
     marginBottom: 16,
-    position: 'relative',
-    backgroundColor: 'transparent',
-  },
-  lockedContainer: {
-    borderColor: 'rgba(157, 118, 193, 0.22)',
-    borderTopColor: 'rgba(157, 118, 193, 0.38)',
-  },
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.985 }],
   },
   gradient: {
     padding: 20,

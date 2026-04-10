@@ -4,5 +4,5 @@ import { View } from 'react-native';
 // - OnboardingModal (auth step) when user has no session/onboarding
 // - router.replace('/(tabs)/home') once session + onboarding are confirmed
 export default function Index() {
-  return <View style={{ flex: 1, backgroundColor: '#020817' }} />;
+  return <View style={{ flex: 1, backgroundColor: '#0A0A0F' }} />;
 }

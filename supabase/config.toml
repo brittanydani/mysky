@@ -6,3 +6,6 @@ verify_jwt = false
 
 [functions.password-recovery]
 verify_jwt = false
+
+[functions.pattern-insights]
+verify_jwt = false

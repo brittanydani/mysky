@@ -297,7 +297,7 @@ export default function NotificationSettings() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
   header: {
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  card: { borderRadius: 24, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
+  card: { borderRadius: 28, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', borderTopColor: 'rgba(255,255,255,0.16)', backgroundColor: 'rgba(255,255,255,0.05)' },
   cardDisabled: { opacity: 0.45 },
 
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

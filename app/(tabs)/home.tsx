@@ -72,7 +72,7 @@ const PALETTE = {
   copper: '#CD7F5D',
   emerald: '#8CBEAA',
   rose: '#D4A3B3',
-  bg: '#020817',
+  bg: '#0A0A0F',
   textMain: '#FFFFFF',
   glassBorder: 'rgba(255,255,255,0.08)',
   glassHighlight: 'rgba(255,255,255,0.12)',
@@ -889,7 +889,7 @@ const createFabStyles = (theme: AppTheme) => StyleSheet.create({
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: 'rgba(255, 255, 255, 0.9)',

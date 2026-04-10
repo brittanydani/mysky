@@ -20,6 +20,8 @@ import * as Haptics from 'expo-haptics';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { EditorialPillGrid } from '../components/ui/EditorialPillGrid';
 
 import {
   loadReflections,
@@ -37,7 +39,7 @@ import { VALUES_THEME_MAP } from '../services/insights/reflectionProfileSync';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PALETTE = {
-  gold: '#D9BF8C',
+  gold: '#D4AF37',
   lavender: '#A89BC8',
   silverBlue: '#C9AE78',
   emerald: '#6EBF8B',
@@ -45,7 +47,7 @@ const PALETTE = {
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#020817',
+  bg: '#0A0A0F',
 };
 
 const CATEGORY_COLORS: Record<ReflectionCategory, string> = {
@@ -236,42 +238,41 @@ export default function PastReflectionsScreen() {
         >
 
           {/* Filter Chips */}
-          <Animated.View entering={FadeInDown.delay(140).duration(500)} style={styles.filterRow}>
-            {FILTERS.map(f => {
-              const active = filter === f.key;
-              const chipColor = f.key === 'all'
-                ? PALETTE.textMain
-                : CATEGORY_COLORS[f.key as ReflectionCategory];
-              return (
-                <Pressable
-                  key={f.key}
-                  style={[styles.filterChip, active && { borderColor: chipColor }]}
-                  onPress={() => applyFilter(f.key)}
-                >
-                  <Text style={[
-                    styles.filterLabel,
-                    active && { color: chipColor },
-                  ]}>
-                    {f.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-            {trends.length > 0 && (
-              <Pressable
-                style={[styles.filterChip, showTrends && { borderColor: PALETTE.lavender }]}
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); setShowTrends(v => !v); }}
-              >
-                <Text style={[styles.filterLabel, showTrends && { color: PALETTE.lavender }]}>
-                  Trends
-                </Text>
-              </Pressable>
-            )}
+          <Animated.View entering={FadeInDown.delay(140).duration(500)}>
+            <EditorialPillGrid
+              style={styles.filterRow}
+              items={[
+                ...FILTERS.map((f) => ({
+                  key: f.key,
+                  label: f.label,
+                  selected: filter === f.key,
+                  accentColor: f.key === 'all' ? PALETTE.textMain : CATEGORY_COLORS[f.key as ReflectionCategory],
+                  onPress: () => applyFilter(f.key),
+                  labelStyle: styles.filterLabel,
+                  selectedLabelStyle: styles.filterLabelSelected,
+                })),
+                ...(trends.length > 0
+                  ? [{
+                      key: 'trends',
+                      label: 'Trends',
+                      selected: showTrends,
+                      accentColor: PALETTE.lavender,
+                      onPress: () => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setShowTrends((value) => !value);
+                      },
+                      labelStyle: styles.filterLabel,
+                      selectedLabelStyle: styles.filterLabelSelected,
+                    }]
+                  : []),
+              ]}
+            />
           </Animated.View>
 
           {/* Trends View */}
           {showTrends && trends.length > 0 && (
-            <Animated.View entering={FadeInDown.delay(60).duration(400)} style={styles.trendsSection}>
+            <Animated.View entering={FadeInDown.delay(60).duration(400)}>
+              <VelvetGlassSurface style={styles.trendsSection} intensity={42} backgroundColor="rgba(18, 18, 24, 0.62)">
               <Text style={styles.trendsSectionHeader}>HOW YOU'VE CHANGED</Text>
               <Text style={styles.trendsSectionSub}>
                 Comparing your earliest vs. most recent values reflections
@@ -301,16 +302,19 @@ export default function PastReflectionsScreen() {
                   </View>
                 );
               })}
-            </Animated.View>
+                </VelvetGlassSurface>
+              </Animated.View>
           )}
 
           {/* Empty State */}
           {groups.length === 0 && (
-            <Animated.View entering={FadeIn.duration(500)} style={styles.emptyCard}>
+            <Animated.View entering={FadeIn.duration(500)}>
+              <VelvetGlassSurface style={styles.emptyCard} intensity={40} backgroundColor="rgba(18, 18, 24, 0.58)">
               <MetallicIcon name="document-text-outline" size={36} color={PALETTE.textMuted} />
               <Text style={styles.emptyText}>
                 No sealed reflections yet.{'\n'}Complete your first daily reflection to see them here.
               </Text>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
@@ -344,11 +348,18 @@ export default function PastReflectionsScreen() {
                   if (showNote) shownNoteCategories.add(noteKey);
 
                   return (
-                    <LinearGradient
+                    <VelvetGlassSurface
                       key={`${a.date}-${a.category}-${a.questionId}`}
-                      colors={[`${catColor}18`, 'transparent']}
                       style={styles.answerCard}
+                      intensity={42}
+                      backgroundColor="rgba(18, 18, 24, 0.60)"
                     >
+                      <LinearGradient
+                        colors={[`${catColor}14`, 'rgba(10,10,12,0.10)']}
+                        style={StyleSheet.absoluteFill}
+                      >
+                        <View />
+                      </LinearGradient>
                       {/* Category tag */}
                       <View style={styles.categoryTag}>
                         <Text style={[styles.categoryTagIcon, { color: catColor }]}>
@@ -369,7 +380,7 @@ export default function PastReflectionsScreen() {
                       {showNote && (
                         <Text style={styles.answerNote}>"{a.notes}"</Text>
                       )}
-                    </LinearGradient>
+                    </VelvetGlassSurface>
                   );
                 });
               })()}
@@ -388,51 +399,41 @@ export default function PastReflectionsScreen() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   headerTitle: {
-    fontSize: 34,
+    fontSize: 30,
     color: PALETTE.textMain,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 4,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    marginBottom: 6,
+    maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.68)' },
 
   // Filter chips
-  filterRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 32,
-  },
-  filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
+  filterRow: { marginBottom: 32 },
   filterLabel: {
     fontSize: 13,
     color: PALETTE.textMuted,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
+  filterLabelSelected: { color: '#0A0A0F' },
 
   // Empty state
-  emptyCard: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 40, alignItems: 'center', gap: 16, backgroundColor: 'rgba(255,255,255,0.02)' },
+  emptyCard: { borderRadius: 28, padding: 40, alignItems: 'center', gap: 16 },
   emptyText: {
     fontSize: 14,
-    color: PALETTE.textMuted,
+    color: 'rgba(255,255,255,0.68)',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -477,14 +478,7 @@ const styles = StyleSheet.create({
   },
 
   // Answer cards — match blueprint identity card style
-  answerCard: {
-    padding: 28,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    marginBottom: 16,
-  },
+  answerCard: { padding: 28, borderRadius: 28, marginBottom: 16, overflow: 'hidden' },
   categoryTag: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -507,13 +501,13 @@ const styles = StyleSheet.create({
   },
   answerText: {
     fontSize: 16,
-    color: PALETTE.textMuted,
+    color: 'rgba(255,255,255,0.74)',
     lineHeight: 24,
   },
   answerNote: {
     marginTop: 12,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.54)',
     fontStyle: 'italic',
     lineHeight: 19,
   },
@@ -521,10 +515,7 @@ const styles = StyleSheet.create({
   // Trends section
   trendsSection: {
     marginBottom: 32,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(168,155,200,0.2)',
-    backgroundColor: 'rgba(168,155,200,0.04)',
+    borderRadius: 28,
     padding: 24,
     gap: 14,
   },
@@ -536,7 +527,7 @@ const styles = StyleSheet.create({
   },
   trendsSectionSub: {
     fontSize: 12,
-    color: PALETTE.textMuted,
+    color: 'rgba(255,255,255,0.62)',
     lineHeight: 17,
     marginBottom: 4,
   },
@@ -573,7 +564,7 @@ const styles = StyleSheet.create({
   },
   trendScore: {
     fontSize: 12,
-    color: PALETTE.textMuted,
+    color: 'rgba(255,255,255,0.58)',
     fontWeight: '700',
     width: 28,
     textAlign: 'right',

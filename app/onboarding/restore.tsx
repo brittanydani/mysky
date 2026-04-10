@@ -206,7 +206,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     borderRadius: 24,
     borderWidth: 1,
     borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     padding: 28,
   },
   cardHeader: {

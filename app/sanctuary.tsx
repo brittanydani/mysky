@@ -118,7 +118,7 @@ export default function SanctuaryWorkspace() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 24, paddingBottom: 8 },

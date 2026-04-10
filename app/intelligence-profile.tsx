@@ -27,6 +27,7 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
 import { syncIntelligenceFromReflections } from '../services/insights/reflectionProfileSync';
 import { keepLastWordsTogether } from '../utils/textLayout';
 
@@ -464,33 +465,19 @@ export default function IntelligenceProfileScreen() {
 
                       <Text style={styles.dimQuestion}>{dim.prompt}</Text>
 
-                      <View style={styles.scaleRow}>
-                        {[1, 2, 3, 4, 5].map((v) => {
-                          const isSelected = currentScore === v;
-                          return (
-                            <Pressable
-                              key={v}
-                              style={[
-                                styles.scaleBtn,
-                                isSelected && styles.scaleBtnSelected,
-                                isSelected && saved && styles.scaleBtnSealed,
-                              ]}
-                              onPress={() => setScore(dim.id, v)}
-                            >
-                              {isSelected ? (
-                                <MetallicText
-                                  style={[styles.scaleBtnText, styles.scaleBtnTextSelected]}
-                                  color="#0A0A0F"
-                                >
-                                  {v}
-                                </MetallicText>
-                              ) : (
-                                <Text style={styles.scaleBtnText}>{v}</Text>
-                              )}
-                            </Pressable>
-                          );
-                        })}
-                      </View>
+                      <EditorialLikertScale
+                        value={currentScore ?? null}
+                        onChange={(nextValue) => {
+                          if (nextValue != null) {
+                            setScore(dim.id, nextValue);
+                          }
+                        }}
+                        style={styles.scaleRow}
+                        buttonStyle={styles.scaleBtn}
+                        selectedButtonStyle={saved ? styles.scaleBtnSealed : undefined}
+                        labelStyle={styles.scaleBtnText}
+                        selectedLabelStyle={styles.scaleBtnTextSelected}
+                      />
 
                       <View style={styles.dimLabels}>
                         <View style={styles.dimLabelBlockLeft}>
@@ -583,10 +570,9 @@ const styles = StyleSheet.create({
   dimName: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
   dimQuestion: { fontSize: 16, fontWeight: '400', color: PALETTE.textMain, lineHeight: 24, marginBottom: 22 },
 
-  scaleRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14, gap: 8 },
-  scaleBtn: { flex: 1, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)', justifyContent: 'center', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16 },
-  scaleBtnSelected: { backgroundColor: '#D4AF37' },
-  scaleBtnSealed: { backgroundColor: '#D4AF37' },
+  scaleRow: { marginBottom: 14 },
+  scaleBtn: { borderRadius: 14 },
+  scaleBtnSealed: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
   scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.74)', fontWeight: '700' },
   scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 

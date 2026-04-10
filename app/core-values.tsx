@@ -27,6 +27,7 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
+import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import {
   loadReflections,
   loadReflectionDrafts,
@@ -45,13 +46,13 @@ const MAP_TOP_ANCHOR_WEIGHTS = [4.6, 4.1, 3.6, 3.1, 2.6];
 const MAP_SELECTED_WEIGHT = 0.35;
 
 const PALETTE = {
-  gold: '#D9BF8C',
+  gold: '#D4AF37',
   silverBlue: '#C9AE78',
   copper: '#CD7F5D',
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#020817',
+  bg: '#0A0A0F',
 };
 
 const ALL_VALUES = [
@@ -229,7 +230,7 @@ const CoreValuesConstellation = ({
     .filter((line): line is { key: string; start: (typeof points)[number]; end: (typeof points)[number] } => Boolean(line));
 
   return (
-    <View style={styles.constellationCard}>
+    <VelvetGlassSurface style={styles.constellationCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
       <View style={styles.constellationHeader}>
         <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
         <MetallicText style={styles.constellationTitle} color={PALETTE.gold}>VALUES MAP</MetallicText>
@@ -312,7 +313,7 @@ const CoreValuesConstellation = ({
       <Text style={styles.constellationHint}>
         Your sealed North Star anchors the map, and recent values reflections can subtly shift it day to day. Copper links mark active paradoxes currently pulling against each other.
       </Text>
-    </View>
+    </VelvetGlassSurface>
   );
 };
 
@@ -604,7 +605,10 @@ export default function CoreValuesScreen() {
           {/* Top 5 North Star Summary */}
           {mapValues.length > 0 && (
             <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)}>
-              <LinearGradient colors={['rgba(217,191,140,0.15)', 'rgba(10,10,12,0.85)']} style={styles.summaryCard}>
+              <VelvetGlassSurface style={styles.summaryCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <LinearGradient colors={['rgba(217,191,140,0.12)', 'rgba(10,10,12,0.34)']} style={StyleSheet.absoluteFill}>
+                <View />
+              </LinearGradient>
               
               <View style={styles.summaryHeaderRow}>
                 <MetallicIcon name="compass-outline" size={18} color={PALETTE.gold} />
@@ -627,14 +631,14 @@ export default function CoreValuesScreen() {
               ) : (
                 <Text style={styles.summaryHint}>Your sealed North Star anchors this list, while recent reflections can move the live order day to day.</Text>
               )}
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
           {/* The Paradox Engine Insight */}
           {activeParadoxes.map((paradox, index) => (
             <Animated.View key={paradox.name} layout={Layout.springify()} entering={FadeIn.delay(index * 150).duration(600)}>
-              <View style={styles.paradoxCard}>
+              <VelvetGlassSurface style={styles.paradoxCard} intensity={42} backgroundColor="rgba(28, 18, 18, 0.58)">
               <View style={styles.paradoxHeader}>
                 <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.copper} />
                 <MetallicText style={styles.paradoxEyebrow} color={PALETTE.copper}>CORE PARADOX DETECTED</MetallicText>
@@ -644,16 +648,18 @@ export default function CoreValuesScreen() {
               <Text style={styles.paradoxFooter}>
                 When making decisions, notice which of these two values you are sacrificing. Growth lives in balancing this tension.
               </Text>
-              </View>
+              </VelvetGlassSurface>
             </Animated.View>
           ))}
 
           {/* Generic Reflection (if no paradoxes exist yet but they have selected values) */}
           {state.selected.length >= 3 && activeParadoxes.length === 0 && (
-            <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)} style={styles.promptCard}>
+            <Animated.View layout={Layout.springify()} entering={FadeInDown.duration(400)}>
+              <VelvetGlassSurface style={styles.promptCard} intensity={40} backgroundColor="rgba(18, 18, 24, 0.56)">
               <Text style={styles.promptText}>
                 When two values you hold pull in opposite directions, that's where your most difficult—and important—decisions live.
               </Text>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
@@ -695,22 +701,22 @@ const styles = StyleSheet.create({
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
   closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
-  headerSubtitle: { fontSize: 14 },
+  headerTitle: { fontSize: 30, color: PALETTE.textMain, fontWeight: '700', letterSpacing: -0.8, marginBottom: 6, maxWidth: '88%' },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
 
   sectionLabel: { fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, fontWeight: '800', marginBottom: 16 },
 
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
-  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.03)' },
-  customChip: { borderWidth: 1, borderColor: 'rgba(217,191,140,0.24)', backgroundColor: 'rgba(217,191,140,0.06)' },
+  chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 21, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.06)' },
+  customChip: { borderWidth: 1, borderColor: 'rgba(217,191,140,0.24)', backgroundColor: 'rgba(255,255,255,0.05)' },
   addCustomChip: { borderColor: 'rgba(217,191,140,0.28)' },
-  chipSelected: { borderColor: 'rgba(217,191,140,0.4)', backgroundColor: 'rgba(217,191,140,0.1)' },
+  chipSelected: { borderColor: 'rgba(217,191,140,0.48)', backgroundColor: 'rgba(255,255,255,0.90)' },
   chipTop: { borderColor: PALETTE.gold, backgroundColor: PALETTE.gold },
-  chipText: { fontSize: 12, color: PALETTE.textMuted, fontWeight: '500' },
+  chipText: { fontSize: 12, color: 'rgba(255,255,255,0.74)', fontWeight: '600' },
   chipTextSelected: { color: PALETTE.gold, fontWeight: '600' },
   chipTextTop: { color: PALETTE.bg, fontWeight: '800' },
   customComposer: {
@@ -722,30 +728,27 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   customComposerInput: { minWidth: 150, flex: 1, color: PALETTE.textMain, fontSize: 12, paddingVertical: 0 },
 
-  summaryCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)', padding: 28, marginBottom: 20, backgroundColor: 'rgba(255,255,255,0.02)' },
+  summaryCard: { borderRadius: 28, padding: 28, marginBottom: 20, overflow: 'hidden' },
   summaryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
   summaryTitle: { fontSize: 11, color: PALETTE.gold, fontWeight: '800', letterSpacing: 1.5 },
   
   topList: { gap: 12 },
-  topItemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.03)', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  topItemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.05)', padding: 14, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   topNumberBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(217,191,140,0.2)', justifyContent: 'center', alignItems: 'center' },
   topNumberText: { color: PALETTE.gold, fontSize: 11, fontWeight: '800' },
   topItemText: { fontSize: 16, color: PALETTE.textMain, fontWeight: '600' },
   
-  summaryHint: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 20, textAlign: 'center' },
+  summaryHint: { fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: 20, textAlign: 'center', lineHeight: 18 },
 
   constellationCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(217,191,140,0.2)',
+    borderRadius: 28,
     padding: 24,
     marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   constellationHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 },
   constellationTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
@@ -753,27 +756,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 20,
-    backgroundColor: 'rgba(4,11,24,0.8)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     paddingVertical: 12,
     marginBottom: 14,
   },
   constellationHint: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.64)',
     lineHeight: 18,
     textAlign: 'center',
   },
 
   // Paradox Engine Cards
-  paradoxCard: { borderRadius: 24, borderWidth: 1, borderColor: 'rgba(205, 127, 93, 0.3)', padding: 28, marginBottom: 20, backgroundColor: 'rgba(205, 127, 93, 0.05)' },
+  paradoxCard: { borderRadius: 28, padding: 28, marginBottom: 20 },
   paradoxHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   paradoxEyebrow: { fontSize: 10, color: PALETTE.copper, fontWeight: '800', letterSpacing: 1.5 },
   paradoxTitle: { fontSize: 20, color: PALETTE.textMain, fontWeight: '700', marginBottom: 10 },
-  paradoxBody: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 22, marginBottom: 16 },
-  paradoxFooter: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
+  paradoxBody: { fontSize: 14, color: 'rgba(255,255,255,0.84)', lineHeight: 22, marginBottom: 16 },
+  paradoxFooter: { fontSize: 12, color: 'rgba(255,255,255,0.62)', lineHeight: 18, borderTopWidth: 1, borderTopColor: 'rgba(205, 127, 93, 0.2)', paddingTop: 16 },
 
-  promptCard: { borderRadius: 24, padding: 28, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  promptText: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 20, textAlign: 'center' },
+  promptCard: { borderRadius: 28, padding: 28, marginBottom: 24 },
+  promptText: { fontSize: 13, color: 'rgba(255,255,255,0.72)', lineHeight: 20, textAlign: 'center' },
 
   sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.95)' },
   saveBtn: { height: 52, borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.5)', justifyContent: 'center', alignItems: 'center' },

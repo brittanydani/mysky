@@ -25,6 +25,7 @@ import {
 import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
+import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -36,7 +37,7 @@ const PALETTE = {
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.45)',
   glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#020817',
+  bg: '#0A0A0F',
 };
 
 // ── Synthesis Logic ──
@@ -193,7 +194,10 @@ export default function HealingSpaceScreen() {
           {/* 1. ARCHETYPE SHADOW WORK */}
           {hasArchetype && archetypeData && (
             <Animated.View entering={FadeInDown.delay(140).duration(600)}>
-              <LinearGradient colors={['rgba(168, 155, 200, 0.1)', 'rgba(10,10,12,0.85)']} style={styles.card}>
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <LinearGradient colors={['rgba(168, 155, 200, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
+                <View />
+              </LinearGradient>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="moon-outline" size={16} color={PALETTE.lavender} />
@@ -207,14 +211,17 @@ export default function HealingSpaceScreen() {
                 <Text style={styles.affirmationLabel}>ANCHOR AFFIRMATION</Text>
                 <MetallicText style={styles.affirmationText} variant="gold">{'"' + archetypeData.affirmation + '"'}</MetallicText>
               </View>
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
           {/* 2. SOMATIC RELEASE RITUAL */}
           {hasSomatic && topRegion && SOMATIC_RITUALS[topRegion] && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)}>
-              <LinearGradient colors={['rgba(110, 191, 139, 0.1)', 'rgba(10,10,12,0.85)']} style={styles.card}>
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <LinearGradient colors={['rgba(110, 191, 139, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
+                <View />
+              </LinearGradient>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="body-outline" size={16} color={PALETTE.emerald} />
@@ -233,14 +240,17 @@ export default function HealingSpaceScreen() {
                   {SOMATIC_RITUALS[topRegion]}
                 </Text>
               </View>
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
           {/* 3. RELATIONAL PATTERN INTERVENTION */}
           {hasRelational && relationalCategories.hasStruggle && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-              <LinearGradient colors={['rgba(212, 163, 179, 0.1)', 'rgba(10,10,12,0.85)']} style={styles.card}>
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <LinearGradient colors={['rgba(212, 163, 179, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
+                <View />
+              </LinearGradient>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="git-compare-outline" size={16} color={PALETTE.rose} />
@@ -254,14 +264,17 @@ export default function HealingSpaceScreen() {
               <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700' }]} variant="rose">
                 Step back. Take three breaths. Ask yourself: "Am I responding to the present moment, or protecting a past wound?"
               </MetallicText>
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
           {/* 3b. SECURE GROWTH ACKNOWLEDGEMENT */}
           {hasRelational && relationalCategories.hasSecure && (
             <Animated.View entering={FadeInDown.delay(relationalCategories.hasStruggle ? 380 : 300).duration(600)}>
-              <LinearGradient colors={['rgba(123, 174, 143, 0.12)', 'rgba(10,10,12,0.85)']} style={styles.card}>
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <LinearGradient colors={['rgba(123, 174, 143, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
+                <View />
+              </LinearGradient>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="leaf-outline" size={16} color="#7BAE8F" />
@@ -275,13 +288,16 @@ export default function HealingSpaceScreen() {
               <MetallicText style={[styles.bodyText, { marginTop: 12, fontWeight: '700', color: '#7BAE8F' }]}>
                 Notice what was true in those moments. That version of you is not an accident — it is who you are becoming.
               </MetallicText>
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
           {!hasHealingInputs && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-              <LinearGradient colors={['rgba(255,255,255,0.06)', 'rgba(10,10,12,0.85)']} style={styles.card}>
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
+                <View />
+              </LinearGradient>
 
               <View style={styles.cardHeader}>
                 <MetallicIcon name="sparkles-outline" size={16} color={PALETTE.gold} />
@@ -297,7 +313,7 @@ export default function HealingSpaceScreen() {
               <Pressable style={[styles.actionBtn, { marginTop: 16 }]} onPress={() => router.push('/(tabs)/identity' as Href)}>
                 <Text style={styles.actionBtnText}>Open Blueprint</Text>
               </Pressable>
-              </LinearGradient>
+              </VelvetGlassSurface>
             </Animated.View>
           )}
 
@@ -309,7 +325,7 @@ export default function HealingSpaceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -326,13 +342,14 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   header: { marginBottom: 32 },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 30,
     color: PALETTE.textMain,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 4,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    marginBottom: 6,
+    maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 14 },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
 
   loadingText: { color: PALETTE.textMuted, fontSize: 14 },
 
@@ -351,15 +368,15 @@ const styles = StyleSheet.create({
 
   emptyTitle: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12, textAlign: 'center' },
   emptySub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
-  actionBtn: { borderWidth: 1, borderColor: PALETTE.glassBorder, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 28 },
+  actionBtn: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', paddingHorizontal: 32, paddingVertical: 16, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.05)' },
   actionBtnText: { color: PALETTE.textMain, fontSize: 14, fontWeight: '600' },
 
-  card: { borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, padding: 28, marginBottom: 24, backgroundColor: 'rgba(255,255,255,0.02)' },
+  card: { borderRadius: 28, padding: 28, marginBottom: 24, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
   cardTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12 },
   promptText: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, marginBottom: 24 },
-  bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.75)', lineHeight: 24 },
+  bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.78)', lineHeight: 24 },
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
   affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },

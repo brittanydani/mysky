@@ -74,7 +74,7 @@ export default function OnboardingIndex() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
   glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },

@@ -26,7 +26,7 @@ const PALETTE = {
   gold: '#D4B872',
   silverBlue: '#C9AE78',
   amethyst: '#9D76C1',
-  bg: '#020817',
+  bg: '#0A0A0F',
   textMain: '#FFFFFF',
   textMuted: 'rgba(226,232,240,0.58)',
   glassBorder: 'rgba(255,255,255,0.10)',
@@ -158,7 +158,7 @@ const SectionHeader = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; 
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   glowOrb: {

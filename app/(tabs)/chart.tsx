@@ -2828,7 +2828,7 @@ export default function ChartScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   center: { justifyContent: 'center', alignItems: 'center' },
   loadingText: {
     color: theme.textSecondary,

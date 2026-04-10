@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   glassHighlight: {
     ...StyleSheet.absoluteFillObject, 
-    backgroundColor: 'rgba(255,255,255,0.02)' 
+    backgroundColor: 'rgba(255,255,255,0.05)' 
   },
   tabItemsRow: {
     flexDirection: 'row', 
