@@ -43,4 +43,25 @@ describe('narrativeInsights', () => {
     expect(sleepInsight?.takeaway?.label).toBeTruthy();
     expect(sleepInsight?.takeaway?.body).toMatch(/sleep|night|morning|tomorrow/i);
   });
+
+  it('formats energy rhythm with hero metrics and a capacity takeaway', () => {
+    const aggregates: DailyAggregate[] = [
+      makeAggregate({ dayKey: '2026-04-01', moodAvg: 7, energyAvg: 7, stressAvg: 3, sleepQuality: 4, sleepDurationHours: 8 }),
+      makeAggregate({ dayKey: '2026-04-02', moodAvg: 5, energyAvg: 4, stressAvg: 6, sleepQuality: 3, sleepDurationHours: 6 }),
+      makeAggregate({ dayKey: '2026-04-03', moodAvg: 4, energyAvg: 3, stressAvg: 7, sleepQuality: 2, sleepDurationHours: 5 }),
+      makeAggregate({ dayKey: '2026-04-04', moodAvg: 6, energyAvg: 6, stressAvg: 4, sleepQuality: 4, sleepDurationHours: 7 }),
+      makeAggregate({ dayKey: '2026-04-05', moodAvg: 7, energyAvg: 7, stressAvg: 3, sleepQuality: 4, sleepDurationHours: 8 }),
+      makeAggregate({ dayKey: '2026-04-06', moodAvg: 6, energyAvg: 5, stressAvg: 4, sleepQuality: 3, sleepDurationHours: 7 }),
+      makeAggregate({ dayKey: '2026-04-07', moodAvg: 7, energyAvg: 7, stressAvg: 3, sleepQuality: 4, sleepDurationHours: 8 }),
+    ];
+
+    const result = computeNarrativeInsights(aggregates);
+    const energyInsight = result.insights.find((insight) => insight.category === 'energy_rhythm');
+
+    expect(energyInsight).toBeDefined();
+    expect(energyInsight?.heroMetrics).toHaveLength(3);
+    expect(energyInsight?.heroMetrics?.[0].label).toBe('Restoration avg');
+    expect(energyInsight?.takeaway?.label).toBe('Capacity check');
+    expect(energyInsight?.takeaway?.body).toMatch(/bandwidth|reserves|baseline|streak/i);
+  });
 });

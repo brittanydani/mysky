@@ -97,5 +97,48 @@ describe('selfKnowledgeCrossRef', () => {
       expect(relationshipInsight?.takeaway?.label).toBe('Inquiry');
       expect(relationshipInsight?.takeaway?.body).toMatch(/interaction|boundary|pattern/i);
     });
+
+    it('formats archetype and somatic insights as explicit triads', () => {
+      const context = {
+        coreValues: null,
+        archetypeProfile: {
+          dominant: 'seeker' as const,
+          scores: { hero: 1, caregiver: 2, seeker: 5, sage: 3, rebel: 1 },
+          completedAt: '2026-04-01T12:00:00Z',
+        },
+        cognitiveStyle: null,
+        somaticEntries: [
+          { id: 's1', date: '2026-04-01T12:00:00Z', region: 'gut', emotion: 'overwhelm', intensity: 4 },
+          { id: 's2', date: '2026-04-02T12:00:00Z', region: 'gut', emotion: 'anxiety', intensity: 5 },
+          { id: 's3', date: '2026-04-03T12:00:00Z', region: 'gut', emotion: 'overwhelm', intensity: 4 },
+        ],
+        triggers: null,
+        relationshipPatterns: [],
+        dailyReflections: null,
+      };
+
+      const checkIns = [
+        { id: '1', date: '2026-04-01', moodScore: 4, energyLevel: 'medium', stressLevel: 'high', tags: ['anxiety'], createdAt: '2026-04-01T12:00:00Z' },
+        { id: '2', date: '2026-04-02', moodScore: 5, energyLevel: 'medium', stressLevel: 'high', tags: ['overwhelm'], createdAt: '2026-04-02T12:00:00Z' },
+        { id: '3', date: '2026-04-03', moodScore: 5, energyLevel: 'medium', stressLevel: 'high', tags: ['relationships'], createdAt: '2026-04-03T12:00:00Z' },
+        { id: '4', date: '2026-04-04', moodScore: 6, energyLevel: 'medium', stressLevel: 'medium', tags: ['creative'], createdAt: '2026-04-04T12:00:00Z' },
+        { id: '5', date: '2026-04-05', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: ['rest'], createdAt: '2026-04-05T12:00:00Z' },
+        { id: '6', date: '2026-04-06', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: ['screens'], createdAt: '2026-04-06T12:00:00Z' },
+        { id: '7', date: '2026-04-07', moodScore: 6, energyLevel: 'medium', stressLevel: 'low', tags: ['nature'], createdAt: '2026-04-07T12:00:00Z' },
+      ];
+
+      const result = computeSelfKnowledgeCrossRef(context as any, checkIns as any);
+      const archetypeInsight = result.find((insight) => insight.id === 'archetype-shadow');
+      const somaticInsight = result.find((insight) => insight.id === 'somatic-dominant');
+
+      expect(archetypeInsight?.heroMetrics?.[0]?.value).toMatch(/HIGH-STRESS DAYS/);
+      expect(archetypeInsight?.heroMetrics?.[1]?.value).toBe('THE SEEKER');
+      expect(archetypeInsight?.takeaway?.label).toBe('Shadow work');
+
+      expect(somaticInsight?.heroMetrics?.[0]?.value).toMatch(/STRESS-LINKED|TRACKED/);
+      expect(somaticInsight?.heroMetrics?.[1]?.value).toBe('GUT & BELLY (3X)');
+      expect(somaticInsight?.takeaway?.label).toBe('Somatic cue');
+      expect(somaticInsight?.takeaway?.body).toMatch(/stomach|breathe/i);
+    });
   });
 });

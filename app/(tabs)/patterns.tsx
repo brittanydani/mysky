@@ -63,6 +63,7 @@ const PALETTE = {
 };
 
 const LIGHT_MODE_INK = '#2A2520';
+const LIGHT_MODE_META = 'rgba(26, 24, 21, 0.5)';
 
 const CROSS_REF_ACCENT: Record<string, string> = {
   gold:       PALETTE.gold,
@@ -751,15 +752,13 @@ export default function PatternsScreen() {
                     </View>
                     <Text style={styles.patternTitle}>{keepLastWordsTogether(insight.title)}</Text>
                     <HeroMetricsRow metrics={insight.heroMetrics ?? []} />
-                    <Text style={styles.insightBody}>{keepLastWordsTogether(insight.body)}</Text>
+                    <ProseBlock body={insight.body} />
                     {support && (
-                      <View style={styles.supportCallout}>
-                        <View style={styles.supportCalloutHeader}>
-                          <Ionicons name={(support.icon as keyof typeof Ionicons.glyphMap) ?? 'sparkles-outline'} size={13} color={PALETTE.emerald} />
-                          <Text style={styles.supportCalloutLabel}>{support.label}</Text>
-                        </View>
-                        <Text style={styles.supportCalloutBody}>{support.body}</Text>
-                      </View>
+                      <GlassTakeaway
+                        label={support.label}
+                        body={support.body}
+                        icon={(support.icon as keyof typeof Ionicons.glyphMap) ?? 'sparkles-outline'}
+                      />
                     )}
                   </LinearGradient>
                 );
@@ -1084,6 +1083,38 @@ const HeroMetricsRow = ({ metrics }: { metrics: InsightMetricDisplay[] }) => {
   );
 };
 
+const ProseBlock = ({ body }: { body: string }) => {
+  const styles = useThemedStyles(createStyles);
+
+  return (
+    <Text style={styles.insightBody}>
+      {renderEditorialCopy(keepLastWordsTogether(body), styles.insightBodyEmphasis)}
+    </Text>
+  );
+};
+
+const GlassTakeaway = ({
+  label,
+  body,
+  icon,
+}: {
+  label: string;
+  body: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+}) => {
+  const styles = useThemedStyles(createStyles);
+
+  return (
+    <View style={styles.supportCallout}>
+      <View style={styles.supportCalloutHeader}>
+        <Ionicons name={icon ?? 'sparkles-outline'} size={13} color={PALETTE.emerald} />
+        <Text style={styles.supportCalloutLabel}>{label}</Text>
+      </View>
+      <Text style={styles.supportCalloutBody}>{body}</Text>
+    </View>
+  );
+};
+
 const NarrativeCard = ({ insight }: { insight: NarrativeInsight }) => {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
@@ -1107,15 +1138,13 @@ const NarrativeCard = ({ insight }: { insight: NarrativeInsight }) => {
         </View>
       </View>
       <HeroMetricsRow metrics={heroMetrics} />
-      <Text style={styles.insightBody}>{renderEditorialCopy(keepLastWordsTogether(insight.body), styles.insightBodyEmphasis)}</Text>
+      <ProseBlock body={insight.body} />
       {support && (
-        <View style={styles.supportCallout}>
-          <View style={styles.supportCalloutHeader}>
-            <Ionicons name={(support.icon as keyof typeof Ionicons.glyphMap) ?? 'sparkles-outline'} size={13} color={PALETTE.emerald} />
-            <Text style={styles.supportCalloutLabel}>{support.label}</Text>
-          </View>
-          <Text style={styles.supportCalloutBody}>{support.body}</Text>
-        </View>
+        <GlassTakeaway
+          label={support.label}
+          body={support.body}
+          icon={(support.icon as keyof typeof Ionicons.glyphMap) ?? 'sparkles-outline'}
+        />
       )}
     </LinearGradient>
   );

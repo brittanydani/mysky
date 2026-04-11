@@ -191,6 +191,10 @@ const REGION_LABELS: Record<string, string> = {
   limbs:  'hands & legs',
 };
 
+function titleCase(text: string): string {
+  return text.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function buildSomaticInsight(
   entries: SelfKnowledgeContext['somaticEntries'],
   checkIns: DailyCheckIn[],
@@ -213,24 +217,40 @@ function buildSomaticInsight(
   const regionLabel = REGION_LABELS[topRegionId] ?? topRegionId;
 
   // Cross-ref: how many somatic entry days overlap with high-stress check-in days?
-  let crossNote = '';
+  let overlap = 0;
   let isConfirmed = false;
   if (checkIns.length >= 5) {
     const highStressDates = new Set(
       checkIns.filter(c => c.stressLevel === 'high').map(c => c.date),
     );
     const somaticDates = entries.map(e => e.date.slice(0, 10));
-    const overlap = somaticDates.filter(d => highStressDates.has(d)).length;
+    overlap = somaticDates.filter(d => highStressDates.has(d)).length;
     if (overlap >= 2 && overlap / entries.length >= 0.4) {
-      crossNote = ` ${overlap} of these entries coincided with high-stress days in your check-in data.`;
       isConfirmed = true;
     }
   }
 
+  const heavyLabel = overlap > 0 ? `${overlap} stress-linked` : `${entries.length} tracked`;
+  const regionMetric = `${titleCase(regionLabel)} (${topRegionCount}x)`;
+  const emotionalWeather = titleCase(topEmotion);
+  const overlapBody = overlap >= 2
+    ? ` On ${overlap} of those days, the same body signal appeared alongside high stress, which suggests your system is flagging the tension there before your thoughts fully catch up.`
+    : '';
+
   return {
     id: 'somatic-dominant',
     title: 'Body Awareness Pattern',
-    body: `You've logged ${entries.length} somatic sensations. ${topEmotion} appears most often (${topEmotionCount}×), primarily in your ${regionLabel} (${topRegionCount}×).${crossNote} Mapping where emotion lives in your body builds the capacity to work with it — not just think about it.`,
+    body: `Your physical and emotional logs are pointing to the same place. When ${topEmotion.toLowerCase()} surfaces, your body most often stores it in your ${regionLabel}.${overlapBody}`,
+    heroMetrics: [
+      metric(heavyLabel.toUpperCase(), 'Somatic days', overlap >= 2 ? 'caution' : 'default'),
+      metric(regionMetric.toUpperCase(), 'Primary signal'),
+      metric(emotionalWeather.toUpperCase(), 'Top emotion'),
+    ],
+    takeaway: takeaway(
+      'Somatic cue',
+      `Before you journal or analyze tonight, place a hand on your ${topRegionId === 'gut' ? 'stomach' : regionLabel}. Breathe into that exact area first and let the sensation speak before the story does.`,
+      'body-outline',
+    ),
     accentColor: 'silverBlue',
     source: 'somatic',
     isConfirmed,
@@ -241,26 +261,31 @@ function buildSomaticInsight(
 // 4. Archetype Shadow
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; body: string }> = {
+const ARCHETYPE_SHADOWS: Record<ArchetypeKey, { title: string; body: string; takeaway: string }> = {
   hero: {
     title: 'The Hero Under Pressure',
     body: 'Your dominant pattern is The Hero — driven to overcome and prove strength. The shadow to watch: striving harder when rest is what your system actually needs. On high-load days, strategic recovery is the most courageous move.',
+    takeaway: 'When pressure spikes, notice whether you are trying to earn safety by doing more. What would strategic recovery look like before you prove anything else?',
   },
   caregiver: {
     title: 'The Caregiver Under Pressure',
     body: 'Your dominant pattern is The Caregiver — moving through the world by nurturing others. The shadow to watch: over-giving until quietly depleted. On hard days, ask honestly: who is taking care of you?',
+    takeaway: 'Catch the reflex to caretake before it empties you. What need are you about to meet for someone else that you have not named for yourself yet?',
   },
   seeker: {
     title: 'The Seeker Under Pressure',
-    body: 'Your dominant pattern is The Seeker — craving discovery, freedom, and new horizons. The shadow to watch: seeking movement or escape when presence might matter most. Restlessness can delay what stillness would reveal.',
+    body: 'When pressure rises, your instinct is movement and escape. The data suggests your Seeker pattern is activating under stress, favoring restlessness when staying present might resolve the tension faster.',
+    takeaway: 'Notice the urge to pull away today. What happens if you stay still for five more minutes instead of changing course?',
   },
   sage: {
     title: 'The Sage Under Pressure',
     body: 'Your dominant pattern is The Sage — seeking truth and understanding above all. The shadow to watch: over-analyzing when the answer lives below thought. On heavy days, feeling through it may matter more than figuring it out.',
+    takeaway: 'When the mind speeds up, pause before solving. What feeling are you trying to out-think right now?',
   },
   rebel: {
     title: 'The Rebel Under Pressure',
     body: 'Your dominant pattern is The Rebel — questioning structures and catalyzing change. The shadow to watch: resistance as a stress response — fighting what feels constraining, even when it isn\'t. Discernment protects your energy better than friction does.',
+    takeaway: 'Spot the moment resistance becomes reflex. Which part of today is actually misaligned, and which part only feels intolerable because you are already overloaded?',
   },
 };
 
@@ -269,22 +294,39 @@ function buildArchetypeInsight(
   checkIns: DailyCheckIn[],
 ): CrossRefInsight {
   const shadow = ARCHETYPE_SHADOWS[profile.dominant];
-  let contextNote = '';
   let isConfirmed = false;
+  let pct = 0;
 
   if (checkIns.length >= 7) {
     const highStressCount = checkIns.filter(c => c.stressLevel === 'high').length;
-    const pct = Math.round((highStressCount / checkIns.length) * 100);
+    pct = Math.round((highStressCount / checkIns.length) * 100);
     if (pct >= 30) {
-      contextNote = ` Your recent check-ins show ${pct}% high-stress days — a useful moment to notice how this pattern tends to activate.`;
       isConfirmed = true;
     }
   }
 
+  const dominantName = `The ${profile.dominant.charAt(0).toUpperCase()}${profile.dominant.slice(1)}`;
+  const secondary = Object.entries(profile.scores)
+    .filter(([key]) => key !== profile.dominant)
+    .sort((a, b) => b[1] - a[1])[0]?.[0];
+  const secondaryName = secondary ? `The ${secondary.charAt(0).toUpperCase()}${secondary.slice(1)}` : null;
+
   return {
     id: 'archetype-shadow',
     title: shadow.title,
-    body: shadow.body + contextNote,
+    body: pct >= 30
+      ? shadow.body
+      : `Your dominant archetype is ${dominantName}, and that pattern is still the clearest frame for how you respond under pressure. ${shadow.body.replace(/^Your dominant pattern is [^.]+\.\s*/, '')}`,
+    heroMetrics: [
+      metric(`${pct}% HIGH-STRESS DAYS`, 'Pressure load', pct >= 30 ? 'caution' : 'default'),
+      metric(dominantName.toUpperCase(), 'Dominant archetype'),
+      ...(secondaryName ? [metric(secondaryName.toUpperCase(), 'Backup pattern')] : []),
+    ],
+    takeaway: takeaway(
+      'Shadow work',
+      shadow.takeaway,
+      'sparkles-outline',
+    ),
     accentColor: 'lavender',
     source: 'archetype',
     isConfirmed,

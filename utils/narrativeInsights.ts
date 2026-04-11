@@ -205,21 +205,27 @@ function buildEnergyRhythm(profile: PatternProfile): NarrativeInsight | null {
   let body: string;
   let effectStrength: number;
 
+  const trendLabel = restorationTrend?.direction === 'falling'
+    ? 'Declining'
+    : restorationTrend?.direction === 'rising'
+      ? 'Rising'
+      : 'Steady';
+
   if (maxLowStreak >= 3) {
-    body = `Your energy tends to drop after multiple depleted days in a row — your longest recent stretch was ${maxLowStreak} consecutive low-restoration days. Your system may be pushing through exhaustion more often than restoring from it.`;
+    body = `Your capacity is dipping into a repeatable low streak. The pattern shows ${maxLowStreak} consecutive depleted days before recovery catches up, which means you are likely pushing past your refill point before your system resets.`;
     effectStrength = maxLowStreak * 15;
   } else if (restorationTrend?.direction === 'falling') {
-    body = `Your restoration has been gradually declining over this window — currently averaging ${overallAvg.restoration}/100. This kind of slow drain can be easy to miss day-to-day but adds up. Consider what's been drawing from your reserves without replenishing them.`;
+    body = `Your reserves are sliding gradually rather than crashing all at once. The data shows your restoration baseline moving down across this window, which usually means the drains are staying consistent while the refills are no longer fully catching up.`;
     effectStrength = 55;
   } else if (recoveries >= 3 && lowDays >= 3) {
     const rate = Math.round((recoveries / lowDays) * 100);
-    body = `You show a pattern of bouncing back after depleted days — recovering about ${rate}% of the time. Your system has a recovery rhythm — it may not feel fast enough, but the data suggests real resilience in how you recharge.`;
+    body = `Your capacity is moving in reliable waves instead of collapsing. After depleted days, you rebound about ${rate}% of the time, which points to a recovery rhythm that is working even when the dips feel sharp in the moment.`;
     effectStrength = 50;
   } else if (overallAvg.restoration >= 65) {
-    body = `Your restoration levels have stayed relatively strong across this period — averaging ${overallAvg.restoration}/100. This consistency is worth protecting — notice what routines, rhythms, or choices seem to be sustaining it.`;
+    body = `Your capacity is holding in a sustainable range. The data shows your restoration staying consistently elevated without sliding into an extended low streak, which suggests your current rhythm is supporting recovery instead of draining it.`;
     effectStrength = 40;
   } else {
-    body = 'Your energy is moving in waves rather than holding steady. The useful signal is not whether you can push through another dip, but which conditions actually bring you back.';
+    body = 'Your energy is moving in waves rather than breaking down. The real pattern is not the dip itself, but which conditions actually bring you back without costing more than they restore.';
     effectStrength = 30;
   }
 
@@ -231,11 +237,30 @@ function buildEnergyRhythm(profile: PatternProfile): NarrativeInsight | null {
     label: 'Energy Rhythm',
     body,
     stat: `Restoration avg: ${overallAvg.restoration}/100 · ${restorationTrend?.direction === 'falling' ? 'Declining' : restorationTrend?.direction === 'rising' ? 'Rising' : 'Steady'} · ${maxLowStreak > 0 ? `Longest low streak: ${maxLowStreak} ${streakLabel}` : 'No extended low streaks'}`,
+    heroMetrics: [
+      {
+        value: `${overallAvg.restoration} / 100`,
+        label: 'Restoration avg',
+        tone: overallAvg.restoration >= 65 ? 'positive' : overallAvg.restoration < 45 ? 'caution' : 'default',
+      },
+      {
+        value: trendLabel.toUpperCase(),
+        label: 'Trend',
+        tone: trendLabel === 'Declining' ? 'caution' : trendLabel === 'Rising' ? 'positive' : 'default',
+      },
+      {
+        value: maxLowStreak > 0 ? `${maxLowStreak} ${streakLabel}`.toUpperCase() : 'NONE',
+        label: 'Low streak',
+        tone: maxLowStreak >= 3 ? 'caution' : 'default',
+      },
+    ],
     takeaway: takeaway(
-      'Recovery cue',
+      'Capacity check',
       maxLowStreak >= 3
-        ? `Your longest low streak reached ${maxLowStreak} ${streakLabel}. Interrupt the next third depleted day earlier with one reliable refill instead of waiting for a collapse.`
-        : `Your restoration baseline is ${overallAvg.restoration}/100. Notice which routine makes the next day feel measurably easier, and repeat that before your energy drops again.`,
+        ? `Your reserves are staying low for ${maxLowStreak} ${streakLabel} when the dip begins. Interrupt the next streak on day two with the one refill that reliably changes tomorrow, not just tonight.`
+        : overallAvg.restoration >= 60
+          ? 'Your reserves are stable right now. You have enough bandwidth to take on one heavier emotional task without borrowing from tomorrow.'
+          : `Your baseline is ${overallAvg.restoration}/100, so the safer move is precision. Pick the one task that matters and protect the refill that keeps tomorrow from dropping lower.`,
       'leaf-outline',
     ),
     confidence: insightConfidence(profile.windowDays, effectStrength, maxLowStreak <= 2),
