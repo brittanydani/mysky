@@ -53,8 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const isMounted = useRef(true);
+  const lastDemoSyncTimestamp = useRef(0);
 
   const syncDemoArtifacts = useCallback(async (email: string | null | undefined) => {
+    const now = Date.now();
+    if (now - lastDemoSyncTimestamp.current < 30_000) return;
+    lastDemoSyncTimestamp.current = now;
+
     if (isAutoDemoSeedEnabled()) {
       await DemoSeedService.seedIfNeeded(email);
       return;

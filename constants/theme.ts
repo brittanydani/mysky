@@ -95,25 +95,25 @@ export const MYSTIC = {
 } as const;
 
 export const AURORA = {
-  // Backgrounds
-  bgTop: '#FCF8F1',
-  bgMid: '#FBF6EE',
-  bgBottom: '#F6EFE4',
-  bgDeep: '#EEE4D6',
+  // Backgrounds — Desert Titanium warm alabaster canvas
+  bgTop: '#F7F5F0',
+  bgMid: '#F4F1EB',
+  bgBottom: '#F2EFE9',
+  bgDeep: '#EDE9E2',
 
-  // Text hierarchy
-  heading: '#162033',
-  body: 'rgba(22, 32, 51, 0.78)',
-  muted: 'rgba(22, 32, 51, 0.52)',
+  // Text hierarchy — rich espresso ink
+  heading: '#1A1815',
+  body: 'rgba(26, 24, 21, 0.7)',
+  muted: 'rgba(26, 24, 21, 0.4)',
 
-  // Champagne-gold accents
-  subtitleGold: '#8A6A32',
-  restoreGold: '#8A6A32',
-  featureIconGold: '#B89457',
+  // Burnished bronze accents
+  subtitleGold: '#B8935A',
+  restoreGold: '#A68042',
+  featureIconGold: '#B8935A',
 
   // CTA / premium button surface
   ctaText: '#FFFFFF',
-  ctaBorder: 'rgba(138,106,50,0.16)',
+  ctaBorder: 'rgba(184,147,90,0.16)',
   ctaGloss: 'rgba(255,255,255,0.35)',
 
   // Metallic gold gradients
@@ -135,21 +135,21 @@ export const AURORA = {
 
   // Star colors
   star: 'rgba(255,255,255,0.98)',
-  starDim: 'rgba(138,106,50,0.52)',
+  starDim: 'rgba(166,128,66,0.52)',
 
-  // Glass card system
-  cardBg: 'rgba(255, 252, 247, 0.92)',
-  cardBorder: 'rgba(146, 124, 88, 0.12)',
-  cardHighlight: 'rgba(255, 255, 255, 0.74)',
+  // Glass card system — frosted sheet on warm canvas
+  cardBg: 'rgba(255, 255, 255, 0.5)',
+  cardBorder: 'rgba(0, 0, 0, 0.04)',
+  cardHighlight: 'rgba(255, 255, 255, 0.9)',
 
-  // Semantic accents
-  success: '#4E8A64',
-  error: '#C06A6A',
-  love: '#CC7E96',
+  // Semantic accents — deeply saturated & burnished
+  success: '#4A5D4E',
+  error: '#8C4A42',
+  love: '#9A6B75',
   silverBlue: '#7A90A8',
   copper: '#B4765B',
   amethyst: '#8B77AA',
-  gold: '#B58A3A',
+  gold: '#B8935A',
 } as const;
 
 type ThemePalette = typeof MYSTIC | typeof AURORA;
@@ -171,10 +171,10 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     // Background Colors
     background: palette.bgTop,
     backgroundDeep: palette.bgDeep,
-    backgroundSecondary: isDark ? '#101119' : '#FFF9F2',
-    backgroundTertiary: isDark ? '#151724' : '#F7F0E5',
-    surface: isDark ? '#12141D' : '#FFFDF9',
-    surfaceLight: isDark ? '#181B27' : '#FFFFFF',
+    backgroundSecondary: isDark ? '#101119' : '#F4F1EB',
+    backgroundTertiary: isDark ? '#151724' : '#F2EFE9',
+    surface: isDark ? '#12141D' : '#F7F5F0',
+    surfaceLight: isDark ? '#181B27' : '#FAF8F4',
 
     // Accent Colors
     indigo: isDark ? '#2D3A5C' : '#6A7B96',
@@ -204,17 +204,17 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     warning: palette.restoreGold,
 
     // Card Colors
-    cardGradientStart: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 253, 249, 0.96)',
-    cardGradientEnd: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(246, 239, 228, 0.98)',
+    cardGradientStart: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.5)',
+    cardGradientEnd: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.4)',
     cardBorder: palette.cardBorder,
-    cardSurface: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(246, 247, 250, 0.92)',
-    cardSurfaceStrong: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(250, 251, 252, 0.95)',
-    pillSurface: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(240, 243, 247, 0.92)',
-    pillSurfaceMuted: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(235, 239, 244, 0.86)',
+    cardSurface: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+    cardSurfaceStrong: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)',
+    pillSurface: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+    pillSurfaceMuted: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
 
     // Locked/Premium
-    lockedOverlay: isDark ? 'rgba(2, 8, 23, 0.7)' : 'rgba(252, 248, 241, 0.92)',
-    premiumGlow: isDark ? 'rgba(232, 214, 174, 0.25)' : 'rgba(201, 174, 120, 0.18)',
+    lockedOverlay: isDark ? 'rgba(2, 8, 23, 0.7)' : 'rgba(247, 245, 240, 0.92)',
+    premiumGlow: isDark ? 'rgba(232, 214, 174, 0.25)' : 'rgba(184, 147, 90, 0.18)',
 
     // Spacing
     spacing: {
@@ -289,17 +289,17 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     // Shadows
     shadows: {
       soft: {
-        shadowColor: isDark ? '#000' : '#6F552E',
+        shadowColor: isDark ? '#000' : '#4A3F35',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.3 : 0.12,
-        shadowRadius: 8,
+        shadowOpacity: isDark ? 0.3 : 0.05,
+        shadowRadius: isDark ? 8 : 24,
         elevation: 4,
       },
       glow: {
-        shadowColor: palette.restoreGold,
+        shadowColor: isDark ? palette.restoreGold : '#4A3F35',
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: isDark ? 0.3 : 0.18,
-        shadowRadius: 12,
+        shadowOpacity: isDark ? 0.3 : 0.08,
+        shadowRadius: isDark ? 12 : 20,
         elevation: 6,
       },
     },
@@ -307,9 +307,19 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     // Glass effects
     glass: {
       base: palette.cardBg,
-      border: palette.cardHighlight,
-      highlight: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.52)',
+      border: isDark ? palette.cardHighlight : 'rgba(255, 255, 255, 0.9)',
+      highlight: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.6)',
     },
+
+    // Light mode nested glass (callouts inside cards)
+    nestedGlass: {
+      base: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.6)',
+      border: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(255, 255, 255, 1)',
+    },
+
+    // Input field colors
+    inputBackground: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
+    inputBorder: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
 
     // Archetypal mapping
     archetypes: {
@@ -325,19 +335,19 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
       silverBlue: palette.silverBlue,
       copper: palette.copper,
       emerald: palette.success,
-      rose: isDark ? '#D4A3B3' : '#C88D9F',
+      rose: isDark ? '#D4A3B3' : '#9A6B75',
       textMain: palette.heading,
-      glassBorder: palette.cardHighlight,
-      glassHighlight: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.42)',
+      glassBorder: isDark ? palette.cardHighlight : 'rgba(255, 255, 255, 0.9)',
+      glassHighlight: isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.6)',
     },
 
     // Enhanced Gradients
     obsidianGradient: isDark
       ? (['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)'] as const)
-      : (['rgba(255,255,255,0.86)', 'rgba(241,232,217,0.92)'] as const),
+      : (['rgba(255,255,255,0.5)', 'rgba(247,245,240,0.7)'] as const),
     amethystGradient: isDark
       ? (['rgba(40, 30, 60, 0.25)', 'rgba(2,8,23,0.50)'] as const)
-      : (['rgba(205, 192, 224, 0.22)', 'rgba(241,232,217,0.68)'] as const),
+      : (['rgba(139,119,170,0.12)', 'rgba(247,245,240,0.5)'] as const),
   } as const;
 }
 

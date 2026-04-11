@@ -24,22 +24,22 @@ export function VelvetGlassSurface({
   style,
   intensity = 45,
   tint,
-  backgroundColor = 'rgba(255, 255, 255, 0.02)',
-  borderColor = 'rgba(255, 255, 255, 0.08)',
-  highlightColor = 'rgba(255, 255, 255, 0.03)',
-  innerBorderColor = 'rgba(255, 255, 255, 0.03)',
-  topEdgeColor = 'rgba(255, 255, 255, 0.15)',
+  backgroundColor,
+  borderColor,
+  highlightColor,
+  innerBorderColor,
+  topEdgeColor,
   leftEdgeColor,
   rightEdgeColor,
   bottomEdgeColor,
 }: VelvetGlassSurfaceProps) {
   const theme = useAppTheme();
   const resolvedTint = tint ?? theme.blurTint;
-  const resolvedBackgroundColor = backgroundColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 252, 247, 0.78)');
-  const resolvedBorderColor = borderColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(146, 124, 88, 0.16)');
-  const resolvedHighlightColor = highlightColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.42)');
-  const resolvedInnerBorderColor = innerBorderColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(146, 124, 88, 0.08)');
-  const resolvedTopEdgeColor = topEdgeColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.72)');
+  const resolvedBackgroundColor = backgroundColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.5)');
+  const resolvedBorderColor = borderColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)');
+  const resolvedHighlightColor = highlightColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.6)');
+  const resolvedInnerBorderColor = innerBorderColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.04)');
+  const resolvedTopEdgeColor = topEdgeColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.9)');
 
   return (
     <View style={[styles.container, style]}>
