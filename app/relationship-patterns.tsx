@@ -12,10 +12,9 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
 } from 'react-native';
+import { KeyboardAwareScrollView } from '../components/keyboard/KeyboardControllerCompat';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
@@ -31,6 +30,8 @@ import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const STORAGE_KEY = '@mysky:relationship_patterns';
 const CUSTOM_TAGS_KEY = '@mysky:relationship_pattern_custom_tags';
@@ -101,6 +102,8 @@ interface PatternEntry {
 }
 
 function SectionHeader({ title, icon }: { title: string; icon: string }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.sectionHeader}>
       <MetallicIcon name={icon as any} size={18} color={PALETTE.gold} />
@@ -110,6 +113,8 @@ function SectionHeader({ title, icon }: { title: string; icon: string }) {
 }
 
 export default function RelationshipPatternsScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [entries, setEntries] = useState<PatternEntry[]>([]);
   const [note, setNote] = useState('');
@@ -271,7 +276,6 @@ export default function RelationshipPatternsScreen() {
     new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.container}>
         <SkiaDynamicCosmos />
 
@@ -286,6 +290,7 @@ export default function RelationshipPatternsScreen() {
             <Pressable
               style={styles.backButton}
               onPress={() => { Haptics.selectionAsync().catch(() => {}); router.replace('/(tabs)/identity'); }}
+              hitSlop={10}
             >
               <Text style={styles.backIcon}>‹</Text>
             </Pressable>
@@ -296,14 +301,21 @@ export default function RelationshipPatternsScreen() {
             <GoldSubtitle style={styles.headerSubtitle}>What you notice about yourself in connection</GoldSubtitle>
           </View>
 
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <KeyboardAwareScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            bottomOffset={20}
+            extraKeyboardSpace={12}
+            disableScrollOnKeyboardHide
+          >
 
             {/* Relational Gravity Visualization */}
             {gravityStats.total > 0 && (
               <>
               <SectionHeader title="Relational Gravity" icon="planet-outline" />
               <Animated.View entering={FadeIn.duration(600)}>
-                <VelvetGlassSurface style={styles.summaryCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.56)">
+                <VelvetGlassSurface style={styles.summaryCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.56)' : 'rgba(255, 255, 255, 0.80)'}>
                 <View style={styles.summaryHeader}>
                   <MetallicIcon name="planet-outline" size={16} color={PALETTE.gold} />
                   <MetallicText style={styles.summaryTitle} color={PALETTE.gold}>YOUR RELATIONAL GRAVITY</MetallicText>
@@ -366,12 +378,12 @@ export default function RelationshipPatternsScreen() {
             {/* Log Entry Form */}
             <SectionHeader title="Log a Pattern" icon="pencil-outline" />
             <Animated.View entering={FadeInDown.delay(220).duration(500)}>
-              <VelvetGlassSurface style={styles.formCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.56)">
+              <VelvetGlassSurface style={styles.formCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.56)' : 'rgba(255, 255, 255, 0.80)'}>
 
               <TextInput
                 style={styles.noteInput}
                 placeholder="What dynamic played out today? Write freely..."
-                placeholderTextColor="rgba(255,255,255,0.64)"
+                placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.64)' : 'rgba(22,32,51,0.42)'}
                 multiline
                 maxLength={1000}
                 value={note}
@@ -471,7 +483,7 @@ export default function RelationshipPatternsScreen() {
                                 value={customTagInput}
                                 onChangeText={setCustomTagInput}
                                 placeholder="Type your own..."
-                                placeholderTextColor="rgba(255,255,255,0.42)"
+                                placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.42)' : 'rgba(22,32,51,0.36)'}
                                 autoFocus
                                 maxLength={40}
                                 returnKeyType="done"
@@ -531,9 +543,9 @@ export default function RelationshipPatternsScreen() {
                 <SectionHeader title="Previous Reflections" icon="journal-outline" />
                 <View style={styles.entryList}>
                   {entries.slice(0, 15).map((entry) => (
-                    <VelvetGlassSurface key={entry.id} style={styles.entryCard} intensity={28} backgroundColor="rgba(15, 15, 20, 0.54)">
+                    <VelvetGlassSurface key={entry.id} style={styles.entryCard} intensity={28} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.54)' : 'rgba(255, 255, 255, 0.80)'}>
                       <View style={styles.entryHeaderRow}>
-                        <Ionicons name="journal-outline" size={14} color={PALETTE.textMuted} />
+                        <Ionicons name="journal-outline" size={14} color={theme.textMuted} />
                         <Text style={styles.entryDate}>{formatDate(entry.date)}</Text>
                       </View>
 
@@ -560,15 +572,14 @@ export default function RelationshipPatternsScreen() {
             )}
 
             <View style={{ height: 140 }} />
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </SafeAreaView>
       </View>
-    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -580,35 +591,35 @@ const styles = StyleSheet.create({
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 32 },
-  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
-  backIcon:   { color: '#FFF', fontSize: 34, lineHeight: 34, marginTop: -2 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  backIcon:   { color: theme.textPrimary, fontSize: 34, lineHeight: 34, marginTop: -2 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 29, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.3, marginBottom: 4 },
-  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
+  headerTitle: { fontSize: 29, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.3, marginBottom: 4 },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: theme.textSecondary },
 
   summaryCard: { borderRadius: 24, padding: 24, marginBottom: 32 },
   summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   summaryTitle: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
-  summaryDescription: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 32, fontWeight: '400' },
+  summaryDescription: { fontSize: 16, color: theme.textPrimary, lineHeight: 24, marginBottom: 32, fontWeight: '400' },
 
-  gravityBarContainer: { height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 24, gap: 3 },
+  gravityBarContainer: { height: 8, borderRadius: 4, flexDirection: 'row', overflow: 'hidden', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface, marginBottom: 24, gap: 3 },
   gravitySegment: { height: '100%', borderRadius: 4 },
 
   legendRow: { flexDirection: 'row', marginTop: 8, justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
   legendItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 6, paddingVertical: 2 },
 
   formCard: { borderRadius: 24, padding: 24, marginBottom: 32 },
-  formTitle: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  formTitle: { fontSize: 12, color: theme.textMuted, fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20, marginTop: 8 },
-  sectionTitle: { color: '#FFFFFF', fontSize: 19, fontWeight: '700' },
-  noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)', padding: 20, color: PALETTE.textMain, fontSize: 16, lineHeight: 24, marginBottom: 32 },
-  tagSectionLabel: { fontSize: 11, color: 'rgba(255,255,255,0.58)', fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
-  tagHint: { fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: -8, marginBottom: 20, lineHeight: 18 },
+  sectionTitle: { color: theme.textPrimary, fontSize: 19, fontWeight: '700' },
+  noteInput: { minHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, padding: 20, color: theme.textPrimary, fontSize: 16, lineHeight: 24, marginBottom: 32 },
+  tagSectionLabel: { fontSize: 11, color: theme.textMuted, fontWeight: '700', letterSpacing: 1.5, marginBottom: 20, textTransform: 'uppercase' },
+  tagHint: { fontSize: 12, color: theme.textMuted, marginTop: -8, marginBottom: 20, lineHeight: 18 },
 
-  patternTag: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)' },
-  customPatternTag: { borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)' },
-  patternTagText: { fontSize: 13, color: 'rgba(255,255,255,0.84)', fontWeight: '600' },
+  patternTag: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
+  customPatternTag: { borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
+  patternTagText: { fontSize: 13, color: theme.textSecondary, fontWeight: '600' },
   addPatternTag: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   addPatternTagStandalone: { alignSelf: 'flex-start', marginTop: 2 },
   addPatternTagText: { fontSize: 13, fontWeight: '700' },
@@ -621,21 +632,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
   },
-  customComposerInput: { minWidth: 120, flex: 1, color: PALETTE.textMain, fontSize: 13, paddingVertical: 0 },
+  customComposerInput: { minWidth: 120, flex: 1, color: theme.textPrimary, fontSize: 13, paddingVertical: 0 },
 
   submitBtn: { height: 58, borderRadius: 29, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(217,191,140,0.56)', justifyContent: 'center', alignItems: 'center', shadowColor: PALETTE.gold, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.16, shadowRadius: 22, elevation: 6 },
   submitBtnText: { fontSize: 15, color: PALETTE.gold, fontWeight: '800', letterSpacing: 0.7 },
 
-  tagCategoryGroup: { marginBottom: 18, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 18 },
+  tagCategoryGroup: { marginBottom: 18, borderRadius: 22, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface, padding: 18 },
   tagCategoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tagCategoryDot: { fontSize: 7, marginTop: 1 },
-  tagCategoryLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.8, color: 'rgba(255,255,255,0.52)' },
+  tagCategoryLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.8, color: theme.textMuted },
   tagCategoryMeta: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tagCategoryCount: { fontSize: 11, color: 'rgba(255,255,255,0.62)', fontWeight: '600' },
-  tagCategoryBody: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
+  tagCategoryCount: { fontSize: 11, color: theme.textMuted, fontWeight: '600' },
+  tagCategoryBody: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.cardBorder },
   tagRail: { marginHorizontal: -2 },
   tagRailContent: { gap: 10, paddingHorizontal: 2, alignItems: 'center' },
 
@@ -646,8 +657,8 @@ const styles = StyleSheet.create({
   entryList: { gap: 16 },
   entryCard: { borderRadius: 24, padding: 24 },
   entryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  entryDate: { fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
-  entryNote: { fontSize: 16, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 20 },
+  entryDate: { fontSize: 13, color: theme.textSecondary, fontWeight: '500' },
+  entryNote: { fontSize: 16, color: theme.textPrimary, lineHeight: 24, marginBottom: 20 },
   entryTagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   entryTag: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
   entryTagText: { fontSize: 12, fontWeight: '600' },

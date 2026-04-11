@@ -3,6 +3,7 @@
     "name": "MySky",
     "slug": "mysky",
     "version": "1.0.1",
+    "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mysky",

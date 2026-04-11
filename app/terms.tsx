@@ -259,7 +259,7 @@ export default function TermsOfServiceScreen({ onBack }: { onBack?: () => void }
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   header: {
     paddingHorizontal: 24,
@@ -274,9 +274,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -299,7 +299,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 1.0,
     textTransform: 'uppercase',
     marginTop: 2,
-    color: 'rgba(255,255,255,0.6)',
+    color: theme.textSecondary,
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
@@ -332,9 +332,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   glassCard: {
     borderRadius: 24,
     padding: 28,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     marginVertical: 16,
   },
   disclaimerCard: {
@@ -342,7 +342,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 28,
     borderWidth: 1,
     borderColor: 'rgba(205,127,93,0.20)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255, 245, 242, 0.9)',
     marginVertical: 16,
   },
   disclaimerHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },

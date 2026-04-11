@@ -8,18 +8,25 @@ export const LEGAL_URL = 'https://amber-divan-e75.notion.site/Privacy-Policy-for
 // Support contact — single source of truth for all in-app references
 export const SUPPORT_EMAIL = 'brittanyapps@outlook.com';
 
-const DREAM_REINTERPRET_DEFAULT_DAILY_LIMIT = 1;
+// Reviewer/demo content should only be seeded when explicitly enabled.
+// Defaulting this off keeps normal app startup deterministic and avoids
+// mutating local encrypted state during auth restoration.
+export function isAutoDemoSeedEnabled(): boolean {
+  return process.env.EXPO_PUBLIC_ENABLE_AUTO_DEMO_SEED === 'true';
+}
+
+const DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT = 1;
 const DREAM_REINTERPRET_EMAIL_LIMIT_OVERRIDES: Record<string, number> = {
   'brithornick92@gmail.com': 5,
 };
 
-export function getDreamReinterpretDailyLimit(email?: string | null): number {
+export function getDreamReinterpretPerDreamLimit(email?: string | null): number {
   if (!email) {
-    return DREAM_REINTERPRET_DEFAULT_DAILY_LIMIT;
+    return DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;
   }
 
   return DREAM_REINTERPRET_EMAIL_LIMIT_OVERRIDES[email.trim().toLowerCase()]
-    ?? DREAM_REINTERPRET_DEFAULT_DAILY_LIMIT;
+    ?? DREAM_REINTERPRET_DEFAULT_PER_DREAM_LIMIT;
 }
 
 export const config = {

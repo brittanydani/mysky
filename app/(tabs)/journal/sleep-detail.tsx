@@ -29,17 +29,19 @@ import { MetallicLucideIcon } from '../../../components/ui/MetallicLucideIcon';
 import SkiaMetallicPill from '../../../components/ui/SkiaMetallicPill';
 
 import { localDb } from '../../../services/storage/localDb';
+import { isDecryptionFailure } from '../../../services/storage/fieldEncryption';
 import { SleepEntry } from '../../../services/storage/models';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremium } from '../../../context/PremiumContext';
 import { useAuth } from '../../../context/AuthContext';
-import { getDreamReinterpretDailyLimit } from '../../../constants/config';
+import { getDreamReinterpretPerDreamLimit } from '../../../constants/config';
 import { logger } from '../../../utils/logger';
 import { parseLocalDate, toLocalDateString } from '../../../utils/dateUtils';
 import { generateDreamInterpretation } from '../../../services/premium/dreamInterpretation';
 import {
   generateGeminiDreamInterpretation,
   isGeminiAvailable,
+  isExpectedGeminiDreamError,
   GeminiDreamResult,
 } from '../../../services/premium/geminiDreamInterpretation';
 import { computeDreamAggregates, computeDreamPatterns } from '../../../services/premium/dreamAggregates';
@@ -49,6 +51,8 @@ import {
   DreamMetadata,
   SelectedFeeling,
 } from '../../../services/premium/dreamTypes';
+import type { AppTheme } from '../../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
 
 const QUALITY_LABELS = ['Exhausted', 'Restless', 'Neutral', 'Restored', 'Deeply Vibrant'];
 const DEFAULT_METADATA: DreamMetadata = {
@@ -59,20 +63,22 @@ const DEFAULT_METADATA: DreamMetadata = {
   recurring: false,
 };
 
-const DAILY_REINTERPRET_KEY_PREFIX = '@mysky:dream_reinterpret';
+const DREAM_REINTERPRET_KEY_PREFIX = '@mysky:dream_reinterpret';
 
-function getDailyReinterpretKey(userId?: string | null, date: Date = new Date()): string {
-  return `${DAILY_REINTERPRET_KEY_PREFIX}:${userId ?? 'anon'}:${toLocalDateString(date)}`;
+function getDreamReinterpretKey(dreamId?: string | null, userId?: string | null): string {
+  return `${DREAM_REINTERPRET_KEY_PREFIX}:${userId ?? 'anon'}:${dreamId ?? 'unknown'}`;
 }
 
 export default function SleepDetailScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { isPremium } = usePremium();
   const { session, user } = useAuth();
   const canUseGemini = isGeminiAvailable(Boolean(session?.access_token));
-  const dailyReinterpretLimit = getDreamReinterpretDailyLimit(user?.email);
+  const perDreamReinterpretLimit = getDreamReinterpretPerDreamLimit(user?.email);
 
   const [entry, setEntry] = useState<SleepEntry | null>(null);
   const [allEntries, setAllEntries] = useState<SleepEntry[]>([]);
@@ -81,7 +87,7 @@ export default function SleepDetailScreen() {
   const [interpretation, setInterpretation] = useState<DreamInterpretation | null>(null);
   const [interpreting, setInterpreting] = useState(false);
   const [reinterpretCount, setReinterpretCount] = useState(0);
-  const [dailyReinterpretUsedCount, setDailyReinterpretUsedCount] = useState(0);
+  const [dreamReinterpretUsedCount, setDreamReinterpretUsedCount] = useState(0);
 
   // Gemini AI state
   const [aiResult, setAiResult] = useState<GeminiDreamResult | null>(null);
@@ -95,8 +101,8 @@ export default function SleepDetailScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reinterpretCount]);
 
-  const hasReachedDailyReinterpretLimit = dailyReinterpretUsedCount >= dailyReinterpretLimit;
-  const remainingReinterprets = Math.max(0, dailyReinterpretLimit - dailyReinterpretUsedCount);
+  const hasReachedDreamReinterpretLimit = dreamReinterpretUsedCount >= perDreamReinterpretLimit;
+  const remainingReinterprets = Math.max(0, perDreamReinterpretLimit - dreamReinterpretUsedCount);
 
   useFocusEffect(
     useCallback(() => {
@@ -117,12 +123,12 @@ export default function SleepDetailScreen() {
       if (found) {
         setEntry(found);
         setDreamText(found.dreamText ?? '');
-        const dailyKey = getDailyReinterpretKey(user?.id);
-        const used = await AsyncStorage.getItem(dailyKey);
+        const dreamKey = getDreamReinterpretKey(found.id, user?.id);
+        const used = await AsyncStorage.getItem(dreamKey);
         const parsedUsed = Number.parseInt(used ?? '0', 10);
-        setDailyReinterpretUsedCount(Number.isFinite(parsedUsed) ? parsedUsed : 0);
+        setDreamReinterpretUsedCount(Number.isFinite(parsedUsed) ? parsedUsed : 0);
         // Auto-generate interpretation if entry already has dream text
-        if (found.dreamText) {
+        if (found.dreamText && !isDecryptionFailure(found.dreamText)) {
           void runInterpretation(found, found.dreamText, entries);
         }
       }
@@ -180,10 +186,9 @@ export default function SleepDetailScreen() {
         }).then(aiRes => {
           setAiResult(aiRes);
         }).catch(e => {
-          const msg = e.message ?? 'AI interpretation failed';
-          const isAuthError = msg.includes('sign-in') || msg.includes('Sign in');
-          if (isAuthError) {
-            logger.warn('[SleepDetail] AI interpretation skipped (no active session)');
+          const msg = e instanceof Error ? e.message : 'AI interpretation failed';
+          if (isExpectedGeminiDreamError(e)) {
+            logger.warn('[SleepDetail] Auto AI interpretation unavailable:', msg);
           } else {
             logger.error('[SleepDetail] Auto AI interpretation failed:', e);
           }
@@ -215,7 +220,7 @@ export default function SleepDetailScreen() {
       {/* HEADER */}
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <ChevronLeft color="#FFF" size={26} />
+          <ChevronLeft color={theme.textPrimary} size={26} />
         </Pressable>
         <View style={styles.saveBtn} />
       </View>
@@ -308,27 +313,27 @@ export default function SleepDetailScreen() {
                 </>
               )}
               <Pressable
-                style={[styles.rerunBtn, hasReachedDailyReinterpretLimit && { opacity: 0.4 }]}
+                style={[styles.rerunBtn, hasReachedDreamReinterpretLimit && { opacity: 0.4 }]}
                 onPress={() => {
-                  if (hasReachedDailyReinterpretLimit) return;
+                  if (hasReachedDreamReinterpretLimit) return;
                   if (entry && dreamText.trim()) {
                     setAiResult(null);
                     setAiError(null);
-                    const nextUsedCount = dailyReinterpretUsedCount + 1;
-                    setDailyReinterpretUsedCount(nextUsedCount);
-                    void AsyncStorage.setItem(getDailyReinterpretKey(user?.id), String(nextUsedCount));
+                    const nextUsedCount = dreamReinterpretUsedCount + 1;
+                    setDreamReinterpretUsedCount(nextUsedCount);
+                    void AsyncStorage.setItem(getDreamReinterpretKey(entry.id, user?.id), String(nextUsedCount));
                     setReinterpretCount(c => c + 1);
                   }
                 }}
               >
                 <MetallicText color="#C9AE78" style={styles.rerunBtnText}>
-                  {hasReachedDailyReinterpretLimit ? 'RE-INTERPRET LIMIT REACHED' : 'RE-INTERPRET'}
+                  {hasReachedDreamReinterpretLimit ? 'RE-INTERPRET LIMIT REACHED' : 'RE-INTERPRET'}
                 </MetallicText>
               </Pressable>
               <Text style={styles.reinterpretHint}>
                 {remainingReinterprets === 1
-                  ? '1 re-interpret remaining today.'
-                  : `${remainingReinterprets} re-interprets remaining today.`}
+                  ? '1 re-interpret remaining for this dream.'
+                  : `${remainingReinterprets} re-interprets remaining for this dream.`}
               </Text>
               {!isPremium && (
                 <SkiaMetallicPill
@@ -369,34 +374,34 @@ export default function SleepDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 24, paddingBottom: 8,
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     justifyContent: 'center', alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 34, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.5, marginBottom: 4,
+    fontSize: 34, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4,
   },
   saveBtn: { paddingHorizontal: 12, paddingVertical: 8 },
-  saveText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  saveText: { color: theme.textPrimary, fontSize: 14, fontWeight: '600' },
   scrollPadding: { padding: 24, paddingTop: 8 },
 
   card: {
     borderRadius: 24, padding: 28,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 24,
+    borderWidth: 1, borderColor: theme.cardBorder, marginBottom: 24,
   },
   dreamCardHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12,
   },
   dreamCardDate: {
-    fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.45)',
+    fontSize: 12, fontWeight: '600', color: theme.textMuted,
     letterSpacing: 0.3, textTransform: 'uppercase', marginBottom: 4,
   },
   dreamMeta: { flexDirection: 'row', alignItems: 'center' },
@@ -405,21 +410,21 @@ const styles = StyleSheet.create({
     fontSize: 12, color: 'rgba(201,174,120,0.7)', textTransform: 'uppercase',
     letterSpacing: 0.8, fontWeight: '600', marginLeft: 6,
   },
-  dreamDuration: { fontSize: 12, color: 'rgba(226,232,240,0.45)' },
+  dreamDuration: { fontSize: 12, color: theme.textMuted },
   dreamExcerpt: {
-    fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26,
+    fontSize: 16, color: theme.textPrimary, lineHeight: 26,
   },
-  dreamNone: { fontSize: 16, color: 'rgba(226,232,240,0.45)' },
+  dreamNone: { fontSize: 16, color: theme.textMuted },
   fullInput: {
-    color: '#FFF', fontSize: 16,
+    color: theme.textPrimary, fontSize: 16,
     lineHeight: 26, textAlignVertical: 'top', minHeight: 250,
   },
   fullInputReadOnly: {
-    color: 'rgba(255,255,255,0.85)', fontSize: 16,
+    color: theme.textPrimary, fontSize: 16,
     lineHeight: 26, minHeight: 80,
   },
   fullInputPlaceholder: {
-    color: 'rgba(255,255,255,0.25)', fontSize: 15,
+    color: theme.textMuted, fontSize: 15,
     lineHeight: 24, fontStyle: 'italic',
   },
 
@@ -428,21 +433,21 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#C9AE78', gap: 12,
   },
   premiumTitle: {
-    color: '#FFFFFF', fontSize: 16, fontWeight: '600', textAlign: 'center',
+    color: theme.textPrimary, fontSize: 16, fontWeight: '600', textAlign: 'center',
   },
   modelHint: {
-    color: 'rgba(255,255,255,0.62)', fontSize: 13, textAlign: 'center', lineHeight: 19,
+    color: theme.textSecondary, fontSize: 13, textAlign: 'center', lineHeight: 19,
   },
   premiumBody: {
-    color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center', lineHeight: 20,
+    color: theme.textMuted, fontSize: 14, textAlign: 'center', lineHeight: 20,
   },
 
 
   interpretationParagraph: {
-    color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 24,
+    color: theme.textSecondary, fontSize: 15, lineHeight: 24,
   },
   reflectionQuestion: {
-    color: '#FFFFFF', fontSize: 14,
+    color: theme.textPrimary, fontSize: 14,
     lineHeight: 22,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(201,174,120,0.2)',
@@ -452,15 +457,15 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end', paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,191,140,0.3)',
   },
-  rerunBtnText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
-  reinterpretHint: { color: 'rgba(255,255,255,0.38)', fontSize: 12, textAlign: 'right' },
+  rerunBtnText: { color: theme.textPrimary, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  reinterpretHint: { color: theme.textMuted, fontSize: 12, textAlign: 'right' },
 
   // AI Gemini interpretation
   aiSection: { marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(217,191,140,0.2)', width: '100%' },
   aiBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, backgroundColor: 'rgba(217,191,140,0.08)', borderWidth: 1, borderColor: 'rgba(217,191,140,0.25)' },
   aiBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   aiLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
-  aiLoadingText: { fontSize: 13, color: 'rgba(255,255,255,0.4)',  },
+  aiLoadingText: { fontSize: 13, color: theme.textMuted,  },
   aiErrorText: { fontSize: 13, color: '#CD7F5D', textAlign: 'center', paddingVertical: 8 },
   aiResultBox: { marginTop: 4, width: '100%' },
   aiResultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },

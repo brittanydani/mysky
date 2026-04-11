@@ -3,7 +3,8 @@ import { StyleSheet, View, ViewStyle } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Ionicons } from '@expo/vector-icons';
 import { SkiaGradient } from './SkiaGradient';
-import { METALLIC_GOLD, type MetallicVariant, METALLIC_VARIANTS, metallicForHex } from '../../constants/metallicPalettes';
+import { type MetallicVariant, resolveMetallicGradient } from '../../constants/metallicPalettes';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface MetallicIconProps {
   name: React.ComponentProps<typeof Ionicons>['name'];
@@ -29,13 +30,15 @@ export const MetallicIcon: React.FC<MetallicIconProps> = ({
   color,
   colors: colorsProp,
 }) => {
-  const gradientColors = colorsProp
-    ? [...colorsProp]
-    : variant
-      ? [...METALLIC_VARIANTS[variant]]
-      : color
-        ? [...metallicForHex(color)]
-        : [...METALLIC_GOLD];
+  const theme = useAppTheme();
+  const gradientColors = [
+    ...resolveMetallicGradient({
+      variant,
+      color,
+      colors: colorsProp,
+      isDark: theme.isDark,
+    }),
+  ];
 
   return (
     <View style={style}>

@@ -11,11 +11,10 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from '../components/keyboard/KeyboardControllerCompat';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { SkiaGradient as LinearGradient } from '../components/ui/SkiaGradient';
 import { useRouter } from 'expo-router';
@@ -31,6 +30,8 @@ import { EditorialPillGrid } from '../components/ui/EditorialPillGrid';
 import { formatTime, formatDate, timeOfDayLabel } from '../utils/triggerLogHelpers';
 import { keepLastWordsTogether } from '../utils/textLayout';
 import type { TriggerEvent, LogMode, NSState } from '../utils/triggerEventTypes';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 export type { TriggerEvent } from '../utils/triggerEventTypes';
 
 const STORAGE_KEY = '@mysky:trigger_events';
@@ -92,12 +93,14 @@ const NS_STATE_CARDS: Record<string, { label: string; sub: string; color: string
 // ─────────────────────────────────────────────────────────────────────────────
 
 function HistoryEntry({ entry }: { entry: TriggerEvent }) {
+  const histStyles = useThemedStyles(createHistStyles);
+  const theme = useAppTheme();
   const isDrain = entry.mode === 'drain';
   const accentColor = isDrain ? PALETTE.copper : PALETTE.sage;
   const stateCard = NS_STATE_CARDS[entry.nsState];
 
   return (
-    <VelvetGlassSurface style={histStyles.card} intensity={26} backgroundColor="rgba(15, 15, 20, 0.54)">
+    <VelvetGlassSurface style={histStyles.card} intensity={26} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.54)' : 'rgba(255, 255, 255, 0.82)'}>
       <View style={histStyles.cardHeader}>
         <View style={[histStyles.modeBadge, { backgroundColor: `${accentColor}18`, borderColor: `${accentColor}40` }]}>
           <Text style={[histStyles.modeBadgeText, { color: accentColor }]}>
@@ -152,7 +155,7 @@ function HistoryEntry({ entry }: { entry: TriggerEvent }) {
   );
 }
 
-const histStyles = StyleSheet.create({
+const createHistStyles = (theme: AppTheme) => StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 20,
@@ -166,21 +169,21 @@ const histStyles = StyleSheet.create({
     borderWidth: 1,
   },
   modeBadgeText: { fontSize: 10, fontWeight: '700', letterSpacing: 1 },
-  timeText: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
-  eventText: { fontSize: 15, color: PALETTE.textMain, lineHeight: 22, marginBottom: 12 },
+  timeText: { fontSize: 11, color: theme.textMuted },
+  eventText: { fontSize: 15, color: theme.textPrimary, lineHeight: 22, marginBottom: 12 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 8 },
   statePill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
   statePillText: { fontSize: 11, fontWeight: '600' },
-  areaPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  areaPillText: { fontSize: 11, color: 'rgba(255,255,255,0.5)' },
+  areaPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface, borderWidth: 1, borderColor: theme.cardBorder },
+  areaPillText: { fontSize: 11, color: theme.textSecondary },
   intensityWrap: { flexDirection: 'row', gap: 4, alignItems: 'center' },
   intensityDot: { width: 7, height: 7, borderRadius: 4 },
-  todLabel: { fontSize: 11, color: 'rgba(255,255,255,0.3)' },
+  todLabel: { fontSize: 11, color: theme.textMuted },
   sensationRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 },
-  sensationChip: { fontSize: 10, color: 'rgba(255,255,255,0.35)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-  resolutionBox: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  resolutionLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1.2, color: 'rgba(255,255,255,0.3)', marginBottom: 4 },
-  resolutionText: { fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 19 },
+  sensationChip: { fontSize: 10, color: theme.textSecondary, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface, borderWidth: 1, borderColor: theme.cardBorder },
+  resolutionBox: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.cardBorder },
+  resolutionLabel: { fontSize: 9, fontWeight: '700', letterSpacing: 1.2, color: theme.textMuted, marginBottom: 4 },
+  resolutionText: { fontSize: 13, color: theme.textSecondary, lineHeight: 19 },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,6 +191,8 @@ const histStyles = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function TriggerLogScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('log');
   const [mode, setMode] = useState<LogMode>('drain');
@@ -432,7 +437,7 @@ export default function TriggerLogScreen() {
   };
 
   const activeColor = mode === 'drain' ? PALETTE.crimson : PALETTE.gold;
-  const placeholderColor = 'rgba(255,255,255,0.35)';
+  const placeholderColor = theme.textMuted;
 
   return (
     <View style={styles.container}>
@@ -451,7 +456,7 @@ export default function TriggerLogScreen() {
           style={styles.confirmOverlay}
           pointerEvents="none"
         >
-          <VelvetGlassSurface style={styles.confirmCard} intensity={30} backgroundColor="rgba(15, 15, 20, 0.66)">
+          <VelvetGlassSurface style={styles.confirmCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(15, 15, 20, 0.66)' : 'rgba(255, 255, 255, 0.88)'}>
             <MetallicIcon
               name={mode === 'drain' ? 'pulse-outline' : 'sunny-outline'}
               size={44}
@@ -472,10 +477,11 @@ export default function TriggerLogScreen() {
           <Pressable
             style={styles.backButton}
             onPress={() => { Haptics.selectionAsync().catch(() => {}); router.back(); }}
+            hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <MetallicIcon name="chevron-back-outline" size={22} color={PALETTE.textMuted} />
+            <MetallicIcon name="chevron-back-outline" size={22} color={theme.textMuted} />
           </Pressable>
 
           {/* ── View mode toggle: Log / History ── */}
@@ -530,15 +536,14 @@ export default function TriggerLogScreen() {
         ) : (
 
         /* ════════════════════════ LOG VIEW ════════════════════════ */
-        <KeyboardAvoidingView
+        <KeyboardAwareScrollView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={0}
-        >
-        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          bottomOffset={24}
+          extraKeyboardSpace={12}
+          disableScrollOnKeyboardHide
         >
 
           {/* ── Mode Toggle ── */}
@@ -563,7 +568,7 @@ export default function TriggerLogScreen() {
             <VelvetGlassSurface
               style={[styles.inputGlass, { borderColor: `${activeColor}40` }]}
               intensity={30}
-              backgroundColor="rgba(18, 18, 24, 0.7)"
+              backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.7)' : 'rgba(255, 255, 255, 0.85)'}
               borderColor={`${activeColor}30`}
               highlightColor="rgba(255,255,255,0.16)"
               topEdgeColor="rgba(255,255,255,0.24)"
@@ -618,7 +623,7 @@ export default function TriggerLogScreen() {
                   key: area,
                   label: area,
                   selected: contextArea === area,
-                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  selectedBackgroundColor: theme.isDark ? 'rgba(255,255,255,0.92)' : 'rgba(181, 138, 58, 0.22)',
                   onPress: () => {
                     Haptics.selectionAsync().catch(() => {});
                     setContextArea((prev) => (prev === area ? null : area));
@@ -631,7 +636,7 @@ export default function TriggerLogScreen() {
                   label: area.label,
                   selected: contextArea === area.label,
                   variant: 'custom' as const,
-                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  selectedBackgroundColor: theme.isDark ? 'rgba(255,255,255,0.92)' : 'rgba(181, 138, 58, 0.22)',
                   onPress: () => {
                     Haptics.selectionAsync().catch(() => {});
                     setContextArea((prev) => (prev === area.label ? null : area.label));
@@ -655,7 +660,7 @@ export default function TriggerLogScreen() {
                   label: '+ Custom',
                   selected: showCustomAreaInput,
                   variant: 'utility' as const,
-                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  selectedBackgroundColor: theme.isDark ? 'rgba(255,255,255,0.92)' : 'rgba(181, 138, 58, 0.22)',
                   onPress: () => {
                     Haptics.selectionAsync().catch(() => {});
                     setShowCustomAreaInput((prev) => !prev);
@@ -801,7 +806,7 @@ export default function TriggerLogScreen() {
                   key: sensation,
                   label: sensation,
                   selected: selectedSensations.includes(sensation),
-                  selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                  selectedBackgroundColor: theme.isDark ? 'rgba(255,255,255,0.92)' : 'rgba(181, 138, 58, 0.22)',
                   onPress: () => toggleSensation(sensation),
                   labelStyle: styles.tagText,
                   selectedLabelStyle: styles.tagTextSelected,
@@ -813,7 +818,7 @@ export default function TriggerLogScreen() {
                     label: option.label,
                     selected: selectedSensations.includes(option.label),
                     variant: 'custom' as const,
-                    selectedBackgroundColor: 'rgba(255,255,255,0.92)',
+                    selectedBackgroundColor: theme.isDark ? 'rgba(255,255,255,0.92)' : 'rgba(181, 138, 58, 0.22)',
                     onPress: () => toggleSensation(option.label),
                     onLongPress: () => promptCustomSensationAction(option),
                     labelStyle: styles.tagText,
@@ -864,7 +869,7 @@ export default function TriggerLogScreen() {
             <VelvetGlassSurface
               style={styles.inputGlass}
               intensity={30}
-              backgroundColor="rgba(18, 18, 24, 0.7)"
+              backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.7)' : 'rgba(255, 255, 255, 0.85)'}
               borderColor={`${activeColor}24`}
               highlightColor="rgba(255,255,255,0.14)"
             >
@@ -894,7 +899,7 @@ export default function TriggerLogScreen() {
             <Pressable
               style={[
                 styles.sealBtn,
-                { backgroundColor: (!eventText.trim() || !selectedState || saving || saved) ? 'rgba(255,255,255,0.08)' : activeColor },
+                { backgroundColor: (!eventText.trim() || !selectedState || saving || saved) ? (theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(146, 124, 88, 0.18)') : activeColor },
               ]}
               onPress={handleSeal}
               disabled={!eventText.trim() || !selectedState || saving || saved}
@@ -909,50 +914,49 @@ export default function TriggerLogScreen() {
           </Animated.View>
 
           <View style={{ height: 48 }} />
-        </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
         )}
       </SafeAreaView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
 
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 14 },
-  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
 
-  viewToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.035)', borderRadius: 14, padding: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  viewToggleBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-  viewToggleBtnActive: { backgroundColor: 'rgba(255,255,255,0.09)', borderColor: 'rgba(255,255,255,0.16)' },
-  viewToggleText: { fontSize: 13, color: PALETTE.textMuted, fontWeight: '600' },
-  viewToggleTextActive: { color: PALETTE.textMain },
+  viewToggle: { flexDirection: 'row', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.035)' : theme.pillSurface, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: theme.cardBorder },
+  viewToggleBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 11, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.pillSurfaceMuted, borderWidth: 1, borderColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(146, 124, 88, 0.12)' },
+  viewToggleBtnActive: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.72)', borderColor: theme.isDark ? 'rgba(255,255,255,0.16)' : 'rgba(146, 124, 88, 0.2)' },
+  viewToggleText: { fontSize: 13, color: theme.textMuted, fontWeight: '600' },
+  viewToggleTextActive: { color: theme.textPrimary },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 24,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     letterSpacing: -0.8,
     lineHeight: 29,
     marginBottom: 6,
     maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)', lineHeight: 17 },
+  headerSubtitle: { fontSize: 12, color: theme.textSecondary, lineHeight: 17 },
 
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderRadius: 18,
     padding: 4,
     marginBottom: 30,
   },
-  toggleBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)' },
+  toggleBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 14, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
   toggleBtnActiveDrain: {
     backgroundColor: 'rgba(220, 50, 50, 0.12)',
     borderWidth: 1,
@@ -966,21 +970,21 @@ const styles = StyleSheet.create({
   toggleBtnActiveNourish: {
     backgroundColor: '#D4AF37',
   },
-  toggleText: { fontSize: 13, fontWeight: '700', color: PALETTE.textMuted, letterSpacing: 0.35 },
+  toggleText: { fontSize: 13, fontWeight: '700', color: theme.textMuted, letterSpacing: 0.35 },
   toggleTextActiveDrain: { color: 'rgba(255,255,255,0.92)' },
   toggleTextActiveNourish: { color: '#0A0A0F' },
 
   section: { marginBottom: 32 },
   sectionLabel: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.62)',
+    color: theme.textMuted,
     fontWeight: '700',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     marginTop: 8,
     marginBottom: 16,
   },
-  helperText: { fontSize: 12, color: 'rgba(255,255,255,0.62)', marginTop: -6, marginBottom: 14, lineHeight: 18 },
+  helperText: { fontSize: 12, color: theme.textMuted, marginTop: -6, marginBottom: 14, lineHeight: 18 },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   intensityScaleRow: { alignItems: 'center' },
@@ -991,23 +995,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: 0,
   },
-  intensityNum: { fontSize: 16, fontWeight: '700', color: PALETTE.textMuted },
+  intensityNum: { fontSize: 16, fontWeight: '700', color: theme.textMuted },
   intensityBtnSelected: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
   intensityNumSelected: { color: '#0A0A0F' },
-  intensityHint: { fontSize: 11, color: 'rgba(255,255,255,0.58)' },
+  intensityHint: { fontSize: 11, color: theme.textMuted },
 
   inputSection: { marginBottom: 32 },
   inputGlass: {
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
     paddingHorizontal: 24,
     paddingVertical: 0,
     minHeight: 154,
   },
   textInput: {
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontSize: 16,
     lineHeight: 24,
     minHeight: 154,
@@ -1020,20 +1024,20 @@ const styles = StyleSheet.create({
   stateCard: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     padding: 24,
   },
-  stateCardSelected: { backgroundColor: 'rgba(255,255,255,0.9)' },
-  stateTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain, marginBottom: 4 },
-  stateSub: { fontSize: 13, color: 'rgba(226,232,240,0.68)', lineHeight: 19 },
+  stateCardSelected: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.9)' : 'rgba(181, 138, 58, 0.16)' },
+  stateTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: 4 },
+  stateSub: { fontSize: 13, color: theme.textSecondary, lineHeight: 19 },
 
   tagCloud: {},
   addCueChip: { borderRadius: 20 },
-  utilityChip: { backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  tagText: { fontSize: 11, color: 'rgba(226,232,240,0.76)', fontWeight: '600' },
+  utilityChip: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface, borderWidth: 1, borderColor: theme.cardBorder },
+  tagText: { fontSize: 11, color: theme.textSecondary, fontWeight: '600' },
   tagTextSelected: { color: '#0A0A0F' },
-  addCueText: { color: PALETTE.textMuted },
+  addCueText: { color: theme.textMuted },
   adHocContextChip: { alignSelf: 'flex-start', marginTop: 6 },
 
   customAreaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
@@ -1042,18 +1046,18 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface,
     paddingHorizontal: 12,
     fontSize: 12,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
   },
   customAreaConfirm: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 18,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface,
   },
   customCueRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   customCueInput: {
@@ -1061,19 +1065,19 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface,
     paddingHorizontal: 14,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontSize: 12,
   },
-  customCueAdd: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)' },
+  customCueAdd: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 18, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface },
   customCueAddText: { fontSize: 12, fontWeight: '700' },
 
   submitSection: { paddingHorizontal: 0, marginBottom: 8 },
   submitHint: {
     fontSize: 12,
-    color: 'rgba(226,232,240,0.66)',
+    color: theme.textMuted,
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 18,
@@ -1093,8 +1097,8 @@ const styles = StyleSheet.create({
   // Empty state
   emptyState: { alignItems: 'center', paddingTop: 80 },
   emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, color: PALETTE.textMain, fontWeight: '700', marginBottom: 8 },
-  emptyText: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 21 },
+  emptyTitle: { fontSize: 20, color: theme.textPrimary, fontWeight: '700', marginBottom: 8 },
+  emptyText: { fontSize: 14, color: theme.textMuted, textAlign: 'center', lineHeight: 21 },
 
   // Post-save overlay
   confirmOverlay: {
@@ -1111,6 +1115,6 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
 
-  confirmTitle: { fontSize: 28, color: PALETTE.textMain, fontWeight: '800', marginBottom: 10 },
-  confirmBody: { fontSize: 14, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 21 },
+  confirmTitle: { fontSize: 28, color: theme.textPrimary, fontWeight: '800', marginBottom: 10 },
+  confirmBody: { fontSize: 14, color: theme.textMuted, textAlign: 'center', lineHeight: 21 },
 });

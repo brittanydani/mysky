@@ -40,6 +40,8 @@ import { MetallicIcon } from '../../../components/ui/MetallicIcon';
 import { SkiaDynamicCosmos } from '../../../components/ui/SkiaDynamicCosmos';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { type AppTheme } from '../../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../../context/ThemeContext';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -185,6 +187,8 @@ function getDefaultProfiles(): AllProfiles {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function VisualCalibration() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const navigation = useNavigation();
 
@@ -574,10 +578,10 @@ export default function VisualCalibration() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
+    backgroundColor: theme.background,
     padding: 24,
   },
   safe: {
@@ -596,27 +600,27 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   headerRow: { paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, justifyContent: 'center', alignItems: 'center' },
+  closeIcon: { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
   header: {
     marginBottom: 16,
   },
   eyebrow: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 2,
   },
   title: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 34,
     fontWeight: '800',
     letterSpacing: -0.5,
     marginTop: 8,
   },
   description: {
-    color: 'rgba(255,255,255,0.5)',
+    color: theme.textSecondary,
     fontSize: 14,
     lineHeight: 22,
     marginTop: 12,
@@ -635,12 +639,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   promptTitle: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '700',
   },
   promptText: {
-    color: 'rgba(255,255,255,0.55)',
+    color: theme.textSecondary,
     fontSize: 14,
     lineHeight: 21,
   },
@@ -656,10 +660,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: theme.cardBorder,
   },
   cardLabel: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -677,19 +681,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   profileText: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
   hint: {
-    color: 'rgba(255,255,255,0.3)',
+    color: theme.textMuted,
     fontSize: 12,
     marginTop: 12,
   },
 
   // ── All-categories summary ──
   summaryHint: {
-    color: 'rgba(255,255,255,0.3)',
+    color: theme.textMuted,
     fontSize: 12,
     marginBottom: 8,
   },
@@ -698,7 +702,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: theme.cardBorder,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -706,7 +710,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: theme.cardBorder,
   },
   summaryRowActive: {
     backgroundColor: 'transparent',
@@ -715,13 +719,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   summaryLabel: {
-    color: 'rgba(255,255,255,0.5)',
+    color: theme.textSecondary,
     fontSize: 14,
     fontWeight: '500',
     flex: 1,
   },
   summaryLabelActive: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontWeight: '600',
   },
   summaryChip: {
@@ -730,7 +734,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   summaryValue: {
-    color: 'rgba(255,255,255,0.45)',
+    color: theme.textMuted,
     fontSize: 13,
     fontWeight: '500',
     minWidth: 60,
@@ -738,7 +742,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   summaryValueActive: {
-    color: 'rgba(255,255,255,0.7)',
+    color: theme.textSecondary,
   },
 
   saveButton: {

@@ -101,9 +101,39 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-function normalizeDailyCheckInPayload(payload: Record<string, unknown>): Record<string, unknown> {
+function clampMoodValue(value: number): number {
+  return Math.max(0, Math.min(10, Math.round(value)));
+}
+
+async function normalizeDailyCheckInPayload(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
   const normalized = { ...payload };
   delete normalized.id;
+
+  const explicitMoodValue = normalized.mood_value;
+  if (typeof explicitMoodValue === 'number' && Number.isFinite(explicitMoodValue)) {
+    normalized.mood_value = clampMoodValue(explicitMoodValue);
+    return normalized;
+  }
+
+  const directMoodScore = normalized.moodScore;
+  if (typeof directMoodScore === 'number' && Number.isFinite(directMoodScore)) {
+    normalized.mood_value = clampMoodValue(directMoodScore);
+    return normalized;
+  }
+
+  const encryptedMoodScore = normalized.mood_score_enc;
+  if (typeof encryptedMoodScore === 'string' && encryptedMoodScore.length > 0) {
+    try {
+      const decryptedMoodScore = await FieldEncryptionService.decryptField(encryptedMoodScore);
+      const parsedMoodValue = Number(decryptedMoodScore);
+      if (Number.isFinite(parsedMoodValue)) {
+        normalized.mood_value = clampMoodValue(parsedMoodValue);
+      }
+    } catch (error) {
+      logger.warn('[SyncService] Failed to derive mood_value from encrypted daily_check_ins payload.', error);
+    }
+  }
+
   return normalized;
 }
 
@@ -218,7 +248,7 @@ export async function flushQueue(): Promise<void> {
 
         if (item.operation === 'upsert') {
           const normalizedPayload = item.table_name === 'daily_check_ins'
-            ? normalizeDailyCheckInPayload(payload)
+            ? await normalizeDailyCheckInPayload(payload)
             : payload;
           const onConflict = item.table_name === 'daily_check_ins'
             ? 'user_id,log_date,time_of_day'

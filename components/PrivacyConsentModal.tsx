@@ -10,6 +10,8 @@ import * as Haptics from 'expo-haptics';
 import { SkiaDynamicCosmos } from './ui/SkiaDynamicCosmos';
 import { MetallicIcon } from './ui/MetallicIcon';
 import { MetallicText } from './ui/MetallicText';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -23,9 +25,9 @@ const PALETTE = {
   starlight: 'rgba(79, 79, 127, 0.10)',
 };
 
-function LivingBackground() {
+function LivingBackground({ backgroundColor }: { backgroundColor: string }) {
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020817' }]} pointerEvents="none" />
+    <View style={[StyleSheet.absoluteFill, { backgroundColor }]} pointerEvents="none" />
   );
 }
 
@@ -38,6 +40,8 @@ export default function PrivacyConsentModal({
   visible,
   onConsent,
 }: PrivacyConsentModalProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const [showDeclineHint, setShowDeclineHint] = useState(false);
 
   useEffect(() => {
@@ -63,7 +67,7 @@ export default function PrivacyConsentModal({
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen">
       <View style={styles.container}>
-        <LivingBackground />
+        <LivingBackground backgroundColor={theme.background} />
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <SkiaDynamicCosmos fill="transparent" />
         </View>
@@ -99,7 +103,7 @@ export default function PrivacyConsentModal({
                   </View>
                 </View>
 
-                <View style={[styles.glassSection, { borderColor: 'rgba(201, 174, 120, 0.2)' }]}>
+                <View style={[styles.glassSection, styles.goldSection]}>
                   <Text style={styles.sectionLabel}>How We Protect It</Text>
                   <View style={styles.dataRow}>
                     <MetallicIcon name="lock-closed-outline" size={16} color={PALETTE.silverBlue} />
@@ -115,7 +119,7 @@ export default function PrivacyConsentModal({
                   </View>
                 </View>
 
-                <View style={[styles.glassSection, { borderColor: 'rgba(110, 191, 139, 0.2)' }]}>
+                <View style={[styles.glassSection, styles.emeraldSection]}>
                   <Text style={styles.sectionLabel}>Your Agreement</Text>
                   <View style={styles.dataRow}>
                     <MetallicIcon name="document-text-outline" size={16} color={PALETTE.emerald} />
@@ -165,8 +169,14 @@ export default function PrivacyConsentModal({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+const createStyles = (theme: AppTheme) => {
+  const glassSurface = theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255, 252, 247, 0.92)';
+  const glassBorder = theme.isDark ? PALETTE.glassBorder : 'rgba(146, 124, 88, 0.14)';
+  const mutedGold = theme.isDark ? 'rgba(201, 174, 120, 0.2)' : 'rgba(181, 138, 58, 0.24)';
+  const mutedEmerald = theme.isDark ? 'rgba(110, 191, 139, 0.2)' : 'rgba(78, 138, 100, 0.24)';
+
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 52, paddingBottom: 28 },
@@ -182,38 +192,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: 'rgba(232,214,174,0.18)',
+    borderColor: theme.isDark ? 'rgba(232,214,174,0.18)' : 'rgba(181, 138, 58, 0.2)',
   },
   title: { 
     fontSize: 30, 
     fontWeight: '800', 
     letterSpacing: -0.7, 
-    color: '#F5F5F7', 
+    color: theme.textPrimary, 
     marginBottom: 8, 
     textAlign: 'center' 
   },
-  subtitle: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5, color: 'rgba(255,255,255,0.65)', textAlign: 'center', paddingHorizontal: 20, lineHeight: 20,  },
+  subtitle: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5, color: theme.textSecondary, textAlign: 'center', paddingHorizontal: 20, lineHeight: 20,  },
   
   contentContainer: { marginBottom: 28 },
   glassSection: {
     padding: 20,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: glassSurface,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: glassBorder,
     marginBottom: 12,
   },
-  sectionLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2.5, textTransform: 'uppercase', color: '#86868B', marginBottom: 10 },
+  goldSection: { borderColor: mutedGold },
+  emeraldSection: { borderColor: mutedEmerald },
+  sectionLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 2.5, textTransform: 'uppercase', color: theme.textMuted, marginBottom: 10 },
   dataRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, gap: 10 },
-  dataText: { fontSize: 12, color: "#FFFFFF", flex: 1 },
+  dataText: { fontSize: 12, color: theme.textPrimary, flex: 1 },
   
   footerActions: { marginTop: 24, gap: 16 },
   acceptBtn: { borderRadius: 28, overflow: 'hidden', },
   btnGradient: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
   acceptBtnText: { fontSize: 14, fontWeight: '700', color: '#020817' },
   declineBtn: { paddingVertical: 12, alignItems: 'center' },
-  declineBtnText: { fontSize: 12, color: "#FFFFFF", fontWeight: '600', textDecorationLine: 'underline' },
-  declineHint: { fontSize: 13, color: 'rgba(255,255,255,0.65)', textAlign: 'center', marginTop: 4 },
-
-
-});
+  declineBtnText: { fontSize: 12, color: theme.textPrimary, fontWeight: '600', textDecorationLine: 'underline' },
+  declineHint: { fontSize: 13, color: theme.textSecondary, textAlign: 'center', marginTop: 4 },
+  });
+};

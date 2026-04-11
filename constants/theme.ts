@@ -96,10 +96,10 @@ export const MYSTIC = {
 
 export const AURORA = {
   // Backgrounds
-  bgTop: '#F5EFE4',
-  bgMid: '#F7F2E8',
-  bgBottom: '#EFE5D3',
-  bgDeep: '#E8DDC8',
+  bgTop: '#FCF8F1',
+  bgMid: '#FBF6EE',
+  bgBottom: '#F6EFE4',
+  bgDeep: '#EEE4D6',
 
   // Text hierarchy
   heading: '#162033',
@@ -138,9 +138,9 @@ export const AURORA = {
   starDim: 'rgba(138,106,50,0.52)',
 
   // Glass card system
-  cardBg: 'rgba(255, 255, 255, 0.72)',
-  cardBorder: 'rgba(93, 74, 42, 0.10)',
-  cardHighlight: 'rgba(255, 255, 255, 0.44)',
+  cardBg: 'rgba(255, 252, 247, 0.92)',
+  cardBorder: 'rgba(146, 124, 88, 0.12)',
+  cardHighlight: 'rgba(255, 255, 255, 0.74)',
 
   // Semantic accents
   success: '#4E8A64',
@@ -171,10 +171,10 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     // Background Colors
     background: palette.bgTop,
     backgroundDeep: palette.bgDeep,
-    backgroundSecondary: isDark ? '#101119' : '#FAF6EE',
-    backgroundTertiary: isDark ? '#151724' : '#F1E8D9',
-    surface: isDark ? '#12141D' : '#FFFFFF',
-    surfaceLight: isDark ? '#181B27' : '#FBF7F0',
+    backgroundSecondary: isDark ? '#101119' : '#FFF9F2',
+    backgroundTertiary: isDark ? '#151724' : '#F7F0E5',
+    surface: isDark ? '#12141D' : '#FFFDF9',
+    surfaceLight: isDark ? '#181B27' : '#FFFFFF',
 
     // Accent Colors
     indigo: isDark ? '#2D3A5C' : '#6A7B96',
@@ -204,12 +204,16 @@ function createTheme(palette: ThemePalette, mode: 'light' | 'dark') {
     warning: palette.restoreGold,
 
     // Card Colors
-    cardGradientStart: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.82)',
-    cardGradientEnd: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(250, 246, 238, 0.94)',
+    cardGradientStart: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 253, 249, 0.96)',
+    cardGradientEnd: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(246, 239, 228, 0.98)',
     cardBorder: palette.cardBorder,
+    cardSurface: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(246, 247, 250, 0.92)',
+    cardSurfaceStrong: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(250, 251, 252, 0.95)',
+    pillSurface: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(240, 243, 247, 0.92)',
+    pillSurfaceMuted: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(235, 239, 244, 0.86)',
 
     // Locked/Premium
-    lockedOverlay: isDark ? 'rgba(2, 8, 23, 0.7)' : 'rgba(245, 239, 228, 0.82)',
+    lockedOverlay: isDark ? 'rgba(2, 8, 23, 0.7)' : 'rgba(252, 248, 241, 0.92)',
     premiumGlow: isDark ? 'rgba(232, 214, 174, 0.25)' : 'rgba(201, 174, 120, 0.18)',
 
     // Spacing

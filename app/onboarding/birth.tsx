@@ -12,15 +12,13 @@ import { AstrologyCalculator } from '../../services/astrology/calculator';
 import { localDb } from '../../services/storage/localDb';
 import { logger } from '../../utils/logger';
 import { IdentityVault, CosmicIdentity } from '../../utils/IdentityVault';
-
-// ── Cinematic Palette ──
-const PALETTE = {
-  gold: '#C9AE78',
-  textMain: '#FFFFFF',
-};
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 export default function OnboardingBirthScreen() {
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const [visible, setVisible] = useState(true);
   const [savedName, setSavedName] = useState<string | undefined>(undefined);
 
@@ -103,10 +101,10 @@ export default function OnboardingBirthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#0A0A0F' 
+    backgroundColor: theme.background
   },
   safeArea: { 
     flex: 1 
@@ -119,7 +117,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   headerText: { 
-    color: PALETTE.textMain, 
+    color: theme.textPrimary, 
     fontSize: 34, 
     fontWeight: '800', 
     letterSpacing: -0.5,

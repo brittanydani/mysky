@@ -25,17 +25,15 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const STORAGE_KEY = '@mysky:archetype_profile';
 
-const PALETTE = {
+const ACCENT = {
   lavender: '#A89BC8',
   gold: '#D4AF37',
   rose: '#D4A3B3',
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.45)',
-  glassBorder: 'rgba(255,255,255,0.08)',
-  bg: '#0A0A0F',
 };
 
 type ArchetypeKey = 'hero' | 'caregiver' | 'seeker' | 'sage' | 'rebel';
@@ -166,6 +164,8 @@ interface SavedProfile {
 
 export default function ArchetypesScreen() {
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const [answers, setAnswers] = useState<Record<number, ArchetypeKey>>({});
   const [savedProfile, setSavedProfile] = useState<SavedProfile | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -269,7 +269,7 @@ export default function ArchetypesScreen() {
                 const scoreCeiling = Math.max(...Object.values(savedProfile.scores), 1);
                 return (
                   <>
-              <VelvetGlassSurface style={[styles.resultCard, { borderColor: `${dominant.color}40` }]} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)"> 
+              <VelvetGlassSurface style={[styles.resultCard, { borderColor: `${dominant.color}40` }]} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}> 
                 <MetallicText style={styles.resultIcon} color={dominant.color}>{dominant.icon}</MetallicText>
                 <MetallicText style={styles.resultName} color={dominant.color}>{dominant.name}</MetallicText>
                 <Text style={styles.resultTagline}>{dominant.tagline}</Text>
@@ -286,7 +286,7 @@ export default function ArchetypesScreen() {
               </VelvetGlassSurface>
 
               {/* Score breakdown */}
-              <VelvetGlassSurface style={styles.scoresCard} intensity={42} backgroundColor="rgba(18, 18, 24, 0.56)">
+              <VelvetGlassSurface style={styles.scoresCard} intensity={42} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.56)' : 'rgba(255, 255, 255, 0.82)'}>
                 <Text style={styles.scoresTitle}>SCORE BREAKDOWN</Text>
                 {(Object.keys(savedProfile.scores) as ArchetypeKey[])
                   .sort((a, b) => savedProfile.scores[b] - savedProfile.scores[a])
@@ -324,7 +324,7 @@ export default function ArchetypesScreen() {
                 if (totalRefVotes < 6 || refDominant === savedProfile.dominant) return null;
                 const arc = ARCHETYPES[refDominant];
                 return (
-                  <VelvetGlassSurface style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]} intensity={38} backgroundColor="rgba(18, 18, 24, 0.52)"> 
+                  <VelvetGlassSurface style={[styles.evolutionCard, { borderColor: `${arc.color}30` }]} intensity={38} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.52)' : 'rgba(255, 255, 255, 0.82)'}> 
                     <MetallicText style={styles.evolutionIcon} color={arc.color}>{arc.icon}</MetallicText>
                     <View style={styles.evolutionText}>
                       <Text style={[styles.evolutionTitle, { color: arc.color }]}>
@@ -401,7 +401,7 @@ export default function ArchetypesScreen() {
                       colors={['rgba(168,155,200,0.35)', 'rgba(168,155,200,0.12)']}
                       style={StyleSheet.absoluteFill}
                     />
-                    <MetallicText style={styles.submitBtnText} color={PALETTE.lavender}>Reveal My Archetype</MetallicText>
+                    <MetallicText style={styles.submitBtnText} color={ACCENT.lavender}>Reveal My Archetype</MetallicText>
                   </Pressable>
                 </Animated.View>
               )}
@@ -415,30 +415,30 @@ export default function ArchetypesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 360 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 30,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     letterSpacing: -0.8,
     marginBottom: 6,
     maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
+  headerSubtitle: { fontSize: 12, color: theme.textSecondary },
 
   instruction: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.62)',
+    color: theme.textMuted,
     lineHeight: 21,
     marginBottom: 28,
   },
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   promptQuestion: {
     fontSize: 16,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     marginBottom: 14,
     lineHeight: 22,
@@ -468,10 +468,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
   },
-  optionText: { fontSize: 13, color: 'rgba(255,255,255,0.76)', flex: 1, lineHeight: 18 },
+  optionText: { fontSize: 13, color: theme.textSecondary, flex: 1, lineHeight: 18 },
   optionCheck: { fontSize: 14, fontWeight: '700', marginLeft: 8 },
 
   submitRow: { marginTop: 8, marginBottom: 24, alignItems: 'center' },
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  submitBtnText: { fontSize: 15, color: PALETTE.lavender, fontWeight: '700' },
+  submitBtnText: { fontSize: 15, color: '#A89BC8', fontWeight: '700' },
 
   // Result
   resultCard: { borderRadius: 28, padding: 28, marginBottom: 20, alignItems: 'center' },
@@ -493,42 +493,42 @@ const styles = StyleSheet.create({
   resultName: { fontSize: 26, fontWeight: '700', marginBottom: 6 },
   resultTagline: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.72)',
+    color: theme.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
-  divider: { width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 20 },
-  dividerThin: { width: '100%', height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 14 },
+  divider: { width: '100%', height: 1, backgroundColor: theme.cardBorder, marginVertical: 20 },
+  dividerThin: { width: '100%', height: 1, backgroundColor: theme.cardBorder, marginVertical: 14 },
   traitLabel: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.5,
-    color: 'rgba(255,255,255,0.52)',
+    color: theme.textMuted,
     marginBottom: 6,
     alignSelf: 'flex-start',
   },
-  traitText: { fontSize: 14, color: 'rgba(255,255,255,0.78)', lineHeight: 20, alignSelf: 'flex-start' },
+  traitText: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, alignSelf: 'flex-start' },
 
   scoresCard: { borderRadius: 28, padding: 28, marginBottom: 20, gap: 12 },
   scoresTitle: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.5,
-    color: 'rgba(255,255,255,0.52)',
+    color: theme.textMuted,
     marginBottom: 4,
   },
   scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   scoreIcon: { fontSize: 16, width: 20, textAlign: 'center' },
-  scoreName: { fontSize: 13, color: 'rgba(255,255,255,0.72)', width: 100 },
+  scoreName: { fontSize: 13, color: theme.textSecondary, width: 100 },
   scoreBarBg: {
     flex: 1,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: theme.cardBorder,
     overflow: 'hidden',
   },
   scoreBarFill: { height: '100%', borderRadius: 2 },
-  scoreNum: { fontSize: 12, color: 'rgba(255,255,255,0.52)', width: 16, textAlign: 'right' },
+  scoreNum: { fontSize: 12, color: theme.textMuted, width: 16, textAlign: 'right' },
 
   retakeBtn: {
     alignSelf: 'center',
@@ -536,10 +536,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: theme.cardBorder,
     marginBottom: 8,
   },
-  retakeBtnText: { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
+  retakeBtnText: { fontSize: 13, color: theme.textMuted },
 
   evolutionCard: {
     flexDirection: 'row',
@@ -553,5 +553,5 @@ const styles = StyleSheet.create({
   evolutionIcon: { fontSize: 28, marginTop: 2 },
   evolutionText: { flex: 1, gap: 4 },
   evolutionTitle: { fontSize: 14, fontWeight: '700', letterSpacing: 0.2 },
-  evolutionBody: { fontSize: 13, color: 'rgba(255,255,255,0.66)', lineHeight: 19 },
+  evolutionBody: { fontSize: 13, color: theme.textMuted, lineHeight: 19 },
 });

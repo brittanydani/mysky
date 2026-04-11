@@ -2,7 +2,8 @@ import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { SkiaGradient } from './SkiaGradient';
-import { METALLIC_GOLD, type MetallicVariant, METALLIC_VARIANTS, metallicForHex } from '../../constants/metallicPalettes';
+import { type MetallicVariant, resolveMetallicGradient } from '../../constants/metallicPalettes';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface MetallicLucideIconProps {
   /** The Lucide icon component (e.g. Home, Activity) */
@@ -31,13 +32,15 @@ export const MetallicLucideIcon: React.FC<MetallicLucideIconProps> = ({
   color,
   colors: colorsProp,
 }) => {
-  const gradientColors = colorsProp
-    ? [...colorsProp]
-    : variant
-      ? [...METALLIC_VARIANTS[variant]]
-      : color
-        ? [...metallicForHex(color)]
-        : [...METALLIC_GOLD];
+  const theme = useAppTheme();
+  const gradientColors = [
+    ...resolveMetallicGradient({
+      variant,
+      color,
+      colors: colorsProp,
+      isDark: theme.isDark,
+    }),
+  ];
 
   return (
     <View style={style}>

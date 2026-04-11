@@ -235,8 +235,18 @@ const SkiaSleepGraph = memo(function SkiaSleepGraph({
               end={vec(width - MARGIN.right, MARGIN.top)}
               colors={[COLORS.restless, COLORS.amethyst, COLORS.deepRestSoft]}
             />
+            <Shadow dx={0} dy={2} blur={6} color="rgba(40, 28, 64, 0.26)" />
             <Shadow dx={0} dy={0} blur={glowBlur} color="rgba(245, 232, 196, 0.34)" />
             <Shadow dx={0} dy={0} blur={coreGlowBlur} color="rgba(245, 232, 196, 0.68)" />
+          </Path>
+
+          <Path path={strokePath} style="stroke" strokeWidth={2.2} strokeCap="round" strokeJoin="round" opacity={0.9}>
+            <LinearGradient
+              start={vec(MARGIN.left, MARGIN.top)}
+              end={vec(width - MARGIN.right, MARGIN.top)}
+              colors={[COLORS.dreamMist, COLORS.deepRestSoft, '#FFFFFF']}
+            />
+            <Shadow dx={0} dy={1} blur={12} color="rgba(255, 245, 220, 0.42)" />
           </Path>
 
           <Path path={strokePath} style="stroke" strokeWidth={1.9} strokeCap="round" strokeJoin="round">

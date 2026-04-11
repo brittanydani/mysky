@@ -19,6 +19,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import * as Haptics from 'expo-haptics';
 
 import { supabase } from '../lib/supabase';
+import { isAutoDemoSeedEnabled } from '../constants/config';
 import { logger } from '../utils/logger';
 import { revenueCatService } from '../services/premium/revenuecat';
 import { DemoSeedService } from '../services/storage/demoSeedService';
@@ -53,6 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const isMounted = useRef(true);
 
+  const syncDemoArtifacts = useCallback(async (email: string | null | undefined) => {
+    if (isAutoDemoSeedEnabled()) {
+      await DemoSeedService.seedIfNeeded(email);
+      return;
+    }
+
+    await DemoSeedService.cleanupStaleDemoArtifacts(email);
+  }, []);
+
   useEffect(() => {
     isMounted.current = true;
     
@@ -70,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // Await so any RC initialization exception surfaces here rather
               // than as an unhandled fire-and-forget rejection.
               await revenueCatService.logIn(restored.user.id);
+              await syncDemoArtifacts(restored.user.email);
             }
           }
           break; // success
@@ -96,10 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isMounted.current) {
         setSession(newSession);
       }
-      if (event === 'SIGNED_IN' && newSession?.user) {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
         revenueCatService.logIn(newSession.user.id).catch((e) => logger.error('[AuthContext] RC logIn failed:', e));
-        // Auto-seed demo data for the App Store reviewer account only
-        DemoSeedService.seedIfNeeded(newSession.user.email).catch((e) => logger.warn('[AuthContext] Demo seed failed:', e));
+        syncDemoArtifacts(newSession.user.email).catch((e) => logger.warn('[AuthContext] Demo sync failed:', e));
       } else if (event === 'SIGNED_OUT') {
         revenueCatService.logOut().catch((e) => logger.error('[AuthContext] RC logOut failed:', e));
       }
@@ -139,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             // Top-up demo data for any days missed while app was closed.
             if (nextSession?.user?.email) {
-              DemoSeedService.seedIfNeeded(nextSession.user.email).catch((e) => logger.warn('[AuthContext] Demo seed failed:', e));
+              syncDemoArtifacts(nextSession.user.email).catch((e) => logger.warn('[AuthContext] Demo sync failed:', e));
             }
           } catch (e) {
             logger.warn('[AuthContext] Failed to sync session on foreground:', e);
@@ -153,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const sub = AppState.addEventListener('change', handleAppState);
     return () => sub.remove();
-  }, []);
+  }, [syncDemoArtifacts]);
 
   const signOut = useCallback(async () => {
     try {

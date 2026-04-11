@@ -21,19 +21,19 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { MetallicText } from '../components/ui/MetallicText';
 import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
-const PALETTE = {
+const ACCENT = {
   gold: '#D4B872',
   silverBlue: '#C9AE78',
   amethyst: '#9D76C1',
-  bg: '#0A0A0F',
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.58)',
-  glassBorder: 'rgba(255,255,255,0.10)',
 };
 
 export default function CheckInHub() {
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
 
   const nav = (route: Href) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -66,10 +66,11 @@ export default function CheckInHub() {
                   router.back();
                 }}
                 style={styles.closeButton}
+                hitSlop={10}
                 accessibilityRole="button"
                 accessibilityLabel="Close"
               >
-                <Ionicons name="close-outline" size={22} color={PALETTE.textMuted} />
+                <Ionicons name="close-outline" size={22} color={theme.textMuted} />
               </Pressable>
             </View>
           </Animated.View>
@@ -84,14 +85,14 @@ export default function CheckInHub() {
                 colors={['rgba(201, 174, 120, 0.12)', 'rgba(10, 10, 12, 0.8)']}
                 style={styles.entryCard}
               >
-                <View style={[styles.iconRing, { borderColor: PALETTE.silverBlue + '40', backgroundColor: PALETTE.silverBlue + '10' }]}>
-                  <MetallicIcon name="sparkles" size={24} color={PALETTE.silverBlue} />
+                <View style={[styles.iconRing, { borderColor: ACCENT.silverBlue + '40', backgroundColor: ACCENT.silverBlue + '10' }]}>
+                  <MetallicIcon name="sparkles" size={24} color={ACCENT.silverBlue} />
                 </View>
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Today&apos;s Questions</Text>
                   <Text style={styles.cardDescription}>Open your daily guided reflection prompts and record each category when you&apos;re ready.</Text>
                 </View>
-                <Ionicons name="chevron-forward-outline" size={18} color={PALETTE.textMuted} />
+                <Ionicons name="chevron-forward-outline" size={18} color={theme.textMuted} />
               </LinearGradient>
             </Pressable>
           </Animated.View>
@@ -107,14 +108,14 @@ export default function CheckInHub() {
                 colors={['rgba(212, 184, 114, 0.12)', 'rgba(10, 10, 12, 0.8)']}
                 style={styles.entryCard}
               >
-                <View style={[styles.iconRing, { borderColor: PALETTE.gold + '40', backgroundColor: PALETTE.gold + '10' }]}>
-                  <MetallicIcon name="pulse-outline" size={26} color={PALETTE.gold} />
+                <View style={[styles.iconRing, { borderColor: ACCENT.gold + '40', backgroundColor: ACCENT.gold + '10' }]}>
+                  <MetallicIcon name="pulse-outline" size={26} color={ACCENT.gold} />
                 </View>
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Mood & Energy</Text>
                   <Text style={styles.cardDescription}>Sync your current emotional and physical state.</Text>
                 </View>
-                <Ionicons name="chevron-forward-outline" size={18} color={PALETTE.textMuted} />
+                <Ionicons name="chevron-forward-outline" size={18} color={theme.textMuted} />
               </LinearGradient>
             </Pressable>
           </Animated.View>
@@ -130,14 +131,14 @@ export default function CheckInHub() {
                 colors={['rgba(157, 118, 193, 0.1)', 'rgba(10, 10, 12, 0.8)']}
                 style={styles.entryCard}
               >
-                <View style={[styles.iconRing, { borderColor: PALETTE.amethyst + '40', backgroundColor: PALETTE.amethyst + '10' }]}>
-                  <MetallicIcon name="moon-outline" size={24} color={PALETTE.amethyst} />
+                <View style={[styles.iconRing, { borderColor: ACCENT.amethyst + '40', backgroundColor: ACCENT.amethyst + '10' }]}>
+                  <MetallicIcon name="moon-outline" size={24} color={ACCENT.amethyst} />
                 </View>
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Sleep & Dreams</Text>
                   <Text style={styles.cardDescription}>Log rest quality and capture subconscious imagery.</Text>
                 </View>
-                <Ionicons name="chevron-forward-outline" size={18} color={PALETTE.textMuted} />
+                <Ionicons name="chevron-forward-outline" size={18} color={theme.textMuted} />
               </LinearGradient>
             </Pressable>
           </Animated.View>
@@ -148,17 +149,21 @@ export default function CheckInHub() {
   );
 }
 
-const SectionHeader = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) => (
-  <View style={styles.sectionHeaderWrap}>
-    <View style={styles.sectionHeaderRow}>
-      <MetallicIcon name={icon} size={18} variant="gold" />
-      <MetallicText style={styles.sectionHeaderLabel} variant="gold">{label}</MetallicText>
-    </View>
-  </View>
-);
+const SectionHeader = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) => {
+  const styles = useThemedStyles(createStyles);
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  return (
+    <View style={styles.sectionHeaderWrap}>
+      <View style={styles.sectionHeaderRow}>
+        <MetallicIcon name={icon} size={18} variant="gold" />
+        <MetallicText style={styles.sectionHeaderLabel} variant="gold">{label}</MetallicText>
+      </View>
+    </View>
+  );
+};
+
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   glowOrb: {
@@ -174,27 +179,27 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
   },
-  title: { fontSize: 31, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
-  subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.72)' },
+  title: { fontSize: 31, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
+  subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: theme.textSecondary },
   section: { marginBottom: 0 },
   sectionHeaderWrap: { marginBottom: 20, marginTop: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sectionHeaderLabel: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', letterSpacing: 1.3, textTransform: 'uppercase' },
+  sectionHeaderLabel: { fontSize: 13, fontWeight: '700', color: theme.textPrimary, letterSpacing: 1.3, textTransform: 'uppercase' },
   entryCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderTopColor: 'rgba(255,255,255,0.18)',
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(22,32,51,0.18)',
     marginBottom: 32,
   },
   pressableActive: {
@@ -211,6 +216,6 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   cardText: { flex: 1 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: PALETTE.textMain, marginBottom: 6 },
-  cardDescription: { fontSize: 13, color: PALETTE.textMuted, lineHeight: 20 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: theme.textPrimary, marginBottom: 6 },
+  cardDescription: { fontSize: 13, color: theme.textMuted, lineHeight: 20 },
 });

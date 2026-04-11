@@ -7,10 +7,14 @@ import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStor
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import SkiaMetallicPill from '../../components/ui/SkiaMetallicPill';
 import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 export default function OnboardingIndex() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const [name, setName] = useState('');
 
   const trimmedName = name.trim();
@@ -45,7 +49,7 @@ export default function OnboardingIndex() {
             <TextInput
               style={styles.input}
               placeholder="Your name"
-              placeholderTextColor="rgba(255,255,255,0.2)"
+              placeholderTextColor={theme.textMuted}
               value={name}
               onChangeText={setName}
               autoFocus
@@ -73,14 +77,14 @@ export default function OnboardingIndex() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
   glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  title: { fontSize: 34, fontWeight: '800', color: '#FFF', marginBottom: 40, letterSpacing: -0.5 },
-  input: { fontSize: 24, color: '#FFFFFF', borderBottomWidth: 1, borderColor: 'rgba(201,174,120,0.3)', paddingBottom: 16 },
+  title: { fontSize: 34, fontWeight: '800', color: theme.textPrimary, marginBottom: 40, letterSpacing: -0.5 },
+  input: { fontSize: 24, color: theme.textPrimary, borderBottomWidth: 1, borderColor: 'rgba(201,174,120,0.3)', paddingBottom: 16 },
   footer: { paddingHorizontal: 24 },
 });
 

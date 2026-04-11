@@ -2,7 +2,8 @@ import React from 'react';
 import { Text, TextStyle, StyleSheet } from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { SkiaGradient } from './SkiaGradient';
-import { METALLIC_GOLD, type MetallicVariant, METALLIC_VARIANTS, metallicForHex } from '../../constants/metallicPalettes';
+import { type MetallicVariant, resolveMetallicGradient } from '../../constants/metallicPalettes';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface MetallicTextProps {
   children: React.ReactNode;
@@ -28,13 +29,15 @@ export const MetallicText: React.FC<MetallicTextProps> = ({
   colors: colorsProp,
   numberOfLines,
 }) => {
-  const gradientColors = colorsProp
-    ? [...colorsProp]
-    : variant
-      ? [...METALLIC_VARIANTS[variant]]
-      : color
-        ? [...metallicForHex(color)]
-        : [...METALLIC_GOLD];
+  const theme = useAppTheme();
+  const gradientColors = [
+    ...resolveMetallicGradient({
+      variant,
+      color,
+      colors: colorsProp,
+      isDark: theme.isDark,
+    }),
+  ];
 
   const mergedStyle = StyleSheet.flatten(style) as TextStyle;
 

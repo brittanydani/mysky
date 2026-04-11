@@ -33,6 +33,8 @@ import { MetallicText } from '../../components/ui/MetallicText';
 import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { PremiumSegmentedControl } from '../../components/ui/PremiumSegmentedControl';
 import { EnergyScrollContent } from '../../components/screens/EnergyScrollContent';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const PALETTE = {
   gold: '#C9AE78',
@@ -114,6 +116,8 @@ const IDENTITY_TABS = [
 ];
 
 export default function BlueprintScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
   const [chartName, setChartName] = useState<string | null>(null);
@@ -181,7 +185,7 @@ export default function BlueprintScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Open inner world hub"
               >
-                <Ionicons name="arrow-forward-outline" size={18} color="rgba(255,255,255,0.7)" />
+                <Ionicons name="arrow-forward-outline" size={18} color={theme.isDark ? 'rgba(255,255,255,0.7)' : theme.textMuted} />
               </Pressable>
             </View>
           </Animated.View>
@@ -239,15 +243,21 @@ export default function BlueprintScreen() {
 
 // Premium lock indicator
 const PremiumBadge = () => (
-  <View style={styles.badgeContainer}>
-    <MetallicLucideIcon icon={Star} size={12} strokeWidth={1.5} variant="gold" />
-  </View>
+  (() => {
+    const styles = useThemedStyles(createStyles);
+
+    return (
+      <View style={styles.badgeContainer}>
+        <MetallicLucideIcon icon={Star} size={12} strokeWidth={1.5} variant="gold" />
+      </View>
+    );
+  })()
 );
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -268,13 +278,13 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
   },
   headerTitle: {
     fontSize: 34,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -289,8 +299,8 @@ const styles = StyleSheet.create({
     padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 
@@ -302,19 +312,19 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.pillSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
   },
   cardTitle: {
     fontSize: 20,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     marginBottom: 4,
   },
   cardSubtitle: {
     fontSize: 16,
-    color: PALETTE.textMuted,
+    color: theme.textMuted,
     lineHeight: 24,
   },
 

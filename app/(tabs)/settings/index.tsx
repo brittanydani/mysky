@@ -36,9 +36,10 @@ import { logger } from '../../../utils/logger';
 import { SUPPORT_EMAIL } from '../../../constants/config';
 import { NotificationEngine } from '../../../utils/NotificationEngine';
 import { setHapticsEnabled } from '../../../utils/haptics';
-import SkiaCelestialToggle from '../../../components/ui/SkiaCelestialToggle';
+import GlassToggle from '../../../components/ui/GlassToggle';
 import ObsidianSettingsGroup, { ObsidianDivider } from '../../../components/ui/ObsidianSettingsGroup';
 import { GoldSubtitle } from '../../../components/ui/GoldSubtitle';
+import { VelvetGlassCard } from '../../../components/ui/VelvetGlassCard';
 import { useAppTheme, useThemedStyles, useThemePreference } from '../../../context/ThemeContext';
 
 const FAQ: { question: string; answer: string }[] = [
@@ -122,22 +123,21 @@ const FAQ: { question: string; answer: string }[] = [
 export default function SettingsScreen() {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const settingsFaqGradient = theme.isDark
+    ? ['rgba(14, 24, 48, 0.6)', 'rgba(10, 18, 36, 0.4)']
+    : [theme.cardSurfaceStrong, 'rgba(236, 240, 245, 0.98)'];
   const { preference: appearanceMode, resolvedMode, setPreference: setAppearanceMode } = useThemePreference();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = usePremium();
   const { user, signOut } = useAuth();
 
-  const successColor = theme.success;
   const errorColor = theme.error;
 
   // ── Accent colors for settings sections ──
-  const accentGold = '#C9AE78';
-  const accentAmethyst = '#9D76C1';
-  const accentBlue = '#C9AE78';
+  const accentGold = '#D4AF37';
   const accentCopper = '#CD7F5D';
-  const accentEmerald = '#6EBF8B';
-  const appearanceOptions: Array<{ value: 'light' | 'dark' | 'system'; label: string }> = [
+  const appearanceOptions: { value: 'light' | 'dark' | 'system'; label: string }[] = [
     { value: 'light', label: 'Light' },
     { value: 'dark', label: 'Dark' },
     { value: 'system', label: 'System' },
@@ -607,7 +607,14 @@ export default function SettingsScreen() {
 
           {/* ── Your Identity ── */}
           <Animated.View entering={FadeInDown.delay(150).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Your Identity" subtitle="Birth chart anchor point">
+            <VelvetGlassCard
+              interactive={false}
+              style={styles.groupShell}
+              backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
+              borderColor="rgba(212,175,55,0.12)"
+              topEdgeColor="rgba(255,255,255,0.18)"
+            >
+            <ObsidianSettingsGroup title="Your Identity" subtitle="Birth chart anchor point" style={styles.groupInner}>
               <View style={{ paddingHorizontal: 20 }}>
                 <View style={styles.identityCard}>
                   <View style={styles.identityRow}>
@@ -639,10 +646,18 @@ export default function SettingsScreen() {
                 </Pressable>
               </View>
             </ObsidianSettingsGroup>
+            </VelvetGlassCard>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key">
+            <VelvetGlassCard
+              interactive={false}
+              style={styles.groupShell}
+              backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
+              borderColor="rgba(212,175,55,0.12)"
+              topEdgeColor="rgba(255,255,255,0.18)"
+            >
+            <ObsidianSettingsGroup title="Encrypted Backup" subtitle="End-to-end encrypted, you control the key" style={styles.groupInner}>
                 <View style={{ paddingHorizontal: 20 }}>
                   <View style={styles.settingRow}>
                     <View style={styles.settingInfo}>
@@ -691,10 +706,18 @@ export default function SettingsScreen() {
                   </View>
                 </View>
             </ObsidianSettingsGroup>
+            </VelvetGlassCard>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(275).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Export" subtitle="Download your data as a PDF">
+            <VelvetGlassCard
+              interactive={false}
+              style={styles.groupShell}
+              backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
+              borderColor="rgba(212,175,55,0.12)"
+              topEdgeColor="rgba(255,255,255,0.18)"
+            >
+            <ObsidianSettingsGroup title="Export" subtitle="Download your data as a PDF" style={styles.groupInner}>
               <View style={{ paddingHorizontal: 20 }}>
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -730,10 +753,18 @@ export default function SettingsScreen() {
                 </Pressable>
               </View>
             </ObsidianSettingsGroup>
+            </VelvetGlassCard>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Security & Data Protection" subtitle="Your data is fully encrypted">
+            <VelvetGlassCard
+              interactive={false}
+              style={styles.groupShell}
+              backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
+              borderColor="rgba(212,175,55,0.12)"
+              topEdgeColor="rgba(255,255,255,0.18)"
+            >
+            <ObsidianSettingsGroup title="Security & Data Protection" subtitle="Your data is fully encrypted" style={styles.groupInner}>
                 <View style={styles.securityGrid}>
                   <View style={styles.securityRow}>
                     <View style={styles.securityBullet}>
@@ -776,11 +807,19 @@ export default function SettingsScreen() {
                   </View>
                 </View>
             </ObsidianSettingsGroup>
+            </VelvetGlassCard>
           </Animated.View>
 
           {/* ── Calibration (Celestial Toggles) ── */}
           <Animated.View entering={FadeInDown.delay(350).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Personalization" subtitle="Fine-tune your experience">
+            <VelvetGlassCard
+              interactive={false}
+              style={styles.groupShell}
+              backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
+              borderColor="rgba(212,175,55,0.12)"
+              topEdgeColor="rgba(255,255,255,0.18)"
+            >
+            <ObsidianSettingsGroup title="Personalization" subtitle="Fine-tune your experience" style={styles.groupInner}>
               <Pressable
                 style={{ paddingHorizontal: 20, paddingVertical: 14 }}
                 onPress={async () => {
@@ -800,32 +839,32 @@ export default function SettingsScreen() {
                       Set morning and evening reminder times
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
+                  <Ionicons name="chevron-forward-outline" size={16} color={styles.chevronTint.color} />
                 </View>
               </Pressable>
               <ObsidianDivider />
-              <SkiaCelestialToggle
+              <GlassToggle
                 value={hapticEnabled}
                 onToggle={(v) => togglePref('pref_haptic', v, setHapticEnabled)}
                 label="Haptic Feedback"
                 description="Tactile response on interactions"
               />
               <ObsidianDivider />
-              <SkiaCelestialToggle
+              <GlassToggle
                 value={dailyReminderEnabled}
                 onToggle={toggleDailyReminder}
                 label="Daily Check-in Reminder"
                 description="Daily nudge to log your internal weather"
               />
               <ObsidianDivider />
-              <SkiaCelestialToggle
+              <GlassToggle
                 value={moodInsightsEnabled}
                 onToggle={(v) => togglePref('pref_mood_insights', v, setMoodInsightsEnabled)}
                 label="Mood Pattern Insights"
                 description="Surface recurring patterns in your daily check-ins"
               />
               <ObsidianDivider />
-              <SkiaCelestialToggle
+              <GlassToggle
                 value={dreamLoggingEnabled}
                 onToggle={(v) => togglePref('pref_dream_logging', v, setDreamLoggingEnabled)}
                 label="Subconscious Capture"
@@ -870,10 +909,18 @@ export default function SettingsScreen() {
                 </Text>
               </View>
             </ObsidianSettingsGroup>
+            </VelvetGlassCard>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.section}>
-            <ObsidianSettingsGroup title="Privacy & Data" subtitle="Device-only, encrypted at rest">
+            <VelvetGlassCard
+              interactive={false}
+              style={styles.groupShell}
+              backgroundColor={theme.isDark ? 'rgba(15, 14, 18, 0.56)' : 'rgba(255,255,255,0.78)'}
+              borderColor="rgba(212,175,55,0.12)"
+              topEdgeColor="rgba(255,255,255,0.18)"
+            >
+            <ObsidianSettingsGroup title="Privacy & Data" subtitle="Device-only, encrypted at rest" style={styles.groupInner}>
               <Pressable style={{ paddingHorizontal: 20, paddingVertical: 14 }} onPress={() => setShowPrivacyModal(true)} accessibilityRole="button" accessibilityLabel="Privacy settings">
                 <View style={styles.settingRow}>
                   <View style={styles.settingInfo}>
@@ -885,7 +932,7 @@ export default function SettingsScreen() {
                       Export, delete, or manage your data on this device
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
+                  <Ionicons name="chevron-forward-outline" size={16} color={styles.chevronTint.color} />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -904,6 +951,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
             </ObsidianSettingsGroup>
+            </VelvetGlassCard>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(475).duration(600)} style={styles.section}>
@@ -926,10 +974,7 @@ export default function SettingsScreen() {
 
             {showFaq && (
               <View style={styles.settingCard}>
-                <LinearGradient
-                  colors={['rgba(14, 24, 48, 0.6)', 'rgba(10, 18, 36, 0.4)']}
-                  style={styles.glossaryGradient}
-                >
+                <LinearGradient colors={settingsFaqGradient} style={styles.glossaryGradient}>
                   {FAQ.map((item, index) => (
                     <Pressable
                       key={item.question}
@@ -977,7 +1022,7 @@ export default function SettingsScreen() {
                       How MySky handles your data and protects your privacy
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
+                  <Ionicons name="chevron-forward-outline" size={16} color={styles.chevronTint.color} />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -997,7 +1042,7 @@ export default function SettingsScreen() {
                       App terms, subscription details, and disclaimers
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
+                  <Ionicons name="chevron-forward-outline" size={16} color={styles.chevronTint.color} />
                 </View>
               </Pressable>
               <ObsidianDivider />
@@ -1017,7 +1062,7 @@ export default function SettingsScreen() {
                       Answers to common questions about privacy, backups, and premium
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward-outline" size={16} color="rgba(255,255,255,0.3)" />
+                  <Ionicons name="chevron-forward-outline" size={16} color={styles.chevronTint.color} />
                 </View>
               </Pressable>
             </ObsidianSettingsGroup>
@@ -1039,7 +1084,7 @@ export default function SettingsScreen() {
                     </View>
                     <Text style={styles.settingDescription}>Get help with MySky</Text>
                   </View>
-                  <Ionicons name="open-outline" size={18} color={theme.textMuted} />
+                  <Ionicons name="open-outline" size={16} color={styles.chevronTint.color} />
                 </View>
               </Pressable>
             </ObsidianSettingsGroup>
@@ -1067,7 +1112,7 @@ export default function SettingsScreen() {
                         Full personal story, healing insights, unlimited relationships, pattern analysis, encrypted backup, and personalized guidance — $4.99/mo • $29.99/yr • $129.99 lifetime.
                       </Text>
                     </View>
-                    <Ionicons name="arrow-forward-outline" size={20} color={theme.primary} />
+                    <Ionicons name="arrow-forward-outline" size={16} color={styles.chevronTint.color} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -1106,7 +1151,7 @@ export default function SettingsScreen() {
                         Manage, upgrade, or cancel your subscription
                       </Text>
                     </View>
-                    <Ionicons name="open-outline" size={18} color={theme.primary} />
+                    <Ionicons name="open-outline" size={16} color={styles.chevronTint.color} />
                   </View>
                 </LinearGradient>
               </Pressable>
@@ -1245,7 +1290,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   titleArea: { flex: 1 },
   greeting: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 34,
     fontWeight: '800',
     letterSpacing: -0.5,
@@ -1256,10 +1301,17 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
   section: { marginBottom: theme.spacing.xl },
+  groupShell: {
+    borderRadius: 28,
+  },
+  groupInner: {
+    width: '100%',
+    marginBottom: 0,
+  },
   sectionTitle: {
     fontSize: 19,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     marginBottom: 20,
     marginTop: 8,
   },
@@ -1269,12 +1321,15 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: theme.spacing.md,
   },
+  chevronTint: {
+    color: theme.isDark ? 'rgba(255,255,255,0.3)' : 'rgba(22,32,51,0.3)',
+  },
 
   settingCard: {
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     marginBottom: 16,
   },
   cardGradient: { padding: 28 },
@@ -1301,12 +1356,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: 'transparent',
-    borderRadius: theme.borderRadius.sm,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,248,240,0.54)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(212,175,55,0.14)' : 'rgba(181,138,58,0.18)',
   },
   syncButtonDisabled: { opacity: 0.6 },
-  syncButtonText: { fontSize: 14, color: '#C9AE78', fontWeight: '600', marginLeft: theme.spacing.xs },
+  syncButtonText: { fontSize: 14, color: '#C9AE78', fontWeight: '600' },
 
   // ── Identity ──
   identityCard: {
@@ -1382,8 +1441,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   premiumDescription: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
 
   privacyInfo: {
-    backgroundColor: 'transparent',
-    borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,249,243,0.6)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(181,138,58,0.12)',
     padding: theme.spacing.md,
     gap: theme.spacing.sm,
   },
@@ -1398,28 +1459,33 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flexDirection: 'row',
     gap: theme.spacing.sm,
     marginTop: theme.spacing.md,
+    padding: 4,
+    borderRadius: 24,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,249,243,0.5)',
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(181,138,58,0.12)',
   },
   appearanceChip: {
     flex: 1,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    paddingVertical: 10,
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(181,138,58,0.12)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.72)',
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   appearanceChipActive: {
-    backgroundColor: 'rgba(201, 174, 120, 0.18)',
-    borderColor: 'rgba(201, 174, 120, 0.50)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.82)' : 'rgba(212,175,55,0.22)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(212,175,55,0.36)',
   },
   appearanceChipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.4)',
+    color: theme.isDark ? 'rgba(255,255,255,0.62)' : 'rgba(22,32,51,0.56)',
   },
   appearanceChipTextActive: {
-    color: '#D4AF37',
+    color: theme.isDark ? '#0A0A0F' : '#7A5A15',
     fontWeight: '700',
   },
   appearanceCaption: {
@@ -1446,20 +1512,22 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   glossaryGradient: { paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm },
   glossaryRow: { paddingVertical: theme.spacing.md },
-  glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(255, 255, 255, 0.08)' },
+  glossaryRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.cardBorder },
   glossaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   glossaryTerm: { fontSize: 15, fontWeight: '600', color: theme.textPrimary, flex: 1 },
   glossaryDefinition: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginTop: theme.spacing.xs },
 
-  versionText: { fontSize: 11, color: 'rgba(226,232,240,0.25)', textAlign: 'center', marginTop: theme.spacing.xl, marginBottom: theme.spacing.sm, letterSpacing: 0.5 },
+  versionText: { fontSize: 11, color: theme.textMuted, textAlign: 'center', marginTop: theme.spacing.xl, marginBottom: theme.spacing.sm, letterSpacing: 0.5 },
 
   deleteAccountRow: {
-    borderRadius: 12,
-    marginHorizontal: 8,
+    borderRadius: 18,
+    marginHorizontal: 10,
     marginBottom: 4,
     backgroundColor: 'rgba(220, 50, 50, 0.05)',
-    paddingHorizontal: 12,
-    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(220, 50, 50, 0.14)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
   },
 
   // Key-loss warning banner

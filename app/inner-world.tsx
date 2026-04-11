@@ -4,6 +4,8 @@
 // with daily reflection questions embedded per-category.
 
 import React, { useCallback, useState, useRef } from 'react';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
+import type { AppTheme } from '../constants/theme';
 import { logger } from '../utils/logger';
 import {
   View,
@@ -113,6 +115,8 @@ const TOOLS: ToolCard[] = [
 ];
 
 export default function InnerWorldScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -285,7 +289,7 @@ export default function InnerWorldScreen() {
                       style={({ pressed }) => [pressed && styles.cardPressed]}
                       onPress={() => nav(tool.route)}
                     >
-                      <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+                      <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
                         <LinearGradient
                           colors={[`rgba(${tool.accentRgb}, 0.10)`, 'rgba(10,10,15,0.18)']}
                           style={StyleSheet.absoluteFill}
@@ -295,11 +299,11 @@ export default function InnerWorldScreen() {
                         <View style={styles.cardHeader}>
                           <MetallicText style={[styles.cardIcon]} color={tool.iconColor}>{tool.icon}</MetallicText>
 
-                          <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.gold}18`, borderColor: `${PALETTE.gold}38` } : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+                          <View style={[styles.badge, isDone ? { backgroundColor: `${PALETTE.gold}18`, borderColor: `${PALETTE.gold}38` } : { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderColor: theme.cardBorder }]}>
                             {isDone ? (
                               <MetallicText style={styles.badgeText} color={PALETTE.gold}>RECORDED</MetallicText>
                             ) : (
-                              <Text style={[styles.badgeText, { color: PALETTE.textMuted }]}>EXPLORE</Text>
+                              <Text style={[styles.badgeText, { color: theme.textMuted }]}>EXPLORE</Text>
                             )}
                             {isDone && <MetallicIcon name="checkmark-outline" size={10} color={PALETTE.gold} style={{ marginLeft: 4 }} />}
                           </View>
@@ -349,7 +353,7 @@ export default function InnerWorldScreen() {
             {/* Body Intelligence */}
             {somaticCorrelations.length > 0 && (
               <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-                <VelvetGlassSurface style={styles.somaticCard} intensity={40} backgroundColor="rgba(18, 24, 20, 0.56)">
+                <VelvetGlassSurface style={styles.somaticCard} intensity={40} backgroundColor={theme.isDark ? 'rgba(18, 24, 20, 0.56)' : 'rgba(246, 250, 255, 0.88)'}>
                 <Text style={styles.somaticLabel}>BODY INTELLIGENCE</Text>
                 <Text style={styles.somaticDesc}>
                   The body states that show up most often on your reflection days:
@@ -380,32 +384,32 @@ export default function InnerWorldScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 31,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     letterSpacing: -0.9,
     marginBottom: 4,
     maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.72)' },
+  headerSubtitle: { fontSize: 12, color: theme.textSecondary },
 
   syncBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
     borderColor: 'rgba(217,191,140,0.18)',
     paddingVertical: 12,
@@ -420,9 +424,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: theme.cardBorder,
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -430,7 +434,7 @@ const styles = StyleSheet.create({
   },
   statItem: { alignItems: 'center', flex: 1 },
   statValue: { fontSize: 20, fontWeight: '700' },
-  statLabel: { fontSize: 10, color: 'rgba(255,255,255,0.62)', fontWeight: '600', letterSpacing: 1, marginTop: 2, textTransform: 'uppercase' },
+  statLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '600', letterSpacing: 1, marginTop: 2, textTransform: 'uppercase' },
   statDivider: { width: 1, height: 28, backgroundColor: PALETTE.glassBorder },
 
   // Sealed banner
@@ -438,7 +442,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
     borderColor: 'rgba(217,191,140,0.18)',
     paddingVertical: 12,
@@ -453,9 +457,9 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderTopColor: 'rgba(255,255,255,0.18)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    borderTopColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.68)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
   },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 
@@ -474,13 +478,13 @@ const styles = StyleSheet.create({
 
   cardTitle: {
     fontSize: 20,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     marginBottom: 6,
   },
   cardSubtitle: {
     fontSize: 15,
-    color: 'rgba(226,232,240,0.7)',
+    color: theme.textSecondary,
     lineHeight: 22,
   },
 
@@ -492,7 +496,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     letterSpacing: 0.2,
   },
-  dailyHeaderSub: { fontSize: 13, color: 'rgba(255,255,255,0.66)' },
+  dailyHeaderSub: { fontSize: 13, color: theme.textSecondary },
 
   // Progress
   progressSection: {
@@ -503,7 +507,7 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     fontSize: 13,
-    color: PALETTE.textMuted,
+    color: theme.textMuted,
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -511,7 +515,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 6,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 8,
@@ -523,7 +527,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
-    color: 'rgba(226,232,240,0.68)',
+    color: theme.textSecondary,
     lineHeight: 18,
   },
   pastLink: {
@@ -533,7 +537,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.05)' : theme.cardSurface,
     borderWidth: 1,
     borderColor: 'rgba(217, 191, 140, 0.15)',
     borderRadius: 14,
@@ -559,7 +563,7 @@ const styles = StyleSheet.create({
   },
   somaticDesc: {
     fontSize: 12,
-    color: PALETTE.textMuted,
+    color: theme.textMuted,
     lineHeight: 17,
   },
   somaticRow: {
@@ -568,11 +572,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 4,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    borderTopColor: theme.cardBorder,
   },
   somaticCat: {
     fontSize: 13,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
   },
   somaticValueGroup: {
@@ -586,7 +590,7 @@ const styles = StyleSheet.create({
   },
   somaticCount: {
     fontSize: 11,
-    color: PALETTE.textMuted,
+    color: theme.textMuted,
     fontWeight: '500',
   },
 });

@@ -29,6 +29,11 @@ jest.mock('../../lib/supabase', () => ({
 
 const mockRevenueCatLogIn = jest.fn();
 const mockRevenueCatLogOut = jest.fn();
+let mockAutoDemoSeedEnabled = false;
+
+jest.mock('../../constants/config', () => ({
+  isAutoDemoSeedEnabled: () => mockAutoDemoSeedEnabled,
+}));
 
 jest.mock('../../services/premium/revenuecat', () => ({
   revenueCatService: {
@@ -38,10 +43,12 @@ jest.mock('../../services/premium/revenuecat', () => ({
 }));
 
 const mockSeedIfNeeded = jest.fn().mockResolvedValue(undefined);
+const mockCleanupStaleDemoArtifacts = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('../../services/storage/demoSeedService', () => ({
   DemoSeedService: {
     seedIfNeeded: (...args: unknown[]) => mockSeedIfNeeded(...args),
+    cleanupStaleDemoArtifacts: (...args: unknown[]) => mockCleanupStaleDemoArtifacts(...args),
   },
 }));
 
@@ -107,6 +114,7 @@ function AuthConsumer() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAutoDemoSeedEnabled = false;
   mockOnAuthStateChange.mockReturnValue({
     data: { subscription: { unsubscribe: jest.fn() } },
   });
@@ -183,7 +191,7 @@ describe('Auth Workflow', () => {
       });
     });
 
-    it('triggers RevenueCat logIn on SIGNED_IN event', async () => {
+    it('clears queued demo sync items on SIGNED_IN when auto demo seeding is disabled', async () => {
       mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
 
       let authCallback: Function = () => {};
@@ -203,7 +211,54 @@ describe('Auth Workflow', () => {
       });
 
       expect(mockRevenueCatLogIn).toHaveBeenCalledWith('new-user');
+      expect(mockSeedIfNeeded).not.toHaveBeenCalled();
+      expect(mockCleanupStaleDemoArtifacts).toHaveBeenCalledWith('demo@test.com');
+    });
+
+    it('triggers demo seed on SIGNED_IN only when auto demo seeding is enabled', async () => {
+      mockAutoDemoSeedEnabled = true;
+      mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+
+      let authCallback: Function = () => {};
+      mockOnAuthStateChange.mockImplementation((cb: Function) => {
+        authCallback = cb;
+        return { data: { subscription: { unsubscribe: jest.fn() } } };
+      });
+
+      render(React.createElement(AuthProvider, null, React.createElement(AuthConsumer)));
+
+      await waitFor(() => {
+        expect(mockOnAuthStateChange).toHaveBeenCalled();
+      });
+
+      act(() => {
+        authCallback('SIGNED_IN', { user: { id: 'new-user', email: 'demo@test.com' } });
+      });
+
       expect(mockSeedIfNeeded).toHaveBeenCalledWith('demo@test.com');
+    });
+
+    it('runs demo sync on TOKEN_REFRESHED when a session becomes available after reload', async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+
+      let authCallback: Function = () => {};
+      mockOnAuthStateChange.mockImplementation((cb: Function) => {
+        authCallback = cb;
+        return { data: { subscription: { unsubscribe: jest.fn() } } };
+      });
+
+      render(React.createElement(AuthProvider, null, React.createElement(AuthConsumer)));
+
+      await waitFor(() => {
+        expect(mockOnAuthStateChange).toHaveBeenCalled();
+      });
+
+      act(() => {
+        authCallback('TOKEN_REFRESHED', { user: { id: 'reviewer-1', email: 'brittanyapps@outlook.com' } });
+      });
+
+      expect(mockRevenueCatLogIn).toHaveBeenCalledWith('reviewer-1');
+      expect(mockCleanupStaleDemoArtifacts).toHaveBeenCalledWith('brittanyapps@outlook.com');
     });
 
     it('triggers RevenueCat logOut on SIGNED_OUT event', async () => {
@@ -271,7 +326,8 @@ describe('Auth Workflow', () => {
 
       expect(mockStartAutoRefresh).toHaveBeenCalled();
       expect(mockRefreshSession).toHaveBeenCalled();
-      expect(mockSeedIfNeeded).toHaveBeenCalledWith('test@test.com');
+      expect(mockSeedIfNeeded).not.toHaveBeenCalled();
+      expect(mockCleanupStaleDemoArtifacts).toHaveBeenCalledWith('test@test.com');
     });
   });
 

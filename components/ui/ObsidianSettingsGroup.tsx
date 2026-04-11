@@ -8,6 +8,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const GROUP_W = SCREEN_W - 32;
@@ -37,9 +39,12 @@ const ObsidianSettingsGroup = memo(function ObsidianSettingsGroup({
   children,
   style,
 }: Props) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={[styles.wrapper, style]}>
-      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+      <BlurView intensity={40} tint={theme.blurTint} style={StyleSheet.absoluteFill} />
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.glassFill]} />
       {/* Top light-catch edge */}
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.borderOverlay]} />
@@ -65,12 +70,13 @@ export default ObsidianSettingsGroup;
 // ── Divider sub-component ───────────────────────────────────────────────────
 
 export const ObsidianDivider = memo(function ObsidianDivider() {
+  const styles = useThemedStyles(createStyles);
   return <View style={styles.divider} />;
 });
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   wrapper: {
     width: GROUP_W,
     alignSelf: 'center',
@@ -80,16 +86,16 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   glassFill: {
-    backgroundColor: 'rgba(8, 10, 18, 0.55)',
+    backgroundColor: theme.isDark ? 'rgba(8, 10, 18, 0.55)' : 'rgba(255, 252, 247, 0.78)',
     borderRadius: 24,
   },
   borderOverlay: {
     borderRadius: 24,
     borderWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.14)',
-    borderLeftColor: 'rgba(255,255,255,0.07)',
-    borderRightColor: 'rgba(255,255,255,0.04)',
-    borderBottomColor: 'rgba(255,255,255,0.03)',
+    borderTopColor: theme.isDark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.70)',
+    borderLeftColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(181, 138, 58, 0.14)',
+    borderRightColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(181, 138, 58, 0.10)',
+    borderBottomColor: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(181, 138, 58, 0.08)',
   },
   headerRow: {
     paddingHorizontal: 20,
@@ -97,19 +103,19 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   title: {
-    color: 'rgba(255,255,255,0.9)',
+    color: theme.textPrimary,
     fontSize: 20,
     fontWeight: '700',
   },
   subtitle: {
-    color: 'rgba(255,255,255,0.45)',
+    color: theme.textSecondary,
     fontSize: 13,
     marginTop: 3,
     lineHeight: 18,
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(201,174,120,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(201,174,120,0.06)' : 'rgba(181, 138, 58, 0.10)',
     marginHorizontal: 20,
     marginVertical: 8,
   },

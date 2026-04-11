@@ -277,7 +277,7 @@ export default function FAQScreen({ onBack }: { onBack?: () => void } = {}) {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
 
   header: {
@@ -293,9 +293,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -318,7 +318,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 1.0,
     textTransform: 'uppercase',
     marginTop: 2,
-    color: 'rgba(255,255,255,0.6)',
+    color: theme.textSecondary,
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
@@ -341,9 +341,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   faqCard: {
     borderRadius: 24,
     padding: 28,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
   },
   question: {
     fontSize: 19,

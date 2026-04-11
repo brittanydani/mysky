@@ -1,12 +1,11 @@
-import React, { useCallback } from 'react';
-import { type StyleProp, type ViewStyle } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import React from 'react';
+import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 import { VelvetGlassSurface } from './VelvetGlassSurface';
 
 const PRESS_SCALE = 0.97;
@@ -36,24 +35,25 @@ export function VelvetGlassCard({
 }: VelvetGlassCardProps) {
   const scale = useSharedValue(1);
 
+  const handlePressIn = () => {
+    if (!interactive) return;
+    scale.value = withSpring(PRESS_SCALE, SPRING_CONFIG);
+  };
+
+  const handlePressOut = () => {
+    if (!interactive) return;
+    scale.value = withSpring(1, SPRING_CONFIG);
+  };
+
+  const handlePress = () => {
+    if (!interactive || !onPress) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    onPress();
+  };
+
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-
-  const tap = Gesture.Tap()
-    .runOnJS(true)
-    .onBegin(() => {
-      if (!interactive) return;
-      scale.value = withSpring(PRESS_SCALE, SPRING_CONFIG);
-    })
-    .onFinalize((_, success) => {
-      if (!interactive) return;
-      scale.value = withSpring(1.0, SPRING_CONFIG);
-      if (success && onPress) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-        onPress();
-      }
-    });
 
   if (!interactive || !onPress) {
     return (
@@ -70,7 +70,12 @@ export function VelvetGlassCard({
   }
 
   return (
-    <GestureDetector gesture={tap}>
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={handlePress}
+      accessibilityRole="button"
+    >
       <Animated.View style={animatedStyle}>
         <VelvetGlassSurface
           style={style}
@@ -82,6 +87,6 @@ export function VelvetGlassCard({
           {children}
         </VelvetGlassSurface>
       </Animated.View>
-    </GestureDetector>
+    </Pressable>
   );
 }

@@ -7,6 +7,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions, ActivityIndicator } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SkiaGradient as LinearGradient } from '../../components/ui/SkiaGradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,6 +43,8 @@ import { exportInsightsToPdf, InsightsPdfInput } from '../../services/premium/in
 import { DailyAggregate, ChartProfile } from '../../services/insights/types';
 import { TriggerEvent } from '../../utils/triggerEventTypes';
 import { keepLastWordsTogether } from '../../utils/textLayout';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const SCREEN_W = Dimensions.get('window').width;
 const ORBIT_SIZE = SCREEN_W - 48;
@@ -59,6 +62,8 @@ const PALETTE = {
   glassBorder: 'rgba(255,255,255,0.06)',
 };
 
+const LIGHT_MODE_INK = '#2A2520';
+
 const CROSS_REF_ACCENT: Record<string, string> = {
   gold:       PALETTE.gold,
   silverBlue: PALETTE.silverBlue,
@@ -67,6 +72,48 @@ const CROSS_REF_ACCENT: Record<string, string> = {
   rose:       PALETTE.rose,
   lavender:   PALETTE.lavender,
 };
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace('#', '');
+  if (normalized.length !== 6) {
+    return hex;
+  }
+
+  const red = parseInt(normalized.slice(0, 2), 16);
+  const green = parseInt(normalized.slice(2, 4), 16);
+  const blue = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function themedCardGradient(
+  theme: AppTheme,
+  accent?: string,
+  options?: { darkTopAlpha?: number; lightTopAlpha?: number; lightEnd?: string }
+): [string, string] {
+  const darkTopAlpha = options?.darkTopAlpha ?? 0.08;
+  const lightTopAlpha = options?.lightTopAlpha ?? 0.17;
+
+  const start = accent
+    ? hexToRgba(accent, theme.isDark ? darkTopAlpha : lightTopAlpha)
+    : theme.isDark
+      ? 'rgba(255,255,255,0.05)'
+      : 'rgba(255,255,255,0.94)';
+
+  const end = theme.isDark
+    ? 'rgba(10,10,12,0.9)'
+    : options?.lightEnd ?? 'rgba(232, 223, 210, 0.98)';
+
+  return [start, end];
+}
+
+function renderEditorialCopy(text: string, emphasisStyle: any): React.ReactNode[] {
+  return text.split(/(\b\d+(?:\.\d+)?(?:\/\d+)?(?:\s?(?:pts?|point|points|days?|entries|h|\/100))?\b)/g).map((part, index) => {
+    if (/^\b\d+(?:\.\d+)?(?:\/\d+)?(?:\s?(?:pts?|point|points|days?|entries|h|\/100))?\b$/.test(part)) {
+      return <Text key={`${part}-${index}`} style={emphasisStyle}>{part}</Text>;
+    }
+    return part;
+  });
+}
 
 
 
@@ -82,6 +129,12 @@ interface LoopCardContent {
   title: string;
   body: string;
   accent: string;
+}
+
+interface InsightMetricDisplay {
+  value: string;
+  label: string;
+  tone?: 'default' | 'positive' | 'caution';
 }
 
 /** Map 1–10 average mood to a human-readable label. */
@@ -123,6 +176,8 @@ function buildWeeklyChangeCard(deepBundle: null, snapshot: SnapshotData): LoopCa
 }
 
 export default function PatternsScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const { isPremium } = usePremium();
   const [snapshot, setSnapshot] = useState<SnapshotData>({
     avgMood: null,
@@ -330,7 +385,11 @@ export default function PatternsScreen() {
             <View style={styles.headerRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.title}>Patterns</Text>
-                <GoldSubtitle style={styles.subtitle}>Analysis of your internal weather</GoldSubtitle>
+                {theme.isDark ? (
+                  <GoldSubtitle style={styles.subtitle}>Analysis of your internal weather</GoldSubtitle>
+                ) : (
+                  <Text style={styles.subtitleText}>Analysis of your internal weather</Text>
+                )}
               </View>
               {isPremium && (
                 <Pressable
@@ -360,16 +419,22 @@ export default function PatternsScreen() {
           {/* ── Visualization — Cosmic Pattern Orbit ── */}
           <View style={styles.visualSection}>
             <View style={styles.orbitCard}>
+              {!theme.isDark && <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />}
               {/* Clipped background fills only the card bounds */}
               <View style={[StyleSheet.absoluteFill, styles.orbitCardBg]} pointerEvents="none">
                 <LinearGradient
-                  colors={['rgba(201,174,120,0.08)', 'rgba(10,10,12,0.90)']}
+                  colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.16, lightEnd: 'rgba(231, 223, 211, 0.97)' })}
                   style={StyleSheet.absoluteFill}
                 />
               </View>
+              {!theme.isDark && <View pointerEvents="none" style={styles.lightGlassSheen} />}
               <View style={styles.orbitCardHeader}>
                 <MetallicIcon name="planet-outline" size={14} variant="gold" />
-                <MetallicText color={PALETTE.gold} style={styles.orbitCardEyebrow}>PATTERN ORBIT MAP</MetallicText>
+                {theme.isDark ? (
+                  <MetallicText color={PALETTE.gold} style={styles.orbitCardEyebrow}>PATTERN ORBIT MAP</MetallicText>
+                ) : (
+                  <Text style={styles.orbitCardEyebrowLight}>PATTERN ORBIT MAP</Text>
+                )}
               </View>
               {loading ? (
                 <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center' }}>
@@ -379,7 +444,7 @@ export default function PatternsScreen() {
                 <PatternOrbitMap checkIns={trendCheckIns} size={ORBIT_SIZE} />
               ) : (
                 <View style={{ height: ORBIT_SIZE, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
-                  <Text style={{ color: 'rgba(255,255,255,0.58)', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 20 }}>
+                  <Text style={{ color: theme.textMuted, fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 20 }}>
                     Log a few check-ins to reveal your pattern orbit map.
                   </Text>
                 </View>
@@ -404,7 +469,7 @@ export default function PatternsScreen() {
               {enhanced.blended.map((card, i) => (
                 <LinearGradient
                   key={i}
-                  colors={['rgba(201, 174, 120, 0.1)', 'rgba(10,10,12,0.9)']}
+                  colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.15 })}
                   style={styles.insightCard}
                 >
                   <Text style={styles.blendedTitle}>{keepLastWordsTogether(card.title)}</Text>
@@ -425,7 +490,7 @@ export default function PatternsScreen() {
           {enhanced && enhanced.keywordLift.hasData && (
             <Animated.View entering={FadeInDown.delay(300)} style={styles.section}>
               <SectionHeader label="WHAT LIFTS & DRAINS YOU" icon="swap-vertical-outline" />
-              <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10, 10, 12, 0.9)']} style={styles.insightCard}>
+              <LinearGradient colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.13 })} style={styles.insightCard}>
                 <Text style={styles.liftIntro}>
                   These themes appear more often on your best vs. hardest days — based on your own words.
                 </Text>
@@ -437,8 +502,8 @@ export default function PatternsScreen() {
                     </View>
                     <View style={styles.pillRow}>
                       {enhanced.keywordLift.restores.map(r => (
-                        <View key={r.label} style={[styles.liftPill, { borderColor: `${PALETTE.gold}50`, backgroundColor: `${PALETTE.gold}12` }]}>
-                          <Text style={[styles.pillText, { color: PALETTE.gold }]}>{r.label}</Text>
+                        <View key={r.label} style={[styles.liftPill, theme.isDark ? { borderColor: `${PALETTE.gold}50`, backgroundColor: `${PALETTE.gold}12` } : styles.badgeRecessedLight]}>
+                          <Text style={[styles.pillText, { color: theme.isDark ? PALETTE.gold : LIGHT_MODE_INK }]}>{r.label}</Text>
                         </View>
                       ))}
                     </View>
@@ -452,8 +517,8 @@ export default function PatternsScreen() {
                     </View>
                     <View style={styles.pillRow}>
                       {enhanced.keywordLift.drains.map(d => (
-                        <View key={d.label} style={[styles.liftPill, { borderColor: `${PALETTE.copper}50`, backgroundColor: `${PALETTE.copper}12` }]}>
-                          <Text style={[styles.pillText, { color: PALETTE.copper }]}>{d.label}</Text>
+                        <View key={d.label} style={[styles.liftPill, theme.isDark ? { borderColor: `${PALETTE.copper}50`, backgroundColor: `${PALETTE.copper}12` } : styles.badgeRecessedLight]}>
+                          <Text style={[styles.pillText, { color: theme.isDark ? PALETTE.copper : LIGHT_MODE_INK }]}>{d.label}</Text>
                         </View>
                       ))}
                     </View>
@@ -470,7 +535,7 @@ export default function PatternsScreen() {
               {enhanced.timePatterns.map((tp, i) => (
                 <LinearGradient
                   key={i}
-                  colors={['rgba(168, 155, 200, 0.1)', 'rgba(10,10,12,0.9)']}
+                  colors={themedCardGradient(theme, PALETTE.lavender, { lightTopAlpha: 0.16 })}
                   style={styles.insightCard}
                 >
                   <Text style={styles.insightBody}>{keepLastWordsTogether(tp.insight)}</Text>
@@ -509,18 +574,18 @@ export default function PatternsScreen() {
           {enhanced && enhanced.emotionBucketLift.length > 0 && (
             <Animated.View entering={FadeInDown.delay(350)} style={styles.section}>
               <SectionHeader label="YOUR EMOTIONAL PATTERNS" icon="sparkles-outline" />
-              <LinearGradient colors={['rgba(212, 163, 179, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+              <LinearGradient colors={themedCardGradient(theme, PALETTE.rose, { lightTopAlpha: 0.15 })} style={styles.insightCard}>
                 <Text style={styles.liftIntro}>Which emotions show up more on your best and hardest days.</Text>
                 {enhanced.emotionBucketLift.map((item, i) => {
                   const isPositive = item.lift > 0;
                   const color = isPositive ? PALETTE.gold : PALETTE.copper;
                   return (
-                    <View key={item.category} style={[styles.emotionRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
+                    <View key={item.category} style={[styles.emotionRow, i > 0 && { borderTopWidth: 1, borderTopColor: theme.cardBorder }]}>
                       <View style={styles.emotionNameWrap}>
                         <Text style={styles.emotionName} numberOfLines={1}>{item.category.charAt(0).toUpperCase() + item.category.slice(1)}</Text>
                       </View>
                       <View style={{ flex: 1, marginHorizontal: 12 }}>
-                        <Text style={[styles.emotionInsight, { color: 'rgba(255,255,255,0.55)' }]}>{item.insight}</Text>
+                        <Text style={[styles.emotionInsight, { color: theme.textSecondary }]}>{item.insight}</Text>
                       </View>
                       <View style={[styles.emotionBadge, { backgroundColor: `${color}20`, borderColor: `${color}40` }]}>
                         <Text style={[styles.emotionBadgeText, { color }]}>{isPositive ? 'BEST' : 'HARD'}</Text>
@@ -536,7 +601,7 @@ export default function PatternsScreen() {
           {enhanced && enhanced.keywordThemes && (
             <Animated.View entering={FadeInDown.delay(370)} style={styles.section}>
               <SectionHeader label="WHAT'S ON YOUR MIND" icon="chatbubble-ellipses-outline" />
-              <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+              <LinearGradient colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.13 })} style={styles.insightCard}>
                 <Text style={styles.insightBody}>{keepLastWordsTogether(enhanced.keywordThemes.insight)}</Text>
                 <View style={[styles.pillRow, { marginTop: 16 }]}>
                   {enhanced.keywordThemes.topKeywords.map(kw => (
@@ -557,7 +622,7 @@ export default function PatternsScreen() {
               {enhanced.journalImpact.map((card, i) => (
                 <LinearGradient
                   key={i}
-                  colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']}
+                  colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.13 })}
                   style={styles.insightCard}
                 >
                   <Text style={styles.insightBody}>{keepLastWordsTogether(card.insight)}</Text>
@@ -571,7 +636,7 @@ export default function PatternsScreen() {
           {enhanced && enhanced.emotionToneShift && (
             <Animated.View entering={FadeInDown.delay(410)} style={styles.section}>
               <SectionHeader label="HOW YOUR TONE IS SHIFTING" icon="pulse-outline" />
-              <LinearGradient colors={['rgba(212, 184, 114, 0.08)', 'rgba(10, 10, 12, 0.9)']} style={styles.insightCard}>
+              <LinearGradient colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.14 })} style={styles.insightCard}>
                 <Text style={styles.insightBody}>{keepLastWordsTogether(enhanced.emotionToneShift.insight)}</Text>
                 {enhanced.emotionToneShift.rising.length > 0 && (
                   <View style={[styles.toneRow, { marginTop: 16 }]}>
@@ -600,14 +665,14 @@ export default function PatternsScreen() {
           {enhanced && enhanced.volatility.length > 0 && (
             <Animated.View entering={FadeInDown.delay(430)} style={styles.section}>
               <SectionHeader label="EMOTIONAL STABILITY" icon="analytics-outline" />
-              <LinearGradient colors={['rgba(168, 155, 200, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+              <LinearGradient colors={themedCardGradient(theme, PALETTE.lavender, { lightTopAlpha: 0.14 })} style={styles.insightCard}>
                 <Text style={styles.liftIntro}>How consistent your scores have been day-to-day.</Text>
                 {enhanced.volatility.map((v, i) => {
                   const label = v.metric === 'mood' ? 'Mood' : v.metric === 'stress' ? 'Stress' : 'Sentiment';
                   const color = v.level === 'low' ? PALETTE.gold : v.level === 'moderate' ? PALETTE.silverBlue : PALETTE.copper;
                   const description = v.level === 'low' ? 'Very consistent' : v.level === 'moderate' ? 'Some variation' : 'Noticeably variable';
                   return (
-                    <View key={v.metric} style={[styles.stabilityRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
+                    <View key={v.metric} style={[styles.stabilityRow, i > 0 && { borderTopWidth: 1, borderTopColor: theme.cardBorder }]}>
                       <Text style={styles.stabilityMetric}>{label}</Text>
                       <View style={styles.stabilityBar}>
                         <View style={[styles.stabilityFill, {
@@ -629,16 +694,16 @@ export default function PatternsScreen() {
           {correlations.length > 0 && (
             <Animated.View entering={FadeInDown.delay(450)} style={styles.section}>
               <SectionHeader label="WHAT DRIVES WHAT" icon="git-network-outline" />
-              <LinearGradient colors={['rgba(201, 174, 120, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+              <LinearGradient colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.13 })} style={styles.insightCard}>
                 <Text style={styles.liftIntro}>Statistical relationships between your tracked metrics.</Text>
                 {correlations.slice(0, 5).map((c, i) => {
                   const abs = Math.abs(c.correlation);
                   const isPositive = c.correlation > 0;
                   const color = abs >= 0.5 ? (isPositive ? PALETTE.gold : PALETTE.rose) : PALETTE.silverBlue;
                   return (
-                    <View key={`${c.metric_a}-${c.metric_b}`} style={[styles.correlationRow, i > 0 && { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' }]}>
+                    <View key={`${c.metric_a}-${c.metric_b}`} style={[styles.correlationRow, i > 0 && { borderTopWidth: 1, borderTopColor: theme.cardBorder }]}>
                       <Text style={styles.correlationMetrics}>
-                        {c.metric_a} <Text style={{ color: 'rgba(255,255,255,0.3)' }}>×</Text> {c.metric_b}
+                        {c.metric_a} <Text style={{ color: theme.textMuted }}>×</Text> {c.metric_b}
                       </Text>
                       <View style={{ flex: 1, marginHorizontal: 12 }}>
                         <View style={styles.correlationBarWrap}>
@@ -659,24 +724,43 @@ export default function PatternsScreen() {
               <SectionHeader label="PERSONAL PATTERNS" icon="person-circle-outline" subtitle="From your self-knowledge profile, confirmed by data" />
               {crossRefs.map((insight) => {
                 const accent = CROSS_REF_ACCENT[insight.accentColor] ?? PALETTE.gold;
+                const support = insight.takeaway ?? CROSS_REF_SUPPORT[insight.source];
                 return (
                   <LinearGradient
                     key={insight.id}
-                    colors={[`${accent}18`, 'rgba(10,10,12,0.9)']}
+                    colors={themedCardGradient(theme, accent, { lightTopAlpha: 0.16 })}
                     style={styles.insightCard}
                   >
                     <View style={styles.crossRefHeader}>
-                      <MetallicText style={styles.insightLabel} color={accent}>
-                        {insight.source.toUpperCase()}
-                      </MetallicText>
+                      {theme.isDark ? (
+                        <MetallicText style={styles.insightLabel} color={accent}>
+                          {insight.source.toUpperCase()}
+                        </MetallicText>
+                      ) : (
+                        <Text style={styles.insightLabelLight}>{insight.source.toUpperCase()}</Text>
+                      )}
                       {insight.isConfirmed && (
-                        <View style={[styles.confirmedBadge, { borderColor: `${accent}50` }]}>
-                          <MetallicText style={styles.confirmedText} color={accent}>DATA CONFIRMED</MetallicText>
+                        <View style={[styles.confirmedBadge, theme.isDark ? { borderColor: `${accent}50` } : styles.badgeRecessedLight]}>
+                          {theme.isDark ? (
+                            <MetallicText style={styles.confirmedText} color={accent}>DATA CONFIRMED</MetallicText>
+                          ) : (
+                            <Text style={styles.confirmedTextLight}>DATA CONFIRMED</Text>
+                          )}
                         </View>
                       )}
                     </View>
                     <Text style={styles.patternTitle}>{keepLastWordsTogether(insight.title)}</Text>
+                    <HeroMetricsRow metrics={insight.heroMetrics ?? []} />
                     <Text style={styles.insightBody}>{keepLastWordsTogether(insight.body)}</Text>
+                    {support && (
+                      <View style={styles.supportCallout}>
+                        <View style={styles.supportCalloutHeader}>
+                          <Ionicons name={(support.icon as keyof typeof Ionicons.glyphMap) ?? 'sparkles-outline'} size={13} color={PALETTE.emerald} />
+                          <Text style={styles.supportCalloutLabel}>{support.label}</Text>
+                        </View>
+                        <Text style={styles.supportCalloutBody}>{support.body}</Text>
+                      </View>
+                    )}
                   </LinearGradient>
                 );
               })}
@@ -716,7 +800,7 @@ export default function PatternsScreen() {
 
               {/* Season / Chapter */}
               {deepInsights.season && (
-                <LinearGradient colors={[`${PALETTE.gold}10`, 'rgba(10,10,12,0.9)']} style={styles.seasonCard}>
+                <LinearGradient colors={themedCardGradient(theme, PALETTE.gold, { lightTopAlpha: 0.12, lightEnd: 'rgba(244, 237, 227, 0.98)' })} style={styles.seasonCard}>
                   <MetallicText style={styles.seasonLabel} variant="gold">{deepInsights.season.label.toUpperCase()}</MetallicText>
                   <Text style={styles.insightBody}>{keepLastWordsTogether(deepInsights.season.body)}</Text>
                 </LinearGradient>
@@ -724,7 +808,7 @@ export default function PatternsScreen() {
 
               {/* What To Remember — distilled self-knowledge for hard days */}
               {deepInsights.whatToRemember.length > 0 && (
-                <LinearGradient colors={[`${PALETTE.rose}10`, 'rgba(10,10,12,0.9)']} style={styles.seasonCard}>
+                <LinearGradient colors={themedCardGradient(theme, PALETTE.rose, { lightTopAlpha: 0.13, lightEnd: 'rgba(244, 237, 227, 0.98)' })} style={styles.seasonCard}>
                   <MetallicText style={styles.seasonLabel} variant="gold">WHAT TO REMEMBER</MetallicText>
                   {deepInsights.whatToRemember.map((r, i) => (
                     <Text key={`remember-${i}`} style={styles.memoryText}>• {r}</Text>
@@ -776,15 +860,15 @@ export default function PatternsScreen() {
             return (
               <Animated.View entering={FadeInDown.delay(450)} style={styles.section}>
                 <SectionHeader label="WHAT CHANGED YOUR ENERGY" icon="pulse-outline" subtitle="From your trigger and glimmer entries" />
-                <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+                <LinearGradient colors={themedCardGradient(theme, PALETTE.copper, { lightTopAlpha: 0.15 })} style={styles.insightCard}>
                   <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
                     <View style={{ flex: 1, backgroundColor: 'rgba(205,127,93,0.1)', borderRadius: 16, padding: 14, alignItems: 'center' }}>
                       <Text style={{ fontSize: 24, fontWeight: '800', color: PALETTE.copper }}>{drainCount}</Text>
-                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: 0.8 }}>DRAINS</Text>
+                      <Text style={{ fontSize: 10, color: theme.textMuted, marginTop: 2, letterSpacing: 0.8 }}>DRAINS</Text>
                     </View>
                     <View style={{ flex: 1, backgroundColor: 'rgba(140,190,170,0.1)', borderRadius: 16, padding: 14, alignItems: 'center' }}>
                       <Text style={{ fontSize: 24, fontWeight: '800', color: '#8CBEAA' }}>{glimmerCount}</Text>
-                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: 0.8 }}>GLIMMERS</Text>
+                      <Text style={{ fontSize: 10, color: theme.textMuted, marginTop: 2, letterSpacing: 0.8 }}>GLIMMERS</Text>
                     </View>
                   </View>
                   <Text style={styles.insightBody}>{keepLastWordsTogether(narrative)}</Text>
@@ -806,30 +890,50 @@ export default function PatternsScreen() {
   );
 }
 
-const MetricCard = ({ label, value, color, sub, isText }: { label: string; value: string; color: string; sub?: string; isText?: boolean }) => (
-  <LinearGradient colors={['rgba(255,255,255,0.05)', 'rgba(10, 10, 12, 0.8)']} style={styles.metricCard}>
-    <MetallicText style={styles.metricLabel} color={color}>{label}</MetallicText>
-    <Text style={[styles.metricValue, isText && { fontSize: 16 }]}>{value}</Text>
-    {sub && <Text style={styles.metricSub}>{sub}</Text>}
-  </LinearGradient>
-);
+const MetricCard = ({ label, value, color, sub, isText }: { label: string; value: string; color: string; sub?: string; isText?: boolean }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+  return (
+    <LinearGradient colors={themedCardGradient(theme, color, { darkTopAlpha: 0.06, lightTopAlpha: 0.18, lightEnd: 'rgba(231, 222, 209, 0.98)' })} style={styles.metricCard}>
+      {theme.isDark ? (
+        <MetallicText style={styles.metricLabel} color={color}>{label}</MetallicText>
+      ) : (
+        <Text style={[styles.metricLabel, styles.metricLabelLight, { color }]}>{label}</Text>
+      )}
+      <Text style={[styles.metricValue, isText && { fontSize: 16 }]}>{value}</Text>
+      {sub && <Text style={styles.metricSub}>{sub}</Text>}
+    </LinearGradient>
+  );
+};
 
-const SectionHeader = ({ icon, label, subtitle }: { icon: keyof typeof Ionicons.glyphMap; label: string; subtitle?: string }) => (
-  <View style={styles.sectionHeaderWrap}>
-    <View style={styles.sectionHeaderRow}>
-      <MetallicIcon name={icon} size={18} variant="gold" />
-      <MetallicText style={styles.sectionHeaderLabel} variant="gold">{label}</MetallicText>
+const SectionHeader = ({ icon, label, subtitle }: { icon: keyof typeof Ionicons.glyphMap; label: string; subtitle?: string }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View style={styles.sectionHeaderWrap}>
+      <View style={styles.sectionHeaderRow}>
+        <MetallicIcon name={icon} size={18} variant="gold" />
+        {theme.isDark ? (
+          <MetallicText style={styles.sectionHeaderLabel} variant="gold">{label}</MetallicText>
+        ) : (
+          <Text style={styles.sectionHeaderLabelLight}>{label}</Text>
+        )}
+      </View>
+      {subtitle && <Text style={styles.sectionHeaderSubtitle}>{subtitle}</Text>}
     </View>
-    {subtitle && <Text style={styles.sectionHeaderSubtitle}>{subtitle}</Text>}
-  </View>
-);
+  );
+};
 
-const LoopCard = ({ content }: { content: LoopCardContent }) => (
-  <LinearGradient colors={[`${content.accent}18`, 'rgba(10,10,12,0.85)']} style={[styles.insightCard, styles.loopCard]}>
-    <Text style={[styles.loopTitle, { color: content.accent }]}>{keepLastWordsTogether(content.title)}</Text>
-    <Text style={styles.insightBody}>{keepLastWordsTogether(content.body)}</Text>
-  </LinearGradient>
-);
+const LoopCard = ({ content }: { content: LoopCardContent }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+  return (
+    <LinearGradient colors={themedCardGradient(theme, content.accent, { lightTopAlpha: 0.14, lightEnd: 'rgba(236, 228, 216, 0.97)' })} style={[styles.insightCard, styles.loopCard]}>
+      <Text style={[styles.loopTitle, { color: content.accent }]}>{keepLastWordsTogether(content.title)}</Text>
+      <Text style={styles.insightBody}>{keepLastWordsTogether(content.body)}</Text>
+    </LinearGradient>
+  );
+};
 
 const NARRATIVE_ACCENT: Record<string, string> = {
   gold:       PALETTE.gold,
@@ -878,32 +982,141 @@ const NARRATIVE_SUPPORT: Partial<Record<NarrativeInsight['category'], { label: s
   },
 };
 
+const CROSS_REF_SUPPORT: Partial<Record<CrossRefInsight['source'], { label: string; body: string; icon: keyof typeof Ionicons.glyphMap }>> = {
+  somatic: {
+    label: 'Body check',
+    body: 'Use the repeated body signal as the entry point. Start with the sensation or region before you try to explain the whole pattern.',
+    icon: 'body-outline',
+  },
+  relationship: {
+    label: 'Inquiry',
+    body: 'Trace the exact interaction, repair, or boundary that shaped the shift. The useful data is almost always specific.',
+    icon: 'heart-outline',
+  },
+  values: {
+    label: 'Constraint check',
+    body: 'When the day feels off, ask which value was blocked first. That answer is usually faster than more analysis.',
+    icon: 'diamond-outline',
+  },
+  reflection: {
+    label: 'Keep logging',
+    body: 'The more specific the reflection is to the day that just happened, the more usable the pattern becomes later.',
+    icon: 'journal-outline',
+  },
+  cognitive: {
+    label: 'Workflow note',
+    body: 'Design the next task around the way you naturally process, instead of forcing yourself into the wrong mode first.',
+    icon: 'construct-outline',
+  },
+  archetype: {
+    label: 'Shadow watch',
+    body: 'Notice what this pattern does under pressure today. The important move is catching the activation before it becomes identity.',
+    icon: 'sparkles-outline',
+  },
+  triggers: {
+    label: 'Pattern test',
+    body: 'Use the next similar moment to confirm whether the same driver is actually there again.',
+    icon: 'flash-outline',
+  },
+};
+
+function statSegmentsToMetrics(stat: string): InsightMetricDisplay[] {
+  return stat
+    .split(' · ')
+    .map(segment => segment.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((segment) => {
+      const colonIndex = segment.indexOf(':');
+      if (colonIndex > 0) {
+        return {
+          value: segment.slice(colonIndex + 1).trim(),
+          label: segment.slice(0, colonIndex).trim(),
+        };
+      }
+
+      const tokenMatch = segment.match(/^([+−\-]?\d[\d./→-]*\w*)(?:\s+)(.+)$/);
+      if (tokenMatch) {
+        return {
+          value: tokenMatch[1],
+          label: tokenMatch[2],
+        };
+      }
+
+      return {
+        value: segment,
+        label: 'Signal',
+      };
+    });
+}
+
+const HeroMetricsRow = ({ metrics }: { metrics: InsightMetricDisplay[] }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
+
+  if (metrics.length === 0) return null;
+
+  return (
+    <View style={styles.heroMetricsRow}>
+      {metrics.map((item, index) => {
+        const toneColor = item.tone === 'positive'
+          ? PALETTE.emerald
+          : item.tone === 'caution'
+            ? PALETTE.copper
+            : PALETTE.gold;
+
+        return (
+          <View
+            key={`${item.label}-${item.value}-${index}`}
+            style={[
+              styles.heroMetricChip,
+              theme.isDark
+                ? { borderColor: `${toneColor}28`, backgroundColor: `${toneColor}12` }
+                : { borderColor: 'rgba(255,255,255,0.74)', backgroundColor: 'rgba(255,255,255,0.58)' },
+            ]}
+          >
+            <Text style={[styles.heroMetricValue, { color: toneColor }]} numberOfLines={2}>{item.value}</Text>
+            <Text style={styles.heroMetricLabel} numberOfLines={2}>{item.label}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
 const NarrativeCard = ({ insight }: { insight: NarrativeInsight }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const accent = NARRATIVE_ACCENT[insight.accent] ?? PALETTE.gold;
   const icon = NARRATIVE_ICONS[insight.category] ?? 'sparkles-outline';
-  const support = NARRATIVE_SUPPORT[insight.category];
+  const support = insight.takeaway ?? NARRATIVE_SUPPORT[insight.category];
+  const heroMetrics = insight.heroMetrics ?? statSegmentsToMetrics(insight.stat);
   return (
-    <LinearGradient colors={[`${accent}14`, 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+    <LinearGradient colors={themedCardGradient(theme, accent, { lightTopAlpha: 0.15 })} style={styles.insightCard}>
       <View style={styles.narrativeHeader}>
         <MetallicIcon name={icon} size={14} variant="gold" />
-        <MetallicText style={styles.insightLabel} color={accent}>{insight.label.toUpperCase()}</MetallicText>
-        <View style={[styles.narrativeConfidence, { backgroundColor: `${accent}18`, borderColor: `${accent}40` }]}>
-          <Text style={[styles.narrativeConfidenceText, { color: accent }]}>
+        {theme.isDark ? (
+          <MetallicText style={styles.insightLabel} color={accent}>{insight.label.toUpperCase()}</MetallicText>
+        ) : (
+          <Text style={styles.insightLabelLight}>{insight.label.toUpperCase()}</Text>
+        )}
+        <View style={[styles.narrativeConfidence, theme.isDark ? { backgroundColor: `${accent}18`, borderColor: `${accent}40` } : styles.badgeRecessedLight]}>
+          <Text style={[styles.narrativeConfidenceText, !theme.isDark && styles.narrativeConfidenceTextLight, theme.isDark && { color: accent }]}>
             {insight.confidence === 'high' ? 'STRONG' : insight.confidence === 'medium' ? 'GROWING' : 'EMERGING'}
           </Text>
         </View>
       </View>
-      <Text style={styles.insightBody}>{keepLastWordsTogether(insight.body)}</Text>
+      <HeroMetricsRow metrics={heroMetrics} />
+      <Text style={styles.insightBody}>{renderEditorialCopy(keepLastWordsTogether(insight.body), styles.insightBodyEmphasis)}</Text>
       {support && (
         <View style={styles.supportCallout}>
           <View style={styles.supportCalloutHeader}>
-            <Ionicons name={support.icon} size={13} color={PALETTE.emerald} />
+            <Ionicons name={(support.icon as keyof typeof Ionicons.glyphMap) ?? 'sparkles-outline'} size={13} color={PALETTE.emerald} />
             <Text style={styles.supportCalloutLabel}>{support.label}</Text>
           </View>
           <Text style={styles.supportCalloutBody}>{support.body}</Text>
         </View>
       )}
-      <Text style={styles.statText}>{insight.stat}</Text>
     </LinearGradient>
   );
 };
@@ -925,16 +1138,22 @@ const DEEP_LEVEL_LABELS: Record<string, string> = {
 };
 
 const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const accent = NARRATIVE_ACCENT[insight.accent] ?? PALETTE.gold;
   const icon = DEEP_LEVEL_ICONS[insight.level] ?? 'sparkles-outline';
   const levelLabel = DEEP_LEVEL_LABELS[insight.level] ?? insight.level.toUpperCase();
   return (
-    <LinearGradient colors={[`${accent}14`, 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+    <LinearGradient colors={themedCardGradient(theme, accent, { lightTopAlpha: 0.15 })} style={styles.insightCard}>
       <View style={styles.narrativeHeader}>
         <MetallicIcon name={icon} size={14} variant="gold" />
-        <MetallicText style={styles.insightLabel} color={accent}>{insight.title.toUpperCase()}</MetallicText>
-        <View style={[styles.narrativeConfidence, { backgroundColor: `${accent}18`, borderColor: `${accent}40` }]}>
-          <Text style={[styles.narrativeConfidenceText, { color: accent }]}>
+        {theme.isDark ? (
+          <MetallicText style={styles.insightLabel} color={accent}>{insight.title.toUpperCase()}</MetallicText>
+        ) : (
+          <Text style={styles.insightLabelLight}>{insight.title.toUpperCase()}</Text>
+        )}
+        <View style={[styles.narrativeConfidence, theme.isDark ? { backgroundColor: `${accent}18`, borderColor: `${accent}40` } : styles.badgeRecessedLight]}>
+          <Text style={[styles.narrativeConfidenceText, !theme.isDark && styles.narrativeConfidenceTextLight, theme.isDark && { color: accent }]}>
             {insight.confidence === 'strong' ? 'STRONG' : insight.confidence === 'growing' ? 'GROWING' : 'EMERGING'}
           </Text>
         </View>
@@ -945,7 +1164,7 @@ const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
           {insight.job === 'name' ? '◆ NAMING' : insight.job === 'clarify' ? '◆ CLARIFYING' : insight.job === 'guide' ? '◆ GUIDING' : '◆ INTEGRATING'}
         </Text>
       </View>
-      <Text style={styles.insightBody}>{keepLastWordsTogether(insight.body)}</Text>
+      <Text style={styles.insightBody}>{renderEditorialCopy(keepLastWordsTogether(insight.body), styles.insightBodyEmphasis)}</Text>
       {insight.detail && <Text style={styles.statText}>{insight.detail}</Text>}
       {insight.selfLanguage && (
         <Text style={[styles.selfLanguageText, { color: `${accent}CC` }]}>&ldquo;{insight.selfLanguage}&rdquo;</Text>
@@ -960,8 +1179,8 @@ const DeepInsightCard = ({ insight }: { insight: DeepInsight }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   header: { marginBottom: 32 },
@@ -977,48 +1196,59 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(212,175,55,0.08)',
+    backgroundColor: theme.isDark ? 'rgba(212,175,55,0.08)' : 'rgba(255, 248, 235, 0.92)',
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.2)',
+    borderColor: theme.isDark ? 'rgba(212,175,55,0.2)' : 'rgba(181, 138, 58, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
+    shadowColor: theme.isDark ? 'transparent' : 'rgba(111, 85, 46, 0.18)',
+    shadowOpacity: theme.isDark ? 0 : 1,
+    shadowRadius: theme.isDark ? 0 : 18,
+    shadowOffset: { width: 0, height: 8 },
   },
-  title: { fontSize: 29, fontWeight: '800', color: PALETTE.textMain, letterSpacing: -0.28, marginBottom: 4 },
-  subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' },
+  title: { fontSize: 29, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.28, marginBottom: 4 },
+  subtitle: { fontSize: 12, fontStyle: 'normal', fontWeight: '600', letterSpacing: 1.2, textTransform: 'uppercase', color: theme.textSecondary },
+  subtitleText: { fontSize: 12, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' as const, color: theme.textGold, opacity: 0.92 },
   snapshotRow: { flexDirection: 'row', gap: 14, marginBottom: 40 },
-  metricCard: { flex: 1, paddingVertical: 24, paddingHorizontal: 18, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', alignItems: 'center', minHeight: 118, backgroundColor: 'rgba(255,255,255,0.04)' },
+  metricCard: { flex: 1, paddingVertical: 24, paddingHorizontal: 18, borderRadius: 24, borderWidth: 1, borderColor: theme.isDark ? theme.cardBorder : 'rgba(146, 124, 88, 0.16)', alignItems: 'center', minHeight: 118, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurfaceStrong, shadowColor: theme.isDark ? 'transparent' : 'rgba(111, 85, 46, 0.12)', shadowOpacity: theme.isDark ? 0 : 1, shadowRadius: theme.isDark ? 0 : 16, shadowOffset: { width: 0, height: 8 } },
   metricLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, marginBottom: 10, textTransform: 'uppercase', textAlign: 'center' },
-  metricValue: { color: PALETTE.textMain, fontSize: 24, fontWeight: '500', fontVariant: ['tabular-nums'] },
-  metricSub: { color: 'rgba(255,255,255,0.66)', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '500' },
+  metricLabelLight: { fontWeight: '800', opacity: 0.98 },
+  metricValue: { color: theme.textPrimary, fontSize: 30, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  metricSub: { color: theme.isDark ? theme.textMuted : 'rgba(22, 32, 51, 0.64)', fontSize: 12, marginTop: 8, textAlign: 'center', fontWeight: '600', lineHeight: 16 },
   visualSection: { alignItems: 'center', marginBottom: 40 },
-  orbitCard: { borderRadius: 24, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center', width: '100%', overflow: 'visible' },
+  orbitCard: { borderRadius: 24, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 4, borderWidth: 1, borderColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.42)', borderTopColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.92)', borderLeftColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.84)', borderRightColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.44)', borderBottomColor: theme.isDark ? theme.cardBorder : 'rgba(166,152,132,0.22)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurfaceStrong, alignItems: 'center', width: '100%', overflow: 'visible', shadowColor: theme.isDark ? 'transparent' : '#000', shadowOpacity: theme.isDark ? 0 : 0.04, shadowRadius: theme.isDark ? 0 : 16, shadowOffset: { width: 0, height: 10 } },
+  lightGlassSheen: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 24 },
   orbitCardBg: { borderRadius: 24, overflow: 'hidden' },
   orbitCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 8, paddingHorizontal: 20 },
   orbitCardEyebrow: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
+  orbitCardEyebrowLight: { fontSize: 11, fontWeight: '800', letterSpacing: 1.6, color: LIGHT_MODE_INK, opacity: 0.96 },
   orbitCardFooter: { marginTop: 8, alignSelf: 'center' },
-  orbitCardFooterText: { fontSize: 11, color: 'rgba(255,255,255,0.54)', textAlign: 'center', lineHeight: 17 },
+  orbitCardFooterText: { fontSize: 11, color: theme.isDark ? theme.textMuted : 'rgba(22, 32, 51, 0.56)', textAlign: 'center', lineHeight: 17, fontWeight: '500' },
   section: { marginBottom: 0 },
   sectionHeaderWrap: { marginBottom: 20, marginTop: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  sectionHeaderLabel: { fontSize: 13, fontWeight: '700', color: '#FFFFFF', letterSpacing: 1.3, textTransform: 'uppercase' as const },
-  sectionHeaderSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.62)', marginTop: 4, lineHeight: 19 },
-  insightCard: { padding: 32, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)', marginBottom: 32, overflow: 'hidden' },
+  sectionHeaderLabel: { fontSize: 13, fontWeight: '700', color: theme.textPrimary, letterSpacing: 1.3, textTransform: 'uppercase' as const },
+  sectionHeaderLabelLight: { fontSize: 13, fontWeight: '700', color: LIGHT_MODE_INK, letterSpacing: 1.3, textTransform: 'uppercase' as const },
+  sectionHeaderSubtitle: { fontSize: 13, color: theme.textMuted, marginTop: 4, lineHeight: 19 },
+  insightCard: { padding: 32, borderRadius: 24, borderWidth: 1, borderColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.42)', borderTopColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.92)', borderLeftColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.84)', borderRightColor: theme.isDark ? theme.cardBorder : 'rgba(255,255,255,0.44)', borderBottomColor: theme.isDark ? theme.cardBorder : 'rgba(166,152,132,0.22)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.34)', marginBottom: 32, overflow: 'hidden', shadowColor: theme.isDark ? 'transparent' : '#000', shadowOpacity: theme.isDark ? 0 : 0.04, shadowRadius: theme.isDark ? 0 : 16, shadowOffset: { width: 0, height: 10 } },
   insightLabel: { fontSize: 10, fontWeight: '800', color: PALETTE.gold, letterSpacing: 2, marginBottom: 12, textTransform: 'uppercase' },
-  insightBody: { color: 'rgba(255,255,255,0.82)', fontSize: 16, lineHeight: 24 },
+  insightLabelLight: { fontSize: 10, fontWeight: '800', color: LIGHT_MODE_INK, letterSpacing: 2, marginBottom: 12, textTransform: 'uppercase' },
+  insightBody: { color: theme.textSecondary, fontSize: 16, lineHeight: 26, letterSpacing: 0.2 },
   loopCard: { marginBottom: 32 },
   loopTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
 
 
 
   // Blended
-  blendedTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.textMain, marginBottom: 10 },
-  journalPromptBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: 'rgba(201,174,120,0.06)', borderWidth: 1, borderColor: 'rgba(201,174,120,0.15)' },
-  journalPromptText: { flex: 1, color: 'rgba(255,255,255,0.74)', fontSize: 14, lineHeight: 22 },
-  statText: { fontSize: 11, color: 'rgba(255,255,255,0.56)', marginTop: 8, lineHeight: 17 },
+  blendedTitle: { fontSize: 15, fontWeight: '700', color: theme.textPrimary, marginBottom: 10 },
+  journalPromptBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, padding: 14, borderRadius: 14, backgroundColor: theme.isDark ? 'rgba(201,174,120,0.06)' : 'rgba(255,255,255,0.50)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(201,174,120,0.15)' : 'rgba(255,255,255,0.92)' },
+  journalPromptText: { flex: 1, color: theme.textSecondary, fontSize: 14, lineHeight: 22 },
+  statText: { fontSize: 12, color: theme.isDark ? theme.textMuted : LIGHT_MODE_META, marginTop: 8, lineHeight: 18 },
+  insightBodyEmphasis: { color: theme.isDark ? theme.textPrimary : LIGHT_MODE_INK, fontWeight: '700' },
 
   // Lift & Drain
-  liftIntro: { fontSize: 14, color: 'rgba(255,255,255,0.74)', lineHeight: 22, marginBottom: 16 },
+  liftIntro: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, marginBottom: 16 },
   liftGroup: {},
   liftLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   liftGroupLabel: { fontSize: 13, fontWeight: '700' },
@@ -1029,47 +1259,47 @@ const styles = StyleSheet.create({
   // Time patterns
   timeGrid: { marginTop: 16, gap: 10 },
   timeBucket: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  timeBucketLabel: { width: 80, fontSize: 12, color: 'rgba(255,255,255,0.66)' },
-  timeBucketBar: { flex: 1, height: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  timeBucketLabel: { width: 80, fontSize: 12, color: theme.textSecondary },
+  timeBucketBar: { flex: 1, height: 6, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', overflow: 'hidden' },
   timeBucketFill: { height: '100%', borderRadius: 999 },
-  timeBucketValue: { width: 28, textAlign: 'right', fontSize: 12, color: 'rgba(255,255,255,0.68)' },
+  timeBucketValue: { width: 28, textAlign: 'right', fontSize: 12, color: theme.textSecondary },
 
-  dayGrid: { flexDirection: 'row', gap: 6, marginTop: 16, height: 60, alignItems: 'flex-end' },
-  dayColumn: { flex: 1, alignItems: 'center', gap: 6 },
-  dayBarWrap: { flex: 1, width: '100%', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden', justifyContent: 'flex-end' },
-  dayBarFill: { width: '100%', borderRadius: 4 },
-  dayLabel: { fontSize: 10, color: 'rgba(255,255,255,0.56)' },
+  dayGrid: { flexDirection: 'row', gap: 10, marginTop: 16, height: 84, alignItems: 'flex-end' },
+  dayColumn: { flex: 1, alignItems: 'center', gap: 8 },
+  dayBarWrap: { flex: 1, width: 8, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: 999, overflow: 'hidden', justifyContent: 'flex-end' },
+  dayBarFill: { width: '100%', borderRadius: 999 },
+  dayLabel: { fontSize: 10, color: theme.textMuted },
 
   // Emotion patterns
   emotionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
   emotionNameWrap: { width: 124, justifyContent: 'center', paddingRight: 6 },
-  emotionName: { fontSize: 13, color: PALETTE.textMain, fontWeight: '600' },
+  emotionName: { fontSize: 13, color: theme.textPrimary, fontWeight: '600' },
   emotionInsight: { fontSize: 12, lineHeight: 18 },
   emotionBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
   emotionBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
 
   // Keywords
-  keywordPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, backgroundColor: 'rgba(201,174,120,0.06)' },
-  keywordPillText: { color: PALETTE.textMain, fontSize: 13 },
-  keywordPillCount: { fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: '700' },
+  keywordPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, backgroundColor: theme.isDark ? 'rgba(201,174,120,0.06)' : 'rgba(255,255,255,0.44)' },
+  keywordPillText: { color: theme.textPrimary, fontSize: 13 },
+  keywordPillCount: { fontSize: 10, color: theme.textMuted, fontWeight: '700' },
 
   // Tone
   toneRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   toneLabel: { fontSize: 13, fontWeight: '700' },
-  toneValue: { fontSize: 13, color: 'rgba(255,255,255,0.74)' },
+  toneValue: { fontSize: 13, color: theme.textSecondary },
 
   // Stability
   stabilityRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 10 },
-  stabilityMetric: { width: 58, fontSize: 13, color: PALETTE.textMain, fontWeight: '600' },
-  stabilityBar: { flex: 1, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  stabilityMetric: { width: 58, fontSize: 13, color: theme.textPrimary, fontWeight: '600' },
+  stabilityBar: { flex: 1, height: 6, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', overflow: 'hidden' },
   stabilityFill: { height: '100%', borderRadius: 3 },
-  stabilityBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  stabilityBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: theme.isDark ? 0 : 1, borderColor: theme.isDark ? 'transparent' : 'rgba(0,0,0,0.08)', backgroundColor: theme.isDark ? 'transparent' : 'rgba(0,0,0,0.04)' },
   stabilityBadgeText: { fontSize: 10, fontWeight: '700' },
 
   // Correlations
   correlationRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
-  correlationMetrics: { width: 130, fontSize: 12, color: 'rgba(255,255,255,0.74)', textTransform: 'capitalize' },
-  correlationBarWrap: { flex: 1, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  correlationMetrics: { width: 130, fontSize: 12, color: theme.textSecondary, textTransform: 'capitalize' },
+  correlationBarWrap: { flex: 1, height: 4, borderRadius: 2, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface, overflow: 'hidden' },
   correlationFill: { height: '100%', borderRadius: 2 },
   correlationLabel: { fontSize: 10, fontWeight: '700', textAlign: 'right', width: 90 },
 
@@ -1077,28 +1307,49 @@ const styles = StyleSheet.create({
   crossRefHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   confirmedBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1 },
   confirmedText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  patternTitle: { fontSize: 15, fontWeight: '700', color: PALETTE.textMain, marginBottom: 8 },
+  confirmedTextLight: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: LIGHT_MODE_INK },
+  patternTitle: { fontSize: 15, fontWeight: '700', color: theme.textPrimary, marginBottom: 8 },
 
   // Narrative insights
   narrativeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
   narrativeConfidence: { marginLeft: 'auto', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
   narrativeConfidenceText: { fontSize: 8, fontWeight: '800', letterSpacing: 0.8 },
-  supportCallout: { marginTop: 14, padding: 14, borderRadius: 16, backgroundColor: 'rgba(107,144,128,0.10)', borderWidth: 1, borderColor: 'rgba(107,144,128,0.20)' },
+  narrativeConfidenceTextLight: { color: LIGHT_MODE_INK },
+  badgeRecessedLight: { backgroundColor: 'rgba(0,0,0,0.04)', borderColor: 'rgba(0,0,0,0.08)' },
+  heroMetricsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
+  heroMetricChip: {
+    minWidth: '31%',
+    flexGrow: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  heroMetricValue: { fontSize: 17, fontWeight: '800', lineHeight: 21, marginBottom: 4 },
+  heroMetricLabel: {
+    fontSize: 10,
+    color: theme.textMuted,
+    fontWeight: '700',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase' as const,
+    lineHeight: 14,
+  },
+  supportCallout: { marginTop: 14, padding: 14, borderRadius: 16, backgroundColor: theme.isDark ? 'rgba(107,144,128,0.10)' : 'rgba(255,255,255,0.50)', borderWidth: 1, borderColor: theme.isDark ? 'rgba(107,144,128,0.20)' : 'rgba(255,255,255,0.92)' },
   supportCalloutHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  supportCalloutLabel: { color: '#6B9080', fontSize: 11, fontWeight: '800', letterSpacing: 1.1, textTransform: 'uppercase' as const },
-  supportCalloutBody: { color: 'rgba(255,255,255,0.82)', fontSize: 14, lineHeight: 21 },
+  supportCalloutLabel: { color: theme.isDark ? '#6B9080' : LIGHT_MODE_INK, fontSize: 11, fontWeight: '800', letterSpacing: 1.1, textTransform: 'uppercase' as const },
+  supportCalloutBody: { color: theme.textSecondary, fontSize: 14, lineHeight: 23, letterSpacing: 0.15 },
   deepLevelBadge: { marginBottom: 10 },
   deepLevelText: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' as const },
-  personalTruthsWrap: { marginTop: 20, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212,175,55,0.15)', backgroundColor: 'rgba(212,175,55,0.04)' },
+  personalTruthsWrap: { marginTop: 20, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: theme.isDark ? 'rgba(212,175,55,0.15)' : 'rgba(212,175,55,0.22)', backgroundColor: theme.isDark ? 'rgba(212,175,55,0.04)' : 'rgba(212,175,55,0.08)' },
   personalTruthsHeader: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 16 },
-  personalTruthText: { color: 'rgba(255,255,255,0.78)', fontSize: 14, lineHeight: 22, marginBottom: 12, fontWeight: '400' },
-  seasonCard: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(212,175,55,0.12)', marginBottom: 16, backgroundColor: 'rgba(212,175,55,0.03)' },
+  personalTruthText: { color: theme.textSecondary, fontSize: 14, lineHeight: 22, marginBottom: 12, fontWeight: '400' },
+  seasonCard: { padding: 20, borderRadius: 20, borderWidth: 1, borderColor: theme.isDark ? 'rgba(212,175,55,0.12)' : 'rgba(212,175,55,0.18)', marginBottom: 16, backgroundColor: theme.isDark ? 'rgba(212,175,55,0.03)' : 'rgba(212,175,55,0.06)' },
   seasonLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: 12 },
-  memoryWrap: { marginTop: 16, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'rgba(255,255,255,0.05)' },
-  memoryText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 20, marginBottom: 10, fontStyle: 'italic' as const, fontWeight: '400' },
+  memoryWrap: { marginTop: 16, padding: 20, borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
+  memoryText: { color: theme.textSecondary, fontSize: 13, lineHeight: 20, marginBottom: 10, fontStyle: 'italic' as const, fontWeight: '400' },
   selfLanguageText: { fontSize: 13, fontStyle: 'italic' as const, marginTop: 10, fontWeight: '500' },
-  reflectionPromptWrap: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8, marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.04)' },
-  reflectionPromptText: { color: 'rgba(255,255,255,0.45)', fontSize: 13, lineHeight: 19, flex: 1, fontStyle: 'italic' as const, fontWeight: '400' },
+  reflectionPromptWrap: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8, marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(98, 78, 44, 0.08)' },
+  reflectionPromptText: { color: theme.textMuted, fontSize: 13, lineHeight: 19, flex: 1, fontStyle: 'italic' as const, fontWeight: '400' },
 
 });
 

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient, BlurMask } from '@shopify/react-native-skia';
+import { Canvas, Path, Circle, vec, Line as SkiaLine, RadialGradient as SkiaRadialGradient, BlurMask, Shadow } from '@shopify/react-native-skia';
 import { type AppTheme } from '../../constants/theme';
 import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
@@ -55,7 +55,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   const getCoordinates = (value: number, index: number, isLabel: boolean = false) => {
     // Offset by -90 degrees (Math.PI / 2) to start at the top
     const angle = (Math.PI * 2 * index) / forces.length - Math.PI / 2;
-    const r = isLabel ? radius * 1.01 : (radius * value) / 100;
+    const r = isLabel ? radius * 1.08 : (radius * value) / 100;
     return {
       x: center + r * Math.cos(angle),
       y: center + r * Math.sin(angle),
@@ -66,7 +66,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
   const dominantForce = useMemo(() => {
     if (forces.length === 0) return theme.primary;
     return forces.reduce((prev, current) => (prev.value > current.value ? prev : current)).color;
-  }, [forces]);
+  }, [forces, theme.primary]);
 
   // Map valid polygon points for Skia Path
   const skiaPath = useMemo(() => {
@@ -133,7 +133,10 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
             colors={[`${dominantForce}55`, `${dominantForce}10`]}
           />
         </Path>
-        <Path path={skiaPath} color={dominantForce} style="stroke" strokeWidth={2} strokeJoin="round" opacity={0.85} />
+        <Path path={skiaPath} color={dominantForce} style="stroke" strokeWidth={2} strokeJoin="round" opacity={0.85}>
+          <Shadow dx={0} dy={0} blur={10} color={`${dominantForce}88`} />
+          <Shadow dx={0} dy={0} blur={4} color={`${dominantForce}CC`} />
+        </Path>
         
         {/* Force Points — glow halo + crisp dot */}
         {forces.map((force, i) => {
@@ -158,8 +161,8 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
         const isCenter = !isLeft && !isRight;
         const isAbove  = labelPoint.y < center;
 
-        const leftOffset = isCenter ? -56 : isLeft ? -116 : 10;
-        const topOffset  = isCenter ? (isAbove ? -24 : 6) : -12;
+        const leftOffset = isCenter ? -52 : isLeft ? -108 : 8;
+        const topOffset  = isCenter ? (isAbove ? -22 : 4) : -10;
 
         const textContent = SHORT_FORCE_LABELS[force.label] ?? force.label;
 
@@ -170,7 +173,7 @@ export const PsychologicalForcesRadar: React.FC<PsychologicalForcesRadarProps> =
               position: 'absolute',
               top: labelPoint.y + topOffset,
               left: labelPoint.x + leftOffset,
-              width: 100,
+              width: 96,
               alignItems: isCenter ? 'center' : isLeft ? 'flex-end' : 'flex-start',
             }}>
             <Text

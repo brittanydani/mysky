@@ -487,6 +487,101 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const rawAscLongitude = getLongitude((chart as any).ascendant) ?? 0;
+  const wheelPalette = useMemo(() => {
+    if (theme.isDark) {
+      return {
+        rimGlow: 'rgba(232, 214, 174, 0.28)',
+        divider: 'rgba(184, 155, 106, 0.25)',
+        zodiacInk: 'rgba(240, 234, 214, 0.7)',
+        houseInk: 'rgba(240, 234, 214, 0.72)',
+        angularLine: 'rgba(232, 214, 174, 0.7)',
+        regularLine: 'rgba(232, 214, 174, 0.45)',
+        ringStroke: [
+          'rgba(232, 214, 174, 0.12)',
+          'rgba(255, 255, 255, 1)',
+          'rgba(232, 214, 174, 0.12)',
+          'rgba(255, 255, 255, 0.8)',
+          'rgba(232, 214, 174, 0.12)',
+        ],
+        specularSoft: 'rgba(255,255,255,0.35)',
+        specularMuted: 'rgba(255,255,255,0.22)',
+        specularStrong: 'rgba(255,255,255,0.55)',
+        specularPeak: 'rgba(255,255,255,0.75)',
+        bounce: 'rgba(255,245,220,0.22)',
+        dottedRing: [
+          'rgba(255,255,255,0.10)',
+          'rgba(255,255,255,1.0)',
+          'rgba(255,255,255,0.10)',
+          'rgba(255,255,255,0.90)',
+          'rgba(255,255,255,0.10)',
+        ],
+        pointText: '#FFFFFF',
+        glyphText: '#000000',
+        angleLabel: 'rgba(255,240,200,0.90)',
+        centerHalo: ['rgba(184,155,106,0.10)', 'rgba(184,155,106,0.04)', 'rgba(184,155,106,0.00)'],
+        centerHaloStroke: 'rgba(2,8,23,0.70)',
+        centerFill: ['#020817', '#020817', '#020817'],
+        centerSparkle: 'rgba(255,255,255,0.30)',
+        centerRing: [
+          'rgba(232, 214, 174, 0.15)',
+          'rgba(255, 255, 255, 1.0)',
+          'rgba(232, 214, 174, 0.15)',
+          'rgba(255, 255, 255, 0.60)',
+          'rgba(232, 214, 174, 0.15)',
+        ],
+        synastryLabel: 'rgba(255,255,255,0.7)',
+        synastryName: 'rgba(184,155,106,0.95)',
+        aspectColor: (alpha: number) => `rgba(232, 214, 174, ${alpha})`,
+        aspectGlow: (alpha: number) => `rgba(233, 217, 184, ${alpha})`,
+      };
+    }
+
+    return {
+      rimGlow: 'rgba(181, 145, 79, 0.22)',
+      divider: 'rgba(145, 113, 58, 0.30)',
+      zodiacInk: 'rgba(111, 85, 46, 0.84)',
+      houseInk: 'rgba(67, 50, 29, 0.82)',
+      angularLine: 'rgba(134, 101, 54, 0.82)',
+      regularLine: 'rgba(152, 118, 69, 0.60)',
+      ringStroke: [
+        'rgba(177, 142, 84, 0.32)',
+        'rgba(255, 253, 248, 0.92)',
+        'rgba(177, 142, 84, 0.24)',
+        'rgba(255, 255, 255, 0.72)',
+        'rgba(177, 142, 84, 0.30)',
+      ],
+      specularSoft: 'rgba(255,255,255,0.24)',
+      specularMuted: 'rgba(255,255,255,0.14)',
+      specularStrong: 'rgba(255,255,255,0.38)',
+      specularPeak: 'rgba(255,255,255,0.52)',
+      bounce: 'rgba(204,184,146,0.24)',
+      dottedRing: [
+        'rgba(140,118,84,0.16)',
+        'rgba(255,255,255,0.62)',
+        'rgba(140,118,84,0.18)',
+        'rgba(255,255,255,0.48)',
+        'rgba(140,118,84,0.16)',
+      ],
+      pointText: '#43321D',
+      glyphText: '#141B2C',
+      angleLabel: 'rgba(67,50,29,0.92)',
+      centerHalo: ['rgba(201,174,120,0.18)', 'rgba(201,174,120,0.08)', 'rgba(201,174,120,0.00)'],
+      centerHaloStroke: 'rgba(201,174,120,0.28)',
+      centerFill: ['#FBF7EF', '#F3E9D7', '#E8D9BC'],
+      centerSparkle: 'rgba(255,255,255,0.60)',
+      centerRing: [
+        'rgba(190, 155, 93, 0.24)',
+        'rgba(255, 255, 255, 0.92)',
+        'rgba(190, 155, 93, 0.18)',
+        'rgba(255, 255, 255, 0.62)',
+        'rgba(190, 155, 93, 0.24)',
+      ],
+      synastryLabel: 'rgba(67,50,29,0.72)',
+      synastryName: 'rgba(111,85,46,0.96)',
+      aspectColor: (alpha: number) => `rgba(140, 106, 58, ${Math.min(alpha + 0.08, 0.72)})`,
+      aspectGlow: (alpha: number) => `rgba(200, 168, 113, ${Math.min(alpha + 0.05, 0.34)})`,
+    };
+  }, [theme.isDark]);
 
   const [settingsOrientation, setSettingsOrientation] = useState<ChartOrientation>('standard-natal');
   useEffect(() => {
@@ -675,15 +770,15 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           y1: p1.y,
           x2: p2.x,
           y2: p2.y,
-          color: `rgba(232, 214, 174,${topAlpha})`, // #C5B493 in rgb
-          glowColor: `rgba(233,217,184,${glowAlpha})`, // #e9d9b8 in rgb
+          color: wheelPalette.aspectColor(topAlpha),
+          glowColor: wheelPalette.aspectGlow(glowAlpha),
           strokeWidth: 1.0,
           dashed: typeName !== 'trine' && typeName !== 'sextile' && typeName !== 'conjunction',
         });
       }
 
       return lines;
-    }, [visibleAspects, planetLongitudes, ascLongitude]);
+    }, [visibleAspects, planetLongitudes, ascLongitude, wheelPalette]);
   const crossLines = useMemo(() => {
     const lines: {
       x1: number;
@@ -731,7 +826,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         {/* ── Outer Zodiac Border (Major Ring) ── */}
         <Group>
           {/* Underglow */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.28)">
+          <Circle cx={CX} cy={CY} r={R_OUTER + 44} style="stroke" strokeWidth={4} color={wheelPalette.rimGlow}>
             <BlurMask blur={4} style="normal" />
           </Circle>
           
@@ -768,7 +863,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         <Group>
           {/* 1. Outer Gold Bezel */}
           {/* Glow layer */}
-          <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color="rgba(232, 214, 174,0.28)">
+          <Circle cx={CX} cy={CY} r={R_OUTER + 2} style="stroke" strokeWidth={4} color={wheelPalette.rimGlow}>
             <BlurMask blur={3} style="normal" />
           </Circle>
           
@@ -828,7 +923,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
               <Line 
                 p1={vec(pInner.x, pInner.y)} 
                 p2={vec(pOuter.x, pOuter.y)} 
-                color="rgba(184,155,106,0.25)" 
+                color={wheelPalette.divider} 
                 strokeWidth={0.8} 
               />
               
@@ -839,7 +934,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   y={tc.y + 8}
                   text={sign.symbol}
                   font={zodiac24}
-                  color="rgba(240, 234, 214,0.7)"
+                  color={wheelPalette.zodiacInk}
                 />
               )}
             </Group>
@@ -855,7 +950,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
 
           const isAngular = (cusp as any).house === 1 || (cusp as any).house === 4 || (cusp as any).house === 7 || (cusp as any).house === 10;
           const strokeW = isAngular ? 1.0 : 0.8;
-          const strokeColor = isAngular ? 'rgba(232, 214, 174,0.7)' : 'rgba(232, 214, 174,0.45)';
+          const strokeColor = isAngular ? wheelPalette.angularLine : wheelPalette.regularLine;
 
           const cusps = chart.houseCusps ?? [];
           const nextHouse = cusps.find((c: HouseCusp) => (c as any).house === (((cusp as any).house % 12) + 1));
@@ -881,7 +976,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   y={numPos.y + 3.5}
                   text={houseText}
                   font={sans9}
-                  color="rgba(240, 234, 214,0.7)"
+                  color={wheelPalette.houseInk}
                 />
               )}
             </Group>
@@ -893,13 +988,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           <Circle cx={CX} cy={CY} r={R_HOUSE_OUTER} style="stroke" strokeWidth={0.8} opacity={0.90}>
             <SweepGradient
               c={vec(CX, CY)}
-              colors={[
-                'rgba(232, 214, 174, 0.12)',
-                'rgba(255, 255, 255, 1.0)',
-                'rgba(232, 214, 174, 0.12)',
-                'rgba(255, 255, 255, 0.80)',
-                'rgba(232, 214, 174, 0.12)'
-              ]}
+              colors={wheelPalette.ringStroke}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
@@ -911,7 +1000,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
             style="stroke"
             strokeWidth={1.6}
             strokeCap="round"
-            color="rgba(255,255,255,0.35)"
+            color={wheelPalette.specularSoft}
           >
             <BlurMask blur={1.5} style="normal" />
           </Path>
@@ -922,7 +1011,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
             style="stroke"
             strokeWidth={1.2}
             strokeCap="round"
-            color="rgba(255,255,255,0.28)"
+            color={wheelPalette.specularSoft}
           >
             <BlurMask blur={1.5} style="normal" />
           </Path>
@@ -934,7 +1023,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           style="stroke"
           strokeWidth={1.8}
           strokeCap="round"
-          color="rgba(255,255,255,0.22)"
+          color={wheelPalette.specularMuted}
         >
           <BlurMask blur={2} style="normal" />
         </Path>
@@ -945,7 +1034,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           style="stroke"
           strokeWidth={3.0}
           strokeCap="round"
-          color="rgba(255,255,255,0.55)"
+          color={wheelPalette.specularStrong}
         >
           <BlurMask blur={1.2} style="normal" />
         </Path>
@@ -956,7 +1045,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           style="stroke"
           strokeWidth={4.0}
           strokeCap="round"
-          color="rgba(255,255,255,0.75)"
+          color={wheelPalette.specularPeak}
         >
           <BlurMask blur={0.8} style="normal" />
         </Path>
@@ -967,7 +1056,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           style="stroke"
           strokeWidth={1.0}
           strokeCap="round"
-          color="rgba(255,255,255,0.10)"
+          color={wheelPalette.specularMuted}
         >
           <BlurMask blur={1.5} style="normal" />
         </Path>
@@ -978,7 +1067,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           style="stroke"
           strokeWidth={1.8}
           strokeCap="round"
-          color="rgba(255,245,220,0.22)"
+          color={wheelPalette.bounce}
         >
           <BlurMask blur={2} style="normal" />
         </Path>
@@ -987,7 +1076,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
         <Circle cx={CX} cy={CY} r={R_DOT_RING_1} style="stroke" strokeWidth={0.8} opacity={0.85}>
           <SweepGradient
               c={vec(CX, CY)}
-              colors={['rgba(255,255,255,0.10)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.10)', 'rgba(255,255,255,0.90)', 'rgba(255,255,255,0.10)']}
+              colors={wheelPalette.dottedRing}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
@@ -999,14 +1088,14 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           style="stroke"
           strokeWidth={1.4}
           strokeCap="round"
-          color="rgba(255,255,255,0.40)"
+          color={wheelPalette.specularStrong}
         >
           <BlurMask blur={1} style="normal" />
         </Path>
         <Circle cx={CX} cy={CY} r={R_DOT_RING_2} style="stroke" strokeWidth={0.8} opacity={0.85}>
           <SweepGradient
               c={vec(CX, CY)}
-              colors={['rgba(255,255,255,0.10)', 'rgba(255,255,255,1.0)', 'rgba(255,255,255,0.10)', 'rgba(255,255,255,0.90)', 'rgba(255,255,255,0.10)']}
+              colors={wheelPalette.dottedRing}
               positions={[0, 0.25, 0.5, 0.75, 1]}
               transform={[{rotate: -0.3}]}
             />
@@ -1018,7 +1107,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           style="stroke"
           strokeWidth={1.4}
           strokeCap="round"
-          color="rgba(255,255,255,0.35)"
+          color={wheelPalette.specularSoft}
         >
           <BlurMask blur={1} style="normal" />
         </Path>
@@ -1093,7 +1182,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           // Tick extends from the rim to the glyph; use originalAngle endpoint so the
           // hair-line visually connects to the sphere at exact degree.
           const tickInner = polarToXY(planet.originalAngle, isPoint ? actualRadius + 15 : actualRadius + PLANET_R + 2);
-          const textColor = isPoint ? "#FFFFFF" : "#000000";
+          const textColor = isPoint ? wheelPalette.pointText : wheelPalette.glyphText;
           const textOpacity = 1.0;
           const textStyle = isPoint ? "fill" : "stroke";
           const strokeWidthVal = isPoint ? 0 : 1.5;
@@ -1191,7 +1280,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   // K lower arm: from mid-stem going lower-right
                   path.moveTo(cx, cy + 1);
                   path.lineTo(cx + 4.5, cy + 5);
-                  return <Path path={path} style="stroke" strokeWidth={0.8} color="#FFFFFF" strokeCap="round" />;
+                  return <Path path={path} style="stroke" strokeWidth={0.8} color={wheelPalette.pointText} strokeCap="round" />;
                 })()
               ) : symbolFont ? (
                 <SkiaText
@@ -1335,10 +1424,10 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   // K lower arm
                   path.moveTo(cx, cy + 0.8);
                   path.lineTo(cx + 3.6, cy + 4);
-                  return <Path path={path} style="stroke" strokeWidth={0.7} color="#FFFFFF" strokeCap="round" />;
+                  return <Path path={path} style="stroke" strokeWidth={0.7} color={wheelPalette.pointText} strokeCap="round" />;
                 })()
               ) : glyphFont && (
-                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color="#000000" style="stroke" strokeWidth={1.2} />
+                <SkiaText x={glyphPos.x - glyphOffsetX} y={glyphPos.y + glyphOffsetY} text={glyph} font={glyphFont} color={wheelPalette.glyphText} style="stroke" strokeWidth={1.2} />
               )}
 
               {/* Retrograde mark */}
@@ -1382,7 +1471,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                       y={acPos.y + 4}
                       text={acText}
                       font={sans8}
-                      color="rgba(255,240,200,0.90)"
+                      color={wheelPalette.angleLabel}
                     />
                     {/* DC — right / 3 o'clock */}
                     <SkiaText
@@ -1390,7 +1479,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                       y={dcPos.y + 4}
                       text={dcText}
                       font={sans8}
-                      color="rgba(255,240,200,0.90)"
+                      color={wheelPalette.angleLabel}
                     />
                   </>
                 )}
@@ -1423,7 +1512,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                       y={mcPos.y + 4}
                       text="MC"
                       font={sans8}
-                      color="rgba(255,240,200,0.90)"
+                      color={wheelPalette.angleLabel}
                     />
                     {/* IC — bottom / 6 o'clock */}
                     <SkiaText
@@ -1431,7 +1520,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                       y={icPos.y + 4}
                       text="IC"
                       font={sans8}
-                      color="rgba(255,240,200,0.90)"
+                      color={wheelPalette.angleLabel}
                     />
                   </>
                 )}
@@ -1444,30 +1533,26 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           <RadialGradient
             c={vec(CX, CY)}
             r={R_INNER + 24}
-            colors={['rgba(184,155,106,0.10)', 'rgba(184,155,106,0.04)', 'rgba(184,155,106,0.00)']}
+            colors={wheelPalette.centerHalo}
             positions={[0, 0.55, 1]}
           />
         </Circle>
 
         {/* Navy shadow halo */}
-        <Circle cx={CX} cy={CY} r={R_INNER + 4} style="stroke" strokeWidth={6} color="rgba(2,8,23,0.70)" />
+        <Circle cx={CX} cy={CY} r={R_INNER + 4} style="stroke" strokeWidth={6} color={wheelPalette.centerHaloStroke} />
 
         {/* Glass face (deeper, cosmic) */}
         <Circle cx={CX} cy={CY} r={R_INNER}>
           <RadialGradient
             c={vec(CX - 10, CY - 12)}
             r={R_INNER * 1.8}
-            colors={[
-              '#020817',   // match background
-              '#020817',   // match background
-              '#020817'    // match background
-            ]}
+            colors={wheelPalette.centerFill}
             positions={[0, 0.55, 1]}
           />
         </Circle>
 
         {/* Tiny specular dot on center hub — point light catch */}
-        <Circle cx={CX - R_INNER * 0.25} cy={CY - R_INNER * 0.35} r={3} color="rgba(255,255,255,0.30)">
+        <Circle cx={CX - R_INNER * 0.25} cy={CY - R_INNER * 0.35} r={3} color={wheelPalette.centerSparkle}>
           <BlurMask blur={1.5} style="normal" />
         </Circle>
 
@@ -1476,13 +1561,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
           <Circle cx={CX} cy={CY} r={R_INNER} style="stroke" strokeWidth={3} opacity={0.80}>
             <SweepGradient
               c={vec(CX, CY)}
-              colors={[
-                'rgba(232, 214, 174, 0.15)', 
-                'rgba(255, 255, 255, 1.0)', 
-                'rgba(232, 214, 174, 0.15)', 
-                'rgba(255, 255, 255, 0.60)', 
-                'rgba(232, 214, 174, 0.15)'
-              ]}
+              colors={wheelPalette.centerRing}
               positions={[0, 0.15, 0.5, 0.65, 1]}
               transform={[{rotate: 0.1}]}
             />
@@ -1495,7 +1574,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
             style="stroke"
             strokeWidth={2.5}
             strokeCap="round"
-            color="rgba(255,255,255,0.60)"
+            color={wheelPalette.specularStrong}
           >
             <BlurMask blur={1} style="normal" />
           </Path>
@@ -1550,7 +1629,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   y={CY - 10}
                   text={text}
                   font={sans10}
-                  color="rgba(255,255,255,0.7)"
+                  color={wheelPalette.synastryLabel}
                 />
               );
             })()}
@@ -1567,7 +1646,7 @@ function NatalChartWheel({ chart, showAspects = true, overlayChart, overlayName,
                   y={CY + 14}
                   text={text}
                   font={useFont}
-                  color="rgba(184,155,106,0.95)"
+                  color={wheelPalette.synastryName}
                 />
               );
             })()}

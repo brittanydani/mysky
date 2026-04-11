@@ -10,6 +10,9 @@
 /** Champagne-gold metallic — matches existing GoldSubtitle. */
 export const METALLIC_GOLD = ['#FFF4D6', '#E9D9B8', '#C9AE78', '#E9D9B8', '#FFF4D6'] as const;
 
+/** Champagne-gold metallic for light mode — reduced white, stronger body/shadow. */
+export const METALLIC_GOLD_LIGHT = ['#E9C97E', '#D7A758', '#B57F35', '#D7A758', '#E9C97E'] as const;
+
 /** Amethyst / deep purple metallic. */
 export const METALLIC_PURPLE = ['#E8D5F5', '#C9A8E0', '#9D76C1', '#C9A8E0', '#E8D5F5'] as const;
 
@@ -174,4 +177,34 @@ export function metallicForHex(hex: string): readonly string[] {
     '#E87050': METALLIC_COPPER,
   };
   return map[hex.toUpperCase()] ?? map[hex] ?? METALLIC_GOLD;
+}
+
+interface ResolveMetallicGradientOptions {
+  variant?: MetallicVariant;
+  color?: string;
+  colors?: readonly string[];
+  isDark?: boolean;
+}
+
+export function resolveMetallicGradient({
+  variant,
+  color,
+  colors,
+  isDark = true,
+}: ResolveMetallicGradientOptions): readonly string[] {
+  if (colors) {
+    return colors;
+  }
+
+  const resolved = variant
+    ? METALLIC_VARIANTS[variant]
+    : color
+      ? metallicForHex(color)
+      : METALLIC_GOLD;
+
+  if (!isDark && resolved === METALLIC_GOLD) {
+    return METALLIC_GOLD_LIGHT;
+  }
+
+  return resolved;
 }

@@ -16,7 +16,7 @@
  */
 
 import React, { memo, useEffect, useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import {
   Canvas,
   Circle,
@@ -36,6 +36,7 @@ import {
   Easing,
 } from 'react-native-reanimated';
 import { DailyCheckIn } from '../../services/patterns/types';
+import { useAppTheme } from '../../context/ThemeContext';
 
 // ── Metallic core colors (from metallicPalettes.ts) ──────────────────────────
 // Each dimension uses the "core" stop of its metallic gradient.
@@ -231,6 +232,7 @@ export interface PatternOrbitMapProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }: PatternOrbitMapProps) {
+  const theme = useAppTheme();
   const cx = size / 2;
   const cy = size / 2;
   const orbitR = size * 0.34;       // main orbit radius for dimension nodes
@@ -240,6 +242,20 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
   const scores = useMemo(() => computeDimensionScores(checkIns), [checkIns]);
   const themes = useMemo(() => deriveThemes(scores), [scores]);
   const summary = useMemo(() => deriveSummary(scores), [scores]);
+  const chrome = useMemo(() => ({
+    ambientGlow: theme.isDark ? 'rgba(20, 10, 40, 0.6)' : 'rgba(220, 208, 193, 0.18)',
+    outerRing: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(108, 98, 89, 0.15)',
+    innerRing: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(108, 98, 89, 0.12)',
+    mainRing: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(108, 98, 89, 0.11)',
+    centerGlowLarge: theme.isDark ? 'rgba(201, 174, 120, 0.06)' : 'rgba(201, 174, 120, 0.06)',
+    centerGlowSmall: theme.isDark ? 'rgba(201, 174, 120, 0.15)' : 'rgba(201, 174, 120, 0.10)',
+    centerStar: theme.isDark ? '#C9AE78' : '#B58A3A',
+    centerThemes: theme.isDark ? '#FFFFFF' : '#162033',
+    centerSummary: theme.isDark ? 'rgba(255,255,255,0.68)' : 'rgba(22, 32, 51, 0.72)',
+    legendLabel: theme.isDark ? 'rgba(255,255,255,0.45)' : 'rgba(22, 32, 51, 0.58)',
+    iconShadow: theme.isDark ? 'rgba(0,0,0,0.7)' : 'rgba(120, 101, 72, 0.24)',
+    emptyText: theme.isDark ? 'rgba(255,255,255,0.35)' : theme.textMuted,
+  }), [theme.isDark, theme.textMuted, theme.textPrimary, theme.textSecondary]);
 
   // ── Animation: breathing pulse ──────────────────────────────────────────
   const breath = useSharedValue(0);
@@ -332,7 +348,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
     return (
       <View style={[styles.root, { width: size, height: size }]}>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTxt}>Complete check-ins to reveal your pattern map</Text>
+          <Text style={[styles.emptyTxt, { color: chrome.emptyText }]}>Complete check-ins to reveal your pattern map</Text>
         </View>
       </View>
     );
@@ -345,7 +361,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
       {/* ── Skia Canvas ── */}
       <Canvas style={StyleSheet.absoluteFill}>
         {/* Background ambient glow */}
-        <Circle cx={cx} cy={cy} r={size * 0.45} color="rgba(20, 10, 40, 0.6)">
+        <Circle cx={cx} cy={cy} r={size * 0.45} color={chrome.ambientGlow}>
           <BlurMask blur={40} style="normal" />
         </Circle>
 
@@ -354,7 +370,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
           path={outerRingPath}
           style="stroke"
           strokeWidth={0.5}
-          color="rgba(255,255,255,0.08)"
+          color={chrome.outerRing}
         />
 
         {/* Inner orbit ring */}
@@ -362,11 +378,11 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
           path={innerRingPath}
           style="stroke"
           strokeWidth={0.5}
-          color="rgba(255,255,255,0.06)"
+          color={chrome.innerRing}
         />
 
         {/* Main orbit ring (where nodes sit) */}
-        <Circle cx={cx} cy={cy} r={orbitR} style="stroke" strokeWidth={0.8} color="rgba(255,255,255,0.05)" />
+        <Circle cx={cx} cy={cy} r={orbitR} style="stroke" strokeWidth={0.8} color={chrome.mainRing} />
 
         {/* ── Flow arcs between dimensions ── */}
         <Group>
@@ -448,14 +464,14 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
         ))}
 
         {/* ── Center metallic glow ── */}
-        <Circle cx={cx} cy={cy} r={size * 0.12} color="rgba(201, 174, 120, 0.06)">
+        <Circle cx={cx} cy={cy} r={size * 0.12} color={chrome.centerGlowLarge}>
           <BlurMask blur={30} style="normal" />
         </Circle>
-        <Circle cx={cx} cy={cy} r={size * 0.04} color="rgba(201, 174, 120, 0.15)">
+        <Circle cx={cx} cy={cy} r={size * 0.04} color={chrome.centerGlowSmall}>
           <BlurMask blur={8} style="normal" />
         </Circle>
         {/* Tiny star at center */}
-        <Circle cx={cx} cy={cy} r={2} color="#C9AE78" opacity={0.6} />
+        <Circle cx={cx} cy={cy} r={2} color={chrome.centerStar} opacity={0.75} />
 
         {/* ── Orbiting particles (one per dimension) ── */}
         <Group origin={vec(cx, cy)} transform={rotateTransform}>
@@ -484,6 +500,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
         pointerEvents="none"
         style={[
           styles.centerCopyWrap,
+          !theme.isDark && styles.centerCopyWrapLight,
           {
             width: size * 0.58,
             left: cx - size * 0.29,
@@ -491,8 +508,8 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
           },
         ]}
       >
-        <Text style={styles.centerThemes}>{themes.join(' · ').toUpperCase()}</Text>
-        <Text style={styles.centerSummary}>{summary}</Text>
+        <Text style={[styles.centerThemes, !theme.isDark && styles.centerThemesLight, { color: chrome.centerThemes }]}>{themes.join(' \u00A0•\u00A0 ').toUpperCase()}</Text>
+        <Text style={[styles.centerSummary, { color: chrome.centerSummary }]}>{summary}</Text>
       </View>
 
       {/* ── Dimension symbols only ── */}
@@ -505,7 +522,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
             key={`label-${i}`}
             style={[styles.dimLabel, { left: lx - 12, top: ly - 12 }]}
           >
-            <Text style={[styles.dimIcon, { color: node.color }]}>{node.icon}</Text>
+            <Text style={[styles.dimIcon, { color: node.color, textShadowColor: chrome.iconShadow }]}>{node.icon}</Text>
           </View>
         );
       })}
@@ -516,7 +533,7 @@ export const PatternOrbitMap = memo(function PatternOrbitMap({ checkIns, size }:
         {DIMENSIONS.map((dim) => (
           <View key={dim.key} style={styles.legendItem}>
             <Text style={[styles.legendIcon, { color: dim.color }]}>{dim.icon}</Text>
-            <Text style={styles.legendLabel}>{dim.label.replace('\n', ' ')}</Text>
+            <Text style={[styles.legendLabel, { color: chrome.legendLabel }]}>{dim.label.replace('\n', ' ')}</Text>
           </View>
         ))}
       </View>
@@ -550,25 +567,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  centerCopyWrapLight: {
+    backgroundColor: 'rgba(255, 248, 238, 0.74)',
+    borderWidth: 1,
+    borderColor: 'rgba(181, 138, 58, 0.12)',
+    borderRadius: 22,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    shadowColor: 'rgba(111, 85, 46, 0.12)',
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+  },
   centerThemes: {
-    color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 2,
+    letterSpacing: 2.2,
     textAlign: 'center',
     textTransform: 'uppercase',
   },
+  centerThemesLight: {
+    fontWeight: '500',
+    letterSpacing: 3.6,
+  },
   centerSummary: {
-    color: 'rgba(255,255,255,0.68)',
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 19,
     textAlign: 'center',
+    fontWeight: '500',
   },
   dimIcon: {
     fontSize: 18,
     fontWeight: '400',
     textAlign: 'center',
-    textShadowColor: 'rgba(0,0,0,0.7)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
@@ -591,8 +622,7 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     fontSize: 10,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.45)',
+    fontWeight: '700',
     letterSpacing: 0.4,
   },
 });

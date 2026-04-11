@@ -7,23 +7,23 @@ jest.mock('expo-constants', () => ({
   },
 }));
 
-import { getDreamReinterpretDailyLimit } from '../../constants/config';
+import { getDreamReinterpretPerDreamLimit } from '../../constants/config';
 
-describe('getDreamReinterpretDailyLimit', () => {
+describe('getDreamReinterpretPerDreamLimit', () => {
   it('returns the default limit when email is missing', () => {
-    expect(getDreamReinterpretDailyLimit()).toBe(1);
-    expect(getDreamReinterpretDailyLimit(null)).toBe(1);
+    expect(getDreamReinterpretPerDreamLimit()).toBe(1);
+    expect(getDreamReinterpretPerDreamLimit(null)).toBe(1);
   });
 
   it('returns the default limit for users not in the override list', () => {
-    expect(getDreamReinterpretDailyLimit('someone@example.com')).toBe(1);
+    expect(getDreamReinterpretPerDreamLimit('someone@example.com')).toBe(1);
   });
 
   it('returns the override limit for allowlisted emails', () => {
-    expect(getDreamReinterpretDailyLimit('brithornick92@gmail.com')).toBe(5);
+    expect(getDreamReinterpretPerDreamLimit('brithornick92@gmail.com')).toBe(5);
   });
 
   it('normalizes allowlisted emails before lookup', () => {
-    expect(getDreamReinterpretDailyLimit('  Brithornick92@gmail.com  ')).toBe(5);
+    expect(getDreamReinterpretPerDreamLimit('  Brithornick92@gmail.com  ')).toBe(5);
   });
 });

@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface VelvetGlassSurfaceProps {
   children: React.ReactNode;
@@ -32,15 +33,21 @@ export function VelvetGlassSurface({
   rightEdgeColor,
   bottomEdgeColor,
 }: VelvetGlassSurfaceProps) {
-  const resolvedTint = tint ?? 'dark';
+  const theme = useAppTheme();
+  const resolvedTint = tint ?? theme.blurTint;
+  const resolvedBackgroundColor = backgroundColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 252, 247, 0.78)');
+  const resolvedBorderColor = borderColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(146, 124, 88, 0.16)');
+  const resolvedHighlightColor = highlightColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.42)');
+  const resolvedInnerBorderColor = innerBorderColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(146, 124, 88, 0.08)');
+  const resolvedTopEdgeColor = topEdgeColor ?? (theme.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.72)');
 
   return (
     <View style={[styles.container, style]}>
-      <BlurView intensity={intensity} tint={resolvedTint} style={StyleSheet.absoluteFill} />
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor }]} />
+      <BlurView intensity={intensity} tint={resolvedTint} style={StyleSheet.absoluteFillObject} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { backgroundColor: resolvedBackgroundColor }]} />
       <LinearGradient
         pointerEvents="none"
-        colors={[highlightColor, 'transparent']}
+        colors={[resolvedHighlightColor, 'transparent']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -50,10 +57,10 @@ export function VelvetGlassSurface({
         style={[
           styles.directionalBorder,
           {
-            borderTopColor: topEdgeColor,
-            borderLeftColor: leftEdgeColor ?? borderColor,
-            borderRightColor: rightEdgeColor ?? borderColor,
-            borderBottomColor: bottomEdgeColor ?? innerBorderColor,
+            borderTopColor: resolvedTopEdgeColor,
+            borderLeftColor: leftEdgeColor ?? resolvedBorderColor,
+            borderRightColor: rightEdgeColor ?? resolvedBorderColor,
+            borderBottomColor: bottomEdgeColor ?? resolvedInnerBorderColor,
           },
         ]}
       />

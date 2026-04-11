@@ -20,14 +20,13 @@ import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { MetallicText } from '../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
-const PALETTE = {
+const ACCENT = {
   sage: '#8CBEAA',
   emerald: '#6EBF8B',
   rose: '#D4A3B3',
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.45)',
-  glassBorder: 'rgba(255,255,255,0.08)',
 };
 
 interface ToolCard {
@@ -46,7 +45,7 @@ const TOOLS: ToolCard[] = [
     title: 'Somatic Map',
     description: 'Track where emotions live in your body and notice patterns over time.',
     icon: '◍',
-    iconColor: PALETTE.sage,
+    iconColor: ACCENT.sage,
     accentRgb: '140, 190, 170',
     route: '/somatic-map' as Href,
   },
@@ -54,7 +53,7 @@ const TOOLS: ToolCard[] = [
     title: 'Trigger Log',
     description: 'Name what drains you and what restores you to build your nervous system profile.',
     icon: '⬥',
-    iconColor: PALETTE.emerald,
+    iconColor: ACCENT.emerald,
     accentRgb: '110, 191, 139',
     route: '/trigger-log' as Href,
     iconOffset: -10,
@@ -64,6 +63,8 @@ const TOOLS: ToolCard[] = [
 
 export default function BodyNervousScreen() {
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
 
   const nav = (route: Href) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -97,7 +98,7 @@ export default function BodyNervousScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
           <Animated.View entering={FadeInDown.delay(140).duration(600)}>
-            <VelvetGlassSurface style={styles.infoCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+            <VelvetGlassSurface style={styles.infoCard} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
             <LinearGradient
               colors={['rgba(140,190,170,0.08)', 'rgba(10,10,12,0.18)']}
               style={StyleSheet.absoluteFill}
@@ -120,7 +121,7 @@ export default function BodyNervousScreen() {
                   style={({ pressed }) => [pressed && styles.cardPressed]}
                   onPress={() => nav(tool.route)}
                 >
-                  <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+                  <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
                   <LinearGradient
                     colors={[`rgba(${tool.accentRgb}, 0.10)`, 'rgba(10,10,12,0.18)']}
                     style={StyleSheet.absoluteFill}
@@ -143,26 +144,26 @@ export default function BodyNervousScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
-  backIcon:   { color: '#FFF', fontSize: 34, lineHeight: 34, marginTop: -2 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  backIcon:   { color: theme.textPrimary, fontSize: 34, lineHeight: 34, marginTop: -2 },
 
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 30,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     letterSpacing: -0.8,
     marginBottom: 6,
     maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
+  headerSubtitle: { fontSize: 12, color: theme.textSecondary },
 
   infoCard: {
     borderRadius: 28,
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.68)',
+    color: theme.textSecondary,
     lineHeight: 20,
   },
 
@@ -185,13 +186,13 @@ const styles = StyleSheet.create({
   cardIcon: { fontSize: 32, marginBottom: 16 },
   cardTitle: {
     fontSize: 20,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     marginBottom: 6,
   },
   cardSubtitle: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.72)',
+    color: theme.textSecondary,
     lineHeight: 22,
   },
 });

@@ -15,14 +15,13 @@ import * as Haptics from 'expo-haptics';
 import DailyReflectionSection from '../components/DailyReflectionSection';
 import { GoldSubtitle } from '../components/ui/GoldSubtitle';
 import { SkiaDynamicCosmos } from '../components/ui/SkiaDynamicCosmos';
-
-const PALETTE = {
-  textMain: '#FFFFFF',
-  textMuted: 'rgba(226,232,240,0.45)',
-};
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 export default function DailyReflectionScreen() {
   const router = useRouter();
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.container}>
@@ -45,7 +44,7 @@ export default function DailyReflectionScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Close"
               >
-                <Ionicons name="close-outline" size={22} color={PALETTE.textMuted} />
+                <Ionicons name="close-outline" size={22} color={theme.textMuted} />
               </Pressable>
             </View>
           </Animated.View>
@@ -57,8 +56,8 @@ export default function DailyReflectionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   header: { marginBottom: 20 },
@@ -68,9 +67,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
@@ -78,7 +77,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 31,
     fontWeight: '800',
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     letterSpacing: -0.9,
     marginBottom: 4,
     maxWidth: '88%',
@@ -89,6 +88,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.72)',
+    color: theme.textSecondary,
   },
 });

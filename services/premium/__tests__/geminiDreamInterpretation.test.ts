@@ -28,11 +28,15 @@ import {
   generateGeminiDreamInterpretation,
   getGeminiDreamModel,
   isGeminiAvailable,
+  isExpectedGeminiDreamError,
 } from '../geminiDreamInterpretation';
 
 describe('geminiDreamInterpretation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockInvoke.mockReset();
+    mockGetSession.mockReset();
+    mockRefreshSession.mockReset();
   });
 
   afterEach(() => {
@@ -44,6 +48,13 @@ describe('geminiDreamInterpretation', () => {
     expect(isGeminiAvailable(true)).toBe(true);
     expect(getGeminiDreamModel('free')).toBe('gemini-2.5-flash-lite');
     expect(getGeminiDreamModel('premium')).toBe('gemini-2.5-flash');
+  });
+
+  it('classifies expected Gemini availability messages as recoverable', () => {
+    expect(isExpectedGeminiDreamError(new Error('AI insights are at capacity right now. Please wait a minute and try again.'))).toBe(true);
+    expect(isExpectedGeminiDreamError(new Error('AI insights are temporarily unavailable. Please try again soon.'))).toBe(true);
+    expect(isExpectedGeminiDreamError(new Error('Could not reach AI insights. Please check your connection and try again.'))).toBe(true);
+    expect(isExpectedGeminiDreamError(new Error('Invalid response structure from Gemini'))).toBe(false);
   });
 
   it('uses the free Gemini model by default', async () => {
@@ -103,7 +114,7 @@ describe('geminiDreamInterpretation', () => {
 
     await expect(
       generateGeminiDreamInterpretation({ dreamText: 'I was falling through a red hallway.' }),
-    ).rejects.toThrow('Sign in to use AI dream insights.');
+    ).rejects.toThrow('AI insights are temporarily unavailable. Please try again soon.');
 
     expect(mockInvoke).not.toHaveBeenCalled();
     expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -115,6 +126,10 @@ describe('geminiDreamInterpretation', () => {
       data: { session: { access_token: 'token' } },
       error: null,
     });
+    mockRefreshSession.mockResolvedValue({
+      data: { session: null },
+      error: new Error('refresh failed'),
+    });
     mockInvoke.mockResolvedValue({
       data: null,
       error: {
@@ -125,17 +140,64 @@ describe('geminiDreamInterpretation', () => {
 
     await expect(
       generateGeminiDreamInterpretation({ dreamText: 'I was standing in the ocean at night.' }),
-    ).rejects.toThrow('Sign in to use AI dream insights.');
+    ).rejects.toThrow('AI insights are temporarily unavailable. Please try again soon.');
 
     expect(mockInvoke).toHaveBeenCalledTimes(1);
+    expect(mockRefreshSession).toHaveBeenCalledTimes(1);
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      '[GeminiDream] Edge function unauthorized; AI dream insights require sign-in.',
+      '[GeminiDream] Session refresh failed after edge-function unauthorized response.',
+      expect.any(Error),
+    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      '[GeminiDream] Edge function unauthorized; AI dream insights unavailable.',
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
 
+  it('retries once with a refreshed token after an unauthorized edge-function response', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(170_000);
+    mockGetSession.mockResolvedValue({
+      data: { session: { access_token: 'stale-token' } },
+      error: null,
+    });
+    mockRefreshSession.mockResolvedValue({
+      data: { session: { access_token: 'fresh-token' } },
+      error: null,
+    });
+    mockInvoke
+      .mockResolvedValueOnce({
+        data: null,
+        error: {
+          message: 'Edge Function returned a non-2xx status code',
+          context: { status: 401 },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: { paragraph: 'Fresh paragraph', question: 'Fresh question?' },
+        error: null,
+      });
+
+    await expect(
+      generateGeminiDreamInterpretation({ dreamText: 'I was back in my childhood home.' }),
+    ).resolves.toMatchObject({
+      paragraph: 'Fresh paragraph',
+      question: 'Fresh question?',
+    });
+
+    expect(mockRefreshSession).toHaveBeenCalledTimes(1);
+    expect(mockInvoke).toHaveBeenNthCalledWith(1, 'dream-insights', expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'Bearer stale-token' }),
+    }));
+    expect(mockInvoke).toHaveBeenNthCalledWith(2, 'dream-insights', expect.objectContaining({
+      headers: expect.objectContaining({ Authorization: 'Bearer fresh-token' }),
+    }));
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      '[GeminiDream] Edge function unauthorized; refreshed session and retrying.',
+    );
+  });
+
   it('surfaces the edge-function JSON error message for 502 responses', async () => {
-    jest.spyOn(Date, 'now').mockReturnValue(130_000);
+    jest.spyOn(Date, 'now').mockReturnValue(190_000);
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: 'token' } },
       error: null,
@@ -168,7 +230,7 @@ describe('geminiDreamInterpretation', () => {
   });
 
   it('maps upstream Gemini 404s to a temporary-unavailable message', async () => {
-    jest.spyOn(Date, 'now').mockReturnValue(150_000);
+    jest.spyOn(Date, 'now').mockReturnValue(210_000);
     mockGetSession.mockResolvedValue({
       data: { session: { access_token: 'token' } },
       error: null,

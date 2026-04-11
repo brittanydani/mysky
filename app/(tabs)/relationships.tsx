@@ -852,7 +852,7 @@ export default function RelationshipsScreen() {
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
   safeArea: { flex: 1 },
   glowOrb: {
@@ -961,7 +961,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   bulletItem: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10 },
   bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.textGold, marginTop: 8, marginRight: 12 },
   bulletText: { flex: 1, fontSize: 15, color: theme.textSecondary, lineHeight: 22 },
-  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 28, padding: 24, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', borderTopColor: 'rgba(255,255,255,0.16)' },
+  tipCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderRadius: 28, padding: 24, marginBottom: 16, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.68)' },
   tipText: { flex: 1, fontSize: 15, color: theme.textPrimary, marginLeft: 16, lineHeight: 22 },
 
   previewSection: { marginTop: 6 },

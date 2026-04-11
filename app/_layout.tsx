@@ -19,6 +19,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from '../components/keyboard/KeyboardControllerCompat';
 import { View, Text, TouchableOpacity, StyleSheet, DeviceEventEmitter } from 'react-native';
 import { PremiumProvider } from '../context/PremiumContext';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -789,83 +790,85 @@ function AppShell() {
   return (
     <PremiumProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1, position: 'relative' }}>
-        <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: theme.background }} />}>
-          <CosmicBackground />
-        </React.Suspense>
-        <SafeAreaProvider>
-          <StatusBar style={theme.statusBarStyle} />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: 'transparent' },
-              animation: 'fade',
-            }}
-          >
-            {/* Keep the screen list static for Expo Router; access is gated by overlays and redirects. */}
-            <Stack.Screen name="(tabs)" />
-
-            {/* --- HIDDEN SCREENS (MODALS) --- */}
-            {/* Slide up over the tab bar — dedicated workspaces */}
-            <Stack.Screen
-              name="checkin"
-              options={{
-                presentation: 'modal',
-                contentStyle: { backgroundColor: theme.background },
-              }}
-            />
-            <Stack.Screen
-              name="daily-reflection"
-              options={{
-                presentation: 'modal',
-                contentStyle: { backgroundColor: theme.background },
-              }}
-            />
-            <Stack.Screen
-              name="sanctuary"
-              options={{
-                presentation: 'fullScreenModal',
-                animation: 'fade_from_bottom',
-              }}
-            />
-            {/* Slide-up from within the tab context (e.g. natal chart detail) */}
-            <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
-
-            {/* Legal */}
-            <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
-          </Stack>
-
-          {/* Overlay gates (do NOT unmount navigation) */}
-          <React.Suspense fallback={null}>
-          {/* Re-consent gate — only shown when consent is withdrawn after onboarding is complete */}
-          {needsPrivacyConsent && onboardingComplete && (
-            <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
-          )}
-
-          {!onboardingComplete && (
-            <OnboardingModal
-              visible
-              onPrivacyConsent={() => handlePrivacyConsent(true)}
-              onSignInComplete={handleExistingSignInComplete}
-              onComplete={handleOnboardingComplete}
-            />
-          )}
-
-          {/* Auth gate — shown after onboarding when no session exists */}
-          <AuthRequiredModal
-            visible={
-              !completingOnboarding &&
-              !needsPrivacyConsent &&
-              onboardingComplete &&
-              !authLoading &&
-              !session
-            }
-          />
+      <KeyboardProvider preload={false}>
+        <View style={{ flex: 1, position: 'relative' }}>
+          <React.Suspense fallback={<View style={{ flex: 1, backgroundColor: theme.background }} />}>
+            <CosmicBackground />
           </React.Suspense>
-        </SafeAreaProvider>
-      </View>
+          <SafeAreaProvider>
+            <StatusBar style={theme.statusBarStyle} />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+                animation: 'fade',
+              }}
+            >
+              {/* Keep the screen list static for Expo Router; access is gated by overlays and redirects. */}
+              <Stack.Screen name="(tabs)" />
+
+              {/* --- HIDDEN SCREENS (MODALS) --- */}
+              {/* Slide up over the tab bar — dedicated workspaces */}
+              <Stack.Screen
+                name="checkin"
+                options={{
+                  presentation: 'modal',
+                  contentStyle: { backgroundColor: theme.background },
+                }}
+              />
+              <Stack.Screen
+                name="daily-reflection"
+                options={{
+                  presentation: 'modal',
+                  contentStyle: { backgroundColor: theme.background },
+                }}
+              />
+              <Stack.Screen
+                name="sanctuary"
+                options={{
+                  presentation: 'fullScreenModal',
+                  animation: 'fade_from_bottom',
+                }}
+              />
+              {/* Slide-up from within the tab context (e.g. natal chart detail) */}
+              <Stack.Screen name="astrology-context" options={{ animation: 'slide_from_bottom' }} />
+
+              {/* Legal */}
+              <Stack.Screen name="faq" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
+            </Stack>
+
+            {/* Overlay gates (do NOT unmount navigation) */}
+            <React.Suspense fallback={null}>
+            {/* Re-consent gate — only shown when consent is withdrawn after onboarding is complete */}
+            {needsPrivacyConsent && onboardingComplete && (
+              <PrivacyConsentModal visible onConsent={handlePrivacyConsent} />
+            )}
+
+            {!onboardingComplete && (
+              <OnboardingModal
+                visible
+                onPrivacyConsent={() => handlePrivacyConsent(true)}
+                onSignInComplete={handleExistingSignInComplete}
+                onComplete={handleOnboardingComplete}
+              />
+            )}
+
+            {/* Auth gate — shown after onboarding when no session exists */}
+            <AuthRequiredModal
+              visible={
+                !completingOnboarding &&
+                !needsPrivacyConsent &&
+                onboardingComplete &&
+                !authLoading &&
+                !session
+              }
+            />
+            </React.Suspense>
+          </SafeAreaProvider>
+        </View>
+      </KeyboardProvider>
     </GestureHandlerRootView>
     </PremiumProvider>
   );

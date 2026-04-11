@@ -43,8 +43,22 @@ export interface NarrativeInsight {
   label: string;
   body: string;
   stat: string;
+  heroMetrics?: InsightMetric[];
+  takeaway?: InsightTakeaway;
   confidence: 'low' | 'medium' | 'high';
   accent: 'gold' | 'silverBlue' | 'copper' | 'emerald' | 'rose' | 'lavender';
+}
+
+export interface InsightMetric {
+  value: string;
+  label: string;
+  tone?: 'default' | 'positive' | 'caution';
+}
+
+export interface InsightTakeaway {
+  label: string;
+  body: string;
+  icon?: string;
 }
 
 export interface NarrativeInsightBundle {
@@ -100,6 +114,10 @@ function confidentPhrase(conf: 'low' | 'medium' | 'high', strong: string, mid: s
   return emerging;
 }
 
+function takeaway(label: string, body: string, icon?: string): InsightTakeaway {
+  return { label, body, icon };
+}
+
 const SENSITIVITY_TAGS = ['overstimulated', 'anxiety', 'conflict', 'loneliness', 'overwhelm', 'screens', 'routine'];
 const MIN_DAYS = 7;
 const MIN_DAYS_STRONG = 14;
@@ -148,6 +166,13 @@ function buildEmotionalUndercurrent(profile: PatternProfile): NarrativeInsight |
     label: 'Emotional Undercurrent',
     body,
     stat: `${profile.windowDays}-day window · Stability: ${overallAvg.stability}/100 · Trend: ${trendLabel} · Variability: ${volatility < 8 ? 'low' : volatility < 15 ? 'moderate' : 'high'}`,
+    takeaway: takeaway(
+      'Gentle read',
+      recentDiff < 0
+        ? `Protect one lower-demand pocket today. Your recent tone is running ${Math.round(Math.abs(recentDiff))} points below baseline, so reducing pressure is more useful than forcing output.`
+        : 'Name what is helping this steadier stretch hold. The signal is stable enough right now to notice which condition is keeping it there.',
+      'compass-outline',
+    ),
     confidence: conf,
     accent: 'lavender',
   };
@@ -194,7 +219,7 @@ function buildEnergyRhythm(profile: PatternProfile): NarrativeInsight | null {
     body = `Your restoration levels have stayed relatively strong across this period — averaging ${overallAvg.restoration}/100. This consistency is worth protecting — notice what routines, rhythms, or choices seem to be sustaining it.`;
     effectStrength = 40;
   } else {
-    body = `Your energy moves in waves — restoration averaging ${overallAvg.restoration}/100, shifting between periods of depletion and recovery. Understanding your personal rhythm — what drains and what refills — is key to working with your capacity rather than against it.`;
+    body = 'Your energy is moving in waves rather than holding steady. The useful signal is not whether you can push through another dip, but which conditions actually bring you back.';
     effectStrength = 30;
   }
 
@@ -206,6 +231,13 @@ function buildEnergyRhythm(profile: PatternProfile): NarrativeInsight | null {
     label: 'Energy Rhythm',
     body,
     stat: `Restoration avg: ${overallAvg.restoration}/100 · ${restorationTrend?.direction === 'falling' ? 'Declining' : restorationTrend?.direction === 'rising' ? 'Rising' : 'Steady'} · ${maxLowStreak > 0 ? `Longest low streak: ${maxLowStreak} ${streakLabel}` : 'No extended low streaks'}`,
+    takeaway: takeaway(
+      'Recovery cue',
+      maxLowStreak >= 3
+        ? `Your longest low streak reached ${maxLowStreak} ${streakLabel}. Interrupt the next third depleted day earlier with one reliable refill instead of waiting for a collapse.`
+        : `Your restoration baseline is ${overallAvg.restoration}/100. Notice which routine makes the next day feel measurably easier, and repeat that before your energy drops again.`,
+      'leaf-outline',
+    ),
     confidence: insightConfidence(profile.windowDays, effectStrength, maxLowStreak <= 2),
     accent: 'gold',
   };
@@ -260,6 +292,13 @@ function buildStressSignal(profile: PatternProfile): NarrativeInsight | null {
     label: 'Stress Signal',
     body,
     stat: `Strain avg: ${overallAvg.strain}/100 · Trend: ${strainTrend?.direction === 'rising' ? 'rising' : strainTrend?.direction === 'falling' ? 'easing' : 'steady'} · ${dualLoadDays > 0 ? `${dualLoadDays} dual-load days` : 'No dual-load days'}`,
+    takeaway: takeaway(
+      'Grounding cue',
+      dualLoadDays >= 3
+        ? `You had ${dualLoadDays} dual-load days where strain spiked while restoration stayed low. Reduce input before adding effort on the next one.`
+        : `Your strain trend is ${strainTrend?.direction === 'rising' ? 'rising' : strainTrend?.direction === 'falling' ? 'easing' : 'steady'}. Remove one unnecessary demand before your nervous system has to do it for you.`,
+      'leaf-outline',
+    ),
     confidence: insightConfidence(profile.windowDays, effectStrength, maxBuildup <= 2),
     accent: 'copper',
   };
@@ -290,14 +329,14 @@ function buildSleepConnection(profile: PatternProfile): NarrativeInsight | null 
 
     if (diff > 15) {
       body = confidentPhrase(conf,
-        `Better sleep is strongly tied to more emotional steadiness for you. Your stability score averages ${Math.round(goodStab)} on good-sleep days compared to ${Math.round(poorStab)} on poor-sleep days.`,
-        `Better sleep seems to support steadier mood for you. Your stability averages ${Math.round(goodStab)} on good-sleep days vs ${Math.round(poorStab)} on poor-sleep days.`,
-        `There may be an emerging connection between sleep and emotional steadiness. Good-sleep days average ${Math.round(goodStab)} stability vs ${Math.round(poorStab)}.`,
-      ) + ' Even slight improvements in sleep seem to shift your day in a positive direction.';
+        'Better sleep is strongly tied to steadier days for you. Rest is functioning like a real emotional regulator in this window.',
+        'Better sleep seems to support steadier days for you. The difference between rested and poor-sleep days is large enough to matter.',
+        'There may be an emerging connection between sleep and steadier days for you. The pattern is visible even before it feels fully settled.',
+      );
     } else if (diff > 5) {
-      body = `Sleep quality appears to have a gentle but real effect on your stability — a ${Math.round(diff)}-point difference between good and poor sleep days. The difference isn't dramatic, but it's consistent — better rest tends to create more space for emotional steadiness.`;
+      body = 'Sleep quality is having a gentle but real effect on your emotional steadiness. Better rest is creating more room in the day, even when the lift is not dramatic.';
     } else {
-      body = `Interestingly, your stability doesn't shift dramatically with sleep quality — only a ${Math.round(Math.abs(diff))}-point difference across ${withSleep.length} tracked days. This doesn't mean sleep doesn't matter — it may affect your strain or restoration more than your emotional tone.`;
+      body = 'Sleep quality is not changing your emotional tone dramatically in this window. The stronger sleep effect may be landing in strain or restoration rather than mood itself.';
     }
     const goodStrain = mean(goodSleep.map(d => d.scores.strain));
     const poorStrain = mean(poorSleep.map(d => d.scores.strain));
@@ -308,12 +347,12 @@ function buildSleepConnection(profile: PatternProfile): NarrativeInsight | null 
   } else if (goodSleep.length >= 2) {
     const goodStab = mean(goodSleep.map(d => d.scores.stability));
     effectStrength = goodStab - profile.overallAvg.stability;
-    body = `On nights when you sleep well, your stability the next day tends to lift — averaging ${Math.round(goodStab)} compared to your overall ${profile.overallAvg.stability}. Sleep may be affecting your emotional regulation more than you realize.`;
+    body = 'When you sleep well, the next day tends to arrive with more steadiness. Rest is likely doing more regulation work for you than it gets credit for.';
     stat = `Good-sleep stability: ${Math.round(goodStab)} · Overall: ${profile.overallAvg.stability} · ${goodSleep.length} good-sleep days`;
   } else {
     const poorStab = mean(poorSleep.map(d => d.scores.stability));
     effectStrength = profile.overallAvg.stability - poorStab;
-    body = `Nights with poor sleep are followed by noticeably different days. Your stability after bad sleep averages ${Math.round(poorStab)} — below your overall ${profile.overallAvg.stability}. Your body seems to feel it before your mind names it.`;
+    body = 'Poor sleep is followed by noticeably different days for you. The hit shows up quickly, before the day has much chance to correct itself.';
     stat = `Poor-sleep stability: ${Math.round(poorStab)} · Overall: ${profile.overallAvg.stability} · ${poorSleep.length} poor-sleep days`;
   }
 
@@ -323,6 +362,13 @@ function buildSleepConnection(profile: PatternProfile): NarrativeInsight | null 
     label: 'Sleep Connection',
     body,
     stat,
+    takeaway: takeaway(
+      'Tonight matters',
+      goodSleep.length >= 2 && poorSleep.length >= 2
+        ? `The spread between good and poor sleep days is ${Math.round(Math.abs(effectStrength))} points. Protect the habit that most reliably improves tonight, because it is moving tomorrow too.`
+        : `You have ${goodSleep.length >= 2 ? goodSleep.length : poorSleep.length} sleep-tracked comparison days already. Keep sleep logging specific enough to spot what changes the next morning.`,
+      'moon-outline',
+    ),
     confidence: insightConfidence(withSleep.length, effectStrength, true),
     accent: 'silverBlue',
   };
@@ -385,6 +431,13 @@ function buildRestorationPattern(profile: PatternProfile): NarrativeInsight | nu
     label: 'Restoration Pattern',
     body,
     stat,
+    takeaway: takeaway(
+      'Protect the lift',
+      restoreSignals.length > 0
+        ? `${restoreSignals[0].tag.replace(/_/g, ' ')} is giving you the strongest restoration lift right now. Treat it like maintenance, not a reward.`
+        : 'Keep tagging the conditions that genuinely help you recover. The restorative signal is still forming, and a few more clean entries will sharpen it.',
+      'leaf-outline',
+    ),
     confidence: insightConfidence(profile.windowDays, effectStrength, restoreSignals.length >= 2),
     accent: 'emerald',
   };
@@ -425,6 +478,13 @@ function buildBestDayInsight(profile: PatternProfile): NarrativeInsight | null {
     label: 'Best-Day Insight',
     body,
     stat: `${bp.dayCount} best days analyzed (stability > 75) · Avg stability: ${bp.avgStability} · Avg strain: ${bp.avgStrain} · Avg mood: ${bp.avgMood}`,
+    takeaway: takeaway(
+      'Replicate this',
+      ingredients.length > 0
+        ? `Your strongest days cluster around ${ingredients.slice(0, 2).join(' and ')}. Build one of those conditions into the next 24 hours on purpose.`
+        : 'Your best days are subtle rather than formulaic. Note the smallest thing that felt easier on them so it becomes trackable next time.',
+      'sunny-outline',
+    ),
     confidence: insightConfidence(bp.dayCount, effectStrength, ingredients.length >= 2),
     accent: 'gold',
   };
@@ -475,6 +535,13 @@ function buildHardDayReflection(profile: PatternProfile): NarrativeInsight | nul
     label: 'Hard-Day Reflection',
     body,
     stat: `${hp.dayCount} hard days (stability < 40 or strain > 70) · Avg stability: ${hp.avgStability} · Avg strain: ${hp.avgStrain}`,
+    takeaway: takeaway(
+      'Glimmer to protect',
+      conditions.length > 0
+        ? `When ${conditions[0]} shows up, lower the plan before the rest stacks on top of it. That adjustment is earlier and more useful than recovery after the crash.`
+        : 'Your harder days are cumulative. On the next one, shrink the day instead of trying to overpower it.',
+      'sunny-outline',
+    ),
     confidence: insightConfidence(hp.dayCount, effectStrength, conditions.length >= 2),
     accent: 'copper',
   };
@@ -507,6 +574,11 @@ function buildSensitivityTheme(profile: PatternProfile): NarrativeInsight | null
       label: 'Sensitivity Theme',
       body: `Some days hit your system harder than others. Emotional intensity variability reached ${Math.round(volatility)}, though the trigger pattern is not clear yet. When a day feels louder, that is the moment to get curious about context, not critical about mood.`,
       stat: `Emotional intensity variability: ${Math.round(volatility)} · Still detecting patterns`,
+      takeaway: takeaway(
+        'Somatic release',
+        `Your intensity variability reached ${Math.round(volatility)}. Capture the context on the next louder day so the trigger stops staying invisible.`,
+        'body-outline',
+      ),
       confidence: 'low',
       accent: 'rose',
     };
@@ -540,6 +612,11 @@ function buildSensitivityTheme(profile: PatternProfile): NarrativeInsight | null
     label: 'Sensitivity Theme',
     body,
     stat: `${signals.length} sensitivity pattern${signals.length > 1 ? 's' : ''} · Strongest: ${topLabel} (−${Math.round(top.stabilityDrop)} stability)`,
+    takeaway: takeaway(
+      'Somatic release',
+      `${capitalize(topLabel)} is your strongest destabilizer right now. When it appears, orient to the body before you try to solve the story around it.`,
+      'body-outline',
+    ),
     confidence: insightConfidence(profile.windowDays, effectStrength, signals.length >= 2),
     accent: 'rose',
   };
@@ -591,6 +668,13 @@ function buildConnectionPattern(profile: PatternProfile): NarrativeInsight | nul
     label: 'Connection Pattern',
     body,
     stat: `${connectedDays.length} connected days · ${disconnectedDays.length} strained days · Connection avg: ${overallAvg.connection}/100`,
+    takeaway: takeaway(
+      'Inquiry',
+      connectedDays.length >= 2 && disconnectedDays.length >= 2
+        ? 'Connection is moving your baseline enough to measure. Identify the interaction, repair, or boundary that separates your connected days from your strained ones.'
+        : 'Track what kind of contact changed the day. The useful distinction is not just connection versus disconnection, but which form of contact your system actually trusts.',
+      'heart-outline',
+    ),
     confidence: insightConfidence(connectedDays.length + disconnectedDays.length, effectStrength, true),
     accent: 'rose',
   };
@@ -659,6 +743,13 @@ function buildGrowthReflection(profile: PatternProfile): NarrativeInsight | null
     label: 'Growth Reflection',
     body,
     stat: `Comparing ${older.length}-day windows · Stability: ${Math.round(olderStab)} → ${Math.round(newerStab)} · Variability: ${newerVol < olderVol ? 'decreasing' : 'increasing'}`,
+    takeaway: takeaway(
+      'Keep the proof',
+      signals.length > 0
+        ? `Your shift is showing up as ${signals[0]}. Save one concrete example from this stretch so the progress stays visible when the next hard pocket arrives.`
+        : 'The progress signal is quieter than the struggle signal right now. Keep logging anyway, because comparison over time is still exposing real movement.',
+      'trending-up-outline',
+    ),
     confidence: insightConfidence(profile.windowDays, effectStrength, signals.length >= 2),
     accent: 'emerald',
   };
@@ -706,6 +797,13 @@ function buildDreamTheme(profile: PatternProfile): NarrativeInsight | null {
     label: 'Dream Theme',
     body,
     stat: `${dreamDays.length} dream days · Dream-day strain: ${Math.round(dreamStrain)} (overall: ${profile.overallAvg.strain}) · ${highStrainDreams} on high-strain days`,
+    takeaway: takeaway(
+      'Dream residue',
+      topKw.length > 0
+        ? `Your dream language keeps returning to ${topKw.slice(0, 2).map(k => k.key).join(' and ')}. Notice where that same theme appears in waking life this week.`
+        : 'Dream activity is clustering around higher-strain days. Log one line the morning after a vivid dream so the pattern stays connected to the day that follows.',
+      'cloudy-night-outline',
+    ),
     confidence: insightConfidence(dreamDays.length, effectStrength, highStrainPct > 0.3),
     accent: 'lavender',
   };
@@ -777,6 +875,13 @@ function buildEmergingPattern(profile: PatternProfile): NarrativeInsight | null 
     label: 'Emerging Pattern',
     body,
     stat: `Last ${recent.length} days · Stability: ${Math.round(recentAvg.stability)} (overall: ${profile.overallAvg.stability}) · ${themes.length} recurring theme${themes.length !== 1 ? 's' : ''}`,
+    takeaway: takeaway(
+      'Catch it early',
+      themes.length > 0
+        ? `Your recent entries keep circling ${[...new Set(themes)].slice(0, 2).join(' and ')}. Flag the next day those themes appear so the pattern gets clearer before it hardens.`
+        : 'Keep the recent window tight by logging while the day is still fresh. Emerging patterns become readable fastest when the detail is current.',
+      'sparkles-outline',
+    ),
     confidence: insightConfidence(recent.length, effectStrength, themes.length >= 3),
     accent: 'gold',
   };

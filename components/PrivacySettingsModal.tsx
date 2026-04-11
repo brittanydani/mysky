@@ -38,6 +38,9 @@ interface PrivacySettingsModalProps {
 export default function PrivacySettingsModal({ visible, onClose }: PrivacySettingsModalProps) {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const panelGradient = theme.isDark
+    ? ['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']
+    : ['rgba(255,252,247,0.96)', 'rgba(246,239,228,0.98)'];
   const [hasData, setHasData] = useState(false);
   const [consentRecord, setConsentRecord] = useState<{
     granted: boolean;
@@ -148,7 +151,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Privacy & Data</Text>
             <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={15}>
-              <Ionicons name="close-outline" size={24} color={PALETTE.textMain} />
+              <Ionicons name="close-outline" size={24} color={theme.textPrimary} />
             </Pressable>
           </View>
 
@@ -158,18 +161,18 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
               {/* Privacy Status Grid */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>System Integrity</Text>
-                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
+                <LinearGradient colors={panelGradient} style={styles.glassCard}>
                   {[
-                    { label: 'Architecture', val: 'Local-First', icon: 'server-outline', color: "#FFFFFF" },
-                    { label: 'Encryption', val: 'AES-256-GCM', icon: 'lock-closed-outline', color: "#FFFFFF" },
-                    { label: 'Sharing', val: 'Never Sold', icon: 'ban-outline', color: "#FFFFFF" },
+                    { label: 'Architecture', val: 'Local-First', icon: 'server-outline', color: theme.textPrimary },
+                    { label: 'Encryption', val: 'AES-256-GCM', icon: 'lock-closed-outline', color: theme.textPrimary },
+                    { label: 'Sharing', val: 'Never Sold', icon: 'ban-outline', color: theme.textPrimary },
                   ].map((item, i) => (
                     <View key={i} style={[styles.statusRow, i === 2 && { borderBottomWidth: 0 }]}>
                       <View style={styles.rowLead}>
                         <Ionicons name={item.icon as any} size={16} color={item.color} />
                         <Text style={styles.statusLabel}>{item.label}</Text>
                       </View>
-                      <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>{item.val}</Text>
+                      <Text style={styles.statusVal}>{item.val}</Text>
                     </View>
                   ))}
                 </LinearGradient>
@@ -178,23 +181,23 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
               {/* Consent Status */}
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>Consent Record</Text>
-                <LinearGradient colors={['rgba(14,24,48,0.40)', 'rgba(2,8,23,0.60)']} style={styles.glassCard}>
-                  <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
+                <LinearGradient colors={panelGradient} style={styles.glassCard}>
+                  <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: theme.cardBorder }]}>
                     <View style={styles.rowLead}>
                       <MetallicIcon name="checkmark-circle-outline" size={16} color={consentRecord?.granted ? PALETTE.gold : PALETTE.copper} />
                       <Text style={styles.statusLabel}>Status</Text>
                     </View>
-                    <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
+                    <Text style={styles.statusVal}> 
                       {consentRecord?.granted ? (consentRecord.expired ? 'Expired' : 'Active') : 'Not granted'}
                     </Text>
                   </View>
                   {consentRecord?.timestamp && (
-                    <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }]}>
+                    <View style={[styles.statusRow, { borderBottomWidth: 1, borderBottomColor: theme.cardBorder }]}>
                       <View style={styles.rowLead}>
                         <MetallicIcon name="time-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.statusLabel}>Consented</Text>
                       </View>
-                      <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
+                      <Text style={styles.statusVal}> 
                         {new Date(consentRecord.timestamp).toLocaleDateString()}
                       </Text>
                     </View>
@@ -204,7 +207,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                       <MetallicIcon name="document-outline" size={16} color={PALETTE.silverBlue} />
                       <Text style={styles.statusLabel}>Policy Version</Text>
                     </View>
-                    <Text style={[styles.statusVal, { color: "#FFFFFF" }]}>
+                    <Text style={styles.statusVal}> 
                       {consentRecord?.policyVersion ?? '—'}
                     </Text>
                   </View>
@@ -213,7 +216,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                   <Pressable style={styles.actionCard} onPress={handleWithdrawConsent} disabled={isLoading}>
                     <LinearGradient colors={['rgba(205, 127, 93, 0.08)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                       <MetallicIcon name="close-circle-outline" size={22} color={PALETTE.copper} />
-                      <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Withdraw Consent</Text>
+                      <Text style={styles.actionTitle}>Withdraw Consent</Text>
                       <Text style={styles.actionSub}>Revoke data processing consent. Existing data is preserved.</Text>
                     </LinearGradient>
                   </Pressable>
@@ -228,7 +231,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     <Pressable style={styles.actionCard} onPress={handleExportData} disabled={isLoading}>
                       <LinearGradient colors={['rgba(201, 174, 120, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="download-outline" size={22} color={PALETTE.silverBlue} />
-                        <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Export Archive</Text>
+                        <Text style={styles.actionTitle}>Export Archive</Text>
                         <Text style={styles.actionSub}>Create a readable backup of all entries.</Text>
                       </LinearGradient>
                     </Pressable>
@@ -236,7 +239,7 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
                     <Pressable style={styles.actionCard} onPress={handleDeleteAllData} disabled={isLoading}>
                       <LinearGradient colors={['rgba(205, 127, 93, 0.12)', 'rgba(255,255,255,0.02)']} style={styles.actionGradient}>
                         <MetallicIcon name="trash-outline" size={22} color={PALETTE.copper} />
-                        <Text style={[styles.actionTitle, { color: "#FFFFFF" }]}>Hard Reset</Text>
+                        <Text style={styles.actionTitle}>Hard Reset</Text>
                         <Text style={styles.actionSub}>Permanently erase all data from this device.</Text>
                       </LinearGradient>
                     </Pressable>
@@ -279,11 +282,12 @@ export default function PrivacySettingsModal({ visible, onClose }: PrivacySettin
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+const createStyles = (theme: AppTheme) => {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
-  headerTitle: { fontSize: 34, color: "#FFFFFF", fontWeight: '800', letterSpacing: -0.5 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
+  headerTitle: { fontSize: 34, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.5 },
   closeBtn: { padding: 4 },
   
   scrollView: { flex: 1 },
@@ -291,26 +295,27 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   content: { gap: 32 },
 
   section: { gap: 12 },
-  sectionLabel: { fontSize: 11, fontWeight: '800', color: "#FFFFFF", textTransform: 'uppercase', letterSpacing: 2, paddingLeft: 4 },
+  sectionLabel: { fontSize: 11, fontWeight: '800', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: 2, paddingLeft: 4 },
   
-  glassCard: { borderRadius: 24, paddingHorizontal: 24, borderWidth: 1, borderColor: PALETTE.glassBorder, backgroundColor: 'rgba(255,255,255,0.02)' },
-  statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
+  glassCard: { borderRadius: 24, paddingHorizontal: 24, borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,252,247,0.84)' },
+  statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: theme.cardBorder },
   rowLead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  statusLabel: { fontSize: 14, color: "#FFFFFF", fontWeight: '500' },
-  statusVal: { fontSize: 14, fontWeight: '700' },
+  statusLabel: { fontSize: 14, color: theme.textPrimary, fontWeight: '500' },
+  statusVal: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
 
   actionGrid: { gap: 12 },
-  actionCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: PALETTE.glassBorder },
+  actionCard: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: theme.cardBorder },
   actionGradient: { padding: 28, gap: 8 },
-  actionTitle: { fontSize: 16, fontWeight: '700' },
-  actionSub: { fontSize: 13, color: "#FFFFFF", lineHeight: 18 },
+  actionTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary },
+  actionSub: { fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
 
-  emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  emptyText: { color: "#FFFFFF", fontSize: 14,  },
+  emptyCard: { padding: 40, alignItems: 'center', gap: 12, borderRadius: 24, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(255,252,247,0.84)', borderWidth: 1, borderColor: theme.cardBorder },
+  emptyText: { color: theme.textPrimary, fontSize: 14 },
 
   rightsContainer: { gap: 12, paddingLeft: 4 },
   rightNode: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rightNodeText: { fontSize: 14, color: "#FFFFFF" },
+  rightNodeText: { fontSize: 14, color: theme.textPrimary },
 
-  complianceNote: { fontSize: 12, color: "#FFFFFF", textAlign: 'center', lineHeight: 18, paddingHorizontal: 20 },
-});
+  complianceNote: { fontSize: 12, color: theme.textSecondary, textAlign: 'center', lineHeight: 18, paddingHorizontal: 20 },
+  });
+};

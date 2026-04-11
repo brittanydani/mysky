@@ -14,6 +14,17 @@ const CURRENT_DB_VERSION = 22;
 class LocalDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
 
+  private getUnreadableEncryptedFields(fields: Record<string, string | undefined | null>): string[] {
+    return Object.entries(fields)
+      .filter(([, value]) => isDecryptionFailure(value))
+      .map(([field]) => field);
+  }
+
+  private logUnreadableEncryptedRow(table: string, rowId: string, fields: string[]): void {
+    if (fields.length === 0) return;
+    logger.error(`[LocalDB] ${table} ${rowId} has decryption failures in: ${fields.join(', ')}`);
+  }
+
   private async writeChart(chart: SavedChart): Promise<void> {
     const db = await this.ensureReady();
 
@@ -1350,24 +1361,38 @@ class LocalDatabase {
   }
 
   private async mapJournalRow(row: any): Promise<JournalEntry> {
+    const decTitle = row.title ? await FieldEncryptionService.decryptField(row.title) : row.title;
+    const decContent = await FieldEncryptionService.decryptField(row.content);
+    const decContentKeywords = row.content_keywords_enc
+      ? await FieldEncryptionService.decryptField(row.content_keywords_enc)
+      : undefined;
+    const decContentEmotions = row.content_emotions_enc
+      ? await FieldEncryptionService.decryptField(row.content_emotions_enc)
+      : undefined;
+    const decContentSentiment = row.content_sentiment_enc
+      ? await FieldEncryptionService.decryptField(row.content_sentiment_enc)
+      : undefined;
+
+    this.logUnreadableEncryptedRow('Journal entry', row.id, this.getUnreadableEncryptedFields({
+      title: decTitle,
+      content: decContent,
+      contentKeywords: decContentKeywords,
+      contentEmotions: decContentEmotions,
+      contentSentiment: decContentSentiment,
+    }));
+
     return {
       id: row.id,
       date: row.date,
       mood: row.mood,
       moonPhase: row.moon_phase,
-      title: row.title ? await FieldEncryptionService.decryptField(row.title) : row.title,
-      content: await FieldEncryptionService.decryptField(row.content),
+      title: isDecryptionFailure(decTitle) ? undefined : decTitle,
+      content: isDecryptionFailure(decContent) ? '' : decContent,
       chartId: row.chart_id || undefined,
       transitSnapshot: row.transit_snapshot || undefined,
-      contentKeywords: row.content_keywords_enc
-        ? await FieldEncryptionService.decryptField(row.content_keywords_enc)
-        : undefined,
-      contentEmotions: row.content_emotions_enc
-        ? await FieldEncryptionService.decryptField(row.content_emotions_enc)
-        : undefined,
-      contentSentiment: row.content_sentiment_enc
-        ? await FieldEncryptionService.decryptField(row.content_sentiment_enc)
-        : undefined,
+      contentKeywords: isDecryptionFailure(decContentKeywords) ? undefined : decContentKeywords,
+      contentEmotions: isDecryptionFailure(decContentEmotions) ? undefined : decContentEmotions,
+      contentSentiment: isDecryptionFailure(decContentSentiment) ? undefined : decContentSentiment,
       contentWordCount: row.content_word_count ?? undefined,
       contentReadingMinutes: row.content_reading_minutes ?? undefined,
       tags: row.tags ? (() => { try { return JSON.parse(row.tags); } catch { return undefined; } })() : undefined,
@@ -1650,33 +1675,47 @@ class LocalDatabase {
       [chartId, limit]
     )) as any[];
 
-    return Promise.all(
-      rows.map(async (row) => ({
+    return Promise.all(rows.map(async (row) => {
+      const decDreamText = row.dream_text
+        ? await FieldEncryptionService.decryptField(row.dream_text)
+        : undefined;
+      const decDreamMood = row.dream_mood
+        ? await FieldEncryptionService.decryptField(row.dream_mood)
+        : undefined;
+      const decDreamFeelings = row.dream_feelings
+        ? await FieldEncryptionService.decryptField(row.dream_feelings)
+        : undefined;
+      const decDreamMetadata = row.dream_metadata
+        ? await FieldEncryptionService.decryptField(row.dream_metadata)
+        : undefined;
+      const decNotes = row.notes
+        ? await FieldEncryptionService.decryptField(row.notes)
+        : undefined;
+
+      this.logUnreadableEncryptedRow('Sleep entry', row.id, this.getUnreadableEncryptedFields({
+        dreamText: decDreamText,
+        dreamMood: decDreamMood,
+        dreamFeelings: decDreamFeelings,
+        dreamMetadata: decDreamMetadata,
+        notes: decNotes,
+      }));
+
+      return {
         id: row.id,
         chartId: row.chart_id,
         date: row.date,
         durationHours: row.duration_hours ?? undefined,
         quality: row.quality ?? undefined,
-        dreamText: row.dream_text
-          ? await FieldEncryptionService.decryptField(row.dream_text)
-          : undefined,
-        dreamMood: row.dream_mood
-          ? await FieldEncryptionService.decryptField(row.dream_mood)
-          : undefined,
-        dreamFeelings: row.dream_feelings
-          ? await FieldEncryptionService.decryptField(row.dream_feelings)
-          : undefined,
-        dreamMetadata: row.dream_metadata
-          ? await FieldEncryptionService.decryptField(row.dream_metadata)
-          : undefined,
-        notes: row.notes
-          ? await FieldEncryptionService.decryptField(row.notes)
-          : undefined,
+        dreamText: isDecryptionFailure(decDreamText) ? undefined : decDreamText,
+        dreamMood: isDecryptionFailure(decDreamMood) ? undefined : decDreamMood,
+        dreamFeelings: isDecryptionFailure(decDreamFeelings) ? undefined : decDreamFeelings,
+        dreamMetadata: isDecryptionFailure(decDreamMetadata) ? undefined : decDreamMetadata,
+        notes: isDecryptionFailure(decNotes) ? undefined : decNotes,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         isDeleted: row.is_deleted === 1,
-      }))
-    );
+      };
+    }));
   }
 
   async deleteSleepEntry(id: string): Promise<void> {

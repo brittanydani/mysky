@@ -9,7 +9,8 @@ import * as SecureStore from 'expo-secure-store';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { NotificationEngine } from '../../utils/NotificationEngine';
 import { MetallicText } from '../../components/ui/MetallicText';
-import { useThemePreference } from '../../context/ThemeContext';
+import { useThemePreference, useAppTheme, useThemedStyles } from '../../context/ThemeContext';
+import { type AppTheme } from '../../constants/theme';
 
 // ── Persistence keys ──────────────────────────────────────────────────────────
 const KEYS = {
@@ -34,6 +35,8 @@ function formatTime(date: Date): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function NotificationSettings() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { resolvedMode } = useThemePreference();
   const [isRhythmEnabled, setIsRhythmEnabled] = useState(false);
@@ -214,7 +217,7 @@ export default function NotificationSettings() {
               mode="time"
               display="spinner"
               onChange={(e, d) => handlePickerChange(slot, e, d)}
-              textColor="#FFFFFF"
+              textColor={theme.textPrimary}
               themeVariant={resolvedMode}
               style={styles.picker}
             />
@@ -269,9 +272,9 @@ export default function NotificationSettings() {
             <Switch
               value={isRhythmEnabled}
               onValueChange={toggleRhythm}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: '#D9BF8C' }}
-              thumbColor={isRhythmEnabled ? '#050507' : '#FFF'}
-              ios_backgroundColor="rgba(255,255,255,0.1)"
+              trackColor={{ false: theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(146, 124, 88, 0.22)', true: '#D9BF8C' }}
+              thumbColor={isRhythmEnabled ? '#050507' : (theme.isDark ? '#FFF' : '#FFF9F2')}
+              ios_backgroundColor={theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(146, 124, 88, 0.22)'}
             />
           </View>
         </View>
@@ -296,8 +299,8 @@ export default function NotificationSettings() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 300 },
 
   header: {
@@ -308,10 +311,10 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
-  backArrow: { color: '#FFF', fontSize: 36, fontWeight: '300', lineHeight: 40 },
+  backArrow: { color: theme.textPrimary, fontSize: 36, fontWeight: '300', lineHeight: 40 },
   headerTitle: {
     fontSize: 34,
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontWeight: '800',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -321,20 +324,20 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: 'rgba(255,255,255,0.4)',
+    color: theme.textMuted,
     letterSpacing: 1.5,
     marginBottom: 12,
     marginLeft: 8,
   },
 
-  card: { borderRadius: 28, padding: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', borderTopColor: 'rgba(255,255,255,0.16)', backgroundColor: 'rgba(255,255,255,0.05)' },
+  card: { borderRadius: 28, padding: 28, borderWidth: 1, borderColor: theme.cardBorder, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.68)', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
   cardDisabled: { opacity: 0.45 },
 
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   textContainer: { flex: 1, paddingRight: 16 },
-  title: { fontSize: 16, color: '#FFF', fontWeight: '500', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 18 },
-  dimText: { color: 'rgba(255,255,255,0.25)' },
+  title: { fontSize: 16, color: theme.textPrimary, fontWeight: '500', marginBottom: 4 },
+  subtitle: { fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
+  dimText: { color: theme.textMuted },
 
   timeBadge: {
     paddingHorizontal: 14,
@@ -345,10 +348,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(217,191,140,0.07)',
   },
   timeBadgeDim: {
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: theme.cardBorder,
     backgroundColor: 'transparent',
   },
-  timeText: { fontSize: 15, color: '#FFFFFF', fontWeight: '500', letterSpacing: 0.5 },
+  timeText: { fontSize: 15, color: theme.textPrimary, fontWeight: '500', letterSpacing: 0.5 },
 
   picker: { marginTop: 8 },
   doneButton: {
@@ -359,9 +362,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'rgba(217,191,140,0.12)',
   },
-  doneText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  doneText: { color: theme.textPrimary, fontSize: 14, fontWeight: '600' },
 
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 16 },
+  divider: { height: 1, backgroundColor: theme.cardBorder, marginVertical: 16 },
 
   unknownRow: { flexDirection: 'row', alignItems: 'center' },
   checkbox: {
@@ -369,7 +372,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(146, 124, 88, 0.24)',
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
@@ -380,12 +383,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(217,191,140,0.15)',
   },
   checkmark: { fontSize: 12, color: '#C9AE78', lineHeight: 14 },
-  unknownLabel: { fontSize: 13, color: 'rgba(255,255,255,0.45)', flex: 1 },
+  unknownLabel: { fontSize: 13, color: theme.textMuted, flex: 1 },
 
   privacyNote: {
     marginTop: 28,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.3)',
+    color: theme.textMuted,
     textAlign: 'center',
     paddingHorizontal: 16,
     lineHeight: 18,

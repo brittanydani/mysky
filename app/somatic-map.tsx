@@ -28,6 +28,8 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { keepLastWordsTogether } from '../utils/textLayout';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { EditorialPillGrid } from '../components/ui/EditorialPillGrid';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const STORAGE_KEY = '@mysky:somatic_entries';
@@ -154,6 +156,8 @@ interface SomaticEntry {
 }
 
 export default function SomaticMapScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
 
   const [entries,         setEntries]         = useState<SomaticEntry[]>([]);
@@ -271,7 +275,7 @@ export default function SomaticMapScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <MetallicIcon name="chevron-back-outline" size={22} color={PALETTE.textMuted} />
+            <MetallicIcon name="chevron-back-outline" size={22} color={theme.textMuted} />
           </Pressable>
         </View>
 
@@ -323,7 +327,8 @@ export default function SomaticMapScreen() {
 
           {/* Body map */}
           <Animated.View entering={FadeInDown.delay(160).duration(500)}>
-            <VelvetGlassSurface style={styles.bodyWrap} intensity={45} backgroundColor="rgba(12, 15, 24, 0.34)">
+            <VelvetGlassSurface style={styles.bodyWrap} intensity={45} backgroundColor={theme.isDark ? 'rgba(12, 15, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}>
+            <View style={styles.bodyBackdrop} pointerEvents="none" />
             <View style={styles.bodyAura} pointerEvents="none" />
             <View style={styles.bodyCoreGlow} pointerEvents="none" />
             <View style={styles.bodyFrame}>
@@ -343,14 +348,14 @@ export default function SomaticMapScreen() {
                 <Path
                   d={silhouettePath}
                   fill="rgba(231,243,255,0.14)"
-                  stroke="rgba(236,245,255,0.6)"
-                  strokeWidth={1.2}
+                  stroke="rgba(236,245,255,0.36)"
+                  strokeWidth={1.9}
                 />
                 <Path
                   d={silhouettePath}
                   fill="transparent"
-                  stroke="rgba(140,190,170,0.30)"
-                  strokeWidth={2.4}
+                  stroke="rgba(140,190,170,0.36)"
+                  strokeWidth={3.4}
                 />
               </Svg>
 
@@ -525,26 +530,26 @@ export default function SomaticMapScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: PALETTE.bg },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container:  { flex: 1, backgroundColor: theme.background },
   safeArea:   { flex: 1 },
   topGlow:    { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header:     { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
   titleArea:  { paddingHorizontal: 24, paddingBottom: 0, marginBottom: 34 },
-  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center' },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   headerTitle: {
     fontSize: 26,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     letterSpacing: -0.8,
     lineHeight: 31,
     marginBottom: 6,
     maxWidth: '82%',
   },
-  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.9, textTransform: 'uppercase', color: 'rgba(255,255,255,0.68)' },
+  headerSubtitle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.9, textTransform: 'uppercase', color: theme.textSecondary },
 
   toggleRow: {
     flexDirection: 'row',
@@ -561,22 +566,22 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.035)' : theme.pillSurface,
   },
   sideBtn: {
     minWidth: 88,
     paddingHorizontal: 22,
     paddingVertical: 10,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sideBtnActive: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.9)' : 'rgba(217,191,140,0.18)',
   },
-  sideBtnText:       { fontSize: 13, color: 'rgba(255,255,255,0.58)', fontWeight: '700', letterSpacing: 0.2 },
+  sideBtnText:       { fontSize: 13, color: theme.textMuted, fontWeight: '700', letterSpacing: 0.2 },
   sideBtnTextActive: { color: '#0A0A0F' },
 
   // Body
@@ -593,6 +598,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 30,
     elevation: 6,
+  },
+  bodyBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.015)' : 'rgba(255,255,255,0.38)',
   },
   bodyAura: {
     position: 'absolute',
@@ -644,7 +653,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 12,
     lineHeight: 18,
-    color: 'rgba(232,240,248,0.7)',
+    color: theme.textSecondary,
     textAlign: 'center',
     maxWidth: 260,
   },
@@ -663,16 +672,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 22,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: theme.cardBorder,
   },
   selectionDot:  { width: 7, height: 7, borderRadius: 3.5 },
   selectionText: { fontSize: 11, fontWeight: '600' },
-  selectionClear:{ fontSize: 18, color: 'rgba(255,255,255,0.58)', lineHeight: 20 },
-  tapHint:       { fontSize: 12, color: 'rgba(255,255,255,0.58)' },
+  selectionClear:{ fontSize: 18, color: theme.textMuted, lineHeight: 20 },
+  tapHint:       { fontSize: 12, color: theme.textMuted },
 
   sectionLabel: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.62)',
+    color: theme.textMuted,
     fontWeight: '700',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
@@ -680,28 +689,26 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  emotionWrap: { justifyContent: 'center' },
+  emotionWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'flex-start' },
   emotionMoreBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20 },
-  emotionMoreText: { fontSize: 11, color: 'rgba(255,255,255,0.68)', fontWeight: '700', letterSpacing: 0.5 },
-  emotionText: { fontSize: 13, color: 'rgba(226,232,240,0.82)', fontWeight: '600', textAlign: 'center' },
+  emotionMoreText: { fontSize: 11, color: theme.textSecondary, fontWeight: '700', letterSpacing: 0.5 },
+  emotionText: { fontSize: 13, color: theme.textSecondary, fontWeight: '600', textAlign: 'center' },
   emotionTextSelected: { color: '#0A0A0F' },
 
   intensityRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   intensityDot: {
     width: 20, height: 20, borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.10)' : 'rgba(146, 124, 88, 0.18)',
   },
   intensityDotFilled: {
-    backgroundColor: 'rgba(217,191,140,0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.26)',
+    backgroundColor: '#F4E7BE',
     shadowColor: '#D9BF8C',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOpacity: 0.55,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  intensityLabel: { fontSize: 12, color: 'rgba(255,255,255,0.62)', marginLeft: 6 },
+  intensityLabel: { fontSize: 12, color: theme.textMuted, marginLeft: 6 },
 
   logRow: { marginTop: 28, alignItems: 'center' },
   logBtn: {
@@ -723,17 +730,17 @@ const styles = StyleSheet.create({
   entryRow: {
     flexDirection: 'row', alignItems: 'center',
     borderRadius: 24,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    borderWidth: 1, borderColor: theme.cardBorder,
     paddingHorizontal: 20, paddingVertical: 16, gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
   },
   entryDot:  { width: 8, height: 8, borderRadius: 4 },
   entryMeta: { flex: 1 },
-  entryMain: { fontSize: 13, color: PALETTE.textMuted, marginBottom: 2 },
-  entryDate: { fontSize: 11, color: 'rgba(255,255,255,0.46)' },
+  entryMain: { fontSize: 13, color: theme.textMuted, marginBottom: 2 },
+  entryDate: { fontSize: 11, color: theme.textMuted },
   entryIntensity: { flexDirection: 'row', gap: 3 },
   intensityPip: {
     width: 5, height: 5, borderRadius: 2.5,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(146, 124, 88, 0.24)',
   },
 });

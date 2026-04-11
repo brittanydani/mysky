@@ -163,7 +163,7 @@ export default function SkiaMoodSealButton({
   // ── Seal completion ───────────────────────────────────────────────────────
   const handleComplete = useCallback(() => {
     stopHaptics();
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
     setComplete(true);
     onSeal();
   }, [stopHaptics, onSeal]);
@@ -181,6 +181,7 @@ export default function SkiaMoodSealButton({
         duration: HOLD_MS,
         easing: Easing.linear,
       });
+      runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
       runOnJS(startHaptics)();
     })
     .onStart(() => {

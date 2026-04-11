@@ -61,6 +61,9 @@ export default function AstrologySettingsModal({
 }: AstrologySettingsModalProps) {
   const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
+  const modalBackgroundGradient = theme.isDark
+    ? ['rgba(30, 35, 50, 0.98)', '#020817']
+    : ['rgba(255, 252, 247, 0.98)', 'rgba(241, 233, 221, 0.98)'];
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<AstrologySettings | null>(null);
@@ -151,7 +154,7 @@ export default function AstrologySettingsModal({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={styles.container}>
-        <LinearGradient colors={['rgba(30, 35, 50, 0.98)', '#020817']} style={StyleSheet.absoluteFillObject} />
+        <LinearGradient colors={modalBackgroundGradient} style={StyleSheet.absoluteFillObject} />
 
         {/* Header */}
         <View style={styles.header}>
@@ -350,11 +353,11 @@ export default function AstrologySettingsModal({
 }
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020817' },
+  container: { flex: 1, backgroundColor: theme.background },
   header: { alignItems: 'center', paddingTop: 12, paddingBottom: 16 },
   headerIndicator: { width: 40, height: 4, borderRadius: 2, backgroundColor: 'transparent', marginBottom: 20 },
   headerRow: { flexDirection: 'row', width: '100%', paddingHorizontal: 24, justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 24, color: PALETTE.textMain, fontWeight: '700' },
+  title: { fontSize: 24, color: theme.textPrimary, fontWeight: '700' },
   closeBtn: { padding: 4 },
 
   loadingContainer: { padding: 60, alignItems: 'center' },
@@ -362,22 +365,22 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   section: { marginBottom: 32 },
   sectionLabel: { fontSize: 13, fontWeight: '700', color: PALETTE.gold, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  sectionSub: { fontSize: 14, color: theme.textMuted, lineHeight: 20, marginBottom: 16 },
+  sectionSub: { fontSize: 14, color: theme.textSecondary, lineHeight: 20, marginBottom: 16 },
 
   optionsList: { gap: 10 },
   houseCard: {
     padding: 28,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : theme.cardSurfaceStrong,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.isDark ? PALETTE.glassBorder : theme.cardBorder,
   },
-  cardSelected: { backgroundColor: 'transparent', borderColor: 'rgba(232,214,174,0.25)' },
+  cardSelected: { backgroundColor: theme.isDark ? 'transparent' : theme.surfaceLight, borderColor: theme.isDark ? 'rgba(232,214,174,0.25)' : 'rgba(201,174,120,0.28)' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  optionTitle: { fontSize: 16, fontWeight: '600', color: PALETTE.textMain },
-  optionSub: { fontSize: 12, color: theme.textMuted, lineHeight: 18 },
+  optionTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary },
+  optionSub: { fontSize: 12, color: theme.textSecondary, lineHeight: 18 },
 
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: theme.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(111, 85, 46, 0.26)', alignItems: 'center', justifyContent: 'center' },
   radioActive: { borderColor: PALETTE.gold },
   radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: PALETTE.gold },
 
@@ -386,16 +389,16 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     flex: 1,
     padding: 20,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : theme.cardSurfaceStrong,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.isDark ? PALETTE.glassBorder : theme.cardBorder,
     alignItems: 'center',
     gap: 8,
   },
   orbLabel: { fontSize: 13, fontWeight: '700', color: theme.textSecondary },
 
-  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: PALETTE.glassBorder },
-  infoNoteText: { flex: 1, fontSize: 12, color: theme.textMuted,  },
+  infoNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : theme.cardSurface, padding: 20, borderRadius: 24, borderWidth: 1, borderColor: theme.isDark ? PALETTE.glassBorder : theme.cardBorder },
+  infoNoteText: { flex: 1, fontSize: 12, color: theme.textSecondary },
 
-  footer: { padding: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' },
+  footer: { padding: 24, borderTopWidth: 1, borderTopColor: theme.isDark ? 'rgba(255,255,255,0.08)' : theme.cardBorder },
 });

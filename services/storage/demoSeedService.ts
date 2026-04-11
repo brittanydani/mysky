@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { localDb } from './localDb';
 import { EncryptedAsyncStorage } from './encryptedAsyncStorage';
+import { FieldEncryptionService } from './fieldEncryption';
 import { type RelationshipChart } from './models';
 import { supabase } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
@@ -27,7 +28,6 @@ const DEMO_EMAIL = 'brittanyapps@outlook.com';
 const SEED_FLAG_KEY = '@mysky:demo_seeded_v10';
 // Tracks the last date a daily entry was seeded (YYYY-MM-DD)
 const DAILY_SEED_KEY = '@mysky:demo_last_seeded';
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function uid(): string {
@@ -491,12 +491,101 @@ export const DemoSeedService = {
         await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
         logger.info('[DemoSeed] Demo seed complete.');
       } else {
+        const repaired = await DemoSeedService._repairUnreadableDemoSeedData();
+        if (repaired) {
+          await AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date()));
+          return;
+        }
+
         // Daily top-up: fill any days since last seed
         await DemoSeedService._dailyTopUp();
       }
     } catch (e) {
       logger.error('[DemoSeed] Seed failed:', e);
     }
+  },
+
+  async cleanupStaleDemoArtifacts(email: string | null | undefined = null): Promise<void> {
+    try {
+      await localDb.initialize();
+
+      if (DemoSeedService.isDemoAccount(email)) {
+        await DemoSeedService._restoreLocalDemoDataIfMissing();
+      }
+
+      const db = await localDb.getDb();
+
+      const result = await db.runAsync("DELETE FROM sync_queue WHERE record_id LIKE 'demo-%'");
+      const removed = result?.changes ?? 0;
+      if (removed > 0) {
+        logger.info(`[DemoSeed] Removed ${removed} queued demo sync item${removed === 1 ? '' : 's'} while auto-demo seeding is disabled.`);
+      }
+    } catch (e) {
+      logger.error('[DemoSeed] Failed to clean queued demo sync items:', e);
+    }
+  },
+
+  async _restoreLocalDemoDataIfMissing(): Promise<void> {
+    const db = await localDb.getDb();
+    const [journalRow, sleepRow, checkInRow] = await Promise.all([
+      db.getFirstAsync("SELECT COUNT(*) as cnt FROM journal_entries WHERE id LIKE 'demo-journal-%'"),
+      db.getFirstAsync("SELECT COUNT(*) as cnt FROM sleep_entries WHERE id LIKE 'demo-%'"),
+      db.getFirstAsync("SELECT COUNT(*) as cnt FROM daily_check_ins WHERE id LIKE 'demo-checkin-%'"),
+    ]);
+
+    const journalCount = Number((journalRow as { cnt?: number } | null)?.cnt ?? 0);
+    const sleepCount = Number((sleepRow as { cnt?: number } | null)?.cnt ?? 0);
+    const checkInCount = Number((checkInRow as { cnt?: number } | null)?.cnt ?? 0);
+
+    if (journalCount > 0 && sleepCount > 0 && checkInCount > 0) {
+      return;
+    }
+
+    logger.info('[DemoSeed] Restoring missing local demo content without re-enabling ongoing demo generation.');
+
+    await Promise.all([
+      db.runAsync("DELETE FROM journal_entries WHERE id LIKE 'demo-%'"),
+      db.runAsync("DELETE FROM sleep_entries WHERE id LIKE 'demo-%'"),
+      db.runAsync("DELETE FROM daily_check_ins WHERE id LIKE 'demo-%'"),
+      db.runAsync("DELETE FROM insight_history WHERE id LIKE 'demo-%'"),
+    ]);
+
+    const existingCharts = await localDb.getCharts();
+    let activeChartId: string;
+    if (existingCharts.length > 0) {
+      activeChartId = existingCharts[0].id;
+    } else {
+      activeChartId = CHART_ID;
+      await localDb.saveChart({
+        id: CHART_ID,
+        name: 'Brittany',
+        birthDate: '2002-03-01',
+        birthTime: '12:01',
+        hasUnknownTime: false,
+        birthPlace: 'Austin, TX',
+        latitude: 30.2672,
+        longitude: -97.7431,
+        timezone: 'America/Chicago',
+        houseSystem: 'placidus',
+        createdAt: CHART_CREATED,
+        updatedAt: CHART_CREATED,
+        isDeleted: false,
+      });
+    }
+
+    let journalOffset = 0;
+    for (let i = 0; i < SEED_DAYS; i++) {
+      const d = daysBefore(SEED_DAYS - 1 - i);
+      const dateStr = isoDate(d);
+      const count = await DemoSeedService._seedDay(dateStr, d, activeChartId, dayNumber(d), journalOffset);
+      journalOffset += count;
+    }
+
+    await Promise.all([
+      AsyncStorage.setItem(SEED_FLAG_KEY, 'true'),
+      AsyncStorage.setItem(DAILY_SEED_KEY, isoDate(new Date())),
+      EncryptedAsyncStorage.setItem('@mysky:demo_premium', 'true'),
+    ]);
   },
 
   /**
@@ -543,6 +632,42 @@ export const DemoSeedService = {
     // Cloud top-up
     await DemoSeedService._seedSupabaseDay(missing, chartId);
     await AsyncStorage.setItem(DAILY_SEED_KEY, today);
+  },
+
+  async _repairUnreadableDemoSeedData(): Promise<boolean> {
+    const db = await localDb.getDb();
+    const rows = await db.getAllAsync(
+      "SELECT id, title, content FROM journal_entries WHERE id LIKE 'demo-journal-%'"
+    ) as Array<{ id: string; title: string | null; content: string | null }>;
+
+    const unreadableIds: string[] = [];
+
+    for (const row of rows) {
+      const titleResult = row.title
+        ? await FieldEncryptionService.tryDecryptField(row.title)
+        : { ok: true as const, value: '' };
+      const contentResult = row.content
+        ? await FieldEncryptionService.tryDecryptField(row.content)
+        : { ok: true as const, value: '' };
+
+      if (!titleResult.ok || !contentResult.ok) {
+        unreadableIds.push(row.id);
+      }
+    }
+
+    if (unreadableIds.length === 0) {
+      return false;
+    }
+
+    logger.warn(
+      `[DemoSeed] Found ${unreadableIds.length} unreadable demo journal entr${unreadableIds.length === 1 ? 'y' : 'ies'}; reseeding demo content.`,
+      unreadableIds.slice(0, 5),
+    );
+
+    await DemoSeedService._seed();
+    await AsyncStorage.setItem(SEED_FLAG_KEY, 'true');
+    logger.info('[DemoSeed] Demo content reseeded after unreadable journal recovery.');
+    return true;
   },
 
   /**

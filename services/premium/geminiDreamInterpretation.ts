@@ -121,7 +121,25 @@ function getFriendlyRateLimitMessage(): string {
 }
 
 function getFriendlyAuthMessage(): string {
-  return 'Sign in to use AI dream insights.';
+  return FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE;
+}
+
+const FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE = 'AI insights are temporarily unavailable. Please try again soon.';
+const FRIENDLY_NETWORK_UNAVAILABLE_MESSAGE = 'Could not reach AI insights. Please check your connection and try again.';
+
+export function isExpectedGeminiDreamError(error: unknown): boolean {
+  const message = error instanceof Error
+    ? error.message
+    : typeof error === 'string'
+      ? error
+      : '';
+
+  if (!message) return false;
+
+  const normalized = message.trim().toLowerCase();
+  return normalized.includes('ai insights are at capacity right now')
+    || normalized.includes(FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE.toLowerCase())
+    || normalized.includes(FRIENDLY_NETWORK_UNAVAILABLE_MESSAGE.toLowerCase());
 }
 
 async function getEdgeFunctionErrorDetails(error: unknown): Promise<{ status: number; message: string }> {
@@ -224,6 +242,21 @@ async function ensureGeminiDreamSession(): Promise<string> {
   }
 }
 
+async function refreshGeminiDreamSession(): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    if (error || !data.session?.access_token) {
+      logger.warn('[GeminiDream] Session refresh failed after edge-function unauthorized response.', error);
+      return null;
+    }
+
+    return data.session.access_token;
+  } catch (error) {
+    logger.warn('[GeminiDream] Session refresh failed after edge-function unauthorized response.', error);
+    return null;
+  }
+}
+
 // ─── Client-side Rate Limiter ────────────────────────────────────────────────
 
 const MIN_CALL_INTERVAL_MS = 10_000; // 10 seconds between calls
@@ -247,12 +280,13 @@ export async function generateGeminiDreamInterpretation(
   lastCallTimestamp = now;
 
   const payload = buildDreamInsightPayload(input);
+  let currentAccessToken = accessToken;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     try {
       const { data, error } = await supabase.functions.invoke('dream-insights', {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${currentAccessToken}`,
         },
         body: payload,
       });
@@ -261,7 +295,14 @@ export async function generateGeminiDreamInterpretation(
         const { status, message } = await getEdgeFunctionErrorDetails(error);
 
         if (status === 401 || status === 403) {
-          logger.warn('[GeminiDream] Edge function unauthorized; AI dream insights require sign-in.');
+          const refreshedAccessToken = await refreshGeminiDreamSession();
+          if (refreshedAccessToken && refreshedAccessToken !== currentAccessToken) {
+            logger.warn('[GeminiDream] Edge function unauthorized; refreshed session and retrying.');
+            currentAccessToken = refreshedAccessToken;
+            continue;
+          }
+
+          logger.warn('[GeminiDream] Edge function unauthorized; AI dream insights unavailable.');
           throw new Error(getFriendlyAuthMessage());
         }
 
@@ -274,10 +315,10 @@ export async function generateGeminiDreamInterpretation(
           throw new Error(getFriendlyRateLimitMessage());
         }
         if (normalizedMessage.includes('gemini api error: 404')) {
-          throw new Error('AI insights are temporarily unavailable. Please try again soon.');
+          throw new Error(FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE);
         }
         if (normalizedMessage.includes('gemini api error: 503')) {
-          throw new Error('AI insights are temporarily unavailable. Please try again soon.');
+          throw new Error(FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE);
         }
 
         const retriable = status === 0 || status === 408 || status === 503 || status >= 500;
@@ -305,11 +346,11 @@ export async function generateGeminiDreamInterpretation(
         continue;
       }
       if (isNetwork) {
-        throw new Error('Could not reach AI insights. Please check your connection and try again.');
+        throw new Error(FRIENDLY_NETWORK_UNAVAILABLE_MESSAGE);
       }
       throw error;
     }
   }
 
-  throw new Error('AI insights are temporarily unavailable. Please try again soon.');
+  throw new Error(FRIENDLY_TEMPORARY_UNAVAILABLE_MESSAGE);
 }

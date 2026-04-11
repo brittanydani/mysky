@@ -40,6 +40,7 @@ import { SkiaDynamicCosmos } from '../../components/ui/SkiaDynamicCosmos';
 import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
+import { PsychologicalForcesRadar } from '../../components/ui/PsychologicalForcesRadar';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { localDb } from '../../services/storage/localDb';
 import { EncryptedAsyncStorage } from '../../services/storage/encryptedAsyncStorage';
@@ -56,6 +57,8 @@ import {
 } from '../../services/premium/innerTensionsEngine';
 import { getTriggerReflectionQuestion, getTriggerTaxonomy } from '../../services/premium/triggerTaxonomy';
 import type { NervousSystemBranch, ShadowTrigger } from '../../services/premium/dreamTypes';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
@@ -96,17 +99,22 @@ function conflictScoreColor(score: number): string {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: string }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Text style={styles.sectionLabel}>{children.toUpperCase()}</Text>
   );
 }
 
 function GlassCard({ children, style }: { children: React.ReactNode; style?: object }) {
+  const styles = useThemedStyles(createStyles);
+  const theme = useAppTheme();
+
   return (
     <VelvetGlassSurface
       style={[styles.glassCard, style]}
       intensity={45}
-      backgroundColor="rgba(11, 15, 25, 0.34)"
+      backgroundColor={theme.isDark ? 'rgba(11, 15, 25, 0.34)' : 'rgba(255, 255, 255, 0.72)'}
       borderColor="rgba(255,255,255,0.10)"
       highlightColor="rgba(255,255,255,0.05)"
     >
@@ -116,29 +124,33 @@ function GlassCard({ children, style }: { children: React.ReactNode; style?: obj
 }
 
 function CircularConflictGauge({ score, color }: { score: number; color: string }) {
+  const styles = useThemedStyles(createStyles);
   const pct = Math.max(4, Math.round(score * 100));
   const size = 120;
   const strokeWidth = 11;
   const startAngle = 135;
   const sweepAngle = 270;
-  const rect = {
-    x: strokeWidth / 2,
-    y: strokeWidth / 2,
-    width: size - strokeWidth,
-    height: size - strokeWidth,
-  };
+  const rect = useMemo(
+    () => ({
+      x: strokeWidth / 2,
+      y: strokeWidth / 2,
+      width: size - strokeWidth,
+      height: size - strokeWidth,
+    }),
+    [size, strokeWidth],
+  );
 
   const trackPath = useMemo(() => {
     const path = Skia.Path.Make();
     path.addArc(rect, startAngle, sweepAngle);
     return path;
-  }, []);
+  }, [rect, startAngle, sweepAngle]);
 
   const valuePath = useMemo(() => {
     const path = Skia.Path.Make();
     path.addArc(rect, startAngle, sweepAngle * Math.max(0.04, Math.min(score, 1)));
     return path;
-  }, [score]);
+  }, [rect, score, startAngle, sweepAngle]);
 
   return (
     <View style={styles.conflictGaugeWrap}>
@@ -168,6 +180,7 @@ function TugOfWarBar({
   profile: InnerTensionsData['nsProfile'];
   states: [NervousSystemBranch, NervousSystemBranch];
 }) {
+  const styles = useThemedStyles(createStyles);
   const [leftState, rightState] = states;
   const leftValue = profile[leftState] ?? 0;
   const rightValue = profile[rightState] ?? 0;
@@ -195,6 +208,7 @@ function TugOfWarBar({
 }
 
 function NSConflictCard({ data }: { data: InnerTensionsData }) {
+  const styles = useThemedStyles(createStyles);
   const { nsConflict, dataQuality } = data;
   const hasData = dataQuality.entriesWithFeelings > 0;
   const scoreColor = conflictScoreColor(nsConflict.conflictScore);
@@ -276,6 +290,8 @@ function NSConflictCard({ data }: { data: InnerTensionsData }) {
 }
 
 function PremiumLockBanner({ onUnlock }: { onUnlock: () => void }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Pressable style={styles.lockBanner} onPress={onUnlock}>
       <LinearGradient
@@ -299,6 +315,8 @@ function PremiumLockBanner({ onUnlock }: { onUnlock: () => void }) {
 }
 
 function NSBranchMapSection({ data }: { data: InnerTensionsData }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Animated.View entering={FadeInDown.delay(100).duration(400)}>
       <SectionLabel>State Balance</SectionLabel>
@@ -308,15 +326,16 @@ function NSBranchMapSection({ data }: { data: InnerTensionsData }) {
           A separate view of which states are carrying the most weight right now. This is your state mix, not your conflict-load score.
         </Text>
         <View style={styles.radarWrap}>
-          {data.nsBranchForces.map((force) => (
-            <View key={force.label} style={styles.stateBalanceRow}>
-              <Text style={styles.stateBalanceLabel}>{force.label}</Text>
-              <View style={styles.stateBalanceBar}>
-                <View style={[styles.stateBalanceFill, { width: `${Math.max(force.value, 4)}%`, backgroundColor: force.color }]} />
+          <PsychologicalForcesRadar forces={data.nsBranchForces} size={272} />
+          <View style={styles.stateBalanceLegend}>
+            {data.nsBranchForces.map((force) => (
+              <View key={force.label} style={styles.stateBalanceLegendItem}>
+                <View style={[styles.stateBalanceLegendDot, { backgroundColor: force.color }]} />
+                <Text style={styles.stateBalanceLegendLabel}>{force.label}</Text>
+                <Text style={styles.stateBalanceLegendValue}>{Math.round(force.value)}%</Text>
               </View>
-              <Text style={styles.stateBalanceValue}>{Math.round(force.value)}</Text>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
         {data.dataQuality.entriesWithFeelings === 0 && (
           <Text style={styles.emptyStateText}>Log dreams with feelings to populate the map.</Text>
@@ -327,6 +346,7 @@ function NSBranchMapSection({ data }: { data: InnerTensionsData }) {
 }
 
 function AmbivalenceSection({ data }: { data: InnerTensionsData }) {
+  const styles = useThemedStyles(createStyles);
   const { ambivalence } = data;
 
   return (
@@ -378,6 +398,7 @@ function AmbivalenceSection({ data }: { data: InnerTensionsData }) {
 }
 
 function DreamPatternsSection({ data }: { data: InnerTensionsData }) {
+  const styles = useThemedStyles(createStyles);
   const { dreamPatterns, dataQuality } = data;
 
   return (
@@ -399,7 +420,7 @@ function DreamPatternsSection({ data }: { data: InnerTensionsData }) {
           </Text>
         ) : (
           <View style={styles.patternGrid}>
-            {dreamPatterns.map((p, i) => (
+            {dreamPatterns.map((p) => (
               <View key={p.pattern} style={styles.patternChip}>
                 <LinearGradient
                   colors={['rgba(168,155,200,0.15)', 'rgba(168,155,200,0.05)']}
@@ -409,18 +430,20 @@ function DreamPatternsSection({ data }: { data: InnerTensionsData }) {
                 />
                 <View style={styles.patternChipInner}>
                   <View style={styles.patternChipHeader}>
-                    <Text
-                      style={styles.patternChipLabel}
-                      numberOfLines={2}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.9}
-                    >
-                      {p.label}
-                    </Text>
-                    <View style={styles.patternChipBadge}>
-                      <Text style={styles.patternChipBadgeCount}>{p.count}</Text>
-                      <Text style={styles.patternChipBadgeLabel}>{p.count === 1 ? 'dream' : 'dreams'}</Text>
+                    <View style={styles.patternChipTitleWrap}>
+                      <Text
+                        style={styles.patternChipLabel}
+                        numberOfLines={2}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.9}
+                      >
+                        {p.label}
+                      </Text>
                     </View>
+                      <View style={styles.patternChipBadge}>
+                        <Text style={styles.patternChipBadgeCount}>{p.count}</Text>
+                        <Text style={styles.patternChipBadgeLabel}>{p.count === 1 ? 'dream' : 'dreams'}</Text>
+                      </View>
                   </View>
                   <View style={styles.patternConfidenceBar}>
                     <View style={[styles.patternConfidenceFill, { width: `${Math.round(p.topConfidence * 100)}%` }]} />
@@ -436,6 +459,7 @@ function DreamPatternsSection({ data }: { data: InnerTensionsData }) {
 }
 
 function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
+  const styles = useThemedStyles(createStyles);
   const { topTriggers } = data;
   const [expanded, setExpanded] = useState<ShadowTrigger | null>(null);
 
@@ -469,7 +493,8 @@ function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
               <Pressable
                 key={item.trigger}
                 onPress={() => toggle(item.trigger)}
-                style={[styles.triggerRow, i === 0 && styles.triggerRowFirst]}
+                style={[styles.triggerRow, i > 0 && styles.triggerRowSeparated]}
+                hitSlop={12}
               >
                 <View style={styles.triggerHeader}>
                   <View style={styles.triggerNameRow}>
@@ -510,6 +535,8 @@ function TriggerReflectionsSection({ data }: { data: InnerTensionsData }) {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function InnerTensionsScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
   const [data, setData] = useState<InnerTensionsData | null>(null);
@@ -573,8 +600,8 @@ export default function InnerTensionsScreen() {
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={goBack} accessibilityRole="button" accessibilityLabel="Go back">
-            <MetallicLucideIcon icon={ChevronLeft} size={20} color={PALETTE.textMain} />
+          <Pressable style={styles.backButton} onPress={goBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Go back">
+            <MetallicLucideIcon icon={ChevronLeft} size={20} color={theme.textPrimary} />
           </Pressable>
         </View>
 
@@ -643,8 +670,8 @@ export default function InnerTensionsScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container:        { flex: 1, backgroundColor: theme.background },
   safeArea:         { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -655,18 +682,18 @@ const styles = StyleSheet.create({
   },
   header:           { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:        { paddingHorizontal: 24, paddingBottom: 8 },
-  backButton:       { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
+  backButton:       { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
   scrollContent:    { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
   loader:           { marginTop: 80 },
   bottomSpacer:     { height: 40 },
 
-  screenTitle: { fontSize: 31, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
+  screenTitle: { fontSize: 31, fontWeight: '800', color: theme.textPrimary, letterSpacing: -0.9, marginBottom: 4, maxWidth: '88%' },
   screenSubtitle: { fontSize: 14, marginBottom: 32 },
 
   // Section label
   sectionLabel: {
     fontSize: 12, fontWeight: '700',
-    color: 'rgba(255,255,255,0.7)',
+    color: theme.textSecondary,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     marginTop: 8, marginBottom: 20,
@@ -678,11 +705,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   cardTitle: {
-    fontSize: 17, fontWeight: '500', color: PALETTE.textMain,
+    fontSize: 17, fontWeight: '500', color: theme.textPrimary,
     marginBottom: 6, letterSpacing: 0.3,
   },
   cardSubtitle: {
-    fontSize: 13, color: PALETTE.textMuted, lineHeight: 19,
+    fontSize: 13, color: theme.textMuted, lineHeight: 19,
     marginBottom: 16,
   },
 
@@ -694,7 +721,7 @@ const styles = StyleSheet.create({
   seedChip: {
     marginTop: 14, alignSelf: 'flex-start',
     paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1, borderColor: PALETTE.glassBorder,
+    borderRadius: 20, borderWidth: 1, borderColor: theme.cardBorder,
   },
   seedChipText: { fontSize: 12, letterSpacing: 0.5 },
 
@@ -708,28 +735,28 @@ const styles = StyleSheet.create({
   conflictGaugeCenter: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   conflictGaugeNumber: { fontSize: 28, fontWeight: '700', letterSpacing: -0.8 },
   conflictGaugeUnit: { fontSize: 10, color: PALETTE.textDim, marginTop: 1 },
-  conflictGaugeHint: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18, marginTop: 12 },
+  conflictGaugeHint: { fontSize: 12, color: theme.textMuted, lineHeight: 18, marginTop: 12 },
 
   conflictPairHeader: { marginBottom: 12 },
-  conflictPairLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.66)', marginBottom: 4 },
-  conflictPairHint: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18 },
+  conflictPairLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase', color: theme.textSecondary, marginBottom: 4 },
+  conflictPairHint: { fontSize: 12, color: theme.textMuted, lineHeight: 18 },
   tugWrap: { marginBottom: 16 },
   tugHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 },
   tugLabel: { flex: 1, fontSize: 11, fontWeight: '700' },
   tugHint: { fontSize: 10, color: PALETTE.textDim, textTransform: 'uppercase', letterSpacing: 1.1 },
-  tugTrack: { flexDirection: 'row', height: 8, borderRadius: 999, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.06)' },
+  tugTrack: { flexDirection: 'row', height: 8, borderRadius: 999, overflow: 'hidden', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
   tugFillLeft: { height: '100%' },
   tugFillRight: { height: '100%' },
   tugValues: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-  tugValue: { fontSize: 11, color: PALETTE.textMuted, fontWeight: '700' },
+  tugValue: { fontSize: 11, color: theme.textMuted, fontWeight: '700' },
 
   conflictStatesRow:    { gap: 12, marginBottom: 14 },
   conflictState:        { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   stateDot:             { width: 8, height: 8, borderRadius: 4, marginTop: 4 },
   stateName:            { fontSize: 13, fontWeight: '600', marginBottom: 2 },
-  stateDesc:            { fontSize: 12, color: PALETTE.textMuted, letterSpacing: 0.2, lineHeight: 17 },
+  stateDesc:            { fontSize: 12, color: theme.textMuted, letterSpacing: 0.2, lineHeight: 17 },
   conflictInterpretation: {
-    fontSize: 13, color: PALETTE.textMuted, lineHeight: 19,
+    fontSize: 13, color: theme.textMuted, lineHeight: 19,
     borderTopWidth: 1, borderTopColor: PALETTE.glassBorder,
     paddingTop: 14, marginTop: 4,
   },
@@ -743,7 +770,7 @@ const styles = StyleSheet.create({
   },
   lockBannerRow:        { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   lockBannerTitle:      { fontSize: 16, fontWeight: '600' },
-  lockBannerSub:        { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18, marginBottom: 16 },
+  lockBannerSub:        { fontSize: 12, color: theme.textMuted, lineHeight: 18, marginBottom: 16 },
   lockBannerButton: {
     alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 20, borderWidth: 1, borderColor: PALETTE.gold,
@@ -752,8 +779,8 @@ const styles = StyleSheet.create({
 
   // Blurred teaser
   blurPreviewWrap:    { position: 'relative', overflow: 'hidden', borderRadius: 16 },
-  blurPreviewCard: { backgroundColor: PALETTE.glassBg, borderWidth: 1, borderColor: PALETTE.glassBorder, borderRadius: 24, padding: 28, opacity: 0.4 },
-  blurPreviewTitle:   { fontSize: 17, fontWeight: '500', color: PALETTE.textMain, marginBottom: 12 },
+  blurPreviewCard: { backgroundColor: PALETTE.glassBg, borderWidth: 1, borderColor: theme.cardBorder, borderRadius: 24, padding: 28, opacity: 0.4 },
+  blurPreviewTitle:   { fontSize: 17, fontWeight: '500', color: theme.textPrimary, marginBottom: 12 },
   blurPreviewRadar:   { height: 150, backgroundColor: 'rgba(168,155,200,0.08)', borderRadius: 16 },
   blurPreviewOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -761,12 +788,38 @@ const styles = StyleSheet.create({
   },
 
   // Radar
-  radarWrap: { alignItems: 'stretch', marginVertical: 8, gap: 12 },
+  radarWrap: { alignItems: 'center', marginVertical: 8, gap: 18 },
+  stateBalanceLegend: {
+    width: '100%',
+    gap: 10,
+  },
+  stateBalanceLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 4,
+  },
+  stateBalanceLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  stateBalanceLegendLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: theme.textPrimary,
+    fontWeight: '600',
+  },
+  stateBalanceLegendValue: {
+    fontSize: 12,
+    color: theme.textMuted,
+    fontWeight: '700',
+  },
   stateBalanceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stateBalanceLabel: { width: 76, fontSize: 12, color: PALETTE.textMain, fontWeight: '600' },
-  stateBalanceBar: { flex: 1, height: 10, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.06)', overflow: 'hidden' },
+  stateBalanceLabel: { width: 76, fontSize: 12, color: theme.textPrimary, fontWeight: '600' },
+  stateBalanceBar: { flex: 1, height: 10, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface, overflow: 'hidden' },
   stateBalanceFill: { height: '100%', borderRadius: 999 },
-  stateBalanceValue: { width: 28, textAlign: 'right', fontSize: 12, color: 'rgba(255,255,255,0.62)', fontWeight: '600' },
+  stateBalanceValue: { width: 28, textAlign: 'right', fontSize: 12, color: theme.textMuted, fontWeight: '600' },
 
   // Ambivalence
   ambivalencePair:    { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: PALETTE.glassBorder },
@@ -775,7 +828,7 @@ const styles = StyleSheet.create({
   ambivalenceTrigger: { fontSize: 14, fontWeight: '600' },
   ambivalenceArrow:   { fontSize: 14, color: PALETTE.textDim },
   ambivalenceIntensityWrap: { minWidth: 60, alignItems: 'flex-end' },
-  ambivalenceIntensity: { fontSize: 12, color: PALETTE.textMain, minWidth: 36, textAlign: 'right', fontWeight: '700' },
+  ambivalenceIntensity: { fontSize: 12, color: theme.textPrimary, minWidth: 36, textAlign: 'right', fontWeight: '700' },
   ambivalenceIntensityLabel: { fontSize: 9, color: PALETTE.textDim, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 2 },
   ambivalenceBarBg:   { height: 8, backgroundColor: PALETTE.glassBorder, borderRadius: 999, marginBottom: 10, overflow: 'hidden' },
   ambivalenceBarFill: { height: 8, backgroundColor: PALETTE.gold + '80', borderRadius: 999 },
@@ -784,12 +837,19 @@ const styles = StyleSheet.create({
   // Dream patterns
   patternGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
   patternChip: {
-    width: '47%', borderRadius: 24, padding: 16,
-    borderWidth: 1, borderColor: PALETTE.glassBorder,
+    flexBasis: '48%',
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 132,
+    minHeight: 108,
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1, borderColor: theme.cardBorder,
     overflow: 'hidden', position: 'relative',
   },
   patternChipInner: {
-    minHeight: 92,
+    flex: 1,
+    minHeight: 76,
     justifyContent: 'space-between',
     gap: 12,
   },
@@ -797,52 +857,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 10,
   },
+  patternChipTitleWrap: { flex: 1, minWidth: 0, paddingRight: 10 },
   patternChipBadge: {
-    minWidth: 42,
+    minWidth: 52,
     paddingHorizontal: 8,
-    height: 24,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
     backgroundColor: 'rgba(168,155,200,0.22)',
     borderWidth: 1,
     borderColor: 'rgba(168,155,200,0.28)',
     alignItems: 'center', justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 4,
+    gap: 1,
     flexShrink: 0,
+    alignSelf: 'flex-start',
   },
-  patternChipBadgeCount: { fontSize: 11, fontWeight: '800', color: PALETTE.lavender, lineHeight: 12, textAlign: 'center' },
-  patternChipBadgeLabel: { fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.68)', textTransform: 'uppercase', letterSpacing: 0.6 },
+  patternChipBadgeCount: { fontSize: 12, fontWeight: '800', color: PALETTE.lavender, lineHeight: 13, textAlign: 'center' },
+  patternChipBadgeLabel: { fontSize: 8, fontWeight: '700', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, lineHeight: 9 },
   patternChipLabel: {
-    flex: 1,
     fontSize: 12,
-    color: PALETTE.textMain,
-    fontWeight: '500',
+    color: theme.textPrimary,
+    fontWeight: '600',
     lineHeight: 17,
-    flexWrap: 'wrap',
   },
-  patternConfidenceBar: { height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2 },
+  patternConfidenceBar: { marginTop: 'auto', height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2 },
   patternConfidenceFill: { height: 3, backgroundColor: PALETTE.lavender + '80', borderRadius: 2 },
 
   // Trigger reflections
-  triggerRow: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: PALETTE.glassBorder },
-  triggerRowFirst: { marginTop: 16, paddingTop: 0, borderTopWidth: 0 },
+  triggerRow: { marginTop: 0, paddingTop: 0 },
+  triggerRowSeparated: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: PALETTE.glassBorder },
   triggerHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   triggerNameRow:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
   triggerDot:         { width: 7, height: 7, borderRadius: 4 },
-  triggerName:        { fontSize: 14, fontWeight: '600', color: PALETTE.textMain },
-  triggerIntensityWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  triggerIntensityText: { fontSize: 12, color: PALETTE.textDim },
-  triggerChevron: { marginTop: 2 },
+  triggerName:        { fontSize: 14, fontWeight: '600', color: theme.textPrimary },
+  triggerIntensityWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  triggerIntensityText: { fontSize: 12, color: PALETTE.textDim, lineHeight: 16 },
+  triggerChevron: { marginTop: 0 },
   triggerBarBg:  { height: 3, backgroundColor: PALETTE.glassBorder, borderRadius: 2, marginBottom: 0 },
   triggerBarFill: { height: 3, backgroundColor: PALETTE.gold + '60', borderRadius: 2 },
   triggerExpanded: { marginTop: 12 },
-  triggerDefinition: { fontSize: 12, color: PALETTE.textMuted, lineHeight: 18, marginBottom: 12 },
+  triggerDefinition: { fontSize: 12, color: theme.textMuted, lineHeight: 18, marginBottom: 12 },
   triggerQuestion: { flexDirection: 'row', gap: 4 },
   triggerQuestionMark: { fontSize: 18, lineHeight: 22 },
   triggerQuestionText: {
-    flex: 1, fontSize: 13, color: PALETTE.textMain,
+    flex: 1, fontSize: 13, color: theme.textPrimary,
     lineHeight: 20,
   },
 

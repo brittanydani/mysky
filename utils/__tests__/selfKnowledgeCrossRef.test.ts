@@ -63,5 +63,39 @@ describe('selfKnowledgeCrossRef', () => {
         expect(typeof insight.isConfirmed).toBe('boolean');
       });
     });
+
+    it('formats the relational mirror with hero metrics and a takeaway', () => {
+      const context = {
+        coreValues: null,
+        archetypeProfile: null,
+        cognitiveStyle: null,
+        somaticEntries: [],
+        triggers: null,
+        relationshipPatterns: [
+          { id: 'r1', note: 'I noticed I over-explained after conflict.', date: '2026-04-01', createdAt: '2026-04-01T12:00:00Z', updatedAt: '2026-04-01T12:00:00Z', tags: ['t5', 't12'] },
+          { id: 'r2', note: 'I asked for reassurance directly.', date: '2026-04-02', createdAt: '2026-04-02T12:00:00Z', updatedAt: '2026-04-02T12:00:00Z', tags: ['s1'] },
+          { id: 'r3', note: 'I kept tracking the same pattern.', date: '2026-04-03', createdAt: '2026-04-03T12:00:00Z', updatedAt: '2026-04-03T12:00:00Z', tags: ['t5'] },
+        ],
+        dailyReflections: null,
+      };
+
+      const checkIns = [
+        { id: '1', date: '2026-04-01', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: ['relationships'], createdAt: '2026-04-01T12:00:00Z' },
+        { id: '2', date: '2026-04-02', moodScore: 8, energyLevel: 'medium', stressLevel: 'low', tags: ['boundaries'], createdAt: '2026-04-02T12:00:00Z' },
+        { id: '3', date: '2026-04-03', moodScore: 7, energyLevel: 'medium', stressLevel: 'medium', tags: ['intimacy'], createdAt: '2026-04-03T12:00:00Z' },
+        { id: '4', date: '2026-04-04', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: ['productivity'], createdAt: '2026-04-04T12:00:00Z' },
+        { id: '5', date: '2026-04-05', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: ['rest'], createdAt: '2026-04-05T12:00:00Z' },
+        { id: '6', date: '2026-04-06', moodScore: 6, energyLevel: 'medium', stressLevel: 'medium', tags: ['creative'], createdAt: '2026-04-06T12:00:00Z' },
+        { id: '7', date: '2026-04-07', moodScore: 5, energyLevel: 'medium', stressLevel: 'medium', tags: ['screens'], createdAt: '2026-04-07T12:00:00Z' },
+      ];
+
+      const result = computeSelfKnowledgeCrossRef(context as any, checkIns as any);
+      const relationshipInsight = result.find((insight) => insight.id === 'relationship-pattern');
+
+      expect(relationshipInsight).toBeDefined();
+      expect(relationshipInsight?.heroMetrics?.length).toBeGreaterThan(0);
+      expect(relationshipInsight?.takeaway?.label).toBe('Inquiry');
+      expect(relationshipInsight?.takeaway?.body).toMatch(/interaction|boundary|pattern/i);
+    });
   });
 });

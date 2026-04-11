@@ -155,7 +155,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={styles.securityCard}>
               <View style={styles.securityHeader}>
                 <MetallicIcon name="lock-closed-outline" size={18} color={PALETTE.emerald} />
-                <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Encryption at Rest</Text>
+                <Text style={styles.securityTitle}>Encryption at Rest</Text>
               </View>
               <Text style={styles.paragraph}>
                 Sensitive fields — journal content, titles, birth places, dream text, mood/stress/energy scores, emotional tags, check-in notes, wins, challenges, and NLP results — use <Text style={styles.highlight}>AES-256-GCM</Text> field-level encryption. The data encryption key is stored in your device's hardware-backed SecureStore (iOS Keychain).
@@ -165,7 +165,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <MetallicIcon name="shield-checkmark-outline" size={18} color={PALETTE.emerald} />
-                <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Tamper Detection</Text>
+                <Text style={styles.securityTitle}>Tamper Detection</Text>
               </View>
               <Text style={styles.paragraph}>
                 SecureStore payloads are protected with <Text style={styles.highlight}>HMAC-SHA256</Text> tamper detection using a device-unique key. Security events are logged in a rolling audit trail for your transparency.
@@ -175,7 +175,7 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
             <LinearGradient colors={['rgba(110,191,139,0.10)', theme.cardGradientEnd]} style={[styles.securityCard, { marginTop: 12 }]}>
               <View style={styles.securityHeader}>
                 <MetallicIcon name="cloud-offline-outline" size={18} color={PALETTE.emerald} />
-                <Text style={[styles.securityTitle, { color: "#FFFFFF" }]}>Backup Encryption</Text>
+                <Text style={styles.securityTitle}>Backup Encryption</Text>
               </View>
               <Text style={styles.paragraph}>
                 Encrypted .msky backups use <Text style={styles.highlight}>AES-256-GCM with PBKDF2-SHA256</Text> key derivation (100,000 iterations) from your chosen passphrase. Backups are never uploaded to any server — you control where they go via your device's share sheet.
@@ -373,8 +373,16 @@ export default function PrivacyPolicyScreen({ onBack }: { onBack?: () => void } 
   );
 }
 
-const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => {
+  const sectionSurface = theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255, 252, 247, 0.92)';
+  const sectionBorder = theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(146, 124, 88, 0.14)';
+  const sectionDivider = theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(146, 124, 88, 0.12)';
+  const securitySurface = theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(248, 252, 248, 0.94)';
+  const securityBorder = theme.isDark ? 'rgba(110,191,139,0.20)' : 'rgba(78, 138, 100, 0.22)';
+  const emphasisText = theme.isDark ? '#FFFFFF' : theme.primaryDark;
+
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   header: {
     paddingHorizontal: 24,
@@ -389,9 +397,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -414,7 +422,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 1.0,
     textTransform: 'uppercase',
     marginTop: 2,
-    color: 'rgba(255,255,255,0.6)',
+    color: theme.textSecondary,
   },
   scrollView: { flex: 1 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
@@ -423,33 +431,33 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 16,
     opacity: 0.95,
   },
-  lastUpdated: { fontSize: 13, color: "#FFFFFF", marginBottom: 24, textAlign: 'center' },
+  lastUpdated: { fontSize: 13, color: theme.textPrimary, marginBottom: 24, textAlign: 'center' },
   
   section: { marginBottom: 32 },
   glassSection: {
     borderRadius: 24,
     padding: 28,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: sectionBorder,
+    backgroundColor: sectionSurface,
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: "#FFFFFF",
+    color: theme.textPrimary,
     marginBottom: 16,
     paddingLeft: 4,
   },
   subSectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: "#FFFFFF",
+    color: theme.textPrimary,
     marginBottom: 8,
   },
   paragraph: {
     fontSize: 15,
-    color: "#FFFFFF",
+    color: theme.textSecondary,
     lineHeight: 24,
     marginBottom: 12,
   },
@@ -457,27 +465,27 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 20,
     paddingLeft: 12,
     borderLeftWidth: 2,
-    borderLeftColor: 'rgba(255,255,255,0.1)',
+    borderLeftColor: sectionDivider,
   },
   bulletPoint: {
     fontSize: 15,
-    color: "#FFFFFF",
+    color: theme.textSecondary,
     lineHeight: 24,
     marginBottom: 8,
     paddingLeft: 4,
   },
-  highlight: { color: "#FFFFFF", fontWeight: '600' },
-  boldText: { color: "#FFFFFF", fontWeight: '600' },
+  highlight: { color: emphasisText, fontWeight: '600' },
+  boldText: { color: emphasisText, fontWeight: '600' },
   
   securityCard: {
     borderRadius: 24,
     padding: 28,
     borderWidth: 1,
-    borderColor: 'rgba(110,191,139,0.20)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: securityBorder,
+    backgroundColor: securitySurface,
   },
   securityHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  securityTitle: { fontSize: 15, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  securityTitle: { fontSize: 15, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, color: theme.textPrimary },
   
   contactCard: {
     flexDirection: 'row',
@@ -485,17 +493,18 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 12,
     padding: 28,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: sectionSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: sectionBorder,
   },
-  contactInfo: { fontSize: 16, color: "#FFFFFF", fontWeight: '600' },
+  contactInfo: { fontSize: 16, color: theme.textPrimary, fontWeight: '600' },
   
   footer: {
     alignItems: 'center',
     paddingVertical: 40,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: sectionDivider,
   },
-  footerText: { fontSize: 13, color: "#FFFFFF",  },
-});
+  footerText: { fontSize: 13, color: theme.textMuted },
+  });
+};

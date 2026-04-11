@@ -161,7 +161,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: theme.cardBorder,
   },
   backButton: { width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { 
@@ -176,8 +176,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   card: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     padding: 28,
   },
   
@@ -215,7 +215,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     height: 24,
     borderRadius: 8,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.3)' : 'rgba(146, 124, 88, 0.22)',
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',

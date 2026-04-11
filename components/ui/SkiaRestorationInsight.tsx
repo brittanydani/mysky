@@ -35,7 +35,7 @@ const CARD_H = 180;
 const GRAPH_H = 110;
 const GRAPH_TOP = 20;
 const GRAPH_SIDE_PAD = 18;
-const BAR_GAP = 10;
+const BAR_GAP = 14;
 
 // ── Colour stops ────────────────────────────────────────────────────────────
 
@@ -78,7 +78,7 @@ const SkiaRestorationInsight = memo(function SkiaRestorationInsight({
   const barWidth = useMemo(() => {
     if (points.length === 0) return 0;
     const availableWidth = CARD_W - GRAPH_SIDE_PAD * 2 - BAR_GAP * (points.length - 1);
-    return Math.max(7, Math.min(12, availableWidth / points.length));
+    return Math.max(5, Math.min(8, availableWidth / points.length));
   }, [points.length]);
   const baselineY = GRAPH_TOP + GRAPH_H;
 

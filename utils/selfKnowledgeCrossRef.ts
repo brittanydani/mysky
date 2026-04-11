@@ -41,6 +41,8 @@ export interface CrossRefInsight {
   id: string;
   title: string;
   body: string;
+  heroMetrics?: InsightMetric[];
+  takeaway?: InsightTakeaway;
   /** Accent color key — map against your palette in the UI layer */
   accentColor: 'gold' | 'emerald' | 'silverBlue' | 'copper' | 'rose' | 'lavender';
   source: 'triggers' | 'somatic' | 'archetype' | 'values' | 'cognitive' | 'relationship' | 'reflection';
@@ -49,6 +51,18 @@ export interface CrossRefInsight {
    * false → insight is a profile reflection (still valuable, not data-backed)
    */
   isConfirmed: boolean;
+}
+
+export interface InsightMetric {
+  value: string;
+  label: string;
+  tone?: 'default' | 'positive' | 'caution';
+}
+
+export interface InsightTakeaway {
+  label: string;
+  body: string;
+  icon?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,6 +109,14 @@ export const RESTORE_TAG_MAP: Record<string, string> = {
 function avg(nums: number[]): number {
   if (!nums.length) return 0;
   return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+function metric(value: string, label: string, tone: InsightMetric['tone'] = 'default'): InsightMetric {
+  return { value, label, tone };
+}
+
+function takeaway(label: string, body: string, icon?: string): InsightTakeaway {
+  return { label, body, icon };
 }
 
 function resolveTag(text: string, map: Record<string, string>): string | null {
@@ -333,7 +355,7 @@ function buildRelationshipInsight(
     .slice(0, 1);
 
   // Cross-ref: mood on days with relational check-in tags vs overall
-  let checkInNote = '';
+  let impact: number | null = null;
   let isConfirmed = false;
   if (checkIns.length >= 7) {
     const relDays = checkIns.filter(c => c.tags.some(t => RELATIONAL_TAGS.includes(t)));
@@ -343,27 +365,52 @@ function buildRelationshipInsight(
       if (relMoods.length >= 3 && allMoods.length >= 5) {
         const relAvg = avg(relMoods);
         const overallAvg = avg(allMoods);
-        const impact = relAvg - overallAvg;
+        impact = relAvg - overallAvg;
         if (Math.abs(impact) >= 0.4) {
-          const dir = impact < 0 ? 'lower' : 'higher';
-          checkInNote = ` On days your check-ins include relational themes, your mood runs ${Math.abs(impact).toFixed(1)} points ${dir} than your baseline — worth exploring what drives that.`;
           isConfirmed = true;
         }
       }
     }
   }
 
-  const topLabel = topTags.length > 0
-    ? ` Your most recurring ${topTags.length > 1 ? 'patterns are' : 'pattern is'} ${topTags.map(([t]) => `"${resolveTagLabel(t)}"`).join(' and ')}.`
-    : '';
-  const secureLabel = topSecureTags.length > 0
-    ? ` You are also logging secure behavior — "${resolveTagLabel(topSecureTags[0][0])}" — evidence of real integration.`
-    : '';
+  const topThemeLabel = topTags.length > 0
+    ? topTags.map(([tag]) => resolveTagLabel(tag)).join(', ')
+    : 'Still emerging';
+  const secureThemeLabel = topSecureTags.length > 0
+    ? resolveTagLabel(topSecureTags[0][0])
+    : null;
+
+  let body = `Your relationship reflections keep circling ${topThemeLabel.toLowerCase()}.`;
+  if (impact !== null && Math.abs(impact) >= 0.4) {
+    body = impact > 0
+      ? 'When relational themes appear in your check-ins, your emotional baseline tends to lift. Your data is linking connection with expansion rather than collapse.'
+      : 'When relational themes appear in your check-ins, your emotional baseline tends to drop. The pattern suggests some forms of connection are still landing as stress in your system.';
+  } else if (secureThemeLabel) {
+    body = `Your reflections show recurring struggle themes, but they also show secure behavior through ${secureThemeLabel.toLowerCase()}. The pattern is not static; you are already recording a different way of relating.`;
+  }
 
   return {
     id: 'relationship-pattern',
     title: 'Your Relational Mirror',
-    body: `You've logged ${entries.length} reflections on how you show up in connection.${topLabel}${secureLabel}${checkInNote} Recognizing your own patterns is what makes conscious choice possible.`,
+    body,
+    heroMetrics: [
+      metric(
+        impact == null ? 'No clear lift yet' : `${impact > 0 ? '+' : '−'}${Math.abs(impact).toFixed(1)}`,
+        impact == null ? 'Relational delta' : 'Mood lift',
+        impact == null ? 'default' : impact > 0 ? 'positive' : 'caution',
+      ),
+      metric(String(entries.length), 'Reflections'),
+      metric(topThemeLabel, 'Top themes'),
+    ],
+    takeaway: takeaway(
+      'Inquiry',
+      impact != null && impact >= 0.4
+        ? `What interaction, repair, or boundary created that ${Math.abs(impact).toFixed(1)} lift? Notice the part that worked, then repeat it.`
+        : impact != null && impact <= -0.4
+          ? `Which kind of interaction is creating that ${Math.abs(impact).toFixed(1)} drop? Name the specific pattern so you can stop treating all connection as the same.`
+          : `Your reflections are led by ${topThemeLabel.toLowerCase()}. Pick one recent interaction and trace where that theme showed up in real time.`,
+      'heart-outline',
+    ),
     accentColor: 'rose',
     source: 'relationship',
     isConfirmed,
@@ -656,7 +703,16 @@ function buildJournalBodyInsight(
     return {
       id: 'journal-body-pattern',
       title: 'Your Journal and Your Body',
-      body: `You've had ${journal.heavyDays.length} heavy or stormy journal days. Your body map most often signals in your ${topRegion[0]} (${topRegion[1]}×). Checking in with that region on difficult writing days may help name what the words haven't reached yet.`,
+      body: `Your heavier journal days are clustering around signals in your ${topRegion[0]}. The body region showing up most often is carrying part of the story your writing is processing.`,
+      heroMetrics: [
+        metric(String(journal.heavyDays.length), 'Heavy days'),
+        metric(String(topRegion[1]), `${topRegion[0]} entries`),
+      ],
+      takeaway: takeaway(
+        'Body check',
+        `On the next heavy writing day, start with your ${topRegion[0]} before you chase the right sentence. That region is showing up often enough to count as signal.`,
+        'body-outline',
+      ),
       accentColor: 'copper',
       source: 'somatic',
       isConfirmed: false,
@@ -673,7 +729,16 @@ function buildJournalBodyInsight(
   return {
     id: 'journal-body-pattern',
     title: 'Your Heaviest Days Have a Body Signature',
-    body: `On ${onHeavyDays.length} of your heavy journal days, you also logged somatic sensations — most often ${topEmotion[0].toLowerCase()} (${topEmotion[1]}×). Your body and your words are writing the same story from different angles. Both are worth listening to.`,
+    body: `Your heaviest journal days repeatedly land in the body as ${topEmotion[0].toLowerCase()}. The overlap is strong enough that your body and your writing are tracking the same load from different angles.`,
+    heroMetrics: [
+      metric(String(onHeavyDays.length), 'Overlap days'),
+      metric(String(topEmotion[1]), topEmotion[0].toLowerCase()),
+    ],
+    takeaway: takeaway(
+      'Body signature',
+      `When a day starts feeling heavy, check for ${topEmotion[0].toLowerCase()} early. Catching the body signature sooner gives you a better intervention point than waiting for the spiral.`,
+      'body-outline',
+    ),
     accentColor: 'copper',
     source: 'somatic',
     isConfirmed: true,
@@ -760,7 +825,17 @@ function buildSleepMoodInsight(
   return {
     id: 'sleep-mood-link',
     title: 'Sleep Shapes Your Days',
-    body: `On mornings after tracked sleep entries, your mood averages ${Math.abs(diff).toFixed(1)} points ${dir} than your overall baseline.${qualNote} The night before appears to meaningfully influence how you show up the next day.`,
+    body: `The night before is materially shaping the next day for you. Morning mood shifts enough after tracked sleep to register as a real lever rather than background noise.${qualNote}`,
+    heroMetrics: [
+      metric(`${dir === 'higher' ? '+' : '−'}${Math.abs(diff).toFixed(1)}`, 'Next-day mood', dir === 'higher' ? 'positive' : 'caution'),
+      metric(String(nightBeforeCheckIns.length), 'Tracked mornings'),
+      ...(dreamSummary.avgQuality != null ? [metric(dreamSummary.avgQuality.toFixed(1), 'Avg sleep quality')] : []),
+    ],
+    takeaway: takeaway(
+      'Night before',
+      `Your next-day mood is running ${Math.abs(diff).toFixed(1)} points ${dir} after tracked sleep. Protect the evening habit that most reliably changes that morning result.`,
+      'moon-outline',
+    ),
     accentColor: 'emerald',
     source: 'reflection',
     isConfirmed: true,

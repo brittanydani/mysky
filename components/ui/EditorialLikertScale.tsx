@@ -8,7 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import * as Haptics from '../../utils/haptics';
 
 export interface EditorialLikertScaleProps {
   value: number | null;
@@ -36,7 +36,7 @@ export const EditorialLikertScale = memo(function EditorialLikertScale({
   selectedLabelStyle,
 }: EditorialLikertScaleProps) {
   const handlePress = (nextValue: number) => {
-    Haptics.selectionAsync().catch(() => {});
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     if (clearable && value === nextValue) {
       onChange(null);
       return;

@@ -10,7 +10,6 @@ import {
   Alert,
   InteractionManager,
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -20,6 +19,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from './keyboard/KeyboardControllerCompat';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -698,10 +698,10 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
               </Animated.View>
             )}
 
-            <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <View style={styles.flex}>
               {writingMode ? (
                 /* ── Distraction-free writing surface ── */
-                <>
+                <View style={styles.writingModeBody}>
                   <TextInput
                     style={styles.focusedContentInput}
                     value={content}
@@ -718,39 +718,49 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <Text style={styles.bodyCounterText}>{content.length}/{BODY_MAX_LENGTH}</Text>
                     </View>
                   )}
-                  {/* Mood quick-pick — floats above the keyboard */}
-                  <View style={styles.moodToolbar}>
-                    {(
-                      [
-                        { key: 'calm',   label: '☽ Calm',   color: '#6EBF8B' },
-                        { key: 'soft',   label: '◌ Soft',   color: '#C9AE78' },
-                        { key: 'okay',   label: '◈ Okay',   color: '#C9AE78' },
-                        { key: 'heavy',  label: '◎ Heavy',  color: 'rgba(201,174,120,0.55)' },
-                        { key: 'stormy', label: '◉ Stormy', color: '#E07A7A' },
-                      ] as { key: MoodKey; label: string; color: string }[]
-                    ).map(({ key, label, color }) => (
-                      <Pressable
-                        key={key}
-                        onPress={() => {
-                          setMood(key);
-                          Haptics.selectionAsync().catch(() => {});
-                        }}
-                        style={[
-                          styles.moodChip,
-                          mood === key && { borderColor: color, backgroundColor: `${color}22` },
-                        ]}
-                      >
-                        {mood === key ? (
-                          <MetallicText style={styles.moodChipText} color={color}>{label}</MetallicText>
-                        ) : (
-                          <Text style={[styles.moodChipText, { color: 'rgba(255,255,255,0.45)' }]}>{label}</Text>
-                        )}
-                      </Pressable>
-                    ))}
-                  </View>
-                </>
+                  {/* Mood quick-pick — rides the native keyboard animation instead of resizing the whole writing surface */}
+                  <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+                    <View style={styles.moodToolbar}>
+                      {(
+                        [
+                          { key: 'calm',   label: '☽ Calm',   color: '#6EBF8B' },
+                          { key: 'soft',   label: '◌ Soft',   color: '#C9AE78' },
+                          { key: 'okay',   label: '◈ Okay',   color: '#C9AE78' },
+                          { key: 'heavy',  label: '◎ Heavy',  color: 'rgba(201,174,120,0.55)' },
+                          { key: 'stormy', label: '◉ Stormy', color: '#E07A7A' },
+                        ] as { key: MoodKey; label: string; color: string }[]
+                      ).map(({ key, label, color }) => (
+                        <Pressable
+                          key={key}
+                          onPress={() => {
+                            setMood(key);
+                            Haptics.selectionAsync().catch(() => {});
+                          }}
+                          style={[
+                            styles.moodChip,
+                            mood === key && { borderColor: color, backgroundColor: `${color}22` },
+                          ]}
+                        >
+                          {mood === key ? (
+                            <MetallicText style={styles.moodChipText} color={color}>{label}</MetallicText>
+                          ) : (
+                            <Text style={[styles.moodChipText, { color: 'rgba(255,255,255,0.45)' }]}>{label}</Text>
+                          )}
+                        </Pressable>
+                      ))}
+                    </View>
+                  </KeyboardStickyView>
+                </View>
               ) : (
-              <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <KeyboardAwareScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                bottomOffset={20}
+                extraKeyboardSpace={8}
+                disableScrollOnKeyboardHide
+              >
                 
                 {/* Date Selection */}
                 <Animated.View entering={FadeInDown.delay(200)} style={styles.section}>
@@ -760,7 +770,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                       <View style={styles.cardRow}>
                         <MetallicIcon name="calendar-outline" size={16} color={PALETTE.silverBlue} />
                         <Text style={styles.cardRowText}>{formatDate(date)}</Text>
-                        <Ionicons name="chevron-down-outline" size={18} color="rgba(255,255,255,0.38)" />
+                        <Ionicons name="chevron-down-outline" size={16} color="rgba(255,255,255,0.42)" />
                       </View>
                     </LinearGradient>
                   </Pressable>
@@ -944,7 +954,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   </Pressable>
                 </Animated.View>
 
-              </ScrollView>
+              </KeyboardAwareScrollView>
               )}
               {/* end writingMode ternary */}
 
@@ -979,7 +989,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                   onChange={(_e, d) => { setShowDatePicker(false); if (d) setDate(d); }}
                 />
               )}
-            </KeyboardAvoidingView>
+            </View>
           </SafeAreaView>
         </View>
 
@@ -1136,7 +1146,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                 else closeCustomTagComposer();
                               }}
                             />
-                            <Pressable hitSlop={8} onPress={() => {
+                            <Pressable hitSlop={12} onPress={() => {
                               const v = newTagModalInput.trim();
                               if (v) saveCustomTag(v, undefined, editingCustomTagId);
                               else closeCustomTagComposer();
@@ -1183,7 +1193,7 @@ export default function JournalEntryModal({ visible, onClose, onSave, initialDat
                                       else closeCustomTagComposer();
                                     }}
                                   />
-                                  <Pressable hitSlop={8} onPress={() => {
+                                  <Pressable hitSlop={12} onPress={() => {
                                     const v = newTagModalInput.trim();
                                     if (v) saveCustomTag(v, cat.id, editingCustomTagId);
                                     else closeCustomTagComposer();
@@ -1248,7 +1258,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   writingSaveBtnText: { fontSize: 12, color: PALETTE.gold, fontWeight: '700', letterSpacing: 0.3 },
 
   // ── Distraction-free writing surface ──
-  focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 20, paddingBottom: 12, color: PALETTE.textMain, fontSize: 17, lineHeight: 28, textAlignVertical: 'top' },
+  writingModeBody: { flex: 1 },
+  focusedContentInput: { flex: 1, paddingHorizontal: 22, paddingTop: 16, paddingBottom: 12, color: PALETTE.textMain, fontSize: 17, lineHeight: 28, textAlignVertical: 'top' },
   bodyCounterWrap: { paddingHorizontal: 22, paddingBottom: 8, alignItems: 'flex-end' },
   bodyCounterWrapInline: { marginTop: 12, alignItems: 'flex-end' },
   bodyCounterText: { fontSize: 12, color: 'rgba(255,255,255,0.38)', fontWeight: '500' },
@@ -1281,7 +1292,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   primaryPromptText: { fontSize: 16, color: PALETTE.textMain, lineHeight: 24 },
   chakraNote: { fontSize: 12, color: PALETTE.gold, marginTop: 12, opacity: 0.8 },
   
-  contentInput: { color: PALETTE.textMain, fontSize: 17, lineHeight: 27, minHeight: 180, paddingTop: 4, paddingBottom: 0 },
+  contentInput: { color: PALETTE.textMain, fontSize: 17, lineHeight: 27, minHeight: 180, paddingTop: 16, paddingBottom: 0, textAlignVertical: 'top' },
 
   // ── Archetype lens prompt card ──
   archetypePromptCard: { flexDirection: 'row', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.025)', marginBottom: 16 },
@@ -1292,7 +1303,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   archetypeQuestion: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 21, marginTop: 2 },
   
   // ── Mood row ──
-  moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' },
+  moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-start' },
   moodPill: {
     flexBasis: '31%',
     maxWidth: '31%',

@@ -41,6 +41,8 @@ import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { GoldSubtitle } from '../../components/ui/GoldSubtitle';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
 import { keepLastWordsTogether } from '../../utils/textLayout';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 // scrollContent paddingH 24x2 + trendCard padding 20x2
@@ -318,6 +320,8 @@ function formatDisplayDate(dateStr: string): string {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function MoodCheckIn() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -773,7 +777,7 @@ export default function MoodCheckIn() {
           onPress={() => { Haptics.selectionAsync(); router.back(); }}
           style={styles.backButton}
         >
-          <Ionicons name="chevron-back-outline" size={22} color="#FFF" />
+          <Ionicons name="chevron-back-outline" size={22} color={theme.textPrimary} />
         </Pressable>
       </View>
 
@@ -821,7 +825,7 @@ export default function MoodCheckIn() {
         <VelvetGlassSurface
           style={styles.trendCard}
           intensity={34}
-          backgroundColor="rgba(11, 14, 24, 0.32)"
+          backgroundColor={theme.isDark ? 'rgba(11, 14, 24, 0.32)' : 'rgba(255, 255, 255, 0.72)'}
           borderColor="rgba(226, 194, 122, 0.18)"
           highlightColor="rgba(255,255,255,0.035)"
         >
@@ -831,7 +835,13 @@ export default function MoodCheckIn() {
           </View>
           {isLoading ? (
             <View style={styles.trendPlaceholder}>
-              <ActivityIndicator size="small" color="rgba(217,191,140,0.5)" />
+              <View style={styles.trendSkeletonBars}>
+                {[64, 112, 86, 148, 104, 134, 92].map((height, index) => (
+                  <View key={`trend-skeleton-${index}`} style={styles.trendSkeletonColumn}>
+                    <View style={[styles.trendSkeletonBar, { height }]} />
+                  </View>
+                ))}
+              </View>
             </View>
           ) : recentCheckIns.length >= 2 ? (
             <NeonWaveChart checkIns={recentCheckIns} width={CARD_INNER_W} height={190} />
@@ -850,7 +860,7 @@ export default function MoodCheckIn() {
         <VelvetGlassSurface
           style={styles.slidersContainer}
           intensity={32}
-          backgroundColor="rgba(10, 14, 23, 0.34)"
+          backgroundColor={theme.isDark ? 'rgba(10, 14, 23, 0.34)' : 'rgba(255, 255, 255, 0.72)'}
           borderColor="rgba(255,255,255,0.1)"
           highlightColor="rgba(255,255,255,0.03)"
         >
@@ -865,7 +875,7 @@ export default function MoodCheckIn() {
         <VelvetGlassSurface
           style={styles.tagsCard}
           intensity={32}
-          backgroundColor="rgba(11, 14, 24, 0.34)"
+          backgroundColor={theme.isDark ? 'rgba(11, 14, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}
           borderColor="rgba(255,255,255,0.10)"
           highlightColor="rgba(255,255,255,0.04)"
         >
@@ -909,7 +919,7 @@ export default function MoodCheckIn() {
             <TextInput
               style={[styles.customInfluenceInput, customInfluenceInput.trim().length > 0 && styles.customInputActive]}
               placeholder="Anything else on your mind..."
-              placeholderTextColor="rgba(255,255,255,0.36)"
+              placeholderTextColor={theme.isDark ? 'rgba(255,255,255,0.36)' : 'rgba(22,32,51,0.38)'}
               value={customInfluenceInput}
               onChangeText={setCustomInfluenceInput}
               onSubmitEditing={() => {
@@ -948,7 +958,7 @@ export default function MoodCheckIn() {
         <VelvetGlassSurface
           style={styles.tagsCard}
           intensity={32}
-          backgroundColor="rgba(11, 14, 24, 0.34)"
+          backgroundColor={theme.isDark ? 'rgba(11, 14, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}
           borderColor="rgba(255,255,255,0.10)"
           highlightColor="rgba(255,255,255,0.04)"
         >
@@ -1148,6 +1158,7 @@ const CustomHapticSlider = ({
   color: string;
   labels: string[];
 }) => {
+  const styles = useThemedStyles(createStyles);
   const maxSteps = 10;
   const trackWidth = useSharedValue(CARD_INNER_W);
   const progress = useSharedValue((value - 1) / (maxSteps - 1));
@@ -1294,6 +1305,7 @@ const TagButton = ({
   isPremiumVariant?: boolean;
   isLocked?: boolean;
 }) => {
+  const styles = useThemedStyles(createStyles);
   const iconColor = isLocked
     ? 'rgba(110,140,180,0.3)'
     : isSelected
@@ -1339,8 +1351,8 @@ const TagButton = ({
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
 
   glowOrb: {
     position: 'absolute',
@@ -1353,38 +1365,61 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 8 },
   headerSubtitle: { marginTop: 2 },
-  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 23, color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.72, lineHeight: 27, marginBottom: 4, maxWidth: '82%' },
-  headerEditingBadge: { fontSize: 10, color: '#FFFFFF', letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
+  backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 23, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.72, lineHeight: 27, marginBottom: 4, maxWidth: '82%' },
+  headerEditingBadge: { fontSize: 10, color: theme.textPrimary, letterSpacing: 1, textTransform: 'uppercase', marginTop: 3, opacity: 0.8 },
 
   dateNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 16 },
   dateArrow: { padding: 4 },
-  dateNavLabel: { fontSize: 15, color: 'rgba(255,255,255,0.75)', fontWeight: '600', letterSpacing: 0.5, minWidth: 90, textAlign: 'center' },
+  dateNavLabel: { fontSize: 15, color: theme.textPrimary, fontWeight: '600', letterSpacing: 0.5, minWidth: 90, textAlign: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
 
-  sectionLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.84)', letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 0, marginBottom: 12 },
-  tagsHint: { fontSize: 12, color: 'rgba(255,255,255,0.64)', marginTop: 0, marginBottom: 18, lineHeight: 18 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', color: theme.textPrimary, letterSpacing: 1.4, textTransform: 'uppercase', marginTop: 0, marginBottom: 12 },
+  tagsHint: { fontSize: 12, color: theme.textSecondary, marginTop: 0, marginBottom: 18, lineHeight: 18 },
 
   trendCard: { borderRadius: 24, padding: 24, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 18, elevation: 10 },
   trendHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   trendSectionLabel: { marginTop: 0, marginBottom: 0, fontSize: 12 },
   trendValue: { fontSize: 13, color: '#C9AE78', fontWeight: '700', letterSpacing: 0.3 },
-  trendPlaceholder: { height: 60, justifyContent: 'center', alignItems: 'center' },
-  trendEmptyText: { fontSize: 12, color: 'rgba(255,255,255,0.52)', textAlign: 'center', lineHeight: 18 },
+  trendPlaceholder: { height: 190, justifyContent: 'center', alignItems: 'center' },
+  trendSkeletonBars: {
+    width: '100%',
+    height: 190,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    paddingTop: 16,
+    paddingBottom: 10,
+  },
+  trendSkeletonColumn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  trendSkeletonBar: {
+    width: '58%',
+    minHeight: 44,
+    borderRadius: 999,
+    backgroundColor: theme.isDark ? 'rgba(226, 194, 122, 0.16)' : 'rgba(201, 174, 120, 0.18)',
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(226, 194, 122, 0.18)' : 'rgba(201, 174, 120, 0.16)',
+  },
+  trendEmptyText: { fontSize: 12, color: theme.textMuted, textAlign: 'center', lineHeight: 18 },
 
   slidersContainer: { borderRadius: 24, padding: 24, marginBottom: 32 },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 24 },
+  divider: { height: 1, backgroundColor: theme.cardBorder, marginVertical: 24 },
 
   sliderWrapper: { width: '100%' },
   sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
-  sliderTitle: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  sliderTitle: { fontSize: 16, fontWeight: '700', color: theme.textPrimary },
   sliderValue: { fontSize: 18, fontWeight: 'bold' },
 
   trackContainer: { height: 50, justifyContent: 'center' },
-  trackBackground: { position: 'absolute', left: 0, right: 0, height: 12, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' },
+  trackBackground: { position: 'absolute', left: 0, right: 0, height: 12, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface, borderRadius: 999, borderWidth: 1, borderColor: theme.cardBorder },
   trackTicksRow: { position: 'absolute', left: 8, right: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  trackTick: { width: 1, height: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.14)' },
+  trackTick: { width: 1, height: 6, borderRadius: 999, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.14)' : 'rgba(146, 124, 88, 0.2)' },
   trackGlow: { position: 'absolute', left: 0, height: 18, borderRadius: 999 },
   trackFill: { position: 'absolute', left: 0, height: 12, borderRadius: 999, opacity: 0.9 },
   thumbHalo: {
@@ -1402,7 +1437,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(244,248,255,0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.26)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.26)' : 'rgba(146, 124, 88, 0.24)',
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 16,
     elevation: 5,
@@ -1415,7 +1450,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 7,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.24)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.82)',
   },
   thumbInner: { width: 8, height: 28, borderRadius: 999 },
   thumbCoreHighlight: {
@@ -1424,26 +1459,26 @@ const styles = StyleSheet.create({
     width: 4,
     height: 12,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.30)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.9)',
   },
 
   labelsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
-  sliderLabel: { fontSize: 8, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: '600', letterSpacing: 0.8, flex: 1 },
+  sliderLabel: { fontSize: 8, color: theme.textMuted, textTransform: 'uppercase', fontWeight: '600', letterSpacing: 0.8, flex: 1 },
 
   customInfluenceInput: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     paddingHorizontal: 20,
     paddingVertical: 12,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.88)',
+    color: theme.textPrimary,
     flex: 1,
   },
   customInputActive: {
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.25)' : 'rgba(146, 124, 88, 0.24)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.72)',
   },
   customPillComposer: {
     marginTop: 14,
@@ -1460,15 +1495,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
   },
   customComposerActionEnabled: {
     borderColor: 'rgba(217,191,140,0.52)',
     backgroundColor: 'rgba(217,191,140,0.92)',
   },
   customComposerActionText: {
-    color: 'rgba(255,255,255,0.78)',
+    color: theme.textSecondary,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -1491,21 +1526,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
     overflow: 'hidden',
   },
   tagButtonPremiumBase: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
+    borderColor: theme.cardBorder,
   },
-  tagButtonSelected: { backgroundColor: 'rgba(255,255,255,0.94)', borderColor: 'rgba(255,255,255,0.18)' },
-  tagButtonPositive: { backgroundColor: 'rgba(212,175,55,0.88)', borderColor: 'rgba(255,255,255,0.24)' },
+  tagButtonSelected: { backgroundColor: theme.isDark ? 'rgba(255,255,255,0.94)' : 'rgba(181, 138, 58, 0.22)', borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(181, 138, 58, 0.32)' },
+  tagButtonPositive: { backgroundColor: 'rgba(212,175,55,0.88)', borderColor: theme.isDark ? 'rgba(255,255,255,0.24)' : 'rgba(181, 138, 58, 0.28)' },
   tagButtonNegative: { backgroundColor: 'rgba(145,42,62,0.24)', borderColor: 'rgba(255,143,161,0.38)' },
   tagButtonSelectedPremium: {
     backgroundColor: 'rgba(212,175,55,0.88)',
-    borderColor: 'rgba(255,255,255,0.24)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.24)' : 'rgba(181, 138, 58, 0.28)',
     shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.32,
@@ -1517,13 +1552,13 @@ const styles = StyleSheet.create({
   tagPremiumGlow: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: theme.cardBorder,
     borderRadius: 20,
   },
-  tagText: { fontSize: 13, color: 'rgba(255,255,255,0.82)', fontWeight: '600' },
+  tagText: { fontSize: 13, color: theme.textSecondary, fontWeight: '600' },
   tagTextSelected: { color: '#050507', fontWeight: 'bold' },
   tagTextDangerActive: { color: '#FFF4F6', fontWeight: '700' },
-  tagTextLocked: { color: 'rgba(255,255,255,0.68)' },
+  tagTextLocked: { color: theme.textSecondary },
 
   sealContainer: { alignItems: 'center', marginTop: 8 },
 
@@ -1540,9 +1575,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: theme.cardBorder,
     minWidth: 72,
   },
   slotPillDone: {
@@ -1554,7 +1589,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(217,191,140,0.08)',
   },
   slotPillSelectedDone: {
-    borderColor: 'rgba(255,255,255,0.26)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.26)' : 'rgba(146, 124, 88, 0.24)',
     backgroundColor: 'rgba(217,191,140,0.16)',
   },
   slotIconWrap: {
@@ -1562,8 +1597,8 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.10)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1571,7 +1606,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(217,191,140,0.40)',
     backgroundColor: 'rgba(201,174,120,0.12)',
   },
-  slotLabel: { fontSize: 10, color: 'rgba(255,255,255,0.56)', fontWeight: '700', letterSpacing: 0.5 },
+  slotLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '700', letterSpacing: 0.5 },
   slotLabelDone: { color: '#C9AE78' },
 
   emotionDropdownHeader: {

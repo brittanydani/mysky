@@ -121,12 +121,15 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
   const tone = toneFromMood(mood);
   const accent = toneColor(tone);
   const previewContent = buildPreviewContent(title, content);
+  const entryGradient = theme.isDark
+    ? [accent + '14', 'rgba(10,10,12,0.9)']
+    : ['rgba(217,191,140,0.12)', theme.cardSurfaceStrong];
 
   return (
     <View style={styles.wrapper}>
       <LinearGradient
-        colors={[accent + '14', 'rgba(10,10,12,0.9)']}
-        style={[styles.card, { borderColor: 'rgba(255,255,255,0.08)' }]}
+        colors={entryGradient}
+        style={styles.card}
       >
         {/* Header row */}
         <View style={styles.headerRow}>
@@ -184,7 +187,7 @@ const ObsidianJournalEntry = memo(function ObsidianJournalEntry({
               <Ionicons
                 name={isExpanded ? 'chevron-up' : 'chevron-down'}
                 size={14}
-                color="rgba(255,255,255,0.58)"
+                color={theme.isDark ? 'rgba(255,255,255,0.58)' : theme.textMuted}
               />
             </Pressable>
           </View>
@@ -211,7 +214,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.cardBorder,
   },
   headerRow: {
     flexDirection: 'row',
@@ -230,10 +233,10 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
   },
   iconButtonPressed: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
   },
   dateText: {
-    color: 'rgba(255,255,255,0.45)',
+    color: theme.textMuted,
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.3,
@@ -242,12 +245,12 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     marginBottom: 8,
     lineHeight: 28,
   },
   body: {
-    color: 'rgba(255,255,255,0.7)',
+    color: theme.textSecondary,
     fontSize: 15,
     lineHeight: 24,
     marginBottom: 16,
@@ -258,7 +261,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: theme.cardBorder,
   },
   footerLeft: {
     flexDirection: 'row',
@@ -283,14 +286,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     opacity: 0.72,
   },
   expandHint: {
-    color: 'rgba(255,255,255,0.58)',
+    color: theme.textMuted,
     fontSize: 12,
     fontWeight: '600',
   },
   toneBadge: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : theme.pillSurfaceMuted,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: theme.cardBorder,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,

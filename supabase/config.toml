@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.pattern-insights]
 verify_jwt = false
+
+[functions.dream-insights]
+verify_jwt = false

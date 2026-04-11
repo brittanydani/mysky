@@ -76,6 +76,9 @@ const PALETTE = {
   glassHighlight: 'rgba(255,255,255,0.12)',
 };
 
+const LIGHT_MODE_INK = '#1A1815';
+const LIGHT_MODE_META = 'rgba(26, 24, 21, 0.5)';
+
 // ── Mood helpers ──
 
 // ── Cinematic Palette ──
@@ -127,11 +130,12 @@ interface DreamCardProps {
 }
 
 const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPress }: DreamCardProps) {
+  const theme = useAppTheme();
   const styles = useThemedStyles(createStyles);
   const hasDream = !!(entry.dreamText?.trim());
   const quality = Math.max(0, Math.min(5, entry.quality ?? 0));
   const moons = quality > 0 ? '☽'.repeat(quality) : null;
-  const remainingMoons = quality > 0 ? '☾'.repeat(5 - quality) : null;
+  const remainingMoons = quality > 0 ? '☽'.repeat(5 - quality) : null;
   const qualityLabel = entry.quality ? DREAM_QUALITY_LABELS[entry.quality] : null;
   const durationText = entry.durationHours ? `${entry.durationHours}h` : null;
   const skipNextPressRef = useRef(false);
@@ -166,7 +170,7 @@ const DreamCard = memo(function DreamCard({ entry, formatDate, onPress, onLongPr
                 {moons && (
                   <View style={styles.dreamMoonsRow}>
                     <MetallicText color="#C9AE78" style={styles.dreamMoons}>{moons}</MetallicText>
-                    {!!remainingMoons && <Text style={styles.dreamMoonsEmpty}>{remainingMoons}</Text>}
+                    {!!remainingMoons && <Text style={[styles.dreamMoonsEmpty, !theme.isDark && styles.dreamMoonsEmptyLight]}>{remainingMoons}</Text>}
                   </View>
                 )}
                 {qualityLabel && <MetallicText color="#C9AE78" style={styles.dreamQualityLabel}>{qualityLabel}</MetallicText>}
@@ -233,6 +237,11 @@ export default function JournalScreen() {
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
+  const archiveSurfaceGradients = {
+    insight: theme.isDark ? ['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)'] : ['rgba(217,191,140,0.14)', theme.cardSurfaceStrong],
+    cluster: theme.isDark ? ['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)'] : ['rgba(217,191,140,0.10)', theme.cardSurfaceStrong],
+    actionSheet: theme.isDark ? ['rgba(28,36,52,0.96)', 'rgba(8,12,22,0.98)'] : [theme.cardSurfaceStrong, 'rgba(244, 238, 229, 0.98)'],
+  } as const;
   const reflectionsListRef = useRef<FlatList<JournalEntry> | null>(null);
 
   const [showPremiumRequired] = useState(false);
@@ -545,13 +554,23 @@ export default function JournalScreen() {
       <Animated.View entering={FadeInDown.duration(1000)} style={styles.header}>
         <View>
           <Text style={styles.greeting}>Archive</Text>
-          <GoldSubtitle style={styles.dateLabel}>
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </GoldSubtitle>
+          {theme.isDark ? (
+            <GoldSubtitle style={styles.dateLabel}>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </GoldSubtitle>
+          ) : (
+            <Text style={styles.dateLabelLight}>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </Text>
+          )}
         </View>
       </Animated.View>
 
@@ -611,7 +630,7 @@ export default function JournalScreen() {
 
           {patternInsights.filter(i => i.type !== 'transit_correlation' && i.icon !== 'moon-outline' && i.icon !== 'planet-outline').map((insight, idx) => {
             const accentColor = '#C9AE78';
-            const gradientColors: [string, string] = ['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)'];
+            const gradientColors: [string, string] = [...archiveSurfaceGradients.insight];
 
             return (
               <LinearGradient key={`${insight.title}-${idx}`} colors={gradientColors} style={styles.insightCard}>
@@ -623,16 +642,20 @@ export default function JournalScreen() {
                     style={{ marginRight: 8 }}
                   />
                   <View style={{ flex: 1, flexShrink: 1, overflow: 'hidden' }}>
-                    <MetallicText color={accentColor} style={styles.insightTitle}>{insight.title}</MetallicText>
+                    {theme.isDark ? (
+                      <MetallicText color={accentColor} style={styles.insightTitle}>{insight.title}</MetallicText>
+                    ) : (
+                      <Text style={styles.insightTitleLight}>{insight.title}</Text>
+                    )}
                   </View>
-                  <View style={[styles.confidenceBadge, insight.confidence === 'strong' && styles.confidenceStrong, insight.confidence === 'suggested' && styles.confidenceSuggested]}>
-                    <Text style={[styles.confidenceText, insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
+                  <View style={[styles.confidenceBadge, theme.isDark ? insight.confidence === 'strong' && styles.confidenceStrong : styles.confidenceLight, theme.isDark && insight.confidence === 'suggested' && styles.confidenceSuggested]}>
+                    <Text style={[styles.confidenceText, !theme.isDark && styles.confidenceTextLight, theme.isDark && insight.confidence === 'suggested' && { color: PALETTE.gold }]}>{insight.confidence.toUpperCase()}</Text>
                   </View>
                 </View>
                 <Text style={styles.insightDescription}>{insight.description}</Text>
                 {!!insight.evidence && <Text style={styles.insightEvidence}>{insight.evidence}</Text>}
                 {!!insight.actionable && (
-                  <Text style={[styles.insightActionable, { color: 'rgba(255,255,255,0.85)' }]}>{insight.actionable}</Text>
+                  <Text style={[styles.insightActionable, { color: theme.textPrimary }]}>{insight.actionable}</Text>
                 )}
               </LinearGradient>
             );
@@ -643,7 +666,7 @@ export default function JournalScreen() {
       {activeTab === 'reflections' && !isPremium && totalCount >= 5 && (
         <Animated.View entering={FadeInDown.delay(250).duration(600)} style={styles.insightsSection}>
           <Pressable onPress={() => router.push('/(tabs)/premium' as Href)} accessibilityRole="button" accessibilityLabel="See your patterns">
-            <LinearGradient colors={['rgba(201,174,120,0.18)', 'rgba(10,10,12,0.9)']} style={styles.insightCard}>
+            <LinearGradient colors={archiveSurfaceGradients.insight} style={styles.insightCard}>
               <View style={styles.insightHeader}>
                 <MetallicIcon name="analytics-outline" size={18} color={PALETTE.gold} />
                 <MetallicText color="#C9AE78" style={styles.insightTitle}>Pattern Insights</MetallicText>
@@ -668,11 +691,12 @@ export default function JournalScreen() {
         <Animated.View entering={FadeInDown.delay(300).duration(600)} style={styles.insightsSection}>
           <SectionHeader title="Dream Symbols" icon="planet-outline" />
           <View style={styles.clusterCard}>
-            <LinearGradient colors={['rgba(20, 24, 35, 0.8)', 'rgba(10, 12, 18, 0.95)']} style={StyleSheet.absoluteFill} />
-            <View style={styles.clusterCardHeader}>
+            <LinearGradient colors={archiveSurfaceGradients.cluster} style={StyleSheet.absoluteFill} />
+            <Pressable style={styles.clusterCardHeader} onPress={() => router.push('/(tabs)/sleep' as Href)} accessibilityRole="button" accessibilityLabel="Open sleep tab from recurring themes">
               <MetallicIcon name="planet-outline" size={14} color="#C9AE78" />
               <MetallicText color="#C9AE78" style={styles.clusterCardEyebrow}>RECURRING THEMES</MetallicText>
-            </View>
+              <Ionicons name="chevron-forward-outline" size={14} color={theme.isDark ? '#C9AE78' : LIGHT_MODE_META} style={styles.clusterChevron} />
+            </Pressable>
             <DreamClusterMap height={280} />
           </View>
         </Animated.View>
@@ -690,8 +714,8 @@ export default function JournalScreen() {
         <View style={styles.entriesHeader}>
           <Text style={styles.entriesCount}>
             {activeTab === 'reflections'
-              ? `${filteredEntries.length}${searchQuery ? ' found' : ''} · ${totalCount} total`
-              : `${filteredSleepEntries.length}${searchQuery ? ' found' : ''} · ${sleepEntries.length} total`}
+              ? (searchQuery ? `${filteredEntries.length} found · ${totalCount} total` : `${totalCount} entries`)
+              : (searchQuery ? `${filteredSleepEntries.length} found · ${sleepEntries.length} total` : `${sleepEntries.length} entries`)}
           </Text>
         </View>
       </View>
@@ -917,7 +941,7 @@ export default function JournalScreen() {
             <Pressable style={StyleSheet.absoluteFill} onPress={closeEntryActions} />
             <View style={styles.entryActionSheetWrap}>
               <LinearGradient
-                colors={['rgba(28,36,52,0.96)', 'rgba(8,12,22,0.98)']}
+                colors={archiveSurfaceGradients.actionSheet}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.entryActionSheet}
@@ -1059,9 +1083,9 @@ const createJournalFabStyles = (theme: AppTheme) => StyleSheet.create({
 });
 
 const createStyles = (theme: AppTheme) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
-  iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
+  iconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.10)' : theme.cardSurface, justifyContent: 'center', alignItems: 'center', marginTop: 4 },
 
   // Header — matches Today screen
   header: {
@@ -1072,7 +1096,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     marginBottom: 32,
   },
   greeting: {
-    color: '#FFFFFF',
+    color: theme.textPrimary,
     fontSize: 34,
     fontWeight: '800',
     letterSpacing: -0.5,
@@ -1083,6 +1107,14 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     marginTop: 4,
+  },
+  dateLabelLight: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 4,
+    color: LIGHT_MODE_META,
   },
 
   // Nebula glow orbs
@@ -1116,31 +1148,34 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 32,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface,
   },
   lockTitle: { color: theme.textGold, marginTop: 12, fontWeight: '600', fontSize: 16 },
   lockSubtitle: { color: theme.textSecondary, fontSize: 14, marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
 
   insightsSection: { marginBottom: 32 },
   insightsTitle: { fontSize: 20, color: theme.textPrimary, marginBottom: 6, fontWeight: '700' },
-  insightsSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 20, lineHeight: 20 },
+  insightsSubtitle: { fontSize: 13, color: theme.textMuted, marginBottom: 20, lineHeight: 20 },
 
   insightCard: {
     padding: 28,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.cardBorder,
     marginBottom: 32,
   },
   insightHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   insightTitle: { fontSize: 14, fontWeight: '700', color: PALETTE.gold, letterSpacing: 1.5, textTransform: 'uppercase' },
+  insightTitleLight: { fontSize: 14, fontWeight: '700', color: LIGHT_MODE_INK, letterSpacing: 1.5, textTransform: 'uppercase' },
   confidenceBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: 'transparent', marginLeft: 8, flexShrink: 0, overflow: 'visible' },
   confidenceStrong: { backgroundColor: 'rgba(110, 191, 139, 0.2)' },
   confidenceSuggested: { backgroundColor: 'transparent' },
+  confidenceLight: { backgroundColor: 'rgba(0, 0, 0, 0.04)', borderColor: 'rgba(0, 0, 0, 0.08)' },
   confidenceText: { fontSize: 10, textTransform: 'uppercase', fontWeight: '800', letterSpacing: 1.2 },
-  insightDescription: { fontSize: 16, color: 'rgba(255,255,255,0.7)', lineHeight: 24, marginBottom: 12 },
-  insightEvidence: { fontSize: 14, color: 'rgba(255,255,255,0.45)', lineHeight: 22, marginBottom: 8 },
+  confidenceTextLight: { color: LIGHT_MODE_INK },
+  insightDescription: { fontSize: 16, color: theme.textSecondary, lineHeight: 26, letterSpacing: 0.2, marginBottom: 12 },
+  insightEvidence: { fontSize: 13, color: theme.isDark ? theme.textMuted : LIGHT_MODE_META, lineHeight: 21, marginBottom: 8 },
   insightActionable: { fontSize: 15, fontWeight: '600', marginTop: 6, lineHeight: 22 },
 
   filterSection: {
@@ -1165,21 +1200,21 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderColor: theme.cardBorder,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : theme.cardSurface,
   },
   browseSectionTitle: {
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontSize: 19,
     fontWeight: '700',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : theme.cardSurface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.cardBorder,
     paddingLeft: 12,
     paddingRight: 12,
     paddingVertical: 12,
@@ -1195,19 +1230,19 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   entriesSection: { marginBottom: 20 },
   entriesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginTop: -12 },
   sectionTitle: {
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontSize: 19,
     fontWeight: '700',
   },
-  entriesCount: { fontSize: 12, color: 'rgba(255,255,255,0.4)', fontVariant: ['tabular-nums'], fontWeight: '600', letterSpacing: 0.5 },
+  entriesCount: { fontSize: 12, color: theme.textMuted, fontVariant: ['tabular-nums'], fontWeight: '600', letterSpacing: 0.5 },
 
   loadingContainer: { padding: 40, alignItems: 'center' },
-  loadingText: { fontSize: 15, color: 'rgba(255,255,255,0.6)' },
+  loadingText: { fontSize: 15, color: theme.textSecondary },
 
   emptyContainer: { paddingVertical: 32 },
-  emptyCard: { borderRadius: 24, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: PALETTE.glassBorder },
-  emptyTitle: { fontSize: 22, color: PALETTE.textMain, marginBottom: 8, fontWeight: '700' },
-  emptyDescription: { fontSize: 16, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 26 },
+  emptyCard: { borderRadius: 24, padding: 40, alignItems: 'center', borderWidth: 1, borderColor: theme.cardBorder, backgroundColor: theme.isDark ? 'transparent' : theme.cardSurfaceStrong },
+  emptyTitle: { fontSize: 22, color: theme.textPrimary, marginBottom: 8, fontWeight: '700' },
+  emptyDescription: { fontSize: 16, color: theme.textSecondary, textAlign: 'center', lineHeight: 26 },
 
   entryActionOverlay: {
     flex: 1,
@@ -1226,7 +1261,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   entryActionSheet: {
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(146, 124, 88, 0.18)',
     paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 20,
@@ -1237,7 +1272,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     width: 44,
     height: 5,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.72)',
     marginBottom: 16,
   },
   entryActionHeader: {
@@ -1259,7 +1294,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   entryActionSubtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    color: theme.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(22,32,51,0.56)',
     letterSpacing: 0.3,
   },
   entryActionList: {
@@ -1271,8 +1306,8 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     gap: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(146, 124, 88, 0.14)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.78)',
     paddingHorizontal: 14,
     paddingVertical: 16,
   },
@@ -1309,21 +1344,21 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   entryActionHint: {
     fontSize: 13,
     lineHeight: 18,
-    color: 'rgba(255,255,255,0.52)',
+    color: theme.isDark ? 'rgba(255,255,255,0.52)' : 'rgba(22,32,51,0.56)',
   },
   entryActionCancel: {
     marginTop: 16,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(146, 124, 88, 0.14)',
     paddingVertical: 14,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.78)',
   },
   entryActionCancelText: {
     fontSize: 15,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.82)',
+    color: theme.textPrimary,
     letterSpacing: 0.2,
   },
 
@@ -1335,7 +1370,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
 
   entryTitle: { fontSize: 18, color: theme.textPrimary, marginBottom: 8 },
   entryContent: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
-  expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.06)' },
+  expandButton: { alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.cardBorder },
   // ── Dream card ──
   dreamCardWrapper: {
     marginBottom: 16,
@@ -1355,7 +1390,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   dreamCardDate: {
     fontSize: 12,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.45)',
+    color: theme.textMuted,
     letterSpacing: 0.3,
     textTransform: 'uppercase',
     marginBottom: 4,
@@ -1379,6 +1414,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     color: 'rgba(201,174,120,0.26)',
     letterSpacing: 1,
   },
+  dreamMoonsEmptyLight: {
+    color: 'rgba(0, 0, 0, 0.05)',
+  },
   dreamQualityLabel: {
     fontSize: 12,
     color: 'rgba(201,174,120,0.7)',
@@ -1393,7 +1431,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   },
   dreamExcerpt: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.85)',
+    color: theme.textPrimary,
     lineHeight: 26,
   },
   dreamNone: {
@@ -1405,7 +1443,7 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
   clusterCard: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: PALETTE.glassBorder,
+    borderColor: theme.cardBorder,
     overflow: 'hidden',
     padding: 20,
   },
@@ -1414,6 +1452,9 @@ const createStyles = (theme: AppTheme) => StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 16,
+  },
+  clusterChevron: {
+    marginLeft: 'auto',
   },
   clusterCardEyebrow: {
     fontSize: 10,

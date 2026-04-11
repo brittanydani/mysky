@@ -18,6 +18,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { useThemedStyles } from '../../context/ThemeContext';
+import { type AppTheme } from '../../constants/theme';
 
 export interface TabOption {
   id: string;
@@ -31,18 +33,12 @@ interface PremiumSegmentedControlProps {
   onChange: (index: number) => void;
 }
 
-const INDICATOR_BG = 'rgba(255,255,255,0.10)';
-const CONTAINER_BG = 'rgba(10, 18, 36, 0.5)';
-const TEXT_ACTIVE = '#FFFFFF';
-const TEXT_INACTIVE = 'rgba(226,232,240,0.45)';
-const COUNT_ACTIVE = '#D4B872';
-const COUNT_INACTIVE = 'rgba(226,232,240,0.30)';
-
 export function PremiumSegmentedControl({
   options,
   selectedIndex,
   onChange,
 }: PremiumSegmentedControlProps) {
+  const styles = useThemedStyles(createStyles);
   const [containerWidth, setContainerWidth] = useState(0);
   const tabWidth = containerWidth > 0 ? containerWidth / options.length : 0;
   const translateX = useSharedValue(0);
@@ -106,27 +102,29 @@ export function PremiumSegmentedControl({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: CONTAINER_BG,
+    backgroundColor: theme.isDark ? 'rgba(10, 18, 36, 0.5)' : 'rgba(50, 30, 10, 0.03)',
     borderRadius: 14,
     padding: 4,
     height: 56,
     position: 'relative',
     marginBottom: 16,
     width: '100%',
+    borderWidth: theme.isDark ? 0 : 1,
+    borderColor: theme.isDark ? 'transparent' : 'rgba(0, 0, 0, 0.06)',
   },
   indicator: {
     position: 'absolute',
     top: 4,
     bottom: 4,
     left: 4,
-    backgroundColor: INDICATOR_BG,
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.10)' : theme.cardSurfaceStrong,
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: theme.isDark ? '#000' : 'rgba(111, 85, 46, 0.16)',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOpacity: theme.isDark ? 0.25 : 1,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -139,21 +137,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: TEXT_INACTIVE,
+    color: theme.textMuted,
     letterSpacing: 0.4,
     textAlign: 'center',
   },
   labelActive: {
-    color: TEXT_ACTIVE,
+    color: theme.isDark ? '#FFFFFF' : theme.textPrimary,
   },
   count: {
     fontSize: 11,
     fontWeight: '500',
-    color: COUNT_INACTIVE,
+    color: theme.isDark ? 'rgba(226,232,240,0.30)' : theme.textSecondary,
     marginTop: 2,
     textAlign: 'center',
   },
   countActive: {
-    color: COUNT_ACTIVE,
+    color: '#D4B872',
   },
 });

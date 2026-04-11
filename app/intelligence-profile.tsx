@@ -30,6 +30,8 @@ import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
 import { syncIntelligenceFromReflections } from '../services/insights/reflectionProfileSync';
 import { keepLastWordsTogether } from '../utils/textLayout';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const STORAGE_KEY = '@mysky:intelligence_profile';
 
@@ -145,6 +147,8 @@ type Scores = Record<string, number>; // 1–5
 // ── Octagon Radar Chart ──
 
 const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const size = 264;
   const center = size / 2;
   const radius = size / 2 - 42;
@@ -210,7 +214,11 @@ const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
             <Path
               key={ring}
               path={makePolygonPath(ring)}
-              color={ring === 5 ? 'rgba(255,255,255,0.11)' : 'rgba(255,255,255,0.06)'}
+              color={
+                ring === 5
+                  ? theme.isDark ? 'rgba(255,255,255,0.11)' : 'rgba(146,124,88,0.22)'
+                  : theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(146,124,88,0.12)'
+              }
               style="stroke"
               strokeWidth={ring === 5 ? 1.2 : 1}
             />
@@ -220,7 +228,7 @@ const IntelligenceRadar = ({ scores }: { scores: Scores }) => {
             <Path
               key={`axis-${i}`}
               path={makeAxisPath(i)}
-              color="rgba(255,255,255,0.08)"
+              color={theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(146,124,88,0.16)'}
               style="stroke"
               strokeWidth={1}
             />
@@ -326,6 +334,8 @@ function getProfileSummary(scores: Scores): string {
 // ── Screen ──
 
 export default function IntelligenceProfileScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [scores, setScores] = useState<Scores>({});
   const [saved, setSaved] = useState(false);
@@ -400,7 +410,7 @@ export default function IntelligenceProfileScreen() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.closeButton} onPress={handleClose}>
+          <Pressable style={styles.closeButton} onPress={handleClose} hitSlop={10}>
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>
         </View>
@@ -421,7 +431,7 @@ export default function IntelligenceProfileScreen() {
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
             >
-              <VelvetGlassSurface style={styles.synthesisCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.68)">
+              <VelvetGlassSurface style={styles.synthesisCard} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.68)' : 'rgba(255, 255, 255, 0.88)'}>
                 <View style={styles.synthesisHeader}>
                   <MetallicIcon name="sparkles-outline" size={18} color={PALETTE.gold} />
                   <MetallicText style={styles.synthesisEyebrow} color={PALETTE.gold}>INTELLIGENCE FINGERPRINT</MetallicText>
@@ -456,7 +466,7 @@ export default function IntelligenceProfileScreen() {
                   key={dim.id}
                   entering={FadeInDown.delay(200 + i * 60).duration(500)}
                 >
-                  <VelvetGlassSurface style={styles.dimensionBlock} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+                  <VelvetGlassSurface style={styles.dimensionBlock} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
                     <View style={styles.dimInner}>
                       <View style={styles.dimHeader}>
                         <MetallicIcon name={dim.icon as any} size={20} color={PALETTE.gold} />
@@ -527,39 +537,39 @@ export default function IntelligenceProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header: { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 10 },
   titleArea: { paddingHorizontal: 24, paddingBottom: 14 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon: { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, justifyContent: 'center', alignItems: 'center' },
+  closeIcon: { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 26, lineHeight: 31, color: PALETTE.textMain, fontWeight: '700', letterSpacing: -0.85, marginBottom: 6, maxWidth: '88%' },
-  headerSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.68)', lineHeight: 18 },
+  headerTitle: { fontSize: 26, lineHeight: 31, color: theme.textPrimary, fontWeight: '700', letterSpacing: -0.85, marginBottom: 6, maxWidth: '88%' },
+  headerSubtitle: { fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
 
-  instruction: { fontSize: 13, color: 'rgba(255,255,255,0.58)', lineHeight: 21, marginBottom: 28, maxWidth: 320 },
+  instruction: { fontSize: 13, color: theme.textMuted, lineHeight: 21, marginBottom: 28, maxWidth: 320 },
 
   synthesisCard: { borderRadius: 30, padding: 24, marginBottom: 34, alignItems: 'center' },
   synthesisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 16 },
   synthesisEyebrow: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5 },
-  synthesisTitle: { fontSize: 28, lineHeight: 32, fontWeight: '700', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start', letterSpacing: -0.75 },
+  synthesisTitle: { fontSize: 28, lineHeight: 32, fontWeight: '700', color: theme.textPrimary, marginBottom: 24, alignSelf: 'flex-start', letterSpacing: -0.75 },
 
   radarContainer: { width: 264, height: 264, justifyContent: 'center', alignItems: 'center', marginBottom: 26, position: 'relative' },
   radarCanvas: { width: 264, height: 264 },
   radarLabelWrap: { position: 'absolute', width: 36, alignItems: 'center' },
-  radarLabel: { fontSize: 8, fontWeight: '800', letterSpacing: 0.8, color: 'rgba(255,255,255,0.46)' },
+  radarLabel: { fontSize: 8, fontWeight: '800', letterSpacing: 0.8, color: theme.textMuted },
 
-  synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 23, textAlign: 'center', marginBottom: 4 },
+  synthesisBody: { fontSize: 14, color: theme.textSecondary, lineHeight: 23, textAlign: 'center', marginBottom: 4 },
 
-  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(10,10,15,0.95)' },
-  saveBtn: { height: 50, paddingHorizontal: 32, borderRadius: 25, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)' },
+  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(10,10,15,0.95)' : 'rgba(252,248,241,0.96)' },
+  saveBtn: { height: 50, paddingHorizontal: 32, borderRadius: 25, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.cardBorder },
   saveBtnFull: { width: '100%' },
   saveBtnDone: { borderColor: '#D4AF37', backgroundColor: '#D4AF37' },
-  saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', color: PALETTE.textMain },
+  saveBtnText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center', color: theme.textPrimary },
   saveBtnTextDone: { color: '#0A0A0F' },
 
   dimensionsContainer: { gap: 16 },
@@ -568,18 +578,18 @@ const styles = StyleSheet.create({
   dimHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   dimIcon: { width: 20, alignItems: 'center' },
   dimName: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
-  dimQuestion: { fontSize: 16, fontWeight: '400', color: PALETTE.textMain, lineHeight: 24, marginBottom: 22 },
+  dimQuestion: { fontSize: 16, fontWeight: '400', color: theme.textPrimary, lineHeight: 24, marginBottom: 22 },
 
   scaleRow: { marginBottom: 14 },
   scaleBtn: { borderRadius: 14 },
   scaleBtnSealed: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
-  scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.74)', fontWeight: '700' },
+  scaleBtnText: { fontSize: 15, color: theme.textSecondary, fontWeight: '700' },
   scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 
   dimLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   dimLabelBlockLeft: { flex: 1, alignItems: 'flex-start' },
   dimLabelBlockRight: { flex: 1, alignItems: 'flex-end' },
-  dimLabelText: { fontSize: 11, color: 'rgba(255,255,255,0.42)', fontWeight: '600' },
+  dimLabelText: { fontSize: 11, color: theme.textMuted, fontWeight: '600' },
   dimLabelTextRight: { textAlign: 'right' },
-  dimDescription: { marginTop: 16, fontSize: 12, color: 'rgba(255,255,255,0.54)', lineHeight: 19, fontStyle: 'italic' },
+  dimDescription: { marginTop: 16, fontSize: 12, color: theme.textMuted, lineHeight: 19, fontStyle: 'italic' },
 });

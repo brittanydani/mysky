@@ -10,6 +10,8 @@ import { MetallicLucideIcon } from '../../components/ui/MetallicLucideIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { SkiaGradient } from '../../components/ui/SkiaGradient';
 import { metallicFillColors, metallicFillPositions } from '../../constants/mySkyMetallic';
+import type { AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 const VISIBLE_TABS = new Set(['home', 'patterns', 'journal', 'identity', 'settings']);
 
@@ -34,6 +36,8 @@ const OPTICAL_ADJUSTMENTS: Record<string, { translateY?: number; translateX?: nu
  * Floating glassmorphic container with gold active indicators and strict mathematical alignment.
  */
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const visibleRoutes = state.routes.filter((r) => VISIBLE_TABS.has(r.name));
 
@@ -45,7 +49,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.tabBarContainer, { height: BAR_HEIGHT, paddingBottom: safeBottom }]}>
-      <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
+      <BlurView intensity={80} tint={theme.blurTint} style={StyleSheet.absoluteFill}>
         <View style={styles.glassHighlight} />
       </BlurView>
 
@@ -62,7 +66,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             }
           };
 
-          const inactiveColor = 'rgba(255,255,255,0.3)';
+          const inactiveColor = theme.textMuted;
           const size = 22;
           const sw = 1.5;
 
@@ -114,7 +118,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               {isFocused ? (
                 <MetallicText style={styles.tabLabel}>{options.title}</MetallicText>
               ) : (
-                <Text style={[styles.tabLabel, { color: 'rgba(255,255,255,0.4)' }]}>
+                <Text style={[styles.tabLabel, { color: theme.textMuted }]}>
                   {options.title}
                 </Text>
               )}
@@ -150,7 +154,7 @@ export default function TabLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: AppTheme) => StyleSheet.create({
   tabBarContainer: {
     position: 'absolute', 
     bottom: 0, 
@@ -158,11 +162,12 @@ const styles = StyleSheet.create({
     right: 0,
     overflow: 'hidden',
     borderTopWidth: 1, 
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    borderTopColor: theme.cardBorder,
+    backgroundColor: theme.background,
   },
   glassHighlight: {
     ...StyleSheet.absoluteFillObject, 
-    backgroundColor: 'rgba(255,255,255,0.05)' 
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.35)' 
   },
   tabItemsRow: {
     flexDirection: 'row', 
@@ -188,17 +193,17 @@ const styles = StyleSheet.create({
   activeIndicator: {
     position: 'absolute', 
     bottom: -7, 
-    width: 4, 
-    height: 4, 
-    borderRadius: 2,
+    width: 20,
+    height: 5,
+    borderRadius: 999,
     overflow: 'hidden',
     shadowColor: '#D9BF8C', 
-    shadowRadius: 4, 
-    shadowOpacity: 0.8,
+    shadowRadius: 10, 
+    shadowOpacity: 0.9,
   },
   tabLabel: { 
     fontSize: 9, 
-    fontWeight: '700', 
+    fontWeight: '800', 
     letterSpacing: 1, 
     textTransform: 'uppercase', 
     lineHeight: 10, 

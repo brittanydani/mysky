@@ -22,6 +22,8 @@ import { AdvancedJournalAnalyzer, PatternInsight, JournalEntryMeta, MoodLevel, T
 import { usePremium } from '../context/PremiumContext';
 import { useFocusEffect } from '@react-navigation/core';
 import { dayOfYear, toLocalDateString } from '../utils/dateUtils';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 type TransitCoordinates = {
   latitude: number;
@@ -232,14 +234,20 @@ function GradientSymbol({
   );
 }
 
-const ActionPill = ({ label, icon, color, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }) => (
-  <Pressable onPress={onPress} style={[styles.actionPill, { borderColor: `${color}40` }]}>
-    <MetallicIcon name={icon} size={16} color={color} />
-    <MetallicText style={styles.actionLabel} color={color}>{label}</MetallicText>
-  </Pressable>
-);
+const ActionPill = ({ label, icon, color, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }) => {
+  const styles = useThemedStyles(createStyles);
+
+  return (
+    <Pressable onPress={onPress} style={[styles.actionPill, { borderColor: `${color}40` }]}>
+      <MetallicIcon name={icon} size={16} color={color} />
+      <MetallicText style={styles.actionLabel} color={color}>{label}</MetallicText>
+    </Pressable>
+  );
+};
 
 export default function CosmicContext() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium } = usePremium();
   const [transitInsights, setTransitInsights] = useState<PatternInsight[]>([]);
@@ -361,7 +369,7 @@ export default function CosmicContext() {
 
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.header}>
-          <Pressable style={styles.closeButton} onPress={handleBack}>
+          <Pressable style={styles.closeButton} onPress={handleBack} hitSlop={10}>
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>
         </View>
@@ -427,7 +435,7 @@ export default function CosmicContext() {
                       Haptics.selectionAsync();
                       setActiveDayIdx(prev => (prev === i ? null : i));
                     }}
-                    hitSlop={4}
+                    hitSlop={10}
                   >
                     {isToday ? (
                       <MetallicText style={styles.weekDayName} color="#D4B872">{dayName.toUpperCase()}</MetallicText>
@@ -470,7 +478,7 @@ export default function CosmicContext() {
 
         {/* ── Retrograde Alerts ──────────────────────────────────────── */}
         {retrogrades.length > 0 && (
-          <VelvetGlassSurface style={styles.rxAlertCard} intensity={42} backgroundColor="rgba(28, 18, 18, 0.56)">
+          <VelvetGlassSurface style={styles.rxAlertCard} intensity={42} backgroundColor={theme.isDark ? 'rgba(28, 18, 18, 0.56)' : 'rgba(255, 249, 243, 0.88)'}>
             <View style={styles.rxAlertHeader}>
               <MetallicIcon name="warning-outline" size={16} color="#D98C8C" />
               <MetallicText style={styles.rxAlertTitle} color="#D98C8C">
@@ -487,7 +495,7 @@ export default function CosmicContext() {
         )}
 
         {/* ── Daily Alignment ────────────────────────────────────────── */}
-        <VelvetGlassSurface style={styles.affirmationCard} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+        <VelvetGlassSurface style={styles.affirmationCard} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
           <View style={styles.premiumHeaderRow}>
             <MetallicText style={styles.affirmationLabel} color="#D9BF8C">DAILY ALIGNMENT</MetallicText>
             <MetallicText style={styles.premiumIcon} color="#D9BF8C">✦</MetallicText>
@@ -500,7 +508,7 @@ export default function CosmicContext() {
         {/* ── Active Transits ────────────────────────────────────────── */}
         <View style={styles.transitsSection}>
           <Text style={styles.sectionLabel}>ACTIVE TRANSITS</Text>
-          <VelvetGlassSurface style={styles.transitsContainer} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+          <VelvetGlassSurface style={styles.transitsContainer} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
             {activeTransits.map((transit, index) => (
               <View key={transit.planet}>
                 <View style={styles.transitRow}>
@@ -541,9 +549,9 @@ export default function CosmicContext() {
         {isPremium && transitInsights.length > 0 && (
           <Animated.View entering={FadeInDown.delay(200)} style={{ marginBottom: 24 }}>
             <Text style={styles.sectionLabel}>YOUR COSMIC PATTERNS</Text>
-            <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 14, marginTop: -10 }}>How planetary transits correlate with your journal entries</Text>
+            <Text style={{ fontSize: 13, color: theme.textMuted, marginBottom: 14, marginTop: -10 }}>How planetary transits correlate with your journal entries</Text>
             {transitInsights.map((insight, idx) => (
-              <VelvetGlassSurface key={`${insight.title}-${idx}`} style={styles.insightCard} intensity={40} backgroundColor="rgba(18, 18, 24, 0.58)">
+              <VelvetGlassSurface key={`${insight.title}-${idx}`} style={styles.insightCard} intensity={40} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.58)' : 'rgba(255, 255, 255, 0.80)'}>
                 <LinearGradient colors={['rgba(168,155,200,0.12)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
                   <View />
                 </LinearGradient>
@@ -556,7 +564,7 @@ export default function CosmicContext() {
                 </View>
                 <Text style={styles.transitImpact}>{insight.description}</Text>
                 {!!insight.evidence && <Text style={[styles.transitSource, { marginTop: 4 }]}>{insight.evidence}</Text>}
-                {!!insight.actionable && <Text style={[styles.transitImpact, { color: 'rgba(255,255,255,0.85)', marginTop: 6 }]}>{insight.actionable}</Text>}
+                {!!insight.actionable && <Text style={[styles.transitImpact, styles.actionableText]}>{insight.actionable}</Text>}
               </VelvetGlassSurface>
             ))}
           </Animated.View>
@@ -564,7 +572,7 @@ export default function CosmicContext() {
 
         {/* ── Reflection Prompt ── */}
         <Animated.View entering={FadeInDown.delay(300)} style={{ marginBottom: 24 }}>
-          <VelvetGlassSurface style={styles.reflectionCard} intensity={42} backgroundColor="rgba(18, 18, 24, 0.62)">
+          <VelvetGlassSurface style={styles.reflectionCard} intensity={42} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
             <LinearGradient colors={['rgba(212, 184, 114, 0.10)', 'rgba(10, 10, 12, 0.18)']} style={StyleSheet.absoluteFill}>
               <View />
             </LinearGradient>
@@ -587,39 +595,39 @@ export default function CosmicContext() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   ambientTop: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   safeArea: { flex: 1 },
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
   titleHeader: { marginBottom: 32 },
-  headerTitle: { fontSize: 30, color: '#FFFFFF', fontWeight: '700', letterSpacing: -0.8, marginBottom: 6, maxWidth: '88%' },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
+  headerTitle: { fontSize: 30, color: theme.textPrimary, fontWeight: '700', letterSpacing: -0.8, marginBottom: 6, maxWidth: '88%' },
+  headerSubtitle: { fontSize: 12, color: theme.textSecondary },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  sectionLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, marginBottom: 16 },
+  sectionLabel: { fontSize: 11, fontWeight: 'bold', color: theme.textMuted, letterSpacing: 1.5, marginBottom: 16 },
 
   // ── Hero Moon ─────────────────────────────────────────────────────────────
   heroSection: { alignItems: 'center', marginBottom: 20 },
 
   // ── Weekly Moon ───────────────────────────────────────────────────────────
   weekHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, marginBottom: 4 },
-  weekHeaderLabel: { fontSize: 11, fontWeight: 'bold', color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5 },
-  weekRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 22, paddingVertical: 16, paddingHorizontal: 8, borderWidth: 1, borderColor: 'rgba(212,184,114,0.16)', marginBottom: 28 },
+  weekHeaderLabel: { fontSize: 11, fontWeight: 'bold', color: theme.textSecondary, letterSpacing: 1.5 },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderRadius: 22, paddingVertical: 16, paddingHorizontal: 8, borderWidth: 1, borderColor: 'rgba(212,184,114,0.16)', marginBottom: 28 },
   weekDayCol: { flex: 1, alignItems: 'center', gap: 4 },
-  weekDayName: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.35)', letterSpacing: 0.8 },
-  weekDayNameToday: { color: '#FFFFFF' },
-  weekDayNum: { fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: '500' },
-  weekDayNumToday: { color: '#FFFFFF', fontWeight: '800' },
+  weekDayName: { fontSize: 9, fontWeight: '700', color: theme.textMuted, letterSpacing: 0.8 },
+  weekDayNameToday: { color: theme.textPrimary },
+  weekDayNum: { fontSize: 11, color: theme.textMuted, fontWeight: '500' },
+  weekDayNumToday: { color: theme.textPrimary, fontWeight: '800' },
   weekOrb: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
   weekOrbToday: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(212,184,114,0.4)' },
   weekDayColActive: { backgroundColor: 'rgba(212,184,114,0.08)', borderRadius: 12 },
   weekInfoStrip: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(212,184,114,0.18)',
@@ -631,30 +639,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  weekInfoPhase: { fontSize: 15, color: '#FFF', fontWeight: '700' },
+  weekInfoPhase: { fontSize: 15, color: theme.textPrimary, fontWeight: '700' },
   weekInfoSign: { fontSize: 13, color: 'rgba(201,174,120,0.85)', fontWeight: '600' },
-  weekInfoMessage: { fontSize: 12, color: 'rgba(255,255,255,0.45)', textAlign: 'center', marginTop: 2 },
+  weekInfoMessage: { fontSize: 12, color: theme.textMuted, textAlign: 'center', marginTop: 2 },
 
-  moonTitle: { fontSize: 22, color: '#FFF', fontWeight: '700', marginTop: 20, marginBottom: 4 },
-  moonDegree: { fontSize: 14, color: '#FFFFFF', letterSpacing: 1, marginBottom: 16 },
+  moonTitle: { fontSize: 22, color: theme.textPrimary, fontWeight: '700', marginTop: 20, marginBottom: 4 },
+  moonDegree: { fontSize: 14, color: theme.textPrimary, letterSpacing: 1, marginBottom: 16 },
 
   // VoC
   vocBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(212,184,114,0.08)', borderWidth: 1, borderColor: 'rgba(212,184,114,0.25)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   vocPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#C9AE78', marginRight: 8 },
-  vocText: { fontSize: 10, fontWeight: '800', color: '#FFFFFF', letterSpacing: 1.2 },
+  vocText: { fontSize: 10, fontWeight: '800', color: theme.textPrimary, letterSpacing: 1.2 },
 
   // ── Retrograde Alert ──────────────────────────────────────────────────────
   rxAlertCard: { borderRadius: 28, padding: 28, marginBottom: 24 },
   rxAlertHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   rxAlertTitle: { fontSize: 14, fontWeight: '700', color: '#D98C8C' },
-  rxAlertBody: { fontSize: 13, color: 'rgba(255,255,255,0.68)', lineHeight: 20 },
+  rxAlertBody: { fontSize: 13, color: theme.textSecondary, lineHeight: 20 },
 
   // ── Daily Alignment ───────────────────────────────────────────────────────
   affirmationCard: { padding: 28, borderRadius: 28, marginBottom: 32 },
   premiumHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: '#FFFFFF', letterSpacing: 1.5 },
+  affirmationLabel: { fontSize: 11, fontWeight: 'bold', color: theme.textPrimary, letterSpacing: 1.5 },
   premiumIcon: { color: '#C9AE78', fontSize: 14 },
-  affirmationText: { fontSize: 18, color: '#FFF', lineHeight: 28 },
+  affirmationText: { fontSize: 18, color: theme.textPrimary, lineHeight: 28 },
 
   // ── Transits ──────────────────────────────────────────────────────────────
   transitsSection: { marginBottom: 32 },
@@ -662,12 +670,13 @@ const styles = StyleSheet.create({
   transitRow: { flexDirection: 'row', alignItems: 'flex-start' },
   transitDetails: { flex: 1 },
   transitHeaderRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 },
-  transitTitle: { fontSize: 16, color: '#FFF', fontWeight: '600' },
-  transitIn: { fontSize: 16, color: 'rgba(255,255,255,0.45)', fontWeight: '400' },
+  transitTitle: { fontSize: 16, color: theme.textPrimary, fontWeight: '600' },
+  transitIn: { fontSize: 16, color: theme.textMuted, fontWeight: '400' },
   rxBadge: { backgroundColor: 'rgba(217,140,140,0.2)', color: '#D98C8C', fontSize: 9, fontWeight: 'bold', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
-  transitImpact: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 20 },
-  transitSource: { fontSize: 12, color: 'rgba(212,184,114,0.58)', lineHeight: 17, marginTop: 5, fontStyle: 'italic' },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 20, marginLeft: 44 },
+  transitImpact: { fontSize: 14, color: theme.textSecondary, lineHeight: 20 },
+  transitSource: { fontSize: 12, color: theme.isDark ? 'rgba(212,184,114,0.58)' : theme.primaryDark, lineHeight: 17, marginTop: 5, fontStyle: 'italic' },
+  actionableText: { color: theme.isDark ? 'rgba(255,255,255,0.85)' : theme.textPrimary, marginTop: 6 },
+  divider: { height: 1, backgroundColor: theme.cardBorder, marginVertical: 20, marginLeft: 44 },
   insightCard: {
     padding: 18,
     borderRadius: 20,
@@ -701,7 +710,7 @@ const styles = StyleSheet.create({
   reflectionCard: { padding: 24, borderRadius: 28, marginBottom: 8, overflow: 'hidden' },
   promptHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   promptEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
-  promptText: { color: '#FFFFFF', fontSize: 20, lineHeight: 30, fontWeight: '700', marginBottom: 20 },
+  promptText: { color: theme.textPrimary, fontSize: 20, lineHeight: 30, fontWeight: '700', marginBottom: 20 },
   actionRow: { flexDirection: 'row', gap: 12 },
   actionPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 16, borderWidth: 1 },
   actionLabel: { fontWeight: '700', fontSize: 13 },

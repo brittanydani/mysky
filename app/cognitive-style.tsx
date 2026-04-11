@@ -38,6 +38,8 @@ import { MetallicIcon } from '../components/ui/MetallicIcon';
 import { VelvetGlassSurface } from '../components/ui/VelvetGlassSurface';
 import { EditorialLikertScale } from '../components/ui/EditorialLikertScale';
 import { keepLastWordsTogether } from '../utils/textLayout';
+import { type AppTheme } from '../constants/theme';
+import { useAppTheme, useThemedStyles } from '../context/ThemeContext';
 
 const STORAGE_KEY = '@mysky:cognitive_style';
 const RADAR_SIZE = 180;
@@ -97,6 +99,7 @@ interface StoredCognitiveProfile extends Partial<Scores> {
 
 // --- Radar Chart Component ---
 const CognitiveSynthesisMap = ({ scores }: { scores: Scores }) => {
+  const styles = useThemedStyles(createStyles);
   const center = RADAR_SIZE / 2;
   const radius = RADAR_SIZE / 2 - 20;
 
@@ -174,6 +177,8 @@ const CognitiveSynthesisMap = ({ scores }: { scores: Scores }) => {
 };
 
 export default function CognitiveStyleScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [scores, setScores] = useState<Partial<Scores>>({});
   const [saved, setSaved] = useState(false);
@@ -262,6 +267,7 @@ export default function CognitiveStyleScreen() {
           <Pressable
             style={styles.closeButton}
             onPress={handleClose}
+            hitSlop={10}
           >
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>
@@ -284,7 +290,7 @@ export default function CognitiveStyleScreen() {
               entering={FadeIn.duration(600)}
               layout={Layout.springify()}
             >
-              <VelvetGlassSurface style={styles.synthesisCard} intensity={30} backgroundColor="rgba(12, 15, 24, 0.34)">
+              <VelvetGlassSurface style={styles.synthesisCard} intensity={30} backgroundColor={theme.isDark ? 'rgba(12, 15, 24, 0.34)' : 'rgba(255, 255, 255, 0.72)'}>
               <View style={styles.synthesisHeader}>
                 <MetallicIcon name="git-network-outline" size={18} color={PALETTE.silverBlue} />
                 <MetallicText style={styles.synthesisEyebrow} color={PALETTE.silverBlue}>COGNITIVE BLUEPRINT</MetallicText>
@@ -319,7 +325,7 @@ export default function CognitiveStyleScreen() {
                   entering={FadeInDown.delay(200 + i * 80).duration(500)}
                   style={styles.dimensionBlock}
                 >
-                  <VelvetGlassSurface style={styles.dimInner} intensity={28} backgroundColor="rgba(12, 15, 24, 0.30)">
+                  <VelvetGlassSurface style={styles.dimInner} intensity={28} backgroundColor={theme.isDark ? 'rgba(12, 15, 24, 0.30)' : 'rgba(255, 255, 255, 0.70)'}>
                     <Text style={styles.dimQuestion}>{keepLastWordsTogether(dim.question)}</Text>
 
                     <EditorialLikertScale
@@ -379,57 +385,57 @@ export default function CognitiveStyleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALETTE.bg },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   topGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
 
   header:      { flexDirection: 'row', alignItems: 'center', paddingTop: 8, paddingHorizontal: 24, paddingBottom: 8 },
   titleArea:   { paddingHorizontal: 24, paddingBottom: 8 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', justifyContent: 'center', alignItems: 'center' },
-  closeIcon:   { color: '#FFF', fontSize: 24, lineHeight: 28 },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center' },
+  closeIcon:   { color: theme.textPrimary, fontSize: 24, lineHeight: 28 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 140 },
-  headerTitle: { fontSize: 34, color: PALETTE.textMain, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
+  headerTitle: { fontSize: 34, color: theme.textPrimary, fontWeight: '800', letterSpacing: -0.5, marginBottom: 4 },
   headerSubtitle: { fontSize: 14 },
 
-  instruction: { fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 20, marginBottom: 28 },
+  instruction: { fontSize: 13, color: theme.textMuted, lineHeight: 20, marginBottom: 28 },
 
   synthesisCard: { borderRadius: 24, padding: 24, marginBottom: 32, alignItems: 'center' },
   synthesisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginBottom: 16 },
   synthesisEyebrow: { fontSize: 11, color: PALETTE.silverBlue, fontWeight: '800', letterSpacing: 1.5 },
-  synthesisTitle: { fontSize: 26, fontWeight: '700', color: PALETTE.textMain, marginBottom: 24, alignSelf: 'flex-start' },
+  synthesisTitle: { fontSize: 26, fontWeight: '700', color: theme.textPrimary, marginBottom: 24, alignSelf: 'flex-start' },
 
   radarContainer: { position: 'relative', width: 220, height: 220, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   radarCanvas: { width: RADAR_SIZE, height: RADAR_SIZE },
   radarLabelAnchor: { position: 'absolute' },
-  radarLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.52)', letterSpacing: 1 },
+  radarLabel: { fontSize: 9, fontWeight: '800', color: theme.textMuted, letterSpacing: 1 },
 
-  synthesisBody: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22, textAlign: 'center', marginBottom: 8 },
+  synthesisBody: { fontSize: 14, color: theme.textSecondary, lineHeight: 22, textAlign: 'center', marginBottom: 8 },
 
-  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', backgroundColor: 'rgba(2,8,23,0.88)' },
-  saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.06)' },
+  sealBar: { paddingHorizontal: 24, paddingBottom: 32, paddingTop: 12, borderTopWidth: 1, borderTopColor: theme.cardBorder, backgroundColor: theme.isDark ? 'rgba(2,8,23,0.88)' : 'rgba(245,239,228,0.95)' },
+  saveBtn: { height: 48, paddingHorizontal: 32, borderRadius: 24, borderWidth: 1, borderColor: theme.cardBorder, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : theme.pillSurface },
   saveBtnFull: { width: '100%' },
   saveBtnDone: { borderColor: '#D4AF37', backgroundColor: '#D4AF37' },
-  saveBtnText: { fontSize: 13, color: PALETTE.textMain, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center' },
+  saveBtnText: { fontSize: 13, color: theme.textPrimary, fontWeight: '700', letterSpacing: 0.5, textAlign: 'center' },
   saveBtnTextDone: { color: '#0A0A0F' },
 
   dimensionsContainer: { gap: 16 },
   dimensionBlock: { borderRadius: 24 },
   dimInner: { padding: 24, borderRadius: 24 },
-  dimQuestion: { fontSize: 15, fontWeight: '400', color: PALETTE.textMain, lineHeight: 22, marginBottom: 20 },
+  dimQuestion: { fontSize: 15, fontWeight: '400', color: theme.textPrimary, lineHeight: 22, marginBottom: 20 },
 
   scaleRow: { marginBottom: 16 },
   scaleBtn: { borderRadius: 12 },
   scaleBtnSealed: { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
-  scaleBtnText: { fontSize: 15, color: 'rgba(255,255,255,0.74)', fontWeight: '700' },
+  scaleBtnText: { fontSize: 15, color: theme.textSecondary, fontWeight: '700' },
   scaleBtnTextSelected: { fontSize: 15, fontWeight: '800', color: '#0A0A0F' },
 
   dimLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginTop: 12 },
   dimLabelBlock: { flex: 1, maxWidth: '48%' },
   dimLabelBlockLeft: { alignItems: 'flex-start' },
   dimLabelBlockRight: { alignItems: 'flex-end' },
-  dimLabelTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginBottom: 4, color: '#FFFFFF' },
-  dimLabelDetail: { fontSize: 12, color: 'rgba(255,255,255,0.58)', lineHeight: 17 },
+  dimLabelTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginBottom: 4, color: theme.textPrimary },
+  dimLabelDetail: { fontSize: 12, color: theme.textMuted, lineHeight: 17 },
   dimLabelDetailRight: { textAlign: 'right' },
 });

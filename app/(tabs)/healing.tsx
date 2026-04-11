@@ -26,6 +26,8 @@ import { usePremium } from '../../context/PremiumContext';
 import { MetallicIcon } from '../../components/ui/MetallicIcon';
 import { MetallicText } from '../../components/ui/MetallicText';
 import { VelvetGlassSurface } from '../../components/ui/VelvetGlassSurface';
+import { type AppTheme } from '../../constants/theme';
+import { useAppTheme, useThemedStyles } from '../../context/ThemeContext';
 
 // ── Cinematic Palette ──
 const PALETTE = {
@@ -79,6 +81,8 @@ const SOMATIC_RITUALS: Record<string, string> = {
 };
 
 export default function HealingSpaceScreen() {
+  const theme = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { isPremium, isReady, refreshCustomerInfo } = usePremium();
   const [context, setContext] = useState<SelfKnowledgeContext | null>(null);
@@ -194,7 +198,7 @@ export default function HealingSpaceScreen() {
           {/* 1. ARCHETYPE SHADOW WORK */}
           {hasArchetype && archetypeData && (
             <Animated.View entering={FadeInDown.delay(140).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
               <LinearGradient colors={['rgba(168, 155, 200, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
                 <View />
               </LinearGradient>
@@ -218,7 +222,7 @@ export default function HealingSpaceScreen() {
           {/* 2. SOMATIC RELEASE RITUAL */}
           {hasSomatic && topRegion && SOMATIC_RITUALS[topRegion] && (
             <Animated.View entering={FadeInDown.delay(220).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
               <LinearGradient colors={['rgba(110, 191, 139, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
                 <View />
               </LinearGradient>
@@ -236,7 +240,7 @@ export default function HealingSpaceScreen() {
               </Text>
 
               <View style={[styles.affirmationBox, { borderLeftColor: PALETTE.emerald }]}>
-                <Text style={[styles.affirmationText, { fontStyle: 'normal', color: PALETTE.textMain }]}>
+                <Text style={[styles.affirmationText, { fontStyle: 'normal', color: theme.textPrimary }]}>
                   {SOMATIC_RITUALS[topRegion]}
                 </Text>
               </View>
@@ -247,7 +251,7 @@ export default function HealingSpaceScreen() {
           {/* 3. RELATIONAL PATTERN INTERVENTION */}
           {hasRelational && relationalCategories.hasStruggle && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
               <LinearGradient colors={['rgba(212, 163, 179, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
                 <View />
               </LinearGradient>
@@ -271,7 +275,7 @@ export default function HealingSpaceScreen() {
           {/* 3b. SECURE GROWTH ACKNOWLEDGEMENT */}
           {hasRelational && relationalCategories.hasSecure && (
             <Animated.View entering={FadeInDown.delay(relationalCategories.hasStruggle ? 380 : 300).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
               <LinearGradient colors={['rgba(123, 174, 143, 0.10)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
                 <View />
               </LinearGradient>
@@ -294,7 +298,7 @@ export default function HealingSpaceScreen() {
 
           {!hasHealingInputs && (
             <Animated.View entering={FadeInDown.delay(300).duration(600)}>
-              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor="rgba(18, 18, 24, 0.62)">
+              <VelvetGlassSurface style={styles.card} intensity={45} backgroundColor={theme.isDark ? 'rgba(18, 18, 24, 0.62)' : 'rgba(255, 255, 255, 0.82)'}>
               <LinearGradient colors={['rgba(255,255,255,0.08)', 'rgba(10,10,12,0.18)']} style={StyleSheet.absoluteFill}>
                 <View />
               </LinearGradient>
@@ -324,8 +328,8 @@ export default function HealingSpaceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F' },
+const createStyles = (theme: AppTheme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   safeArea: { flex: 1 },
   glowOrb: {
     position: 'absolute',
@@ -343,18 +347,18 @@ const styles = StyleSheet.create({
   header: { marginBottom: 32 },
   headerTitle: {
     fontSize: 30,
-    color: PALETTE.textMain,
+    color: theme.textPrimary,
     fontWeight: '700',
     letterSpacing: -0.8,
     marginBottom: 6,
     maxWidth: '88%',
   },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.68)' },
+  headerSubtitle: { fontSize: 12, color: theme.textSecondary },
 
-  loadingText: { color: PALETTE.textMuted, fontSize: 14 },
+  loadingText: { color: theme.textMuted, fontSize: 14 },
 
-  lockTitle: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12, textAlign: 'center' },
-  lockSub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+  lockTitle: { fontSize: 24, fontWeight: '700', color: theme.textPrimary, marginBottom: 12, textAlign: 'center' },
+  lockSub: { fontSize: 15, color: theme.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
   premiumBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -366,20 +370,20 @@ const styles = StyleSheet.create({
   },
   premiumBtnText: { color: '#0A0A0C', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
 
-  emptyTitle: { fontSize: 24, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12, textAlign: 'center' },
-  emptySub: { fontSize: 15, color: PALETTE.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
-  actionBtn: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', paddingHorizontal: 32, paddingVertical: 16, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.05)' },
-  actionBtnText: { color: PALETTE.textMain, fontSize: 14, fontWeight: '600' },
+  emptyTitle: { fontSize: 24, fontWeight: '700', color: theme.textPrimary, marginBottom: 12, textAlign: 'center' },
+  emptySub: { fontSize: 15, color: theme.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+  actionBtn: { borderWidth: 1, borderColor: theme.cardBorder, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 28, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : theme.cardSurface },
+  actionBtnText: { color: theme.textPrimary, fontSize: 14, fontWeight: '600' },
 
   card: { borderRadius: 28, padding: 28, marginBottom: 24, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   cardEyebrow: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
-  cardTitle: { fontSize: 22, fontWeight: '700', color: PALETTE.textMain, marginBottom: 12 },
-  promptText: { fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 26, marginBottom: 24 },
-  bodyText: { fontSize: 15, color: 'rgba(255,255,255,0.78)', lineHeight: 24 },
+  cardTitle: { fontSize: 22, fontWeight: '700', color: theme.textPrimary, marginBottom: 12 },
+  promptText: { fontSize: 16, color: theme.isDark ? 'rgba(255,255,255,0.85)' : theme.textPrimary, lineHeight: 26, marginBottom: 24 },
+  bodyText: { fontSize: 15, color: theme.textSecondary, lineHeight: 24 },
 
   affirmationBox: { marginTop: 8, paddingLeft: 16, borderLeftWidth: 2, borderLeftColor: PALETTE.lavender },
-  affirmationLabel: { fontSize: 10, color: PALETTE.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
-  affirmationText: { fontSize: 15, color: '#FFFFFF', lineHeight: 22,  },
+  affirmationLabel: { fontSize: 10, color: theme.textMuted, fontWeight: '700', letterSpacing: 1, marginBottom: 8 },
+  affirmationText: { fontSize: 15, color: theme.textPrimary, lineHeight: 22,  },
 });
 
